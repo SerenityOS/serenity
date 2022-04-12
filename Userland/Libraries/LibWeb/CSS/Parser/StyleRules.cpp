@@ -33,9 +33,6 @@ StyleRule::StyleRule(StyleRule::Type type)
 }
 StyleRule::~StyleRule() = default;
 
-Declaration::Declaration() = default;
-Declaration::~Declaration() = default;
-
 template<class SeparatorType, class CollectionType>
 void append_with_to_string(StringBuilder& builder, SeparatorType& separator, CollectionType& collection)
 {
@@ -80,20 +77,6 @@ String StyleRule::to_string() const
         builder.append(m_block->to_string());
     else
         builder.append(';');
-
-    return builder.to_string();
-}
-
-String Declaration::to_string() const
-{
-    StringBuilder builder;
-
-    serialize_an_identifier(builder, m_name);
-    builder.append(": ");
-    append_with_to_string(builder, " ", m_values);
-
-    if (m_important == Important::Yes)
-        builder.append(" !important");
 
     return builder.to_string();
 }
