@@ -123,6 +123,7 @@ public:
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
     void insert_at_cursor_or_replace_selection(StringView);
+    void replace_all_text_while_keeping_undo_stack(StringView text);
     bool write_to_file(String const& path);
     bool write_to_file(Core::File&);
     bool has_selection() const { return m_selection.is_valid(); }
