@@ -46,7 +46,7 @@ static RefPtr<StyleValue> style_value_for_display(CSS::Display display)
     if (display.is_none())
         return IdentifierStyleValue::create(CSS::ValueID::None);
 
-    if (display.it_outside_and_inside()) {
+    if (display.is_outside_and_inside()) {
         NonnullRefPtrVector<StyleValue> values;
         switch (display.outside()) {
         case CSS::Display::Outside::Inline:

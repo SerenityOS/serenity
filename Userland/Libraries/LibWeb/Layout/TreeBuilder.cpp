@@ -283,7 +283,7 @@ void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Call
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
         auto const& display = box.computed_values().display();
-        if (display.it_outside_and_inside() && display.inside() == inside)
+        if (display.is_outside_and_inside() && display.inside() == inside)
             callback(box);
         return IterationDecision::Continue;
     });
