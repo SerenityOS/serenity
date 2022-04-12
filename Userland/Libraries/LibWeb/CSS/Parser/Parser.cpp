@@ -2049,7 +2049,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             tokens.reconsume_current_input_token();
 
             // Consume an at-rule. Append the returned rule to the list of declarations.
-            list_of_declarations.append(DeclarationOrAtRule(consume_an_at_rule(tokens)));
+            list_of_declarations.empend(consume_an_at_rule(tokens));
             continue;
         }
 
@@ -2071,7 +2071,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             // Consume a declaration from the temporary list. If anything was returned, append it to the list of declarations.
             auto token_stream = TokenStream(temporary_list);
             if (auto maybe_declaration = consume_a_declaration(token_stream); maybe_declaration.has_value())
-                list_of_declarations.append(DeclarationOrAtRule(maybe_declaration.value()));
+                list_of_declarations.empend(maybe_declaration.value());
 
             continue;
         }
