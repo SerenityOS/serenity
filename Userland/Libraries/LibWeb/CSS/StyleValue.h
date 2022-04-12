@@ -1625,7 +1625,7 @@ private:
 
 class UnresolvedStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<ComponentValue>&& values, bool contains_var_or_attr)
+    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
     {
         return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var_or_attr));
     }
@@ -1633,18 +1633,18 @@ public:
 
     virtual String to_string() const override;
 
-    Vector<ComponentValue> const& values() const { return m_values; }
+    Vector<Parser::ComponentValue> const& values() const { return m_values; }
     bool contains_var_or_attr() const { return m_contains_var_or_attr; }
 
 private:
-    UnresolvedStyleValue(Vector<ComponentValue>&& values, bool contains_var_or_attr)
+    UnresolvedStyleValue(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
         : StyleValue(Type::Unresolved)
         , m_values(move(values))
         , m_contains_var_or_attr(contains_var_or_attr)
     {
     }
 
-    Vector<ComponentValue> m_values;
+    Vector<Parser::ComponentValue> m_values;
     bool m_contains_var_or_attr { false };
 };
 

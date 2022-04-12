@@ -20,7 +20,7 @@ class StyleBlockRule : public RefCounted<StyleBlockRule> {
 
 public:
     StyleBlockRule();
-    explicit StyleBlockRule(Token token, Vector<ComponentValue>&& values)
+    explicit StyleBlockRule(Token token, Vector<Parser::ComponentValue>&& values)
         : m_token(move(token))
         , m_values(move(values))
     {
@@ -33,12 +33,12 @@ public:
 
     Token const& token() const { return m_token; }
 
-    Vector<ComponentValue> const& values() const { return m_values; }
+    Vector<Parser::ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
     Token m_token;
-    Vector<ComponentValue> m_values;
+    Vector<Parser::ComponentValue> m_values;
 };
 }

@@ -9,7 +9,7 @@
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 ComponentValue::ComponentValue(Token token)
     : m_value(token)
