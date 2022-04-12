@@ -34,7 +34,7 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
     dbgln_if(CSS_PARSER_DEBUG, "Parse error (CSS) {}", location);
 }
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 ParsingContext::ParsingContext(DOM::Document const& document, Optional<AK::URL> const url)
     : m_document(&document)
@@ -5741,8 +5741,8 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
         return {};
 
-    CSS::Parser parser(context, "");
-    CSS::TokenStream<CSS::ComponentValue> token_stream { tokens };
+    Parser parser(context, "");
+    TokenStream<ComponentValue> token_stream { tokens };
     auto result = parser.parse_css_value(property_id, token_stream);
     if (result.is_error())
         return {};
@@ -5868,59 +5868,59 @@ TimePercentage Parser::Dimension::time_percentage() const
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const& context, StringView css, Optional<AK::URL> location)
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
         return CSS::CSSStyleSheet::create({}, location);
-    CSS::Parser parser(context, css);
+    CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }
 
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css, DOM::Element& element)
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
 {
     if (css.is_empty())
         return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});
-    CSS::Parser parser(context, css);
+    CSS::Parser::Parser parser(context, css);
     return parser.parse_as_style_attribute(element);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
         return {};
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_css_value(property_id);
 }
 
-RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const& context, StringView css_text)
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)
 {
-    CSS::Parser parser(context, css_text);
+    CSS::Parser::Parser parser(context, css_text);
     return parser.parse_as_css_rule();
 }
 
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView selector_text)
+Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
 {
-    CSS::Parser parser(context, selector_text);
+    CSS::Parser::Parser parser(context, selector_text);
     return parser.parse_as_selector();
 }
 
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const& context, StringView string)
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_media_query();
 }
 
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const& context, StringView string)
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_media_query_list();
 }
 
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, StringView string)
+RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& context, StringView string)
 {
     if (string.is_empty())
         return {};
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_supports();
 }
 

@@ -14,7 +14,7 @@
 namespace Web::CSS {
 
 class Declaration {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     Declaration();

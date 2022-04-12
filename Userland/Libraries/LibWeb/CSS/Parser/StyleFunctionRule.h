@@ -11,13 +11,12 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
-class ComponentValue;
-
 class StyleFunctionRule : public RefCounted<StyleFunctionRule> {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     explicit StyleFunctionRule(String name);

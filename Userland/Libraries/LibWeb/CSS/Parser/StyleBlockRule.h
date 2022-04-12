@@ -11,11 +11,12 @@
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Token.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
 class StyleBlockRule : public RefCounted<StyleBlockRule> {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     StyleBlockRule();

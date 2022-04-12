@@ -213,7 +213,7 @@ private:
 };
 
 class MediaQuery : public RefCounted<MediaQuery> {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     ~MediaQuery() = default;
