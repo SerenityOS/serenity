@@ -54,7 +54,7 @@ HexEditorWidget::HexEditorWidget()
         if (!index.is_valid())
             return;
         m_selecting_from_inspector = true;
-        m_editor->set_selection(m_editor->selection_start_offset(), index.data(GUI::ModelRole::Custom).as_i32());
+        m_editor->set_selection(m_editor->selection_start_offset(), index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         m_editor->update();
     };
 
