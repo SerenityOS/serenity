@@ -47,6 +47,7 @@ set(SOURCES
     CSS/Parser/Block.cpp
     CSS/Parser/ComponentValue.cpp
     CSS/Parser/Declaration.cpp
+    CSS/Parser/DeclarationOrAtRule.cpp
     CSS/Parser/Function.cpp
     CSS/Parser/Parser.cpp
     CSS/Parser/StyleRules.cpp
