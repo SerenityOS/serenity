@@ -27,6 +27,7 @@ public:
         Float,
         Double,
         ASCII,
+        UTF8,
         __Count
     };
 
@@ -92,6 +93,8 @@ public:
             return "Double";
         case ASCII:
             return "ASCII";
+        case UTF8:
+            return "UTF-8";
         default:
             return "";
         }
@@ -127,6 +130,12 @@ public:
             case UnsignedLong:
             case Double:
                 return 8;
+            case UTF8: {
+                auto utf8_view = Utf8View(m_values.at(index.row()));
+                if (utf8_view.validate())
+                    return static_cast<i32>(utf8_view.byte_length());
+                return 0;
+            }
             default:
                 return 0;
             }
