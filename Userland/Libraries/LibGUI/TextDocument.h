@@ -236,4 +236,20 @@ private:
     TextRange m_range;
 };
 
+class ReplaceAllTextCommand : public GUI::TextDocumentUndoCommand {
+
+public:
+    ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range);
+    void redo() override;
+    void undo() override;
+    bool merge_with(GUI::Command const&) override;
+    String action_text() const override;
+    String const& text() const { return m_text; }
+    TextRange const& range() const { return m_range; }
+
+private:
+    String m_text;
+    GUI::TextRange m_range;
+};
+
 }

@@ -227,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
         if (!formatted_gml_or_error.is_error()) {
-            editor->set_text(formatted_gml_or_error.release_value());
+            editor->replace_all_text_while_keeping_undo_stack(formatted_gml_or_error.release_value());
         } else {
             GUI::MessageBox::show(
                 window,

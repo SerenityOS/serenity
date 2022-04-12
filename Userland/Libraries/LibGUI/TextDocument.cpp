@@ -884,6 +884,40 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_text(text)
+    , m_range(range)
+{
+}
+
+void ReplaceAllTextCommand::redo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
+    m_range.set_end(new_cursor);
+    m_document.set_all_cursors(new_cursor);
+}
+
+void ReplaceAllTextCommand::undo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    m_document.set_all_cursors(new_cursor);
+}
+
+bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
+{
+    return false;
+}
+
+String ReplaceAllTextCommand::action_text() const
+{
+    return "Playground format text";
+}
+
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)
 {
     TextPosition cursor = position;
