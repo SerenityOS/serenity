@@ -905,6 +905,7 @@ void ReplaceAllTextCommand::undo()
     m_document.remove(m_range);
     m_document.set_all_cursors(m_range.start());
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    m_range.set_end(new_cursor);
     m_document.set_all_cursors(new_cursor);
 }
 
