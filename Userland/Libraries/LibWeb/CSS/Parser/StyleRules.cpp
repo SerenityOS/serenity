@@ -15,18 +15,6 @@
 
 namespace Web::CSS {
 
-DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<StyleRule> at)
-    : m_type(DeclarationType::At)
-    , m_at(move(at))
-{
-}
-DeclarationOrAtRule::DeclarationOrAtRule(Declaration declaration)
-    : m_type(DeclarationType::Declaration)
-    , m_declaration(move(declaration))
-{
-}
-DeclarationOrAtRule::~DeclarationOrAtRule() = default;
-
 StyleRule::StyleRule(StyleRule::Type type)
     : m_type(type)
 {
@@ -44,22 +32,6 @@ void append_with_to_string(StringBuilder& builder, SeparatorType& separator, Col
             builder.append(separator);
         builder.append(item.to_string());
     }
-}
-
-String DeclarationOrAtRule::to_string() const
-{
-    StringBuilder builder;
-    switch (m_type) {
-    default:
-    case DeclarationType::At:
-        builder.append(m_at->to_string());
-        break;
-    case DeclarationType::Declaration:
-        builder.append(m_declaration.to_string());
-        break;
-    }
-
-    return builder.to_string();
 }
 
 String StyleRule::to_string() const
