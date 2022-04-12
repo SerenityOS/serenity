@@ -19,11 +19,11 @@
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
+#include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/DOM/Document.h>
@@ -1821,7 +1821,7 @@ ComponentValue Parser::consume_a_component_value(TokenStream<T>& tokens)
 // 5.4.8. Consume a simple block
 // https://www.w3.org/TR/css-syntax-3/#consume-simple-block
 template<typename T>
-NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
+NonnullRefPtr<Block> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the current input token has already been checked
     // to be an <{-token>, <[-token>, or <(-token>.
@@ -1834,7 +1834,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 
     // Create a simple block with its associated token set to the current input token
     // and with its value initially set to an empty list.
-    auto block = make_ref_counted<StyleBlockRule>();
+    auto block = make_ref_counted<Block>();
     block->m_token = tokens.current_token();
 
     // Repeatedly consume the next input token and process it as follows:
@@ -4938,7 +4938,7 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    auto block_contains_var_or_attr = [](StyleBlockRule const& block, auto&& recurse) -> bool {
+    auto block_contains_var_or_attr = [](Block const& block, auto&& recurse) -> bool {
         for (auto const& token : block.values()) {
             if (token.is_function() && (token.function().name().equals_ignoring_case("var"sv) || token.function().name().equals_ignoring_case("attr"sv)))
                 return true;

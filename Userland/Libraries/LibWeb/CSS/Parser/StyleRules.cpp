@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Serialize.h>
 
