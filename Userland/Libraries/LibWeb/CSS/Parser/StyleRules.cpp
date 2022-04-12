@@ -39,18 +39,6 @@ StyleBlockRule::~StyleBlockRule() = default;
 Declaration::Declaration() = default;
 Declaration::~Declaration() = default;
 
-StyleFunctionRule::StyleFunctionRule(String name)
-    : m_name(move(name))
-{
-}
-
-StyleFunctionRule::StyleFunctionRule(String name, Vector<Parser::ComponentValue>&& values)
-    : m_name(move(name))
-    , m_values(move(values))
-{
-}
-StyleFunctionRule::~StyleFunctionRule() = default;
-
 template<class SeparatorType, class CollectionType>
 void append_with_to_string(StringBuilder& builder, SeparatorType& separator, CollectionType& collection)
 {
@@ -120,18 +108,6 @@ String Declaration::to_string() const
 
     if (m_important == Important::Yes)
         builder.append(" !important");
-
-    return builder.to_string();
-}
-
-String StyleFunctionRule::to_string() const
-{
-    StringBuilder builder;
-
-    serialize_an_identifier(builder, m_name);
-    builder.append("(");
-    append_with_to_string(builder, " ", m_values);
-    builder.append(")");
 
     return builder.to_string();
 }
