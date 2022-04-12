@@ -21,6 +21,14 @@ public:
     bool selected() const { return m_selected; }
     void set_selected(bool);
 
+    String value() const;
+    void set_value(String);
+
+    String text() const;
+    void set_text(String);
+
+    int index() const;
+
 private:
     friend class Bindings::OptionConstructor;
     friend class HTMLSelectElement;
