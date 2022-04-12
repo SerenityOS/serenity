@@ -21,9 +21,9 @@
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/DOM/Document.h>
@@ -1867,7 +1867,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 // 5.4.9. Consume a function
 // https://www.w3.org/TR/css-syntax-3/#consume-function
 template<typename T>
-NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
+NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the current input token has already been checked to be a <function-token>.
     auto name_ident = tokens.current_token();
@@ -1877,7 +1877,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
-    auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).function());
+    auto function = make_ref_counted<Function>(((Token)name_ident).function());
 
     // Repeatedly consume the next input token and process it as follows:
     for (;;) {

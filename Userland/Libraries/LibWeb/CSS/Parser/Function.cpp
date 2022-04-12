@@ -5,25 +5,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Serialize.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
-StyleFunctionRule::StyleFunctionRule(String name)
+Function::Function(String name)
     : m_name(move(name))
 {
 }
 
-StyleFunctionRule::StyleFunctionRule(String name, Vector<Parser::ComponentValue>&& values)
+Function::Function(String name, Vector<ComponentValue>&& values)
     : m_name(move(name))
     , m_values(move(values))
 {
 }
 
-StyleFunctionRule::~StyleFunctionRule() = default;
+Function::~Function() = default;
 
-String StyleFunctionRule::to_string() const
+String Function::to_string() const
 {
     StringBuilder builder;
 

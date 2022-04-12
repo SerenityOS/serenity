@@ -100,6 +100,7 @@ enum class ValueID;
 
 namespace Web::CSS::Parser {
 class ComponentValue;
+class Function;
 class Parser;
 }
 
