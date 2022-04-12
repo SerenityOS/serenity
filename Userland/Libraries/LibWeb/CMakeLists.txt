@@ -44,10 +44,10 @@ set(SOURCES
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
+    CSS/Parser/Block.cpp
     CSS/Parser/ComponentValue.cpp
     CSS/Parser/Function.cpp
     CSS/Parser/Parser.cpp
-    CSS/Parser/StyleBlockRule.cpp
     CSS/Parser/StyleRules.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp

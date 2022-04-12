@@ -5,19 +5,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
+#include <LibWeb/CSS/Parser/Block.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
-StyleBlockRule::StyleBlockRule() = default;
-StyleBlockRule::StyleBlockRule(Token token, Vector<Parser::ComponentValue>&& values)
+Block::Block() = default;
+Block::Block(Token token, Vector<ComponentValue>&& values)
     : m_token(move(token))
     , m_values(move(values))
 {
 }
-StyleBlockRule::~StyleBlockRule() = default;
+Block::~Block() = default;
 
-String StyleBlockRule::to_string() const
+String Block::to_string() const
 {
     StringBuilder builder;
 

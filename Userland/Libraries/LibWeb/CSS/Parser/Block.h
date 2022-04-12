@@ -13,15 +13,15 @@
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/Forward.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
-class StyleBlockRule : public RefCounted<StyleBlockRule> {
-    friend class Parser::Parser;
+class Block : public RefCounted<Block> {
+    friend class Parser;
 
 public:
-    StyleBlockRule();
-    StyleBlockRule(Token, Vector<Parser::ComponentValue>&&);
-    ~StyleBlockRule();
+    Block();
+    Block(Token, Vector<ComponentValue>&&);
+    ~Block();
 
     bool is_curly() const { return m_token.is(Token::Type::OpenCurly); }
     bool is_paren() const { return m_token.is(Token::Type::OpenParen); }
@@ -29,12 +29,12 @@ public:
 
     Token const& token() const { return m_token; }
 
-    Vector<Parser::ComponentValue> const& values() const { return m_values; }
+    Vector<ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
     Token m_token;
-    Vector<Parser::ComponentValue> m_values;
+    Vector<ComponentValue> m_values;
 };
 }

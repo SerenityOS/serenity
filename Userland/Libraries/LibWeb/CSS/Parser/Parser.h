@@ -16,11 +16,11 @@
 #include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
+#include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Ratio.h>
@@ -193,7 +193,7 @@ private:
     template<typename T>
     [[nodiscard]] ComponentValue consume_a_component_value(TokenStream<T>&);
     template<typename T>
-    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+    NonnullRefPtr<Block> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
     NonnullRefPtr<Function> consume_a_function(TokenStream<T>&);
 
