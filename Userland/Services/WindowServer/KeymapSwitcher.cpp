@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Timur Sultanov <SultanovTS@yandex.ru>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/JsonObject.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibKeyboard/Keymap.h>
 #include <WindowServer/KeymapSwitcher.h>
 #include <spawn.h>
 #include <unistd.h>
@@ -21,7 +23,7 @@ KeymapSwitcher::KeymapSwitcher()
         refresh();
     };
 
-    MUST(m_file_watcher->add_watch(m_keyboard_config, Core::FileWatcherEvent::Type::ContentModified));
+    MUST(m_file_watcher->add_watch(Keyboard::Keymap::config_file_path(), Core::FileWatcherEvent::Type::ContentModified));
 
     refresh();
 }
@@ -30,13 +32,9 @@ void KeymapSwitcher::refresh()
 {
     m_keymaps.clear();
 
-    auto mapper_config(Core::ConfigFile::open(m_keyboard_config).release_value_but_fixme_should_propagate_errors());
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
-
-    auto keymaps_vector = keymaps.split(',');
-
+    auto keymaps_vector = Keyboard::Keymap::read_all().release_value_but_fixme_should_propagate_errors();
     for (auto& keymap : keymaps_vector) {
-        m_keymaps.append(keymap);
+        m_keymaps.append(keymap.name());
     }
 
     if (m_keymaps.is_empty()) {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <LibCore/System.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibKeyboard/Keymap.h>
 #include <LibMain/Main.h>
 #include <signal.h>
 #include <string.h>
@@ -25,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
-    TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
+    TRY(Core::System::unveil(Keyboard::Keymap::config_file_path(), "r"));
     TRY(Core::System::unveil("/dev", "rw"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/proc/keymap", "r"));

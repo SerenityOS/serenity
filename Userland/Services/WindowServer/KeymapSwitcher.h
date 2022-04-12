@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Timur Sultanov <SultanovTS@yandex.ru>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,8 +38,6 @@ private:
     void setkeymap(AK::String const&);
 
     RefPtr<Core::FileWatcher> m_file_watcher;
-
-    char const* m_keyboard_config = "/etc/Keyboard.ini";
 };
 
 }

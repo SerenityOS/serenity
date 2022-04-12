@@ -40,5 +40,5 @@ set(SOURCES
 )
 
 serenity_bin(WindowServer)
-target_link_libraries(WindowServer LibCore LibGfx LibThreading LibIPC LibMain)
+target_link_libraries(WindowServer LibCore LibGfx LibKeyboard LibThreading LibIPC LibMain)
 serenity_install_headers(Services/WindowServer)

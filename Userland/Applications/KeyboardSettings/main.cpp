@@ -8,9 +8,9 @@
 
 #include "KeyboardSettingsWidget.h"
 #include <LibCore/System.h>
-#include <LibKeyboard/Keymap.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/SettingsWindow.h>
+#include <LibKeyboard/Keymap.h>
 #include <LibMain/Main.h>
 
 // Including this after to avoid LibIPC errors
