@@ -2517,7 +2517,7 @@ RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(V
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
 {
-    auto& property_name = declaration.name();
+    auto property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
     if (property_id == PropertyID::Invalid) {
