@@ -9,6 +9,7 @@
 #include <AK/Hex.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
@@ -28,6 +29,7 @@ public:
         Double,
         ASCII,
         UTF8,
+        UTF16,
         __Count
     };
 
@@ -96,6 +98,8 @@ public:
             return "ASCII";
         case UTF8:
             return "UTF-8";
+        case UTF16:
+            return "UTF-16";
         default:
             return "";
         }
@@ -135,6 +139,12 @@ public:
                 auto utf8_view = Utf8View(m_values.at(index.row()));
                 if (utf8_view.validate())
                     return static_cast<i32>(utf8_view.byte_length());
+                return 0;
+            }
+            case UTF16: {
+                auto utf16_view = Utf16View(utf8_to_utf16(m_values.at(index.row())));
+                if (utf16_view.validate())
+                    return static_cast<i32>(utf16_view.length_in_code_units() * 2);
                 return 0;
             }
             default:
