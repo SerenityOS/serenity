@@ -20,14 +20,14 @@ public:
     Declaration();
     ~Declaration();
 
-    String const& name() const { return m_name; }
+    StringView name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
     Important importance() const { return m_important; }
 
     String to_string() const;
 
 private:
-    String m_name;
+    FlyString m_name;
     Vector<ComponentValue> m_values;
     Important m_important { Important::No };
 };
