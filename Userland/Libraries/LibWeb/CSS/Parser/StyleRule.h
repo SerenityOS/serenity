@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/Block.h>
@@ -31,13 +32,13 @@ public:
 
     Vector<ComponentValue> const& prelude() const { return m_prelude; }
     RefPtr<Block const> block() const { return m_block; }
-    String const& at_rule_name() const { return m_at_rule_name; }
+    StringView at_rule_name() const { return m_at_rule_name; }
 
     String to_string() const;
 
 private:
     Type const m_type;
-    String m_at_rule_name;
+    FlyString m_at_rule_name;
     Vector<ComponentValue> m_prelude;
     RefPtr<Block> m_block;
 };
