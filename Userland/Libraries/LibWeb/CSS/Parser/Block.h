@@ -16,11 +16,12 @@
 namespace Web::CSS::Parser {
 
 class Block : public RefCounted<Block> {
-    friend class Parser;
-
 public:
-    Block();
-    Block(Token, Vector<ComponentValue>&&);
+    static NonnullRefPtr<Block> create(Token token, Vector<ComponentValue>&& values)
+    {
+        return adopt_ref(*new Block(move(token), move(values)));
+    }
+
     ~Block();
 
     bool is_curly() const { return m_token.is(Token::Type::OpenCurly); }
@@ -34,6 +35,7 @@ public:
     String to_string() const;
 
 private:
+    Block(Token, Vector<ComponentValue>&&);
     Token m_token;
     Vector<ComponentValue> m_values;
 };
