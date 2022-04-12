@@ -26,6 +26,7 @@ public:
         UnsignedLong,
         Float,
         Double,
+        ASCII,
         __Count
     };
 
@@ -89,6 +90,8 @@ public:
             return "Float";
         case Double:
             return "Double";
+        case ASCII:
+            return "ASCII";
         default:
             return "";
         }
@@ -111,6 +114,7 @@ public:
             switch (selected_type) {
             case SignedByte:
             case UnsignedByte:
+            case ASCII:
                 return 1;
             case SignedShort:
             case UnsignedShort:
