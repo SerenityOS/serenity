@@ -1,6 +1,7 @@
 set(SOURCES
     CharacterMap.cpp
     CharacterMapFile.cpp
+    Keymap.cpp
 )
 
 serenity_lib(LibKeyboard keyboard)
