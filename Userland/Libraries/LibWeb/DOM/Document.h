@@ -67,6 +67,9 @@ public:
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
 
+    String url_string() const { return m_url.to_string(); }
+    String document_uri() const { return m_url.to_string(); }
+
     Origin origin() const;
     void set_origin(Origin const& origin);
 
