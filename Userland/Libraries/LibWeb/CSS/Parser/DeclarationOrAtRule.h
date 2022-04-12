@@ -9,10 +9,10 @@
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 class DeclarationOrAtRule {
-    friend class Parser::Parser;
+    friend class Parser;
 
 public:
     explicit DeclarationOrAtRule(RefPtr<StyleRule> at);
