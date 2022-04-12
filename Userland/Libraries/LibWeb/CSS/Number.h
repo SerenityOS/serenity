@@ -7,14 +7,11 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibWeb/Forward.h>
 #include <math.h>
 
 namespace Web::CSS {
 
 class Number {
-    friend class Parser::Tokenizer;
-
 public:
     enum class Type {
         Number,
