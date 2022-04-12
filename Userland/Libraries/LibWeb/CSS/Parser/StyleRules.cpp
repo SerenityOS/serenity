@@ -44,7 +44,7 @@ StyleFunctionRule::StyleFunctionRule(String name)
 {
 }
 
-StyleFunctionRule::StyleFunctionRule(String name, Vector<ComponentValue>&& values)
+StyleFunctionRule::StyleFunctionRule(String name, Vector<Parser::ComponentValue>&& values)
     : m_name(move(name))
     , m_values(move(values))
 {

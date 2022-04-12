@@ -12,9 +12,11 @@
 #include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
-
 class StyleBlockRule;
 class StyleFunctionRule;
+}
+
+namespace Web::CSS::Parser {
 
 // https://www.w3.org/TR/css-syntax-3/#component-value
 class ComponentValue {
