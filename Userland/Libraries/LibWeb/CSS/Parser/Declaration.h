@@ -14,10 +14,8 @@
 namespace Web::CSS::Parser {
 
 class Declaration {
-    friend class Parser;
-
 public:
-    Declaration();
+    Declaration(FlyString name, Vector<ComponentValue> values, Important);
     ~Declaration();
 
     StringView name() const { return m_name; }

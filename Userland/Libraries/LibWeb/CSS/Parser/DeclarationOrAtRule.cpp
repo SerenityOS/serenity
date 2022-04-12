@@ -32,7 +32,7 @@ String DeclarationOrAtRule::to_string() const
         builder.append(m_at->to_string());
         break;
     case DeclarationType::Declaration:
-        builder.append(m_declaration.to_string());
+        builder.append(m_declaration->to_string());
         break;
     }
 
