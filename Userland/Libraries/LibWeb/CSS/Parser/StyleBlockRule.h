@@ -20,11 +20,7 @@ class StyleBlockRule : public RefCounted<StyleBlockRule> {
 
 public:
     StyleBlockRule();
-    explicit StyleBlockRule(Token token, Vector<Parser::ComponentValue>&& values)
-        : m_token(move(token))
-        , m_values(move(values))
-    {
-    }
+    StyleBlockRule(Token, Vector<Parser::ComponentValue>&&);
     ~StyleBlockRule();
 
     bool is_curly() const { return m_token.is(Token::Type::OpenCurly); }

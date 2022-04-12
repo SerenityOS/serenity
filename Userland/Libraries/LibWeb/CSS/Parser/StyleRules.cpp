@@ -33,9 +33,6 @@ StyleRule::StyleRule(StyleRule::Type type)
 }
 StyleRule::~StyleRule() = default;
 
-StyleBlockRule::StyleBlockRule() = default;
-StyleBlockRule::~StyleBlockRule() = default;
-
 Declaration::Declaration() = default;
 Declaration::~Declaration() = default;
 
@@ -83,17 +80,6 @@ String StyleRule::to_string() const
         builder.append(m_block->to_string());
     else
         builder.append(';');
-
-    return builder.to_string();
-}
-
-String StyleBlockRule::to_string() const
-{
-    StringBuilder builder;
-
-    builder.append(m_token.bracket_string());
-    append_with_to_string(builder, " ", m_values);
-    builder.append(m_token.bracket_mirror_string());
 
     return builder.to_string();
 }
