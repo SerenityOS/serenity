@@ -138,4 +138,28 @@ void HTMLImageElement::set_height(unsigned height)
     set_attribute(HTML::AttributeNames::height, String::number(height));
 }
 
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalwidth
+unsigned HTMLImageElement::natural_width() const
+{
+    // Return the density-corrected intrinsic width of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available.
+    if (m_image_loader.has_image())
+        return m_image_loader.width();
+
+    // ...or else 0.
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalheight
+unsigned HTMLImageElement::natural_height() const
+{
+    // Return the density-corrected intrinsic height of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available.
+    if (m_image_loader.has_image())
+        return m_image_loader.height();
+
+    // ...or else 0.
+    return 0;
+}
+
 }
