@@ -162,7 +162,7 @@ bool RunWindow::run_via_launch(String const& run_input)
 
 String RunWindow::history_file_path()
 {
-    return LexicalPath::canonicalized_path(String::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
+    return LexicalPath::canonicalized_path(String::formatted("{}/{}", Core::StandardPaths::history_directory(), "Run.txt"));
 }
 
 void RunWindow::load_history()

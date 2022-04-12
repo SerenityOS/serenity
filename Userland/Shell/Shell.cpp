@@ -1131,7 +1131,7 @@ String Shell::get_history_path()
 {
     if (auto histfile = getenv("HISTFILE"))
         return { histfile };
-    return String::formatted("{}/.history", home);
+    return String::formatted("{}/.history/Shell.txt", home);
 }
 
 String Shell::escape_token_for_single_quotes(StringView token)
