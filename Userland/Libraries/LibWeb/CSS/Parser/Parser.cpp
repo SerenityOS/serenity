@@ -1932,8 +1932,10 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
 
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
-    Declaration declaration;
-    declaration.m_name = ((Token)token).ident();
+    // NOTE: We create a fully-initialized Declaration just before returning it instead.
+    FlyString declaration_name = ((Token)token).ident();
+    Vector<ComponentValue> declaration_values;
+    Important declaration_important = Important::No;
 
     // 1. While the next input token is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
@@ -1958,18 +1960,18 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
         }
-        declaration.m_values.append(consume_a_component_value(tokens));
+        declaration_values.append(consume_a_component_value(tokens));
     }
 
     // 5. If the last two non-<whitespace-token>s in the declaration’s value are a <delim-token>
     //    with the value "!" followed by an <ident-token> with a value that is an ASCII case-insensitive
     //    match for "important", remove them from the declaration’s value and set the declaration’s
     //    important flag to true.
-    if (declaration.m_values.size() >= 2) {
+    if (declaration_values.size() >= 2) {
         // Walk backwards from the end until we find "important"
         Optional<size_t> important_index;
-        for (size_t i = declaration.m_values.size() - 1; i > 0; i--) {
-            auto value = declaration.m_values[i];
+        for (size_t i = declaration_values.size() - 1; i > 0; i--) {
+            auto value = declaration_values[i];
             if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important")) {
                 important_index = i;
                 break;
@@ -1983,7 +1985,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         if (important_index.has_value()) {
             Optional<size_t> bang_index;
             for (size_t i = important_index.value() - 1; i > 0; i--) {
-                auto value = declaration.m_values[i];
+                auto value = declaration_values[i];
                 if (value.is(Token::Type::Delim) && value.token().delim() == '!') {
                     bang_index = i;
                     break;
@@ -1994,24 +1996,24 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
             }
 
             if (bang_index.has_value()) {
-                declaration.m_values.remove(important_index.value());
-                declaration.m_values.remove(bang_index.value());
-                declaration.m_important = Important::Yes;
+                declaration_values.remove(important_index.value());
+                declaration_values.remove(bang_index.value());
+                declaration_important = Important::Yes;
             }
         }
     }
 
     // 6. While the last token in the declaration’s value is a <whitespace-token>, remove that token.
-    while (!declaration.m_values.is_empty()) {
-        auto maybe_whitespace = declaration.m_values.last();
+    while (!declaration_values.is_empty()) {
+        auto maybe_whitespace = declaration_values.last();
         if (!(maybe_whitespace.is(Token::Type::Whitespace))) {
             break;
         }
-        declaration.m_values.take_last();
+        declaration_values.take_last();
     }
 
     // 7. Return the declaration.
-    return declaration;
+    return Declaration { move(declaration_name), move(declaration_values), move(declaration_important) };
 }
 
 // 5.4.5. Consume a list of declarations

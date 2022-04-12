@@ -36,7 +36,7 @@ public:
     Declaration const& declaration() const
     {
         VERIFY(is_declaration());
-        return m_declaration;
+        return *m_declaration;
     }
 
     String to_string() const;
@@ -44,7 +44,7 @@ public:
 private:
     DeclarationType m_type;
     RefPtr<StyleRule> m_at;
-    Declaration m_declaration;
+    Optional<Declaration> m_declaration;
 };
 
 }
