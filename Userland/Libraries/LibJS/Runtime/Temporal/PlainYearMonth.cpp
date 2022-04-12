@@ -233,7 +233,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
 
     // 3. Let year be ! PadISOYear(yearMonth.[[ISOYear]]).
-    // 4. Let month be yearMonth.[[ISOMonth]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 4. Let month be ToZeroPaddedDecimalString(yearMonth.[[ISOMonth]], 2).
     // 5. Let result be the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and month.
     auto result = String::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
 
@@ -242,7 +242,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
 
     // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
     if (show_calendar == "always"sv || calendar_id != "iso8601") {
-        // a. Let day be yearMonth.[[ISODay]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+        // a. Let day be ToZeroPaddedDecimalString(yearMonth.[[ISODay]], 2).
         // b. Set result to the string-concatenation of result, the code unit 0x002D (HYPHEN-MINUS), and day.
         result = String::formatted("{}-{:02}", result, year_month.iso_day());
     }
