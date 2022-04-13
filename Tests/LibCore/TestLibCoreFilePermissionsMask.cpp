@@ -106,3 +106,13 @@ TEST_CASE(file_permission_mask_parse)
     mask = Core::FilePermissionsMask::parse("z+rw");
     EXPECT(mask.is_error());
 }
+
+TEST_CASE(file_sticky_bit_mask_parse) {
+    auto numeric_mask = Core::FilePermissionsMask::parse("1750"sv);
+    auto symbolic_mask_other = Core::FilePermissionsMask::parse("u+rwx,g+rx,o+t");
+    auto symbolic_mask_plain = Core::FilePermissionsMask::parse("u+rwx,g+rx,+t");
+
+    EXPECT_EQ(numeric_mask.value().apply(0), 01750);
+    EXPECT_EQ(symbolic_mask_other.value().apply(0), 01750);
+    EXPECT_EQ(symbolic_mask_plain.value().apply(0), 01750);
+}
