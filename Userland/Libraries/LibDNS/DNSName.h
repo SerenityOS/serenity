@@ -14,6 +14,7 @@ namespace DNS {
 
 class DNSName {
 public:
+    DNSName() = default;
     DNSName(String const&);
 
     static DNSName parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);

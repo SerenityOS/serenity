@@ -9,6 +9,7 @@
 #include "DNSName.h"
 #include <AK/Format.h>
 #include <AK/String.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace DNS {
@@ -33,6 +34,7 @@ enum class DNSRecordClass : u16 {
 
 class DNSAnswer {
 public:
+    DNSAnswer() = default;
     DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush);
 
     DNSName const& name() const { return m_name; }
@@ -46,6 +48,9 @@ public:
 
     bool has_expired() const;
 
+    unsigned hash() const;
+    bool operator==(DNSAnswer const&) const;
+
 private:
     DNSName m_name;
     DNSRecordType m_type { 0 };
@@ -57,6 +62,13 @@ private:
 };
 
 }
+
+template<>
+struct AK::Traits<DNS::DNSAnswer> : public GenericTraits<DNS::DNSAnswer> {
+    static constexpr bool is_trivial() { return false; }
+    static unsigned hash(DNS::DNSAnswer a) { return a.hash(); }
+};
+
 template<>
 struct AK::Formatter<DNS::DNSRecordType> : StandardFormatter {
     Formatter() = default;
