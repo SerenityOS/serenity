@@ -14,9 +14,8 @@ if command -v wslpath >/dev/null; then
     QEMU_INSTALL_DIR=$(PowerShell.exe -Command Get-ItemPropertyValue 'HKLM:\SOFTWARE\QEMU' -Name Install_Dir)
 
     if [ -z "$QEMU_INSTALL_DIR" ]; then
-        if [ "$KVM_SUPPORT" -eq "0" ]; then
-            die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_IMG_BIN and SERENITY_QEMU_BIN if it is already installed."
-        fi
+        echo "die: Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_IMG_BIN and SERENITY_QEMU_BIN if it is already installed."
+        exit 1
     else
         KVM_SUPPORT="0"
         QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
@@ -38,5 +37,6 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
     fi
 fi
 
+export KVM_SUPPORT
 export SERENITY_QEMU_IMG_BIN
 export SERENITY_QEMU_BIN
