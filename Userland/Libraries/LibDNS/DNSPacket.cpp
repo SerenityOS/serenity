@@ -14,7 +14,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
-namespace LookupServer {
+namespace DNS {
 
 void DNSPacket::add_question(DNSQuestion const& question)
 {

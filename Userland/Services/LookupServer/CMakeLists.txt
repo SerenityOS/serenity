@@ -8,9 +8,6 @@ compile_ipc(LookupServer.ipc LookupServerEndpoint.h)
 compile_ipc(LookupClient.ipc LookupClientEndpoint.h)
 
 set(SOURCES
-    DNSAnswer.cpp
-    DNSName.cpp
-    DNSPacket.cpp
     DNSServer.cpp
     LookupServer.cpp
     LookupServerEndpoint.h
@@ -21,4 +18,4 @@ set(SOURCES
 )
 
 serenity_bin(LookupServer)
-target_link_libraries(LookupServer LibCore LibIPC LibMain)
+target_link_libraries(LookupServer LibCore LibDNS LibIPC LibMain)

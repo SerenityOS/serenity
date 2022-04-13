@@ -10,7 +10,7 @@
 #include <AK/Vector.h>
 #include <ctype.h>
 
-namespace LookupServer {
+namespace DNS {
 
 DNSName::DNSName(String const& name)
 {

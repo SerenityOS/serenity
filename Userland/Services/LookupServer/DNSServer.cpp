@@ -5,11 +5,13 @@
  */
 
 #include "DNSServer.h"
-#include "DNSPacket.h"
 #include "LookupServer.h"
 #include <AK/IPv4Address.h>
+#include <LibDNS/DNSPacket.h>
 
 namespace LookupServer {
+
+using namespace DNS;
 
 DNSServer::DNSServer(Object* parent)
     : Core::UDPServer(parent)
