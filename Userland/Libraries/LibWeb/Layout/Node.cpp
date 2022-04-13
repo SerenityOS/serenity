@@ -363,7 +363,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     }
     computed_values.set_background_color(computed_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
-    computed_values.set_box_sizing(computed_style.box_sizing());
+    if (auto box_sizing = computed_style.box_sizing(); box_sizing.has_value())
+        computed_values.set_box_sizing(box_sizing.release_value());
 
     if (auto maybe_font_variant = computed_style.font_variant(); maybe_font_variant.has_value())
         computed_values.set_font_variant(maybe_font_variant.release_value());
