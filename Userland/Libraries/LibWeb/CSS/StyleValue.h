@@ -72,22 +72,6 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     VERIFY_NOT_REACHED();
 }
 
-constexpr StringView to_string(Repeat value)
-{
-    switch (value) {
-    case Repeat::NoRepeat:
-        return "no-repeat"sv;
-    case Repeat::Repeat:
-        return "repeat"sv;
-    case Repeat::Round:
-        return "round"sv;
-    case Repeat::Space:
-        return "space"sv;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
 enum class TransformFunction {
     Matrix,
     Translate,
