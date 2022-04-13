@@ -173,7 +173,7 @@ void Shape::ensure_property_table() const
     }
     transition_chain.append(*this);
 
-    for (auto const& shape : transition_chain) {
+    for (auto const& shape : transition_chain.in_reverse()) {
         if (!shape.m_property_key.is_valid()) {
             // Ignore prototype transitions as they don't affect the key map.
             continue;
