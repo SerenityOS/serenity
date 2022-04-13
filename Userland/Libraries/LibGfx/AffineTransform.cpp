@@ -21,20 +21,14 @@ bool AffineTransform::is_identity_or_translation() const
     return a() == 1 && b() == 0 && c() == 0 && d() == 1;
 }
 
-static float hypotenuse(float x, float y)
-{
-    // FIXME: This won't handle overflow :(
-    return sqrtf(x * x + y * y);
-}
-
 float AffineTransform::x_scale() const
 {
-    return hypotenuse(m_values[0], m_values[1]);
+    return AK::hypot(m_values[0], m_values[1]);
 }
 
 float AffineTransform::y_scale() const
 {
-    return hypotenuse(m_values[2], m_values[3]);
+    return AK::hypot(m_values[2], m_values[3]);
 }
 
 FloatPoint AffineTransform::scale() const
@@ -124,8 +118,9 @@ AffineTransform& AffineTransform::multiply(AffineTransform const& other)
 
 AffineTransform& AffineTransform::rotate_radians(float radians)
 {
-    float sin_angle = sinf(radians);
-    float cos_angle = cosf(radians);
+    float sin_angle;
+    float cos_angle;
+    AK::sincos(radians, sin_angle, cos_angle);
     AffineTransform rotation(cos_angle, sin_angle, -sin_angle, cos_angle, 0, 0);
     multiply(rotation);
     return *this;
