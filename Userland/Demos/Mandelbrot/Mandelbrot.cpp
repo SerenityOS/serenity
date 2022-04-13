@@ -16,8 +16,10 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibGfx/QOIWriter.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 
@@ -206,10 +208,16 @@ private:
     }
 };
 
+enum class ImageType {
+    BMP,
+    PNG,
+    QOI
+};
+
 class Mandelbrot : public GUI::Frame {
     C_OBJECT(Mandelbrot)
 
-    void export_image(String const& export_path);
+    void export_image(String const& export_path, ImageType image_type);
 
     enum class Zoom {
         In,
@@ -358,17 +366,32 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
     m_set.resize(event.size());
 }
 
-void Mandelbrot::export_image(String const& export_path)
+void Mandelbrot::export_image(String const& export_path, ImageType image_type)
 {
     m_set.resize(Gfx::IntSize { 1920, 1080 });
-    auto png = Gfx::PNGWriter::encode(m_set.bitmap());
+    ByteBuffer encoded_data;
+    switch (image_type) {
+    case ImageType::BMP: {
+        Gfx::BMPWriter dumper;
+        encoded_data = dumper.dump(m_set.bitmap());
+        break;
+    }
+    case ImageType::PNG:
+        encoded_data = Gfx::PNGWriter::encode(m_set.bitmap());
+        break;
+    case ImageType::QOI:
+        encoded_data = Gfx::QOIWriter::encode(m_set.bitmap());
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
     m_set.resize(size());
     auto file = fopen(export_path.characters(), "wb");
     if (!file) {
         GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot", GUI::MessageBox::Type::Error);
         return;
     }
-    fwrite(png.data(), 1, png.size(), file);
+    fwrite(encoded_data.data(), 1, encoded_data.size(), file);
     fclose(file);
     GUI::MessageBox::show(window(), "Image was successfully exported.", "Mandelbrot", GUI::MessageBox::Type::Information);
 }
@@ -392,13 +415,33 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto mandelbrot = TRY(window->try_set_main_widget<Mandelbrot>());
 
     auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors(),
+
+    auto& export_submenu = file_menu->add_submenu("&Export");
+
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP",
+        [&](GUI::Action&) {
+            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
+            if (!export_path.has_value())
+                return;
+            mandelbrot->export_image(export_path.value(), ImageType::BMP);
+        })));
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
             Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
                 return;
-            mandelbrot->export_image(export_path.value());
+            mandelbrot->export_image(export_path.value(), ImageType::PNG);
         })));
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI",
+        [&](GUI::Action&) {
+            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
+            if (!export_path.has_value())
+                return;
+            mandelbrot->export_image(export_path.value(), ImageType::QOI);
+        })));
+
+    export_submenu.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png")));
+
     TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
