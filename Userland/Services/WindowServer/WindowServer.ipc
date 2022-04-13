@@ -159,6 +159,6 @@ endpoint WindowServer
     remove_window_stealing_for_client(i32 client_id, i32 window_id) =|
     remove_window_stealing(i32 window_id) =|
 
-    set_mouse_size(int size) =|
-    get_mouse_size() => (int size)
+    set_cursor_size(int size) =|
+    get_cursor_size() => (int size)
 }

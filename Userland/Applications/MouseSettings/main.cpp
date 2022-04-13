@@ -7,8 +7,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MouseWidget.h"
 #include "CursorWidget.h"
+#include "MouseWidget.h"
 #include "ThemeWidget.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>

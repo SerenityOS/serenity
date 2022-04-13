@@ -15,7 +15,7 @@
 #include <WindowServer/WindowManager.h>
 
 constexpr double speed_slider_scale = 100.0;
-constexpr int default_mouse_size = 1;
+constexpr int default_cursor_size = 1;
 
 CursorWidget::CursorWidget()
 {
@@ -36,7 +36,7 @@ CursorWidget::CursorWidget()
     m_size_slider->on_change = [&](int value) {
         m_size_label->set_text(String::formatted("{}x", value));
     };
-    int const size_slider_value = GUI::ConnectionToWindowServer::the().get_mouse_size();
+    int const size_slider_value = GUI::ConnectionToWindowServer::the().get_cursor_size();
     m_size_slider->set_value(size_slider_value);
 };
 
@@ -44,11 +44,11 @@ void CursorWidget::apply_settings()
 {
     float const factor = m_speed_slider->value() / speed_slider_scale;
     GUI::ConnectionToWindowServer::the().async_set_mouse_acceleration(factor);
-    GUI::ConnectionToWindowServer::the().async_set_mouse_size(m_size_slider->value());
+    GUI::ConnectionToWindowServer::the().async_set_cursor_size(m_size_slider->value());
 }
 
 void CursorWidget::reset_default_values()
 {
     m_speed_slider->set_value(speed_slider_scale);
-    m_size_slider->set_value(default_mouse_size);
+    m_size_slider->set_value(default_cursor_size);
 }

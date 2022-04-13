@@ -81,7 +81,7 @@ void WindowManager::reload_config()
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_mouse_size = m_config->read_num_entry("Mouse", "Size", 2);
+    m_cursor_size = m_config->read_num_entry("Mouse", "Size", 2);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
@@ -289,10 +289,10 @@ int WindowManager::double_click_speed() const
     return m_double_click_speed;
 }
 
-void WindowManager::set_mouse_size(int size)
+void WindowManager::set_cursor_size(int size)
 {
     VERIFY(size >= mouse_size_min && size <= mouse_size_max);
-    m_mouse_size = size;
+    m_cursor_size = size;
     dbgln("Saving mouse size {} to config file at {}", size, m_config->filename());
     m_config->write_num_entry("Mouse", "Size", size);
     if (auto result = m_config->sync(); result.is_error())
@@ -301,7 +301,7 @@ void WindowManager::set_mouse_size(int size)
 
 float WindowManager::mouse_size() const
 {
-    return m_mouse_size;
+    return m_cursor_size;
 }
 
 void WindowManager::set_buttons_switched(bool switched)
