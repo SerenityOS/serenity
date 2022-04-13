@@ -46,6 +46,8 @@ ErrorOr<void> generate_header_file(JsonObject& enums_data, Core::Stream::File& f
     generator.append(R"~~~(
 #pragma once
 
+#include <AK/Optional.h>
+
 namespace Web::CSS {
 
 enum class ValueID;
@@ -58,6 +60,8 @@ enum class ValueID;
 
         auto enum_generator = generator.fork();
         enum_generator.set("name:titlecase", title_casify(name));
+        enum_generator.set("name:snakecase", snake_casify(name));
+
         enum_generator.appendln("enum class @name:titlecase@ {");
 
         for (auto& member : members.values()) {
@@ -70,7 +74,9 @@ enum class ValueID;
             member_generator.appendln("    @member:titlecase@,");
         }
 
-        enum_generator.appendln("};\n");
+        enum_generator.appendln("};");
+        enum_generator.appendln("Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID);");
+        enum_generator.append("\n");
     });
 
     generator.appendln("}");
@@ -86,12 +92,47 @@ ErrorOr<void> generate_implementation_file(JsonObject& enums_data, Core::Stream:
 
     generator.append(R"~~~(
 #include <LibWeb/CSS/Enums.h>
+#include <LibWeb/CSS/ValueID.h>
 
 namespace Web::CSS {
 )~~~");
 
-    // TODO: Generate some things!
-    (void)enums_data;
+    enums_data.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_array());
+        auto& members = value.as_array();
+
+        auto enum_generator = generator.fork();
+        enum_generator.set("name:titlecase", title_casify(name));
+        enum_generator.set("name:snakecase", snake_casify(name));
+
+        enum_generator.append(R"~~~(
+Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
+{
+    switch (value_id) {)~~~");
+
+        for (auto& member : members.values()) {
+            auto member_generator = enum_generator.fork();
+            auto member_name = member.to_string();
+            if (member_name.contains('=')) {
+                auto parts = member_name.split_view('=');
+                member_generator.set("valueid:titlecase", title_casify(parts[0]));
+                member_generator.set("member:titlecase", title_casify(parts[1]));
+            } else {
+                member_generator.set("valueid:titlecase", title_casify(member_name));
+                member_generator.set("member:titlecase", title_casify(member_name));
+            }
+            member_generator.append(R"~~~(
+    case ValueID::@valueid:titlecase@:
+        return @name:titlecase@::@member:titlecase@;)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+    default:
+        return {};
+    }
+}
+)~~~");
+    });
 
     generator.appendln("}");
 
