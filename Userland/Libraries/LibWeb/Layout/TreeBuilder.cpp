@@ -146,9 +146,9 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         return;
 
     auto insert_node_into_inline_or_block_ancestor = [this](auto& node, bool prepend = false) {
-        if (node->is_inline() && !(node->is_inline_block() && m_parent_stack.last()->computed_values().display().is_flex_inside())) {
+        if (node->is_inline() && !(node->is_inline_block() && m_ancestor_stack.last().computed_values().display().is_flex_inside())) {
             // Inlines can be inserted into the nearest ancestor.
-            auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last());
+            auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
             if (prepend)
                 insertion_point.prepend_child(*node);
             else
@@ -157,9 +157,9 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         } else {
             // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
             auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
-                for (ssize_t i = m_parent_stack.size() - 1; i >= 0; --i) {
-                    if (!m_parent_stack[i]->is_inline() || m_parent_stack[i]->is_inline_block())
-                        return *m_parent_stack[i];
+                for (auto& ancestor : m_ancestor_stack.in_reverse()) {
+                    if (!ancestor.is_inline() || ancestor.is_inline_block())
+                        return ancestor;
                 }
                 VERIFY_NOT_REACHED();
             }();
@@ -178,7 +178,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
     } else if (layout_node->is_svg_box()) {
-        m_parent_stack.last()->append_child(*layout_node);
+        m_ancestor_stack.last().append_child(*layout_node);
     } else {
         insert_node_into_inline_or_block_ancestor(layout_node);
     }
