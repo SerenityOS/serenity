@@ -291,7 +291,7 @@ int WindowManager::double_click_speed() const
 
 void WindowManager::set_cursor_size(int size)
 {
-    VERIFY(size >= mouse_size_min && size <= mouse_size_max);
+    VERIFY(size >= cursor_size_min && size <= cursor_size_max);
     m_cursor_size = size;
     dbgln("Saving mouse size {} to config file at {}", size, m_config->filename());
     m_config->write_num_entry("Cursor", "Size", size);
@@ -299,7 +299,7 @@ void WindowManager::set_cursor_size(int size)
         dbgln("Failed to save config file: {}", result.error());
 }
 
-float WindowManager::mouse_size() const
+float WindowManager::cursor_size() const
 {
     return m_cursor_size;
 }
