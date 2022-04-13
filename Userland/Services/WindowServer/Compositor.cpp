@@ -840,7 +840,7 @@ Gfx::IntRect Compositor::current_cursor_rect() const
 {
     auto& wm = WindowManager::the();
     auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
-    return { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()).translated(-(wm.mouse_size() - 1.0f) * 2.0f), current_cursor.size() * wm.mouse_size() };
+    return { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot() * wm.mouse_size()), current_cursor.size() * wm.mouse_size() };
 }
 
 void Compositor::invalidate_cursor(bool compose_immediately)

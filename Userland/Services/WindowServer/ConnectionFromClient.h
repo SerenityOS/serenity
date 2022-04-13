@@ -163,7 +163,7 @@ private:
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_cursor_size(int) override;
-    virtual Messages::WindowServer::GetMouseSizeResponse get_cursor_size() override;
+    virtual Messages::WindowServer::GetCursorSizeResponse get_cursor_size() override;
     virtual void set_buttons_switched(bool) override;
     virtual Messages::WindowServer::GetButtonsSwitchedResponse get_buttons_switched() override;
     virtual void set_window_modified(i32, bool) override;

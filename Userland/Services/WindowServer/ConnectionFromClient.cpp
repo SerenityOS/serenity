@@ -979,13 +979,13 @@ Messages::WindowServer::GetDoubleClickSpeedResponse ConnectionFromClient::get_do
 void ConnectionFromClient::set_cursor_size(int size)
 {
     if (size < mouse_size_min || size > mouse_size_max) {
-        did_misbehave("SetMouseSize with bad size");
+        did_misbehave("SetCursorSize with bad size");
         return;
     }
     WindowManager::the().set_cursor_size(size);
 }
 
-Messages::WindowServer::GetMouseSizeResponse ConnectionFromClient::get_cursor_size()
+Messages::WindowServer::GetCursorSizeResponse ConnectionFromClient::get_cursor_size()
 {
     return WindowManager::the().mouse_size();
 }
