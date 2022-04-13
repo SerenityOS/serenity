@@ -231,11 +231,33 @@ if [ -z "$SERENITY_ETHERNET_DEVICE_TYPE" ]; then
   SERENITY_ETHERNET_DEVICE_TYPE="e1000"
 fi
 
+if [ -z "$SERENITY_NETDEV" ]; then
+  # If SERENITY_NETDEV is set, use it as-is. Otherwise, if SERENITY_NETDEV_TAP is set we'll configure it to use the
+  # tap interface specified, or fall back to user, which may specify custom port forwarding through SERENITY_NETDEV_USER
+  if [ "$SERENITY_NETDEV_TAP" != "" ]; then
+    SERENITY_NETDEV="tap,id=breh,ifname=$SERENITY_NETDEV_TAP"
+    # FIXME: Is there a way around having to use sudo?
+    SERENITY_QEMU_USE_SUDO=1
+  else
+    SERENITY_NETDEV="user,id=breh,${SERENITY_NETDEV_USER:-hostfwd=tcp:${SERENITY_HOST_IP}:8888-10.0.2.15:8888,hostfwd=tcp:${SERENITY_HOST_IP}:8823-10.0.2.15:23,hostfwd=tcp:${SERENITY_HOST_IP}:8000-10.0.2.15:8000,hostfwd=tcp:${SERENITY_HOST_IP}:2222-10.0.2.15:22}"
+  fi
+fi
+
+SERENITY_NETDEV="${SERENITY_NETDEV:-user,id=breh,}"
+
+run_qemu() {
+  if [ -z "$SERENITY_QEMU_USE_SUDO" ]; then
+    "$SERENITY_QEMU_BIN" "$@"
+  else
+    sudo "$SERENITY_QEMU_BIN" "$@"
+  fi
+}
+
 if [ "$SERENITY_ARCH" = "aarch64" ]; then
     SERENITY_NETFLAGS=
     SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE=
 else
-    SERENITY_NETFLAGS="-netdev user,id=breh,hostfwd=tcp:${SERENITY_HOST_IP}:8888-10.0.2.15:8888,hostfwd=tcp:${SERENITY_HOST_IP}:8823-10.0.2.15:23,hostfwd=tcp:${SERENITY_HOST_IP}:8000-10.0.2.15:8000,hostfwd=tcp:${SERENITY_HOST_IP}:2222-10.0.2.15:22"
+    SERENITY_NETFLAGS="-netdev $SERENITY_NETDEV"
     SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE="
     $SERENITY_NETFLAGS
     -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh
@@ -389,10 +411,10 @@ if [ "$SERENITY_RUN" = "b" ]; then
         [ -z "$SERENITY_SOURCE_DIR" ] && die 'SERENITY_SOURCE_DIR not set or empty'
         SERENITY_BOCHSRC="$SERENITY_SOURCE_DIR/Meta/bochsrc"
     }
-    "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
+    run_qemu -q -f "$SERENITY_BOCHSRC"
 elif [ "$SERENITY_RUN" = "qn" ]; then
     # Meta/run.sh qn: qemu without network
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ARGS \
         -device $SERENITY_ETHERNET_DEVICE_TYPE \
         $SERENITY_KERNEL_AND_INITRD \
@@ -401,7 +423,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo ip tuntap del dev tap0 mode tap || true
     sudo ip tuntap add dev tap0 mode tap user "$(id -u)"
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -412,7 +434,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
     sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
     # Meta/run.sh qgrub: qemu with grub/extlinux
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -420,7 +442,7 @@ elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
 elif [ "$SERENITY_RUN" = "q35" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU Q35 machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
@@ -429,7 +451,7 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
 elif [ "$SERENITY_RUN" = "isapc" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ISA_PC_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
@@ -439,7 +461,7 @@ elif [ "$SERENITY_RUN" = "isapc" ]; then
 elif [ "$SERENITY_RUN" = "microvm" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU MicroVM machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_MICROVM_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
@@ -448,18 +470,18 @@ elif [ "$SERENITY_RUN" = "microvm" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "q35grub" ]; then
     # Meta/run.sh q35grub: qemu (q35 chipset) with SerenityOS, using a grub disk image
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE
 elif [ "$SERENITY_RUN" = "limine" ]; then
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
     echo "Running QEMU in CI"
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_EXTRA_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         -m $SERENITY_RAM_SIZE \
@@ -476,7 +498,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 else
     # Meta/run.sh: qemu with user networking
-    "$SERENITY_QEMU_BIN" \
+    run_qemu \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
