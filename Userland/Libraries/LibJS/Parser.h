@@ -43,7 +43,14 @@ class ScopePusher;
 
 class Parser {
 public:
-    explicit Parser(Lexer lexer, Program::Type program_type = Program::Type::Script);
+    struct EvalInitialState {
+        bool in_eval_function_context { false };
+        bool allow_super_property_lookup { false };
+        bool allow_super_constructor_call { false };
+        bool in_class_field_initializer { false };
+    };
+
+    explicit Parser(Lexer lexer, Program::Type program_type = Program::Type::Script, Optional<EvalInitialState> initial_state_for_eval = {});
 
     NonnullRefPtr<Program> parse_program(bool starts_in_strict_mode = false);
 
@@ -300,6 +307,7 @@ private:
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };
         bool in_function_context { false };
+        bool in_eval_function_context { false }; // This controls if we allow new.target or not. Note that eval("return") is not allowed, so we have to have a separate state variable for eval.
         bool in_formal_parameter_context { false };
         bool in_generator_function_context { false };
         bool await_expression_is_valid { false };

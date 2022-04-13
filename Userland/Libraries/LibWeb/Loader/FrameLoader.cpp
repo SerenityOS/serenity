@@ -187,6 +187,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (type == Type::IFrame)
         return true;
 
+    auto* document = browsing_context().active_document();
+    if (document && document->has_active_favicon())
+        return true;
+
     if (url.protocol() == "http" || url.protocol() == "https") {
         AK::URL favicon_url;
         favicon_url.set_protocol(url.protocol());
@@ -197,6 +201,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         ResourceLoader::the().load(
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
+                // Always fetch the current document
+                auto* document = this->browsing_context().active_document();
+                if (document && document->has_active_favicon())
+                    return;
                 dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
                 if (data.is_empty())
                     return;
@@ -211,6 +219,11 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                 load_favicon(favicon_bitmap);
             },
             [this](auto&, auto) {
+                // Always fetch the current document
+                auto* document = this->browsing_context().active_document();
+                if (document && document->has_active_favicon())
+                    return;
+
                 load_favicon();
             });
     } else {

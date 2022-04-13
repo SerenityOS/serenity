@@ -12,7 +12,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, LinkLabel)

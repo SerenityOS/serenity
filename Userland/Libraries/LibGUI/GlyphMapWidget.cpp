@@ -9,8 +9,8 @@
 
 #include "GlyphMapWidget.h"
 #include <LibGUI/Painter.h>
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/Emoji.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, GlyphMapWidget);

@@ -95,8 +95,6 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
         case CSSRule::Type::Supports:
             static_cast<CSSSupportsRule const&>(rule).for_each_effective_style_rule(callback);
             break;
-        case CSSRule::Type::__Count:
-            VERIFY_NOT_REACHED();
         }
     }
 }
@@ -133,8 +131,6 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
                 any_media_queries_changed_match_state = true;
             break;
         }
-        case CSSRule::Type::__Count:
-            VERIFY_NOT_REACHED();
         }
     }
 

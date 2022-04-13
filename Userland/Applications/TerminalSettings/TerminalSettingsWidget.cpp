@@ -24,8 +24,8 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <LibVT/TerminalWidget.h>
 #include <spawn.h>

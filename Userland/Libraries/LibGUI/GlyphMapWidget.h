@@ -11,7 +11,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
-#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font/BitmapFont.h>
 #include <LibUnicode/CharacterTypes.h>
 
 namespace GUI {

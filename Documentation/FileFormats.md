@@ -62,7 +62,7 @@ See also [`Userland/Services/Taskbar/main.cpp`](../Userland/Services/Taskbar/mai
 ## Font (`*.font` files)
 
 These files contain bitmap definitions of fonts, either varying-width or fixed-width.
-The header definition can be found in `Gfx::FontFileHeader` in [`Userland/Libraries/LibGfx/BitmapFont.cpp`](../Userland/Libraries/LibGfx/BitmapFont.cpp).
+The header definition can be found in `Gfx::FontFileHeader` in [`Userland/Libraries/LibGfx/Font/BitmapFont.cpp`](../Userland/Libraries/LibGfx/Font/BitmapFont.cpp).
 Most prominently, the first four bytes contain the filemagic: `!Fnt`.
 
 ## GUI Markup Language (`*.gml` files)

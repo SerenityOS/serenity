@@ -108,7 +108,7 @@ void InlineLevelIterator::compute_next()
 
 void InlineLevelIterator::skip_to_next()
 {
-    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block() && !m_next_node->is_out_of_flow(m_inline_formatting_context))
+    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block() && !m_next_node->is_out_of_flow(m_inline_formatting_context) && !is<ReplacedBox>(m_next_node))
         enter_node_with_box_model_metrics(static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*m_next_node));
 
     m_current_node = m_next_node;

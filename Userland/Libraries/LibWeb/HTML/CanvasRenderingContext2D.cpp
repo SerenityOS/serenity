@@ -182,9 +182,10 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     if (!painter)
         return {};
 
-    if (m_drawing_state.transform.is_identity()) {
-        // There's no affine transformation to worry about, we can just call Gfx::Painter.
+    if (m_drawing_state.transform.is_identity_or_translation()) {
+        painter->translate(m_drawing_state.transform.e(), m_drawing_state.transform.f());
         painter->draw_scaled_bitmap(destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+        painter->translate(-m_drawing_state.transform.e(), -m_drawing_state.transform.f());
     } else {
         // The context has an affine transform, we have to draw through it!
 
@@ -689,6 +690,46 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(d
 NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
 {
     return CanvasGradient::create_conic(start_angle, x, y);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-transform
+void CanvasRenderingContext2D::transform(double a, double b, double c, double d, double e, double f)
+{
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
+        return;
+
+    // 2. Replace the current transformation matrix with the result of multiplying the current transformation matrix with the matrix described by:
+    //    a c e
+    //    b d f
+    //    0 0 1
+    m_drawing_state.transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
+void CanvasRenderingContext2D::set_transform(double a, double b, double c, double d, double e, double f)
+{
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
+        return;
+
+    // 2. Reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+
+    // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
+    transform(a, b, c, d, e, f);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-resettransform
+void CanvasRenderingContext2D::reset_transform()
+{
+    // The resetTransform() method, when invoked, must reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+}
+
+void CanvasRenderingContext2D::clip()
+{
+    // FIXME: Implement.
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument

@@ -181,42 +181,6 @@ String File::real_path_for(String const& filename)
     return real_path;
 }
 
-bool File::ensure_parent_directories(String const& path)
-{
-    char* parent_buffer = strdup(path.characters());
-    ScopeGuard free_buffer = [parent_buffer] { free(parent_buffer); };
-
-    char const* parent = dirname(parent_buffer);
-
-    return ensure_directories(parent);
-}
-
-bool File::ensure_directories(String const& path)
-{
-    VERIFY(path.starts_with("/"));
-
-    int saved_errno = 0;
-    ScopeGuard restore_errno = [&saved_errno] { errno = saved_errno; };
-
-    int rc = mkdir(path.characters(), 0755);
-    saved_errno = errno;
-
-    if (rc == 0 || errno == EEXIST)
-        return true;
-
-    if (errno != ENOENT)
-        return false;
-
-    bool ok = ensure_parent_directories(path);
-    saved_errno = errno;
-    if (!ok)
-        return false;
-
-    rc = mkdir(path.characters(), 0755);
-    saved_errno = errno;
-    return rc == 0;
-}
-
 String File::current_working_directory()
 {
     char* cwd = getcwd(nullptr, 0);

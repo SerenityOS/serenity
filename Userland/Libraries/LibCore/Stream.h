@@ -205,6 +205,8 @@ public:
 
     virtual ~File() override { close(); }
 
+    static int open_mode_to_options(OpenMode mode);
+
 private:
     File(OpenMode mode)
         : m_mode(mode)

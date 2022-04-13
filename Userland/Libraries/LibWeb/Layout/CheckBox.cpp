@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/CheckBox.h>

@@ -111,3 +111,8 @@ void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* p
 {
     g_gl_context->gl_get_tex_parameter_integerv(target, level, pname, params);
 }
+
+void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    g_gl_context->gl_copy_tex_sub_image_2d(target, level, xoffset, yoffset, x, y, width, height);
+}

@@ -30,8 +30,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             if (value.equals_ignoring_case("center"sv) || value.equals_ignoring_case("middle"sv)) {
                 style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebCenter));
             } else {
-                CSS::Parser parser(CSS::ParsingContext(document()), value.view());
-                if (auto parsed_value = parser.parse_as_css_value(CSS::PropertyID::TextAlign))
+                if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::TextAlign))
                     style.set_property(CSS::PropertyID::TextAlign, parsed_value.release_nonnull());
             }
             return;

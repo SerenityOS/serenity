@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/Proxy.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
@@ -200,6 +201,14 @@ bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 bool encode(Encoder& encoder, Core::DateTime const& datetime)
 {
     encoder << static_cast<i64>(datetime.timestamp());
+    return true;
+}
+
+bool encode(Encoder& encoder, Core::ProxyData const& proxy)
+{
+    encoder << to_underlying(proxy.type);
+    encoder << proxy.host_ipv4;
+    encoder << proxy.port;
     return true;
 }
 

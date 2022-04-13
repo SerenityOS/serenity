@@ -15,4 +15,14 @@ HTMLPreElement::HTMLPreElement(DOM::Document& document, DOM::QualifiedName quali
 
 HTMLPreElement::~HTMLPreElement() = default;
 
+void HTMLPreElement::apply_presentational_hints(CSS::StyleProperties& style) const
+{
+    HTMLElement::apply_presentational_hints(style);
+
+    for_each_attribute([&](auto const& name, auto const&) {
+        if (name.equals_ignoring_case(HTML::AttributeNames::wrap))
+            style.set_property(CSS::PropertyID::WhiteSpace, CSS::IdentifierStyleValue::create(CSS::ValueID::PreWrap));
+    });
+}
+
 }

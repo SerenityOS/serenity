@@ -398,10 +398,16 @@ Parser::ParserState::ParserState(Lexer l, Program::Type program_type)
     current_token = lexer.next();
 }
 
-Parser::Parser(Lexer lexer, Program::Type program_type)
+Parser::Parser(Lexer lexer, Program::Type program_type, Optional<EvalInitialState> initial_state_for_eval)
     : m_state(move(lexer), program_type)
     , m_program_type(program_type)
 {
+    if (initial_state_for_eval.has_value()) {
+        m_state.in_eval_function_context = initial_state_for_eval->in_eval_function_context;
+        m_state.allow_super_property_lookup = initial_state_for_eval->allow_super_property_lookup;
+        m_state.allow_super_constructor_call = initial_state_for_eval->allow_super_constructor_call;
+        m_state.in_class_field_initializer = initial_state_for_eval->in_class_field_initializer;
+    }
 }
 
 Associativity Parser::operator_associativity(TokenType type) const
@@ -1448,7 +1454,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         auto new_start = position();
         auto new_target_result = try_parse_new_target_expression();
         if (!new_target_result.is_null()) {
-            if (!m_state.in_function_context && !m_state.in_class_static_init_block)
+            if (!m_state.in_function_context && !m_state.in_eval_function_context && !m_state.in_class_static_init_block)
                 syntax_error("'new.target' not allowed outside of a function", new_start);
             return { new_target_result.release_nonnull() };
         }

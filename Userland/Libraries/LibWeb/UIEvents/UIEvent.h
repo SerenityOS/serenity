@@ -35,6 +35,7 @@ public:
 
     HTML::Window const* view() const { return m_view; }
     int detail() const { return m_detail; }
+    virtual u32 which() const { return 0; }
 
     void init_ui_event(String const& type, bool bubbles, bool cancelable, HTML::Window* view, int detail)
     {

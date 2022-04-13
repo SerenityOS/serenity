@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name,
 
 ErrorOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<Syscall::SC_set_coredump_metadata_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.key.length == 0 || params.key.length > 16 * KiB)

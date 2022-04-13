@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=dialog
-version=1.3-20210324
+version=1.3-20220117
 depends=("ncurses")
 files="https://invisible-mirror.net/archives/dialog/dialog-${version}.tgz dialog-${version}.tgz
 https://invisible-mirror.net/archives/dialog/dialog-${version}.tgz.asc dialog-${version}.tgz.asc"

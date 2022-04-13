@@ -14,7 +14,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/StylePainter.h>
 #include <stdlib.h>
 

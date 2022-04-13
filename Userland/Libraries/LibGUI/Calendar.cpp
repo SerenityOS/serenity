@@ -10,7 +10,7 @@
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, Calendar);

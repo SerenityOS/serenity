@@ -13,7 +13,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/TextBox.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 
 REGISTER_WIDGET(PixelPaint, LayerPropertiesWidget);
 

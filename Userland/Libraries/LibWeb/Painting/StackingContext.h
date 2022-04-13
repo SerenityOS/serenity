@@ -20,6 +20,8 @@ public:
     StackingContext* parent() { return m_parent; }
     StackingContext const* parent() const { return m_parent; }
 
+    PaintableBox const& paintable() const { return *m_box.paint_box(); }
+
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,
         Floats,

@@ -28,7 +28,7 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)>);
 
 class ParsedInitialArguments {
 public:
-    ParsedInitialArguments(Vector<char const*>&, StringView placeholder);
+    ParsedInitialArguments(Vector<String>&, StringView placeholder);
 
     void for_each_joined_argument(StringView, Function<void(String const&)>) const;
 
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
     char const* placeholder = nullptr;
     bool split_with_nulls = false;
     char const* specified_delimiter = "\n";
-    Vector<char const*> arguments;
+    Vector<String> arguments;
     bool verbose = false;
     char const* file_to_read = "-";
     int max_lines_for_one_command = 0;
@@ -238,18 +238,16 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     return true;
 }
 
-ParsedInitialArguments::ParsedInitialArguments(Vector<char const*>& arguments, StringView placeholder)
+ParsedInitialArguments::ParsedInitialArguments(Vector<String>& arguments, StringView placeholder)
 {
     m_all_parts.ensure_capacity(arguments.size());
     bool some_argument_has_placeholder = false;
 
-    for (auto argument : arguments) {
-        StringView arg { argument };
-
+    for (auto arg : arguments) {
         if (placeholder.is_empty()) {
             m_all_parts.append({ arg });
         } else {
-            auto parts = arg.split_view(placeholder, true);
+            auto parts = arg.view().split_view(placeholder, true);
             some_argument_has_placeholder = some_argument_has_placeholder || parts.size() > 1;
             m_all_parts.append(move(parts));
         }

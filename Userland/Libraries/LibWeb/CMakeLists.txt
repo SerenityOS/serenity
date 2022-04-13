@@ -44,8 +44,13 @@ set(SOURCES
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
+    CSS/Parser/Block.cpp
+    CSS/Parser/ComponentValue.cpp
+    CSS/Parser/Declaration.cpp
+    CSS/Parser/DeclarationOrAtRule.cpp
+    CSS/Parser/Function.cpp
     CSS/Parser/Parser.cpp
-    CSS/Parser/StyleRules.cpp
+    CSS/Parser/Rule.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
     CSS/Percentage.cpp
@@ -280,6 +285,7 @@ set(SOURCES
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
     Loader/LoadRequest.cpp
+    Loader/ProxyMappings.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     MimeSniff/MimeType.cpp
@@ -316,6 +322,9 @@ set(SOURCES
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
+    SVG/SVGClipPathElement.cpp
+    SVG/SVGDefsElement.cpp
+    SVG/SVGElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
@@ -580,6 +589,8 @@ libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
 libweb_js_wrapper(ResizeObserver/ResizeObserver)
 libweb_js_wrapper(SVG/SVGAnimatedLength)
+libweb_js_wrapper(SVG/SVGClipPathElement)
+libweb_js_wrapper(SVG/SVGDefsElement)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)

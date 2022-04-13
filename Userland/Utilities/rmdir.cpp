@@ -15,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath"));
 
-    Vector<char const*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, "Directories to remove", "paths");
@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int status = 0;
     for (auto path : paths) {
-        int rc = rmdir(path);
+        int rc = rmdir(path.characters());
         if (rc < 0) {
             perror("rmdir");
             status = 1;

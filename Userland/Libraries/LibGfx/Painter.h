@@ -11,7 +11,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>

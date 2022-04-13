@@ -11,11 +11,7 @@
 
 namespace Web::CSS {
 
-class Tokenizer;
-
 class Number {
-    friend class Tokenizer;
-
 public:
     enum class Type {
         Number,

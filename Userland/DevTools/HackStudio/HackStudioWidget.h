@@ -27,7 +27,7 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibThreading/Thread.h>
 
 namespace HackStudio {

@@ -19,12 +19,12 @@
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
+#include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
-#include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -34,7 +34,7 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
     dbgln_if(CSS_PARSER_DEBUG, "Parse error (CSS) {}", location);
 }
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 ParsingContext::ParsingContext(DOM::Document const& document, Optional<AK::URL> const url)
     : m_document(&document)
@@ -1520,12 +1520,12 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
 // 5.4.1. Consume a list of rules
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 template<typename T>
-NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
+NonnullRefPtrVector<Rule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
 {
     // To consume a list of rules, given a top-level flag:
 
     // Create an initially empty list of rules.
-    NonnullRefPtrVector<StyleRule> rules;
+    NonnullRefPtrVector<Rule> rules;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1588,7 +1588,7 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
 // 5.4.2. Consume an at-rule
 // https://www.w3.org/TR/css-syntax-3/#consume-at-rule
 template<typename T>
-NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
+NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
     // To consume an at-rule:
 
@@ -1597,8 +1597,10 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
-    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::At);
-    rule->m_at_rule_name = ((Token)name_ident).at_keyword();
+    // NOTE: We create the Rule fully initialized when we return it instead.
+    FlyString at_rule_name = ((Token)name_ident).at_keyword();
+    Vector<ComponentValue> prelude;
+    RefPtr<Block> block;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1607,21 +1609,21 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
         // <semicolon-token>
         if (token.is(Token::Type::Semicolon)) {
             // Return the at-rule.
-            return rule;
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the at-rule.
             log_parse_error();
-            return rule;
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the at-rule’s block. Return the at-rule.
-            rule->m_block = consume_a_simple_block(tokens);
-            return rule;
+            block = consume_a_simple_block(tokens);
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1629,8 +1631,8 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the at-rule’s block. Return the at-rule.
-                rule->m_block = component_value.block();
-                return rule;
+                block = component_value.block();
+                return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
             }
         }
 
@@ -1639,7 +1641,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             // Reconsume the current input token.
             tokens.reconsume_current_input_token();
             // Consume a component value. Append the returned value to the at-rule’s prelude.
-            rule->m_prelude.append(consume_a_component_value(tokens));
+            prelude.append(consume_a_component_value(tokens));
         }
     }
 }
@@ -1647,12 +1649,14 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 // 5.4.3. Consume a qualified rule
 // https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
 template<typename T>
-RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
+RefPtr<Rule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 {
     // To consume a qualified rule:
 
     // Create a new qualified rule with its prelude initially set to an empty list, and its value initially set to nothing.
-    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::Qualified);
+    // NOTE: We create the Rule fully initialized when we return it instead.
+    Vector<ComponentValue> prelude;
+    RefPtr<Block> block;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1668,8 +1672,8 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
         // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the qualified rule’s block. Return the qualified rule.
-            rule->m_block = consume_a_simple_block(tokens);
-            return rule;
+            block = consume_a_simple_block(tokens);
+            return Rule::make_qualified_rule(move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1677,8 +1681,8 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
             ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the qualified rule’s block. Return the qualified rule.
-                rule->m_block = component_value.block();
-                return rule;
+                block = component_value.block();
+                return Rule::make_qualified_rule(move(prelude), move(block));
             }
         }
 
@@ -1688,11 +1692,9 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
             tokens.reconsume_current_input_token();
 
             // Consume a component value. Append the returned value to the qualified rule’s prelude.
-            rule->m_prelude.append(consume_a_component_value(tokens));
+            prelude.append(consume_a_component_value(tokens));
         }
     }
-
-    return rule;
 }
 
 // 5.4.4. Consume a style block’s contents
@@ -1821,7 +1823,7 @@ ComponentValue Parser::consume_a_component_value(TokenStream<T>& tokens)
 // 5.4.8. Consume a simple block
 // https://www.w3.org/TR/css-syntax-3/#consume-simple-block
 template<typename T>
-NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
+NonnullRefPtr<Block> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the current input token has already been checked
     // to be an <{-token>, <[-token>, or <(-token>.
@@ -1834,8 +1836,9 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 
     // Create a simple block with its associated token set to the current input token
     // and with its value initially set to an empty list.
-    auto block = make_ref_counted<StyleBlockRule>();
-    block->m_token = tokens.current_token();
+    // NOTE: We create the Block fully initialized when we return it instead.
+    Token block_token = tokens.current_token();
+    Vector<ComponentValue> block_values;
 
     // Repeatedly consume the next input token and process it as follows:
     for (;;) {
@@ -1844,13 +1847,13 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
         // ending token
         if (token.is(ending_token)) {
             // Return the block.
-            return block;
+            return Block::create(move(block_token), move(block_values));
         }
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the block.
             log_parse_error();
-            return block;
+            return Block::create(move(block_token), move(block_values));
         }
 
         // anything else
@@ -1859,7 +1862,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
             tokens.reconsume_current_input_token();
 
             // Consume a component value and append it to the value of the block.
-            block->m_values.append(consume_a_component_value(tokens));
+            block_values.empend(consume_a_component_value(tokens));
         }
     }
 }
@@ -1867,7 +1870,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 // 5.4.9. Consume a function
 // https://www.w3.org/TR/css-syntax-3/#consume-function
 template<typename T>
-NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
+NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the current input token has already been checked to be a <function-token>.
     auto name_ident = tokens.current_token();
@@ -1877,7 +1880,9 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
-    auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).function());
+    // NOTE: We create the Function fully initialized when we return it instead.
+    FlyString function_name = ((Token)name_ident).function();
+    Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
     for (;;) {
@@ -1886,14 +1891,14 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
         // <)-token>
         if (token.is(Token::Type::CloseParen)) {
             // Return the function.
-            return function;
+            return Function::create(move(function_name), move(function_values));
         }
 
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the function.
             log_parse_error();
-            return function;
+            return Function::create(move(function_name), move(function_values));
         }
 
         // anything else
@@ -1902,7 +1907,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
             tokens.reconsume_current_input_token();
 
             // Consume a component value and append the returned value to the function’s value.
-            function->m_values.append(consume_a_component_value(tokens));
+            function_values.append(consume_a_component_value(tokens));
         }
     }
 }
@@ -1931,8 +1936,10 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
 
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
-    Declaration declaration;
-    declaration.m_name = ((Token)token).ident();
+    // NOTE: We create a fully-initialized Declaration just before returning it instead.
+    FlyString declaration_name = ((Token)token).ident();
+    Vector<ComponentValue> declaration_values;
+    Important declaration_important = Important::No;
 
     // 1. While the next input token is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
@@ -1957,18 +1964,18 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
         }
-        declaration.m_values.append(consume_a_component_value(tokens));
+        declaration_values.append(consume_a_component_value(tokens));
     }
 
     // 5. If the last two non-<whitespace-token>s in the declaration’s value are a <delim-token>
     //    with the value "!" followed by an <ident-token> with a value that is an ASCII case-insensitive
     //    match for "important", remove them from the declaration’s value and set the declaration’s
     //    important flag to true.
-    if (declaration.m_values.size() >= 2) {
+    if (declaration_values.size() >= 2) {
         // Walk backwards from the end until we find "important"
         Optional<size_t> important_index;
-        for (size_t i = declaration.m_values.size() - 1; i > 0; i--) {
-            auto value = declaration.m_values[i];
+        for (size_t i = declaration_values.size() - 1; i > 0; i--) {
+            auto value = declaration_values[i];
             if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important")) {
                 important_index = i;
                 break;
@@ -1982,7 +1989,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         if (important_index.has_value()) {
             Optional<size_t> bang_index;
             for (size_t i = important_index.value() - 1; i > 0; i--) {
-                auto value = declaration.m_values[i];
+                auto value = declaration_values[i];
                 if (value.is(Token::Type::Delim) && value.token().delim() == '!') {
                     bang_index = i;
                     break;
@@ -1993,24 +2000,24 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
             }
 
             if (bang_index.has_value()) {
-                declaration.m_values.remove(important_index.value());
-                declaration.m_values.remove(bang_index.value());
-                declaration.m_important = Important::Yes;
+                declaration_values.remove(important_index.value());
+                declaration_values.remove(bang_index.value());
+                declaration_important = Important::Yes;
             }
         }
     }
 
     // 6. While the last token in the declaration’s value is a <whitespace-token>, remove that token.
-    while (!declaration.m_values.is_empty()) {
-        auto maybe_whitespace = declaration.m_values.last();
+    while (!declaration_values.is_empty()) {
+        auto maybe_whitespace = declaration_values.last();
         if (!(maybe_whitespace.is(Token::Type::Whitespace))) {
             break;
         }
-        declaration.m_values.take_last();
+        declaration_values.take_last();
     }
 
     // 7. Return the declaration.
-    return declaration;
+    return Declaration { move(declaration_name), move(declaration_values), move(declaration_important) };
 }
 
 // 5.4.5. Consume a list of declarations
@@ -2046,7 +2053,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             tokens.reconsume_current_input_token();
 
             // Consume an at-rule. Append the returned rule to the list of declarations.
-            list_of_declarations.append(DeclarationOrAtRule(consume_an_at_rule(tokens)));
+            list_of_declarations.empend(consume_an_at_rule(tokens));
             continue;
         }
 
@@ -2068,7 +2075,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             // Consume a declaration from the temporary list. If anything was returned, append it to the list of declarations.
             auto token_stream = TokenStream(temporary_list);
             if (auto maybe_declaration = consume_a_declaration(token_stream); maybe_declaration.has_value())
-                list_of_declarations.append(DeclarationOrAtRule(maybe_declaration.value()));
+                list_of_declarations.empend(maybe_declaration.value());
 
             continue;
         }
@@ -2105,10 +2112,10 @@ RefPtr<CSSRule> Parser::parse_as_css_rule()
 // 5.3.5. Parse a rule
 // https://www.w3.org/TR/css-syntax-3/#parse-rule
 template<typename T>
-RefPtr<StyleRule> Parser::parse_a_rule(TokenStream<T>& tokens)
+RefPtr<Rule> Parser::parse_a_rule(TokenStream<T>& tokens)
 {
     // To parse a rule from input:
-    RefPtr<StyleRule> rule;
+    RefPtr<Rule> rule;
 
     // 1. Normalize input, and set input to the result.
     // Note: This is done when initializing the Parser.
@@ -2146,7 +2153,7 @@ RefPtr<StyleRule> Parser::parse_a_rule(TokenStream<T>& tokens)
 // 5.3.4. Parse a list of rules
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-rules
 template<typename T>
-NonnullRefPtrVector<StyleRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
+NonnullRefPtrVector<Rule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
     // To parse a list of rules from input:
 
@@ -2366,7 +2373,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     return {};
 }
 
-RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
+RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
 {
     if (rule->is_at_rule()) {
         if (has_ignored_vendor_prefix(rule->at_rule_name())) {
@@ -2516,7 +2523,7 @@ RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(V
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
 {
-    auto& property_name = declaration.name();
+    auto property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
     if (property_id == PropertyID::Invalid) {
@@ -4488,7 +4495,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
     // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
     auto font_format_is_supported = [](StringView name) {
         // The spec requires us to treat opentype and truetype as synonymous.
-        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv))
+        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv, "woff"sv))
             return true;
         return false;
     };
@@ -4938,7 +4945,7 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    auto block_contains_var_or_attr = [](StyleBlockRule const& block, auto&& recurse) -> bool {
+    auto block_contains_var_or_attr = [](Block const& block, auto&& recurse) -> bool {
         for (auto const& token : block.values()) {
             if (token.is_function() && (token.function().name().equals_ignoring_case("var"sv) || token.function().name().equals_ignoring_case("attr"sv)))
                 return true;
@@ -5741,8 +5748,8 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
         return {};
 
-    CSS::Parser parser(context, "");
-    CSS::TokenStream<CSS::ComponentValue> token_stream { tokens };
+    Parser parser(context, "");
+    TokenStream<ComponentValue> token_stream { tokens };
     auto result = parser.parse_css_value(property_id, token_stream);
     if (result.is_error())
         return {};
@@ -5868,59 +5875,59 @@ TimePercentage Parser::Dimension::time_percentage() const
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const& context, StringView css, Optional<AK::URL> location)
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
         return CSS::CSSStyleSheet::create({}, location);
-    CSS::Parser parser(context, css);
+    CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }
 
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css, DOM::Element& element)
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
 {
     if (css.is_empty())
         return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});
-    CSS::Parser parser(context, css);
+    CSS::Parser::Parser parser(context, css);
     return parser.parse_as_style_attribute(element);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
         return {};
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_css_value(property_id);
 }
 
-RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const& context, StringView css_text)
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)
 {
-    CSS::Parser parser(context, css_text);
+    CSS::Parser::Parser parser(context, css_text);
     return parser.parse_as_css_rule();
 }
 
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView selector_text)
+Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
 {
-    CSS::Parser parser(context, selector_text);
+    CSS::Parser::Parser parser(context, selector_text);
     return parser.parse_as_selector();
 }
 
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const& context, StringView string)
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_media_query();
 }
 
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const& context, StringView string)
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_media_query_list();
 }
 
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, StringView string)
+RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& context, StringView string)
 {
     if (string.is_empty())
         return {};
-    CSS::Parser parser(context, string);
+    CSS::Parser::Parser parser(context, string);
     return parser.parse_as_supports();
 }
 

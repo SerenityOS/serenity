@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     int byte_count = -1;
     bool never_print_filenames = false;
     bool always_print_filenames = false;
-    Vector<char const*> files;
+    Vector<String> files;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print the beginning ('head') of a file.");

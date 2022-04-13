@@ -6,23 +6,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/Directory.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <pwd.h>
+#include <sys/types.h>
 
 namespace Core {
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
 {
-    String directory = StandardPaths::config_directory();
-    auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
+    String directory_name = String::formatted("{}/lib", StandardPaths::config_directory());
+    auto directory = TRY(Directory::create(directory_name, Directory::CreateDirectories::Yes));
+    auto path = String::formatted("{}/{}.ini", directory, lib_name);
     return ConfigFile::open(path, allow_altering);
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
 {
-    String directory = StandardPaths::config_directory();
+    auto directory = TRY(Directory::create(StandardPaths::config_directory(), Directory::CreateDirectories::Yes));
     auto path = String::formatted("{}/{}.ini", directory, app_name);
     return ConfigFile::open(path, allow_altering);
 }

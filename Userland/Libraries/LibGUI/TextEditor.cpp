@@ -25,8 +25,8 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/Highlighter.h>
 #include <fcntl.h>
@@ -1444,6 +1444,19 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
         set_cursor(original_cursor_position);
     }
+}
+
+void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
+{
+    auto start = GUI::TextPosition(0, 0);
+    auto last_line_index = line_count() - 1;
+    auto end = GUI::TextPosition(last_line_index, line(last_line_index).length());
+    auto range = GUI::TextRange(start, end);
+    auto normalized_range = range.normalized();
+    execute<ReplaceAllTextCommand>(text, range, "GML Playground Format Text");
+    did_change();
+    set_cursor(normalized_range.start());
+    update();
 }
 
 void TextEditor::cut()

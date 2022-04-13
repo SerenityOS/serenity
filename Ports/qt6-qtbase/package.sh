@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=qt6-qtbase
-version=6.2.2
+version=6.2.3
 workdir=qtbase-everywhere-src-${version}
 useconfigure=true
-files="https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtbase-everywhere-src-${version}.tar.xz qt6-qtbase-${version}.tar.xz 85ab9180180c2eaf84cd11ae4c6d5a6a69f2f8fd7260aaccfd91a3e7e7232c1a"
+files="https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtbase-everywhere-src-${version}.tar.xz qt6-qtbase-${version}.tar.xz 34d6d0072e197241463c417ad72610c3d44e2efd6062868e9a95283103d75df4"
 auth_type="sha256"
 configopts=(
     "-GNinja"

@@ -29,7 +29,7 @@
 
 namespace JS {
 
-ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -46,15 +46,15 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         prototype = global_object.async_generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_object, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
-    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
+    return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_function_length(function_length)
@@ -64,6 +64,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source
     , m_ecmascript_code(ecmascript_code)
     , m_realm(global_object().associated_realm())
     , m_source_text(move(source_text))
+    , m_class_field_initializer_name(move(class_field_initializer_name))
     , m_strict(strict)
     , m_might_need_arguments_object(might_need_arguments_object)
     , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
@@ -626,7 +627,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     TRY(vm.push_execution_context(callee_context, global_object()));
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
-    // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
+    // 14. Return calleeContext.
+    // NOTE: See the comment after step 2 above about how contexts are allocated on the C++ stack.
     return {};
 }
 

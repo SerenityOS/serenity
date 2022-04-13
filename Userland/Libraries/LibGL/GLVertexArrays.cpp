@@ -33,3 +33,8 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, void const* indices
 {
     g_gl_context->gl_draw_elements(mode, count, type, indices);
 }
+
+void glArrayElement(GLint i)
+{
+    g_gl_context->gl_array_element(i);
+}

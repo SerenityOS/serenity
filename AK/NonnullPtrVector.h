@@ -32,7 +32,7 @@ public:
     using ConstIterator = SimpleIterator<const NonnullPtrVector, const T>;
     using Iterator = SimpleIterator<NonnullPtrVector, T>;
     using ReverseIterator = SimpleReverseIterator<NonnullPtrVector, T>;
-    using ReverseConstIterator = SimpleReverseIterator<NonnullPtrVector, T const>;
+    using ReverseConstIterator = SimpleReverseIterator<NonnullPtrVector const, T const>;
 
     ALWAYS_INLINE constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     ALWAYS_INLINE constexpr Iterator begin() { return Iterator::begin(*this); }

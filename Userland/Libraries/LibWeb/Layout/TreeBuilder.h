@@ -26,8 +26,8 @@ private:
 
     void create_layout_tree(DOM::Node&, Context&);
 
-    void push_parent(Layout::NodeWithStyle& node) { m_parent_stack.append(&node); }
-    void pop_parent() { m_parent_stack.take_last(); }
+    void push_parent(Layout::NodeWithStyle& node) { m_ancestor_stack.append(node); }
+    void pop_parent() { m_ancestor_stack.take_last(); }
 
     template<CSS::Display::Internal, typename Callback>
     void for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback);
@@ -41,7 +41,7 @@ private:
     void generate_missing_parents(NodeWithStyle& root);
 
     RefPtr<Layout::Node> m_layout_root;
-    Vector<Layout::NodeWithStyle*> m_parent_stack;
+    Vector<Layout::NodeWithStyle&> m_ancestor_stack;
 };
 
 }

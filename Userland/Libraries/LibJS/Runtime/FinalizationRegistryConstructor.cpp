@@ -50,10 +50,12 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
 
     // 3. Let finalizationRegistry be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistry.prototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
-    // 4. Let fn be the active function object. (NOTE: Not necessary. The active function object is `this`)
+    // 4. Let fn be the active function object.
+    // NOTE: This is not necessary, the active function object is `this`.
     // 5. Set finalizationRegistry.[[Realm]] to fn.[[Realm]].
     // 6. Set finalizationRegistry.[[CleanupCallback]] to HostMakeJobCallback(cleanupCallback).
-    // 7. Set finalizationRegistry.[[Cells]] to a new empty List. (NOTE: This is done inside FinalizationRegistry instead of here)
+    // 7. Set finalizationRegistry.[[Cells]] to a new empty List.
+    // NOTE: This is done inside FinalizationRegistry instead of here.
     // 8. Return finalizationRegistry.
     return TRY(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
 }

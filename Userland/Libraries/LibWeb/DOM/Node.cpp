@@ -78,6 +78,13 @@ Node::~Node()
     deallocate_node_id(m_id);
 }
 
+// https://dom.spec.whatwg.org/#dom-node-baseuri
+String Node::base_uri() const
+{
+    // FIXME: Return this’s node document’s document base URL, serialized.
+    return document().url_string();
+}
+
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {

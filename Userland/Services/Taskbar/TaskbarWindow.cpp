@@ -21,7 +21,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
 #include <stdio.h>

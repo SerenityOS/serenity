@@ -118,6 +118,8 @@ Tab::Tab(BrowserWindow& window)
     else
         m_web_content_view->set_content_filters({});
 
+    m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
+
     auto& go_back_button = toolbar.add_action(window.go_back_action());
     go_back_button.on_context_menu_request = [this](auto& context_menu_event) {
         if (!m_history.can_go_back())
@@ -514,6 +516,11 @@ void Tab::content_filters_changed()
         m_web_content_view->set_content_filters(g_content_filters);
     else
         m_web_content_view->set_content_filters({});
+}
+
+void Tab::proxy_mappings_changed()
+{
+    m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
 }
 
 void Tab::action_entered(GUI::Action& action)

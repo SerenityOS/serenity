@@ -427,8 +427,8 @@ String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
-    // 2. Let hour be hour formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 3. Let minute be minute formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 2. Let hour be ToZeroPaddedDecimalString(hour, 2).
+    // 3. Let minute be ToZeroPaddedDecimalString(minute, 2).
 
     // 4. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
     auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);

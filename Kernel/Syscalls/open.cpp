@@ -69,7 +69,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
 
 ErrorOr<FlatPtr> Process::sys$close(int fd)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
     auto description = TRY(open_file_description(fd));
     auto result = description->close();

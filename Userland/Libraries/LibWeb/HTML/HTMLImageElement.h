@@ -39,6 +39,9 @@ public:
     unsigned height() const;
     void set_height(unsigned);
 
+    unsigned natural_width() const;
+    unsigned natural_height() const;
+
 private:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 

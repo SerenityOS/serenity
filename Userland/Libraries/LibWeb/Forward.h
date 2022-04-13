@@ -92,6 +92,22 @@ class TransformationStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
+
+enum class MediaFeatureID;
+enum class PropertyID;
+enum class ValueID;
+}
+
+namespace Web::CSS::Parser {
+class Block;
+class ComponentValue;
+class Declaration;
+class DeclarationOrAtRule;
+class Function;
+class Parser;
+class Rule;
+class Token;
+class Tokenizer;
 }
 
 namespace Web::DOM {
@@ -296,6 +312,8 @@ class ResizeObserver;
 namespace Web::SVG {
 class SVGAnimatedLength;
 class SVGCircleElement;
+class SVGClipPathElement;
+class SVGDefsElement;
 class SVGElement;
 class SVGEllipseElement;
 class SVGGeometryElement;
@@ -522,6 +540,8 @@ class SubmitEventWrapper;
 class SubtleCryptoWrapper;
 class SVGAnimatedLengthWrapper;
 class SVGCircleElementWrapper;
+class SVGDefsElementWrapper;
+class SVGClipPathElementWrapper;
 class SVGElementWrapper;
 class SVGEllipseElementWrapper;
 class SVGGeometryElementWrapper;

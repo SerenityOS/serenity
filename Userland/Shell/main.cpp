@@ -159,7 +159,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* command_to_run = nullptr;
     char const* file_to_read_from = nullptr;
-    Vector<char const*> script_args;
+    Vector<String> script_args;
     bool skip_rc_files = false;
     char const* format = nullptr;
     bool should_format_live = false;
@@ -228,12 +228,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         shell->cache_path();
     }
 
-    {
-        Vector<String> args;
-        for (auto* arg : script_args)
-            args.empend(arg);
-        shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(args))));
-    }
+    shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(script_args))));
 
     if (command_to_run) {
         dbgln("sh -c '{}'\n", command_to_run);

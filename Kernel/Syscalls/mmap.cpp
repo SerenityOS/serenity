@@ -240,7 +240,8 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         region->set_shared(true);
     if (map_stack)
         region->set_stack(true);
-    region->set_name(move(name));
+    if (name)
+        region->set_name(move(name));
 
     PerformanceManager::add_mmap_perf_event(*this, *region);
 

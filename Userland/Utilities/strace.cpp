@@ -809,7 +809,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio wpath cpath proc exec ptrace sigaction"));
 
-    Vector<char const*> child_argv;
+    Vector<StringView> child_argv;
 
     char const* output_filename = nullptr;
     char const* exclude_syscalls_option = nullptr;
@@ -849,17 +849,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (child_argv.is_empty())
             return Error::from_string_literal("Expected either a pid or some arguments"sv);
 
-        child_argv.append(nullptr);
         auto pid = TRY(Core::System::fork());
 
         if (!pid) {
             TRY(Core::System::ptrace(PT_TRACE_ME, 0, 0, 0));
-
-            int rc = execvp(child_argv.first(), const_cast<char**>(child_argv.data()));
-            if (rc < 0) {
-                perror("execvp");
-                exit(1);
-            }
+            TRY(Core::System::exec(child_argv.first(), child_argv, Core::System::SearchInPath::Yes));
             VERIFY_NOT_REACHED();
         }
 

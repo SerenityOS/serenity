@@ -43,6 +43,7 @@ endpoint WebContentServer
     select_all() =|
 
     set_content_filters(Vector<String> filters) =|
+    set_proxy_mappings(Vector<String> proxies, HashMap<String,size_t> mappings) =|
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(bool has_focus) =|
     set_is_scripting_enabled(bool is_scripting_enabled) =|

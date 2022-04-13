@@ -41,6 +41,7 @@ public:
     GUI::Action& inspect_dom_node_action() { return *m_inspect_dom_node_action; }
 
     void content_filters_changed();
+    void proxy_mappings_changed();
 
 private:
     explicit BrowserWindow(CookieJar&, URL);

@@ -12,7 +12,7 @@
 #include <LibGfx/BitmapMixer.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 #include <LibGfx/Filters/LumaFilter.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 namespace PixelPaint::Filters {
 

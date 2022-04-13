@@ -16,9 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
-static void spawn_command(Vector<char const*> const& command, ByteBuffer const& data, char const* state)
+static void spawn_command(Span<StringView> command, ByteBuffer const& data, char const* state)
 {
     auto pipefd = MUST(Core::System::pipe2(0));
     pid_t pid = MUST(Core::System::fork());
@@ -28,8 +27,8 @@ static void spawn_command(Vector<char const*> const& command, ByteBuffer const& 
         MUST(Core::System::dup2(pipefd[0], 0));
         MUST(Core::System::close(pipefd[0]));
         MUST(Core::System::close(pipefd[1]));
-        setenv("CLIPBOARD_STATE", state, true);
-        execvp(command[0], const_cast<char**>(command.data()));
+        MUST(Core::System::setenv("CLIPBOARD_STATE", state, true));
+        MUST(Core::System::exec(command[0], command, Core::System::SearchInPath::Yes));
         perror("exec");
         exit(1);
     }
@@ -53,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool print_type = false;
     bool no_newline = false;
     bool watch = false;
-    Vector<char const*> watch_command;
+    Vector<StringView> watch_command;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Paste from the clipboard to stdout.");

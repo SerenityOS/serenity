@@ -8,6 +8,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/Proxy.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
@@ -182,6 +183,16 @@ ErrorOr<void> decode(Decoder& decoder, Core::DateTime& datetime)
     i64 timestamp;
     TRY(decoder.decode(timestamp));
     datetime = Core::DateTime::from_timestamp(static_cast<time_t>(timestamp));
+    return {};
+}
+
+ErrorOr<void> decode(Decoder& decoder, Core::ProxyData& data)
+{
+    UnderlyingType<decltype(data.type)> type;
+    TRY(decoder.decode(type));
+    data.type = static_cast<Core::ProxyData::Type>(type);
+    TRY(decoder.decode(data.host_ipv4));
+    TRY(decoder.decode(data.port));
     return {};
 }
 

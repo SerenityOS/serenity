@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<char const*> paths;
+    Vector<String> paths;
     char const* opt_algorithm = nullptr;
 
     Core::ArgsParser args_parser;
@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool fail = false;
     for (auto& path : paths) {
-        auto filepath = (StringView(path) == "-") ? "/dev/stdin" : path;
+        auto filepath = (path == "-") ? "/dev/stdin" : path;
         auto file = Core::File::construct(filepath);
         if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("{}: {}: {}", arguments.strings[0], path, file->error_string());

@@ -32,10 +32,10 @@ public:
         Global,
     };
 
-    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
-    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false);
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static ECMAScriptFunctionObject* create(GlobalObject&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
-    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function);
+    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, PrivateEnvironment* private_scope, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
     virtual void initialize(GlobalObject&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
 
@@ -91,6 +91,8 @@ public:
     // https://html.spec.whatwg.org/multipage/webappapis.html#getting-the-current-value-of-the-event-handler Step 3.11
     void set_script_or_module(ScriptOrModule script_or_module) { m_script_or_module = move(script_or_module); }
 
+    Variant<PropertyKey, PrivateName, Empty> const& class_field_initializer_name() const { return m_class_field_initializer_name; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
@@ -113,20 +115,21 @@ private:
     i32 m_function_length { 0 };
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
-    Environment* m_environment { nullptr };                           // [[Environment]]
-    PrivateEnvironment* m_private_environment { nullptr };            // [[PrivateEnvironment]]
-    Vector<FunctionNode::Parameter> const m_formal_parameters;        // [[FormalParameters]]
-    NonnullRefPtr<Statement> m_ecmascript_code;                       // [[ECMAScriptCode]]
-    Realm* m_realm { nullptr };                                       // [[Realm]]
-    ScriptOrModule m_script_or_module;                                // [[ScriptOrModule]]
-    Object* m_home_object { nullptr };                                // [[HomeObject]]
-    String m_source_text;                                             // [[SourceText]]
-    Vector<InstanceField> m_fields;                                   // [[Fields]]
-    Vector<PrivateElement> m_private_methods;                         // [[PrivateMethods]]
-    ConstructorKind m_constructor_kind : 1 { ConstructorKind::Base }; // [[ConstructorKind]]
-    bool m_strict : 1 { false };                                      // [[Strict]]
-    bool m_is_class_constructor : 1 { false };                        // [[IsClassConstructor]]
-    ThisMode m_this_mode : 2 { ThisMode::Global };                    // [[ThisMode]]
+    Environment* m_environment { nullptr };                                  // [[Environment]]
+    PrivateEnvironment* m_private_environment { nullptr };                   // [[PrivateEnvironment]]
+    Vector<FunctionNode::Parameter> const m_formal_parameters;               // [[FormalParameters]]
+    NonnullRefPtr<Statement> m_ecmascript_code;                              // [[ECMAScriptCode]]
+    Realm* m_realm { nullptr };                                              // [[Realm]]
+    ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]
+    Object* m_home_object { nullptr };                                       // [[HomeObject]]
+    String m_source_text;                                                    // [[SourceText]]
+    Vector<InstanceField> m_fields;                                          // [[Fields]]
+    Vector<PrivateElement> m_private_methods;                                // [[PrivateMethods]]
+    Variant<PropertyKey, PrivateName, Empty> m_class_field_initializer_name; // [[ClassFieldInitializerName]]
+    ConstructorKind m_constructor_kind : 1 { ConstructorKind::Base };        // [[ConstructorKind]]
+    bool m_strict : 1 { false };                                             // [[Strict]]
+    bool m_is_class_constructor : 1 { false };                               // [[IsClassConstructor]]
+    ThisMode m_this_mode : 2 { ThisMode::Global };                           // [[ThisMode]]
 
     bool m_might_need_arguments_object : 1 { true };
     bool m_contains_direct_call_to_eval : 1 { true };

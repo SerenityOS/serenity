@@ -9,7 +9,7 @@
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/CSS/Serialize.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 String Token::to_string() const
 {

@@ -5,6 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 #include "FillPathImplementation.h"
 #include <AK/Function.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -21,8 +25,7 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
     auto corrected_thickness = thickness > 1 ? thickness - 1 : thickness;
     auto size = IntSize(corrected_thickness, corrected_thickness);
     auto plot = [&](int x, int y, float c) {
-        auto center = m_transform.map(Gfx::IntPoint(x, y)).to_type<int>();
-        m_underlying_painter.fill_rect(IntRect::centered_on(center, size), color.with_alpha(color.alpha() * c));
+        m_underlying_painter.fill_rect(IntRect::centered_on({ x, y }, size), color.with_alpha(color.alpha() * c));
     };
 
     auto integer_part = [](float x) { return floorf(x); };
@@ -109,7 +112,9 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
         }
     };
 
-    draw_line(actual_from.x(), actual_from.y(), actual_to.x(), actual_to.y());
+    auto mapped_from = m_transform.map(actual_from);
+    auto mapped_to = m_transform.map(actual_to);
+    draw_line(mapped_from.x(), mapped_from.y(), mapped_to.x(), mapped_to.y());
 }
 
 void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
