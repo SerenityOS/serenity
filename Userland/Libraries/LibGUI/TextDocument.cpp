@@ -884,10 +884,11 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range)
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
+    , m_action_text(action_text)
 {
 }
 
@@ -916,7 +917,7 @@ bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
 
 String ReplaceAllTextCommand::action_text() const
 {
-    return "Playground format text";
+    return m_action_text;
 }
 
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)
