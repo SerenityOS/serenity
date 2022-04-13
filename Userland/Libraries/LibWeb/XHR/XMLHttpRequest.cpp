@@ -390,8 +390,8 @@ static bool is_forbidden_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-method
 static bool is_method(String const& method)
 {
-    Regex<ECMA262Parser> regex { R"~~~(^.*["(),\/:;<=>?@\\[\]{}]+.*$)~~~" };
-    return !regex.has_match(method);
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    return regex.has_match(method);
 }
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
