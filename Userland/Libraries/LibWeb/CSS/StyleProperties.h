@@ -74,7 +74,7 @@ public:
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
     Vector<CSS::ShadowData> box_shadow() const;
-    CSS::BoxSizing box_sizing() const;
+    Optional<CSS::BoxSizing> box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
     Optional<CSS::FontVariant> font_variant() const;

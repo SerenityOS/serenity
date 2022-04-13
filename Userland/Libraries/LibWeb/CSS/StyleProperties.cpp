@@ -961,7 +961,7 @@ Vector<ShadowData> StyleProperties::text_shadow() const
     return shadow(PropertyID::TextShadow);
 }
 
-CSS::BoxSizing StyleProperties::box_sizing() const
+Optional<CSS::BoxSizing> StyleProperties::box_sizing() const
 {
     auto value = property(CSS::PropertyID::BoxSizing);
     if (!value.has_value())
