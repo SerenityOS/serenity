@@ -270,7 +270,7 @@ bool Context::verify_chain(StringView host) const
 
         auto maybe_root_certificate = root_certificates.get(issuer_string);
         if (maybe_root_certificate.has_value()) {
-            auto root_certificate = maybe_root_certificate.release_value();
+            auto& root_certificate = *maybe_root_certificate;
             auto verification_correct = verify_certificate_pair(cert, root_certificate);
 
             if (!verification_correct) {
@@ -280,37 +280,37 @@ bool Context::verify_chain(StringView host) const
 
             // Root certificate reached, and correctly verified, so we can stop now
             return true;
-        } else {
-            if (subject_string == issuer_string) {
-                dbgln("verify_chain: Non-root self-signed certificate");
-                return options.allow_self_signed_certificates;
-            }
-            if ((cert_index + 1) >= local_chain->size()) {
-                dbgln("verify_chain: No trusted root certificate found before end of certificate chain");
-                dbgln("verify_chain: Last certificate in chain was signed by {}", issuer_string);
-                return false;
-            }
+        }
 
-            auto parent_certificate = local_chain->at(cert_index + 1);
-            if (issuer_string != parent_certificate.subject_identifier_string()) {
-                dbgln("verify_chain: Next certificate in the chain is not the issuer of this certificate");
-                return false;
-            }
+        if (subject_string == issuer_string) {
+            dbgln("verify_chain: Non-root self-signed certificate");
+            return options.allow_self_signed_certificates;
+        }
+        if ((cert_index + 1) >= local_chain->size()) {
+            dbgln("verify_chain: No trusted root certificate found before end of certificate chain");
+            dbgln("verify_chain: Last certificate in chain was signed by {}", issuer_string);
+            return false;
+        }
 
-            if (!(parent_certificate.is_allowed_to_sign_certificate && parent_certificate.is_certificate_authority)) {
-                dbgln("verify_chain: {} is not marked as certificate authority", issuer_string);
-                return false;
-            }
-            if (parent_certificate.path_length_constraint.has_value() && cert_index > parent_certificate.path_length_constraint.value()) {
-                dbgln("verify_chain: Path length for certificate exceeded");
-                return false;
-            }
+        auto parent_certificate = local_chain->at(cert_index + 1);
+        if (issuer_string != parent_certificate.subject_identifier_string()) {
+            dbgln("verify_chain: Next certificate in the chain is not the issuer of this certificate");
+            return false;
+        }
 
-            bool verification_correct = verify_certificate_pair(cert, parent_certificate);
-            if (!verification_correct) {
-                dbgln("verify_chain: Signature inconsistent, {} was not signed by {}", subject_string, issuer_string);
-                return false;
-            }
+        if (!(parent_certificate.is_allowed_to_sign_certificate && parent_certificate.is_certificate_authority)) {
+            dbgln("verify_chain: {} is not marked as certificate authority", issuer_string);
+            return false;
+        }
+        if (parent_certificate.path_length_constraint.has_value() && cert_index > parent_certificate.path_length_constraint.value()) {
+            dbgln("verify_chain: Path length for certificate exceeded");
+            return false;
+        }
+
+        bool verification_correct = verify_certificate_pair(cert, parent_certificate);
+        if (!verification_correct) {
+            dbgln("verify_chain: Signature inconsistent, {} was not signed by {}", subject_string, issuer_string);
+            return false;
         }
     }
 
@@ -318,7 +318,7 @@ bool Context::verify_chain(StringView host) const
     VERIFY_NOT_REACHED();
 }
 
-bool Context::verify_certificate_pair(Certificate& subject, Certificate& issuer) const
+bool Context::verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const
 {
     Crypto::Hash::HashKind kind;
     switch (subject.signature_algorithm) {
@@ -340,7 +340,8 @@ bool Context::verify_certificate_pair(Certificate& subject, Certificate& issuer)
     }
 
     Crypto::PK::RSAPrivateKey dummy_private_key;
-    auto rsa = Crypto::PK::RSA(issuer.public_key, dummy_private_key);
+    Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key };
+    auto rsa = Crypto::PK::RSA(public_key_copy, dummy_private_key);
     auto verification_buffer_result = ByteBuffer::create_uninitialized(subject.signature_value.size());
     if (verification_buffer_result.is_error()) {
         dbgln("verify_certificate_pair: Unable to allocate buffer for verification");

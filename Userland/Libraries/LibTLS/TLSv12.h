@@ -263,7 +263,7 @@ struct Options {
 
 struct Context {
     bool verify_chain(StringView host) const;
-    bool verify_certificate_pair(Certificate& subject, Certificate& issuer) const;
+    bool verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const;
 
     Options options;
 
