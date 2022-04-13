@@ -16,11 +16,10 @@ StackOfOpenElements::~StackOfOpenElements() = default;
 
 bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const& list) const
 {
-    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
-        auto& node = m_elements.at(i);
-        if (node.local_name() == tag_name)
+    for (auto const& element : m_elements.in_reverse()) {
+        if (element.local_name() == tag_name)
             return true;
-        if (list.contains_slow(node.local_name()))
+        if (list.contains_slow(element.local_name()))
             return false;
     }
     VERIFY_NOT_REACHED();
@@ -33,11 +32,10 @@ bool StackOfOpenElements::has_in_scope(FlyString const& tag_name) const
 
 bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, Vector<FlyString> const& list) const
 {
-    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
-        auto& node = m_elements.at(i);
-        if (&node == &target_node)
+    for (auto& element : m_elements.in_reverse()) {
+        if (&element == &target_node)
             return true;
-        if (list.contains_slow(node.local_name()))
+        if (list.contains_slow(element.local_name()))
             return false;
     }
     VERIFY_NOT_REACHED();
@@ -77,9 +75,8 @@ bool StackOfOpenElements::has_in_list_item_scope(FlyString const& tag_name) cons
 bool StackOfOpenElements::has_in_select_scope(FlyString const& tag_name) const
 {
     // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
-    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
-        // 1. Initialize node to be the current node (the bottommost node of the stack).
-        auto& node = m_elements.at(i);
+    // 1. Initialize node to be the current node (the bottommost node of the stack).
+    for (auto& node : m_elements.in_reverse()) {
         // 2. If node is the target node, terminate in a match state.
         if (node.local_name() == tag_name)
             return true;
@@ -122,8 +119,7 @@ void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(Fly
 DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element& formatting_element)
 {
     DOM::Element* found_element = nullptr;
-    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
-        auto& element = m_elements[i];
+    for (auto& element : m_elements.in_reverse()) {
         if (&element == &formatting_element)
             break;
         if (HTMLParser::is_special_tag(element.local_name(), element.namespace_()))
@@ -145,8 +141,7 @@ StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_ta
 DOM::Element* StackOfOpenElements::element_immediately_above(DOM::Element const& target)
 {
     bool found_target = false;
-    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
-        auto& element = m_elements[i];
+    for (auto& element : m_elements.in_reverse()) {
         if (&element == &target) {
             found_target = true;
         } else if (found_target)
