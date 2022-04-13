@@ -61,7 +61,7 @@ ErrorOr<Directory> Directory::create(LexicalPath path, CreateDirectories create_
 
 ErrorOr<void> Directory::ensure_directory(LexicalPath const& path)
 {
-    if (path.basename() == "/")
+    if (path.basename() == "/" || path.basename() == ".")
         return {};
 
     TRY(ensure_directory(path.parent()));
