@@ -76,6 +76,7 @@ enum class ValueID;
 
         enum_generator.appendln("};");
         enum_generator.appendln("Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID);");
+        enum_generator.appendln("ValueID to_value_id(@name:titlecase@);");
         enum_generator.append("\n");
     });
 
@@ -129,6 +130,30 @@ Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
         enum_generator.append(R"~~~(
     default:
         return {};
+    }
+}
+)~~~");
+
+        enum_generator.append(R"~~~(
+ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
+{
+    switch (@name:snakecase@_value) {)~~~");
+
+        for (auto& member : members.values()) {
+            auto member_generator = enum_generator.fork();
+            auto member_name = member.to_string();
+            if (member_name.contains('='))
+                continue;
+            member_generator.set("member:titlecase", title_casify(member_name));
+
+            member_generator.append(R"~~~(
+    case @name:titlecase@::@member:titlecase@:
+        return ValueID::@member:titlecase@;)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 )~~~");
