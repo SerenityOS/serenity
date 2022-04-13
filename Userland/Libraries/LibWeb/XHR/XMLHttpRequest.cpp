@@ -394,6 +394,13 @@ static bool is_method(String const& method)
     return regex.has_match(method);
 }
 
+// https://fetch.spec.whatwg.org/#header-name
+static bool is_header_name(String const& header_name)
+{
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    return regex.has_match(header_name);
+}
+
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 static String normalize_method(String const& method)
 {
@@ -407,6 +414,16 @@ static String normalize_method(String const& method)
 static String normalize_header_value(String const& header_value)
 {
     return header_value.trim(StringView { http_whitespace_bytes });
+}
+
+// https://fetch.spec.whatwg.org/#header-value
+static bool is_header_value(String const& header_value)
+{
+    for (auto const& character : header_value.view()) {
+        if (character == '\0' || character == '\n' || character == '\r')
+            return false;
+    }
+    return true;
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
@@ -423,8 +440,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, St
     // 3. Normalize value.
     auto normalized_value = normalize_header_value(value);
 
-    // FIXME: 4. If name is not a header name or value is not a header value,
-    //           then throw a "SyntaxError" DOMException.
+    // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
+    if (!is_header_name(name))
+        return DOM::SyntaxError::create("Header name contains invalid characters.");
+    if (!is_header_value(value))
+        return DOM::SyntaxError::create("Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
     if (is_forbidden_header_name(name))
