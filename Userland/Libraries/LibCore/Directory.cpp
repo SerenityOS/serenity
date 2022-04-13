@@ -45,28 +45,28 @@ ErrorOr<Directory> Directory::adopt_fd(int fd, Optional<LexicalPath> path)
     return Directory { fd, move(path) };
 }
 
-ErrorOr<Directory> Directory::create(String path, CreateDirectories create_directories)
+ErrorOr<Directory> Directory::create(String path, CreateDirectories create_directories, mode_t creation_mode)
 {
-    return create(LexicalPath { move(path) }, create_directories);
+    return create(LexicalPath { move(path) }, create_directories, creation_mode);
 }
 
-ErrorOr<Directory> Directory::create(LexicalPath path, CreateDirectories create_directories)
+ErrorOr<Directory> Directory::create(LexicalPath path, CreateDirectories create_directories, mode_t creation_mode)
 {
     if (create_directories == CreateDirectories::Yes)
-        TRY(ensure_directory(path));
+        TRY(ensure_directory(path, creation_mode));
     // FIXME: doesn't work on Linux probably
     auto fd = TRY(System::open(path.string(), O_CLOEXEC));
     return adopt_fd(fd, move(path));
 }
 
-ErrorOr<void> Directory::ensure_directory(LexicalPath const& path)
+ErrorOr<void> Directory::ensure_directory(LexicalPath const& path, mode_t creation_mode)
 {
     if (path.basename() == "/" || path.basename() == ".")
         return {};
 
-    TRY(ensure_directory(path.parent()));
+    TRY(ensure_directory(path.parent(), creation_mode));
 
-    auto return_value = System::mkdir(path.string(), 0755);
+    auto return_value = System::mkdir(path.string(), creation_mode);
     // We don't care if the directory already exists.
     if (return_value.is_error() && return_value.error().code() != EEXIST)
         return return_value;
