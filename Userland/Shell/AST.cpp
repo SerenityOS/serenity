@@ -392,7 +392,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     }
     auto result = hit_test_position(offset);
     if (!result.matching_node)
-        return {};
+        return shell.complete_path("", "", 0, Shell::ExecutableOnly::No, result.closest_command_node.ptr(), nullptr, Shell::EscapeMode::Bareword);
     auto node = result.matching_node;
     if (node->is_bareword() || node != result.closest_node_with_semantic_meaning)
         node = result.closest_node_with_semantic_meaning;
