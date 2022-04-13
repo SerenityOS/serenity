@@ -697,24 +697,46 @@ public:
         return Rect<U>(*this);
     }
 
-    template<typename U>
+    template<FloatingPoint U>
     [[nodiscard]] ALWAYS_INLINE Rect<U> to_rounded() const
     {
+        // FIXME: We may get away with `rint[lf]?()` here.
+        //        This would even give us some more control of these internals,
+        //        while the break-tie algorithm does not really matter
         if constexpr (IsSame<T, float>) {
             return {
-                static_cast<U>(llroundf(x())),
-                static_cast<U>(llroundf(y())),
-                static_cast<U>(llroundf(width())),
-                static_cast<U>(llroundf(height())),
-            };
-        } else {
-            return {
-                static_cast<U>(llroundd(x())),
-                static_cast<U>(llroundd(y())),
-                static_cast<U>(llroundd(width())),
-                static_cast<U>(llroundd(height())),
+                static_cast<U>(roundf(x())),
+                static_cast<U>(roundf(y())),
+                static_cast<U>(roundf(width())),
+                static_cast<U>(roundf(height())),
             };
         }
+        if constexpr (IsSame<T, double>) {
+            return {
+                static_cast<U>(round(x())),
+                static_cast<U>(round(y())),
+                static_cast<U>(round(width())),
+                static_cast<U>(round(height())),
+            };
+        }
+
+        return {
+            static_cast<U>(roundl(x())),
+            static_cast<U>(roundl(y())),
+            static_cast<U>(roundl(width())),
+            static_cast<U>(roundl(height())),
+        };
+    }
+
+    template<Integral I>
+    ALWAYS_INLINE Rect<I> to_rounded() const
+    {
+        return {
+            round_to<I>(x()),
+            round_to<I>(y()),
+            round_to<I>(width()),
+            round_to<I>(height()),
+        };
     }
 
     [[nodiscard]] String to_string() const;
