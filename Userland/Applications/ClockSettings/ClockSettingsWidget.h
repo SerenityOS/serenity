@@ -18,7 +18,10 @@ private:
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
+    void update_time_format_string();
+
     RefPtr<GUI::RadioButton> m_24_hour_radio;
+    RefPtr<GUI::CheckBox> m_show_seconds_checkbox;
     RefPtr<GUI::TextBox> m_custom_format_input;
 
     String m_date_format;
