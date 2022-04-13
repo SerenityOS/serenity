@@ -25,6 +25,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
+#include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
@@ -39,35 +40,10 @@
 
 namespace Web::CSS {
 
-enum class AlignItems {
-    FlexStart,
-    FlexEnd,
-    Center,
-    Baseline,
-    Stretch,
-};
-
-enum class BackgroundAttachment {
-    Fixed,
-    Local,
-    Scroll,
-};
-
-enum class BackgroundBox {
-    BorderBox,
-    ContentBox,
-    PaddingBox,
-};
-
 enum class BackgroundSize {
     Contain,
     Cover,
     LengthPercentage,
-};
-
-enum class BoxSizing {
-    BorderBox,
-    ContentBox,
 };
 
 enum class ShadowPlacement {
@@ -75,88 +51,10 @@ enum class ShadowPlacement {
     Inner,
 };
 
-enum class Clear {
-    None,
-    Left,
-    Right,
-    Both,
-};
-
-enum class Cursor {
-    Auto,
-    Default,
-    None,
-    ContextMenu,
-    Help,
-    Pointer,
-    Progress,
-    Wait,
-    Cell,
-    Crosshair,
-    Text,
-    VerticalText,
-    Alias,
-    Copy,
-    Move,
-    NoDrop,
-    NotAllowed,
-    Grab,
-    Grabbing,
-    EResize,
-    NResize,
-    NeResize,
-    NwResize,
-    SResize,
-    SeResize,
-    SwResize,
-    WResize,
-    EwResize,
-    NsResize,
-    NeswResize,
-    NwseResize,
-    ColResize,
-    RowResize,
-    AllScroll,
-    ZoomIn,
-    ZoomOut,
-};
-
 enum class FlexBasis {
     Content,
     LengthPercentage,
     Auto,
-};
-
-enum class FlexDirection {
-    Row,
-    RowReverse,
-    Column,
-    ColumnReverse,
-};
-
-enum class FlexWrap {
-    Nowrap,
-    Wrap,
-    WrapReverse
-};
-
-enum class Float {
-    None,
-    Left,
-    Right,
-};
-
-enum class FontVariant {
-    Normal,
-    SmallCaps,
-};
-
-enum class ImageRendering {
-    Auto,
-    CrispEdges,
-    HighQuality,
-    Pixelated,
-    Smooth,
 };
 
 // FIXME: Find a better place for this helper.
@@ -174,72 +72,6 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     VERIFY_NOT_REACHED();
 }
 
-enum class JustifyContent {
-    FlexStart,
-    FlexEnd,
-    Center,
-    SpaceBetween,
-    SpaceAround,
-};
-
-enum class LineStyle {
-    None,
-    Hidden,
-    Dotted,
-    Dashed,
-    Solid,
-    Double,
-    Groove,
-    Ridge,
-    Inset,
-    Outset,
-};
-
-enum class ListStyleType {
-    None,
-    Disc,
-    Circle,
-    Square,
-    Decimal,
-    DecimalLeadingZero,
-    LowerAlpha,
-    LowerLatin,
-    LowerRoman,
-    UpperAlpha,
-    UpperLatin,
-    UpperRoman,
-};
-
-enum class Overflow : u8 {
-    Auto,
-    Clip,
-    Hidden,
-    Scroll,
-    Visible,
-};
-
-enum class Position {
-    Static,
-    Relative,
-    Absolute,
-    Fixed,
-    Sticky,
-};
-
-enum class PositionEdge {
-    Left,
-    Right,
-    Top,
-    Bottom,
-};
-
-enum class Repeat : u8 {
-    NoRepeat,
-    Repeat,
-    Round,
-    Space,
-};
-
 constexpr StringView to_string(Repeat value)
 {
     switch (value) {
@@ -256,46 +88,6 @@ constexpr StringView to_string(Repeat value)
     }
 }
 
-enum class TextAlign {
-    Left,
-    Center,
-    Right,
-    Justify,
-    LibwebCenter,
-};
-
-enum class TextDecorationLine {
-    None,
-    Underline,
-    Overline,
-    LineThrough,
-    Blink,
-};
-
-enum class TextDecorationStyle {
-    Solid,
-    Double,
-    Dotted,
-    Dashed,
-    Wavy,
-};
-
-enum class TextJustify {
-    Auto,
-    None,
-    InterWord,
-    InterCharacter,
-};
-
-enum class TextTransform {
-    None,
-    Capitalize,
-    Uppercase,
-    Lowercase,
-    FullWidth,
-    FullSizeKana,
-};
-
 enum class TransformFunction {
     Matrix,
     Translate,
@@ -308,37 +100,6 @@ enum class TransformFunction {
     Skew,
     SkewX,
     SkewY,
-};
-
-enum class VerticalAlign {
-    Baseline,
-    Bottom,
-    Middle,
-    Sub,
-    Super,
-    TextBottom,
-    TextTop,
-    Top,
-};
-
-enum class Visibility {
-    Visible,
-    Hidden,
-    Collapse,
-};
-
-enum class WhiteSpace {
-    Normal,
-    Pre,
-    Nowrap,
-    PreLine,
-    PreWrap,
-};
-
-enum class PointerEvents {
-    Auto,
-    All,
-    None
 };
 
 class StyleValue : public RefCounted<StyleValue> {
