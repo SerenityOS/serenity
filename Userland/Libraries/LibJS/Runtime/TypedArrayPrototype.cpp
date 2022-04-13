@@ -759,75 +759,47 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         // 3. Let targetLength be target.[[ArrayLength]].
         auto target_length = typed_array->array_length();
 
-        // 4. Let targetName be the String value of target.[[TypedArrayName]].
-        // 5. Let targetElementSize be the Element Size value specified in Table 69 for targetName.
-        // 6. Let targetType be the Element Type value in Table 69 for targetName.
-        auto target_element_size = typed_array->element_size();
-
-        // 7. Let targetByteOffset be target.[[ByteOffset]].
-        auto target_byte_offset = typed_array->byte_offset();
-
-        // 8. Let src be ? ToObject(source).
+        // 4. Let src be ? ToObject(source).
         auto* src = TRY(source.to_object(global_object));
 
-        // 9. Let srcLength be ? LengthOfArrayLike(src).
+        // 5. Let srcLength be ? LengthOfArrayLike(src).
         auto source_length = TRY(length_of_array_like(global_object, *src));
 
-        // 10. If targetOffset is +∞, throw a RangeError exception.
+        // 6. If targetOffset is +∞, throw a RangeError exception.
         if (isinf(target_offset))
             return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
 
-        // 11. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+        // 7. If srcLength + targetOffset > targetLength, throw a RangeError exception.
         Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
         if (checked.has_overflow() || checked.value() > target_length)
             return vm.throw_completion<RangeError>(global_object, "Overflow or out of bounds in target length");
 
-        // 12. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
-        Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
-        checked_target_byte_index *= target_element_size;
-        checked_target_byte_index += target_byte_offset;
-        if (checked_target_byte_index.has_overflow())
-            return vm.throw_completion<RangeError>(global_object, "Overflow in target byte index");
-        auto target_byte_index = checked_target_byte_index.value();
+        // 8. Let k be 0.
+        size_t k = 0;
 
-        // 13. Let k be 0.
-        auto k = 0;
-
-        // 14. Let limit be targetByteIndex + targetElementSize × srcLength.
-        Checked<size_t> checked_limit(source_length);
-        checked_limit *= target_element_size;
-        checked_limit += target_byte_index;
-        if (checked_limit.has_overflow())
-            return vm.throw_completion<RangeError>(global_object, "Overflow in target limit");
-        auto limit = checked_limit.value();
-
-        // 15. Repeat, while targetByteIndex < limit,
-        while (target_byte_index < limit) {
+        // 9. Repeat, while k < srcLength,
+        while (k < source_length) {
             // a. Let Pk be ! ToString(𝔽(k)).
             // b. Let value be ? Get(src, Pk).
             auto value = TRY(src->get(k));
 
-            // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
-            if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-                value = TRY(value.to_bigint(global_object));
-            // d. Otherwise, set value to ? ToNumber(value).
-            else
-                value = TRY(value.to_number(global_object));
+            // c. Let targetIndex be 𝔽(targetOffset + k).
+            CanonicalIndex target_index(CanonicalIndex::Type::Index, target_offset + k);
 
-            // e. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-            if (target_buffer->is_detached())
-                return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            // d. Perform ? IntegerIndexedElementSet(target, targetIndex, value).
+            // FIXME: This is very awkward.
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        TRY(integer_indexed_element_set<Type>(*typed_array, target_index, value));
+            JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
 
-            // f. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-            typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
-
-            // g. Set k to k + 1.
+            // e. Set k to k + 1.
             ++k;
-
-            // h. Set targetByteIndex to targetByteIndex + targetElementSize.
-            target_byte_index += target_element_size;
         }
+
+        // 10. Return unused.
     }
 
     // 8. Return undefined.
