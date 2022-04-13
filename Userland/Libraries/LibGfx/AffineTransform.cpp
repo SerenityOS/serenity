@@ -158,7 +158,7 @@ IntPoint AffineTransform::map(IntPoint const& point) const
     float mapped_x;
     float mapped_y;
     map(static_cast<float>(point.x()), static_cast<float>(point.y()), mapped_x, mapped_y);
-    return { roundf(mapped_x), roundf(mapped_y) };
+    return { round_to<int>(mapped_x), round_to<int>(mapped_y) };
 }
 
 template<>
@@ -174,8 +174,8 @@ template<>
 IntSize AffineTransform::map(IntSize const& size) const
 {
     return {
-        roundf(static_cast<float>(size.width()) * x_scale()),
-        roundf(static_cast<float>(size.height()) * y_scale()),
+        round_to<int>(static_cast<float>(size.width()) * x_scale()),
+        round_to<int>(static_cast<float>(size.height()) * y_scale()),
     };
 }
 

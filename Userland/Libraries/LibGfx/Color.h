@@ -200,10 +200,10 @@ public:
 
     Color interpolate(Color const& other, float weight) const noexcept
     {
-        u8 r = red() + roundf(static_cast<float>(other.red() - red()) * weight);
-        u8 g = green() + roundf(static_cast<float>(other.green() - green()) * weight);
-        u8 b = blue() + roundf(static_cast<float>(other.blue() - blue()) * weight);
-        u8 a = alpha() + roundf(static_cast<float>(other.alpha() - alpha()) * weight);
+        u8 r = red() + round_to<u8>(static_cast<float>(other.red() - red()) * weight);
+        u8 g = green() + round_to<u8>(static_cast<float>(other.green() - green()) * weight);
+        u8 b = blue() + round_to<u8>(static_cast<float>(other.blue() - blue()) * weight);
+        u8 a = alpha() + round_to<u8>(static_cast<float>(other.alpha() - alpha()) * weight);
         return Color(r, g, b, a);
     }
 
