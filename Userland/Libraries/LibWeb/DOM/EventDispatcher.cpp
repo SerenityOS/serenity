@@ -286,9 +286,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         if (activation_target)
             activation_target->legacy_pre_activation_behavior();
 
-        for (ssize_t i = event->path().size() - 1; i >= 0; --i) {
-            auto& entry = event->path().at(i);
-
+        for (auto& entry : event->path().in_reverse()) {
             if (entry.shadow_adjusted_target)
                 event->set_phase(Event::Phase::AtTarget);
             else
