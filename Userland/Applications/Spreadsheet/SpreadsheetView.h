@@ -65,6 +65,7 @@ class InfinitelyScrollableTableView : public GUI::TableView {
 public:
     Function<void()> on_reaching_vertical_end;
     Function<void()> on_reaching_horizontal_end;
+
 private:
     InfinitelyScrollableTableView()
         : m_horizontal_scroll_end_timer(Core::Timer::construct())
@@ -110,6 +111,7 @@ public:
     void move_cursor(GUI::AbstractView::CursorMovement);
 
     NonnullRefPtr<SheetModel> model() { return m_sheet_model; };
+
 private:
     virtual void hide_event(GUI::HideEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
