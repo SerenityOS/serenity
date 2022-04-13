@@ -1,0 +1,37 @@
+From 9308979ce6065bcb83cbd76f3d7eec4bc672973a Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Thu, 14 Apr 2022 00:19:04 +0200
+Subject: [PATCH 1/2] Add Serenity to config.sub
+
+---
+ config.sub            | 1 +
+ deps/wslay/config.sub | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/config.sub b/config.sub
+index 1d8e98b..d294bcb 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1364,6 +1364,7 @@ case $os in
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \
+diff --git a/deps/wslay/config.sub b/deps/wslay/config.sub
+index 1d8e98b..d294bcb 100755
+--- a/deps/wslay/config.sub
++++ b/deps/wslay/config.sub
+@@ -1364,6 +1364,7 @@ case $os in
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \
+-- 
+2.32.0 (Apple Git-132)
+

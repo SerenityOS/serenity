@@ -1,0 +1,24 @@
+From 839f9ff4a68a40d77e873a63531394eb4af8e50b Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Thu, 14 Apr 2022 00:22:19 +0200
+Subject: [PATCH 2/2] Include sys/select.h
+
+---
+ src/SelectEventPoll.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/SelectEventPoll.cc b/src/SelectEventPoll.cc
+index d9397b2..49b1f03 100644
+--- a/src/SelectEventPoll.cc
++++ b/src/SelectEventPoll.cc
+@@ -40,6 +40,7 @@
+ #include <cstring>
+ #include <algorithm>
+ #include <numeric>
++#include <sys/select.h>
+ 
+ #include "Command.h"
+ #include "LogFactory.h"
+-- 
+2.32.0 (Apple Git-132)
+
