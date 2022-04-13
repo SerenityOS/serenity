@@ -26,6 +26,34 @@ bool DNSAnswer::has_expired() const
     return time(nullptr) >= m_received_time + m_ttl;
 }
 
+unsigned DNSAnswer::hash() const
+{
+    auto hash = pair_int_hash(CaseInsensitiveStringTraits::hash(name().as_string()), (u32)type());
+    hash = pair_int_hash(hash, pair_int_hash((u32)class_code(), ttl()));
+    hash = pair_int_hash(hash, record_data().hash());
+    hash = pair_int_hash(hash, (u32)mdns_cache_flush());
+    return hash;
+}
+
+bool DNSAnswer::operator==(DNSAnswer const& other) const
+{
+    if (&other == this)
+        return true;
+    if (!DNSName::Traits::equals(name(), other.name()))
+        return false;
+    if (type() != other.type())
+        return false;
+    if (class_code() != other.class_code())
+        return false;
+    if (ttl() != other.ttl())
+        return false;
+    if (record_data() != other.record_data())
+        return false;
+    if (mdns_cache_flush() != other.mdns_cache_flush())
+        return false;
+    return true;
+}
+
 }
 
 ErrorOr<void> AK::Formatter<DNS::DNSRecordType>::format(AK::FormatBuilder& builder, DNS::DNSRecordType value)

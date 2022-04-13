@@ -23,12 +23,12 @@ DNSName::DNSName(String const& name)
 DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level)
 {
     if (recursion_level > 4)
-        return DNSName({});
+        return {};
 
     StringBuilder builder;
     while (true) {
         if (offset >= max_offset)
-            return DNSName({});
+            return {};
         u8 b = data[offset++];
         if (b == '\0') {
             // This terminates the name.
@@ -36,7 +36,7 @@ DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t
         } else if ((b & 0xc0) == 0xc0) {
             // The two bytes tell us the offset when to continue from.
             if (offset >= max_offset)
-                return DNSName({});
+                return {};
             size_t dummy = (b & 0x3f) << 8 | data[offset++];
             auto rest_of_name = parse(data, dummy, max_offset, recursion_level + 1);
             builder.append(rest_of_name.as_string());
@@ -44,7 +44,7 @@ DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t
         } else {
             // This is the length of a part.
             if (offset + b >= max_offset)
-                return DNSName({});
+                return {};
             builder.append((char const*)&data[offset], (size_t)b);
             builder.append('.');
             offset += b;
