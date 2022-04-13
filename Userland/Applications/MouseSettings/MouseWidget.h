@@ -24,6 +24,8 @@ private:
 
     RefPtr<GUI::HorizontalSlider> m_speed_slider;
     RefPtr<GUI::Label> m_speed_label;
+    RefPtr<GUI::HorizontalSlider> m_size_slider;
+    RefPtr<GUI::Label> m_size_label;
     RefPtr<GUI::SpinBox> m_scroll_length_spinbox;
     RefPtr<GUI::HorizontalSlider> m_double_click_speed_slider;
     RefPtr<GUI::Label> m_double_click_speed_label;

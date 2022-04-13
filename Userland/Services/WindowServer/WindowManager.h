@@ -163,7 +163,9 @@ public:
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
     void set_double_click_speed(int);
+    void set_mouse_size(int);
     int double_click_speed() const;
+    float mouse_size() const;
     void set_buttons_switched(bool);
     bool get_buttons_switched() const;
 
@@ -414,6 +416,7 @@ private:
 
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
+    int m_mouse_size { 1 };
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
     bool m_buttons_switched { false };

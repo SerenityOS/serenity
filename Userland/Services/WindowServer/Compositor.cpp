@@ -840,7 +840,7 @@ Gfx::IntRect Compositor::current_cursor_rect() const
 {
     auto& wm = WindowManager::the();
     auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
-    return { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()), current_cursor.size() };
+    return { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()).translated(-(wm.mouse_size() - 1.0f) * 2.0f), current_cursor.size() * wm.mouse_size() };
 }
 
 void Compositor::invalidate_cursor(bool compose_immediately)
@@ -947,10 +947,10 @@ void CompositorScreenData::draw_cursor(Screen& screen, Gfx::IntRect const& curso
     auto& compositor = Compositor::the();
     auto& current_cursor = compositor.m_current_cursor ? *compositor.m_current_cursor : wm.active_cursor();
     auto screen_rect = screen.rect();
-    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(screen_rect).translated(-screen_rect.location()));
+    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, cursor_rect.intersected(screen_rect).translated(-screen_rect.location()));
     auto cursor_src_rect = current_cursor.source_rect(compositor.m_current_cursor_frame);
-    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(screen.scale_factor()), cursor_src_rect);
-    m_flush_special_rects.add(Gfx::IntRect(cursor_rect.location(), cursor_src_rect.size()).intersected(screen.rect()));
+    m_back_painter->draw_scaled_bitmap(cursor_rect, current_cursor.bitmap(screen.scale_factor()), cursor_src_rect, 1, Gfx::Painter::ScalingMode::NearestNeighbor);
+    m_flush_special_rects.add(cursor_rect.intersected(screen.rect()));
     m_have_flush_rects = true;
     m_last_cursor_rect = cursor_rect;
     VERIFY(compositor.m_current_cursor_screen == &screen);

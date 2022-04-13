@@ -14,22 +14,12 @@
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 
-constexpr double speed_slider_scale = 100.0;
 constexpr int default_scroll_length = 4;
 constexpr int double_click_speed_default = 250;
 
 MouseWidget::MouseWidget()
 {
     load_from_gml(mouse_widget_gml);
-
-    m_speed_label = *find_descendant_of_type_named<GUI::Label>("speed_label");
-    m_speed_slider = *find_descendant_of_type_named<GUI::HorizontalSlider>("speed_slider");
-    m_speed_slider->set_range(WindowServer::mouse_accel_min * speed_slider_scale, WindowServer::mouse_accel_max * speed_slider_scale);
-    m_speed_slider->on_change = [&](int value) {
-        m_speed_label->set_text(String::formatted("{} %", value));
-    };
-    int const slider_value = float { speed_slider_scale } * GUI::ConnectionToWindowServer::the().get_mouse_acceleration();
-    m_speed_slider->set_value(slider_value);
 
     m_scroll_length_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");
     m_scroll_length_spinbox->set_min(WindowServer::scroll_step_size_min);
@@ -51,8 +41,6 @@ MouseWidget::MouseWidget()
 
 void MouseWidget::apply_settings()
 {
-    float const factor = m_speed_slider->value() / speed_slider_scale;
-    GUI::ConnectionToWindowServer::the().async_set_mouse_acceleration(factor);
     GUI::ConnectionToWindowServer::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
     GUI::ConnectionToWindowServer::the().async_set_double_click_speed(m_double_click_speed_slider->value());
     GUI::ConnectionToWindowServer::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
@@ -60,7 +48,6 @@ void MouseWidget::apply_settings()
 
 void MouseWidget::reset_default_values()
 {
-    m_speed_slider->set_value(speed_slider_scale);
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
     m_switch_buttons_checkbox->set_checked(false);

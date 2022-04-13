@@ -8,6 +8,7 @@
  */
 
 #include "MouseWidget.h"
+#include "CursorWidget.h"
 #include "ThemeWidget.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -27,6 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     (void)TRY(window->add_tab<MouseWidget>("Mouse"));
+    (void)TRY(window->add_tab<CursorWidget>("Cursor"));
     (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme"));
     window->set_icon(app_icon.bitmap_for_size(16));
 

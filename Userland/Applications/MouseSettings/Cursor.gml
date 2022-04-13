@@ -6,7 +6,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Scroll wheel step size"
+        title: "Cursor speed"
         fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -21,71 +21,18 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/scroll-wheel-step-size.png"
+                icon: "/res/graphics/mouse-cursor-speed.png"
             }
 
             @GUI::Label {
-                text: "The number of steps taken when the scroll wheel is\nmoved a single notch."
+                text: "The relative speed of the mouse cursor."
                 text_alignment: "CenterLeft"
             }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                margins: [8]
-                spacing: 8
-            }
-
-            @GUI::Widget {
-                fixed_width: 32
-            }
-
-            @GUI::Label {
-                autosize: true
-                text: "Step size:"
-            }
-
-            @GUI::SpinBox {
-                name: "scroll_length_spinbox"
-                min: 0
-                max: 100
-                value: 50
-                fixed_width: 100
-            }
-
-            @GUI::Widget {}
-        }
-    }
-
-    @GUI::GroupBox {
-        title: "Double-click speed"
-        fixed_height: 106
-        layout: @GUI::VerticalBoxLayout {
-            margins: [6]
-            spacing: 2
         }
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 16
-            }
-
-            @MouseSettings::DoubleClickArrowWidget {
-                fixed_width: 32
-                fixed_height: 32
-                name: "double_click_arrow_widget"
-            }
-
-            @GUI::Label {
-                text: "The maximum time that may pass between two clicks\nin order for them to become a double-click."
-                text_alignment: "CenterLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                margins: [8]
-                spacing: 8
             }
 
             @GUI::Widget {
@@ -93,7 +40,7 @@
             }
 
             @GUI::HorizontalSlider {
-                name: "double_click_speed_slider"
+                name: "speed_slider"
                 min: 0
                 max: 100
                 value: 50
@@ -101,16 +48,16 @@
 
             @GUI::Label {
                 fixed_width: 40
-                name: "double_click_speed_label"
+                name: "speed_label"
             }
         }
     }
 
     @GUI::GroupBox {
-        title: "Button configuration"
-        fixed_height: 68
+        title: "Cursor size"
+        fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [6]
             spacing: 2
         }
 
@@ -122,12 +69,34 @@
             @GUI::Label {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/switch-mouse-buttons.png"
+                icon: "/res/graphics/mouse-cursor-size.png"
             }
 
-            @GUI::CheckBox {
-                name: "switch_buttons_input"
-                text: "Switch primary and secondary buttons"
+            @GUI::Label {
+                text: "The size of the mouse cursor."
+                text_alignment: "CenterLeft"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Widget {
+                fixed_width: 32
+            }
+
+            @GUI::HorizontalSlider {
+                name: "size_slider"
+                min: 0
+                max: 9
+                value: 0
+            }
+
+            @GUI::Label {
+                fixed_width: 40
+                name: "size_label"
             }
         }
     }

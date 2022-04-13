@@ -976,6 +976,20 @@ Messages::WindowServer::GetDoubleClickSpeedResponse ConnectionFromClient::get_do
     return WindowManager::the().double_click_speed();
 }
 
+void ConnectionFromClient::set_mouse_size(int size)
+{
+    if (size < mouse_size_min || size > mouse_size_max) {
+        did_misbehave("SetMouseSize with bad size");
+        return;
+    }
+    WindowManager::the().set_mouse_size(size);
+}
+
+Messages::WindowServer::GetMouseSizeResponse ConnectionFromClient::get_mouse_size()
+{
+    return WindowManager::the().mouse_size();
+}
+
 void ConnectionFromClient::set_buttons_switched(bool switched)
 {
     WindowManager::the().set_buttons_switched(switched);
