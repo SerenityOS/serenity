@@ -81,7 +81,7 @@ void WindowManager::reload_config()
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_cursor_size = m_config->read_num_entry("Mouse", "Size", 2);
+    m_cursor_size = m_config->read_num_entry("Cursor", "Size", 2);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
@@ -260,7 +260,7 @@ void WindowManager::set_acceleration_factor(double factor)
 {
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
-    m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
+    m_config->write_entry("Cursor", "AccelerationFactor", String::formatted("{}", factor));
     if (auto result = m_config->sync(); result.is_error())
         dbgln("Failed to save config file: {}", result.error());
 }
@@ -294,7 +294,7 @@ void WindowManager::set_cursor_size(int size)
     VERIFY(size >= mouse_size_min && size <= mouse_size_max);
     m_cursor_size = size;
     dbgln("Saving mouse size {} to config file at {}", size, m_config->filename());
-    m_config->write_num_entry("Mouse", "Size", size);
+    m_config->write_num_entry("Cursor", "Size", size);
     if (auto result = m_config->sync(); result.is_error())
         dbgln("Failed to save config file: {}", result.error());
 }
