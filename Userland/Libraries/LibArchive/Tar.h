@@ -61,10 +61,11 @@ static StringView get_field_as_string_view(char const (&field)[N])
 template<size_t N, class TSource>
 static void set_field(char (&field)[N], TSource&& source)
 {
-    if constexpr (requires { source.copy_characters_to_buffer(field, N); }) {
-        VERIFY(source.copy_characters_to_buffer(field, N));
-    } else {
+    if constexpr (requires { source.characters_without_null_termination(); }) {
         memcpy(field, source.characters_without_null_termination(), min(N, source.length()));
+    } else {
+        auto success = source.copy_characters_to_buffer(field, N);
+        VERIFY(success);
     }
 }
 
