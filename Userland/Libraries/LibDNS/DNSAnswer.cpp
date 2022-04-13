@@ -8,7 +8,7 @@
 #include <AK/Stream.h>
 #include <time.h>
 
-namespace LookupServer {
+namespace DNS {
 
 DNSAnswer::DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush)
     : m_name(name)
@@ -28,26 +28,26 @@ bool DNSAnswer::has_expired() const
 
 }
 
-ErrorOr<void> AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordType value)
+ErrorOr<void> AK::Formatter<DNS::DNSRecordType>::format(AK::FormatBuilder& builder, DNS::DNSRecordType value)
 {
     switch (value) {
-    case LookupServer::DNSRecordType::A:
+    case DNS::DNSRecordType::A:
         return builder.put_string("A");
-    case LookupServer::DNSRecordType::NS:
+    case DNS::DNSRecordType::NS:
         return builder.put_string("NS");
-    case LookupServer::DNSRecordType::CNAME:
+    case DNS::DNSRecordType::CNAME:
         return builder.put_string("CNAME");
-    case LookupServer::DNSRecordType::SOA:
+    case DNS::DNSRecordType::SOA:
         return builder.put_string("SOA");
-    case LookupServer::DNSRecordType::PTR:
+    case DNS::DNSRecordType::PTR:
         return builder.put_string("PTR");
-    case LookupServer::DNSRecordType::MX:
+    case DNS::DNSRecordType::MX:
         return builder.put_string("MX");
-    case LookupServer::DNSRecordType::TXT:
+    case DNS::DNSRecordType::TXT:
         return builder.put_string("TXT");
-    case LookupServer::DNSRecordType::AAAA:
+    case DNS::DNSRecordType::AAAA:
         return builder.put_string("AAAA");
-    case LookupServer::DNSRecordType::SRV:
+    case DNS::DNSRecordType::SRV:
         return builder.put_string("SRV");
     }
 
@@ -56,10 +56,10 @@ ErrorOr<void> AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuild
     return {};
 }
 
-ErrorOr<void> AK::Formatter<LookupServer::DNSRecordClass>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordClass value)
+ErrorOr<void> AK::Formatter<DNS::DNSRecordClass>::format(AK::FormatBuilder& builder, DNS::DNSRecordClass value)
 {
     switch (value) {
-    case LookupServer::DNSRecordClass::IN:
+    case DNS::DNSRecordClass::IN:
         return builder.put_string("IN");
     }
 

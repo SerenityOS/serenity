@@ -6,14 +6,16 @@
 
 #pragma once
 
-#include "DNSAnswer.h"
-#include "DNSName.h"
-#include "DNSPacket.h"
 #include <AK/IPv4Address.h>
 #include <LibCore/UDPServer.h>
+#include <LibDNS/DNSAnswer.h>
+#include <LibDNS/DNSName.h>
+#include <LibDNS/DNSPacket.h>
 #include <netinet/in.h>
 
 namespace LookupServer {
+
+using namespace DNS;
 
 class MulticastDNS : public Core::UDPServer {
     C_OBJECT(MulticastDNS)

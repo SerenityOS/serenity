@@ -11,7 +11,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
-namespace LookupServer {
+namespace DNS {
 
 enum class DNSRecordType : u16 {
     A = 1,
@@ -58,23 +58,23 @@ private:
 
 }
 template<>
-struct AK::Formatter<LookupServer::DNSRecordType> : StandardFormatter {
+struct AK::Formatter<DNS::DNSRecordType> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    ErrorOr<void> format(AK::FormatBuilder&, LookupServer::DNSRecordType);
+    ErrorOr<void> format(AK::FormatBuilder&, DNS::DNSRecordType);
 };
 
 template<>
-struct AK::Formatter<LookupServer::DNSRecordClass> : StandardFormatter {
+struct AK::Formatter<DNS::DNSRecordClass> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    ErrorOr<void> format(AK::FormatBuilder&, LookupServer::DNSRecordClass);
+    ErrorOr<void> format(AK::FormatBuilder&, DNS::DNSRecordClass);
 };

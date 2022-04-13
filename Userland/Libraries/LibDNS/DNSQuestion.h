@@ -9,7 +9,7 @@
 #include "DNSName.h"
 #include <AK/Types.h>
 
-namespace LookupServer {
+namespace DNS {
 
 #define MDNS_WANTS_UNICAST_RESPONSE 0x8000
 
