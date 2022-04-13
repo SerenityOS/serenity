@@ -270,13 +270,13 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
                 builder.append('\n');
                 break;
             case 'p':
-                builder.append(tm->tm_hour < 12 ? "a.m." : "p.m.");
+                builder.append(tm->tm_hour < 12 ? "AM" : "PM");
                 break;
             case 'r': {
                 int display_hour = tm->tm_hour % 12;
                 if (display_hour == 0)
                     display_hour = 12;
-                builder.appendff("{:02}:{:02}:{:02} {}", display_hour, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
+                builder.appendff("{:02}:{:02}:{:02} {}", display_hour, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "AM" : "PM");
                 break;
             }
             case 'R':
