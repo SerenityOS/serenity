@@ -62,7 +62,19 @@ enum class ValueID;
         enum_generator.set("name:titlecase", title_casify(name));
         enum_generator.set("name:snakecase", snake_casify(name));
 
-        enum_generator.appendln("enum class @name:titlecase@ {");
+        // Find the smallest possible type to use.
+        auto member_max_value = members.size() - 1;
+        if (NumericLimits<u8>::max() >= member_max_value) {
+            enum_generator.set("enum_type", "u8");
+        } else if (NumericLimits<u16>::max() >= member_max_value) {
+            enum_generator.set("enum_type", "u16");
+        } else if (NumericLimits<u32>::max() >= member_max_value) {
+            enum_generator.set("enum_type", "u32");
+        } else {
+            enum_generator.set("enum_type", "u64");
+        }
+
+        enum_generator.appendln("enum class @name:titlecase@ : @enum_type@ {");
 
         for (auto& member : members.values()) {
             auto member_name = member.to_string();
