@@ -7,17 +7,17 @@
 #pragma once
 
 #include "ConnectionFromClient.h"
-#include "DNSName.h"
-#include "DNSPacket.h"
 #include "DNSServer.h"
 #include "MulticastDNS.h"
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
+#include <LibDNS/DNSName.h>
+#include <LibDNS/DNSPacket.h>
 #include <LibIPC/MultiServer.h>
 
 namespace LookupServer {
 
-class DNSAnswer;
+using namespace DNS;
 
 class LookupServer final : public Core::Object {
     C_OBJECT(LookupServer);

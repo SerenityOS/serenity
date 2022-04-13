@@ -10,7 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/String.h>
 
-namespace LookupServer {
+namespace DNS {
 
 class DNSName {
 public:
@@ -40,8 +40,8 @@ OutputStream& operator<<(OutputStream& stream, DNSName const&);
 }
 
 template<>
-struct AK::Formatter<LookupServer::DNSName> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, LookupServer::DNSName const& value)
+struct AK::Formatter<DNS::DNSName> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, DNS::DNSName const& value)
     {
         return Formatter<StringView>::format(builder, value.as_string());
     }

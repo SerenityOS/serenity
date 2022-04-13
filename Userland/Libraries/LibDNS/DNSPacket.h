@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
-namespace LookupServer {
+namespace DNS {
 
 enum class ShouldRandomizeCase {
     No = 0,

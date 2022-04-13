@@ -9,7 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/Types.h>
 
-namespace LookupServer {
+namespace DNS {
 
 class [[gnu::packed]] DNSPacketHeader {
 public:
