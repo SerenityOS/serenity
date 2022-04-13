@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <LibIPC/Forward.h>
 
 namespace DNS {
 
@@ -90,3 +91,10 @@ struct AK::Formatter<DNS::DNSRecordClass> : StandardFormatter {
 
     ErrorOr<void> format(AK::FormatBuilder&, DNS::DNSRecordClass);
 };
+
+namespace IPC {
+
+bool encode(Encoder&, DNS::DNSAnswer const&);
+ErrorOr<void> decode(Decoder&, DNS::DNSAnswer&);
+
+}

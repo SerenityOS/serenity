@@ -6,6 +6,8 @@
 
 #include "DNSAnswer.h"
 #include <AK/Stream.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <time.h>
 
 namespace DNS {
@@ -94,4 +96,31 @@ ErrorOr<void> AK::Formatter<DNS::DNSRecordClass>::format(AK::FormatBuilder& buil
     TRY(builder.put_string("DNS record class "));
     TRY(builder.put_u64((u16)value));
     return {};
+}
+
+namespace IPC {
+
+bool encode(Encoder& encoder, DNS::DNSAnswer const& answer)
+{
+    encoder << answer.name().as_string() << (u16)answer.type() << (u16)answer.class_code() << answer.ttl() << answer.record_data() << answer.mdns_cache_flush();
+    return true;
+}
+
+ErrorOr<void> decode(Decoder& decoder, DNS::DNSAnswer& answer)
+{
+    String name;
+    TRY(decoder.decode(name));
+    u16 record_type, class_code;
+    TRY(decoder.decode(record_type));
+    TRY(decoder.decode(class_code));
+    u32 ttl;
+    TRY(decoder.decode(ttl));
+    String record_data;
+    TRY(decoder.decode(record_data));
+    bool cache_flush;
+    TRY(decoder.decode(cache_flush));
+    answer = { { name }, (DNS::DNSRecordType)record_type, (DNS::DNSRecordClass)class_code, ttl, record_data, cache_flush };
+    return {};
+}
+
 }
