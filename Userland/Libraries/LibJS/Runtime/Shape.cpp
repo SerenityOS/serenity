@@ -162,29 +162,28 @@ void Shape::ensure_property_table() const
 
     u32 next_offset = 0;
 
-    Vector<Shape const*, 64> transition_chain;
+    Vector<Shape const&, 64> transition_chain;
     for (auto* shape = m_previous; shape; shape = shape->m_previous) {
         if (shape->m_property_table) {
             *m_property_table = *shape->m_property_table;
             next_offset = shape->m_property_count;
             break;
         }
-        transition_chain.append(shape);
+        transition_chain.append(*shape);
     }
-    transition_chain.append(this);
+    transition_chain.append(*this);
 
-    for (ssize_t i = transition_chain.size() - 1; i >= 0; --i) {
-        auto* shape = transition_chain[i];
-        if (!shape->m_property_key.is_valid()) {
+    for (auto const& shape : transition_chain) {
+        if (!shape.m_property_key.is_valid()) {
             // Ignore prototype transitions as they don't affect the key map.
             continue;
         }
-        if (shape->m_transition_type == TransitionType::Put) {
-            m_property_table->set(shape->m_property_key, { next_offset++, shape->m_attributes });
-        } else if (shape->m_transition_type == TransitionType::Configure) {
-            auto it = m_property_table->find(shape->m_property_key);
+        if (shape.m_transition_type == TransitionType::Put) {
+            m_property_table->set(shape.m_property_key, { next_offset++, shape.m_attributes });
+        } else if (shape.m_transition_type == TransitionType::Configure) {
+            auto it = m_property_table->find(shape.m_property_key);
             VERIFY(it != m_property_table->end());
-            it->value.attributes = shape->m_attributes;
+            it->value.attributes = shape.m_attributes;
         }
     }
 }
