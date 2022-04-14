@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto cmd_parts = String(cmd_argument).split_view(' ');
+    auto cmd_parts = StringView(cmd_argument).split_view(' ');
 
     dbgln("Enabling profiling for PID {}", getpid());
     TRY(Core::System::profiling_enable(getpid(), event_mask));
