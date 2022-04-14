@@ -400,12 +400,10 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
 
     if (!m_element->layout_node()) {
         auto style = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
-        if (auto maybe_property = style->property(property_id); maybe_property.has_value()) {
-            return StyleProperty {
-                .property_id = property_id,
-                .value = maybe_property.release_value(),
-            };
-        }
+        return StyleProperty {
+            .property_id = property_id,
+            .value = style->property(property_id),
+        };
         return {};
     }
 

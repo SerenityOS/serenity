@@ -204,7 +204,7 @@ void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const& styl
         auto const* containing_block = this->containing_block();
         auto containing_block_has_definite_size = containing_block && (width ? containing_block->m_has_definite_width : containing_block->m_has_definite_height);
 
-        if (!maybe_value.has_value() || maybe_value.value()->has_auto()) {
+        if (maybe_value->has_auto()) {
             // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
             if (width && is_block_container() && parent() && !parent()->computed_values().display().is_flex_inside())
                 return containing_block_has_definite_size;
@@ -235,8 +235,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
-    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(*this));
-    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight).value()->to_integer());
+    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->to_length().to_px(*this));
+    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->to_integer());
     m_line_height = computed_style.line_height(*this);
 
     computed_values.set_vertical_align(computed_style.vertical_align());
@@ -251,16 +251,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         auto sizes = computed_style.property(CSS::PropertyID::BackgroundSize);
 
         auto count_layers = [](auto maybe_style_value) -> size_t {
-            if (maybe_style_value.has_value() && maybe_style_value.value()->is_value_list())
-                return maybe_style_value.value()->as_value_list().size();
+            if (maybe_style_value->is_value_list())
+                return maybe_style_value->as_value_list().size();
             else
                 return 1;
         };
 
-        auto value_for_layer = [](auto maybe_style_value, size_t layer_index) -> RefPtr<CSS::StyleValue> {
-            if (!maybe_style_value.has_value())
-                return nullptr;
-            auto& style_value = maybe_style_value.value();
+        auto value_for_layer = [](auto& style_value, size_t layer_index) -> RefPtr<CSS::StyleValue> {
             if (style_value->is_value_list())
                 return style_value->as_value_list().value_at(layer_index, true);
             return style_value;
@@ -371,20 +368,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = computed_style.property(CSS::PropertyID::BorderBottomLeftRadius);
-    if (border_bottom_left_radius.has_value() && border_bottom_left_radius.value()->is_border_radius())
-        computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->as_border_radius().horizontal_radius());
+    if (border_bottom_left_radius->is_border_radius())
+        computed_values.set_border_bottom_left_radius(border_bottom_left_radius->as_border_radius().horizontal_radius());
 
     auto border_bottom_right_radius = computed_style.property(CSS::PropertyID::BorderBottomRightRadius);
-    if (border_bottom_right_radius.has_value() && border_bottom_right_radius.value()->is_border_radius())
-        computed_values.set_border_bottom_right_radius(border_bottom_right_radius.value()->as_border_radius().horizontal_radius());
+    if (border_bottom_right_radius->is_border_radius())
+        computed_values.set_border_bottom_right_radius(border_bottom_right_radius->as_border_radius().horizontal_radius());
 
     auto border_top_left_radius = computed_style.property(CSS::PropertyID::BorderTopLeftRadius);
-    if (border_top_left_radius.has_value() && border_top_left_radius.value()->is_border_radius())
-        computed_values.set_border_top_left_radius(border_top_left_radius.value()->as_border_radius().horizontal_radius());
+    if (border_top_left_radius->is_border_radius())
+        computed_values.set_border_top_left_radius(border_top_left_radius->as_border_radius().horizontal_radius());
 
     auto border_top_right_radius = computed_style.property(CSS::PropertyID::BorderTopRightRadius);
-    if (border_top_right_radius.has_value() && border_top_right_radius.value()->is_border_radius())
-        computed_values.set_border_top_right_radius(border_top_right_radius.value()->as_border_radius().horizontal_radius());
+    if (border_top_right_radius->is_border_radius())
+        computed_values.set_border_top_right_radius(border_top_right_radius->as_border_radius().horizontal_radius());
 
     computed_values.set_display(computed_style.display());
 
@@ -472,8 +469,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_list_style_type(list_style_type.value());
 
     auto list_style_image = computed_style.property(CSS::PropertyID::ListStyleImage);
-    if (list_style_image.has_value() && list_style_image.value()->is_image()) {
-        m_list_style_image = list_style_image.value()->as_image();
+    if (list_style_image->is_image()) {
+        m_list_style_image = list_style_image->as_image();
         m_list_style_image->load_bitmap(document());
     }
 
@@ -539,18 +536,17 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     computed_values.set_content(computed_style.content());
 
-    if (auto fill = computed_style.property(CSS::PropertyID::Fill); fill.has_value())
-        computed_values.set_fill(fill.value()->to_color(*this));
-    if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke.has_value())
-        computed_values.set_stroke(stroke.value()->to_color(*this));
-    if (auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth); stroke_width.has_value()) {
-        // FIXME: Converting to pixels isn't really correct - values should be in "user units"
-        //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-        if (stroke_width.value()->is_numeric())
-            computed_values.set_stroke_width(CSS::Length::make_px(stroke_width.value()->to_number()));
-        else
-            computed_values.set_stroke_width(stroke_width.value()->to_length());
-    }
+    if (auto fill = computed_style.property(CSS::PropertyID::Fill); fill->has_color())
+        computed_values.set_fill(fill->to_color(*this));
+    if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke->has_color())
+        computed_values.set_stroke(stroke->to_color(*this));
+    auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);
+    // FIXME: Converting to pixels isn't really correct - values should be in "user units"
+    //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
+    if (stroke_width->is_numeric())
+        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->to_number()));
+    else
+        computed_values.set_stroke_width(stroke_width->to_length());
 }
 
 bool Node::is_root_element() const

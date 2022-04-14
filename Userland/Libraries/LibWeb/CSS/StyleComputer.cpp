@@ -772,7 +772,7 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
 
     if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(property_id);
-    return parent_element->computed_css_values()->property(property_id).release_value();
+    return parent_element->computed_css_values()->property(property_id);
 };
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -835,11 +835,9 @@ float StyleComputer::root_element_font_size() const
     if (!computed_root_style)
         return default_root_element_font_size;
 
-    auto maybe_root_value = computed_root_style->property(CSS::PropertyID::FontSize);
-    if (!maybe_root_value.has_value())
-        return default_root_element_font_size;
+    auto root_value = computed_root_style->property(CSS::PropertyID::FontSize);
 
-    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
+    return root_value->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -853,9 +851,9 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     auto* parent_element = get_parent_element(element, pseudo_element);
 
-    auto font_size = style.property(CSS::PropertyID::FontSize).value();
-    auto font_style = style.property(CSS::PropertyID::FontStyle).value();
-    auto font_weight = style.property(CSS::PropertyID::FontWeight).value();
+    auto font_size = style.property(CSS::PropertyID::FontSize);
+    auto font_style = style.property(CSS::PropertyID::FontStyle);
+    auto font_weight = style.property(CSS::PropertyID::FontWeight);
 
     int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
@@ -930,7 +928,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         auto parent_font_size = [&]() -> float {
             if (!parent_element || !parent_element->computed_css_values())
                 return font_size_in_px;
-            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
+            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                 if (length.is_absolute() || length.is_relative())
@@ -1028,7 +1026,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     RefPtr<Gfx::Font> found_font;
 
-    auto family_value = style.property(PropertyID::FontFamily).value();
+    auto family_value = style.property(PropertyID::FontFamily);
     if (family_value->is_value_list()) {
         auto const& family_list = static_cast<StyleValueList const&>(*family_value).values();
         for (auto const& family : family_list) {
@@ -1068,7 +1066,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 {
     auto font_metrics = style.computed_font().pixel_metrics();
     float root_font_size = root_element_font_size();
-    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
+    float font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
