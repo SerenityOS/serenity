@@ -141,8 +141,10 @@ void NodeVisitor::visit(const AST::MatchExpr* node)
 {
     node->matched_expr()->visit(*this);
     for (auto& entry : node->entries()) {
-        for (auto& option : entry.options)
-            option.visit(*this);
+        if (auto* ptr = entry.options.get_pointer<NonnullRefPtrVector<Node>>()) {
+            for (auto& option : *ptr)
+                option.visit(*this);
+        }
         if (entry.body)
             entry.body->visit(*this);
     }

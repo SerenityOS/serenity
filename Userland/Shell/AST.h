@@ -17,6 +17,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibLine/Editor.h>
+#include <LibRegex/Regex.h>
 
 namespace Shell::AST {
 
@@ -1051,7 +1052,7 @@ private:
 };
 
 struct MatchEntry {
-    NonnullRefPtrVector<Node> options;
+    Variant<NonnullRefPtrVector<Node>, Vector<Regex<ECMA262>>> options;
     Optional<Vector<String>> match_names;
     Optional<Position> match_as_position;
     Vector<Position> pipe_positions;
