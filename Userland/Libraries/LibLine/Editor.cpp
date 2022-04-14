@@ -1103,11 +1103,22 @@ void Editor::handle_read_event()
                 break;
             }
 
+            insert(Utf32View { m_remembered_suggestion_static_data.data(), m_remembered_suggestion_static_data.size() });
+            m_remembered_suggestion_static_data.clear_with_capacity();
+
             auto completion_result = m_suggestion_manager.attempt_completion(completion_mode, token_start);
 
-            auto new_cursor = m_cursor + completion_result.new_cursor_offset;
+            auto new_cursor = m_cursor;
+
+            new_cursor += completion_result.new_cursor_offset;
             for (size_t i = completion_result.offset_region_to_remove.start; i < completion_result.offset_region_to_remove.end; ++i)
                 remove_at_index(new_cursor);
+
+            new_cursor -= completion_result.static_offset_from_cursor;
+            for (size_t i = 0; i < completion_result.static_offset_from_cursor; ++i) {
+                m_remembered_suggestion_static_data.append(m_buffer[new_cursor]);
+                remove_at_index(new_cursor);
+            }
 
             m_cursor = new_cursor;
             m_inline_search_cursor = new_cursor;
@@ -1129,6 +1140,7 @@ void Editor::handle_read_event()
             switch (completion_result.new_completion_mode) {
             case SuggestionManager::DontComplete:
                 m_times_tab_pressed = 0;
+                m_remembered_suggestion_static_data.clear_with_capacity();
                 break;
             case SuggestionManager::CompletePrefix:
                 break;
@@ -1159,14 +1171,15 @@ void Editor::handle_read_event()
                 // We have none, or just one suggestion,
                 // we should just commit that and continue
                 // after it, as if it were auto-completed.
-                m_times_tab_pressed = 0;
-                m_suggestion_manager.reset();
-                m_suggestion_display->finish();
+                reposition_cursor(stderr_stream, true);
+                cleanup_suggestions();
+                m_remembered_suggestion_static_data.clear_with_capacity();
             }
             continue;
         }
 
         // If we got here, manually cleanup the suggestions and then insert the new code point.
+        m_remembered_suggestion_static_data.clear_with_capacity();
         suggestion_cleanup.disarm();
         cleanup_suggestions();
         insert(code_point);
@@ -1185,7 +1198,7 @@ void Editor::handle_read_event()
 
 void Editor::cleanup_suggestions()
 {
-    if (m_times_tab_pressed) {
+    if (m_times_tab_pressed != 0) {
         // Apply the style of the last suggestion.
         readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
         stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, m_suggestion_manager.current_suggestion().style);

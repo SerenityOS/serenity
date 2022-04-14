@@ -98,6 +98,9 @@ public:
             size_t end;
         } offset_region_to_remove { 0, 0 }; // The region to remove as defined by [start, end) translated by (old_cursor + new_cursor_offset)
 
+        // This bit of data will be removed, but restored if the suggestion is rejected.
+        size_t static_offset_from_cursor { 0 };
+
         Vector<Utf32View> insert {};
 
         Optional<Style> style_to_apply {};
