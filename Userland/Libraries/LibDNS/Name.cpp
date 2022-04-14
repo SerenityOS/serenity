@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "DNSName.h"
+#include "Name.h"
 #include <AK/Random.h>
 #include <AK/Vector.h>
 #include <ctype.h>
 
 namespace DNS {
 
-DNSName::DNSName(String const& name)
+Name::Name(String const& name)
 {
     if (name.ends_with('.'))
         m_name = name.substring(0, name.length() - 1);
@@ -20,7 +20,7 @@ DNSName::DNSName(String const& name)
         m_name = name;
 }
 
-DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level)
+Name Name::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level)
 {
     if (recursion_level > 4)
         return {};
@@ -52,14 +52,14 @@ DNSName DNSName::parse(u8 const* data, size_t& offset, size_t max_offset, size_t
     }
 }
 
-size_t DNSName::serialized_size() const
+size_t Name::serialized_size() const
 {
     if (m_name.is_empty())
         return 1;
     return m_name.length() + 2;
 }
 
-void DNSName::randomize_case()
+void Name::randomize_case()
 {
     StringBuilder builder;
     for (char c : m_name) {
@@ -75,7 +75,7 @@ void DNSName::randomize_case()
     m_name = builder.to_string();
 }
 
-OutputStream& operator<<(OutputStream& stream, DNSName const& name)
+OutputStream& operator<<(OutputStream& stream, Name const& name)
 {
     auto parts = name.as_string().split_view('.');
     for (auto& part : parts) {
@@ -86,12 +86,12 @@ OutputStream& operator<<(OutputStream& stream, DNSName const& name)
     return stream;
 }
 
-unsigned DNSName::Traits::hash(DNSName const& name)
+unsigned Name::Traits::hash(Name const& name)
 {
     return CaseInsensitiveStringTraits::hash(name.as_string());
 }
 
-bool DNSName::Traits::equals(DNSName const& a, DNSName const& b)
+bool Name::Traits::equals(Name const& a, Name const& b)
 {
     return CaseInsensitiveStringTraits::equals(a.as_string(), b.as_string());
 }

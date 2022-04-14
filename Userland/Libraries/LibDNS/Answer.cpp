@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "DNSAnswer.h"
+#include "Answer.h"
 #include <AK/Stream.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
@@ -12,7 +12,7 @@
 
 namespace DNS {
 
-DNSAnswer::DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush)
+Answer::Answer(Name const& name, RecordType type, RecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush)
     : m_name(name)
     , m_type(type)
     , m_class_code(class_code)
@@ -23,12 +23,12 @@ DNSAnswer::DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass cla
     time(&m_received_time);
 }
 
-bool DNSAnswer::has_expired() const
+bool Answer::has_expired() const
 {
     return time(nullptr) >= m_received_time + m_ttl;
 }
 
-unsigned DNSAnswer::hash() const
+unsigned Answer::hash() const
 {
     auto hash = pair_int_hash(CaseInsensitiveStringTraits::hash(name().as_string()), (u32)type());
     hash = pair_int_hash(hash, pair_int_hash((u32)class_code(), ttl()));
@@ -37,11 +37,11 @@ unsigned DNSAnswer::hash() const
     return hash;
 }
 
-bool DNSAnswer::operator==(DNSAnswer const& other) const
+bool Answer::operator==(Answer const& other) const
 {
     if (&other == this)
         return true;
-    if (!DNSName::Traits::equals(name(), other.name()))
+    if (!Name::Traits::equals(name(), other.name()))
         return false;
     if (type() != other.type())
         return false;
@@ -58,26 +58,26 @@ bool DNSAnswer::operator==(DNSAnswer const& other) const
 
 }
 
-ErrorOr<void> AK::Formatter<DNS::DNSRecordType>::format(AK::FormatBuilder& builder, DNS::DNSRecordType value)
+ErrorOr<void> AK::Formatter<DNS::RecordType>::format(AK::FormatBuilder& builder, DNS::RecordType value)
 {
     switch (value) {
-    case DNS::DNSRecordType::A:
+    case DNS::RecordType::A:
         return builder.put_string("A");
-    case DNS::DNSRecordType::NS:
+    case DNS::RecordType::NS:
         return builder.put_string("NS");
-    case DNS::DNSRecordType::CNAME:
+    case DNS::RecordType::CNAME:
         return builder.put_string("CNAME");
-    case DNS::DNSRecordType::SOA:
+    case DNS::RecordType::SOA:
         return builder.put_string("SOA");
-    case DNS::DNSRecordType::PTR:
+    case DNS::RecordType::PTR:
         return builder.put_string("PTR");
-    case DNS::DNSRecordType::MX:
+    case DNS::RecordType::MX:
         return builder.put_string("MX");
-    case DNS::DNSRecordType::TXT:
+    case DNS::RecordType::TXT:
         return builder.put_string("TXT");
-    case DNS::DNSRecordType::AAAA:
+    case DNS::RecordType::AAAA:
         return builder.put_string("AAAA");
-    case DNS::DNSRecordType::SRV:
+    case DNS::RecordType::SRV:
         return builder.put_string("SRV");
     }
 
@@ -86,10 +86,10 @@ ErrorOr<void> AK::Formatter<DNS::DNSRecordType>::format(AK::FormatBuilder& build
     return {};
 }
 
-ErrorOr<void> AK::Formatter<DNS::DNSRecordClass>::format(AK::FormatBuilder& builder, DNS::DNSRecordClass value)
+ErrorOr<void> AK::Formatter<DNS::RecordClass>::format(AK::FormatBuilder& builder, DNS::RecordClass value)
 {
     switch (value) {
-    case DNS::DNSRecordClass::IN:
+    case DNS::RecordClass::IN:
         return builder.put_string("IN");
     }
 
@@ -100,13 +100,13 @@ ErrorOr<void> AK::Formatter<DNS::DNSRecordClass>::format(AK::FormatBuilder& buil
 
 namespace IPC {
 
-bool encode(Encoder& encoder, DNS::DNSAnswer const& answer)
+bool encode(Encoder& encoder, DNS::Answer const& answer)
 {
     encoder << answer.name().as_string() << (u16)answer.type() << (u16)answer.class_code() << answer.ttl() << answer.record_data() << answer.mdns_cache_flush();
     return true;
 }
 
-ErrorOr<void> decode(Decoder& decoder, DNS::DNSAnswer& answer)
+ErrorOr<void> decode(Decoder& decoder, DNS::Answer& answer)
 {
     String name;
     TRY(decoder.decode(name));
@@ -119,7 +119,7 @@ ErrorOr<void> decode(Decoder& decoder, DNS::DNSAnswer& answer)
     TRY(decoder.decode(record_data));
     bool cache_flush;
     TRY(decoder.decode(cache_flush));
-    answer = { { name }, (DNS::DNSRecordType)record_type, (DNS::DNSRecordClass)class_code, ttl, record_data, cache_flush };
+    answer = { { name }, (DNS::RecordType)record_type, (DNS::RecordClass)class_code, ttl, record_data, cache_flush };
     return {};
 }
 

@@ -11,8 +11,8 @@
 #include "MulticastDNS.h"
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
-#include <LibDNS/DNSName.h>
-#include <LibDNS/DNSPacket.h>
+#include <LibDNS/Name.h>
+#include <LibDNS/Packet.h>
 #include <LibIPC/MultiServer.h>
 
 namespace LookupServer {
@@ -24,23 +24,23 @@ class LookupServer final : public Core::Object {
 
 public:
     static LookupServer& the();
-    ErrorOr<Vector<DNSAnswer>> lookup(DNSName const& name, DNSRecordType record_type);
+    ErrorOr<Vector<Answer>> lookup(Name const& name, RecordType record_type);
 
 private:
     LookupServer();
 
     void load_etc_hosts();
-    void put_in_cache(DNSAnswer const&);
+    void put_in_cache(Answer const&);
 
-    ErrorOr<Vector<DNSAnswer>> lookup(DNSName const& hostname, String const& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
+    ErrorOr<Vector<Answer>> lookup(Name const& hostname, String const& nameserver, bool& did_get_response, RecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     OwnPtr<IPC::MultiServer<ConnectionFromClient>> m_server;
     RefPtr<DNSServer> m_dns_server;
     RefPtr<MulticastDNS> m_mdns;
     Vector<String> m_nameservers;
     RefPtr<Core::FileWatcher> m_file_watcher;
-    HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_etc_hosts;
-    HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_lookup_cache;
+    HashMap<Name, Vector<Answer>, Name::Traits> m_etc_hosts;
+    HashMap<Name, Vector<Answer>, Name::Traits> m_lookup_cache;
 };
 
 }
