@@ -8,9 +8,9 @@
 
 #include <AK/IPv4Address.h>
 #include <LibCore/UDPServer.h>
-#include <LibDNS/DNSAnswer.h>
-#include <LibDNS/DNSName.h>
-#include <LibDNS/DNSPacket.h>
+#include <LibDNS/Answer.h>
+#include <LibDNS/Name.h>
+#include <LibDNS/Packet.h>
 #include <netinet/in.h>
 
 namespace LookupServer {
@@ -20,20 +20,20 @@ using namespace DNS;
 class MulticastDNS : public Core::UDPServer {
     C_OBJECT(MulticastDNS)
 public:
-    Vector<DNSAnswer> lookup(DNSName const&, DNSRecordType record_type);
+    Vector<Answer> lookup(Name const&, RecordType record_type);
 
 private:
     explicit MulticastDNS(Object* parent = nullptr);
 
     void announce();
-    ErrorOr<size_t> emit_packet(DNSPacket const&, sockaddr_in const* destination = nullptr);
+    ErrorOr<size_t> emit_packet(Packet const&, sockaddr_in const* destination = nullptr);
 
     void handle_packet();
-    void handle_query(DNSPacket const&);
+    void handle_query(Packet const&);
 
     Vector<IPv4Address> local_addresses() const;
 
-    DNSName m_hostname;
+    Name m_hostname;
 
     static constexpr sockaddr_in mdns_addr {
         AF_INET,

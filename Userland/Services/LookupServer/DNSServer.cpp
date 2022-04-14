@@ -7,7 +7,7 @@
 #include "DNSServer.h"
 #include "LookupServer.h"
 #include <AK/IPv4Address.h>
-#include <LibDNS/DNSPacket.h>
+#include <LibDNS/Packet.h>
 
 namespace LookupServer {
 
@@ -29,7 +29,7 @@ ErrorOr<void> DNSServer::handle_client()
 {
     sockaddr_in client_address;
     auto buffer = receive(1024, client_address);
-    auto optional_request = DNSPacket::from_raw_packet(buffer.data(), buffer.size());
+    auto optional_request = Packet::from_raw_packet(buffer.data(), buffer.size());
     if (!optional_request.has_value()) {
         dbgln("Got an invalid DNS packet");
         return {};
@@ -43,12 +43,12 @@ ErrorOr<void> DNSServer::handle_client()
 
     LookupServer& lookup_server = LookupServer::the();
 
-    DNSPacket response;
+    Packet response;
     response.set_is_response();
     response.set_id(request.id());
 
     for (auto& question : request.questions()) {
-        if (question.class_code() != DNSRecordClass::IN)
+        if (question.class_code() != RecordClass::IN)
             continue;
         response.add_question(question);
         auto answers = TRY(lookup_server.lookup(question.name(), question.record_type()));
@@ -58,9 +58,9 @@ ErrorOr<void> DNSServer::handle_client()
     }
 
     if (response.answer_count() == 0)
-        response.set_code(DNSPacket::Code::NXDOMAIN);
+        response.set_code(Packet::Code::NXDOMAIN);
     else
-        response.set_code(DNSPacket::Code::NOERROR);
+        response.set_code(Packet::Code::NOERROR);
 
     buffer = response.to_byte_buffer();
 

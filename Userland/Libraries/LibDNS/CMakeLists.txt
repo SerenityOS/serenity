@@ -1,7 +1,7 @@
 set(SOURCES
-    DNSAnswer.cpp
-    DNSName.cpp
-    DNSPacket.cpp
+    Answer.cpp
+    Name.cpp
+    Packet.cpp
 )
 
 serenity_lib(LibDNS dns)

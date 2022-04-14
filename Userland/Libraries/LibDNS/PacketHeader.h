@@ -11,9 +11,9 @@
 
 namespace DNS {
 
-class [[gnu::packed]] DNSPacketHeader {
+class [[gnu::packed]] PacketHeader {
 public:
-    DNSPacketHeader()
+    PacketHeader()
         : m_recursion_desired(false)
         , m_truncated(false)
         , m_authoritative_answer(false)
@@ -94,6 +94,6 @@ private:
     NetworkOrdered<u16> m_additional_count;
 };
 
-static_assert(sizeof(DNSPacketHeader) == 12);
+static_assert(sizeof(PacketHeader) == 12);
 
 }

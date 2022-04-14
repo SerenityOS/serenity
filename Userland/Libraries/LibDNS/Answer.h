@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "DNSName.h"
+#include "Name.h"
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <AK/Traits.h>
@@ -15,7 +15,7 @@
 
 namespace DNS {
 
-enum class DNSRecordType : u16 {
+enum class RecordType : u16 {
     A = 1,
     NS = 2,
     CNAME = 5,
@@ -27,20 +27,20 @@ enum class DNSRecordType : u16 {
     SRV = 33,
 };
 
-enum class DNSRecordClass : u16 {
+enum class RecordClass : u16 {
     IN = 1
 };
 
 #define MDNS_CACHE_FLUSH 0x8000
 
-class DNSAnswer {
+class Answer {
 public:
-    DNSAnswer() = default;
-    DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush);
+    Answer() = default;
+    Answer(Name const& name, RecordType type, RecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush);
 
-    DNSName const& name() const { return m_name; }
-    DNSRecordType type() const { return m_type; }
-    DNSRecordClass class_code() const { return m_class_code; }
+    Name const& name() const { return m_name; }
+    RecordType type() const { return m_type; }
+    RecordClass class_code() const { return m_class_code; }
     u16 raw_class_code() const { return (u16)m_class_code | (m_mdns_cache_flush ? MDNS_CACHE_FLUSH : 0); }
     u32 ttl() const { return m_ttl; }
     time_t received_time() const { return m_received_time; }
@@ -50,12 +50,12 @@ public:
     bool has_expired() const;
 
     unsigned hash() const;
-    bool operator==(DNSAnswer const&) const;
+    bool operator==(Answer const&) const;
 
 private:
-    DNSName m_name;
-    DNSRecordType m_type { 0 };
-    DNSRecordClass m_class_code { 0 };
+    Name m_name;
+    RecordType m_type { 0 };
+    RecordClass m_class_code { 0 };
     u32 m_ttl { 0 };
     time_t m_received_time { 0 };
     String m_record_data;
@@ -65,36 +65,36 @@ private:
 }
 
 template<>
-struct AK::Traits<DNS::DNSAnswer> : public GenericTraits<DNS::DNSAnswer> {
+struct AK::Traits<DNS::Answer> : public GenericTraits<DNS::Answer> {
     static constexpr bool is_trivial() { return false; }
-    static unsigned hash(DNS::DNSAnswer a) { return a.hash(); }
+    static unsigned hash(DNS::Answer a) { return a.hash(); }
 };
 
 template<>
-struct AK::Formatter<DNS::DNSRecordType> : StandardFormatter {
+struct AK::Formatter<DNS::RecordType> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    ErrorOr<void> format(AK::FormatBuilder&, DNS::DNSRecordType);
+    ErrorOr<void> format(AK::FormatBuilder&, DNS::RecordType);
 };
 
 template<>
-struct AK::Formatter<DNS::DNSRecordClass> : StandardFormatter {
+struct AK::Formatter<DNS::RecordClass> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    ErrorOr<void> format(AK::FormatBuilder&, DNS::DNSRecordClass);
+    ErrorOr<void> format(AK::FormatBuilder&, DNS::RecordClass);
 };
 
 namespace IPC {
 
-bool encode(Encoder&, DNS::DNSAnswer const&);
-ErrorOr<void> decode(Decoder&, DNS::DNSAnswer&);
+bool encode(Encoder&, DNS::Answer const&);
+ErrorOr<void> decode(Decoder&, DNS::Answer&);
 
 }
