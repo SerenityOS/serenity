@@ -150,6 +150,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::Stream:
 
     generator.append(R"~~~(
 #include <AK/Assertions.h>
+#include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -512,8 +513,13 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         } else if (type_name == "url") {
                             // FIXME: Handle urls!
                         } else {
-                            warnln("Unrecognized valid-type name: '{}'", type_name);
-                            VERIFY_NOT_REACHED();
+                            // Assume that any other type names are defined in Enums.json.
+                            // If they're not, the output won't compile, but that's fine since it's invalid.
+                            property_generator.set("type_name:snakecase", snake_casify(type_name));
+                            property_generator.append(R"~~~(
+        if (auto converted_identifier = value_id_to_@type_name:snakecase@(style_value.to_identifier()); converted_identifier.has_value())
+            return true;
+)~~~");
                         }
                     }
                 }
