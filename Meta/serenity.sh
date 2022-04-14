@@ -89,6 +89,7 @@ else
 fi
 
 CMAKE_ARGS=()
+HOST_COMPILER=""
 
 # Toolchain selection only applies to non-lagom targets.
 if [ "$TARGET" != "lagom" ]; then
@@ -141,37 +142,77 @@ create_build_dir() {
     fi
 }
 
-pick_gcc() {
+is_supported_compiler() {
+    local COMPILER="$1"
+    if [ -z "$COMPILER" ]; then
+        return 1
+    fi
+
+    local VERSION=""
+    VERSION="$($COMPILER -dumpversion)" || return 1
+    local MAJOR_VERSION=""
+    MAJOR_VERSION="${VERSION%%.*}"
+    if $COMPILER --version 2>&1 | grep "Apple clang" >/dev/null; then
+        return 1
+    elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
+        [ "$MAJOR_VERSION" -gt 12 ] && return 0
+    else
+        [ "$MAJOR_VERSION" -gt 10 ] && return 0
+    fi
+    return 1
+}
+
+find_newest_compiler() {
     local BEST_VERSION=0
-    local BEST_GCC_CANDIDATE=""
-    for GCC_CANDIDATE in egcc gcc gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
-        if ! command -v $GCC_CANDIDATE >/dev/null 2>&1; then
+    local BEST_CANDIDATE=""
+    for CANDIDATE in "$@"; do
+        if ! command -v "$CANDIDATE" >/dev/null 2>&1; then
             continue
         fi
-        if $GCC_CANDIDATE --version 2>&1 | grep "Apple clang" >/dev/null; then
+        if $CANDIDATE --version 2>&1 | grep "Apple clang" >/dev/null; then
             continue
         fi
-        if ! $GCC_CANDIDATE -dumpversion >/dev/null 2>&1; then
+        if ! $CANDIDATE -dumpversion >/dev/null 2>&1; then
             continue
         fi
         local VERSION=""
-        VERSION="$($GCC_CANDIDATE -dumpversion)"
+        VERSION="$($CANDIDATE -dumpversion)"
         local MAJOR_VERSION="${VERSION%%.*}"
         if [ "$MAJOR_VERSION" -gt "$BEST_VERSION" ]; then
             BEST_VERSION=$MAJOR_VERSION
-            BEST_GCC_CANDIDATE="$GCC_CANDIDATE"
+            BEST_CANDIDATE="$CANDIDATE"
         fi
     done
-    CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$BEST_GCC_CANDIDATE")
-    CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${BEST_GCC_CANDIDATE/gcc/g++}")
-    if [ "$BEST_VERSION" -lt 11 ]; then
-        die "Please make sure that GCC version 11 or higher is installed."
+    HOST_COMPILER=$BEST_CANDIDATE
+}
+
+pick_host_compiler() {
+    if is_supported_compiler "$CC" && is_supported_compiler "$CXX"; then
+        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$CC")
+        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=$CXX")
+        return
     fi
+
+    find_newest_compiler egcc gcc gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11
+    if is_supported_compiler "$HOST_COMPILER"; then
+        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$HOST_COMPILER")
+        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${HOST_COMPILER/gcc/g++}")
+        return
+    fi
+
+    find_newest_compiler clang clang-13 clang-14 clang-15
+    if is_supported_compiler "$HOST_COMPILER"; then
+        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$HOST_COMPILER")
+        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${HOST_COMPILER/clang/clang++}")
+        return
+    fi
+
+    die "Please make sure that GCC version 11, Clang version 13, or higher is installed."
 }
 
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
-    pick_gcc
+    pick_host_compiler
 
     if [ ! -d "$SERENITY_SOURCE_DIR" ]; then
         SERENITY_SOURCE_DIR="$(get_top_dir)"
