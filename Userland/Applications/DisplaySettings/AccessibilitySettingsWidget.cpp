@@ -14,8 +14,6 @@
 
 namespace DisplaySettings {
 
-//static void update_label_with_font(GUI::Label&, Gfx::Font const&);
-
 AccessibilitySettingsWidget::AccessibilitySettingsWidget()
 {
    load_from_gml(accessibility_settings_gml);
@@ -29,11 +27,6 @@ AccessibilitySettingsWidget::AccessibilitySettingsWidget()
    m_filter_tritanomaly = *find_descendant_of_type_named<GUI::RadioButton>("filter_tritanomaly_radio_button");
    m_filter_achromatopsia = *find_descendant_of_type_named<GUI::RadioButton>("filter_achromatopsia_radio_button");
    m_filter_achromatomaly = *find_descendant_of_type_named<GUI::RadioButton>("filter_achromatomaly_radio_button");
-   
-//   auto color_wheel_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/color-wheel.png").release_value_but_fixme_should_propagate_errors();
-//
-//   m_color_wheel = *find_descendant_of_type_named<GUI::ImageWidget>("color_wheel_image");
-//   m_color_wheel->set_bitmap(color_wheel_bitmap);
 
    m_color_wheel = *find_descendant_of_type_named<GUI::ImageWidget>("color_wheel_image");
    m_color_wheel->load_from_file("/res/graphics/color-wheel.png");
