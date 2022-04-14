@@ -2,12 +2,8 @@
   "align-items": {
     "inherited": false,
     "initial": "stretch",
-    "valid-identifiers": [
-      "center",
-      "baseline",
-      "flex-end",
-      "flex-start",
-      "stretch"
+    "valid-types": [
+      "align-items"
     ]
   },
   "background": {
@@ -29,20 +25,16 @@
     "affects-layout": false,
     "inherited": false,
     "initial": "scroll",
-    "valid-identifiers": [
-      "fixed",
-      "local",
-      "scroll"
+    "valid-types": [
+      "background-attachment"
     ]
   },
   "background-clip": {
     "affects-layout": false,
     "inherited": false,
     "initial": "border-box",
-    "valid-identifiers": [
-      "border-box",
-      "content-box",
-      "padding-box"
+    "valid-types": [
+      "background-box"
     ]
   },
   "background-color": {
@@ -71,10 +63,8 @@
     "affects-layout": false,
     "inherited": false,
     "initial": "padding-box",
-    "valid-identifiers": [
-      "border-box",
-      "content-box",
-      "padding-box"
+    "valid-types": [
+      "background-box"
     ]
   },
   "background-position": {
@@ -102,13 +92,12 @@
     "inherited": false,
     "initial": "repeat",
     "max-values": 2,
+    "valid-types": [
+      "repeat"
+    ],
     "valid-identifiers": [
-      "no-repeat",
-      "repeat",
       "repeat-x",
-      "repeat-y",
-      "round",
-      "space"
+      "repeat-y"
     ]
   },
   "background-size": {
@@ -206,17 +195,8 @@
     "affects-layout": false,
     "initial": "none",
     "inherited": false,
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "border-bottom-width": {
@@ -274,17 +254,8 @@
     "affects-layout": false,
     "initial": "none",
     "inherited": false,
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "border-left-width": {
@@ -328,17 +299,8 @@
     "affects-layout": false,
     "initial": "none",
     "inherited": false,
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "border-right-width": {
@@ -373,17 +335,8 @@
       "border-left-style"
     ],
     "max-values": 4,
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "border-top-color": {
@@ -418,17 +371,8 @@
     "affects-layout": false,
     "initial": "none",
     "inherited": false,
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "border-top-width": {
@@ -492,9 +436,8 @@
   "box-sizing": {
     "inherited": false,
     "initial": "content-box",
-    "valid-identifiers": [
-      "border-box",
-      "content-box"
+    "valid-types": [
+      "box-sizing"
     ]
   },
   "caption-side": {
@@ -508,11 +451,8 @@
   "clear": {
     "inherited": false,
     "initial": "none",
-    "valid-identifiers": [
-      "both",
-      "left",
-      "none",
-      "right"
+    "valid-types": [
+      "clear"
     ]
   },
   "clip": {
@@ -553,45 +493,8 @@
     "inherited": true,
     "initial": "auto",
     "valid-types": [
-      "url"
-    ],
-    "valid-identifiers": [
-      "alias",
-      "all-scroll",
-      "auto",
-      "cell",
-      "col-resize",
-      "context-menu",
-      "copy",
-      "crosshair",
-      "default",
-      "e-resize",
-      "ew-resize",
-      "grab",
-      "grabbing",
-      "help",
-      "move",
-      "n-resize",
-      "ne-resize",
-      "nesw-resize",
-      "no-drop",
-      "none",
-      "not-allowed",
-      "ns-resize",
-      "nw-resize",
-      "nwse-resize",
-      "pointer",
-      "progress",
-      "row-resize",
-      "s-resize",
-      "se-resize",
-      "sw-resize",
-      "text",
-      "vertical-text",
-      "w-resize",
-      "wait",
-      "zoom-in",
-      "zoom-out"
+      "url",
+      "cursor"
     ]
   },
   "direction": {
@@ -660,11 +563,8 @@
   "flex-direction": {
     "inherited": false,
     "initial": "row",
-    "valid-identifiers": [
-      "column",
-      "column-reverse",
-      "row",
-      "row-reverse"
+    "valid-types": [
+      "flex-direction"
     ]
   },
   "flex-flow": {
@@ -699,19 +599,15 @@
   "flex-wrap": {
     "inherited": false,
     "initial": "nowrap",
-    "valid-identifiers": [
-      "nowrap",
-      "wrap",
-      "wrap-reverse"
+    "valid-types": [
+      "flex-wrap"
     ]
   },
   "float": {
     "inherited": false,
     "initial": "none",
-    "valid-identifiers": [
-      "left",
-      "none",
-      "right"
+    "valid-types": [
+      "float"
     ]
   },
   "font": {
@@ -763,9 +659,8 @@
   "font-variant": {
     "inherited": true,
     "initial": "normal",
-    "valid-identifiers": [
-      "normal",
-      "small-caps"
+    "valid-types": [
+      "font-variant"
     ]
   },
   "font-weight": {
@@ -799,23 +694,15 @@
     "affects-layout": false,
     "inherited": true,
     "initial": "auto",
-    "valid-identifiers": [
-      "auto",
-      "crisp-edges",
-      "high-quality",
-      "pixelated",
-      "smooth"
+    "valid-types": [
+      "image-rendering"
     ]
   },
   "justify-content": {
     "inherited": false,
     "initial": "flex-start",
-    "valid-identifiers": [
-      "center",
-      "flex-end",
-      "flex-start",
-      "space-around",
-      "space-between"
+    "valid-types": [
+      "justify-content"
     ]
   },
   "left": {
@@ -889,21 +776,8 @@
     "inherited": true,
     "initial": "disc",
     "valid-types": [
-      "string"
-    ],
-    "valid-identifiers": [
-      "circle",
-      "decimal",
-      "decimal-leading-zero",
-      "disc",
-      "lower-alpha",
-      "lower-latin",
-      "lower-roman",
-      "none",
-      "square",
-      "upper-alpha",
-      "upper-latin",
-      "upper-roman"
+      "string",
+      "list-style-type"
     ]
   },
   "margin": {
@@ -1077,17 +951,8 @@
     "affects-layout": false,
     "inherited": false,
     "initial": "none",
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid"
+    "valid-types": [
+      "line-style"
     ]
   },
   "outline-width": {
@@ -1111,34 +976,22 @@
     "inherited": false,
     "initial": "visible",
     "max-values": 2,
-    "valid-identifiers": [
-      "auto",
-      "clip",
-      "hidden",
-      "scroll",
-      "visible"
+    "valid-types": [
+      "overflow"
     ]
   },
   "overflow-x": {
     "inherited": false,
     "initial": "visible",
-    "valid-identifiers": [
-      "auto",
-      "clip",
-      "hidden",
-      "scroll",
-      "visible"
+    "valid-types": [
+      "overflow"
     ]
   },
   "overflow-y": {
     "inherited": false,
     "initial": "visible",
-    "valid-identifiers": [
-      "auto",
-      "clip",
-      "hidden",
-      "scroll",
-      "visible"
+    "valid-types": [
+      "overflow"
     ]
   },
   "padding": {
@@ -1207,21 +1060,15 @@
     "affects-layout": false,
     "inherited": true,
     "initial": "auto",
-    "valid-identifiers": [
-      "auto",
-      "all",
-      "none"
+    "valid-types": [
+      "pointer-events"
     ]
   },
   "position": {
     "inherited": false,
     "initial": "static",
-    "valid-identifiers": [
-      "absolute",
-      "fixed",
-      "relative",
-      "static",
-      "sticky"
+    "valid-types": [
+      "position"
     ]
   },
   "right": {
@@ -1262,12 +1109,8 @@
   "text-align": {
     "inherited": true,
     "initial": "left",
-    "valid-identifiers": [
-      "center",
-      "justify",
-      "left",
-      "right",
-      "-libweb-center"
+    "valid-types": [
+      "text-align"
     ]
   },
   "text-decoration": {
@@ -1294,24 +1137,16 @@
     "affects-layout": false,
     "inherited": true,
     "initial": "none",
-    "valid-identifiers": [
-      "blink",
-      "line-through",
-      "none",
-      "overline",
-      "underline"
+    "valid-types": [
+      "text-decoration-line"
     ]
   },
   "text-decoration-style": {
     "affects-layout": false,
     "inherited": false,
     "initial": "solid",
-    "valid-identifiers": [
-      "dashed",
-      "dotted",
-      "double",
-      "solid",
-      "wavy"
+    "valid-types": [
+      "text-decoration-style"
     ]
   },
   "text-decoration-thickness": {
@@ -1341,12 +1176,8 @@
   "text-justify": {
     "inherited": true,
     "initial": "auto",
-    "valid-identifiers": [
-      "auto",
-      "none",
-      "inter-word",
-      "inter-character",
-      "distribute"
+    "valid-types": [
+      "text-justify"
     ]
   },
   "text-shadow": {
@@ -1360,13 +1191,8 @@
   "text-transform": {
     "inherited": true,
     "initial": "none",
-    "valid-identifiers": [
-      "capitalize",
-      "full-size-kana",
-      "full-width",
-      "lowercase",
-      "none",
-      "uppercase"
+    "valid-types": [
+      "text-transform"
     ]
   },
   "top": {
@@ -1421,17 +1247,8 @@
     "initial": "baseline",
     "valid-types": [
       "length",
-      "percentage"
-    ],
-    "valid-identifiers": [
-      "baseline",
-      "bottom",
-      "middle",
-      "sub",
-      "super",
-      "text-bottom",
-      "text-top",
-      "top"
+      "percentage",
+      "vertical-align"
     ],
     "quirks": [
       "unitless-length"
@@ -1440,10 +1257,8 @@
   "visibility": {
     "inherited": true,
     "initial": "visible",
-    "valid-identifiers": [
-      "collapse",
-      "hidden",
-      "visible"
+    "valid-types": [
+      "visibility"
     ]
   },
   "width": {
@@ -1463,12 +1278,8 @@
   "white-space": {
     "inherited": true,
     "initial": "normal",
-    "valid-identifiers": [
-      "normal",
-      "nowrap",
-      "pre",
-      "pre-line",
-      "pre-wrap"
+    "valid-types": [
+      "white-space"
     ]
   },
   "word-spacing": {
