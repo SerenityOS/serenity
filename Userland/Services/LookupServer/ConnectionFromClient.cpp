@@ -7,7 +7,7 @@
 #include "ConnectionFromClient.h"
 #include "LookupServer.h"
 #include <AK/IPv4Address.h>
-#include <LibDNS/DNSPacket.h>
+#include <LibDNS/Packet.h>
 
 namespace LookupServer {
 
@@ -28,7 +28,7 @@ void ConnectionFromClient::die()
 
 Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(String const& name)
 {
-    auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::A);
+    auto maybe_answers = LookupServer::the().lookup(name, RecordType::A);
     if (maybe_answers.is_error()) {
         dbgln("LookupServer: Failed to lookup A record: {}", maybe_answers.error());
         return { 1, {} };
@@ -53,7 +53,7 @@ Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_addre
         ip_address[1],
         ip_address[0]);
 
-    auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::PTR);
+    auto maybe_answers = LookupServer::the().lookup(name, RecordType::PTR);
     if (maybe_answers.is_error()) {
         dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
         return { 1, String() };

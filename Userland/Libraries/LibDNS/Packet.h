@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "DNSAnswer.h"
-#include "DNSQuestion.h"
+#include "Answer.h"
+#include "Question.h"
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -20,11 +20,11 @@ enum class ShouldRandomizeCase {
     Yes
 };
 
-class DNSPacket {
+class Packet {
 public:
-    DNSPacket() = default;
+    Packet() = default;
 
-    static Optional<DNSPacket> from_raw_packet(u8 const*, size_t);
+    static Optional<Packet> from_raw_packet(u8 const*, size_t);
     ByteBuffer to_byte_buffer() const;
 
     bool is_query() const { return !m_query_or_response; }
@@ -41,8 +41,8 @@ public:
     u16 id() const { return m_id; }
     void set_id(u16 id) { m_id = id; }
 
-    Vector<DNSQuestion> const& questions() const { return m_questions; }
-    Vector<DNSAnswer> const& answers() const { return m_answers; }
+    Vector<Question> const& questions() const { return m_questions; }
+    Vector<Answer> const& answers() const { return m_answers; }
 
     u16 question_count() const
     {
@@ -56,8 +56,8 @@ public:
         return m_answers.size();
     }
 
-    void add_question(DNSQuestion const&);
-    void add_answer(DNSAnswer const&);
+    void add_question(Question const&);
+    void add_answer(Answer const&);
 
     enum class Code : u8 {
         NOERROR = 0,
@@ -82,8 +82,8 @@ private:
     bool m_query_or_response { false };
     bool m_recursion_desired { true };
     bool m_recursion_available { true };
-    Vector<DNSQuestion> m_questions;
-    Vector<DNSAnswer> m_answers;
+    Vector<Question> m_questions;
+    Vector<Answer> m_answers;
 };
 
 }

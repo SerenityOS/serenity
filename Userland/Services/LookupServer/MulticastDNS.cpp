@@ -52,7 +52,7 @@ MulticastDNS::MulticastDNS(Object* parent)
 void MulticastDNS::handle_packet()
 {
     auto buffer = receive(1024);
-    auto optional_packet = DNSPacket::from_raw_packet(buffer.data(), buffer.size());
+    auto optional_packet = Packet::from_raw_packet(buffer.data(), buffer.size());
     if (!optional_packet.has_value()) {
         dbgln("Got an invalid mDNS packet");
         return;
@@ -63,7 +63,7 @@ void MulticastDNS::handle_packet()
         handle_query(packet);
 }
 
-void MulticastDNS::handle_query(DNSPacket const& packet)
+void MulticastDNS::handle_query(Packet const& packet)
 {
     bool should_reply = false;
 
@@ -79,19 +79,19 @@ void MulticastDNS::handle_query(DNSPacket const& packet)
 
 void MulticastDNS::announce()
 {
-    DNSPacket response;
+    Packet response;
     response.set_is_response();
-    response.set_code(DNSPacket::Code::NOERROR);
+    response.set_code(Packet::Code::NOERROR);
     response.set_authoritative_answer(true);
     response.set_recursion_desired(false);
     response.set_recursion_available(false);
 
     for (auto& address : local_addresses()) {
         auto raw_addr = address.to_in_addr_t();
-        DNSAnswer answer {
+        Answer answer {
             m_hostname,
-            DNSRecordType::A,
-            DNSRecordClass::IN,
+            RecordType::A,
+            RecordClass::IN,
             120,
             String { (char const*)&raw_addr, sizeof(raw_addr) },
             true,
@@ -103,7 +103,7 @@ void MulticastDNS::announce()
         perror("Failed to emit response packet");
 }
 
-ErrorOr<size_t> MulticastDNS::emit_packet(DNSPacket const& packet, sockaddr_in const* destination)
+ErrorOr<size_t> MulticastDNS::emit_packet(Packet const& packet, sockaddr_in const* destination)
 {
     auto buffer = packet.to_byte_buffer();
     if (!destination)
@@ -141,19 +141,19 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
     return addresses;
 }
 
-Vector<DNSAnswer> MulticastDNS::lookup(DNSName const& name, DNSRecordType record_type)
+Vector<Answer> MulticastDNS::lookup(Name const& name, RecordType record_type)
 {
-    DNSPacket request;
+    Packet request;
     request.set_is_query();
     request.set_recursion_desired(false);
-    request.add_question({ name, record_type, DNSRecordClass::IN, false });
+    request.add_question({ name, record_type, RecordClass::IN, false });
 
     if (emit_packet(request).is_error()) {
         perror("failed to emit request packet");
         return {};
     }
 
-    Vector<DNSAnswer> answers;
+    Vector<Answer> answers;
 
     // FIXME: It would be better not to block
     // the main loop while we wait for a response.
@@ -170,7 +170,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(DNSName const& name, DNSRecordType record
         auto buffer = receive(1024);
         if (buffer.is_empty())
             return {};
-        auto optional_packet = DNSPacket::from_raw_packet(buffer.data(), buffer.size());
+        auto optional_packet = Packet::from_raw_packet(buffer.data(), buffer.size());
         if (!optional_packet.has_value()) {
             dbgln("Got an invalid mDNS packet");
             continue;

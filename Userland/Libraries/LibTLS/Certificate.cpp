@@ -409,7 +409,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 break;
                             case 2: {
                                 // DNS Name
-                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::DNSName");
+                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::Name");
                                 certificate.SAN.append(name);
                                 break;
                             }
