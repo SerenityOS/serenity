@@ -11,6 +11,7 @@
 #include <LibCore/Object.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
+#include <LibGfx/Filters/ColorBlindnessFilter.h>
 #include <LibGfx/Font/Font.h>
 #include <WindowServer/Overlays.h>
 
@@ -188,6 +189,8 @@ public:
         return adopt_own(*new CompositorScreenData());
     }
 
+    void change_filter(int filter);
+
 private:
     Compositor();
     void init_bitmaps();
@@ -247,6 +250,8 @@ private:
     Optional<Gfx::Color> m_custom_background_color;
 
     HashTable<Animation*> m_animations;
+
+    OwnPtr<Gfx::ColorBlindnessFilter> m_color_filter;
 };
 
 }

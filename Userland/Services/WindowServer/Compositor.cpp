@@ -17,6 +17,7 @@
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Timer.h>
+#include <LibGfx/Filters/ColorBlindnessFilter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
@@ -62,6 +63,8 @@ Compositor::Compositor()
             compose();
         },
         this);
+
+    change_filter(0);
 
     init_bitmaps();
 }
@@ -333,9 +336,15 @@ void Compositor::compose()
                 auto screen_render_rect = screen_rect.intersected(render_rect);
                 if (!screen_render_rect.is_empty()) {
                     dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
-                    prepare_rect(screen, render_rect);
-                    auto& back_painter = *screen.compositor_screen_data().m_back_painter;
-                    paint_wallpaper(screen, back_painter, render_rect, screen_rect);
+                    if (m_color_filter == nullptr) {
+                        prepare_rect(screen, render_rect);
+                        auto& back_painter = *screen.compositor_screen_data().m_back_painter;
+                        paint_wallpaper(screen, back_painter, render_rect, screen_rect);
+                    } else {
+                        prepare_transparency_rect(screen, render_rect);
+                        auto& back_painter = *screen.compositor_screen_data().m_temp_painter;
+                        paint_wallpaper(screen, back_painter, render_rect, screen_rect);
+                    }
                 }
                 return IterationDecision::Continue;
             });
@@ -477,11 +486,20 @@ void Compositor::compose()
                         continue;
                     dbgln_if(COMPOSE_DEBUG, "    render opaque: {} on screen #{}", screen_render_rect, screen->index());
 
-                    prepare_rect(*screen, screen_render_rect);
-                    auto& back_painter = *screen->compositor_screen_data().m_back_painter;
-                    Gfx::PainterStateSaver saver(back_painter);
-                    back_painter.add_clip_rect(screen_render_rect);
-                    compose_window_rect(*screen, back_painter, screen_render_rect);
+                    if (m_color_filter == nullptr) {
+                        prepare_rect(*screen, screen_render_rect);
+                        auto& back_painter = *screen->compositor_screen_data().m_back_painter;
+                        Gfx::PainterStateSaver saver(back_painter);
+                        back_painter.add_clip_rect(screen_render_rect);
+                        compose_window_rect(*screen, back_painter, screen_render_rect);
+                    } else {
+                        prepare_transparency_rect(*screen, screen_render_rect);
+                        auto& back_painter = *screen->compositor_screen_data().m_temp_painter;
+                        Gfx::PainterStateSaver saver(back_painter);
+                        back_painter.add_clip_rect(screen_render_rect);
+                        compose_window_rect(*screen, back_painter, screen_render_rect);
+                    }
+
                 }
                 return IterationDecision::Continue;
             });
@@ -572,8 +590,15 @@ void Compositor::compose()
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
             auto& screen_data = screen.compositor_screen_data();
-            for (auto& rect : screen_data.m_flush_transparent_rects.rects())
-                screen_data.m_back_painter->blit(rect.location(), *screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()));
+            if (m_color_filter != nullptr) {
+                for (auto& rect : screen_data.m_flush_transparent_rects.rects()) {
+                    m_color_filter->apply(*screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()), *screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()));
+                    screen_data.m_back_painter->blit(rect.location(), *screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()));
+                }
+            } else {
+                for (auto& rect : screen_data.m_flush_transparent_rects.rects())
+                    screen_data.m_back_painter->blit(rect.location(), *screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()));
+            }
             return IterationDecision::Continue;
         });
     }
@@ -1671,6 +1696,44 @@ void Compositor::switch_to_window_stack(WindowStack& new_window_stack, bool show
         finish_window_stack_switch();
     };
     m_window_stack_transition_animation->start();
+}
+
+void Compositor::change_filter(int filter)
+{
+    switch (filter) {
+    case 1:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_protanopia();
+        break;
+    case 2:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_protanomaly();
+        break;
+    case 3:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_deuteranopia();
+        break;
+    case 4:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_deuteranomaly();
+        break;
+    case 5:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_tritanopia();
+        break;
+    case 6:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_tritanomaly();
+        break;
+    case 7:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_achromatopsia();
+        break;
+    case 8:
+        m_color_filter = Gfx::ColorBlindnessFilter::create_achromatomaly();
+        break;
+    default:
+        m_color_filter = nullptr;
+    }
+
+    invalidate_window();
+    invalidate_cursor();
+    invalidate_occlusions();
+    invalidate_screen();
+    init_bitmaps();
 }
 
 }

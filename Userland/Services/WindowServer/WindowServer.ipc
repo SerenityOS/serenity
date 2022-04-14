@@ -141,6 +141,8 @@ endpoint WindowServer
     get_screen_bitmap_around_cursor(Gfx::IntSize size) => (Gfx::ShareableBitmap bitmap)
     get_color_under_cursor() => (Optional<Gfx::Color> color)
 
+    set_screen_filter(int filter) =|
+
     pong() =|
 
     set_double_click_speed(int speed) =|

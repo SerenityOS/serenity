@@ -11,6 +11,7 @@
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
 #include "ThemesSettingsWidget.h"
+#include "AccessibilitySettingsWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -35,6 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"));
+    (void)TRY(window->add_tab<DisplaySettings::AccessibilitySettingsWidget>("Accessibility"));
 
     window->set_icon(app_icon.bitmap_for_size(16));
 

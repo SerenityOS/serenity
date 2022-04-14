@@ -174,6 +174,7 @@ private:
     virtual void remove_window_stealing_for_client(i32, i32) override;
     virtual void remove_window_stealing(i32) override;
     virtual Messages::WindowServer::GetColorUnderCursorResponse get_color_under_cursor() override;
+    virtual void set_screen_filter(int filter) override;
 
     Window* window_from_id(i32 window_id);
 

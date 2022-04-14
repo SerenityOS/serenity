@@ -1240,4 +1240,9 @@ void ConnectionFromClient::remove_window_stealing(i32 window_id)
     window->remove_all_stealing();
 }
 
+void ConnectionFromClient::set_screen_filter(int filter)
+{
+    Compositor::the().change_filter(filter);
+}
+
 }
