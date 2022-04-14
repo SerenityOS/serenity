@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -311,4 +311,22 @@ u32 Game::largest_tile() const
             tile = max(tile, cell);
     }
     return tile;
+}
+
+void Game::start_timer_if_not_started()
+{
+    if (!m_elapsed_timer.is_valid())
+        m_elapsed_timer.start();
+}
+
+void Game::stop_timer()
+{
+    if (largest_tile() == target_tile())
+        m_winning_time = m_elapsed_timer.elapsed_time();
+    m_elapsed_timer.reset();
+}
+
+Time Game::time_since_first_move() const
+{
+    return m_winning_time + (m_elapsed_timer.is_valid() ? m_elapsed_timer.elapsed_time() : Time::zero());
 }

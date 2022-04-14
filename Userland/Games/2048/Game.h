@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibCore/ElapsedTimer.h>
 
 class Game final {
 public:
@@ -32,6 +33,9 @@ public:
 
     size_t score() const { return m_score; }
     size_t turns() const { return m_turns; }
+    Time time_since_first_move() const;
+    void start_timer_if_not_started();
+    void stop_timer();
     u32 target_tile() const { return m_target_tile; }
     u32 largest_tile() const;
     void set_want_to_continue() { m_want_to_continue = true; }
@@ -124,4 +128,6 @@ private:
     Board m_board;
     size_t m_score { 0 };
     size_t m_turns { 0 };
+    Core::ElapsedTimer m_elapsed_timer;
+    Time m_winning_time;
 };

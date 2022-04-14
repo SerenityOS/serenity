@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibCore/Timer.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -73,7 +74,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto board_view = TRY(main_widget->try_add<BoardView>(&game.board()));
     board_view->set_focus(true);
-    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
+    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>(2));
+    statusbar->set_text(1, "Time: 00:00");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -86,16 +88,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         statusbar->set_override_text({});
     };
 
+    auto update_time = [&]() {
+        auto seconds_since_first_move = game.time_since_first_move().to_seconds();
+        statusbar->set_text(1, String::formatted("Time: {:02}:{:02}", seconds_since_first_move / 60, seconds_since_first_move % 60));
+    };
+
     auto update = [&]() {
         board_view->set_board(&game.board());
         board_view->update();
         statusbar->set_text(String::formatted("Score: {}", game.score()));
+        game.start_timer_if_not_started();
+        update_time();
     };
 
     update();
 
     Vector<Game> undo_stack;
     Vector<Game> redo_stack;
+
+    auto time_updater = Core::Timer::create_repeating(1000, [&] {
+        update_time();
+    });
+    time_updater->start();
 
     auto change_settings = [&] {
         auto size_dialog = GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
@@ -134,6 +148,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     board_view->on_move = [&](Game::Direction direction) {
+        game.start_timer_if_not_started();
         undo_stack.append(game);
         auto outcome = game.attempt_move(direction);
         switch (outcome) {
@@ -147,6 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         case Game::MoveOutcome::Won: {
             update();
+            game.stop_timer();
             auto want_to_continue = GUI::MessageBox::show(window,
                 String::formatted("You won the game in {} turns with a score of {}. Would you like to continue?", game.turns(), game.score()),
                 "Congratulations!",
@@ -156,9 +172,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 game.set_want_to_continue();
             else
                 start_a_new_game();
+            game.start_timer_if_not_started();
             break;
         }
         case Game::MoveOutcome::GameOver:
+            time_updater->stop();
             update();
             GUI::MessageBox::show(window,
                 String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
