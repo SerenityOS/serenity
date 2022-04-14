@@ -590,9 +590,10 @@ if (BUILD_LAGOM)
         endforeach()
 
         # GL
+        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
         file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
         foreach(source ${LIBGL_TESTS})
-            lagom_test(${source} LIBS LagomGL)
+            lagom_test(${source} WORKING_DIRECTORY LIBS LagomGL LagomGPU LagomSoftGPU)
         endforeach()
 
         # PDF
