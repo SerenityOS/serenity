@@ -5,6 +5,7 @@
  */
 
 #include "DHCPv4Client.h"
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
@@ -365,6 +366,12 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet con
     auto maybe_dhcp_server_ip = offer.parse_options().get<IPv4Address>(DHCPOption::ServerIdentifier);
     if (maybe_dhcp_server_ip.has_value())
         builder.add_option(DHCPOption::ServerIdentifier, sizeof(IPv4Address), &maybe_dhcp_server_ip.value());
+
+    AK::Array<DHCPOption, 2> parameter_request_list = {
+        DHCPOption::SubnetMask,
+        DHCPOption::Router,
+    };
+    builder.add_option(DHCPOption::ParameterRequestList, parameter_request_list.size(), &parameter_request_list);
 
     auto& dhcp_packet = builder.build();
 
