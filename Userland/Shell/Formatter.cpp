@@ -583,12 +583,24 @@ void Formatter::visit(const AST::MatchExpr* node)
                 insert_separator();
             first_entry = false;
             auto first = true;
-            for (auto& option : entry.options) {
-                if (!first)
-                    current_builder().append(" | ");
-                first = false;
-                option.visit(*this);
-            }
+            entry.options.visit(
+                [&](NonnullRefPtrVector<AST::Node> const& patterns) {
+                    for (auto& option : patterns) {
+                        if (!first)
+                            current_builder().append(" | ");
+                        first = false;
+                        option.visit(*this);
+                    }
+                },
+                [&](Vector<Regex<ECMA262>> const& patterns) {
+                    for (auto& option : patterns) {
+                        if (!first)
+                            current_builder().append(" | ");
+                        first = false;
+                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, option.pattern_value);
+                        node->visit(*this);
+                    }
+                });
 
             current_builder().append(' ');
             if (entry.match_names.has_value() && !entry.match_names.value().is_empty()) {

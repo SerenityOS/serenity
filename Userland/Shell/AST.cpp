@@ -2117,8 +2117,15 @@ void MatchExpr::dump(int level) const
             builder.append(')');
         }
         print_indented(builder.string_view(), level + 2);
-        for (auto& node : entry.options)
-            node.dump(level + 3);
+        entry.options.visit(
+            [&](NonnullRefPtrVector<Node> const& options) {
+                for (auto& option : options)
+                    option.dump(level + 3);
+            },
+            [&](Vector<Regex<ECMA262>> const& options) {
+                for (auto& option : options)
+                    print_indented(String::formatted("(regex: {})", option.pattern_value), level + 3);
+            });
         print_indented("(execute)", level + 2);
         if (entry.body)
             entry.body->dump(level + 3);
@@ -2136,39 +2143,59 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
     auto list = value->resolve_as_list(shell);
 
     auto list_matches = [&](auto&& pattern, auto& spans) {
-        if (pattern.size() != list.size())
-            return false;
-
-        for (size_t i = 0; i < pattern.size(); ++i) {
-            Vector<AK::MaskSpan> mask_spans;
-            if (!list[i].matches(pattern[i], mask_spans))
+        if constexpr (IsSame<RemoveCVReference<decltype(pattern)>, Regex<ECMA262>>) {
+            if (list.size() != 1)
                 return false;
-            for (auto& span : mask_spans)
-                spans.append(list[i].substring(span.start, span.length));
-        }
+            auto& subject = list.first();
+            auto match = pattern.match(subject);
+            if (!match.success)
+                return false;
 
-        return true;
+            spans.ensure_capacity(match.n_capture_groups);
+            for (size_t i = 0; i < match.n_capture_groups; ++i) {
+                auto& capture = match.capture_group_matches[0][i];
+                spans.append(capture.view.to_string());
+            }
+            return true;
+        } else {
+            if (pattern.size() != list.size())
+                return false;
+
+            for (size_t i = 0; i < pattern.size(); ++i) {
+                Vector<AK::MaskSpan> mask_spans;
+                if (!list[i].matches(pattern[i], mask_spans))
+                    return false;
+                for (auto& span : mask_spans)
+                    spans.append(list[i].substring(span.start, span.length));
+            }
+
+            return true;
+        }
     };
 
-    auto resolve_pattern = [&](auto& option) {
-        Vector<String> pattern;
-        if (option.is_glob()) {
-            pattern.append(static_cast<const Glob*>(&option)->text());
-        } else if (option.is_bareword()) {
-            pattern.append(static_cast<const BarewordLiteral*>(&option)->text());
+    auto resolve_pattern = [&](auto& option) -> decltype(auto) {
+        if constexpr (IsSame<RemoveCVReference<decltype(option)>, Regex<ECMA262>>) {
+            return option;
         } else {
-            auto list = option.run(shell);
-            if (shell && shell->has_any_error())
-                return pattern;
+            Vector<String> pattern;
+            if (option.is_glob()) {
+                pattern.append(static_cast<const Glob*>(&option)->text());
+            } else if (option.is_bareword()) {
+                pattern.append(static_cast<const BarewordLiteral*>(&option)->text());
+            } else {
+                auto list = option.run(shell);
+                if (shell && shell->has_any_error())
+                    return pattern;
 
-            option.for_each_entry(shell, [&](auto&& value) {
-                pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behavior,
-                                                                 //       asking the node for a 'raw' value.
-                return IterationDecision::Continue;
-            });
+                option.for_each_entry(shell, [&](auto&& value) {
+                    pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behavior,
+                                                                     //       asking the node for a 'raw' value.
+                    return IterationDecision::Continue;
+                });
+            }
+
+            return pattern;
         }
-
-        return pattern;
     };
 
     auto frame = shell->push_frame(String::formatted("match ({})", this));
@@ -2176,24 +2203,31 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         shell->set_local_variable(m_expr_name, value, true);
 
     for (auto& entry : m_entries) {
-        for (auto& option : entry.options) {
-            Vector<String> spans;
-            if (list_matches(resolve_pattern(option), spans)) {
-                if (entry.body) {
-                    if (entry.match_names.has_value()) {
-                        size_t i = 0;
-                        for (auto& name : entry.match_names.value()) {
-                            if (spans.size() > i)
-                                shell->set_local_variable(name, make_ref_counted<AST::StringValue>(spans[i]), true);
-                            ++i;
+        auto result = entry.options.visit([&](auto& options) -> Variant<IterationDecision, RefPtr<Value>> {
+            for (auto& option : options) {
+                Vector<String> spans;
+                if (list_matches(resolve_pattern(option), spans)) {
+                    if (entry.body) {
+                        if (entry.match_names.has_value()) {
+                            size_t i = 0;
+                            for (auto& name : entry.match_names.value()) {
+                                if (spans.size() > i)
+                                    shell->set_local_variable(name, make_ref_counted<AST::StringValue>(spans[i]), true);
+                                ++i;
+                            }
                         }
+                        return entry.body->run(shell);
                     }
-                    return entry.body->run(shell);
-                } else {
-                    return make_ref_counted<AST::ListValue>({});
+                    return RefPtr<Value>(make_ref_counted<AST::ListValue>({}));
                 }
             }
-        }
+            return IterationDecision::Continue;
+        });
+        if (result.has<IterationDecision>() && result.get<IterationDecision>() == IterationDecision::Break)
+            break;
+
+        if (result.has<RefPtr<Value>>())
+            return move(result).get<RefPtr<Value>>();
     }
 
     shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!", position());
@@ -2211,8 +2245,12 @@ void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, Highligh
 
     for (auto& entry : m_entries) {
         metadata.is_first_in_list = false;
-        for (auto& option : entry.options)
-            option.highlight_in_editor(editor, shell, metadata);
+        entry.options.visit(
+            [&](NonnullRefPtrVector<Node>& node_options) {
+                for (auto& option : node_options)
+                    option.highlight_in_editor(editor, shell, metadata);
+            },
+            [](auto&) {});
 
         metadata.is_first_in_list = true;
         if (entry.body)
