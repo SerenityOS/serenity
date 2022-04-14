@@ -140,8 +140,16 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     }
     case CSS::PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
-    case CSS::PropertyID::TextDecorationLine:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_line()));
+    case CSS::PropertyID::TextDecorationLine: {
+        auto text_decoration_lines = layout_node.computed_values().text_decoration_line();
+        if (text_decoration_lines.is_empty())
+            return IdentifierStyleValue::create(ValueID::None);
+        NonnullRefPtrVector<StyleValue> style_values;
+        for (auto const& line : text_decoration_lines) {
+            style_values.append(IdentifierStyleValue::create(to_value_id(line)));
+        }
+        return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
+    }
     case CSS::PropertyID::TextDecorationStyle:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_style()));
     case CSS::PropertyID::TextTransform:

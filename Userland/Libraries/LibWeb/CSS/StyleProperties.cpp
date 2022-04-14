@@ -490,10 +490,23 @@ CSS::Display StyleProperties::display() const
     }
 }
 
-Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
+Vector<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
 {
     auto value = property(CSS::PropertyID::TextDecorationLine);
-    return value_id_to_text_decoration_line(value->to_identifier());
+
+    if (value->is_value_list()) {
+        Vector<CSS::TextDecorationLine> lines;
+        auto& values = value->as_value_list().values();
+        for (auto const& item : values) {
+            lines.append(value_id_to_text_decoration_line(item.to_identifier()).value());
+        }
+        return lines;
+    }
+
+    if (value->is_identifier() && value->to_identifier() == ValueID::None)
+        return {};
+
+    VERIFY_NOT_REACHED();
 }
 
 Optional<CSS::TextDecorationStyle> StyleProperties::text_decoration_style() const
