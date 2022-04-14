@@ -123,7 +123,7 @@ static size_t find_largest_image(ICOLoadingContext const& context)
     size_t index = 0;
     size_t largest_index = 0;
     for (auto const& desc : context.images) {
-        if (desc.width * desc.height > max_area) {
+        if (static_cast<size_t>(desc.width) * static_cast<size_t>(desc.height) > max_area) {
             max_area = desc.width * desc.height;
             largest_index = index;
         }
