@@ -30,6 +30,7 @@ set(KERNEL_SOURCES
     Bus/USB/SysFSUSB.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
+    Bus/USB/USBConfiguration.cpp
     Bus/USB/USBController.cpp
     Bus/USB/USBDevice.cpp
     Bus/USB/USBHub.cpp
