@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -361,6 +361,11 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet con
     // set packet options
     builder.set_message_type(DHCPMessageType::DHCPRequest);
     builder.add_option(DHCPOption::RequestedIPAddress, sizeof(IPv4Address), &offer.yiaddr());
+
+    auto maybe_dhcp_server_ip = offer.parse_options().get<IPv4Address>(DHCPOption::ServerIdentifier);
+    if (maybe_dhcp_server_ip.has_value())
+        builder.add_option(DHCPOption::ServerIdentifier, sizeof(IPv4Address), &maybe_dhcp_server_ip.value());
+
     auto& dhcp_packet = builder.build();
 
     // broadcast the "request" request
