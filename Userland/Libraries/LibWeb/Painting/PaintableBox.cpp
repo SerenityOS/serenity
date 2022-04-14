@@ -289,35 +289,10 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
 
 static void paint_text_decoration(Gfx::Painter& painter, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
 {
-    Gfx::IntPoint line_start_point {};
-    Gfx::IntPoint line_end_point {};
-
     auto& font = fragment.layout_node().font();
     auto fragment_box = enclosing_int_rect(fragment.absolute_rect());
     auto glyph_height = font.pixel_size();
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
-
-    switch (text_node.computed_values().text_decoration_line()) {
-    case CSS::TextDecorationLine::None:
-        return;
-    case CSS::TextDecorationLine::Underline:
-        line_start_point = fragment_box.top_left().translated(0, baseline + 2);
-        line_end_point = fragment_box.top_right().translated(0, baseline + 2);
-        break;
-    case CSS::TextDecorationLine::Overline:
-        line_start_point = fragment_box.top_left().translated(0, baseline - glyph_height);
-        line_end_point = fragment_box.top_right().translated(0, baseline - glyph_height);
-        break;
-    case CSS::TextDecorationLine::LineThrough: {
-        auto x_height = font.x_height();
-        line_start_point = fragment_box.top_left().translated(0, baseline - x_height / 2);
-        line_end_point = fragment_box.top_right().translated(0, baseline - x_height / 2);
-        break;
-    }
-    case CSS::TextDecorationLine::Blink:
-        // Conforming user agents may simply not blink the text
-        return;
-    }
 
     auto line_color = text_node.computed_values().text_decoration_color();
 
@@ -329,38 +304,66 @@ static void paint_text_decoration(Gfx::Painter& painter, Layout::Node const& tex
         return computed_thickness.to_px(text_node);
     }();
 
-    switch (text_node.computed_values().text_decoration_style()) {
-    case CSS::TextDecorationStyle::Solid:
-        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Solid);
-        break;
-    case CSS::TextDecorationStyle::Double:
-        switch (text_node.computed_values().text_decoration_line()) {
+    auto text_decoration_lines = text_node.computed_values().text_decoration_line();
+    for (auto line : text_decoration_lines) {
+        Gfx::IntPoint line_start_point {};
+        Gfx::IntPoint line_end_point {};
+
+        switch (line) {
+        case CSS::TextDecorationLine::None:
+            return;
         case CSS::TextDecorationLine::Underline:
+            line_start_point = fragment_box.top_left().translated(0, baseline + 2);
+            line_end_point = fragment_box.top_right().translated(0, baseline + 2);
             break;
         case CSS::TextDecorationLine::Overline:
-            line_start_point.translate_by(0, -line_thickness - 1);
-            line_end_point.translate_by(0, -line_thickness - 1);
+            line_start_point = fragment_box.top_left().translated(0, baseline - glyph_height);
+            line_end_point = fragment_box.top_right().translated(0, baseline - glyph_height);
             break;
-        case CSS::TextDecorationLine::LineThrough:
-            line_start_point.translate_by(0, -line_thickness / 2);
-            line_end_point.translate_by(0, -line_thickness / 2);
+        case CSS::TextDecorationLine::LineThrough: {
+            auto x_height = font.x_height();
+            line_start_point = fragment_box.top_left().translated(0, baseline - x_height / 2);
+            line_end_point = fragment_box.top_right().translated(0, baseline - x_height / 2);
             break;
-        default:
-            VERIFY_NOT_REACHED();
+        }
+        case CSS::TextDecorationLine::Blink:
+            // Conforming user agents may simply not blink the text
+            return;
         }
 
-        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness);
-        painter.draw_line(line_start_point.translated(0, line_thickness + 1), line_end_point.translated(0, line_thickness + 1), line_color, line_thickness);
-        break;
-    case CSS::TextDecorationStyle::Dashed:
-        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dashed);
-        break;
-    case CSS::TextDecorationStyle::Dotted:
-        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dotted);
-        break;
-    case CSS::TextDecorationStyle::Wavy:
-        painter.draw_triangle_wave(line_start_point, line_end_point, line_color, line_thickness + 1, line_thickness);
-        break;
+        switch (text_node.computed_values().text_decoration_style()) {
+        case CSS::TextDecorationStyle::Solid:
+            painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Solid);
+            break;
+        case CSS::TextDecorationStyle::Double:
+            switch (line) {
+            case CSS::TextDecorationLine::Underline:
+                break;
+            case CSS::TextDecorationLine::Overline:
+                line_start_point.translate_by(0, -line_thickness - 1);
+                line_end_point.translate_by(0, -line_thickness - 1);
+                break;
+            case CSS::TextDecorationLine::LineThrough:
+                line_start_point.translate_by(0, -line_thickness / 2);
+                line_end_point.translate_by(0, -line_thickness / 2);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+
+            painter.draw_line(line_start_point, line_end_point, line_color, line_thickness);
+            painter.draw_line(line_start_point.translated(0, line_thickness + 1), line_end_point.translated(0, line_thickness + 1), line_color, line_thickness);
+            break;
+        case CSS::TextDecorationStyle::Dashed:
+            painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dashed);
+            break;
+        case CSS::TextDecorationStyle::Dotted:
+            painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dotted);
+            break;
+        case CSS::TextDecorationStyle::Wavy:
+            painter.draw_triangle_wave(line_start_point, line_end_point, line_color, line_thickness + 1, line_thickness);
+            break;
+        }
     }
 }
 

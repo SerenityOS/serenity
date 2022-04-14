@@ -4673,15 +4673,15 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& co
 
 RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
-    if (component_values.size() > 4)
-        return nullptr;
-
     RefPtr<StyleValue> decoration_line;
     RefPtr<StyleValue> decoration_thickness;
     RefPtr<StyleValue> decoration_style;
     RefPtr<StyleValue> decoration_color;
 
-    for (auto& part : component_values) {
+    auto tokens = TokenStream { component_values };
+
+    while (tokens.has_next_token()) {
+        auto& part = tokens.next_token();
         auto value = parse_css_value(part);
         if (!value)
             return nullptr;
@@ -4695,7 +4695,11 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
         if (property_accepts_value(PropertyID::TextDecorationLine, *value)) {
             if (decoration_line)
                 return nullptr;
-            decoration_line = value.release_nonnull();
+            tokens.reconsume_current_input_token();
+            auto parsed_decoration_line = parse_text_decoration_line_value(tokens);
+            if (!parsed_decoration_line)
+                return nullptr;
+            decoration_line = parsed_decoration_line.release_nonnull();
             continue;
         }
         if (property_accepts_value(PropertyID::TextDecorationThickness, *value)) {
@@ -4724,6 +4728,45 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
         decoration_color = property_initial_value(PropertyID::TextDecorationColor);
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
+}
+
+RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
+{
+    NonnullRefPtrVector<StyleValue> style_values;
+
+    while (tokens.has_next_token()) {
+        auto& token = tokens.next_token();
+        auto maybe_value = parse_css_value(token);
+        if (!maybe_value || !property_accepts_value(PropertyID::TextDecorationLine, *maybe_value)) {
+            tokens.reconsume_current_input_token();
+            break;
+        }
+        auto value = maybe_value.release_nonnull();
+
+        if (auto maybe_line = value_id_to_text_decoration_line(value->to_identifier()); maybe_line.has_value()) {
+            auto line = maybe_line.release_value();
+            if (line == TextDecorationLine::None) {
+                if (!style_values.is_empty()) {
+                    tokens.reconsume_current_input_token();
+                    break;
+                }
+                return value;
+            }
+            if (style_values.contains_slow(value)) {
+                tokens.reconsume_current_input_token();
+                break;
+            }
+            style_values.append(move(value));
+            continue;
+        }
+
+        tokens.reconsume_current_input_token();
+        break;
+    }
+
+    if (style_values.is_empty())
+        return nullptr;
+    return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
 }
 
 static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
@@ -5076,6 +5119,13 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         if (auto parsed_value = parse_text_decoration_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
+    case PropertyID::TextDecorationLine: {
+        TokenStream tokens { component_values };
+        auto parsed_value = parse_text_decoration_line_value(tokens);
+        if (parsed_value && !tokens.has_next_token())
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
+    }
     case PropertyID::TextShadow:
         if (auto parsed_value = parse_shadow_value(component_values, AllowInsetKeyword::No))
             return parsed_value.release_nonnull();
