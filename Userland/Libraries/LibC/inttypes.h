@@ -11,7 +11,7 @@
 
 __BEGIN_DECLS
 
-#ifndef __x86_64__
+#ifdef __i386__
 #    define __PRI64_PREFIX "ll"
 #    define __PRIPTR_PREFIX
 #else
