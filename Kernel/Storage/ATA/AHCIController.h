@@ -56,5 +56,10 @@ private:
 
     // FIXME: There could be multiple IRQ (MSI) handlers for AHCI. Find a way to use all of them.
     OwnPtr<AHCIInterruptHandler> m_irq_handler;
+
+    // Note: This lock is intended to be locked when doing changes to HBA registers
+    // that affect its core functionality in a manner that controls all attached storage devices
+    // to the HBA SATA ports.
+    mutable Spinlock m_hba_control_lock;
 };
 }
