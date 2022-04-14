@@ -132,11 +132,12 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             break;
         }
 
-        result.offset_region_to_remove = { next_suggestion.invariant_offset, shown_length };
-        result.new_cursor_offset = actual_offset;
-
         auto& suggestion = suggest();
         set_current_suggestion_initiation_index(initiation_start_index);
+
+        result.offset_region_to_remove = { next_suggestion.invariant_offset, shown_length };
+        result.new_cursor_offset = actual_offset;
+        result.static_offset_from_cursor = next_suggestion.static_offset;
 
         if (mode == CompletePrefix) {
             // Only auto-complete *if possible*.

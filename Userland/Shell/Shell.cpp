@@ -1474,7 +1474,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token, escape_mode).length();
-    size_t static_offset = last_slash + 1;
+    size_t static_offset = 0;
     auto invariant_offset = token_length;
     if (m_editor)
         m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
