@@ -39,7 +39,7 @@ public:
     auto const& properties() const { return m_property_values; }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
-    Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
+    NonnullRefPtr<StyleValue> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;

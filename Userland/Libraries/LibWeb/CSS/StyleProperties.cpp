@@ -35,20 +35,17 @@ void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue>
     m_property_values[to_underlying(id)] = move(value);
 }
 
-Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID property_id) const
+NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id) const
 {
     auto value = m_property_values[to_underlying(property_id)];
-    if (!value)
-        return {};
+    // By the time we call this method, all properties have values assigned.
+    VERIFY(!value.is_null());
     return value.release_nonnull();
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
 {
-    auto maybe_value = property(id);
-    if (!maybe_value.has_value())
-        return fallback;
-    auto& value = maybe_value.value();
+    auto value = property(id);
 
     if (value->is_calculated())
         return Length::make_calculated(value->as_calculated());
@@ -66,10 +63,7 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
 
 Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id) const
 {
-    auto maybe_value = property(id);
-    if (!maybe_value.has_value())
-        return {};
-    auto& value = maybe_value.value();
+    auto value = property(id);
 
     if (value->is_calculated())
         return LengthPercentage { value->as_calculated() };
@@ -96,9 +90,9 @@ LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID t
 Color StyleProperties::color_or_fallback(CSS::PropertyID id, Layout::NodeWithStyle const& node, Color fallback) const
 {
     auto value = property(id);
-    if (!value.has_value() || !value.value()->has_color())
+    if (!value->has_color())
         return fallback;
-    return value.value()->to_color(node);
+    return value->to_color(node);
 }
 
 NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold)
@@ -117,26 +111,24 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
 
 float StyleProperties::line_height(Layout::Node const& layout_node) const
 {
-    if (auto maybe_line_height = property(CSS::PropertyID::LineHeight); maybe_line_height.has_value()) {
-        auto line_height = maybe_line_height.release_value();
+    auto line_height = property(CSS::PropertyID::LineHeight);
 
-        if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
-            return layout_node.font().pixel_metrics().line_spacing();
+    if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
+        return layout_node.font().pixel_metrics().line_spacing();
 
-        if (line_height->is_length()) {
-            auto line_height_length = line_height->to_length();
-            if (!line_height_length.is_auto())
-                return line_height_length.to_px(layout_node);
-        }
+    if (line_height->is_length()) {
+        auto line_height_length = line_height->to_length();
+        if (!line_height_length.is_auto())
+            return line_height_length.to_px(layout_node);
+    }
 
-        if (line_height->is_numeric())
-            return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
+    if (line_height->is_numeric())
+        return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
 
-        if (line_height->is_percentage()) {
-            // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
-            auto& percentage = line_height->as_percentage().percentage();
-            return Length(percentage.as_fraction(), Length::Type::Em).to_px(layout_node);
-        }
+    if (line_height->is_percentage()) {
+        // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
+        auto& percentage = line_height->as_percentage().percentage();
+        return Length(percentage.as_fraction(), Length::Type::Em).to_px(layout_node);
     }
 
     return layout_node.font().pixel_metrics().line_spacing();
@@ -144,11 +136,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
 
 Optional<int> StyleProperties::z_index() const
 {
-    auto maybe_value = property(CSS::PropertyID::ZIndex);
-    if (!maybe_value.has_value())
-        return {};
-    auto& value = maybe_value.value();
-
+    auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
     if (value->has_integer())
@@ -158,10 +146,7 @@ Optional<int> StyleProperties::z_index() const
 
 float StyleProperties::opacity() const
 {
-    auto maybe_value = property(CSS::PropertyID::Opacity);
-    if (!maybe_value.has_value())
-        return 1.0f;
-    auto& value = maybe_value.value();
+    auto value = property(CSS::PropertyID::Opacity);
 
     float unclamped_opacity = 1.0f;
 
@@ -192,25 +177,18 @@ float StyleProperties::opacity() const
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
 {
     auto value = property(CSS::PropertyID::FlexDirection);
-    if (!value.has_value())
-        return {};
-    return value_id_to_flex_direction(value.value()->to_identifier());
+    return value_id_to_flex_direction(value->to_identifier());
 }
 
 Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
 {
     auto value = property(CSS::PropertyID::FlexWrap);
-    if (!value.has_value())
-        return {};
-    return value_id_to_flex_wrap(value.value()->to_identifier());
+    return value_id_to_flex_wrap(value->to_identifier());
 }
 
 Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 {
-    auto maybe_value = property(CSS::PropertyID::FlexBasis);
-    if (!maybe_value.has_value())
-        return {};
-    auto& value = maybe_value.value();
+    auto value = property(CSS::PropertyID::FlexBasis);
 
     if (value->is_identifier() && value->to_identifier() == CSS::ValueID::Content)
         return { { CSS::FlexBasis::Content, {} } };
@@ -230,56 +208,50 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 float StyleProperties::flex_grow() const
 {
     auto value = property(CSS::PropertyID::FlexGrow);
-    if (!value.has_value() || !value.value()->has_number())
+    if (!value->has_number())
         return 0;
-    return value.value()->to_number();
+    return value->to_number();
 }
 
 float StyleProperties::flex_shrink() const
 {
     auto value = property(CSS::PropertyID::FlexShrink);
-    if (!value.has_value() || !value.value()->has_number())
+    if (!value->has_number())
         return 1;
-    return value.value()->to_number();
+    return value->to_number();
 }
 
 int StyleProperties::order() const
 {
     auto value = property(CSS::PropertyID::Order);
-    if (!value.has_value() || !value.value()->has_integer())
+    if (!value->has_integer())
         return 0;
-    return value.value()->to_integer();
+    return value->to_integer();
 }
 
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
 {
     auto value = property(CSS::PropertyID::ImageRendering);
-    if (!value.has_value())
-        return {};
-    return value_id_to_image_rendering(value.value()->to_identifier());
+    return value_id_to_image_rendering(value->to_identifier());
 }
 
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const
 {
     auto value = property(CSS::PropertyID::JustifyContent);
-    if (!value.has_value())
-        return {};
-    return value_id_to_justify_content(value.value()->to_identifier());
+    return value_id_to_justify_content(value->to_identifier());
 }
 
 Vector<CSS::Transformation> StyleProperties::transformations() const
 {
     auto value = property(CSS::PropertyID::Transform);
-    if (!value.has_value())
+
+    if (value->is_identifier() && value->to_identifier() == CSS::ValueID::None)
         return {};
 
-    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::None)
+    if (!value->is_value_list())
         return {};
 
-    if (!value.value()->is_value_list())
-        return {};
-
-    auto& list = value.value()->as_value_list();
+    auto& list = value->as_value_list();
 
     Vector<CSS::Transformation> transformations;
 
@@ -321,9 +293,9 @@ static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue c
 CSS::TransformOrigin StyleProperties::transform_origin() const
 {
     auto value = property(CSS::PropertyID::TransformOrigin);
-    if (!value.has_value() || !value.value()->is_value_list() || value.value()->as_value_list().size() != 2)
+    if (!value->is_value_list() || value->as_value_list().size() != 2)
         return {};
-    auto const& list = value.value()->as_value_list();
+    auto const& list = value->as_value_list();
     auto x_value = length_percentage_for_style_value(list.values()[0]);
     auto y_value = length_percentage_for_style_value(list.values()[1]);
     if (!x_value.has_value() || !y_value.has_value()) {
@@ -335,17 +307,13 @@ CSS::TransformOrigin StyleProperties::transform_origin() const
 Optional<CSS::AlignItems> StyleProperties::align_items() const
 {
     auto value = property(CSS::PropertyID::AlignItems);
-    if (!value.has_value())
-        return {};
-    return value_id_to_align_items(value.value()->to_identifier());
+    return value_id_to_align_items(value->to_identifier());
 }
 
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
-    if (!value.has_value())
-        return {};
-    return value_id_to_position(value.value()->to_identifier());
+    return value_id_to_position(value->to_identifier());
 }
 
 bool StyleProperties::operator==(StyleProperties const& other) const
@@ -377,66 +345,48 @@ bool StyleProperties::operator==(StyleProperties const& other) const
 Optional<CSS::TextAlign> StyleProperties::text_align() const
 {
     auto value = property(CSS::PropertyID::TextAlign);
-    if (!value.has_value())
-        return {};
-    return value_id_to_text_align(value.value()->to_identifier());
+    return value_id_to_text_align(value->to_identifier());
 }
 
 Optional<CSS::TextJustify> StyleProperties::text_justify() const
 {
     auto value = property(CSS::PropertyID::TextJustify);
-    if (!value.has_value())
-        return {};
-    return value_id_to_text_justify(value.value()->to_identifier());
+    return value_id_to_text_justify(value->to_identifier());
 }
 
 Optional<CSS::PointerEvents> StyleProperties::pointer_events() const
 {
     auto value = property(CSS::PropertyID::PointerEvents);
-    if (!value.has_value())
-        return {};
-    return value_id_to_pointer_events(value.value()->to_identifier());
+    return value_id_to_pointer_events(value->to_identifier());
 }
 
 Optional<CSS::WhiteSpace> StyleProperties::white_space() const
 {
     auto value = property(CSS::PropertyID::WhiteSpace);
-    if (!value.has_value())
-        return {};
-    return value_id_to_white_space(value.value()->to_identifier());
+    return value_id_to_white_space(value->to_identifier());
 }
 
 Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id) const
 {
     auto value = property(property_id);
-    if (!value.has_value())
-        return {};
-    return value_id_to_line_style(value.value()->to_identifier());
+    return value_id_to_line_style(value->to_identifier());
 }
 
 Optional<CSS::Float> StyleProperties::float_() const
 {
     auto value = property(CSS::PropertyID::Float);
-    if (!value.has_value())
-        return {};
-    return value_id_to_float(value.value()->to_identifier());
+    return value_id_to_float(value->to_identifier());
 }
 
 Optional<CSS::Clear> StyleProperties::clear() const
 {
     auto value = property(CSS::PropertyID::Clear);
-    if (!value.has_value())
-        return {};
-    return value_id_to_clear(value.value()->to_identifier());
+    return value_id_to_clear(value->to_identifier());
 }
 
 CSS::ContentData StyleProperties::content() const
 {
-    auto maybe_value = property(CSS::PropertyID::Content);
-    if (!maybe_value.has_value())
-        return CSS::ContentData {};
-
-    auto& value = maybe_value.value();
+    auto value = property(CSS::PropertyID::Content);
     if (value->is_content()) {
         auto& content_style_value = value->as_content();
 
@@ -486,25 +436,23 @@ CSS::ContentData StyleProperties::content() const
 Optional<CSS::Cursor> StyleProperties::cursor() const
 {
     auto value = property(CSS::PropertyID::Cursor);
-    if (!value.has_value())
-        return {};
-    return value_id_to_cursor(value.value()->to_identifier());
+    return value_id_to_cursor(value->to_identifier());
 }
 
 Optional<CSS::Visibility> StyleProperties::visibility() const
 {
     auto value = property(CSS::PropertyID::Visibility);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value->is_identifier())
         return {};
-    return value_id_to_visibility(value.value()->to_identifier());
+    return value_id_to_visibility(value->to_identifier());
 }
 
 CSS::Display StyleProperties::display() const
 {
     auto value = property(CSS::PropertyID::Display);
-    if (!value.has_value() || !value.value()->is_identifier())
+    if (!value->is_identifier())
         return CSS::Display::from_short(CSS::Display::Short::Inline);
-    switch (value.value()->to_identifier()) {
+    switch (value->to_identifier()) {
     case CSS::ValueID::None:
         return CSS::Display::from_short(CSS::Display::Short::None);
     case CSS::ValueID::Block:
@@ -545,33 +493,25 @@ CSS::Display StyleProperties::display() const
 Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
 {
     auto value = property(CSS::PropertyID::TextDecorationLine);
-    if (!value.has_value())
-        return {};
-    return value_id_to_text_decoration_line(value.value()->to_identifier());
+    return value_id_to_text_decoration_line(value->to_identifier());
 }
 
 Optional<CSS::TextDecorationStyle> StyleProperties::text_decoration_style() const
 {
     auto value = property(CSS::PropertyID::TextDecorationStyle);
-    if (!value.has_value())
-        return {};
-    return value_id_to_text_decoration_style(value.value()->to_identifier());
+    return value_id_to_text_decoration_style(value->to_identifier());
 }
 
 Optional<CSS::TextTransform> StyleProperties::text_transform() const
 {
     auto value = property(CSS::PropertyID::TextTransform);
-    if (!value.has_value())
-        return {};
-    return value_id_to_text_transform(value.value()->to_identifier());
+    return value_id_to_text_transform(value->to_identifier());
 }
 
 Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
 {
     auto value = property(CSS::PropertyID::ListStyleType);
-    if (!value.has_value())
-        return {};
-    return value_id_to_list_style_type(value.value()->to_identifier());
+    return value_id_to_list_style_type(value->to_identifier());
 }
 
 Optional<CSS::Overflow> StyleProperties::overflow_x() const
@@ -587,18 +527,12 @@ Optional<CSS::Overflow> StyleProperties::overflow_y() const
 Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) const
 {
     auto value = property(property_id);
-    if (!value.has_value())
-        return {};
-    return value_id_to_overflow(value.value()->to_identifier());
+    return value_id_to_overflow(value->to_identifier());
 }
 
 Vector<ShadowData> StyleProperties::shadow(PropertyID property_id) const
 {
-    auto value_or_error = property(property_id);
-    if (!value_or_error.has_value())
-        return {};
-
-    auto value = value_or_error.value();
+    auto value = property(property_id);
 
     auto make_shadow_data = [](ShadowStyleValue const& value) {
         return ShadowData { value.color(), value.offset_x(), value.offset_y(), value.blur_radius(), value.spread_distance(), value.placement() };
@@ -636,25 +570,21 @@ Vector<ShadowData> StyleProperties::text_shadow() const
 Optional<CSS::BoxSizing> StyleProperties::box_sizing() const
 {
     auto value = property(CSS::PropertyID::BoxSizing);
-    if (!value.has_value())
-        return {};
-    return value_id_to_box_sizing(value.value()->to_identifier());
+    return value_id_to_box_sizing(value->to_identifier());
 }
 
 Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_align() const
 {
     auto value = property(CSS::PropertyID::VerticalAlign);
-    if (!value.has_value())
-        VERIFY_NOT_REACHED();
 
-    if (value.value()->is_identifier())
-        return value_id_to_vertical_align(value.value()->to_identifier()).release_value();
+    if (value->is_identifier())
+        return value_id_to_vertical_align(value->to_identifier()).release_value();
 
-    if (value.value()->is_length())
-        return CSS::LengthPercentage(value.value()->to_length());
+    if (value->is_length())
+        return CSS::LengthPercentage(value->to_length());
 
-    if (value.value()->is_percentage())
-        return CSS::LengthPercentage(value.value()->as_percentage().percentage());
+    if (value->is_percentage())
+        return CSS::LengthPercentage(value->as_percentage().percentage());
 
     VERIFY_NOT_REACHED();
 }
@@ -662,9 +592,7 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
 Optional<CSS::FontVariant> StyleProperties::font_variant() const
 {
     auto value = property(CSS::PropertyID::FontVariant);
-    if (!value.has_value())
-        return {};
-    return value_id_to_font_variant(value.value()->to_identifier());
+    return value_id_to_font_variant(value->to_identifier());
 }
 
 }
