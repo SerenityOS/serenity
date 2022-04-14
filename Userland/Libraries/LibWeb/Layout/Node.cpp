@@ -453,9 +453,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (pointer_events.has_value())
         computed_values.set_pointer_events(pointer_events.value());
 
-    auto text_decoration_line = computed_style.text_decoration_line();
-    if (text_decoration_line.has_value())
-        computed_values.set_text_decoration_line(text_decoration_line.value());
+    computed_values.set_text_decoration_line(computed_style.text_decoration_line());
 
     auto text_decoration_style = computed_style.text_decoration_style();
     if (text_decoration_style.has_value())
