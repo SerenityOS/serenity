@@ -91,8 +91,17 @@ char* ctime_r(time_t const* t, char* buf)
 
 static int const __seconds_per_day = 60 * 60 * 24;
 
-static void time_to_tm(struct tm* tm, time_t t)
+static struct tm* time_to_tm(struct tm* tm, time_t t)
 {
+    // Note: these correspond to the number of seconds from epoch to the dates "Jan 1 00:00:00 -2147483648" and "Dec 31 23:59:59 2147483647",
+    // respectively, which are the smallest and biggest representable dates without overflowing tm->tm_year, if it is an int.
+    constexpr time_t smallest_possible_time = -67768040609740800;
+    constexpr time_t biggest_possible_time = 67768036191676799;
+    if (t < smallest_possible_time || t > biggest_possible_time) {
+        errno = EOVERFLOW;
+        return nullptr;
+    }
+
     int year = 1970;
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;
@@ -116,6 +125,8 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_mday = days + 1;
     tm->tm_wday = day_of_week(year, month, tm->tm_mday);
     tm->tm_mon = month - 1;
+
+    return tm;
 }
 
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
@@ -140,7 +151,8 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
     tm->tm_yday = day_of_year(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday);
     time_t days_since_epoch = years_to_days_since_epoch(1900 + tm->tm_year) + tm->tm_yday;
     auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
-    time_to_tm(tm, timestamp);
+    if (!time_to_tm(tm, timestamp))
+        return -1;
     return timestamp;
 }
 
@@ -163,8 +175,7 @@ struct tm* localtime_r(time_t const* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    time_to_tm(tm, *t - (daylight ? altzone : timezone));
-    return tm;
+    return time_to_tm(tm, *t - (daylight ? altzone : timezone));
 }
 
 time_t timegm(struct tm* tm)
@@ -182,8 +193,7 @@ struct tm* gmtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
-    time_to_tm(tm, *t);
-    return tm;
+    return time_to_tm(tm, *t);
 }
 
 char* asctime(const struct tm* tm)
