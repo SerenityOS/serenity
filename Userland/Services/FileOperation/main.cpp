@@ -240,6 +240,9 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
                 auto bytes_read = TRY(source_file->read(buffer.bytes()));
                 if (bytes_read == 0)
                     break;
+                if (bytes_read < buffer.size()) {
+                    buffer.resize(bytes_read);
+                }
                 if (auto result = destination_file->write(buffer); result.is_error()) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
                     report_warning(String::formatted("Failed to write to destination file: {}", result.error()));
