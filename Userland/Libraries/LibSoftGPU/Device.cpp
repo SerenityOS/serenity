@@ -1299,14 +1299,14 @@ void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 co
     m_raster_position.eye_coordinate_distance = eye_coordinates.length();
 }
 
-Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size)
+Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size) const
 {
     // Round the X and Y floating point coordinates to the nearest integer; OpenGL 1.5 spec:
     // "Any fragments whose centers lie inside of this rectangle (or on its bottom or left
     // boundaries) are produced in correspondence with this particular group of elements."
     return {
-        static_cast<int>(lroundf(m_raster_position.window_coordinates.x())),
-        static_cast<int>(lroundf(m_raster_position.window_coordinates.y())),
+        round_to<int>(m_raster_position.window_coordinates.x()),
+        round_to<int>(m_raster_position.window_coordinates.y()),
         size.width(),
         size.height(),
     };

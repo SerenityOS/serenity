@@ -75,7 +75,7 @@ public:
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
-    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
+    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size) const;
 
     void rasterize_triangle(Triangle const&);
     void setup_blend_factors();
