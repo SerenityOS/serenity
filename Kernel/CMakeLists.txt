@@ -64,7 +64,6 @@ set(KERNEL_SOURCES
     Devices/RandomDevice.cpp
     Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Devices/HID/I8042Controller.cpp
     Devices/HID/HIDManagement.cpp
@@ -142,6 +141,7 @@ set(KERNEL_SOURCES
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
+    Firmware/Hypervisor/VMWareBackdoor.cpp
     Firmware/MultiProcessor/Parser.cpp
     Firmware/BIOS.cpp
     Firmware/PowerStateSwitch.cpp
