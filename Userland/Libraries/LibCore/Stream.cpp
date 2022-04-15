@@ -552,9 +552,9 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #endif
 }
 
-ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
+ErrorOr<Bytes> LocalSocket::read_without_waiting(Bytes buffer)
 {
-    return TRY(m_helper.read(buffer, MSG_DONTWAIT)).size();
+    return m_helper.read(buffer, MSG_DONTWAIT);
 }
 
 ErrorOr<int> LocalSocket::release_fd()

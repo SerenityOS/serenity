@@ -444,7 +444,7 @@ public:
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
     ErrorOr<pid_t> peer_pid() const;
-    ErrorOr<size_t> read_without_waiting(Bytes buffer);
+    ErrorOr<Bytes> read_without_waiting(Bytes buffer);
 
     /// Release the fd associated with this LocalSocket. After the fd is
     /// released, the socket will be considered "closed" and all operations done
