@@ -7,7 +7,6 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -670,11 +669,10 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
         // a. Let srcByteLength be source.[[ByteLength]].
         auto source_byte_length = source.byte_length();
 
-        // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
-        source_buffer = TRY(clone_array_buffer(global_object, *source_buffer, source_byte_offset, source_byte_length, *global_object.array_buffer_constructor()));
-        // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
+        // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength).
+        source_buffer = TRY(clone_array_buffer(global_object, *source_buffer, source_byte_offset, source_byte_length));
 
-        // d. Let srcByteIndex be 0.
+        // c. Let srcByteIndex be 0.
         source_byte_index = 0;
     }
     // 19. Else, let srcByteIndex be srcByteOffset.
