@@ -228,18 +228,11 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
     return {};
 }
 
-// 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
+// 23.2.5.1.6 AllocateTypedArrayBuffer ( O, length ), https://tc39.es/ecma262/#sec-allocatetypedarraybuffer
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, Object const& array_like)
+static ThrowCompletionOr<void> allocate_typed_array_buffer(GlobalObject& global_object, TypedArray<T>& typed_array, size_t length)
 {
     auto& vm = global_object.vm();
-
-    // 1. Let len be ? LengthOfArrayLike(arrayLike).
-    auto length = TRY(length_of_array_like(global_object, array_like));
-
-    // 2. Perform ? AllocateTypedArrayBuffer(O, len).
-
-    // 23.2.5.1.6 AllocateTypedArrayBuffer ( O, length )
 
     // Enforce 2GB "Excessive Length" limit
     if (length > NumericLimits<i32>::max() / sizeof(T))
@@ -271,9 +264,21 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
     // 9. Set O.[[ArrayLength]] to length.
     typed_array.set_array_length(length);
 
-    // 10. Return O.
-    // End of 23.2.5.1.6
+    // 10. Return unused.
+    return {};
+}
 
+// 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
+template<typename T>
+static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, Object const& array_like)
+{
+    // 1. Let len be ? LengthOfArrayLike(arrayLike).
+    auto length = TRY(length_of_array_like(global_object, array_like));
+
+    // 2. Perform ? AllocateTypedArrayBuffer(O, len).
+    TRY(allocate_typed_array_buffer(global_object, typed_array, length));
+
+    // 3. Let k be 0.
     // 4. Repeat, while k < len,
     for (size_t k = 0; k < length; k++) {
         // a. Let Pk be ! ToString(𝔽(k)).
@@ -286,6 +291,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
         // d. Set k to k + 1.
     }
 
+    // 5. Return unused.
     return {};
 }
 
@@ -293,27 +299,11 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
 template<typename T>
 static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, MarkedVector<Value> const& list)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let len be the number of elements in values.
     auto length = list.size();
 
     // 2. Perform ? AllocateTypedArrayBuffer(O, len).
-
-    // Enforce 2GB "Excessive Length" limit
-    if (length > NumericLimits<i32>::max() / sizeof(T))
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-
-    auto element_size = typed_array.element_size();
-    if (Checked<size_t>::multiplication_would_overflow(element_size, length))
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
-    auto byte_length = element_size * length;
-    auto array_buffer = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length));
-
-    typed_array.set_viewed_array_buffer(array_buffer);
-    typed_array.set_byte_length(byte_length);
-    typed_array.set_byte_offset(0);
-    typed_array.set_array_length(length);
+    TRY(allocate_typed_array_buffer(global_object, typed_array, length));
 
     // 3. Let k be 0.
     // 4. Repeat, while k < len,
@@ -328,6 +318,8 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& gl
         // d. Set k to k + 1.
     }
 
+    // 5. Assert: values is now an empty List.
+    // 6. Return unused.
     return {};
 }
 
