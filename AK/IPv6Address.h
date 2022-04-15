@@ -56,7 +56,7 @@ public:
     {
         if (is_zero()) {
 #ifdef KERNEL
-            return KString::try_create("::"sv);
+            return Kernel::KString::try_create("::"sv);
 #else
             return "::"sv;
 #endif
@@ -67,7 +67,7 @@ public:
 
         if (is_ipv4_mapped()) {
 #ifdef KERNEL
-            return KString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
+            return Kernel::KString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #else
             return String::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #endif
@@ -114,7 +114,7 @@ public:
             i++;
         }
 #ifdef KERNEL
-        return KString::try_create(builder.string_view());
+        return Kernel::KString::try_create(builder.string_view());
 #else
         return builder.string_view();
 #endif
