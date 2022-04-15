@@ -164,63 +164,64 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
     if (byte_length.has_overflow())
         return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-    // FIXME:
-    // 10. If IsSharedArrayBuffer(srcData) is false, then
-    //     a. Let bufferConstructor be ? SpeciesConstructor(srcData, %ArrayBuffer%).
+    ArrayBuffer* data = nullptr;
+
+    // 10. If elementType is the same as srcType, then
+    if (dest_array.element_name() == src_array.element_name()) {
+        // a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength).
+        data = TRY(clone_array_buffer(global_object, *src_data, src_byte_offset, byte_length.value()));
+    }
     // 11. Else,
-    //     a. Let bufferConstructor be %ArrayBuffer%.
-    // 12. If elementType is the same as srcType, then
-    //     a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
-    // 13. Else,
+    else {
+        // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
+        data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length.value()));
 
-    // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
-    auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length.value()));
+        // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
+        if (src_data->is_detached())
+            return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-    if (src_data->is_detached())
-        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        // c. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
+        if (src_array.content_type() != dest_array.content_type())
+            return vm.template throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
 
-    // c. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
-    if (src_array.content_type() != dest_array.content_type())
-        return vm.template throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
+        // d. Let srcByteIndex be srcByteOffset.
+        u64 src_byte_index = src_byte_offset;
 
-    // d. Let srcByteIndex be srcByteOffset.
-    u64 src_byte_index = src_byte_offset;
+        // e. Let targetByteIndex be 0.
+        u64 target_byte_index = 0;
 
-    // e. Let targetByteIndex be 0.
-    u64 target_byte_index = 0;
+        // f. Let count be elementLength.
+        // g. Repeat, while count > 0,
+        for (u32 i = 0; i < element_length; ++i) {
+            // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
+            auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
 
-    // f. Let count be elementLength.
-    // g. Repeat, while count > 0,
-    for (u32 i = 0; i < element_length; ++i) {
-        // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
-        auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
+            // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
+            data->template set_value<T>(target_byte_index, value, true, ArrayBuffer::Order::Unordered);
 
-        // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
-        data->template set_value<T>(target_byte_index, value, true, ArrayBuffer::Order::Unordered);
+            // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
+            src_byte_index += src_element_size;
 
-        // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
-        src_byte_index += src_element_size;
+            // iv. Set targetByteIndex to targetByteIndex + elementSize.
+            target_byte_index += element_size;
 
-        // iv. Set targetByteIndex to targetByteIndex + elementSize.
-        target_byte_index += element_size;
-
-        // v. Set count to count - 1.
+            // v. Set count to count - 1.
+        }
     }
 
-    // 14. Set O.[[ViewedArrayBuffer]] to data.
+    // 12. Set O.[[ViewedArrayBuffer]] to data.
     dest_array.set_viewed_array_buffer(data);
 
-    // 15. Set O.[[ByteLength]] to byteLength.
+    // 13. Set O.[[ByteLength]] to byteLength.
     dest_array.set_byte_length(byte_length.value());
 
-    // 16. Set O.[[ByteOffset]] to 0.
+    // 14. Set O.[[ByteOffset]] to 0.
     dest_array.set_byte_offset(0);
 
-    // 17. Set O.[[ArrayLength]] to elementLength.
+    // 15. Set O.[[ArrayLength]] to elementLength.
     dest_array.set_array_length(element_length);
 
-    // 18. Return unused.
+    // 16. Return unused.
     return {};
 }
 
