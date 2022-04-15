@@ -92,9 +92,6 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     // Make sure it's an actual block
     VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
-    // Restore the snapshot registers
-    bytecode_interpreter->enter_frame(*m_frame);
-
     // Temporarily switch to the captured execution context
     TRY(vm.push_execution_context(m_execution_context, global_object));
 
@@ -102,19 +99,22 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     if (value_to_throw.has_value()) {
         bytecode_interpreter->accumulator() = js_undefined();
         return throw_completion(value_to_throw.release_value());
-    } else {
-        bytecode_interpreter->accumulator() = next_argument.value_or(js_undefined());
     }
+    bytecode_interpreter->accumulator() = next_argument.value_or(js_undefined());
 
-    auto next_result = bytecode_interpreter->run(*m_generating_function->bytecode_executable(), next_block);
+    Bytecode::RegisterWindow* frame = nullptr;
+    if (m_frame.has_value())
+        frame = &m_frame.value();
 
-    m_frame = move(*bytecode_interpreter->pop_frame());
+    auto next_result = bytecode_interpreter->run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
 
     vm.pop_execution_context();
 
-    m_done = TRY(generated_continuation(m_previous_value)) == nullptr;
+    if (!m_frame.has_value())
+        m_frame = move(*next_result.frame);
 
-    m_previous_value = TRY(next_result);
+    m_previous_value = TRY(move(next_result.value));
+    m_done = TRY(generated_continuation(m_previous_value)) == nullptr;
 
     result->define_direct_property("value", TRY(generated_value(m_previous_value)), default_attributes);
     result->define_direct_property("done", Value(m_done), default_attributes);
