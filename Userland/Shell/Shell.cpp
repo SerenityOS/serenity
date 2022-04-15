@@ -1678,9 +1678,9 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     completion_command.argv.extend({ "--complete", "--" });
 
     struct Visitor : public AST::NodeVisitor {
-        Visitor(Shell& shell, AST::Node const& node)
+        Visitor(Shell& shell, AST::Position position)
             : shell(shell)
-            , completion_position(node.position())
+            , completion_position(position)
         {
             lists.empend();
         }
@@ -1824,7 +1824,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         virtual void visit(AST::ReadWriteRedirection const*) override { }
         virtual void visit(AST::WriteAppendRedirection const*) override { }
         virtual void visit(AST::WriteRedirection const*) override { }
-    } visitor { *this, *node };
+    } visitor { *this, node ? node->position() : AST::Position() };
 
     command_node->visit(visitor);
     if (visitor.fail)
