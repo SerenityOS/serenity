@@ -76,9 +76,9 @@ ErrorOr<void> Client::drain_socket()
     auto buffer = TRY(ByteBuffer::create_uninitialized(1024));
 
     while (TRY(m_socket->can_read_without_blocking())) {
-        auto nread = TRY(m_socket->read(buffer));
+        auto read_bytes = TRY(m_socket->read(buffer));
 
-        m_parser.write({ buffer.data(), nread });
+        m_parser.write(StringView { read_bytes });
 
         if (m_socket->is_eof()) {
             Core::deferred_invoke([this, strong_this = NonnullRefPtr(*this)] { quit(); });

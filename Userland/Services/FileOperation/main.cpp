@@ -238,15 +238,15 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
             while (true) {
                 print_progress();
                 auto bytes_read = TRY(source_file->read(buffer.bytes()));
-                if (bytes_read == 0)
+                if (bytes_read.is_empty())
                     break;
-                if (auto result = destination_file->write(buffer); result.is_error()) {
+                if (auto result = destination_file->write(bytes_read); result.is_error()) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
                     report_warning(String::formatted("Failed to write to destination file: {}", result.error()));
                     return result.error();
                 }
-                item_done += bytes_read;
-                executed_work_bytes += bytes_read;
+                item_done += bytes_read.size();
+                executed_work_bytes += bytes_read.size();
                 print_progress();
                 // FIXME: Remove this once the kernel is smart enough to schedule other threads
                 //        while we're doing heavy I/O. Right now, copying a large file will totally

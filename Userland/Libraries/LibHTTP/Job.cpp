@@ -172,7 +172,7 @@ ErrorOr<ByteBuffer> Job::receive(size_t size)
         auto result = m_socket->read(buffer);
         if (result.is_error() && result.error().is_errno() && result.error().code() == EINTR)
             continue;
-        nread = TRY(result);
+        nread = TRY(result).size();
         break;
     } while (true);
     return buffer.slice(0, nread);

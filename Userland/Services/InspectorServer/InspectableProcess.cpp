@@ -43,8 +43,8 @@ String InspectableProcess::wait_for_response()
     }
 
     u32 length {};
-    auto nread = m_socket->read({ (u8*)&length, sizeof(length) }).release_value_but_fixme_should_propagate_errors();
-    if (nread != sizeof(length)) {
+    auto length_bytes_read = m_socket->read({ (u8*)&length, sizeof(length) }).release_value_but_fixme_should_propagate_errors();
+    if (length_bytes_read.size() != sizeof(length)) {
         dbgln("InspectableProcess got malformed data: PID {}", m_pid);
         m_socket->close();
         return {};
@@ -54,17 +54,17 @@ String InspectableProcess::wait_for_response()
     auto remaining_data_buffer = data_buffer.bytes();
 
     while (!remaining_data_buffer.is_empty()) {
-        auto maybe_nread = m_socket->read(remaining_data_buffer);
-        if (maybe_nread.is_error()) {
-            dbgln("InspectableProcess::wait_for_response: Failed to read data: {}", maybe_nread.error());
+        auto maybe_bytes_read = m_socket->read(remaining_data_buffer);
+        if (maybe_bytes_read.is_error()) {
+            dbgln("InspectableProcess::wait_for_response: Failed to read data: {}", maybe_bytes_read.error());
             break;
         }
 
-        auto nread = maybe_nread.release_value();
-        if (nread == 0)
+        auto bytes_read = maybe_bytes_read.release_value();
+        if (bytes_read.is_empty())
             break;
 
-        remaining_data_buffer = remaining_data_buffer.slice(nread);
+        remaining_data_buffer = remaining_data_buffer.slice(bytes_read.size());
     }
 
     VERIFY(data_buffer.size() == length);

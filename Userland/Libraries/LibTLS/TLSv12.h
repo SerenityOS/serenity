@@ -356,9 +356,9 @@ public:
 
     /// Reads into a buffer, with the maximum size being the size of the buffer.
     /// The amount of bytes read can be smaller than the size of the buffer.
-    /// Returns either the amount of bytes read, or an errno in the case of
+    /// Returns either the bytes that were read, or an errno in the case of
     /// failure.
-    virtual ErrorOr<size_t> read(Bytes) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
 
     /// Tries to write the entire contents of the buffer. It is possible for
     /// less than the full buffer to be written. Returns either the amount of

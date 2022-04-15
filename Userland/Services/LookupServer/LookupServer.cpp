@@ -239,7 +239,7 @@ ErrorOr<Vector<DNSAnswer>> LookupServer::lookup(DNSName const& name, String cons
     TRY(udp_socket->write(buffer));
 
     u8 response_buffer[4096];
-    int nrecv = TRY(udp_socket->read({ response_buffer, sizeof(response_buffer) }));
+    int nrecv = TRY(udp_socket->read({ response_buffer, sizeof(response_buffer) })).size();
     if (udp_socket->is_eof())
         return Vector<DNSAnswer> {};
 
