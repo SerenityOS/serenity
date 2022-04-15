@@ -124,6 +124,7 @@ public:
         m_last_shown_suggestion_display_length = 0;
         m_suggestions.clear();
         m_last_displayed_suggestion_index = 0;
+        m_next_suggestion_index = 0;
     }
 
 private:
