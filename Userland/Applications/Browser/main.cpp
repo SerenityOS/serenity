@@ -43,8 +43,7 @@ static ErrorOr<void> load_content_filters()
     auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(ad_filter_list->can_read_line())) {
-        auto length = TRY(ad_filter_list->read_line(buffer));
-        StringView line { buffer.data(), length };
+        auto line = TRY(ad_filter_list->read_line(buffer));
         if (!line.is_empty())
             Browser::g_content_filters.append(line);
     }
