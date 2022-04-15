@@ -647,17 +647,17 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
 
     // 15. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
-        return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
     // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     Checked<size_t> checked = source_length;
     checked += static_cast<u32>(target_offset);
     if (checked.has_overflow() || checked.value() > target_length)
-        return vm.throw_completion<RangeError>(global_object, "Overflow or out of bounds in target length");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
     // 17. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
     if (target.content_type() != source.content_type())
-        return vm.throw_completion<TypeError>(global_object, "Copy between arrays of different content types is prohibited");
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayInvalidCopy, target.class_name(), source.class_name());
 
     // FIXME: 18. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
     // FIXME: a. If srcBuffer.[[ArrayBufferData]] and targetBuffer.[[ArrayBufferData]] are the same Shared Data Block values, let same be true; else let same be false.
@@ -688,7 +688,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
     checked_target_byte_index *= target_element_size;
     checked_target_byte_index += target_byte_offset;
     if (checked_target_byte_index.has_overflow())
-        return vm.throw_completion<RangeError>(global_object, "Overflow in target byte index");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflow, "target byte index");
     auto target_byte_index = checked_target_byte_index.value();
 
     // 23. Let limit be targetByteIndex + targetElementSize × srcLength.
@@ -696,7 +696,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
     checked_limit *= target_element_size;
     checked_limit += target_byte_index;
     if (checked_limit.has_overflow())
-        return vm.throw_completion<RangeError>(global_object, "Overflow in target limit");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflow, "target limit");
     auto limit = checked_limit.value();
 
     // 24. If srcType is the same as targetType, then
@@ -748,13 +748,13 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(GlobalObject& glo
 
     // 6. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
-        return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
     // 7. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     Checked<size_t> checked = source_length;
     checked += static_cast<u32>(target_offset);
     if (checked.has_overflow() || checked.value() > target_length)
-        return vm.throw_completion<RangeError>(global_object, "Overflow or out of bounds in target length");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
     // 8. Let k be 0.
     size_t k = 0;
@@ -800,7 +800,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 
     // 5. If targetOffset < 0, throw a RangeError exception.
     if (target_offset < 0)
-        return vm.throw_completion<RangeError>(global_object, "Invalid target offset");
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "positive");
 
     // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
     if (source.is_object() && is<TypedArrayBase>(source.as_object())) {
