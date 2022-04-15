@@ -27,25 +27,23 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
     // 3. Let buffer be typedArray.[[ViewedArrayBuffer]].
     auto* buffer = typed_array.viewed_array_buffer();
 
-    // 4. Let typeName be typedArray.[[TypedArrayName]].
     auto const& type_name = typed_array.element_name();
 
-    // 5. Let type be the Element Type value in Table 72 for typeName.
-
-    // 6. If waitable is true, then
+    // 4. If waitable is true, then
     if (waitable) {
-        // a. If typeName is not "Int32Array" or "BigInt64Array", throw a TypeError exception.
+        // a. If typedArray.[[TypedArrayName]] is not "Int32Array" or "BigInt64Array", throw a TypeError exception.
         if ((type_name != vm.names.Int32Array.as_string()) && (type_name != vm.names.BigInt64Array.as_string()))
             return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
     }
-    // 7. Else,
+    // 5. Else,
     else {
-        // a. If ! IsUnclampedIntegerElementType(type) is false and ! IsBigIntElementType(type) is false, throw a TypeError exception.
+        // a. Let type be TypedArrayElementType(typedArray).
+        // b. If ! IsUnclampedIntegerElementType(type) is false and ! IsBigIntElementType(type) is false, throw a TypeError exception.
         if (!typed_array.is_unclamped_integer_element_type() && !typed_array.is_bigint_element_type())
             return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
     }
 
-    // 8. Return buffer.
+    // 6. Return buffer.
     return buffer;
 }
 
@@ -66,14 +64,13 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
     if (access_index >= length)
         return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, access_index, typed_array.array_length());
 
-    // 5. Let arrayTypeName be typedArray.[[TypedArrayName]].
-    // 6. Let elementSize be the Element Size value specified in Table 72 for arrayTypeName.
+    // 5. Let elementSize be TypedArrayElementSize(typedArray).
     auto element_size = typed_array.element_size();
 
-    // 7. Let offset be typedArray.[[ByteOffset]].
+    // 6. Let offset be typedArray.[[ByteOffset]].
     auto offset = typed_array.byte_offset();
 
-    // 8. Return (accessIndex × elementSize) + offset.
+    // 7. Return (accessIndex × elementSize) + offset.
     return (access_index * element_size) + offset;
 }
 
@@ -88,26 +85,23 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
     auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, index));
 
-    // 3. Let arrayTypeName be typedArray.[[TypedArrayName]].
-
     Value value_to_set;
 
-    // 4. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
+    // 3. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
         value_to_set = TRY(value.to_bigint(global_object));
-    // 5. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
+    // 4. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
     else
         value_to_set = Value(TRY(value.to_integer_or_infinity(global_object)));
 
-    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
         return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    // 7. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
+    // 6. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
 
-    // 8. Let elementType be the Element Type value in Table 72 for arrayTypeName.
-
-    // 9. Return GetModifySetValueInBuffer(buffer, indexedPosition, elementType, v, op).
+    // 7. Let elementType be TypedArrayElementType(typedArray).
+    // 8. Return GetModifySetValueInBuffer(buffer, indexedPosition, elementType, v, op).
     return typed_array.get_modify_set_value_in_buffer(indexed_position, value_to_set, move(operation));
 }
 
@@ -208,12 +202,10 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     // 3. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
     auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, vm.argument(1)));
 
-    // 4. Let arrayTypeName be typedArray.[[TypedArrayName]].
-
     Value expected;
     Value replacement;
 
-    // 5. If typedArray.[[ContentType]] is BigInt, then
+    // 4. If typedArray.[[ContentType]] is BigInt, then
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
         // a. Let expected be ? ToBigInt(expectedValue).
         expected = TRY(vm.argument(2).to_bigint(global_object));
@@ -221,7 +213,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
         // b. Let replacement be ? ToBigInt(replacementValue).
         replacement = TRY(vm.argument(3).to_bigint(global_object));
     }
-    // 6. Else,
+    // 5. Else,
     else {
         // a. Let expected be 𝔽(? ToIntegerOrInfinity(expectedValue)).
         expected = Value(TRY(vm.argument(2).to_integer_or_infinity(global_object)));
@@ -230,28 +222,28 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
         replacement = Value(TRY(vm.argument(3).to_integer_or_infinity(global_object)));
     }
 
-    // 7. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
         return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    // 8. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
+    // 7. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
 
-    // 9. Let elementType be the Element Type value in Table 72 for arrayTypeName.
-    // 10. Let elementSize be the Element Size value specified in Table 72 for Element Type elementType.
+    // 8. Let elementType be TypedArrayElementType(typedArray).
+    // 9. Let elementSize be TypedArrayElementSize(typedArray).
 
-    // 11. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    // 10. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
     constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
 
-    // 12. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
+    // 11. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
     auto expected_bytes = numeric_to_raw_bytes<T>(global_object, expected, is_little_endian);
 
-    // 13. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
+    // 12. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
     auto replacement_bytes = numeric_to_raw_bytes<T>(global_object, replacement, is_little_endian);
 
     // FIXME: Implement SharedArrayBuffer case.
-    // 14. If IsSharedArrayBuffer(buffer) is true, then
+    // 13. If IsSharedArrayBuffer(buffer) is true, then
     //     a-i.
-    // 15. Else,
+    // 14. Else,
 
     // a. Let rawBytesRead be a List of length elementSize whose elements are the sequence of elementSize bytes starting with block[indexedPosition].
     auto raw_bytes_read = block.slice(indexed_position, sizeof(T));
@@ -269,7 +261,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
         (void)AK::atomic_compare_exchange_strong(v, *e, *r);
     }
 
-    // 16. Return RawBytesToNumeric(elementType, rawBytesRead, isLittleEndian).
+    // 15. Return RawBytesToNumeric(elementType, rawBytesRead, isLittleEndian).
     return raw_bytes_to_numeric<T>(global_object, raw_bytes_read, is_little_endian);
 }
 
@@ -321,15 +313,21 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 // 25.4.8 Atomics.load ( typedArray, index ), https://tc39.es/ecma262/#sec-atomics.load
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 {
+    // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
     auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
-
     TRY(validate_integer_typed_array(global_object, *typed_array));
 
+    // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
     auto indexed_position = TRY(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
 
+    // 3. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
         return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
+    // 4. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ValidateAtomicAccess on the preceding line can have arbitrary side effects, which could cause the buffer to become detached.
+
+    // 5. Let elementType be TypedArrayElementType(typedArray).
+    // 6. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, SeqCst).
     return typed_array->get_value_from_buffer(indexed_position, ArrayBuffer::Order::SeqCst, true);
 }
 
@@ -352,23 +350,34 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 // 25.4.10 Atomics.store ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.store
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 {
+    // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
     auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
-
     TRY(validate_integer_typed_array(global_object, *typed_array));
 
+    // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
     auto indexed_position = TRY(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
 
     auto value = vm.argument(2);
     Value value_to_set;
+
+    // 3. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
         value_to_set = TRY(value.to_bigint(global_object));
+    // 4. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
     else
         value_to_set = Value(TRY(value.to_integer_or_infinity(global_object)));
 
+    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
         return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
+    // 6. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
+
+    // 7. Let elementType be TypedArrayElementType(typedArray).
+    // 8. Perform SetValueInBuffer(buffer, indexedPosition, elementType, v, true, SeqCst).
     typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
+
+    // 9. Return v.
     return value_to_set;
 }
 

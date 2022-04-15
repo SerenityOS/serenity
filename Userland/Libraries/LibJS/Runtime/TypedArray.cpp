@@ -54,36 +54,34 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
 {
     auto& vm = global_object.vm();
 
-    // 1. Let constructorName be the String value of O.[[TypedArrayName]].
-
-    // 2. Let elementSize be the Element Size value specified in Table 72 for constructorName.
+    // 1. Let elementSize be TypedArrayElementSize(O).
     auto element_size = typed_array.element_size();
 
-    // 3. Let offset be ? ToIndex(byteOffset).
+    // 2. Let offset be ? ToIndex(byteOffset).
     auto offset = TRY(byte_offset.to_index(global_object));
 
-    // 4. If offset modulo elementSize ≠ 0, throw a RangeError exception.
+    // 3. If offset modulo elementSize ≠ 0, throw a RangeError exception.
     if (offset % element_size != 0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
 
     size_t new_length { 0 };
 
-    // 5. If length is not undefined, then
+    // 4. If length is not undefined, then
     if (!length.is_undefined()) {
         // a. Let newLength be ? ToIndex(length).
         new_length = TRY(length.to_index(global_object));
     }
 
-    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    // 7. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
+    // 6. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
     auto buffer_byte_length = array_buffer.byte_length();
 
     Checked<size_t> new_byte_length;
 
-    // 8. If length is undefined, then
+    // 7. If length is undefined, then
     if (length.is_undefined()) {
         // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
         if (buffer_byte_length % element_size != 0)
@@ -96,7 +94,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
         new_byte_length = buffer_byte_length;
         new_byte_length -= offset;
     }
-    // 9. Else,
+    // 8. Else,
     else {
         // a. Let newByteLength be newLength × elementSize.
         new_byte_length = new_length;
@@ -116,18 +114,19 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     if (new_byte_length.has_overflow())
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-    // 10. Set O.[[ViewedArrayBuffer]] to buffer.
+    // 9. Set O.[[ViewedArrayBuffer]] to buffer.
     typed_array.set_viewed_array_buffer(&array_buffer);
 
-    // 11. Set O.[[ByteLength]] to newByteLength.
+    // 10. Set O.[[ByteLength]] to newByteLength.
     typed_array.set_byte_length(new_byte_length.value());
 
-    // 12. Set O.[[ByteOffset]] to offset.
+    // 11. Set O.[[ByteOffset]] to offset.
     typed_array.set_byte_offset(offset);
 
-    // 13. Set O.[[ArrayLength]] to newByteLength / elementSize.
+    // 12. Set O.[[ArrayLength]] to newByteLength / elementSize.
     typed_array.set_array_length(new_byte_length.value() / element_size);
 
+    // 13. Return unused.
     return {};
 }
 
@@ -145,38 +144,34 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
     if (src_data->is_detached())
         return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
-    // 3. Let constructorName be the String value of O.[[TypedArrayName]].
-    // 4. Let elementType be the Element Type value in Table 72 for constructorName.
-
-    // 5. Let elementLength be srcArray.[[ArrayLength]].
-    auto element_length = src_array.array_length();
-
-    // 6. Let srcName be the String value of srcArray.[[TypedArrayName]].
-    // 7. Let srcType be the Element Type value in Table 72 for srcName.
-
-    // 8. Let srcElementSize be the Element Size value specified in Table 72 for srcName.
-    auto src_element_size = src_array.element_size();
-
-    // 9. Let srcByteOffset be srcArray.[[ByteOffset]].
-    auto src_byte_offset = src_array.byte_offset();
-
-    // 10. Let elementSize be the Element Size value specified in Table 72 for constructorName.
+    // 3. Let elementType be TypedArrayElementType(O).
+    // 4. Let elementSize be TypedArrayElementSize(O).
     auto element_size = dest_array.element_size();
 
-    // 11. Let byteLength be elementSize × elementLength.
+    // 5. Let srcType be TypedArrayElementType(srcArray).
+    // 6. Let srcElementSize be TypedArrayElementSize(srcArray).
+    auto src_element_size = src_array.element_size();
+
+    // 7. Let srcByteOffset be srcArray.[[ByteOffset]].
+    auto src_byte_offset = src_array.byte_offset();
+
+    // 8. Let elementLength be srcArray.[[ArrayLength]].
+    auto element_length = src_array.array_length();
+
+    // 9. Let byteLength be elementSize × elementLength.
     Checked<size_t> byte_length = element_size;
     byte_length *= element_length;
     if (byte_length.has_overflow())
         return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
     // FIXME:
-    // 12. If IsSharedArrayBuffer(srcData) is false, then
+    // 10. If IsSharedArrayBuffer(srcData) is false, then
     //     a. Let bufferConstructor be ? SpeciesConstructor(srcData, %ArrayBuffer%).
+    // 11. Else,
+    //     a. Let bufferConstructor be %ArrayBuffer%.
+    // 12. If elementType is the same as srcType, then
+    //     a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
     // 13. Else,
-    //    a. Let bufferConstructor be %ArrayBuffer%.
-    // 14. If elementType is the same as srcType, then
-    //    a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
-    // 15. Else,
 
     // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
     auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length.value()));
@@ -213,18 +208,19 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
         // v. Set count to count - 1.
     }
 
-    // 16. Set O.[[ViewedArrayBuffer]] to data.
+    // 14. Set O.[[ViewedArrayBuffer]] to data.
     dest_array.set_viewed_array_buffer(data);
 
-    // 17. Set O.[[ByteLength]] to byteLength.
+    // 15. Set O.[[ByteLength]] to byteLength.
     dest_array.set_byte_length(byte_length.value());
 
-    // 18. Set O.[[ByteOffset]] to 0.
+    // 16. Set O.[[ByteOffset]] to 0.
     dest_array.set_byte_offset(0);
 
-    // 19. Set O.[[ArrayLength]] to elementLength.
+    // 17. Set O.[[ArrayLength]] to elementLength.
     dest_array.set_array_length(element_length);
 
+    // 18. Return unused.
     return {};
 }
 
@@ -239,32 +235,31 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(GlobalObject& global_
         return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
     // 1. Assert: O.[[ViewedArrayBuffer]] is undefined.
-    // 2. Let constructorName be the String value of O.[[TypedArrayName]].
 
-    // 3. Let elementSize be the Element Size value specified in Table 72 for constructorName.
+    // 2. Let elementSize be TypedArrayElementSize(O).
     auto element_size = typed_array.element_size();
     if (Checked<size_t>::multiplication_would_overflow(element_size, length))
         return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
 
-    // 4. Let byteLength be elementSize × length.
+    // 3. Let byteLength be elementSize × length.
     auto byte_length = element_size * length;
 
-    // 5. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
+    // 4. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
     auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length));
 
-    // 6. Set O.[[ViewedArrayBuffer]] to data.
+    // 5. Set O.[[ViewedArrayBuffer]] to data.
     typed_array.set_viewed_array_buffer(data);
 
-    // 7. Set O.[[ByteLength]] to byteLength.
+    // 6. Set O.[[ByteLength]] to byteLength.
     typed_array.set_byte_length(byte_length);
 
-    // 8. Set O.[[ByteOffset]] to 0.
+    // 7. Set O.[[ByteOffset]] to 0.
     typed_array.set_byte_offset(0);
 
-    // 9. Set O.[[ArrayLength]] to length.
+    // 8. Set O.[[ArrayLength]] to length.
     typed_array.set_array_length(length);
 
-    // 10. Return unused.
+    // 9. Return unused.
     return {};
 }
 
