@@ -277,8 +277,12 @@
     M(TypedArrayContentTypeMismatch, "Can't create {} from {}")                                                                         \
     M(TypedArrayInvalidBufferLength, "Invalid buffer length for {}: must be a multiple of {}, got {}")                                  \
     M(TypedArrayInvalidByteOffset, "Invalid byte offset for {}: must be a multiple of {}, got {}")                                      \
+    M(TypedArrayInvalidCopy, "Copy between arrays of different content types ({} and {}) is prohibited")                                \
+    M(TypedArrayInvalidTargetOffset, "Invalid target offset: must be {}")                                                               \
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
     M(TypedArrayOutOfRangeByteOffsetOrLength, "Typed array range {}:{} is out of range for buffer with length {}")                      \
+    M(TypedArrayOverflow, "Overflow in {}")                                                                                             \
+    M(TypedArrayOverflowOrOutOfBounds, "Overflow or out of bounds in {}")                                                               \
     M(TypedArrayPrototypeOneArg, "TypedArray.prototype.{}() requires at least one argument")                                            \
     M(TypedArrayFailedSettingIndex, "Failed setting value of index {} of typed array")                                                  \
     M(TypedArrayTypeIsNot, "Typed array {} element type is not {}")                                                                     \
