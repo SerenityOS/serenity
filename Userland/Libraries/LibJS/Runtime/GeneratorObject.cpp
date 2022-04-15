@@ -100,11 +100,16 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
         bytecode_interpreter->accumulator() = js_undefined();
         return throw_completion(value_to_throw.release_value());
     }
-    bytecode_interpreter->accumulator() = next_argument.value_or(js_undefined());
 
     Bytecode::RegisterWindow* frame = nullptr;
     if (m_frame.has_value())
         frame = &m_frame.value();
+
+    auto next_value = next_argument.value_or(js_undefined());
+    if (frame)
+        frame->registers[0] = next_value;
+    else
+        bytecode_interpreter->accumulator() = next_value;
 
     auto next_result = bytecode_interpreter->run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
 
