@@ -9,8 +9,8 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
+#include <Kernel/Graphics/Intel/Auxiliary/GMBusConnector.h>
 #include <Kernel/Graphics/Intel/Definitions.h>
-#include <Kernel/Graphics/Intel/GMBusConnector.h>
 #include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
 #include <Kernel/Graphics/Intel/Plane/DisplayPlane.h>
 #include <Kernel/Graphics/Intel/Transcoder/DisplayTranscoder.h>

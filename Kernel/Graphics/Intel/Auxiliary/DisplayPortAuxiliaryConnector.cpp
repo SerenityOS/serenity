@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Graphics/Intel/DisplayPortAuxiliaryConnector.h>
+#include <Kernel/Graphics/Intel/Auxiliary/DisplayPortAuxiliaryConnector.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
