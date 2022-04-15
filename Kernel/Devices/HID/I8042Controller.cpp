@@ -109,7 +109,17 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
         TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
         configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
         configuration &= ~I8042ConfigurationFlag::SecondPS2PortInterrupt;
+
+        // Note: The default BIOS on the QEMU microvm machine type (qboot) doesn't
+        // behave like SeaBIOS, which means it doesn't set first port scan code translation.
+        // Howerver we rely on compatbility feature of the i8042 to send scan codes of set 1.
+        // To ensure that the controller is always outputting correct scan codes, set it
+        // to scan code 2 (because SeaBIOS on regular QEMU machine does this for us) and enable
+        // first port translation to ensure all scan codes are translated to scan code set 1.
+        configuration |= I8042ConfigurationFlag::FirstPS2PortTranslation;
         TRY(do_wait_then_write(I8042Port::Buffer, configuration));
+        TRY(do_wait_then_write(I8042Port::Buffer, I8042Command::SetScanCodeSet));
+        TRY(do_wait_then_write(I8042Port::Buffer, 0x2));
 
         m_is_dual_channel = (configuration & I8042ConfigurationFlag::SecondPS2PortClock) != 0;
         dbgln("I8042: {} channel controller", m_is_dual_channel ? "Dual" : "Single");

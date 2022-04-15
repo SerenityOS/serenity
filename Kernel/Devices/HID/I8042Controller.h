@@ -30,6 +30,7 @@ enum I8042Command : u8 {
     DisableFirstPS2Port = 0xAD,
     EnableFirstPS2Port = 0xAE,
     WriteSecondPS2PortInputBuffer = 0xD4,
+    SetScanCodeSet = 0xF0,
     GetDeviceID = 0xF2,
     SetSampleRate = 0xF3,
     EnablePacketStreaming = 0xF4,
