@@ -560,16 +560,16 @@ public:
     // read. Returns the amount of bytes read.
     ErrorOr<size_t> read_line(Bytes buffer)
     {
-        return read_until(buffer, "\n"sv);
+        return TRY(read_until(buffer, "\n"sv)).size();
     }
 
-    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate)
+    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate)
     {
         return read_until_any_of(buffer, Array { candidate });
     }
 
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
     {
         if (!stream().is_open())
             return Error::from_errno(ENOTCONN);
@@ -579,7 +579,7 @@ public:
 
         // We fill the buffer through can_read_line.
         if (!TRY(can_read_line()))
-            return 0;
+            return Bytes {};
 
         if (stream().is_eof()) {
             if (buffer.size() < m_buffered_size) {
@@ -623,7 +623,7 @@ public:
 
             m_buffered_size -= size_written_to_user_buffer + match_size;
 
-            return size_written_to_user_buffer;
+            return buffer.slice(0, size_written_to_user_buffer);
         }
 
         // If we still haven't found anything, then it's most likely the case
@@ -638,7 +638,7 @@ public:
 
         m_buffered_size -= readable_size;
 
-        return readable_size;
+        return buffer.slice(0, readable_size);
     }
 
     // Returns whether a line can be read, populating the buffer in the process.
@@ -770,9 +770,9 @@ public:
     }
 
     ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
@@ -791,7 +791,7 @@ private:
 class BufferedSocketBase : public Socket {
 public:
     virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) = 0;
+    virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) = 0;
     virtual ErrorOr<bool> can_read_line() = 0;
     virtual size_t buffer_size() const = 0;
 };
@@ -839,9 +839,9 @@ public:
     virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
     virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
+    virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }
 
     virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
