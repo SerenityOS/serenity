@@ -46,27 +46,13 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<RegisterWindow> frame;
     };
-    ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point);
+    ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
-    [[nodiscard]] RegisterWindow snapshot_frame() const { return m_register_windows.last(); }
 
-    auto& saved_lexical_environment_stack() { return m_register_windows.last().saved_lexical_environments; }
-    auto& saved_variable_environment_stack() { return m_register_windows.last().saved_variable_environments; }
-
-    void enter_frame(RegisterWindow const& frame)
-    {
-        m_manually_entered_frames.append(true);
-        m_register_windows.append(make<RegisterWindow>(frame));
-    }
-    NonnullOwnPtr<RegisterWindow> pop_frame()
-    {
-        VERIFY(!m_manually_entered_frames.is_empty());
-        VERIFY(m_manually_entered_frames.last());
-        m_manually_entered_frames.take_last();
-        return m_register_windows.take_last();
-    }
+    auto& saved_lexical_environment_stack() { return window().saved_lexical_environments; }
+    auto& saved_variable_environment_stack() { return window().saved_variable_environments; }
 
     void jump(Label const& label)
     {
@@ -89,15 +75,24 @@ public:
     VM::InterpreterExecutionScope ast_interpreter_scope();
 
 private:
-    MarkedVector<Value>& registers() { return m_register_windows.last().registers; }
+    RegisterWindow& window()
+    {
+        return m_register_windows.last().visit([](auto& x) -> RegisterWindow& { return *x; });
+    }
+
+    RegisterWindow const& window() const
+    {
+        return const_cast<Interpreter*>(this)->window();
+    }
+
+    MarkedVector<Value>& registers() { return window().registers; }
 
     static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
     GlobalObject& m_global_object;
     Realm& m_realm;
-    NonnullOwnPtrVector<RegisterWindow> m_register_windows;
-    Vector<bool> m_manually_entered_frames;
+    Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
     Executable const* m_current_executable { nullptr };
