@@ -557,10 +557,10 @@ public:
 
     // Reads into the buffer until \n is encountered.
     // The size of the Bytes object is the maximum amount of bytes that will be
-    // read. Returns the amount of bytes read.
-    ErrorOr<size_t> read_line(Bytes buffer)
+    // read. Returns the bytes read as a StringView.
+    ErrorOr<StringView> read_line(Bytes buffer)
     {
-        return TRY(read_until(buffer, "\n"sv)).size();
+        return StringView { TRY(read_until(buffer, "\n"sv)) };
     }
 
     ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate)
@@ -769,7 +769,7 @@ public:
         return m_helper.stream().truncate(length);
     }
 
-    ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
+    ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
     ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
@@ -790,7 +790,7 @@ private:
 
 class BufferedSocketBase : public Socket {
 public:
-    virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
+    virtual ErrorOr<StringView> read_line(Bytes buffer) = 0;
     virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) = 0;
     virtual ErrorOr<bool> can_read_line() = 0;
     virtual size_t buffer_size() const = 0;
@@ -838,7 +838,7 @@ public:
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
     virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
-    virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
+    virtual ErrorOr<StringView> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
     virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
     ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }

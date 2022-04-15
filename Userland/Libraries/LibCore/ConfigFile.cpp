@@ -88,9 +88,7 @@ ErrorOr<void> ConfigFile::reparse()
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(m_file->can_read_line())) {
-        auto length = TRY(m_file->read_line(buffer));
-
-        StringView line { buffer.data(), length };
+        auto line = TRY(m_file->read_line(buffer));
         size_t i = 0;
 
         while (i < line.length() && (line[i] == ' ' || line[i] == '\t' || line[i] == '\n'))

@@ -426,15 +426,15 @@ TEST_CASE(buffered_long_file_read)
     auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
     EXPECT(!file->seek(255, Core::Stream::SeekMode::SetPosition).is_error());
     EXPECT(file->can_read_line().release_value());
-    auto maybe_nread = file->read_line(buffer);
-    EXPECT(!maybe_nread.is_error());
-    EXPECT_EQ(maybe_nread.value(), 4095ul); // 4095 bytes on the third line
+    auto maybe_line = file->read_line(buffer);
+    EXPECT(!maybe_line.is_error());
+    EXPECT_EQ(maybe_line.value().length(), 4095ul); // 4095 bytes on the third line
 
     // Testing that buffering with seeking works properly
     EXPECT(!file->seek(365, Core::Stream::SeekMode::SetPosition).is_error());
-    auto maybe_after_seek_nread = file->read_line(buffer);
-    EXPECT(!maybe_after_seek_nread.is_error());
-    EXPECT_EQ(maybe_after_seek_nread.value(), 3985ul); // 4095 - 110
+    auto maybe_after_seek_line = file->read_line(buffer);
+    EXPECT(!maybe_after_seek_line.is_error());
+    EXPECT_EQ(maybe_after_seek_line.value().length(), 3985ul); // 4095 - 110
 }
 
 TEST_CASE(buffered_small_file_read)
@@ -456,10 +456,10 @@ TEST_CASE(buffered_small_file_read)
     auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
     for (auto const& line : expected_lines) {
         VERIFY(file->can_read_line().release_value());
-        auto maybe_nread = file->read_line(buffer);
-        EXPECT(!maybe_nread.is_error());
-        EXPECT_EQ(maybe_nread.value(), line.length());
-        EXPECT_EQ(StringView(buffer.span().trim(maybe_nread.value())), line);
+        auto maybe_read_line = file->read_line(buffer);
+        EXPECT(!maybe_read_line.is_error());
+        EXPECT_EQ(maybe_read_line.value().length(), line.length());
+        EXPECT_EQ(StringView(buffer.span().trim(maybe_read_line.value().length())), line);
     }
     EXPECT(!file->can_read_line().is_error());
     EXPECT(!file->can_read_line().value());
@@ -496,13 +496,13 @@ TEST_CASE(buffered_tcp_socket_read)
 
     auto receive_buffer = ByteBuffer::create_uninitialized(64).release_value();
 
-    auto maybe_first_nread = client_socket->read_line(receive_buffer);
-    EXPECT(!maybe_first_nread.is_error());
-    StringView first_received_line { receive_buffer.data(), maybe_first_nread.value() };
+    auto maybe_first_received_line = client_socket->read_line(receive_buffer);
+    EXPECT(!maybe_first_received_line.is_error());
+    auto first_received_line = maybe_first_received_line.value();
     EXPECT_EQ(first_received_line, first_line);
 
-    auto maybe_second_nread = client_socket->read_line(receive_buffer);
-    EXPECT(!maybe_second_nread.is_error());
-    StringView second_received_line { receive_buffer.data(), maybe_second_nread.value() };
+    auto maybe_second_received_line = client_socket->read_line(receive_buffer);
+    EXPECT(!maybe_second_received_line.is_error());
+    auto second_received_line = maybe_second_received_line.value();
     EXPECT_EQ(second_received_line, second_line);
 }

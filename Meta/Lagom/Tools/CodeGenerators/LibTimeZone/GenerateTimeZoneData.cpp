@@ -316,8 +316,7 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
     Vector<TimeZoneOffset>* last_parsed_zone = nullptr;
 
     while (TRY(file->can_read_line())) {
-        auto nread = TRY(file->read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file->read_line(buffer));
 
         if (line.is_empty() || line.trim_whitespace(TrimMode::Left).starts_with('#'))
             continue;
@@ -374,8 +373,7 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
     Array<u8, 1024> buffer {};
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.trim_whitespace(TrimMode::Left).starts_with('#'))
             continue;

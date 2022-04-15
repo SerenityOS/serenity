@@ -63,8 +63,8 @@ ErrorOr<ByteBuffer> WebSocketImpl::read(int max_size)
 ErrorOr<String> WebSocketImpl::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
-    auto nread = TRY(m_socket->read_line(buffer));
-    return String::copy(buffer.span().slice(0, nread));
+    auto line = TRY(m_socket->read_line(buffer));
+    return line.to_string();
 }
 
 }
