@@ -25,13 +25,13 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SelfTTYDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
