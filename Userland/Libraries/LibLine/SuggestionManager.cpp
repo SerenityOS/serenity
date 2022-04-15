@@ -112,6 +112,15 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
     if (m_next_suggestion_index < m_suggestions.size()) {
         auto& next_suggestion = m_suggestions[m_next_suggestion_index];
 
+        if (mode == CompletePrefix && !next_suggestion.allow_commit_without_listing) {
+            result.new_completion_mode = CompletionMode::ShowSuggestions;
+            result.avoid_committing_to_single_suggestion = true;
+            m_last_shown_suggestion_display_length = 0;
+            m_last_shown_suggestion_was_complete = false;
+            m_last_shown_suggestion = String::empty();
+            return result;
+        }
+
         auto can_complete = next_suggestion.invariant_offset <= m_largest_common_suggestion_prefix_length;
         ssize_t actual_offset;
         size_t shown_length = m_last_shown_suggestion_display_length;
@@ -121,7 +130,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             break;
         case ShowSuggestions:
             actual_offset = 0 - m_largest_common_suggestion_prefix_length + next_suggestion.invariant_offset;
-            if (can_complete)
+            if (can_complete && next_suggestion.allow_commit_without_listing)
                 shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trivia_view.length();
             break;
         default:

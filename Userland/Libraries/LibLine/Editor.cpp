@@ -1167,7 +1167,7 @@ void Editor::handle_read_event()
                     m_suggestion_manager.previous();
             }
 
-            if (m_suggestion_manager.count() < 2) {
+            if (m_suggestion_manager.count() < 2 && !completion_result.avoid_committing_to_single_suggestion) {
                 // We have none, or just one suggestion,
                 // we should just commit that and continue
                 // after it, as if it were auto-completed.
