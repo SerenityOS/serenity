@@ -41,7 +41,7 @@ bool Stream::read_or_error(Bytes buffer)
             return false;
         }
 
-        nread += result.value();
+        nread += result.value().size();
     } while (nread < buffer.size());
 
     return true;
@@ -156,7 +156,7 @@ ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
 bool File::is_readable() const { return has_flag(m_mode, OpenMode::Read); }
 bool File::is_writable() const { return has_flag(m_mode, OpenMode::Write); }
 
-ErrorOr<size_t> File::read(Bytes buffer)
+ErrorOr<Bytes> File::read(Bytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Read)) {
         // NOTE: POSIX says that if the fd is not open for reading, the call
@@ -167,7 +167,7 @@ ErrorOr<size_t> File::read(Bytes buffer)
 
     ssize_t nread = TRY(System::read(m_fd, buffer));
     m_last_read_was_eof = nread == 0;
-    return nread;
+    return buffer.trim(nread);
 }
 
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)
@@ -322,7 +322,7 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
     return System::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
 }
 
-ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
+ErrorOr<Bytes> PosixSocketHelper::read(Bytes buffer, int flags)
 {
     if (!is_open()) {
         return Error::from_errno(ENOTCONN);
@@ -337,7 +337,7 @@ ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
     if (m_last_read_was_eof && m_notifier)
         m_notifier->set_enabled(false);
 
-    return nread;
+    return buffer.trim(nread);
 }
 
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
@@ -554,7 +554,7 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 
 ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
 {
-    return m_helper.read(buffer, MSG_DONTWAIT);
+    return TRY(m_helper.read(buffer, MSG_DONTWAIT)).size();
 }
 
 ErrorOr<int> LocalSocket::release_fd()

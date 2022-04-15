@@ -259,8 +259,8 @@ inline ErrorOr<JsonValue> read_json_file(StringView path)
 
     // FIXME: When Core::Stream supports reading an entire file, use that.
     while (TRY(file->can_read_line())) {
-        auto nread = TRY(file->read(buffer));
-        TRY(builder.try_append(reinterpret_cast<char const*>(buffer.data()), nread));
+        auto bytes_read = TRY(file->read(buffer));
+        TRY(builder.try_append(StringView { bytes_read }));
     }
 
     return JsonValue::from_string(builder.build());

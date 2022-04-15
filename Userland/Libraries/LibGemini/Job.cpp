@@ -63,7 +63,7 @@ String Job::read_line(size_t size)
 ByteBuffer Job::receive(size_t size)
 {
     ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
-    auto nread = MUST(m_socket->read(buffer));
+    auto nread = MUST(m_socket->read(buffer)).size();
     return buffer.slice(0, nread);
 }
 

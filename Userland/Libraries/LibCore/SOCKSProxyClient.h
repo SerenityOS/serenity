@@ -37,7 +37,7 @@ public:
     virtual ~SOCKSProxyClient() override;
 
     // ^Stream::Stream
-    virtual ErrorOr<size_t> read(Bytes bytes) override { return m_socket.read(bytes); }
+    virtual ErrorOr<Bytes> read(Bytes bytes) override { return m_socket.read(bytes); }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_socket.write(bytes); }
     virtual bool is_eof() const override { return m_socket.is_eof(); }
     virtual bool is_open() const override { return m_socket.is_open(); }

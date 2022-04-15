@@ -31,7 +31,7 @@ public:
 
     // ^Stream
     virtual bool is_readable() const override { return m_stream.is_readable(); }
-    virtual ErrorOr<size_t> read(Bytes bytes) override
+    virtual ErrorOr<Bytes> read(Bytes bytes) override
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();

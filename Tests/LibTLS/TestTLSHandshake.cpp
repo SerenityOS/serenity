@@ -79,8 +79,8 @@ TEST_CASE(test_TLS_hello_handshake)
     auto tls = MUST(TLS::TLSv12::connect(DEFAULT_SERVER, port, move(options)));
     ByteBuffer contents;
     tls->on_ready_to_read = [&] {
-        auto nread = MUST(tls->read(contents.must_get_bytes_for_writing(4 * KiB)));
-        if (nread == 0) {
+        auto read_bytes = MUST(tls->read(contents.must_get_bytes_for_writing(4 * KiB)));
+        if (read_bytes.is_empty()) {
             FAIL("No data received");
             loop.quit(1);
         }

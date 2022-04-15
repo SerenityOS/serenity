@@ -162,31 +162,31 @@ private:
 #ifdef __serenity__
         m_socket->on_ready_to_read = [this] {
             u32 length;
-            auto maybe_nread = m_socket->read({ (u8*)&length, sizeof(length) });
-            if (maybe_nread.is_error()) {
-                dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_nread.error());
+            auto maybe_bytes_read = m_socket->read({ (u8*)&length, sizeof(length) });
+            if (maybe_bytes_read.is_error()) {
+                dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_bytes_read.error());
                 shutdown();
                 return;
             }
 
-            auto nread = maybe_nread.release_value();
-            if (nread == 0) {
+            auto bytes_read = maybe_bytes_read.release_value();
+            if (bytes_read.is_empty()) {
                 dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
                 shutdown();
                 return;
             }
 
-            VERIFY(nread == sizeof(length));
+            VERIFY(bytes_read.size() == sizeof(length));
 
             auto request_buffer = ByteBuffer::create_uninitialized(length).release_value();
-            maybe_nread = m_socket->read(request_buffer.bytes());
-            if (maybe_nread.is_error()) {
-                dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_nread.error());
+            maybe_bytes_read = m_socket->read(request_buffer.bytes());
+            if (maybe_bytes_read.is_error()) {
+                dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_bytes_read.error());
                 shutdown();
                 return;
             }
 
-            nread = maybe_nread.release_value();
+            bytes_read = maybe_bytes_read.release_value();
 
             auto request_json = JsonValue::from_string(request_buffer);
             if (request_json.is_error() || !request_json.value().is_object()) {
