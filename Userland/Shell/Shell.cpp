@@ -1890,6 +1890,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     };
                     suggestion.static_offset = object.get("static_offset").to_u64(0);
                     suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
+                    suggestion.allow_commit_without_listing = object.get("allow_commit_without_listing").to_bool(true);
                     suggestions.append(move(suggestion));
                 } else {
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
