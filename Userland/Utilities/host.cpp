@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IPv4Address.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -23,14 +24,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.parse(args);
 
     // If input looks like an IPv4 address, we should do a reverse lookup.
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(53);
-    int rc = inet_pton(AF_INET, name_or_ip, &addr.sin_addr);
-    if (rc == 1) {
+    auto ip_address = IPv4Address::from_string(name_or_ip);
+    if (ip_address.has_value()) {
         // Okay, let's do a reverse lookup.
-        auto* hostent = gethostbyaddr(&addr.sin_addr, sizeof(in_addr), AF_INET);
+        auto addr = ip_address.value().to_in_addr_t();
+        auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
         if (!hostent) {
             warnln("Reverse lookup failed for '{}'", name_or_ip);
             return 1;
