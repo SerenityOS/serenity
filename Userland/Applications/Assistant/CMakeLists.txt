@@ -6,7 +6,6 @@ serenity_component(
 
 set(SOURCES
     Providers.cpp
-    FuzzyMatch.cpp
     main.cpp
     )
 
