@@ -275,7 +275,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
     }
 
     // Populate the model
-    NonnullRefPtr<ValueInspectorModel> value_inspector_model = make_ref_counted<ValueInspectorModel>();
+    NonnullRefPtr<ValueInspectorModel> value_inspector_model = make_ref_counted<ValueInspectorModel>(m_value_inspector_little_endian);
     if (byte_read_count >= 1) {
         u8 unsigned_byte_value = 0;
         if (m_value_inspector_little_endian)
