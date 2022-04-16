@@ -344,9 +344,53 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
         MUST(array->create_data_property(vm.names.indices, indices_array));
     }
 
+    auto left_context = string.substring_view(0, match_index);
+    auto right_context = string.substring_view(end_index);
+
     // 22. Perform ! CreateDataPropertyOrThrow(A, "input", S).
     // NOTE: This step is performed last to allow the string to be moved into the js_string invocation.
     MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
+
+    auto* regexp_ctor = global_object.regexp_constructor();
+
+    // https://github.com/tc39/proposal-regexp-legacy-features
+    auto input = TRY(array->get(vm.names.input));
+
+    // Set the value of C’s [[RegExpInput]] internal slot to S.
+    regexp_ctor->set_input(input);
+
+    // For each integer i such that 1 ≤ i ≤ 9
+    // If i ≤ n, set the value of C’s [[RegExpParen]] internal slot to the ith element of capturedValues.
+    // Else, set the value of C’s [[RegExpParen]] internal slot to the empty String.
+    regexp_ctor->set_captured_values(array);
+
+    // Set the value of C’s [[RegExpLastMatch]] internal slot to a String whose
+    // length is endIndex - startIndex and containing the code units
+    // from S with indices startIndex through endIndex - 1, in ascending order.
+    auto last_match = TRY(array->get(0));
+    regexp_ctor->set_last_match(last_match);
+
+    // Set the value of C’s [[RegExpLeftContext]] internal slot to
+    // a String whose length is startIndex and containing the code units
+    // from S with indices 0 through startIndex - 1, in ascending order.
+    auto left_context_string = js_string(vm, left_context);
+    regexp_ctor->set_left_context(left_context_string);
+
+    // Set the value of C’s [[RegExpRightContext]] internal slot to
+    // a String whose length is len - endIndex and containing the code units
+    // from S with indices endIndex through len - 1, in ascending order.
+    auto right_context_string = js_string(vm, right_context);
+    regexp_ctor->set_right_context(right_context_string);
+
+    if (result.n_capture_groups >= 1) {
+        // If n > 0, set the value of C’s [[RegExpLastParen]] internal slot
+        // to the last element of capturedValues.
+        auto last_paren = TRY(array->get(result.n_capture_groups));
+        regexp_ctor->set_last_paren(last_paren);
+    } else {
+        // Else, set the value of C’s [[RegExpLastParen]] internal slot to the empty String.
+        regexp_ctor->set_last_paren(js_string(vm, ""));
+    }
 
     // 34. Return A.
     return array;

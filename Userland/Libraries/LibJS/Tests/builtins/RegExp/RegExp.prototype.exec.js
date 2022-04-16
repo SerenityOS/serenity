@@ -16,6 +16,7 @@ test("basic unnamed captures", () => {
     expect(res.length).toBe(2);
     expect(res[0]).toBe("fooooo");
     expect(res[1]).toBe("ooooo");
+    expect(RegExp.$1).toBe("ooooo");
     expect(res.groups).toBe(undefined);
     expect(res.index).toBe(0);
 
@@ -26,6 +27,8 @@ test("basic unnamed captures", () => {
     expect(res[0]).toBe("foo");
     expect(res[1]).toBe("foo");
     expect(res[2]).toBe(undefined);
+    expect(RegExp.$1).toBe("foo");
+    expect(RegExp.$2).toBe(undefined);
     expect(res.groups).toBe(undefined);
     expect(res.index).toBe(0);
 
@@ -36,6 +39,8 @@ test("basic unnamed captures", () => {
     expect(res[0]).toBe("bar");
     expect(res[1]).toBe(undefined);
     expect(res[2]).toBe("bar");
+    expect(RegExp.$1).toBe(undefined);
+    expect(RegExp.$2).toBe("bar");
     expect(res.groups).toBe(undefined);
     expect(res.index).toBe(0);
 });
@@ -48,6 +53,7 @@ test("basic named captures", () => {
     expect(res.index).toBe(0);
     expect(res[0]).toBe("fooooo");
     expect(res[1]).toBe("ooooo");
+    expect(RegExp.$1).toBe("ooooo");
     expect(res.groups).not.toBe(undefined);
     expect(res.groups.os).toBe("ooooo");
 });
