@@ -85,15 +85,33 @@ fi
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=1G
 
+if [ "$SERENITY_ARCH" = "aarch64" ]; then
+    SERENITY_KERNEL_AND_INITRD="
+    -kernel Kernel/Kernel
+    "
+else
+    SERENITY_KERNEL_AND_INITRD="
+    -kernel Kernel/Prekernel/Prekernel
+    -initrd Kernel/Kernel
+    "
+fi
+
 [ -z "$SERENITY_DISK_IMAGE" ] && {
-    if [ "$SERENITY_RUN" = q35grub ] || [ "$SERENITY_RUN" = qgrub ]; then
+    if [ "$SERENITY_BOOTLOADER" = grub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
-    elif [ "$SERENITY_RUN" = limine ]; then
+        SERENITY_BOOT_KERNEL_OR_DISK_IMAGE=""
+    elif [ "$SERENITY_BOOTLOADER" = limine ]; then
         SERENITY_DISK_IMAGE="limine_disk_image"
-    elif [ "$SERENITY_RUN" = qextlinux ]; then
+        SERENITY_BOOT_KERNEL_OR_DISK_IMAGE=""
+    elif [ "$SERENITY_BOOTLOADER" = qextlinux ]; then
         SERENITY_DISK_IMAGE="extlinux_disk_image"
+        SERENITY_BOOT_KERNEL_OR_DISK_IMAGE=""
     else
         SERENITY_DISK_IMAGE="_disk_image"
+        SERENITY_BOOT_KERNEL_OR_DISK_IMAGE="
+        $SERENITY_KERNEL_AND_INITRD
+        -append $SERENITY_KERNEL_CMDLINE
+        "
     fi
     if command -v wslpath >/dev/null; then
         case "$SERENITY_QEMU_BIN" in
@@ -289,17 +307,6 @@ if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ]; then
     -qmp unix:qmp-sock,server,nowait"
 fi
 
-if [ "$SERENITY_ARCH" = "aarch64" ]; then
-    SERENITY_KERNEL_AND_INITRD="
-    -kernel Kernel/Kernel
-    "
-else
-    SERENITY_KERNEL_AND_INITRD="
-    -kernel Kernel/Prekernel/Prekernel
-    -initrd Kernel/Kernel
-    "
-fi
-
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
@@ -410,8 +417,7 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         -device $SERENITY_ETHERNET_DEVICE_TYPE \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo ip tuntap del dev tap0 mode tap || true
@@ -422,25 +428,17 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev tap,ifname=tap0,id=br0 \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=br0 \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
     sudo ip tuntap del dev tap0 mode tap
-elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
-    # Meta/run.sh qgrub: qemu with grub/extlinux
-    "$SERENITY_QEMU_BIN" \
-        $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_VIRT_TECH_ARG \
-        $SERENITY_PACKET_LOGGING_ARG \
-        $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE
 elif [ "$SERENITY_RUN" = "q35" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU Q35 machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
-        $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 elif [ "$SERENITY_RUN" = "isapc" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
@@ -449,8 +447,7 @@ elif [ "$SERENITY_RUN" = "isapc" ]; then
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
         -device ne2k_isa,netdev=breh \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 elif [ "$SERENITY_RUN" = "microvm" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU MicroVM machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
@@ -459,18 +456,7 @@ elif [ "$SERENITY_RUN" = "microvm" ]; then
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
         -device ne2k_isa,netdev=breh \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
-elif [ "$SERENITY_RUN" = "q35grub" ]; then
-    # Meta/run.sh q35grub: qemu (q35 chipset) with SerenityOS, using a grub disk image
-    "$SERENITY_QEMU_BIN" \
-        $SERENITY_COMMON_QEMU_Q35_ARGS \
-        $SERENITY_VIRT_TECH_ARG \
-        $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE
-elif [ "$SERENITY_RUN" = "limine" ]; then
-    "$SERENITY_QEMU_BIN" \
-        $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_VIRT_TECH_ARG
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
     echo "Running QEMU in CI"
@@ -487,8 +473,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -nographic \
         -display none \
         -debugcon file:debug.log \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 else
     # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
@@ -496,6 +481,5 @@ else
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_BOOT_KERNEL_OR_DISK_IMAGE
 fi
