@@ -10,7 +10,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     int flash_flush = -1;
     Core::ArgsParser args_parser;

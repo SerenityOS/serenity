@@ -207,7 +207,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto window = GUI::Window::construct();
     window->set_minimizable(false);
 
