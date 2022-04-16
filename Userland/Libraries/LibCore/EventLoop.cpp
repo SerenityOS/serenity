@@ -330,12 +330,16 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
             s_event_loop_stack->append(*this);
 
 #ifdef __serenity__
-            if (getuid() != 0
-                && make_inspectable == MakeInspectable::Yes
-                // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
-                && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
-                if (!connect_to_inspector_server())
-                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
+            if (getuid() != 0) {
+                if (getenv("MAKE_INSPECTABLE") == "1"sv)
+                    make_inspectable = Core::EventLoop::MakeInspectable::Yes;
+
+                if (make_inspectable == MakeInspectable::Yes
+                    // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
+                    && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
+                    if (!connect_to_inspector_server())
+                        dbgln("Core::EventLoop: Failed to connect to InspectorServer");
+                }
             }
 #endif
         }
