@@ -4,11 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "FuzzyMatch.h"
-#include <AK/CharacterTypes.h>
-#include <string.h>
+#pragma once
 
-namespace Assistant {
+#include <AK/CharacterTypes.h>
+#include <AK/String.h>
+
+namespace AK {
+
+struct FuzzyMatchResult {
+    bool matched { false };
+    int score { 0 };
+};
 
 static constexpr int const RECURSION_LIMIT = 10;
 static constexpr int const MAX_MATCHES = 256;
@@ -118,7 +124,15 @@ static FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const
     return { true, out_score };
 }
 
-FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
+// This fuzzy_match algorithm is based off a similar algorithm used by Sublime Text. The key insight is that instead
+// of doing a total in the distance between characters (I.E. Levenshtein Distance), we apply some meaningful heuristics
+// related to our dataset that we're trying to match to build up a score. Scores can then be sorted and displayed
+// with the highest at the top.
+//
+// Scores are not normalized between any values and have no particular meaning. The starting value is 100 and when we
+// detect good indicators of a match we add to the score. When we detect bad indicators, we penalize the match and subtract
+// from its score. Therefore, the longer the needle/haystack the greater the range of scores could be.
+static FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
 {
     int recursion_count = 0;
     u8 matches[MAX_MATCHES] {};
@@ -126,3 +140,5 @@ FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
 }
 
 }
+using AK::fuzzy_match;
+using AK::FuzzyMatchResult;
