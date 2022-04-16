@@ -81,7 +81,7 @@ void WindowManager::reload_config()
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_cursor_size = m_config->read_num_entry("Cursor", "Size", 2);
+    m_cursor_size = m_config->read_num_entry("Cursor", "Size", 1);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
@@ -299,7 +299,7 @@ void WindowManager::set_cursor_size(int size)
         dbgln("Failed to save config file: {}", result.error());
 }
 
-float WindowManager::cursor_size() const
+int WindowManager::cursor_size() const
 {
     return m_cursor_size;
 }

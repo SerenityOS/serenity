@@ -32,7 +32,7 @@ CursorWidget::CursorWidget()
 
     m_size_label = *find_descendant_of_type_named<GUI::Label>("size_label");
     m_size_slider = *find_descendant_of_type_named<GUI::HorizontalSlider>("size_slider");
-    m_size_slider->set_range(WindowServer::mouse_size_min, WindowServer::mouse_size_max);
+    m_size_slider->set_range(WindowServer::cursor_size_min, WindowServer::cursor_size_max);
     m_size_slider->on_change = [&](int value) {
         m_size_label->set_text(String::formatted("{}x", value));
     };

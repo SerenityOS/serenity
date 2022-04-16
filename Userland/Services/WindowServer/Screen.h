@@ -21,8 +21,8 @@ namespace WindowServer {
 
 constexpr double mouse_accel_max = 3.5;
 constexpr double mouse_accel_min = 0.5;
-constexpr float cursor_size_max = 10;
-constexpr float cursor_size_min = 1;
+constexpr int cursor_size_max = 10;
+constexpr int cursor_size_min = 1;
 constexpr unsigned scroll_step_size_min = 1;
 
 // Most people will probably have 4 screens or less

@@ -165,7 +165,7 @@ public:
     void set_double_click_speed(int);
     void set_cursor_size(int);
     int double_click_speed() const;
-    float cursor_size() const;
+    int cursor_size() const;
     void set_buttons_switched(bool);
     bool get_buttons_switched() const;
 
