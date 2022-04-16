@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments, Core::EventLoop::MakeInspectable::Yes));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("SystemMonitor");
 
