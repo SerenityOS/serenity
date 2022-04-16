@@ -34,7 +34,8 @@ public:
         Value
     };
 
-    explicit ValueInspectorModel()
+    explicit ValueInspectorModel(bool is_little_endian)
+        : m_is_little_endian(is_little_endian)
     {
         for (int i = 0; i < ValueType::__Count; i++)
             set_parsed_value(static_cast<ValueType>(i), "");
@@ -61,7 +62,7 @@ public:
         case Column::Type:
             return "Type";
         case Column::Value:
-            return "Value";
+            return m_is_little_endian ? "Value (Little Endian)" : "Value (Big Endian)";
         }
         VERIFY_NOT_REACHED();
     }
@@ -131,5 +132,6 @@ public:
     }
 
 private:
+    bool m_is_little_endian = false;
     Array<String, ValueType::__Count> m_values = {};
 };
