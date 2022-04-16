@@ -217,6 +217,11 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     };
 
     m_text_box->set_focus(true);
+
+    on_active_window_change = [this](bool is_active_window) {
+        if (!is_active_window)
+            close();
+    };
 }
 
 void CommandPalette::collect_actions(GUI::Window& parent_window)
