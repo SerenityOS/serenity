@@ -18,7 +18,8 @@ $ Inspector [pid]
 
 Inspector facilitates process inspection via RPC.
 
-The inspected process must have previously allowed the
+To inspect a process, it must have `MAKE_INSPECTABLE=1` in its environment,
+and it must have previously allowed the
 [`accept`(2)](help://man/2/accept) system call with
 [`pledge`(2)](help://man/2/pledge) to allow inspection
 via UNIX socket.
