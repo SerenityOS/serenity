@@ -21,12 +21,49 @@ void RegExpConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
 
+    // FIXME: RegExp's realm needs to be considered before setting these properties.
+    [[maybe_unused]] auto* rm = this->realm();
+
     // 22.2.4.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
     define_direct_property(vm.names.prototype, global_object.regexp_prototype(), 0);
 
     define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    u8 attr = Attribute::Configurable | Attribute::Writable | Attribute::Enumerable;
+    // The initial value of all these internal slots is the empty String.
+
+    // RegExp.input [[Get]] && [[Set]]
+    define_direct_property("input", js_string(vm, ""), attr);
+    define_direct_property("$_", js_string(vm, ""), attr);
+
+    // RegExp.lastMatch [[Get]]
+    define_direct_property("lastMatch", js_string(vm, ""), attr);
+    define_direct_property("$&", js_string(vm, ""), attr);
+
+    // RegExp.lastParen [[Get]]
+    define_direct_property("lastParen", js_string(vm, ""), attr);
+    define_direct_property("$+", js_string(vm, ""), attr);
+
+    // RegExp.leftContext [[Get]]
+    define_direct_property("leftContext", js_string(vm, ""), attr);
+    define_direct_property("$`", js_string(vm, ""), attr);
+
+    // RegExp.rightContext [[Get]]
+    define_direct_property("rightContext", js_string(vm, ""), attr);
+    define_direct_property("$'", js_string(vm, ""), attr);
+
+    // RegExp.$1...$9 [[Get]]
+    define_direct_property("$1", js_string(vm, ""), attr);
+    define_direct_property("$2", js_string(vm, ""), attr);
+    define_direct_property("$3", js_string(vm, ""), attr);
+    define_direct_property("$4", js_string(vm, ""), attr);
+    define_direct_property("$5", js_string(vm, ""), attr);
+    define_direct_property("$6", js_string(vm, ""), attr);
+    define_direct_property("$7", js_string(vm, ""), attr);
+    define_direct_property("$8", js_string(vm, ""), attr);
+    define_direct_property("$9", js_string(vm, ""), attr);
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags

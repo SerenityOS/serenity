@@ -6,7 +6,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+// #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -20,6 +22,10 @@
 #include <LibJS/Runtime/StringPrototype.h>
 
 namespace JS {
+
+static constexpr AK::Array<StringView, 10> k_group_names = {
+    "", "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"
+};
 
 RegExpPrototype::RegExpPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
@@ -295,6 +301,11 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
             captured_value = js_undefined();
             // ii. Append undefined to indices.
             indices.append({});
+
+            if (i >= 1 && i <= 9) {
+                // Set RegExp.$1 ... RegExp.$9
+                TRY(global_object.regexp_constructor()->set(k_group_names[i].characters_without_null_termination(), js_undefined(), Object::ShouldThrowExceptions::Yes));
+            }
         }
         // c. Else,
         else {
@@ -308,6 +319,11 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
             captured_value = js_string(vm, capture.view.u16_view());
             // vi Append capture to indices.
             indices.append(Match::create(capture));
+
+            if (i >= 1 && i <= 9) {
+                // Set RegExp.$1 ... RegExp.$9
+                TRY(global_object.regexp_constructor()->set(k_group_names[i].characters_without_null_termination(), captured_value, Object::ShouldThrowExceptions::Yes));
+            }
         }
 
         // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).

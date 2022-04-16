@@ -92,6 +92,19 @@ test("override exec with non-function", () => {
     expect(re.test("test")).toBe(true);
 });
 
+test("basic unnamed captures", () => {
+    /f(o.*)/.test("fooooo");
+    expect(RegExp.$1).toBe("ooooo");
+
+    /(foo)(bar)?/.test("foo");
+    expect(RegExp.$1).toBe("foo");
+    expect(RegExp.$2).toBe(undefined);
+
+    /(foo)?(bar)/.test("bar");
+    expect(RegExp.$1).toBe(undefined);
+    expect(RegExp.$2).toBe("bar");
+});
+
 test("property escapes", () => {
     expect(/\p{ASCII}/.test("a")).toBeFalse();
     expect(/\p{ASCII}/.test("p{ASCII}")).toBeTrue();
