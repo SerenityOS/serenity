@@ -302,7 +302,7 @@ static String get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget co
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
