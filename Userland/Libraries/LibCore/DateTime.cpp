@@ -153,9 +153,13 @@ String DateTime::to_string(StringView format) const
             case 'H':
                 builder.appendff("{:02}", tm.tm_hour);
                 break;
-            case 'I':
-                builder.appendff("{:02}", tm.tm_hour % 12);
+            case 'I': {
+                int display_hour = tm.tm_hour % 12;
+                if (display_hour == 0)
+                    display_hour = 12;
+                builder.appendff("{:02}", display_hour);
                 break;
+            }
             case 'j':
                 builder.appendff("{:03}", tm.tm_yday + 1);
                 break;
@@ -169,11 +173,15 @@ String DateTime::to_string(StringView format) const
                 builder.append('\n');
                 break;
             case 'p':
-                builder.append(tm.tm_hour < 12 ? "a.m." : "p.m.");
+                builder.append(tm.tm_hour < 12 ? "AM" : "PM");
                 break;
-            case 'r':
-                builder.appendff("{:02}:{:02}:{:02} {}", tm.tm_hour % 12, tm.tm_min, tm.tm_sec, tm.tm_hour < 12 ? "a.m." : "p.m.");
+            case 'r': {
+                int display_hour = tm.tm_hour % 12;
+                if (display_hour == 0)
+                    display_hour = 12;
+                builder.appendff("{:02}:{:02}:{:02} {}", display_hour, tm.tm_min, tm.tm_sec, tm.tm_hour < 12 ? "AM" : "PM");
                 break;
+            }
             case 'R':
                 builder.appendff("{:02}:{:02}", tm.tm_hour, tm.tm_min);
                 break;
@@ -419,19 +427,19 @@ Optional<DateTime> DateTime::parse(StringView format, String const& string)
             }
             break;
         case 'p': {
-            auto ampm = string.substring_view(string_pos, 4);
-            if (ampm == "p.m." && tm.tm_hour < 12) {
+            auto ampm = string.substring_view(string_pos, 2);
+            if (ampm == "PM" && tm.tm_hour < 12) {
                 tm.tm_hour += 12;
             }
-            string_pos += 4;
+            string_pos += 2;
             break;
         }
         case 'r': {
-            auto ampm = string.substring_view(string_pos, 4);
-            if (ampm == "p.m." && tm.tm_hour < 12) {
+            auto ampm = string.substring_view(string_pos, 2);
+            if (ampm == "PM" && tm.tm_hour < 12) {
                 tm.tm_hour += 12;
             }
-            string_pos += 4;
+            string_pos += 2;
             break;
         }
         case 'R': {

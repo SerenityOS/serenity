@@ -121,7 +121,7 @@ public:
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextJustify text_justify() const { return m_inherited.text_justify; }
-    CSS::TextDecorationLine text_decoration_line() const { return m_noninherited.text_decoration_line; }
+    Vector<CSS::TextDecorationLine> text_decoration_line() const { return m_noninherited.text_decoration_line; }
     CSS::LengthPercentage text_decoration_thickness() const { return m_noninherited.text_decoration_thickness; }
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
@@ -217,7 +217,8 @@ protected:
         CSS::Clear clear { InitialValues::clear() };
         CSS::Display display { InitialValues::display() };
         Optional<int> z_index;
-        CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
+        // FIXME: Store this as flags in a u8.
+        Vector<CSS::TextDecorationLine> text_decoration_line { InitialValues::text_decoration_line() };
         CSS::LengthPercentage text_decoration_thickness { InitialValues::text_decoration_thickness() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         Color text_decoration_color { InitialValues::color() };
@@ -282,7 +283,7 @@ public:
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_inherited.text_align = text_align; }
     void set_text_justify(CSS::TextJustify text_justify) { m_inherited.text_justify = text_justify; }
-    void set_text_decoration_line(CSS::TextDecorationLine value) { m_noninherited.text_decoration_line = value; }
+    void set_text_decoration_line(Vector<CSS::TextDecorationLine> value) { m_noninherited.text_decoration_line = move(value); }
     void set_text_decoration_thickness(CSS::LengthPercentage value) { m_noninherited.text_decoration_thickness = value; }
     void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }
     void set_text_decoration_color(Color value) { m_noninherited.text_decoration_color = value; }

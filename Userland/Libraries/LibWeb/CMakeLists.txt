@@ -36,6 +36,7 @@ set(SOURCES
     CSS/CSSSupportsRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
+    CSS/Enums.cpp
     CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
@@ -615,6 +616,16 @@ libweb_js_wrapper(WebSockets/WebSocket)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
+
+invoke_generator(
+    "Enums"
+    Lagom::GenerateCSSEnums
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
+    ""
+    "CSS/Enums.h"
+    "CSS/Enums.cpp"
+    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
+)
 
 invoke_generator(
     "MediaFeatureID"
