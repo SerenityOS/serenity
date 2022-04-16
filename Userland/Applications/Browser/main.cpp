@@ -8,6 +8,7 @@
 #include "LibCore/FileWatcher.h"
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/Browser.h>
+#include <Applications/Browser/BrowserConfig.h>
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/CookieJar.h>
 #include <Applications/Browser/Tab.h>
@@ -93,9 +94,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
-    Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
-    Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
-    Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters", true);
+    Browser::g_home_url = Browser::Config::Preferences::home();
+    Browser::g_search_engine = Browser::Config::Preferences::search_engine();
+    Browser::g_content_filters_enabled = Browser::Config::Preferences::enable_content_filters();
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 

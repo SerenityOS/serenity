@@ -8,6 +8,7 @@
 #include "DownloadWidget.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <Applications/Browser/BrowserConfig.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
@@ -37,7 +38,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         m_destination_path = builder.to_string();
     }
 
-    auto close_on_finish = Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", false);
+    auto close_on_finish = Config::Preferences::close_download_widget_on_finish();
 
     m_elapsed_timer.start();
     m_download = Web::ResourceLoader::the().connector().start_request("GET", url);
@@ -90,7 +91,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
-        Config::write_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", checked);
+        Config::Preferences::set_close_download_widget_on_finish(checked);
     };
 
     auto& button_container = add<GUI::Widget>();

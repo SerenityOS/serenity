@@ -9,9 +9,12 @@ compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
 compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
 compile_gml(StorageWidget.gml StorageWidgetGML.h storage_widget_gml)
 compile_gml(Tab.gml TabGML.h tab_gml)
+generate_config_reader(Browser.ini BrowserConfig)
 
 set(SOURCES
     BookmarksBarWidget.cpp
+    BrowserConfig.cpp
+    BrowserConfig.h
     BrowserWindow.cpp
     BrowserWindowGML.h
     ConsoleWidget.cpp

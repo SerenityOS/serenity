@@ -14,6 +14,7 @@
 #include "CookieJar.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
+#include <Applications/Browser/BrowserConfig.h>
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Process.h>
@@ -127,10 +128,10 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
     m_window_actions.on_show_bookmarks_bar = [](auto& action) {
         Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
-        Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", action.is_checked());
+        Config::Preferences::set_show_bookmarks_bar(action.is_checked());
     };
 
-    bool show_bookmarks_bar = Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true);
+    bool show_bookmarks_bar = Browser::Config::Preferences::show_bookmarks_bar();
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
@@ -246,10 +247,10 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            auto homepage_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
+            auto homepage_url = Browser::Config::Preferences::home();
             if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
-                    Config::write_string("Browser", "Preferences", "Home", homepage_url);
+                    Config::Preferences::set_home(homepage_url);
                     Browser::g_home_url = homepage_url;
                 } else {
                     GUI::MessageBox::show_error(this, "The URL you have entered is not valid");
@@ -268,13 +269,13 @@ void BrowserWindow::build_menus()
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
     color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
-        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser", "Preferences", "ColorScheme", "auto"));
+        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::Preferences::color_scheme());
         m_color_scheme_actions.set_exclusive(true);
 
         auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
             auto action = GUI::Action::create_checkable(
                 name, [=, this](auto&) {
-                    Config::write_string("Browser", "Preferences", "ColorScheme", Web::CSS::preferred_color_scheme_to_string(preference_value));
+                    Config::Preferences::set_color_scheme(Web::CSS::preferred_color_scheme_to_string(preference_value));
                     active_tab().view().set_preferred_color_scheme(preference_value);
                 },
                 this);
@@ -414,7 +415,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     m_disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [](auto&) {
             g_search_engine = {};
-            Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+            Config::Preferences::set_search_engine(g_search_engine);
         },
         this);
     search_engine_menu.add_action(*m_disable_search_engine_action);
@@ -438,7 +439,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 auto action = GUI::Action::create_checkable(
                     name, [&, url_format](auto&) {
                         g_search_engine = url_format;
-                        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+                        Config::Preferences::set_search_engine(g_search_engine);
                     },
                     this);
                 search_engine_menu.add_action(action);
@@ -468,7 +469,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
         }
 
         g_search_engine = search_engine;
-        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+        Config::Preferences::set_search_engine(g_search_engine);
         action.set_status_tip(search_engine);
     });
     search_engine_menu.add_action(custom_search_engine_action);

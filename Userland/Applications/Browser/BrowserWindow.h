@@ -20,7 +20,7 @@ class CookieJar;
 class Tab;
 
 class BrowserWindow final : public GUI::Window
-    , public Config::Listener {
+    , public ::Config::Listener {
     C_OBJECT(BrowserWindow);
 
 public:
