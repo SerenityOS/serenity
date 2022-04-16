@@ -48,15 +48,62 @@ String Annotation::config_type_name() const
     VERIFY_NOT_REACHED();
 }
 
+String Annotation::cpp_value(String const& value) const
+{
+    // TODO: Escape strings
+    if (m_type == Type::String)
+        return String::formatted("\"{}\"", value);
+    return value;
+}
+
 void Annotation::generate_reader(SourceGenerator& generator) const
 {
     generator.set("option.config_type", config_type_name());
-    generator.appendln(R"~~~(    return ::Config::read_@option.config_type@("@config.domain@", "@group.name@", "@option.name@", @option.default_value@);)~~~");
+    generator.appendln(R"~~~(    auto value = ::Config::read_@option.config_type@("@config.domain@", "@group.name@", "@option.name@", @option.default_value@);)~~~");
+
+    if (!m_allowed_values.is_empty()) {
+        generator.append("    if (!(");
+        for (size_t i = 0; auto const& value : m_allowed_values) {
+            generator.set("option.allowed_value", cpp_value(value));
+            generator.append(R"~~~(
+        value == @option.allowed_value@)~~~");
+            if (i != m_allowed_values.size() - 1)
+                generator.append(" || ");
+            i++;
+        }
+        generator.appendln(R"~~~(
+    )) {
+        dbgln("@config.domain@: Invalid value read for @group.name@::@option.name@");
+        return @option.default_value@;
+    }
+)~~~");
+    }
+
+    generator.appendln("    return value;");
 }
 
 void Annotation::generate_writer(SourceGenerator& generator) const
 {
     generator.set("option.config_type", config_type_name());
+
+    if (!m_allowed_values.is_empty()) {
+        generator.append("    if (!(");
+        for (size_t i = 0; auto const& value : m_allowed_values) {
+            generator.set("option.allowed_value", cpp_value(value));
+            generator.append(R"~~~(
+        value == @option.allowed_value@)~~~");
+            if (i != m_allowed_values.size() - 1)
+                generator.append(" || ");
+            i++;
+        }
+        generator.appendln(R"~~~(
+    )) {
+        dbgln("@config.domain@: Tried to write invalid value for @group.name@::@option.name@");
+        return;
+    }
+)~~~");
+    }
+
     generator.appendln(R"~~~(    ::Config::write_@option.config_type@("@config.domain@", "@group.name@", "@option.name@", value);)~~~");
 }
 
@@ -85,8 +132,7 @@ void Option::generate_source(SourceGenerator& generator) const
         return;
     }
     generator.set("option.name.snakecase", m_name.to_snakecase());
-    // TODO: Escape strings
-    generator.set("option.default_value", m_annotation.type() == Annotation::Type::String ? String::formatted("\"{}\"", m_default_value) : m_default_value);
+    generator.set("option.default_value", m_annotation.cpp_value(m_default_value));
     generator.set("option.cpp_return_type", m_annotation.cpp_return_type());
 
     generator.append(R"~~~(

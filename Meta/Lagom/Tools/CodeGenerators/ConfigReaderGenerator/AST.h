@@ -28,8 +28,13 @@ public:
     }
 
     Type type() const { return m_type; }
+
+    Vector<String> allowed_values() const { return m_allowed_values; }
+    void set_allowed_values(Vector<String> const& allowed_values) { m_allowed_values = allowed_values; }
+
     String cpp_return_type() const;
     String cpp_argument_type() const;
+    String cpp_value(String const& value) const;
 
     void generate_reader(SourceGenerator&) const;
     void generate_writer(SourceGenerator&) const;
@@ -38,6 +43,7 @@ private:
     String config_type_name() const;
 
     Type m_type {};
+    Vector<String> m_allowed_values;
 };
 
 class Option {

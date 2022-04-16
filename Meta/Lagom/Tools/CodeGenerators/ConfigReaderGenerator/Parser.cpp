@@ -87,14 +87,45 @@ ParserErrorOr<Optional<AST::Annotation>> Parser::parse_comment_with_annotation()
         return ParserError { .message = String::formatted("Invalid option type: {}", type_name) };
     }());
 
-    // Everything after type name is ignored.
-    // TODO: Support annotation parameters (e.g. range, enum values,...)
+    auto is_ascii_space_but_not_newline = [](auto c) {
+        return is_ascii_space(c) && c != '\n';
+    };
+
+    // Parameters
+    AST::Annotation annotation { type };
+    while (true) {
+        consume_while(is_ascii_space_but_not_newline);
+        String parameter_name = consume_while([](auto c) { return is_ascii_alphanumeric(c) || c == '_'; });
+        if (parameter_name.is_empty())
+            break;
+        if (parameter_name == "allowed_values") {
+            if (!consume_specific('('))
+                return ParserError { .message = "Expected '('" };
+            Vector<String> allowed_values;
+            while (true) {
+                String value = consume_while([](auto c) { return is_ascii_alphanumeric(c) || c == '_'; });
+                allowed_values.append(move(value));
+                if (!consume_specific(',')) {
+                    consume_while(is_ascii_space_but_not_newline);
+                    break;
+                }
+                consume_while(is_ascii_space_but_not_newline);
+            }
+            if (!consume_specific(')'))
+                return ParserError { .message = "Expected ')'" };
+            annotation.set_allowed_values(allowed_values);
+        } else {
+            return ParserError { .message = String::formatted("Invalid annotation parameter: {}", parameter_name) };
+        }
+    }
+
+    // Ignore rest of line
     consume_line();
 
     // Make comments after annotations invalidate the annotation.
     if (consume_comments())
         return Optional<AST::Annotation> {};
-    return AST::Annotation(type);
+    return annotation;
 }
 
 bool Parser::consume_comments()
