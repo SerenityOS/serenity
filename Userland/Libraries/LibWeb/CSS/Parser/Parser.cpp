@@ -4796,19 +4796,11 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         auto function = maybe_function.release_value();
         auto function_metadata = transform_function_metadata(function);
 
-        bool expect_comma = false;
         NonnullRefPtrVector<StyleValue> values;
-        for (auto& value : part.function().values()) {
-            if (value.is(Token::Type::Whitespace))
-                continue;
-
-            if (value.is(Token::Type::Comma)) {
-                if (!expect_comma)
-                    return nullptr;
-                expect_comma = false;
-                continue;
-            } else if (expect_comma)
-                return nullptr;
+        auto argument_tokens = TokenStream { part.function().values() };
+        argument_tokens.skip_whitespace();
+        while (argument_tokens.has_next_token()) {
+            auto& value = argument_tokens.next_token();
 
             // FIXME: Allow calc() parameters.
 
@@ -4846,7 +4838,17 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             }
             }
 
-            expect_comma = true;
+            argument_tokens.skip_whitespace();
+            if (argument_tokens.has_next_token()) {
+                // Arguments must be separated by commas.
+                if (!argument_tokens.next_token().is(Token::Type::Comma))
+                    return nullptr;
+                argument_tokens.skip_whitespace();
+
+                // If there are no more parameters after the comma, this is invalid.
+                if (!argument_tokens.has_next_token())
+                    return nullptr;
+            }
         }
 
         if (values.size() < function_metadata.min_parameters) {
