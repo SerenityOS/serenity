@@ -27,7 +27,8 @@ void IteratorPrototype::initialize(GlobalObject& global_object)
 // 27.1.2.1 %IteratorPrototype% [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::symbol_iterator)
 {
-    return TRY(vm.this_value(global_object).to_object(global_object));
+    // 1. Return the this value.
+    return vm.this_value(global_object);
 }
 
 }
