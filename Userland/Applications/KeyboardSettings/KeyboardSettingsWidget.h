@@ -40,4 +40,6 @@ private:
     RefPtr<GUI::Button> m_remove_keymap_button;
     RefPtr<GUI::TextEditor> m_test_typing_area;
     RefPtr<GUI::Button> m_clear_test_typing_area_button;
+
+    Function<void()> m_activate_keymap_event;
 };
