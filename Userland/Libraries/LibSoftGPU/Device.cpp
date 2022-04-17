@@ -246,9 +246,9 @@ void Device::rasterize_triangle(Triangle const& triangle)
     f32x4 vertex1_fog_depth;
     f32x4 vertex2_fog_depth;
     if (m_options.fog_enabled) {
-        vertex0_fog_depth = expand4(fabsf(vertex0.eye_coordinates.z()));
-        vertex1_fog_depth = expand4(fabsf(vertex1.eye_coordinates.z()));
-        vertex2_fog_depth = expand4(fabsf(vertex2.eye_coordinates.z()));
+        vertex0_fog_depth = expand4(AK::abs(vertex0.eye_coordinates.z()));
+        vertex1_fog_depth = expand4(AK::abs(vertex1.eye_coordinates.z()));
+        vertex2_fog_depth = expand4(AK::abs(vertex2.eye_coordinates.z()));
     }
 
     float const render_bounds_left = render_bounds.left();
