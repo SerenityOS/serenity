@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
@@ -20,11 +21,12 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::pledge("stdio rpath unix"));
     TRY(Core::System::unveil("/proc/net", "r"));
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/services", "r"));
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool flag_all = false;
@@ -161,7 +163,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto bytes_in = if_object.get("bytes_in").to_string();
             auto bytes_out = if_object.get("bytes_out").to_string();
+
             auto peer_address = if_object.get("peer_address").to_string();
+            if (!flag_numeric) {
+                auto from_string = IPv4Address::from_string(peer_address);
+                auto addr = from_string.value().to_in_addr_t();
+                auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
+                if (hostent != nullptr) {
+                    auto host_name = StringView(hostent->h_name);
+                    if (!host_name.is_empty())
+                        peer_address = host_name;
+                }
+            }
 
             auto peer_port = if_object.get("peer_port").to_string();
             if (!flag_numeric) {
@@ -175,6 +188,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto formatted_peer_address = String::formatted("{}:{}", peer_address, peer_port);
 
             auto local_address = if_object.get("local_address").to_string();
+            if (!flag_numeric) {
+                auto from_string = IPv4Address::from_string(local_address);
+                auto addr = from_string.value().to_in_addr_t();
+                auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
+                if (hostent != nullptr) {
+                    auto host_name = StringView(hostent->h_name);
+                    if (!host_name.is_empty())
+                        local_address = host_name;
+                }
+            }
 
             auto local_port = if_object.get("local_port").to_string();
             if (!flag_numeric) {
@@ -228,6 +251,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& if_object = value.as_object();
 
             auto local_address = if_object.get("local_address").to_string();
+            if (!flag_numeric) {
+                auto from_string = IPv4Address::from_string(local_address);
+                auto addr = from_string.value().to_in_addr_t();
+                auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
+                if (hostent != nullptr) {
+                    auto host_name = StringView(hostent->h_name);
+                    if (!host_name.is_empty())
+                        local_address = host_name;
+                }
+            }
 
             auto local_port = if_object.get("local_port").to_string();
             if (!flag_numeric) {
@@ -240,6 +273,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             auto peer_address = if_object.get("peer_address").to_string();
+            if (!flag_numeric) {
+                auto from_string = IPv4Address::from_string(peer_address);
+                auto addr = from_string.value().to_in_addr_t();
+                auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
+                if (hostent != nullptr) {
+                    auto host_name = StringView(hostent->h_name);
+                    if (!host_name.is_empty())
+                        peer_address = host_name;
+                }
+            }
 
             auto peer_port = if_object.get("peer_port").to_string();
             if (!flag_numeric) {
