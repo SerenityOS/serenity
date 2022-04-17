@@ -213,16 +213,15 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
     // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
     // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
-    // question is a "top" or "left" edge. We can detect those easily by testing for Y2 <= Y1,
-    // since we know our vertices are in CCW order. By changing a float epsilon to 0, we
-    // effectively change the comparisons against the edge values below from "> 0" into ">= 0".
+    // question is a "top" or "left" edge. By changing a float epsilon to 0, we effectively change
+    // the comparisons against the edge values below from "> 0" into ">= 0".
     constexpr auto epsilon = NumericLimits<float>::epsilon();
     FloatVector3 zero { epsilon, epsilon, epsilon };
-    if (v2.y() <= v1.y())
+    if (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x()))
         zero.set_x(0.f);
-    if (v0.y() <= v2.y())
+    if (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x()))
         zero.set_y(0.f);
-    if (v1.y() <= v0.y())
+    if (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x()))
         zero.set_z(0.f);
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
