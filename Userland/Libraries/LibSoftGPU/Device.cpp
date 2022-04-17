@@ -45,14 +45,16 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
+// Both of these edge functions return positive values for counter-clockwise rotation of vertices.
+// Note that they return the area of a parallelogram with sides {a, b} and {b, c}, so _double_ the area of the triangle {a, b, c}.
 constexpr static float edge_function(FloatVector2 const& a, FloatVector2 const& b, FloatVector2 const& c)
 {
-    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
+    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
 constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const& b, Vector2<f32x4> const& c)
 {
-    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
+    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
 template<typename T, typename U>
@@ -184,12 +186,11 @@ void Device::rasterize_triangle(Triangle const& triangle)
     if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
 
-    // Vertices
     GPU::Vertex const& vertex0 = triangle.vertices[0];
     GPU::Vertex const& vertex1 = triangle.vertices[1];
     GPU::Vertex const& vertex2 = triangle.vertices[2];
 
-    // Calculate area of the triangle for later tests
+    // Determine the area of a parallelogram with sides (v0,v1) and (v1,v2) to calculate barycentrics
     FloatVector2 const v0 = vertex0.window_coordinates.xy();
     FloatVector2 const v1 = vertex1.window_coordinates.xy();
     FloatVector2 const v2 = vertex2.window_coordinates.xy();
@@ -872,10 +873,6 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         // https://learnopengl.com/Getting-started/Coordinate-Systems
         // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
         // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
-        //
-        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
-
-        // Okay, let's do some face culling first
 
         m_clipped_vertices.clear_with_capacity();
         m_clipped_vertices.append(triangle.vertices[0]);
@@ -924,19 +921,12 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     }
 
     for (auto& triangle : m_processed_triangles) {
-        // Let's calculate the (signed) area of the triangle
-        // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].window_coordinates.x() - triangle.vertices[1].window_coordinates.x(); // A.x - B.x
-        float dxBC = triangle.vertices[1].window_coordinates.x() - triangle.vertices[2].window_coordinates.x(); // B.X - C.x
-        float dyAB = triangle.vertices[0].window_coordinates.y() - triangle.vertices[1].window_coordinates.y();
-        float dyBC = triangle.vertices[1].window_coordinates.y() - triangle.vertices[2].window_coordinates.y();
-        float area = (dxAB * dyBC) - (dxBC * dyAB);
-
-        if (area == 0.0f)
+        auto area = edge_function(triangle.vertices[0].window_coordinates.xy(), triangle.vertices[1].window_coordinates.xy(), triangle.vertices[2].window_coordinates.xy());
+        if (area == 0.f)
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0 : area < 0);
+            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0.f : area < 0.f);
 
             if (!is_front && m_options.cull_back)
                 continue;
@@ -945,7 +935,8 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
                 continue;
         }
 
-        if (area > 0)
+        // Force counter-clockwise ordering of vertices
+        if (area < 0.f)
             swap(triangle.vertices[0], triangle.vertices[1]);
 
         if (texture_coordinate_generation_enabled) {
