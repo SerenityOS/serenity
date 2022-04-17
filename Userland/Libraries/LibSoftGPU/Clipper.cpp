@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -35,23 +36,22 @@ template<Clipper::ClipPlane plane>
 static constexpr GPU::Vertex clip_intersection_point(GPU::Vertex const& p1, GPU::Vertex const& p2)
 {
     constexpr FloatVector4 clip_plane_normals[] = {
-        { 1, 0, 0, 0 },  // Left Plane
-        { -1, 0, 0, 0 }, // Right Plane
-        { 0, -1, 0, 0 }, // Top Plane
-        { 0, 1, 0, 0 },  // Bottom plane
-        { 0, 0, 1, 0 },  // Near Plane
-        { 0, 0, -1, 0 }  // Far Plane
+        { 1, 0, 0, 1 },  // Left Plane
+        { -1, 0, 0, 1 }, // Right Plane
+        { 0, -1, 0, 1 }, // Top Plane
+        { 0, 1, 0, 1 },  // Bottom plane
+        { 0, 0, 1, 1 },  // Near Plane
+        { 0, 0, -1, 1 }  // Far Plane
     };
     constexpr auto clip_plane_normal = clip_plane_normals[to_underlying(plane)];
 
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
+    // Clip plane normals have W=1 so the vertices' W coordinates are included in x1 and x2.
 
-    float const w1 = p1.clip_coordinates.w();
-    float const w2 = p2.clip_coordinates.w();
-    float const x1 = clip_plane_normal.dot(p1.clip_coordinates);
-    float const x2 = clip_plane_normal.dot(p2.clip_coordinates);
-    float const a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
+    auto const x1 = clip_plane_normal.dot(p1.clip_coordinates);
+    auto const x2 = clip_plane_normal.dot(p2.clip_coordinates);
+    auto const a = x1 / (x1 - x2);
 
     GPU::Vertex out;
     out.position = mix(p1.position, p2.position, a);
