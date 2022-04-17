@@ -4772,12 +4772,18 @@ RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<Componen
 RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
     NonnullRefPtrVector<StyleValue> transformations;
+    auto tokens = TokenStream { component_values };
+    tokens.skip_whitespace();
 
-    for (auto& part : component_values) {
-        if (part.is(Token::Type::Whitespace))
-            continue;
+    while (tokens.has_next_token()) {
+        tokens.skip_whitespace();
+        auto& part = tokens.next_token();
+
         if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none")) {
             if (!transformations.is_empty())
+                return nullptr;
+            tokens.skip_whitespace();
+            if (tokens.has_next_token())
                 return nullptr;
             return IdentifierStyleValue::create(ValueID::None);
         }
