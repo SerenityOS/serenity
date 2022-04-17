@@ -4769,33 +4769,6 @@ RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<Componen
     return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
 }
 
-static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
-{
-    if (name == "matrix")
-        return CSS::TransformFunction::Matrix;
-    if (name == "translate")
-        return CSS::TransformFunction::Translate;
-    if (name == "translateX")
-        return CSS::TransformFunction::TranslateX;
-    if (name == "translateY")
-        return CSS::TransformFunction::TranslateY;
-    if (name == "scale")
-        return CSS::TransformFunction::Scale;
-    if (name == "scaleX")
-        return CSS::TransformFunction::ScaleX;
-    if (name == "scaleY")
-        return CSS::TransformFunction::ScaleY;
-    if (name == "rotate")
-        return CSS::TransformFunction::Rotate;
-    if (name == "skew")
-        return CSS::TransformFunction::Skew;
-    if (name == "skewX")
-        return CSS::TransformFunction::SkewX;
-    if (name == "skewY")
-        return CSS::TransformFunction::SkewY;
-    return {};
-}
-
 RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
     NonnullRefPtrVector<StyleValue> transformations;
@@ -4811,7 +4784,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
 
         if (!part.is_function())
             return nullptr;
-        auto maybe_function = parse_transform_function_name(part.function().name());
+        auto maybe_function = transform_function_from_string(part.function().name());
         if (!maybe_function.has_value())
             return nullptr;
 
