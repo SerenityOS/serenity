@@ -4787,6 +4787,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         auto maybe_function = transform_function_from_string(part.function().name());
         if (!maybe_function.has_value())
             return nullptr;
+        auto function = maybe_function.release_value();
+        auto function_metadata = transform_function_metadata(function);
 
         bool expect_comma = false;
         NonnullRefPtrVector<StyleValue> values;
@@ -4802,35 +4804,56 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             } else if (expect_comma)
                 return nullptr;
 
-            if (value.is(Token::Type::Dimension)) {
-                auto dimension = parse_dimension(value);
-                if (!dimension.has_value())
+            // FIXME: Allow calc() parameters.
+
+            switch (function_metadata.parameter_type) {
+            case TransformFunctionParameterType::Angle: {
+                // These are `<angle> | <zero>` in the spec, so we have to check for both kinds.
+                if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
+                    values.append(AngleStyleValue::create(Angle::make_degrees(0)));
+                } else {
+                    auto dimension_value = parse_dimension_value(value);
+                    if (!dimension_value || !dimension_value->is_angle())
+                        return nullptr;
+                    values.append(dimension_value.release_nonnull());
+                }
+                break;
+            }
+            case TransformFunctionParameterType::LengthPercentage: {
+                auto dimension_value = parse_dimension_value(value);
+                if (!dimension_value)
                     return nullptr;
 
-                auto dimension_value = dimension.release_value();
-                if (dimension_value.is_length())
-                    values.append(LengthStyleValue::create(dimension_value.length()));
-                else if (dimension_value.is_angle())
-                    values.append(AngleStyleValue::create(dimension_value.angle()));
+                if (dimension_value->is_percentage() || dimension_value->is_length())
+                    values.append(dimension_value.release_nonnull());
                 else
                     return nullptr;
-            } else if (value.is(Token::Type::Number)) {
+
+                break;
+            }
+            case TransformFunctionParameterType::Number: {
                 auto number = parse_numeric_value(value);
-                values.append(number.release_nonnull());
-            } else if (value.is(Token::Type::Percentage)) {
-                auto percentage = parse_dimension_value(value);
-                if (!percentage || !percentage->is_percentage())
+                if (!number)
                     return nullptr;
-                values.append(percentage.release_nonnull());
-            } else {
-                dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
-                return nullptr;
+                values.append(number.release_nonnull());
+                break;
+            }
             }
 
             expect_comma = true;
         }
 
-        transformations.append(TransformationStyleValue::create(maybe_function.value(), move(values)));
+        if (values.size() < function_metadata.min_parameters) {
+            dbgln_if(CSS_PARSER_DEBUG, "Not enough arguments to {}. min: {}, given: {}", part.function().name(), function_metadata.min_parameters, values.size());
+            return nullptr;
+        }
+
+        if (values.size() > function_metadata.max_parameters) {
+            dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}, given: {}", part.function().name(), function_metadata.max_parameters, values.size());
+            return nullptr;
+        }
+
+        transformations.append(TransformationStyleValue::create(function, move(values)));
     }
     return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
 }
