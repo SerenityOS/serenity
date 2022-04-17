@@ -53,6 +53,11 @@ ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::Stream::Fi
     SourceGenerator generator { builder };
 
     generator.append(R"~~~(
+#pragma once
+
+#include <AK/Optional.h>
+#include <AK/StringView.h>
+
 namespace Web::CSS {
 
 )~~~");
@@ -64,6 +69,9 @@ namespace Web::CSS {
         member_generator.appendln("    @name:titlecase@,");
     });
     generator.appendln("};");
+
+    generator.appendln("Optional<TransformFunction> transform_function_from_string(StringView);");
+    generator.appendln("StringView to_string(TransformFunction);");
 
     generator.appendln("\n}");
 
@@ -77,15 +85,52 @@ ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::St
     SourceGenerator generator { builder };
 
     generator.append(R"~~~(
+#include <LibWeb/CSS/TransformFunctions.h>
+#include <AK/Assertions.h>
+
 namespace Web::CSS {
 )~~~");
 
-    transforms_data.for_each_member([&](auto& name, auto& value) {
-        (void)name;
-        (void)value;
+    generator.append(R"~~~(
+Optional<TransformFunction> transform_function_from_string(StringView name)
+{
+)~~~");
+    transforms_data.for_each_member([&](auto& name, auto&) {
+        auto member_generator = generator.fork();
+        member_generator.set("name", name);
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
+        member_generator.append(R"~~~(
+    if (name.equals_ignoring_case("@name@"sv))
+        return TransformFunction::@name:titlecase@;
+)~~~");
     });
+    generator.append(R"~~~(
+    return {};
+}
+)~~~");
 
-    generator.appendln("}");
+    generator.append(R"~~~(
+StringView to_string(TransformFunction transform_function)
+{
+    switch (transform_function) {
+)~~~");
+    transforms_data.for_each_member([&](auto& name, auto&) {
+        auto member_generator = generator.fork();
+        member_generator.set("name", name);
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
+        member_generator.append(R"~~~(
+    case TransformFunction::@name:titlecase@:
+        return "@name@"sv;
+)~~~");
+    });
+    generator.append(R"~~~(
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+)~~~");
+
+    generator.appendln("\n}");
 
     TRY(file.write(generator.as_string_view().bytes()));
     return {};
