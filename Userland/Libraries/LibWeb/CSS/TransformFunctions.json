@@ -1,0 +1,35 @@
+{
+    "matrix": {
+        "parameters": "<number>{6}"
+    },
+    "translate": {
+        "parameters": "<length-percentage>{1,2}"
+    },
+    "translateX": {
+        "parameters": "<length-percentage>"
+    },
+    "translateY": {
+        "parameters": "<length-percentage>"
+    },
+    "scale": {
+        "parameters": "<number>{1,2}"
+    },
+    "scaleX": {
+        "parameters": "<number>"
+    },
+    "scaleY": {
+        "parameters": "<number>"
+    },
+    "rotate": {
+        "parameters": "<angle>"
+    },
+    "skew": {
+        "parameters": "<angle>{1,2}"
+    },
+    "skewX": {
+        "parameters": "<angle>"
+    },
+    "skewY": {
+        "parameters": "<angle>"
+    }
+}

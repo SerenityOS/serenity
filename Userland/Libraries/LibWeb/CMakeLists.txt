@@ -74,6 +74,7 @@ set(SOURCES
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
+    CSS/TransformFunctions.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
     Cookie/ParsedCookie.cpp
@@ -645,6 +646,16 @@ invoke_generator(
     "CSS/PropertyID.h"
     "CSS/PropertyID.cpp"
     arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json"
+)
+
+invoke_generator(
+    "TransformFunctions"
+    Lagom::GenerateCSSTransformFunctions
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
+    ""
+    "CSS/TransformFunctions.h"
+    "CSS/TransformFunctions.cpp"
+    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
 )
 
 invoke_generator(
