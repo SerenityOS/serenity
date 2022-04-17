@@ -5,6 +5,7 @@
  */
 
 #include "GeneratorUtil.h"
+#include <AK/GenericLexer.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -73,6 +74,21 @@ namespace Web::CSS {
     generator.appendln("Optional<TransformFunction> transform_function_from_string(StringView);");
     generator.appendln("StringView to_string(TransformFunction);");
 
+    generator.append(R"~~~(
+enum class TransformFunctionParameterType {
+    Angle,
+    LengthPercentage,
+    Number,
+};
+
+struct TransformFunctionMetadata {
+    size_t min_parameters;
+    size_t max_parameters;
+    TransformFunctionParameterType parameter_type;
+};
+TransformFunctionMetadata transform_function_metadata(TransformFunction);
+)~~~");
+
     generator.appendln("\n}");
 
     TRY(file.write(generator.as_string_view().bytes()));
@@ -121,6 +137,64 @@ StringView to_string(TransformFunction transform_function)
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return "@name@"sv;
+)~~~");
+    });
+    generator.append(R"~~~(
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+)~~~");
+
+    generator.append(R"~~~(
+TransformFunctionMetadata transform_function_metadata(TransformFunction transform_function)
+{
+    switch (transform_function) {
+)~~~");
+    transforms_data.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto parameters_string = value.as_object().get("parameters").as_string();
+        GenericLexer lexer { parameters_string };
+
+        VERIFY(lexer.consume_specific('<'));
+        auto parameter_type_name = lexer.consume_until('>');
+        VERIFY(lexer.consume_specific('>'));
+
+        StringView parameter_type = ""sv;
+        if (parameter_type_name == "angle"sv)
+            parameter_type = "Angle"sv;
+        else if (parameter_type_name == "length-percentage"sv)
+            parameter_type = "LengthPercentage"sv;
+        else if (parameter_type_name == "number"sv)
+            parameter_type = "Number"sv;
+        else
+            VERIFY_NOT_REACHED();
+
+        StringView min_parameters = "1"sv;
+        StringView max_parameters = "1"sv;
+        if (!lexer.is_eof()) {
+            VERIFY(lexer.consume_specific('{'));
+            min_parameters = lexer.consume_until([](auto c) { return c == ',' || c == '}'; });
+            if (lexer.consume_specific(','))
+                max_parameters = lexer.consume_until('}');
+            else
+                max_parameters = min_parameters;
+            VERIFY(lexer.consume_specific('}'));
+        }
+        VERIFY(lexer.is_eof());
+
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
+        member_generator.set("min_parameters", min_parameters);
+        member_generator.set("max_parameters", max_parameters);
+        member_generator.set("parameter_type", parameter_type);
+        member_generator.append(R"~~~(
+    case TransformFunction::@name:titlecase@:
+        return TransformFunctionMetadata {
+            .min_parameters = @min_parameters@,
+            .max_parameters = @max_parameters@,
+            .parameter_type = TransformFunctionParameterType::@parameter_type@
+        };
 )~~~");
     });
     generator.append(R"~~~(
