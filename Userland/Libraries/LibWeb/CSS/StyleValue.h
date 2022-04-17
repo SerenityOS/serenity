@@ -34,6 +34,7 @@
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/Time.h>
+#include <LibWeb/CSS/TransformFunctions.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
@@ -71,20 +72,6 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     }
     VERIFY_NOT_REACHED();
 }
-
-enum class TransformFunction {
-    Matrix,
-    Translate,
-    TranslateX,
-    TranslateY,
-    Scale,
-    ScaleX,
-    ScaleY,
-    Rotate,
-    Skew,
-    SkewX,
-    SkewY,
-};
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
