@@ -181,12 +181,21 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     keymaps_list_model.set_active_keymap(m_initial_active_keymap);
 
     m_activate_keymap_button = find_descendant_of_type_named<GUI::Button>("activate_keymap_button");
-    m_activate_keymap_button->on_click = [&](auto) {
+
+    m_activate_keymap_event = [&]() {
         auto& selection = m_selected_keymaps_listview->selection();
         if (!selection.is_empty()) {
             auto& selected_keymap = keymaps_list_model.keymap_at(selection.first().row());
             keymaps_list_model.set_active_keymap(selected_keymap);
         }
+    };
+
+    m_activate_keymap_button->on_click = [&](auto) {
+        m_activate_keymap_event();
+    };
+
+    m_selected_keymaps_listview->on_activation = [&](auto) {
+        m_activate_keymap_event();
     };
 
     m_add_keymap_button = find_descendant_of_type_named<GUI::Button>("add_keymap_button");
