@@ -35,4 +35,5 @@ Script::Script(Realm& realm, StringView filename, NonnullRefPtr<Program> parse_n
     , m_host_defined(host_defined)
 {
 }
+
 }
