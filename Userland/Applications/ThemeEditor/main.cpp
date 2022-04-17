@@ -33,6 +33,31 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
+template<typename T>
+class RoleModel final : public GUI::ItemListModel<T> {
+public:
+    static ErrorOr<NonnullRefPtr<RoleModel>> try_create(Vector<T> const& data)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) RoleModel<T>(data));
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::Display)
+            return Gfx::to_string(this->m_data[index.row()]);
+        if (role == GUI::ModelRole::Custom)
+            return this->m_data[index.row()];
+
+        return GUI::ItemListModel<T>::data(index, role);
+    }
+
+private:
+    explicit RoleModel(Vector<T> const& data)
+        : GUI::ItemListModel<T>(data)
+    {
+    }
+};
+
 class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
 public:
     explicit ColorRoleModel(Vector<Gfx::ColorRole> const& data)
