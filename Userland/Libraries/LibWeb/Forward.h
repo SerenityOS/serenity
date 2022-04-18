@@ -30,6 +30,7 @@ class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
 class BackgroundStyleValue;
 class BorderRadiusStyleValue;
+class BorderRadiusShorthandStyleValue;
 class BorderStyleValue;
 class CalculatedStyleValue;
 class ColorStyleValue;

@@ -59,6 +59,12 @@ BorderRadiusStyleValue const& StyleValue::as_border_radius() const
     return static_cast<BorderRadiusStyleValue const&>(*this);
 }
 
+BorderRadiusShorthandStyleValue const& StyleValue::as_border_radius_shorthand() const
+{
+    VERIFY(is_border_radius_shorthand());
+    return static_cast<BorderRadiusShorthandStyleValue const&>(*this);
+}
+
 ShadowStyleValue const& StyleValue::as_shadow() const
 {
     VERIFY(is_shadow());
