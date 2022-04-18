@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Guide.h"
+#include "HistogramWidget.h"
 #include "IconBag.h"
 #include "Image.h"
 #include "ImageEditor.h"
@@ -58,6 +59,7 @@ private:
 
     RefPtr<ToolboxWidget> m_toolbox;
     RefPtr<PaletteWidget> m_palette_widget;
+    RefPtr<HistogramWidget> m_histogram_widget;
     RefPtr<LayerListWidget> m_layer_list_widget;
     RefPtr<LayerPropertiesWidget> m_layer_properties_widget;
     RefPtr<ToolPropertiesWidget> m_tool_properties_widget;
