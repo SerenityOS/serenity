@@ -143,6 +143,7 @@ public:
     Gfx::TextAlignment title_alignment() const { return alignment(AlignmentRole::TitleAlignment); }
 
     bool is_dark() const { return flag(FlagRole::IsDark); }
+    bool enable_default_title_buttons_background() const { return flag(FlagRole::EnableDefaultTitleButtonsBackground); }
 
     int window_border_thickness() const { return metric(MetricRole::BorderThickness); }
     int window_border_radius() const { return metric(MetricRole::BorderRadius); }

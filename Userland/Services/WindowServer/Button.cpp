@@ -27,7 +27,8 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
     auto palette = WindowManager::the().palette();
     Gfx::PainterStateSaver saver(painter);
     painter.translate(relative_rect().location());
-    Gfx::StylePainter::paint_button(painter, rect(), palette, Gfx::ButtonStyle::Normal, m_pressed, m_hovered);
+    if (palette.enable_default_title_buttons_background())
+        Gfx::StylePainter::paint_button(painter, rect(), palette, Gfx::ButtonStyle::Normal, m_pressed, m_hovered);
 
     if (m_icon) {
         auto& bitmap = m_icon->bitmap(screen.scale_factor());
