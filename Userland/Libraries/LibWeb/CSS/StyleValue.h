@@ -239,12 +239,7 @@ public:
     bool operator==(StyleValue const& other) const { return equals(other); }
     bool operator!=(StyleValue const& other) const { return !(*this == other); }
 
-    virtual bool equals(StyleValue const& other) const
-    {
-        if (type() != other.type())
-            return false;
-        return to_string() == other.to_string();
-    }
+    virtual bool equals(StyleValue const& other) const = 0;
 
 protected:
     explicit StyleValue(Type);
@@ -310,6 +305,7 @@ public:
     NonnullRefPtr<StyleValue> size() const { return m_size; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BackgroundStyleValue(
@@ -346,14 +342,7 @@ public:
     Repeat repeat_y() const { return m_repeat_y; }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<BackgroundRepeatStyleValue const&>(other);
-        return m_repeat_x == other_value.m_repeat_x && m_repeat_y == other_value.m_repeat_y;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
@@ -380,14 +369,7 @@ public:
     LengthPercentage size_y() const { return m_size_y; }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<BackgroundSizeStyleValue const&>(other);
-        return m_size_x == other_value.m_size_x && m_size_y == other_value.m_size_y;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
@@ -417,6 +399,7 @@ public:
     NonnullRefPtr<StyleValue> border_color() const { return m_border_color; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BorderStyleValue(
@@ -448,16 +431,7 @@ public:
     bool is_elliptical() const { return m_is_elliptical; }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<BorderRadiusStyleValue const&>(other);
-        return m_is_elliptical == other_value.m_is_elliptical
-            && m_horizontal_radius == other_value.m_horizontal_radius
-            && m_vertical_radius == other_value.m_vertical_radius;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BorderRadiusStyleValue(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
@@ -489,6 +463,7 @@ public:
     NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     BorderRadiusShorthandStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
@@ -666,6 +641,7 @@ public:
     }
 
     String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
 
@@ -703,12 +679,7 @@ public:
     virtual bool has_color() const override { return true; }
     virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_color == static_cast<ColorStyleValue const&>(other).m_color;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit ColorStyleValue(Color color)
@@ -732,6 +703,7 @@ public:
     StyleValueList const* alt_text() const { return m_alt_text; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     ContentStyleValue(NonnullRefPtr<StyleValueList> content, RefPtr<StyleValueList> alt_text)
@@ -761,6 +733,7 @@ public:
     NonnullRefPtr<StyleValue> basis() const { return m_basis; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     FlexStyleValue(
@@ -791,6 +764,7 @@ public:
     NonnullRefPtr<StyleValue> flex_wrap() const { return m_flex_wrap; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     FlexFlowStyleValue(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
@@ -816,6 +790,7 @@ public:
     NonnullRefPtr<StyleValue> font_families() const { return m_font_families; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     FontStyleValue(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
@@ -847,13 +822,7 @@ public:
     Frequency const& frequency() const { return m_frequency; }
 
     virtual String to_string() const override { return m_frequency.to_string(); }
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_frequency == static_cast<FrequencyStyleValue const&>(other).m_frequency;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit FrequencyStyleValue(Frequency frequency)
@@ -881,13 +850,7 @@ public:
     virtual bool has_color() const override;
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_id == static_cast<IdentifierStyleValue const&>(other).m_id;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit IdentifierStyleValue(CSS::ValueID id)
@@ -907,6 +870,7 @@ public:
     virtual ~ImageStyleValue() override = default;
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     void load_bitmap(DOM::Document& document);
     Gfx::Bitmap const* bitmap() const { return m_bitmap; }
@@ -932,6 +896,7 @@ public:
     virtual ~InheritStyleValue() override = default;
 
     String to_string() const override { return "inherit"; }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     InheritStyleValue()
@@ -950,6 +915,7 @@ public:
     virtual ~InitialStyleValue() override = default;
 
     String to_string() const override { return "initial"; }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     InitialStyleValue()
@@ -972,13 +938,7 @@ public:
     virtual Length to_length() const override { return m_length; }
     virtual ValueID to_identifier() const override { return has_auto() ? ValueID::Auto : ValueID::Invalid; }
     virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_length == static_cast<LengthStyleValue const&>(other).m_length;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit LengthStyleValue(Length const& length)
@@ -1006,6 +966,7 @@ public:
     NonnullRefPtr<StyleValue> style_type() const { return m_style_type; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     ListStyleStyleValue(
@@ -1051,17 +1012,7 @@ public:
     virtual float to_integer() const override { return m_value.get<i64>(); }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        if (has_integer() != other.has_integer())
-            return false;
-        if (has_integer())
-            return m_value.get<i64>() == static_cast<NumericStyleValue const&>(other).m_value.get<i64>();
-        return m_value.get<float>() == static_cast<NumericStyleValue const&>(other).m_value.get<float>();
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit NumericStyleValue(Variant<float, i64> value)
@@ -1085,6 +1036,7 @@ public:
     NonnullRefPtr<StyleValue> overflow_y() const { return m_overflow_y; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     OverflowStyleValue(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
@@ -1110,6 +1062,7 @@ public:
     Percentage& percentage() { return m_percentage; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     PercentageStyleValue(Percentage&& percentage)
@@ -1135,17 +1088,7 @@ public:
     LengthPercentage const& offset_y() const { return m_offset_y; }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto const& typed_other = static_cast<PositionStyleValue const&>(other);
-        return m_edge_x == typed_other.m_edge_x
-            && m_offset_x == typed_other.m_offset_x
-            && m_edge_y == typed_other.m_edge_y
-            && m_offset_y == typed_other.m_offset_y;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
@@ -1174,13 +1117,7 @@ public:
     Resolution const& resolution() const { return m_resolution; }
 
     virtual String to_string() const override { return m_resolution.to_string(); }
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_resolution == static_cast<ResolutionStyleValue const&>(other).m_resolution;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit ResolutionStyleValue(Resolution resolution)
@@ -1209,19 +1146,7 @@ public:
     ShadowPlacement placement() const { return m_placement; }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<ShadowStyleValue const&>(other);
-        return m_color == other_value.m_color
-            && m_offset_x == other_value.m_offset_x
-            && m_offset_y == other_value.m_offset_y
-            && m_blur_radius == other_value.m_blur_radius
-            && m_spread_distance == other_value.m_spread_distance
-            && m_placement == other_value.m_placement;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit ShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
@@ -1254,6 +1179,7 @@ public:
     virtual ~StringStyleValue() override = default;
 
     String to_string() const override { return m_string; }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit StringStyleValue(String const& string)
@@ -1283,6 +1209,7 @@ public:
     NonnullRefPtr<StyleValue> color() const { return m_color; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     TextDecorationStyleValue(
@@ -1315,13 +1242,7 @@ public:
     Time const& time() const { return m_time; }
 
     virtual String to_string() const override { return m_time.to_string(); }
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        return m_time == static_cast<TimeStyleValue const&>(other).m_time;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     explicit TimeStyleValue(Time time)
@@ -1345,6 +1266,7 @@ public:
     NonnullRefPtrVector<StyleValue> values() const { return m_values; }
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     TransformationStyleValue(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
@@ -1367,6 +1289,7 @@ public:
     virtual ~UnresolvedStyleValue() override = default;
 
     virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     Vector<Parser::ComponentValue> const& values() const { return m_values; }
     bool contains_var_or_attr() const { return m_contains_var_or_attr; }
@@ -1393,6 +1316,7 @@ public:
     virtual ~UnsetStyleValue() override = default;
 
     String to_string() const override { return "unset"; }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     UnsetStyleValue()
@@ -1419,22 +1343,7 @@ public:
     }
 
     virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<StyleValueList const&>(other);
-        if (m_separator != other_value.m_separator)
-            return false;
-        if (m_values.size() != other_value.m_values.size())
-            return false;
-        for (size_t i = 0; i < m_values.size(); ++i) {
-            if (!m_values[i].equals(other_value.m_values[i]))
-                return false;
-        }
-        return true;
-    }
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)

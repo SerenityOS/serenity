@@ -281,9 +281,32 @@ String BackgroundStyleValue::to_string() const
     return builder.to_string();
 }
 
+bool BackgroundStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_background();
+    return m_color->equals(typed_other.m_color)
+        && m_image->equals(typed_other.m_image)
+        && m_position->equals(typed_other.m_position)
+        && m_size->equals(typed_other.m_size)
+        && m_repeat->equals(typed_other.m_repeat)
+        && m_attachment->equals(typed_other.m_attachment)
+        && m_origin->equals(typed_other.m_origin)
+        && m_clip->equals(typed_other.m_clip);
+}
+
 String BackgroundRepeatStyleValue::to_string() const
 {
     return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
+}
+
+bool BackgroundRepeatStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_background_repeat();
+    return m_repeat_x == typed_other.m_repeat_x && m_repeat_y == typed_other.m_repeat_y;
 }
 
 String BackgroundSizeStyleValue::to_string() const
@@ -291,9 +314,27 @@ String BackgroundSizeStyleValue::to_string() const
     return String::formatted("{} {}", m_size_x.to_string(), m_size_y.to_string());
 }
 
+bool BackgroundSizeStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_background_size();
+    return m_size_x == typed_other.m_size_x && m_size_y == typed_other.m_size_y;
+}
+
 String BorderStyleValue::to_string() const
 {
     return String::formatted("{} {} {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
+}
+
+bool BorderStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_border();
+    return m_border_width->equals(typed_other.m_border_width)
+        && m_border_style->equals(typed_other.m_border_style)
+        && m_border_color->equals(typed_other.m_border_color);
 }
 
 String BorderRadiusStyleValue::to_string() const
@@ -303,13 +344,30 @@ String BorderRadiusStyleValue::to_string() const
     return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
 }
 
-String ShadowStyleValue::to_string() const
+bool BorderRadiusStyleValue::equals(StyleValue const& other) const
 {
-    StringBuilder builder;
-    builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
-    if (m_placement == ShadowPlacement::Inner)
-        builder.append(" inset");
-    return builder.to_string();
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_border_radius();
+    return m_is_elliptical == typed_other.m_is_elliptical
+        && m_horizontal_radius == typed_other.m_horizontal_radius
+        && m_vertical_radius == typed_other.m_vertical_radius;
+}
+
+String BorderRadiusShorthandStyleValue::to_string() const
+{
+    return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+}
+
+bool BorderRadiusShorthandStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_border_radius_shorthand();
+    return m_top_left->equals(typed_other.m_top_left)
+        && m_top_right->equals(typed_other.m_top_right)
+        && m_bottom_right->equals(typed_other.m_bottom_right)
+        && m_bottom_left->equals(typed_other.m_bottom_left);
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
@@ -501,6 +559,14 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
 String CalculatedStyleValue::to_string() const
 {
     return String::formatted("calc({})", m_expression->to_string());
+}
+
+bool CalculatedStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    // This is a case where comparing the strings actually makes sense.
+    return to_string() == other.to_string();
 }
 
 String CalculatedStyleValue::CalcNumberValue::to_string() const
@@ -1010,9 +1076,11 @@ String ColorStyleValue::to_string() const
     return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
 }
 
-String BorderRadiusShorthandStyleValue::to_string() const
+bool ColorStyleValue::equals(StyleValue const& other) const
 {
-    return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+    if (type() != other.type())
+        return false;
+    return m_color == other.as_color().m_color;
 }
 
 String ContentStyleValue::to_string() const
@@ -1022,9 +1090,33 @@ String ContentStyleValue::to_string() const
     return m_content->to_string();
 }
 
+bool ContentStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_content();
+    if (!m_content->equals(typed_other.m_content))
+        return false;
+    if (m_alt_text.is_null() != typed_other.m_alt_text.is_null())
+        return false;
+    if (!m_alt_text.is_null())
+        return m_alt_text->equals(*typed_other.m_alt_text);
+    return true;
+}
+
 String FlexStyleValue::to_string() const
 {
     return String::formatted("{} {} {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
+}
+
+bool FlexStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_flex();
+    return m_grow->equals(typed_other.m_grow)
+        && m_shrink->equals(typed_other.m_shrink)
+        && m_basis->equals(typed_other.m_basis);
 }
 
 String FlexFlowStyleValue::to_string() const
@@ -1032,14 +1124,49 @@ String FlexFlowStyleValue::to_string() const
     return String::formatted("{} {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
 }
 
+bool FlexFlowStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_flex_flow();
+    return m_flex_direction->equals(typed_other.m_flex_direction)
+        && m_flex_wrap->equals(typed_other.m_flex_wrap);
+}
+
 String FontStyleValue::to_string() const
 {
     return String::formatted("{} {} {} / {} {}", m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
 }
 
+bool FontStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_font();
+    return m_font_style->equals(typed_other.m_font_style)
+        && m_font_weight->equals(typed_other.m_font_weight)
+        && m_font_size->equals(typed_other.m_font_size)
+        && m_line_height->equals(typed_other.m_line_height)
+        && m_font_families->equals(typed_other.m_font_families);
+}
+
+bool FrequencyStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_frequency == other.as_frequency().m_frequency;
+}
+
 String IdentifierStyleValue::to_string() const
 {
     return CSS::string_from_value_id(m_id);
+}
+
+bool IdentifierStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_id == other.as_identifier().m_id;
 }
 
 bool IdentifierStyleValue::has_color() const
@@ -1268,9 +1395,43 @@ String ImageStyleValue::to_string() const
     return serialize_a_url(m_url.to_string());
 }
 
+bool ImageStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_url == other.as_image().m_url;
+}
+
+bool InheritStyleValue::equals(StyleValue const& other) const
+{
+    return type() == other.type();
+}
+
+bool InitialStyleValue::equals(StyleValue const& other) const
+{
+    return type() == other.type();
+}
+
+bool LengthStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_length == other.as_length().m_length;
+}
+
 String ListStyleStyleValue::to_string() const
 {
     return String::formatted("{} {} {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
+}
+
+bool ListStyleStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_list_style();
+    return m_position->equals(typed_other.m_position)
+        && m_image->equals(typed_other.m_image)
+        && m_style_type->equals(typed_other.m_style_type);
 }
 
 String NumericStyleValue::to_string() const
@@ -1284,14 +1445,41 @@ String NumericStyleValue::to_string() const
         });
 }
 
+bool NumericStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    if (has_integer() != other.has_integer())
+        return false;
+    if (has_integer())
+        return m_value.get<i64>() == other.as_numeric().m_value.get<i64>();
+    return m_value.get<float>() == other.as_numeric().m_value.get<float>();
+}
+
 String OverflowStyleValue::to_string() const
 {
     return String::formatted("{} {}", m_overflow_x->to_string(), m_overflow_y->to_string());
 }
 
+bool OverflowStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_overflow();
+    return m_overflow_x->equals(typed_other.m_overflow_x)
+        && m_overflow_y->equals(typed_other.m_overflow_y);
+}
+
 String PercentageStyleValue::to_string() const
 {
     return m_percentage.to_string();
+}
+
+bool PercentageStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_percentage == other.as_percentage().m_percentage;
 }
 
 String PositionStyleValue::to_string() const
@@ -1313,9 +1501,74 @@ String PositionStyleValue::to_string() const
     return String::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), m_offset_y.to_string());
 }
 
+bool PositionStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_position();
+    return m_edge_x == typed_other.m_edge_x
+        && m_offset_x == typed_other.m_offset_x
+        && m_edge_y == typed_other.m_edge_y
+        && m_offset_y == typed_other.m_offset_y;
+}
+
+bool ResolutionStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_resolution == other.as_resolution().m_resolution;
+}
+
+String ShadowStyleValue::to_string() const
+{
+    StringBuilder builder;
+    builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
+    if (m_placement == ShadowPlacement::Inner)
+        builder.append(" inset");
+    return builder.to_string();
+}
+
+bool ShadowStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_shadow();
+    return m_color == typed_other.m_color
+        && m_offset_x == typed_other.m_offset_x
+        && m_offset_y == typed_other.m_offset_y
+        && m_blur_radius == typed_other.m_blur_radius
+        && m_spread_distance == typed_other.m_spread_distance
+        && m_placement == typed_other.m_placement;
+}
+
+bool StringStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_string == other.as_string().m_string;
+}
+
 String TextDecorationStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {}", m_line->to_string(), m_thickness->to_string(), m_style->to_string(), m_color->to_string());
+}
+
+bool TextDecorationStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_text_decoration();
+    return m_line->equals(typed_other.m_line)
+        && m_thickness->equals(typed_other.m_thickness)
+        && m_style->equals(typed_other.m_style)
+        && m_color->equals(typed_other.m_color);
+}
+
+bool TimeStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    return m_time == other.as_time().m_time;
 }
 
 String TransformationStyleValue::to_string() const
@@ -1329,12 +1582,41 @@ String TransformationStyleValue::to_string() const
     return builder.to_string();
 }
 
+bool TransformationStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_transformation();
+    if (m_transform_function != typed_other.m_transform_function)
+        return false;
+    if (m_values.size() != typed_other.m_values.size())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i].equals(typed_other.m_values[i]))
+            return false;
+    }
+    return true;
+}
+
 String UnresolvedStyleValue::to_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
         builder.append(value.to_string());
     return builder.to_string();
+}
+
+bool UnresolvedStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    // This is a case where comparing the strings actually makes sense.
+    return to_string() == other.to_string();
+}
+
+bool UnsetStyleValue::equals(StyleValue const& other) const
+{
+    return type() == other.type();
 }
 
 String StyleValueList::to_string() const
@@ -1352,6 +1634,22 @@ String StyleValueList::to_string() const
     }
 
     return String::join(separator, m_values);
+}
+
+bool StyleValueList::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_value_list();
+    if (m_separator != typed_other.m_separator)
+        return false;
+    if (m_values.size() != typed_other.m_values.size())
+        return false;
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!m_values[i].equals(typed_other.m_values[i]))
+            return false;
+    }
+    return true;
 }
 
 NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
