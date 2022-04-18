@@ -284,13 +284,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         LexicalPath lexical_path(String::formatted("{}_{}_backtrace.txt", pid, app_name));
         auto file_or_error = FileSystemAccessClient::Client::the().try_save_file(window, lexical_path.title(), lexical_path.extension());
-        if (file_or_error.is_error()) {
-            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed", GUI::MessageBox::Type::Error);
+        if (file_or_error.is_error())
             return;
-        }
 
         auto file = file_or_error.value();
-        file->write(full_backtrace.to_string());
+        if (!file->write(full_backtrace.to_string()))
+            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed", GUI::MessageBox::Type::Error);
     };
 
     (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(
