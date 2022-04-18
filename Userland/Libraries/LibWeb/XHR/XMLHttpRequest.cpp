@@ -468,14 +468,18 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, St
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
 DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
 {
+    // 8. If the async argument is omitted, set async to true, and set username and password to null.
     return open(method, url, true, {}, {});
 }
 
 DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url, bool async, String const& username, String const& password)
 {
-    // FIXME: 1. Let settingsObject be this’s relevant settings object.
+    // 1. Let settingsObject be this’s relevant settings object.
+    auto& settings_object = m_window->associated_document().relevant_settings_object();
 
-    // FIXME: 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
+    // 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
+    if (!settings_object.responsible_document().is_null() && !settings_object.responsible_document()->is_active())
+        return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
     if (!is_method(method))
@@ -489,13 +493,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     auto normalized_method = normalize_method(method);
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
-    // FIXME: Should use relevant settings object and not assume it's the Window object
-    auto parsed_url = m_window->associated_document().parse_url(url);
+    auto parsed_url = settings_object.responsible_document()->parse_url(url);
+
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
 
-    // FIXME: 8. If the async argument is omitted, set async to true, and set username and password to null.
+    // 8. If the async argument is omitted, set async to true, and set username and password to null.
+    // NOTE: This is handled in the overload lacking the async argument.
 
     // 9. If parsedURL’s host is non-null, then:
     if (!parsed_url.host().is_null()) {
@@ -537,6 +542,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
         // 2. Fire an event named readystatechange at this.
         set_ready_state(ReadyState::Opened);
     }
+
     return {};
 }
 
