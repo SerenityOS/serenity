@@ -84,9 +84,9 @@ public:
         BackgroundSize,
         Border,
         BorderRadius,
+        BorderRadiusShorthand,
         Calculated,
         Color,
-        CombinedBorderRadius,
         Content,
         Flex,
         FlexFlow,
@@ -472,6 +472,37 @@ private:
     LengthPercentage m_vertical_radius;
 };
 
+class BorderRadiusShorthandStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BorderRadiusShorthandStyleValue> create(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+    {
+        return adopt_ref(*new BorderRadiusShorthandStyleValue(top_left, top_right, bottom_right, bottom_left));
+    }
+    virtual ~BorderRadiusShorthandStyleValue() override = default;
+
+    NonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_top_left; }
+    NonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_top_right; }
+    NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_bottom_right; }
+    NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
+
+    virtual String to_string() const override;
+
+private:
+    BorderRadiusShorthandStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+        : StyleValue(Type::BorderRadiusShorthand)
+        , m_top_left(top_left)
+        , m_top_right(top_right)
+        , m_bottom_right(bottom_right)
+        , m_bottom_left(bottom_left)
+    {
+    }
+
+    NonnullRefPtr<BorderRadiusStyleValue> m_top_left;
+    NonnullRefPtr<BorderRadiusStyleValue> m_top_right;
+    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_right;
+    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_left;
+};
+
 class CalculatedStyleValue : public StyleValue {
 public:
     enum class ResolvedType {
@@ -684,37 +715,6 @@ private:
     }
 
     Color m_color;
-};
-
-class CombinedBorderRadiusStyleValue final : public StyleValue {
-public:
-    static NonnullRefPtr<CombinedBorderRadiusStyleValue> create(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
-    {
-        return adopt_ref(*new CombinedBorderRadiusStyleValue(top_left, top_right, bottom_right, bottom_left));
-    }
-    virtual ~CombinedBorderRadiusStyleValue() override = default;
-
-    NonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_top_left; }
-    NonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_top_right; }
-    NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_bottom_right; }
-    NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
-
-    virtual String to_string() const override;
-
-private:
-    CombinedBorderRadiusStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
-        : StyleValue(Type::CombinedBorderRadius)
-        , m_top_left(top_left)
-        , m_top_right(top_right)
-        , m_bottom_right(bottom_right)
-        , m_bottom_left(bottom_left)
-    {
-    }
-
-    NonnullRefPtr<BorderRadiusStyleValue> m_top_left;
-    NonnullRefPtr<BorderRadiusStyleValue> m_top_right;
-    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_right;
-    NonnullRefPtr<BorderRadiusStyleValue> m_bottom_left;
 };
 
 class ContentStyleValue final : public StyleValue {
