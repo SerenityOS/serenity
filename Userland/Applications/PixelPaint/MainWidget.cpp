@@ -46,6 +46,7 @@ MainWidget::MainWidget()
 
     m_palette_widget = *find_descendant_of_type_named<PixelPaint::PaletteWidget>("palette_widget");
 
+    m_histogram_widget = *find_descendant_of_type_named<PixelPaint::HistogramWidget>("histogram_widget");
     m_layer_list_widget = *find_descendant_of_type_named<PixelPaint::LayerListWidget>("layer_list_widget");
     m_layer_list_widget->on_layer_select = [&](auto* layer) {
         auto* editor = current_image_editor();
@@ -73,6 +74,7 @@ MainWidget::MainWidget()
             m_tab_widget->deferred_invoke([&] {
                 m_tab_widget->remove_tab(image_editor);
                 if (m_tab_widget->children().size() == 0) {
+                    m_histogram_widget->set_image(nullptr);
                     m_layer_list_widget->set_image(nullptr);
                     m_layer_properties_widget->set_layer(nullptr);
                     m_palette_widget->set_image_editor(nullptr);
@@ -86,11 +88,13 @@ MainWidget::MainWidget()
     m_tab_widget->on_change = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         m_palette_widget->set_image_editor(&image_editor);
+        m_histogram_widget->set_image(&image_editor.image());
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
         window()->set_modified(image_editor.is_modified());
         image_editor.on_modified_change = [this](bool modified) {
             window()->set_modified(modified);
+            m_histogram_widget->image_changed();
         };
         if (auto* active_tool = m_toolbox->active_tool())
             image_editor.set_active_tool(active_tool);
@@ -125,6 +129,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 editor.set_title(image_title.is_empty() ? "Untitled" : image_title);
                 editor.undo_stack().set_current_unmodified();
 
+                m_histogram_widget->set_image(image);
                 m_layer_list_widget->set_image(image);
                 m_layer_list_widget->set_selected_layer(bg_layer);
             }
@@ -853,13 +858,16 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         auto image_rectangle = Gfx::IntRect { 0, 0, image_size.width(), image_size.height() };
         if (image_rectangle.contains(mouse_position)) {
             m_statusbar->set_override_text(mouse_position.to_string());
+            m_histogram_widget->set_color_at_mouseposition(current_image_editor()->image().color_at(mouse_position));
         } else {
             m_statusbar->set_override_text({});
+            m_histogram_widget->set_color_at_mouseposition(Color::Transparent);
         }
     };
 
     image_editor.on_leave = [&]() {
         m_statusbar->set_override_text({});
+        m_histogram_widget->set_color_at_mouseposition(Color::Transparent);
     };
 
     image_editor.on_set_guide_visibility = [&](bool show_guides) {
