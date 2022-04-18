@@ -108,6 +108,19 @@ struct [[gnu::packed]] USBHubDescriptor {
     // NOTE: This does not contain DeviceRemovable or PortPwrCtrlMask because a struct cannot have two VLAs in a row.
 };
 
+//
+//  USB Human Interface Device (HID) Descriptor
+//  ==============
+//
+struct [[gnu::packed]] USBHIDDescriptor {
+    USBDescriptorCommon descriptor_header;
+    u16 hid_bcd;
+    u8 country_code;
+    u8 number_of_report_descriptors;
+    u8 following_descriptor_type;
+    u16 hid_report_descriptor_size;
+};
+
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE = 0x01;
 static constexpr u8 DESCRIPTOR_TYPE_CONFIGURATION = 0x02;
 static constexpr u8 DESCRIPTOR_TYPE_STRING = 0x03;
