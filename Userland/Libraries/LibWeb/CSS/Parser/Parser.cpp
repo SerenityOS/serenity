@@ -3909,17 +3909,16 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
         || (reading_vertical && vertical_radii.is_empty()))
         return nullptr;
 
-    NonnullRefPtrVector<StyleValue> border_radii;
-    border_radii.append(BorderRadiusStyleValue::create(top_left(horizontal_radii),
-        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii)));
-    border_radii.append(BorderRadiusStyleValue::create(top_right(horizontal_radii),
-        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii)));
-    border_radii.append(BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii)));
-    border_radii.append(BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii)));
+    auto top_left_radius = BorderRadiusStyleValue::create(top_left(horizontal_radii),
+        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii));
+    auto top_right_radius = BorderRadiusStyleValue::create(top_right(horizontal_radii),
+        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii));
+    auto bottom_right_radius = BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii));
+    auto bottom_left_radius = BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii));
 
-    return StyleValueList::create(move(border_radii), StyleValueList::Separator::Space);
+    return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius));
 }
 
 RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
