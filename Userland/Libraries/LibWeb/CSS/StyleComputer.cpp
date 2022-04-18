@@ -292,9 +292,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderRadius) {
-        if (value.is_value_list()) {
-            auto const& values_list = value.as_value_list();
-            assign_edge_values(PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius, values_list.values());
+        if (value.is_border_radius_shorthand()) {
+            auto const& shorthand = value.as_border_radius_shorthand();
+            style.set_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left());
+            style.set_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right());
+            style.set_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right());
+            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left());
             return;
         }
 
