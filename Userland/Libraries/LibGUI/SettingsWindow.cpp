@@ -31,6 +31,11 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     main_widget->layout()->set_spacing(6);
 
     window->m_tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
+    window->m_tab_widget->on_escape_keydown_event = [window = window->make_weak_ptr<SettingsWindow>()](void) mutable {
+        for (auto& tab : window->m_tabs)
+            tab.cancel_settings();
+        GUI::Application::the()->quit();
+    };
 
     auto button_container = TRY(main_widget->try_add<GUI::Widget>());
     button_container->set_shrink_to_fit(true);
