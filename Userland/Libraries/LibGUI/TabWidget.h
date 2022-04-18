@@ -91,6 +91,7 @@ public:
     Function<void(Widget&)> on_tab_close_click;
     Function<void(Widget&, ContextMenuEvent const&)> on_context_menu_request;
     Function<void(Widget&)> on_double_click;
+    Function<void(void)> on_escape_keydown_event;
 
 protected:
     TabWidget();

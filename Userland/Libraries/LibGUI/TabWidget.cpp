@@ -622,6 +622,12 @@ void TabWidget::keydown_event(KeyEvent& event)
             return;
         }
     }
+    if (event.key() == Key_Escape) {
+        if (on_escape_keydown_event)
+            on_escape_keydown_event();
+        event.accept();
+        return;
+    }
     Widget::keydown_event(event);
 }
 
