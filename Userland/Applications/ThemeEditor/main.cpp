@@ -264,7 +264,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& path_input = *main_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
     auto& path_picker_button = *main_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
 
-    color_combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
+    color_combo_box.set_model(TRY(RoleModel<Gfx::ColorRole>::try_create(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_widget.preview_palette().color(role));
@@ -279,7 +279,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
 
-    alignment_combo_box.set_model(adopt_ref(*new AlignmentRoleModel(alignment_roles)));
+    alignment_combo_box.set_model(TRY(RoleModel<Gfx::AlignmentRole>::try_create(alignment_roles)));
     alignment_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_alignment_role();
         alignment_input.set_selected_index((size_t)preview_widget.preview_palette().alignment(role), GUI::AllowCallback::No);
@@ -297,7 +297,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_widget.set_preview_palette(preview_palette);
     };
 
-    flag_combo_box.set_model(adopt_ref(*new FlagRoleModel(flag_roles)));
+    flag_combo_box.set_model(TRY(RoleModel<Gfx::FlagRole>::try_create(flag_roles)));
     flag_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_flag_role();
         flag_input.set_checked(preview_widget.preview_palette().flag(role), GUI::AllowCallback::No);
@@ -312,7 +312,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     flag_input.set_checked(startup_preview_palette.flag(Gfx::FlagRole::IsDark), GUI::AllowCallback::No);
 
-    metric_combo_box.set_model(adopt_ref(*new MetricRoleModel(metric_roles)));
+    metric_combo_box.set_model(TRY(RoleModel<Gfx::MetricRole>::try_create(metric_roles)));
     metric_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_metric_role();
         metric_input.set_value(preview_widget.preview_palette().metric(role), GUI::AllowCallback::No);
@@ -327,7 +327,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     metric_input.set_value(startup_preview_palette.metric(Gfx::MetricRole::TitleButtonHeight), GUI::AllowCallback::No);
 
-    path_combo_box.set_model(adopt_ref(*new PathRoleModel(path_roles)));
+    path_combo_box.set_model(TRY(RoleModel<Gfx::PathRole>::try_create(path_roles)));
     path_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
         path_input.set_text(preview_widget.preview_palette().path(role));
