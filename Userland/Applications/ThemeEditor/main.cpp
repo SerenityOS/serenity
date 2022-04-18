@@ -58,24 +58,6 @@ private:
     }
 };
 
-class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
-public:
-    explicit ColorRoleModel(Vector<Gfx::ColorRole> const& data)
-        : ItemListModel<Gfx::ColorRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
 struct AlignmentValue {
     String title;
     Gfx::TextAlignment setting_value;
@@ -108,78 +90,6 @@ public:
 
 private:
     Vector<AlignmentValue> m_alignments;
-};
-
-class AlignmentRoleModel final : public GUI::ItemListModel<Gfx::AlignmentRole> {
-public:
-    explicit AlignmentRoleModel(Vector<Gfx::AlignmentRole> const& data)
-        : ItemListModel<Gfx::AlignmentRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class FlagRoleModel final : public GUI::ItemListModel<Gfx::FlagRole> {
-public:
-    explicit FlagRoleModel(Vector<Gfx::FlagRole> const& data)
-        : ItemListModel<Gfx::FlagRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class MetricRoleModel final : public GUI::ItemListModel<Gfx::MetricRole> {
-public:
-    explicit MetricRoleModel(Vector<Gfx::MetricRole> const& data)
-        : ItemListModel<Gfx::MetricRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class PathRoleModel final : public GUI::ItemListModel<Gfx::PathRole> {
-public:
-    explicit PathRoleModel(Vector<Gfx::PathRole> const& data)
-        : ItemListModel<Gfx::PathRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
