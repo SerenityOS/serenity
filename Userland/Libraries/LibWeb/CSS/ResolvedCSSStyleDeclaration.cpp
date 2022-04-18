@@ -281,7 +281,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             bottom_right_radius = maybe_bottom_right_radius.value().value->as_border_radius();
         }
 
-        return CombinedBorderRadiusStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull());
+        return BorderRadiusShorthandStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull());
     }
     // FIXME: The two radius components are not yet stored, as we currently don't actually render them.
     case CSS::PropertyID::BorderBottomLeftRadius:
