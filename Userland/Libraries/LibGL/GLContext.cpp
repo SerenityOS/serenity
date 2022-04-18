@@ -2878,10 +2878,10 @@ void GLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     gl_begin(GL_POLYGON);
-    gl_vertex(x1, y1, 0.0, 0.0);
-    gl_vertex(x2, y1, 0.0, 0.0);
-    gl_vertex(x2, y2, 0.0, 0.0);
-    gl_vertex(x1, y2, 0.0, 0.0);
+    gl_vertex(x1, y1, 0.0, 1.0);
+    gl_vertex(x2, y1, 0.0, 1.0);
+    gl_vertex(x2, y2, 0.0, 1.0);
+    gl_vertex(x1, y2, 0.0, 1.0);
     gl_end();
 }
 

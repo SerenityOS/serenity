@@ -26,6 +26,15 @@ static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height
     auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
     auto context = GL::create_context(*bitmap);
     GL::make_context_current(context);
+
+    // Assume some defaults for our testing contexts
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     return context;
 }
 
@@ -51,13 +60,6 @@ TEST_CASE(0001_simple_triangle)
 {
     auto context = create_testing_context(64, 64);
 
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     glBegin(GL_TRIANGLES);
     glColor3f(1, 1, 1);
     glVertex2f(0, 1);
@@ -75,13 +77,6 @@ TEST_CASE(0002_quad_color_interpolation)
 {
     auto context = create_testing_context(64, 64);
 
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     glBegin(GL_QUADS);
 
     glColor3f(1, 0, 0);
@@ -98,4 +93,27 @@ TEST_CASE(0002_quad_color_interpolation)
 
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0002_quad_color_interpolation");
+}
+
+TEST_CASE(0003_rect_w_coordinate_regression)
+{
+    auto context = create_testing_context(64, 64);
+
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(0, 1, 0);
+    glRectf(-0.5f, -0.5f, 0.5f, 0.5f);
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(1, 0, 0);
+    glVertex2i(-1, -1);
+    glVertex2i(1, -1);
+    glVertex2i(-1, 1);
+    glEnd();
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0003_rect_w_coordinate_regression");
 }
