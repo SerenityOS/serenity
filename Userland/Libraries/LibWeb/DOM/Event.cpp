@@ -12,21 +12,30 @@
 
 namespace Web::DOM {
 
+// https://dom.spec.whatwg.org/#concept-event-path-append
 void Event::append_to_path(EventTarget& invocation_target, RefPtr<EventTarget> shadow_adjusted_target, RefPtr<EventTarget> related_target, TouchTargetList& touch_targets, bool slot_in_closed_tree)
 {
+    // 1. Let invocationTargetInShadowTree be false.
     bool invocation_target_in_shadow_tree = false;
+
+    // 3. Let root-of-closed-tree be false.
     bool root_of_closed_tree = false;
 
+    // 2. If invocationTarget is a node and its root is a shadow root, then set invocationTargetInShadowTree to true.
     if (is<Node>(invocation_target)) {
         auto& invocation_target_node = verify_cast<Node>(invocation_target);
         if (is<ShadowRoot>(invocation_target_node.root()))
             invocation_target_in_shadow_tree = true;
         if (is<ShadowRoot>(invocation_target_node)) {
             auto& invocation_target_shadow_root = verify_cast<ShadowRoot>(invocation_target_node);
+            // 4. If invocationTarget is a shadow root whose mode is "closed", then set root-of-closed-tree to true.
             root_of_closed_tree = invocation_target_shadow_root.closed();
         }
     }
 
+    // 5. Append a new struct to event’s path whose invocation target is invocationTarget, invocation-target-in-shadow-tree is invocationTargetInShadowTree,
+    // shadow-adjusted target is shadowAdjustedTarget, relatedTarget is relatedTarget, touch target list is touchTargets, root-of-closed-tree is root-of-closed-tree,
+    // and slot-in-closed-tree is slot-in-closed-tree.
     m_path.append({ invocation_target, invocation_target_in_shadow_tree, shadow_adjusted_target, related_target, touch_targets, root_of_closed_tree, slot_in_closed_tree, m_path.size() });
 }
 
@@ -39,23 +48,38 @@ void Event::set_cancelled_flag()
 // https://dom.spec.whatwg.org/#concept-event-initialize
 void Event::initialize(String const& type, bool bubbles, bool cancelable)
 {
+    // 1. Set event’s initialized flag.
     m_initialized = true;
+
+    // 2. Unset event’s stop propagation flag, stop immediate propagation flag, and canceled flag.
     m_stop_propagation = false;
     m_stop_immediate_propagation = false;
     m_cancelled = false;
+
+    // 3. Set event’s isTrusted attribute to false.
     m_is_trusted = false;
+
+    // 4. Set event’s target to null.
     m_target = nullptr;
+
+    // 5. Set event’s type attribute to type.
     m_type = type;
+
+    // 6. Set event’s bubbles attribute to bubbles.
     m_bubbles = bubbles;
+
+    // 8. Set event’s cancelable attribute to cancelable.
     m_cancelable = cancelable;
 }
 
 // https://dom.spec.whatwg.org/#dom-event-initevent
 void Event::init_event(String const& type, bool bubbles, bool cancelable)
 {
+    // 1. If this’s dispatch flag is set, then return.
     if (m_dispatch)
         return;
 
+    // 2. Initialize this with type, bubbles, and cancelable.
     initialize(type, bubbles, cancelable);
 }
 
