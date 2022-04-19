@@ -40,6 +40,10 @@ else
     if [ ! -f "$E2FSCK" ]; then
         E2FSCK=/sbin/e2fsck
     fi
+
+    if [ ! -f "$E2FSCK" ]; then
+        E2FSCK=e2fsck
+    fi
 fi
 
 SCRIPT_DIR="$(dirname "${0}")"
