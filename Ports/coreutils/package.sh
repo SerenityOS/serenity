@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=coreutils
-version=9.0
+version=9.1
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_path=build-aux/config.sub
