@@ -299,8 +299,6 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     for (auto& field : m_fields) {
         if (auto* property_key_ptr = field.name.get_pointer<PropertyKey>(); property_key_ptr && property_key_ptr->is_symbol())
             visitor.visit(property_key_ptr->as_symbol());
-
-        visitor.visit(field.initializer);
     }
 }
 
@@ -884,11 +882,6 @@ void ECMAScriptFunctionObject::set_name(FlyString const& name)
     m_name = name;
     auto success = MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
     VERIFY(success);
-}
-
-void ECMAScriptFunctionObject::add_field(ClassElement::ClassElementName property_key, ECMAScriptFunctionObject* initializer)
-{
-    m_fields.empend(property_key, initializer);
 }
 
 }

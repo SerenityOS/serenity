@@ -600,7 +600,7 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
         TRY(object.private_method_or_accessor_add(method));
 
     for (auto& field : constructor.fields())
-        TRY(object.define_field(field.name, field.initializer));
+        TRY(object.define_field(field));
     return {};
 }
 

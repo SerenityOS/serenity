@@ -1487,13 +1487,13 @@ Completion ClassElement::execute(Interpreter&, GlobalObject&) const
     VERIFY_NOT_REACHED();
 }
 
-static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_name(Interpreter& interpreter, GlobalObject& global_object, Expression const& key)
+static ThrowCompletionOr<ClassElementName> class_key_to_property_name(Interpreter& interpreter, GlobalObject& global_object, Expression const& key)
 {
     if (is<PrivateIdentifier>(key)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(key);
         auto* private_environment = interpreter.vm().running_execution_context().private_environment;
         VERIFY(private_environment);
-        return ClassElement::ClassElementName { private_environment->resolve_private_identifier(private_identifier.string()) };
+        return ClassElementName { private_environment->resolve_private_identifier(private_identifier.string()) };
     }
 
     auto prop_key = TRY(key.execute(interpreter, global_object)).release_value();
@@ -1502,7 +1502,7 @@ static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_n
         prop_key = TRY(prop_key.to_primitive(global_object, Value::PreferredType::String));
 
     auto property_key = TRY(PropertyKey::from_value(global_object, prop_key));
-    return ClassElement::ClassElementName { property_key };
+    return ClassElementName { property_key };
 }
 
 // 15.4.5 Runtime Semantics: MethodDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-methoddefinitionevaluation
@@ -1838,11 +1838,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     prototype->define_direct_property(vm.names.constructor, class_constructor, Attribute::Writable | Attribute::Configurable);
 
-    using StaticElement = Variant<ClassElement::ClassFieldDefinition, Handle<ECMAScriptFunctionObject>>;
+    using StaticElement = Variant<ClassFieldDefinition, Handle<ECMAScriptFunctionObject>>;
 
     Vector<PrivateElement> static_private_methods;
     Vector<PrivateElement> instance_private_methods;
-    Vector<ClassElement::ClassFieldDefinition> instance_fields;
+    Vector<ClassFieldDefinition> instance_fields;
     Vector<StaticElement> static_elements;
 
     for (auto const& element : m_elements) {
@@ -1871,7 +1871,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
             if (!added_to_existing)
                 container.append(move(element_value.get<PrivateElement>()));
-        } else if (auto* class_field_definition_ptr = element_value.get_pointer<ClassElement::ClassFieldDefinition>()) {
+        } else if (auto* class_field_definition_ptr = element_value.get_pointer<ClassFieldDefinition>()) {
             if (element.is_static())
                 static_elements.append(move(*class_field_definition_ptr));
             else
@@ -1892,7 +1892,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
 
     for (auto& field : instance_fields)
-        class_constructor->add_field(field.name, field.initializer.is_null() ? nullptr : field.initializer.cell());
+        class_constructor->add_field(field);
 
     for (auto& private_method : instance_private_methods)
         class_constructor->add_private_method(private_method);
@@ -1902,8 +1902,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     for (auto& element : static_elements) {
         TRY(element.visit(
-            [&](ClassElement::ClassFieldDefinition& field) -> ThrowCompletionOr<void> {
-                return TRY(class_constructor->define_field(field.name, field.initializer.is_null() ? nullptr : field.initializer.cell()));
+            [&](ClassFieldDefinition& field) -> ThrowCompletionOr<void> {
+                return TRY(class_constructor->define_field(field));
             },
             [&](Handle<ECMAScriptFunctionObject> static_block_function) -> ThrowCompletionOr<void> {
                 VERIFY(!static_block_function.is_null());

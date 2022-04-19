@@ -68,13 +68,8 @@ public:
     String const& source_text() const { return m_source_text; }
     void set_source_text(String source_text) { m_source_text = move(source_text); }
 
-    struct InstanceField {
-        Variant<PropertyKey, PrivateName> name;
-        ECMAScriptFunctionObject* initializer { nullptr };
-    };
-
-    Vector<InstanceField> const& fields() const { return m_fields; }
-    void add_field(Variant<PropertyKey, PrivateName> property_key, ECMAScriptFunctionObject* initializer);
+    Vector<ClassFieldDefinition> const& fields() const { return m_fields; }
+    void add_field(ClassFieldDefinition field) { m_fields.append(move(field)); }
 
     Vector<PrivateElement> const& private_methods() const { return m_private_methods; }
     void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); };
@@ -123,7 +118,7 @@ private:
     ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]
     Object* m_home_object { nullptr };                                       // [[HomeObject]]
     String m_source_text;                                                    // [[SourceText]]
-    Vector<InstanceField> m_fields;                                          // [[Fields]]
+    Vector<ClassFieldDefinition> m_fields;                                   // [[Fields]]
     Vector<PrivateElement> m_private_methods;                                // [[PrivateMethods]]
     Variant<PropertyKey, PrivateName, Empty> m_class_field_initializer_name; // [[ClassFieldInitializerName]]
     ConstructorKind m_constructor_kind : 1 { ConstructorKind::Base };        // [[ConstructorKind]]

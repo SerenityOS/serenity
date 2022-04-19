@@ -110,7 +110,7 @@ public:
     ThrowCompletionOr<void> private_method_or_accessor_add(PrivateElement element);
     ThrowCompletionOr<Value> private_get(PrivateName const& name);
     ThrowCompletionOr<void> private_set(PrivateName const& name, Value value);
-    ThrowCompletionOr<void> define_field(Variant<PropertyKey, PrivateName> name, ECMAScriptFunctionObject* initializer);
+    ThrowCompletionOr<void> define_field(ClassFieldDefinition const&);
 
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
