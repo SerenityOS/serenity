@@ -941,7 +941,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
         return String::empty();
 
-    // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and second formatted as a two-digit decimal number, padded to the left with zeroes if necessary.
+    // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and ToZeroPaddedDecimalString(second, 2).
     auto seconds_string = String::formatted(":{:02}", second);
 
     // 4. Let fraction be millisecond × 10^6 + microsecond × 10^3 + nanosecond.
@@ -955,7 +955,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
         if (fraction == 0)
             return seconds_string;
 
-        // b. Set fraction to fraction formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9).
         fraction_string = String::formatted("{:09}", fraction);
 
         // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
@@ -967,7 +967,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
         if (precision.get<u8>() == 0)
             return seconds_string;
 
-        // b. Set fraction to fraction formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9)
         fraction_string = String::formatted("{:09}", fraction);
 
         // c. Set fraction to the substring of fraction from 0 to precision.

@@ -71,6 +71,7 @@ public:
     ErrorOr<void> write_to_file(String const& file_path) const;
     ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel);
     ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel);
+    ErrorOr<void> export_qoi_to_file(Core::File&) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);

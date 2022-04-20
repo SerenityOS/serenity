@@ -1,15 +1,17 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DHCPv4Client.h"
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/Random.h>
+#include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -39,6 +41,8 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
         dbgln("ERROR: socket :: {}", strerror(errno));
         return false;
     }
+
+    ScopeGuard socket_close_guard = [&] { close(fd); };
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.ifname.characters(), IFNAMSIZ) < 0) {
         dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
@@ -358,6 +362,17 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet con
     // set packet options
     builder.set_message_type(DHCPMessageType::DHCPRequest);
     builder.add_option(DHCPOption::RequestedIPAddress, sizeof(IPv4Address), &offer.yiaddr());
+
+    auto maybe_dhcp_server_ip = offer.parse_options().get<IPv4Address>(DHCPOption::ServerIdentifier);
+    if (maybe_dhcp_server_ip.has_value())
+        builder.add_option(DHCPOption::ServerIdentifier, sizeof(IPv4Address), &maybe_dhcp_server_ip.value());
+
+    AK::Array<DHCPOption, 2> parameter_request_list = {
+        DHCPOption::SubnetMask,
+        DHCPOption::Router,
+    };
+    builder.add_option(DHCPOption::ParameterRequestList, parameter_request_list.size(), &parameter_request_list);
+
     auto& dhcp_packet = builder.build();
 
     // broadcast the "request" request

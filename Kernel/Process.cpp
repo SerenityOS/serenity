@@ -874,15 +874,18 @@ void Process::set_dumpable(bool dumpable)
 
 ErrorOr<void> Process::set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value)
 {
-    // Write it into the first available property slot.
-    for (auto& slot : m_coredump_properties) {
-        if (slot.key)
-            continue;
-        slot.key = move(key);
-        slot.value = move(value);
-        return {};
-    }
-    return ENOBUFS;
+    return m_coredump_properties.with([&](auto& coredump_properties) -> ErrorOr<void> {
+        // Write it into the first available property slot.
+        for (auto& slot : coredump_properties) {
+            if (slot.key)
+                continue;
+            slot.key = move(key);
+            slot.value = move(value);
+            return {};
+        }
+
+        return ENOBUFS;
+    });
 }
 
 ErrorOr<void> Process::try_set_coredump_property(StringView key, StringView value)

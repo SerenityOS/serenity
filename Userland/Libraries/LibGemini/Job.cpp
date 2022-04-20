@@ -56,14 +56,14 @@ bool Job::can_read_line() const
 String Job::read_line(size_t size)
 {
     ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
-    auto nread = MUST(m_socket->read_until(buffer, "\r\n"sv));
-    return String::copy(buffer.span().slice(0, nread));
+    auto bytes_read = MUST(m_socket->read_until(buffer, "\r\n"sv));
+    return String::copy(bytes_read);
 }
 
 ByteBuffer Job::receive(size_t size)
 {
     ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
-    auto nread = MUST(m_socket->read(buffer));
+    auto nread = MUST(m_socket->read(buffer)).size();
     return buffer.slice(0, nread);
 }
 

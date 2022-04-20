@@ -9,6 +9,7 @@
 #include <LibConfig/Client.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 
 static String default_homepage_url = "file:///res/html/misc/welcome.html";
@@ -155,8 +156,14 @@ void BrowserSettingsWidget::set_search_engine_url(StringView url)
 
 void BrowserSettingsWidget::apply_settings()
 {
-    // TODO: Ensure that the URL is valid, as we do in the BrowserWindow's change-homepage dialog
-    Config::write_string("Browser", "Preferences", "Home", m_homepage_url_textbox->text());
+    auto homepage_url = m_homepage_url_textbox->text();
+    if (!URL(homepage_url).is_valid()) {
+        GUI::MessageBox::show_error(this->window(), "The homepage URL you have entered is not valid");
+        m_homepage_url_textbox->select_all();
+        m_homepage_url_textbox->set_focus(true);
+        return;
+    }
+    Config::write_string("Browser", "Preferences", "Home", homepage_url);
 
     Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", m_show_bookmarks_bar_checkbox->is_checked());
 

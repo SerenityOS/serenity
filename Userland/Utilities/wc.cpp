@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<char const*> file_specifiers;
+    Vector<String> file_specifiers;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');

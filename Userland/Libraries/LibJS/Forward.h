@@ -141,6 +141,7 @@ class BoundFunction;
 class Cell;
 class CellAllocator;
 class ClassExpression;
+struct ClassFieldDefinition;
 class Completion;
 class Console;
 class DeclarativeEnvironment;

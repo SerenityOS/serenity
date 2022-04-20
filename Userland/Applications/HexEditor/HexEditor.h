@@ -19,7 +19,7 @@
 #include <AK/StdLibExtras.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/TextAlignment.h>
 
 class HexEditor : public GUI::AbstractScrollableWidget {

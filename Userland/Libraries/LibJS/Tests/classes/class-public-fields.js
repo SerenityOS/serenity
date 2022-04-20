@@ -86,6 +86,43 @@ test("with super class", () => {
     expect(b.super_field).toBe(4);
 });
 
+test("'arguments' is not allowed in class field initializer", () => {
+    expect("class A { a = arguments; }").not.toEval();
+    expect("class B { static b = arguments; }").not.toEval();
+
+    class C {
+        c = eval("arguments");
+    }
+
+    expect(() => {
+        new C();
+    }).toThrowWithMessage(SyntaxError, "'arguments' is not allowed in class field initializer");
+
+    expect(() => {
+        class D {
+            static d = eval("arguments");
+        }
+    }).toThrowWithMessage(SyntaxError, "'arguments' is not allowed in class field initializer");
+});
+
+test("using 'arguments' via indirect eval throws at runtime instead of parse time", () => {
+    const indirect = eval;
+
+    class A {
+        a = indirect("arguments");
+    }
+
+    expect(() => {
+        new A();
+    }).toThrowWithMessage(ReferenceError, "'arguments' is not defined");
+
+    expect(() => {
+        class B {
+            static b = indirect("arguments");
+        }
+    }).toThrowWithMessage(ReferenceError, "'arguments' is not defined");
+});
+
 describe("class fields with a 'special' name", () => {
     test("static", () => {
         class A {

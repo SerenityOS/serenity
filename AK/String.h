@@ -124,7 +124,6 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
-#ifndef KERNEL
     [[nodiscard]] String trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
         auto trimmed_view = StringUtils::trim(view(), characters, mode);
@@ -140,7 +139,6 @@ public:
             return *this;
         return trimmed_view;
     }
-#endif
 
     [[nodiscard]] bool equals_ignoring_case(StringView) const;
 

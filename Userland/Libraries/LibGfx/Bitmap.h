@@ -236,6 +236,8 @@ public:
     [[nodiscard]] Core::AnonymousBuffer& anonymous_buffer() { return m_buffer; }
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
+    [[nodiscard]] bool visually_equals(Bitmap const&) const;
+
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
     Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);

@@ -8,7 +8,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 #include <Shell/NodeVisitor.h>
 #include <Shell/Parser.h>

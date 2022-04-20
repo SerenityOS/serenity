@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <stdlib.h>

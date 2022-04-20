@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -16,19 +17,18 @@ namespace SoftGPU {
 template<Clipper::ClipPlane plane>
 static constexpr bool point_within_clip_plane(FloatVector4 const& vertex)
 {
-    if constexpr (plane == Clipper::ClipPlane::LEFT) {
+    if constexpr (plane == Clipper::ClipPlane::LEFT)
         return vertex.x() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::RIGHT) {
+    else if constexpr (plane == Clipper::ClipPlane::RIGHT)
         return vertex.x() <= vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::TOP) {
+    else if constexpr (plane == Clipper::ClipPlane::TOP)
         return vertex.y() <= vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::BOTTOM) {
+    else if constexpr (plane == Clipper::ClipPlane::BOTTOM)
         return vertex.y() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::NEAR) {
+    else if constexpr (plane == Clipper::ClipPlane::NEAR)
         return vertex.z() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::FAR) {
+    else if constexpr (plane == Clipper::ClipPlane::FAR)
         return vertex.z() <= vertex.w();
-    }
     return false;
 }
 
@@ -36,23 +36,22 @@ template<Clipper::ClipPlane plane>
 static constexpr GPU::Vertex clip_intersection_point(GPU::Vertex const& p1, GPU::Vertex const& p2)
 {
     constexpr FloatVector4 clip_plane_normals[] = {
-        { 1, 0, 0, 0 },  // Left Plane
-        { -1, 0, 0, 0 }, // Right Plane
-        { 0, -1, 0, 0 }, // Top Plane
-        { 0, 1, 0, 0 },  // Bottom plane
-        { 0, 0, 1, 0 },  // Near Plane
-        { 0, 0, -1, 0 }  // Far Plane
+        { 1, 0, 0, 1 },  // Left Plane
+        { -1, 0, 0, 1 }, // Right Plane
+        { 0, -1, 0, 1 }, // Top Plane
+        { 0, 1, 0, 1 },  // Bottom plane
+        { 0, 0, 1, 1 },  // Near Plane
+        { 0, 0, -1, 1 }  // Far Plane
     };
     constexpr auto clip_plane_normal = clip_plane_normals[to_underlying(plane)];
 
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
+    // Clip plane normals have W=1 so the vertices' W coordinates are included in x1 and x2.
 
-    float const w1 = p1.clip_coordinates.w();
-    float const w2 = p2.clip_coordinates.w();
-    float const x1 = clip_plane_normal.dot(p1.clip_coordinates);
-    float const x2 = clip_plane_normal.dot(p2.clip_coordinates);
-    float const a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
+    auto const x1 = clip_plane_normal.dot(p1.clip_coordinates);
+    auto const x2 = clip_plane_normal.dot(p2.clip_coordinates);
+    auto const a = x1 / (x1 - x2);
 
     GPU::Vertex out;
     out.position = mix(p1.position, p2.position, a);
@@ -66,43 +65,41 @@ static constexpr GPU::Vertex clip_intersection_point(GPU::Vertex const& p1, GPU:
 }
 
 template<Clipper::ClipPlane plane>
-FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& read_list, Vector<GPU::Vertex>& write_list)
+FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& input_list, Vector<GPU::Vertex>& output_list)
 {
-    auto read_from = &read_list;
-    auto write_to = &write_list;
+    output_list.clear_with_capacity();
 
-    write_to->clear_with_capacity();
-    for (size_t i = 0; i < read_from->size(); i++) {
-        auto const& curr_vec = read_from->at((i + 1) % read_from->size());
-        auto const& prev_vec = read_from->at(i);
+    auto input_list_size = input_list.size();
+    if (input_list_size == 0)
+        return;
 
-        bool const is_curr_point_within_clip_plane = point_within_clip_plane<plane>(curr_vec.clip_coordinates);
-        bool const is_prev_point_within_clip_plane = point_within_clip_plane<plane>(prev_vec.clip_coordinates);
-        if (is_curr_point_within_clip_plane != is_prev_point_within_clip_plane) {
-            auto const intersect = clip_intersection_point<plane>(prev_vec, curr_vec);
-            write_to->append(intersect);
-        }
+    auto const* prev_vec = &input_list.data()[0];
+    auto is_prev_point_within_clip_plane = point_within_clip_plane<plane>(prev_vec->clip_coordinates);
+
+    for (size_t i = 1; i <= input_list_size; i++) {
+        auto const& curr_vec = input_list[i % input_list_size];
+        auto const is_curr_point_within_clip_plane = point_within_clip_plane<plane>(curr_vec.clip_coordinates);
+
+        if (is_curr_point_within_clip_plane != is_prev_point_within_clip_plane)
+            output_list.append(clip_intersection_point<plane>(*prev_vec, curr_vec));
 
         if (is_curr_point_within_clip_plane)
-            write_to->append(curr_vec);
+            output_list.append(curr_vec);
+
+        prev_vec = &curr_vec;
+        is_prev_point_within_clip_plane = is_curr_point_within_clip_plane;
     }
-    swap(write_list, read_list);
 }
 
 void Clipper::clip_triangle_against_frustum(Vector<GPU::Vertex>& input_verts)
 {
-    list_a = input_verts;
-    list_b.clear_with_capacity();
-
     // FIXME C++23. Static reflection will provide looping over all enum values.
-    clip_plane<ClipPlane::LEFT>(list_a, list_b);
-    clip_plane<ClipPlane::RIGHT>(list_a, list_b);
-    clip_plane<ClipPlane::TOP>(list_a, list_b);
-    clip_plane<ClipPlane::BOTTOM>(list_a, list_b);
-    clip_plane<ClipPlane::NEAR>(list_a, list_b);
-    clip_plane<ClipPlane::FAR>(list_a, list_b);
-
-    input_verts = list_a;
+    clip_plane<ClipPlane::LEFT>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::RIGHT>(m_vertex_buffer, input_verts);
+    clip_plane<ClipPlane::TOP>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::BOTTOM>(m_vertex_buffer, input_verts);
+    clip_plane<ClipPlane::NEAR>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::FAR>(m_vertex_buffer, input_verts);
 }
 
 }

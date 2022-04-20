@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FuzzyMatch.h>
 #include <AK/QuickSort.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -136,8 +137,12 @@ public:
 
     virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
     {
-        auto search = String::formatted("{} {}", menu_name(index), action_text(index));
-        if (search.contains(term.as_string(), CaseSensitivity::CaseInsensitive))
+        auto needle = term.as_string();
+        if (needle.is_empty())
+            return TriState::True;
+
+        auto haystack = String::formatted("{} {}", menu_name(index), action_text(index));
+        if (fuzzy_match(needle, haystack).score > 0)
             return TriState::True;
         return TriState::False;
     }
@@ -217,6 +222,11 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     };
 
     m_text_box->set_focus(true);
+
+    on_active_window_change = [this](bool is_active_window) {
+        if (!is_active_window)
+            close();
+    };
 }
 
 void CommandPalette::collect_actions(GUI::Window& parent_window)

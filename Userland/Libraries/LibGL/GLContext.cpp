@@ -1028,6 +1028,33 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     m_sampler_config_is_dirty = true;
 }
 
+void GLContext::gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_parameterfv, target, pname, params);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: We currently only support GL_TETXURE_2D targets. 1D, 3D and CUBE should also be supported (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_BORDER_COLOR), GL_INVALID_ENUM);
+
+    // We assume GL_TEXTURE_2D (see above)
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
+
+    switch (pname) {
+    case GL_TEXTURE_BORDER_COLOR:
+        texture_2d->sampler().set_border_color(params[0], params[1], params[2], params[3]);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_sampler_config_is_dirty = true;
+}
+
 void GLContext::gl_front_face(GLenum face)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);
@@ -1936,6 +1963,16 @@ void GLContext::gl_depth_mask(GLboolean flag)
     m_rasterizer->set_options(options);
 }
 
+void GLContext::gl_clip_plane(GLenum plane, [[maybe_unused]] GLdouble const* equation)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clip_plane, plane, equation);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF((plane < GL_CLIP_PLANE0) || (plane > GL_CLIP_PLANE5), GL_INVALID_ENUM);
+
+    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_clip_plane() (equation = [{} {} {} {}])", equation[0], equation[1], equation[2], equation[3]);
+}
+
 void GLContext::gl_enable_client_state(GLenum cap)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -2057,6 +2094,7 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     case GL_MODULATE:
     case GL_REPLACE:
     case GL_DECAL:
+    case GL_ADD:
         m_active_texture_unit->set_env_mode(param_enum);
         m_sampler_config_is_dirty = true;
         break;
@@ -2268,6 +2306,41 @@ void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLe
     } else {
         VERIFY_NOT_REACHED();
     }
+}
+
+void GLContext::gl_array_element(GLint i)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_array_element, i);
+    RETURN_WITH_ERROR_IF(i < 0, GL_INVALID_VALUE);
+
+    // This is effectively the same as `gl_draw_elements`, except we only output a single
+    // vertex (this is done between a `gl_begin/end` call) that is to be rendered.
+    if (!m_client_side_vertex_array_enabled)
+        return;
+
+    if (m_client_side_color_array_enabled) {
+        float color[4] { 0, 0, 0, 1 };
+        read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
+        gl_color(color[0], color[1], color[2], color[3]);
+    }
+
+    for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+        if (m_client_side_texture_coord_array_enabled[t]) {
+            float tex_coords[4] { 0, 0, 0, 0 };
+            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
+            gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        }
+    }
+
+    if (m_client_side_normal_array_enabled) {
+        float normal[3];
+        read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal);
+        gl_normal(normal[0], normal[1], normal[2]);
+    }
+
+    float vertex[4] { 0, 0, 0, 1 };
+    read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+    gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
 }
 
 void GLContext::gl_depth_range(GLdouble min, GLdouble max)
@@ -2805,10 +2878,10 @@ void GLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     gl_begin(GL_POLYGON);
-    gl_vertex(x1, y1, 0.0, 0.0);
-    gl_vertex(x2, y1, 0.0, 0.0);
-    gl_vertex(x2, y2, 0.0, 0.0);
-    gl_vertex(x1, y2, 0.0, 0.0);
+    gl_vertex(x1, y1, 0.0, 1.0);
+    gl_vertex(x2, y1, 0.0, 1.0);
+    gl_vertex(x2, y2, 0.0, 1.0);
+    gl_vertex(x1, y2, 0.0, 1.0);
     gl_end();
 }
 
@@ -3013,10 +3086,14 @@ void GLContext::sync_device_sampler_config()
         case GL_DECAL:
             config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Decal;
             break;
+        case GL_ADD:
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Add;
+            break;
         default:
             VERIFY_NOT_REACHED();
         }
 
+        config.border_color = sampler.border_color();
         m_rasterizer->set_sampler_config(i, config);
     }
 }
@@ -3642,6 +3719,18 @@ void GLContext::get_material_param(Face face, GLenum pname, T* params)
         *params = material.shininess;
         break;
     }
+}
+
+void GLContext::gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_sub_image_2d, target, level, xoffset, yoffset, x, y, width, height);
+    RETURN_WITH_ERROR_IF(!(target == GL_TEXTURE_2D || target == GL_TEXTURE_1D_ARRAY), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(level < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_copy_tex_sub_image_2d({:#x}, {}, {}, {}, {}, {}, {}, {})",
+        target, level, xoffset, yoffset, x, y, width, height);
 }
 
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)

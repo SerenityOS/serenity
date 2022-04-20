@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibGfx/TrueTypeFont/Font.h>
+#include <LibGfx/Font/TrueType/Font.h>
 #include <LibPDF/Fonts/Type1Font.h>
 
 namespace PDF {

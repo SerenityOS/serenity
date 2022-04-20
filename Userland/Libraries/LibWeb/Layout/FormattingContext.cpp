@@ -75,6 +75,22 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
 
 OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(FormattingState& state, Box const& child_box)
 {
+    if (child_box.is_replaced_box() && !child_box.can_have_children()) {
+        // NOTE: This is a bit strange.
+        //       Basically, we create a pretend formatting context for replaced elements that does nothing.
+        //       This allows other formatting contexts to treat them like elements that actually need inside layout
+        //       without having separate code to handle replaced elements.
+        // FIXME: Find a better abstraction for this.
+        struct ReplacedFormattingContext : public FormattingContext {
+            ReplacedFormattingContext(FormattingState& state, Box const& box)
+                : FormattingContext(Type::Block, state, box)
+            {
+            }
+            virtual void run(Box const&, LayoutMode) override { }
+        };
+        return make<ReplacedFormattingContext>(state, child_box);
+    }
+
     if (!child_box.can_have_children())
         return {};
 
@@ -799,6 +815,17 @@ void FormattingContext::compute_inset(Box const& box)
 
 FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
 {
+    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
+
+    if (box.has_intrinsic_width() && box.has_intrinsic_height()) {
+        auto const& replaced_box = static_cast<ReplacedBox const&>(box);
+        Gfx::FloatSize size { replaced_box.intrinsic_width().value_or(0), replaced_box.intrinsic_height().value_or(0) };
+        return FormattingState::IntrinsicSizes {
+            .min_content_size = size,
+            .max_content_size = size,
+        };
+    }
+
     auto& root_state = m_state.m_root;
 
     // If we have cached intrinsic sizes for this box, use them.
@@ -807,7 +834,6 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         return it->value;
 
     // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
-    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
 
     FormattingState::IntrinsicSizes cached_box_sizes;
     auto const& containing_block = *box.containing_block();

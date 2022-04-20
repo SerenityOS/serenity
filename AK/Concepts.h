@@ -39,6 +39,9 @@ concept SameAs = IsSame<T, U>;
 template<typename U, typename... Ts>
 concept OneOf = IsOneOf<U, Ts...>;
 
+template<typename U, typename... Ts>
+concept OneOfIgnoringCV = IsOneOfIgnoringCV<U, Ts...>;
+
 template<typename T, template<typename...> typename S>
 concept SpecializationOf = IsSpecializationOf<T, S>;
 
@@ -121,6 +124,7 @@ using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
 using AK::Concepts::OneOf;
+using AK::Concepts::OneOfIgnoringCV;
 using AK::Concepts::SameAs;
 using AK::Concepts::Signed;
 using AK::Concepts::SpecializationOf;

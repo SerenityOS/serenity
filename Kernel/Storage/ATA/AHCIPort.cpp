@@ -70,13 +70,23 @@ void AHCIPort::handle_interrupt()
         if ((m_port_registers.ssts & 0xf) != 3 && m_connected_device) {
             m_connected_device->prepare_for_unplug();
             StorageManagement::the().remove_device(*m_connected_device);
-            g_io_work->queue([this]() {
+            auto work_item_creation_result = g_io_work->try_queue([this]() {
                 m_connected_device.clear();
             });
+            if (work_item_creation_result.is_error()) {
+                auto current_request = m_current_request;
+                m_current_request.clear();
+                current_request->complete(AsyncDeviceRequest::OutOfMemory);
+            }
         } else {
-            g_io_work->queue([this]() {
+            auto work_item_creation_result = g_io_work->try_queue([this]() {
                 reset();
             });
+            if (work_item_creation_result.is_error()) {
+                auto current_request = m_current_request;
+                m_current_request.clear();
+                current_request->complete(AsyncDeviceRequest::OutOfMemory);
+            }
         }
         return;
     }
@@ -86,15 +96,25 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
         // We need to defer the reset, because we can receive interrupts when
         // resetting the device.
-        g_io_work->queue([this]() {
+        auto work_item_creation_result = g_io_work->try_queue([this]() {
             reset();
         });
+        if (work_item_creation_result.is_error()) {
+            auto current_request = m_current_request;
+            m_current_request.clear();
+            current_request->complete(AsyncDeviceRequest::OutOfMemory);
+        }
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
-        g_io_work->queue([this]() {
+        auto work_item_creation_result = g_io_work->try_queue([this]() {
             recover_from_fatal_error();
         });
+        if (work_item_creation_result.is_error()) {
+            auto current_request = m_current_request;
+            m_current_request.clear();
+            current_request->complete(AsyncDeviceRequest::OutOfMemory);
+        }
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::DHR) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::PS)) {
@@ -106,7 +126,7 @@ void AHCIPort::handle_interrupt()
         if (!m_current_request) {
             dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled, probably identify request", representative_port_index());
         } else {
-            g_io_work->queue([this]() {
+            auto work_item_creation_result = g_io_work->try_queue([this]() {
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
                 MutexLocker locker(m_lock);
                 VERIFY(m_current_request);
@@ -128,6 +148,11 @@ void AHCIPort::handle_interrupt()
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request success", representative_port_index());
                 complete_current_request(AsyncDeviceRequest::Success);
             });
+            if (work_item_creation_result.is_error()) {
+                auto current_request = m_current_request;
+                m_current_request.clear();
+                current_request->complete(AsyncDeviceRequest::OutOfMemory);
+            }
         }
     }
 

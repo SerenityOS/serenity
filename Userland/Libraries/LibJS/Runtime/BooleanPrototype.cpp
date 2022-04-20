@@ -50,4 +50,5 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
 
     return Value(static_cast<BooleanObject const&>(this_value.as_object()).boolean());
 }
+
 }

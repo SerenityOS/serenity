@@ -64,9 +64,9 @@ void Client::start()
             if (!maybe_can_read.value())
                 break;
 
-            auto maybe_nread = m_socket->read_until_any_of(buffer, Array { "\r"sv, "\n"sv, "\r\n"sv });
-            if (maybe_nread.is_error()) {
-                warnln("Failed to read a line from the request: {}", maybe_nread.error());
+            auto maybe_bytes_read = m_socket->read_until_any_of(buffer, Array { "\r"sv, "\n"sv, "\r\n"sv });
+            if (maybe_bytes_read.is_error()) {
+                warnln("Failed to read a line from the request: {}", maybe_bytes_read.error());
                 die();
                 return;
             }
@@ -76,7 +76,7 @@ void Client::start()
                 break;
             }
 
-            builder.append(StringView { buffer.data(), maybe_nread.value() });
+            builder.append(StringView { maybe_bytes_read.value() });
             builder.append("\r\n");
         }
 
@@ -176,7 +176,10 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
     builder.append("X-Frame-Options: SAMEORIGIN\r\n");
     builder.append("X-Content-Type-Options: nosniff\r\n");
     builder.append("Pragma: no-cache\r\n");
-    builder.appendff("Content-Type: {}\r\n", content_info.type);
+    if (content_info.type == "text/plain")
+        builder.appendff("Content-Type: {}; charset=utf-8\r\n", content_info.type);
+    else
+        builder.appendff("Content-Type: {}\r\n", content_info.type);
     builder.appendff("Content-Length: {}\r\n", content_info.length);
     builder.append("\r\n");
 

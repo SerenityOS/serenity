@@ -101,7 +101,9 @@ private:
     Vector<MonthTile> m_months;
 
     struct Tile {
-        Core::DateTime date_time;
+        unsigned year;
+        unsigned month;
+        unsigned day;
         Gfx::IntRect rect;
         int width { 0 };
         int height { 0 };

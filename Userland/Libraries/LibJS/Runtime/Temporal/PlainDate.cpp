@@ -498,14 +498,14 @@ String pad_iso_year(i32 y)
 
     // 2. If y ≥ 0 and y ≤ 9999, then
     if (y >= 0 && y <= 9999) {
-        // a. Return y formatted as a four-digit decimal number, padded to the left with zeroes as necessary.
+        // a. Return ToZeroPaddedDecimalString(y, 4).
         return String::formatted("{:04}", y);
     }
 
     // 3. If y > 0, let yearSign be "+"; otherwise, let yearSign be "-".
     auto year_sign = y > 0 ? '+' : '-';
 
-    // 4. Let year be abs(y), formatted as a six-digit decimal number, padded to the left with zeroes as necessary.
+    // 4. Let year be ToZeroPaddedDecimalString(abs(y), 6).
     // 5. Return the string-concatenation of yearSign and year.
     return String::formatted("{}{:06}", year_sign, abs(y));
 }
@@ -519,10 +519,10 @@ ThrowCompletionOr<String> temporal_date_to_string(GlobalObject& global_object, P
     // 3. Let year be ! PadISOYear(temporalDate.[[ISOYear]]).
     auto year = pad_iso_year(temporal_date.iso_year());
 
-    // 4. Let month be temporalDate.[[ISOMonth]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 4. Let month be ToZeroPaddedDecimalString(monthDay.[[ISOMonth]], 2).
     auto month = String::formatted("{:02}", temporal_date.iso_month());
 
-    // 5. Let day be temporalDate.[[ISODay]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 5. Let day be ToZeroPaddedDecimalString(monthDay.[[ISODay]], 2).
     auto day = String::formatted("{:02}", temporal_date.iso_day());
 
     // 6. Let calendarID be ? ToString(temporalDate.[[Calendar]]).

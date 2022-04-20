@@ -25,6 +25,7 @@ public:
     }
 
     bool is_identity() const;
+    bool is_identity_or_translation() const;
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/FontDatabase.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/ImagePaintable.h>
@@ -78,7 +77,7 @@ bool ImageBox::renders_as_alt_text() const
 
 void ImageBox::browsing_context_did_set_viewport_rect(Gfx::IntRect const& viewport_rect)
 {
-    m_image_loader.set_visible_in_viewport(viewport_rect.to_type<float>().intersects(paint_box()->absolute_rect()));
+    m_image_loader.set_visible_in_viewport(paint_box() && viewport_rect.to_type<float>().intersects(paint_box()->absolute_rect()));
 }
 
 RefPtr<Painting::Paintable> ImageBox::create_paintable() const

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
@@ -12,6 +13,7 @@
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
+#include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 #include <errno.h>
@@ -174,19 +176,51 @@ void TLSv12::try_disambiguate_error() const
 
 void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 {
-    if (!m_context.root_certificates.is_empty())
+    if (!m_context.root_certificates.is_empty()) {
         dbgln("TLS warn: resetting root certificates!");
+        m_context.root_certificates.clear();
+    }
 
     for (auto& cert : certificates) {
         if (!cert.is_valid())
             dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.subject, cert.issuer.subject);
         // FIXME: Figure out what we should do when our root certs are invalid.
+
+        m_context.root_certificates.set(cert.subject_identifier_string(), cert);
     }
-    m_context.root_certificates = move(certificates);
     dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
 
-bool Context::verify_chain() const
+static bool wildcard_matches(StringView host, StringView subject)
+{
+    if (host == subject)
+        return true;
+
+    if (subject.starts_with("*.")) {
+        auto maybe_first_dot_index = host.find('.');
+        if (maybe_first_dot_index.has_value()) {
+            auto first_dot_index = maybe_first_dot_index.release_value();
+            return wildcard_matches(host.substring_view(first_dot_index + 1), subject.substring_view(2));
+        }
+    }
+
+    return false;
+}
+
+static bool certificate_subject_matches_host(Certificate& cert, StringView host)
+{
+    if (wildcard_matches(host, cert.subject.subject))
+        return true;
+
+    for (auto& san : cert.SAN) {
+        if (wildcard_matches(host, san))
+            return true;
+    }
+
+    return false;
+}
+
+bool Context::verify_chain(StringView host) const
 {
     if (!options.validate_certificates)
         return true;
@@ -199,40 +233,130 @@ bool Context::verify_chain() const
         local_chain = &certificates;
     }
 
-    // FIXME: Actually verify the signature, instead of just checking the name.
-    HashMap<String, String> chain;
-    HashTable<String> roots;
-    // First, walk the root certs.
-    for (auto& cert : root_certificates) {
-        roots.set(cert.subject.subject);
-        chain.set(cert.subject.subject, cert.issuer.subject);
+    if (local_chain->is_empty()) {
+        dbgln("verify_chain: Attempting to verify an empty chain");
+        return false;
     }
 
-    // Then, walk the local certs.
-    for (auto& cert : *local_chain) {
-        auto& issuer_unique_name = cert.issuer.unit.is_empty() ? cert.issuer.subject : cert.issuer.unit;
-        chain.set(cert.subject.subject, issuer_unique_name);
-    }
+    // RFC5246 section 7.4.2: The sender's certificate MUST come first in the list. Each following certificate
+    // MUST directly certify the one preceding it. Because certificate validation requires that root keys be
+    // distributed independently, the self-signed certificate that specifies the root certificate authority MAY be
+    // omitted from the chain, under the assumption that the remote end must already possess it in order to validate
+    // it in any case.
 
-    // Then verify the chain.
-    for (auto& it : chain) {
-        if (it.key == it.value) { // Allow self-signed certificates.
-            if (!roots.contains(it.key))
-                dbgln("Self-signed warning: Certificate for {} is self-signed", it.key);
-            continue;
+    if (!host.is_empty()) {
+        auto first_certificate = local_chain->first();
+        auto subject_matches = certificate_subject_matches_host(first_certificate, host);
+        if (!subject_matches) {
+            dbgln("verify_chain: First certificate does not match the hostname");
+            return false;
         }
+    } else {
+        // FIXME: The host is taken from m_context.extensions.SNI, when is this empty?
+        dbgln("FIXME: verify_chain called without host");
+        return false;
+    }
 
-        auto ref = chain.get(it.value);
-        if (!ref.has_value()) {
-            dbgln("{}: Certificate for {} is not signed by anyone we trust ({})", this, it.key, it.value);
+    for (size_t cert_index = 0; cert_index < local_chain->size(); ++cert_index) {
+        auto cert = local_chain->at(cert_index);
+
+        auto subject_string = cert.subject_identifier_string();
+        auto issuer_string = cert.issuer_identifier_string();
+
+        if (!cert.is_valid()) {
+            dbgln("verify_chain: Certificate is not valid {}", subject_string);
             return false;
         }
 
-        if (ref.value() == it.key) // Allow (but warn about) mutually recursively signed cert A <-> B.
-            dbgln("Co-dependency warning: Certificate for {} is issued by {}, which itself is issued by {}", ref.value(), it.key, ref.value());
+        auto maybe_root_certificate = root_certificates.get(issuer_string);
+        if (maybe_root_certificate.has_value()) {
+            auto& root_certificate = *maybe_root_certificate;
+            auto verification_correct = verify_certificate_pair(cert, root_certificate);
+
+            if (!verification_correct) {
+                dbgln("verify_chain: Signature inconsistent, {} was not signed by {} (root certificate)", subject_string, issuer_string);
+                return false;
+            }
+
+            // Root certificate reached, and correctly verified, so we can stop now
+            return true;
+        }
+
+        if (subject_string == issuer_string) {
+            dbgln("verify_chain: Non-root self-signed certificate");
+            return options.allow_self_signed_certificates;
+        }
+        if ((cert_index + 1) >= local_chain->size()) {
+            dbgln("verify_chain: No trusted root certificate found before end of certificate chain");
+            dbgln("verify_chain: Last certificate in chain was signed by {}", issuer_string);
+            return false;
+        }
+
+        auto parent_certificate = local_chain->at(cert_index + 1);
+        if (issuer_string != parent_certificate.subject_identifier_string()) {
+            dbgln("verify_chain: Next certificate in the chain is not the issuer of this certificate");
+            return false;
+        }
+
+        if (!(parent_certificate.is_allowed_to_sign_certificate && parent_certificate.is_certificate_authority)) {
+            dbgln("verify_chain: {} is not marked as certificate authority", issuer_string);
+            return false;
+        }
+        if (parent_certificate.path_length_constraint.has_value() && cert_index > parent_certificate.path_length_constraint.value()) {
+            dbgln("verify_chain: Path length for certificate exceeded");
+            return false;
+        }
+
+        bool verification_correct = verify_certificate_pair(cert, parent_certificate);
+        if (!verification_correct) {
+            dbgln("verify_chain: Signature inconsistent, {} was not signed by {}", subject_string, issuer_string);
+            return false;
+        }
     }
 
-    return true;
+    // Either a root certificate is reached, or parent validation fails as the end of the local chain is reached
+    VERIFY_NOT_REACHED();
+}
+
+bool Context::verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const
+{
+    Crypto::Hash::HashKind kind;
+    switch (subject.signature_algorithm) {
+    case CertificateKeyAlgorithm::RSA_SHA1:
+        kind = Crypto::Hash::HashKind::SHA1;
+        break;
+    case CertificateKeyAlgorithm::RSA_SHA256:
+        kind = Crypto::Hash::HashKind::SHA256;
+        break;
+    case CertificateKeyAlgorithm::RSA_SHA384:
+        kind = Crypto::Hash::HashKind::SHA384;
+        break;
+    case CertificateKeyAlgorithm::RSA_SHA512:
+        kind = Crypto::Hash::HashKind::SHA512;
+        break;
+    default:
+        dbgln("verify_certificate_pair: Unknown signature algorithm, expected RSA with SHA1/256/384/512, got {}", (u8)subject.signature_algorithm);
+        return false;
+    }
+
+    Crypto::PK::RSAPrivateKey dummy_private_key;
+    Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key };
+    auto rsa = Crypto::PK::RSA(public_key_copy, dummy_private_key);
+    auto verification_buffer_result = ByteBuffer::create_uninitialized(subject.signature_value.size());
+    if (verification_buffer_result.is_error()) {
+        dbgln("verify_certificate_pair: Unable to allocate buffer for verification");
+        return false;
+    }
+    auto verification_buffer = verification_buffer_result.release_value();
+    auto verification_buffer_bytes = verification_buffer.bytes();
+    rsa.verify(subject.signature_value, verification_buffer_bytes);
+
+    // FIXME: This slice is subject hack, this will work for most certificates, but you actually have to parse
+    //        the ASN.1 data to correctly extract the signed part of the certificate.
+    ReadonlyBytes message = subject.original_asn1.bytes().slice(4, subject.original_asn1.size() - 4 - (5 + subject.signature_value.size()) - 15);
+    auto pkcs1 = Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::Manager>(kind);
+    auto verification = pkcs1.verify(message, verification_buffer_bytes, subject.signature_value.size() * 8);
+    return verification == Crypto::VerificationConsistency::Consistent;
 }
 
 template<typename HMACType>
@@ -345,19 +469,34 @@ Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
     // FIXME: This might not be the best format, find a better way to represent CA certificates.
-    auto config = Core::ConfigFile::open_for_system("ca_certs").release_value_but_fixme_should_propagate_errors();
-    auto now = Core::DateTime::now();
-    auto last_year = Core::DateTime::create(now.year() - 1);
-    auto next_year = Core::DateTime::create(now.year() + 1);
-    for (auto& entity : config->groups()) {
-        Certificate cert;
-        cert.subject.subject = entity;
-        cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
-        cert.subject.country = config->read_entry(entity, "country");
-        cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
-        cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
-        m_ca_certificates.append(move(cert));
+    auto config_result = Core::ConfigFile::open_for_system("ca_certs");
+    if (config_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", config_result.error());
+        return;
     }
+    auto config = config_result.release_value();
+
+    for (auto& entity : config->groups()) {
+        for (auto& subject : config->keys(entity)) {
+            auto certificate_base64 = config->read_entry(entity, subject);
+            auto certificate_data_result = decode_base64(certificate_base64);
+            if (certificate_data_result.is_error()) {
+                dbgln("Skipping CA Certificate {} {}: out of memory", entity, subject);
+                continue;
+            }
+            auto certificate_data = certificate_data_result.release_value();
+            auto certificate_result = Certificate::parse_asn1(certificate_data.bytes());
+            // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
+            // supported right now. Currently, ca_certs.ini should only contain certificates with RSA keys/signatures.
+            if (!certificate_result.has_value()) {
+                dbgln("Skipping CA Certificate {} {}: unable to parse", entity, subject);
+                continue;
+            }
+            auto certificate = certificate_result.release_value();
+            m_ca_certificates.append(move(certificate));
+        }
+    }
+
     dbgln("Loaded {} CA Certificates", m_ca_certificates.size());
 }
 }

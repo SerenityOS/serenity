@@ -56,6 +56,7 @@ public:
     size_t input_offset { 0 };
     size_t static_offset { 0 };
     size_t invariant_offset { 0 };
+    bool allow_commit_without_listing { true };
 
     Utf32View text_view;
     Utf32View trivia_view;
@@ -98,9 +99,14 @@ public:
             size_t end;
         } offset_region_to_remove { 0, 0 }; // The region to remove as defined by [start, end) translated by (old_cursor + new_cursor_offset)
 
+        // This bit of data will be removed, but restored if the suggestion is rejected.
+        size_t static_offset_from_cursor { 0 };
+
         Vector<Utf32View> insert {};
 
         Optional<Style> style_to_apply {};
+
+        bool avoid_committing_to_single_suggestion { false };
     };
 
     CompletionAttemptResult attempt_completion(CompletionMode, size_t initiation_start_index);
@@ -118,6 +124,7 @@ public:
         m_last_shown_suggestion_display_length = 0;
         m_suggestions.clear();
         m_last_displayed_suggestion_index = 0;
+        m_next_suggestion_index = 0;
     }
 
 private:

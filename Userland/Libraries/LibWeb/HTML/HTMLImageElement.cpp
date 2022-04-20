@@ -80,7 +80,11 @@ void HTMLImageElement::parse_attribute(FlyString const& name, String const& valu
 
 RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
+    auto display = style->display();
+    auto layout_node = adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
+    if (display.is_block_outside())
+        layout_node->set_inline(false);
+    return layout_node;
 }
 
 Gfx::Bitmap const* HTMLImageElement::bitmap() const
@@ -96,6 +100,11 @@ unsigned HTMLImageElement::width() const
     // Return the rendered width of the image, in CSS pixels, if the image is being rendered.
     if (auto* paint_box = this->paint_box())
         return paint_box->content_width();
+
+    // NOTE: This step seems to not be in the spec, but all browsers do it.
+    auto width_attr = get_attribute(HTML::AttributeNames::width);
+    if (auto converted = width_attr.to_uint(); converted.has_value())
+        return *converted;
 
     // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
@@ -120,6 +129,11 @@ unsigned HTMLImageElement::height() const
     if (auto* paint_box = this->paint_box())
         return paint_box->content_height();
 
+    // NOTE: This step seems to not be in the spec, but all browsers do it.
+    auto height_attr = get_attribute(HTML::AttributeNames::height);
+    if (auto converted = height_attr.to_uint(); converted.has_value())
+        return *converted;
+
     // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
     if (m_image_loader.has_image())
@@ -132,6 +146,30 @@ unsigned HTMLImageElement::height() const
 void HTMLImageElement::set_height(unsigned height)
 {
     set_attribute(HTML::AttributeNames::height, String::number(height));
+}
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalwidth
+unsigned HTMLImageElement::natural_width() const
+{
+    // Return the density-corrected intrinsic width of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available.
+    if (m_image_loader.has_image())
+        return m_image_loader.width();
+
+    // ...or else 0.
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalheight
+unsigned HTMLImageElement::natural_height() const
+{
+    // Return the density-corrected intrinsic height of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available.
+    if (m_image_loader.has_image())
+        return m_image_loader.height();
+
+    // ...or else 0.
+    return 0;
 }
 
 }

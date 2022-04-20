@@ -7,6 +7,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -121,16 +122,13 @@ ThrowCompletionOr<Value> detach_array_buffer(GlobalObject& global_object, ArrayB
 }
 
 // 25.1.2.4 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer
-ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject& global_object, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length, FunctionObject& clone_constructor)
+ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject& global_object, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length)
 {
-    auto& vm = global_object.vm();
+    // 1. Assert: IsDetachedBuffer(srcBuffer) is false.
+    VERIFY(!source_buffer.is_detached());
 
-    // 1. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
-    auto* target_buffer = TRY(allocate_array_buffer(global_object, clone_constructor, source_length));
-
-    // 2. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (source_buffer.is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+    // 2. Let targetBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, srcLength).
+    auto* target_buffer = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), source_length));
 
     // 3. Let srcBlock be srcBuffer.[[ArrayBufferData]].
     auto& source_block = source_buffer.buffer();

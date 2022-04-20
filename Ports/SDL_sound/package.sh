@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=SDL_sound
 version=git
-_commit=9dfd90e9aebeb8c29248af673a46507f10e0e893
+_commit=df3fc779774c2c5dc1147239da1af858c88f1a74
 workdir=SDL_sound-${_commit}
 useconfigure=true
 depends=("SDL2")
-files="https://github.com/icculus/SDL_sound/archive/${_commit}.zip ${_commit}.zip c701f31fcef9238d6a439d94020ce8957aa5aaea29878312dc0b6d1c247d77ca"
+files="https://github.com/icculus/SDL_sound/archive/${_commit}.zip ${_commit}.zip bf655a03ab96a49c4140e19135433d62893c124330955e85e3dfddbe9963bac2"
 auth_type=sha256
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 

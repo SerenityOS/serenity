@@ -12,7 +12,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 
 namespace GUI {
 

@@ -19,4 +19,5 @@ BooleanObject::BooleanObject(bool value, Object& prototype)
     , m_value(value)
 {
 }
+
 }

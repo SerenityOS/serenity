@@ -31,6 +31,8 @@ String g_search_engine;
 String g_home_url;
 Vector<String> g_content_filters;
 bool g_content_filters_enabled { true };
+Vector<String> g_proxies;
+HashMap<String, size_t> g_proxy_mappings;
 IconBag g_icon_bag;
 
 }
@@ -41,8 +43,7 @@ static ErrorOr<void> load_content_filters()
     auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(ad_filter_list->can_read_line())) {
-        auto length = TRY(ad_filter_list->read_line(buffer));
-        StringView line { buffer.data(), length };
+        auto line = TRY(ad_filter_list->read_line(buffer));
         if (!line.is_empty())
             Browser::g_content_filters.append(line);
     }
@@ -65,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");
@@ -95,6 +96,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
     TRY(load_content_filters());
+
+    for (auto& group : Config::list_groups("Browser")) {
+        if (!group.starts_with("Proxy:"))
+            continue;
+
+        for (auto& key : Config::list_keys("Browser", group)) {
+            auto proxy_spec = group.substring_view(6);
+            auto existing_proxy = Browser::g_proxies.find(proxy_spec);
+            if (existing_proxy.is_end())
+                Browser::g_proxies.append(proxy_spec);
+
+            Browser::g_proxy_mappings.set(key, existing_proxy.index());
+        }
+    }
 
     URL first_url = Browser::url_from_user_input(Browser::g_home_url);
     if (specified_url) {

@@ -1409,8 +1409,12 @@ void Shell::highlight(Line::Editor& editor) const
 
 Vector<Line::CompletionSuggestion> Shell::complete()
 {
-    auto line = m_editor->line(m_editor->cursor());
+    m_completion_stack_info = {};
+    return complete(m_editor->line(m_editor->cursor()));
+}
 
+Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
+{
     Parser parser(line, m_is_interactive);
 
     auto ast = parser.parse();
@@ -1470,7 +1474,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token, escape_mode).length();
-    size_t static_offset = last_slash + 1;
+    size_t static_offset = 0;
     auto invariant_offset = token_length;
     if (m_editor)
         m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
@@ -1674,9 +1678,9 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     completion_command.argv.extend({ "--complete", "--" });
 
     struct Visitor : public AST::NodeVisitor {
-        Visitor(Shell& shell, AST::Node const& node)
+        Visitor(Shell& shell, AST::Position position)
             : shell(shell)
-            , completion_position(node.position())
+            , completion_position(position)
         {
             lists.empend();
         }
@@ -1820,7 +1824,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         virtual void visit(AST::ReadWriteRedirection const*) override { }
         virtual void visit(AST::WriteAppendRedirection const*) override { }
         virtual void visit(AST::WriteRedirection const*) override { }
-    } visitor { *this, *node };
+    } visitor { *this, node ? node->position() : AST::Position() };
 
     command_node->visit(visitor);
     if (visitor.fail)
@@ -1850,29 +1854,54 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             { "/", "rx" },
         },
     });
-    execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
-        auto result = entry->resolve_as_string(*this);
-        JsonParser parser(result);
-        auto parsed_result = parser.parse();
-        if (parsed_result.is_error())
-            return IterationDecision::Continue;
-        auto parsed = parsed_result.release_value();
-        if (parsed.is_object()) {
-            auto& object = parsed.as_object();
-            Line::CompletionSuggestion suggestion {
-                object.get("completion").as_string_or(""),
-                object.get("trailing_trivia").as_string_or(""),
-                object.get("display_trivia").as_string_or(""),
-            };
-            suggestion.static_offset = object.get("static_offset").to_u64(0);
-            suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
-            suggestions.append(move(suggestion));
-        } else {
-            suggestions.append(parsed.to_string());
-        }
+    {
+        TemporaryChange change(m_is_interactive, false);
+        execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
+            auto result = entry->resolve_as_string(*this);
+            JsonParser parser(result);
+            auto parsed_result = parser.parse();
+            if (parsed_result.is_error())
+                return IterationDecision::Continue;
+            auto parsed = parsed_result.release_value();
+            if (parsed.is_object()) {
+                auto& object = parsed.as_object();
+                auto kind = object.get("kind").as_string_or("plain");
+                if (kind == "path") {
+                    auto base = object.get("base").as_string_or("");
+                    auto part = object.get("part").as_string_or("");
+                    auto executable_only = object.get("executable_only").to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
+                    suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
+                } else if (kind == "program") {
+                    auto name = object.get("name").as_string_or("");
+                    suggestions.extend(complete_program_name(name, name.length()));
+                } else if (kind == "proxy") {
+                    if (m_completion_stack_info.size_free() < 4 * KiB) {
+                        dbgln("Not enough stack space, recursion?");
+                        return IterationDecision::Continue;
+                    }
+                    auto argv = object.get("argv").as_string_or("");
+                    dbgln("Proxy completion for {}", argv);
+                    suggestions.extend(complete(argv));
+                } else if (kind == "plain") {
+                    Line::CompletionSuggestion suggestion {
+                        object.get("completion").as_string_or(""),
+                        object.get("trailing_trivia").as_string_or(""),
+                        object.get("display_trivia").as_string_or(""),
+                    };
+                    suggestion.static_offset = object.get("static_offset").to_u64(0);
+                    suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
+                    suggestion.allow_commit_without_listing = object.get("allow_commit_without_listing").to_bool(true);
+                    suggestions.append(move(suggestion));
+                } else {
+                    dbgln("LibLine: Unhandled completion kind: {}", kind);
+                }
+            } else {
+                suggestions.append(parsed.to_string());
+            }
 
-        return IterationDecision::Continue;
-    });
+            return IterationDecision::Continue;
+        });
+    }
 
     auto pgid = getpgrp();
     tcsetpgrp(STDOUT_FILENO, pgid);

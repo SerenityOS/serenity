@@ -12,7 +12,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -82,7 +82,7 @@ HeaderView::VisibleSectionRange HeaderView::visible_section_range() const
     auto is_horizontal = m_orientation == Orientation::Horizontal;
     auto rect = m_table_view.visible_content_rect();
     auto start = is_horizontal ? rect.top_left().x() : rect.top_left().y();
-    auto end = is_horizontal ? rect.top_right().x() : rect.bottom_left().y();
+    auto end = is_horizontal ? (rect.top_left().x() + m_table_view.content_width()) : rect.bottom_left().y();
     auto offset = 0;
     VisibleSectionRange range;
     for (; range.end < section_count; ++range.end) {

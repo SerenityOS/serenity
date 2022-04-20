@@ -333,6 +333,19 @@ void StructOrClassDeclaration::dump(FILE* output, size_t indent) const
     ASTNode::dump(output, indent);
     print_indent(output, indent);
     outln(output, "{}", full_name());
+    if (!m_baseclasses.is_empty()) {
+        print_indent(output, indent + 1);
+        outln(output, ":");
+        for (size_t i = 0; i < m_baseclasses.size(); ++i) {
+            auto& baseclass = m_baseclasses[i];
+            baseclass.dump(output, indent + 1);
+            if (i < m_baseclasses.size() - 1) {
+                print_indent(output, indent + 1);
+                outln(output, ",");
+            }
+        }
+    }
+    outln(output, "");
     for (auto& member : m_members) {
         member.dump(output, indent + 1);
     }

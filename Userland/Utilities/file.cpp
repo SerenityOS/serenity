@@ -141,7 +141,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<char const*> paths;
+    Vector<String> paths;
     bool flag_mime_only = false;
 
     Core::ArgsParser args_parser;
@@ -155,7 +155,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto path : paths) {
         auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
-            perror(path);
+            perror(path.characters());
             all_ok = false;
             continue;
         }

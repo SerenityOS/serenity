@@ -24,6 +24,10 @@ void Parser::write(StringView data)
                 if (on_data)
                     on_data("\n");
                 break;
+            case '\0':
+            case '\n':
+                // Ignore.
+                break;
             default:
                 if (on_data)
                     on_data(StringView(&ch, 1));

@@ -5,7 +5,7 @@
  */
 
 #include "Providers.h"
-#include "FuzzyMatch.h"
+#include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/DirIterator.h>

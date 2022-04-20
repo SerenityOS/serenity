@@ -13,7 +13,7 @@
 
 namespace JS {
 
-// 1.2.1 CreateSyntheticModule ( exportNames, evaluationSteps, realm, hostDefined ), https://tc39.es/proposal-json-modules/#sec-synthetic-module-records
+// 1.2.1 CreateSyntheticModule ( exportNames, evaluationSteps, realm, hostDefined ), https://tc39.es/proposal-json-modules/#sec-createsyntheticmodule
 SyntheticModule::SyntheticModule(Vector<FlyString> export_names, SyntheticModule::EvaluationFunction evaluation_steps, Realm& realm, StringView filename)
     : Module(realm, filename)
     , m_export_names(move(export_names))

@@ -152,38 +152,6 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
     return true;
 }
 
-static bool wildcard_matches(StringView host, StringView subject)
-{
-    if (host.matches(subject))
-        return true;
-
-    if (subject.starts_with("*."))
-        return wildcard_matches(host, subject.substring_view(2));
-
-    return false;
-}
-
-Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(StringView host) const
-{
-    if (m_context.certificates.is_empty() || !m_context.verify_chain())
-        return {};
-
-    if (host.is_empty())
-        return 0;
-
-    for (size_t i = 0; i < m_context.certificates.size(); ++i) {
-        auto& cert = m_context.certificates[i];
-        if (wildcard_matches(host, cert.subject.subject))
-            return i;
-        for (auto& san : cert.SAN) {
-            if (wildcard_matches(host, san))
-                return i;
-        }
-    }
-
-    return {};
-}
-
 void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
 {
     u8 random_bytes[48];
@@ -211,14 +179,8 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     }
     m_context.premaster_key = premaster_key_result.release_value();
 
-    auto const& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
-    if (!certificate_option.has_value()) {
-        dbgln("certificate verification failed :(");
-        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
-        return;
-    }
-
-    auto& certificate = m_context.certificates[certificate_option.value()];
+    // RFC5246 section 7.4.2: The sender's certificate MUST come first in the list.
+    auto& certificate = m_context.certificates.first();
     if constexpr (TLS_DEBUG) {
         dbgln("PreMaster secret");
         print_buffer(m_context.premaster_key);
@@ -400,6 +362,13 @@ ByteBuffer TLSv12::build_certificate()
 
 ByteBuffer TLSv12::build_client_key_exchange()
 {
+    bool chain_verified = m_context.verify_chain(m_context.extensions.SNI);
+    if (!chain_verified) {
+        dbgln("certificate verification failed :(");
+        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
+        return {};
+    }
+
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
 

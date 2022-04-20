@@ -25,6 +25,8 @@
 #include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -291,6 +293,11 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     TODO();
 }
 
+CSS::CSSStyleDeclaration const* Element::inline_style() const
+{
+    return m_inline_style;
+}
+
 void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
@@ -303,7 +310,10 @@ void Element::parse_attribute(FlyString const& name, String const& value)
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        m_inline_style = parse_css_style_attribute(CSS::ParsingContext(document()), value, *this);
+        // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
+        if (m_inline_style && m_inline_style->is_updating())
+            return;
+        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
         set_needs_style_update(true);
     }
 }
@@ -327,6 +337,8 @@ enum class RequiredInvalidation {
 
 static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
+    if (&old_style.computed_font() != &new_style.computed_font())
+        return RequiredInvalidation::Relayout;
     bool requires_repaint = false;
     bool requires_stacking_context_tree_rebuild = false;
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
@@ -410,7 +422,7 @@ RefPtr<DOMTokenList> const& Element::class_list()
 // https://dom.spec.whatwg.org/#dom-element-matches
 DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 
@@ -425,7 +437,7 @@ DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 // https://dom.spec.whatwg.org/#dom-element-closest
 DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) const
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 
@@ -535,6 +547,9 @@ bool Element::serializes_as_void() const
 // https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect
 NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
+    // // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
     // FIXME: Support inline layout nodes as well.
     auto* paint_box = this->paint_box();
     if (!paint_box)
@@ -572,30 +587,73 @@ NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
 int Element::client_top() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().top();
-    return 0;
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+
+    // 2. Return the computed value of the border-top-width property
+    //    plus the height of any scrollbar rendered between the top padding edge and the top border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_top().width;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientleft
 int Element::client_left() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().left();
-    return 0;
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+
+    // 2. Return the computed value of the border-left-width property
+    //    plus the width of any scrollbar rendered between the left padding edge and the left border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_left().width;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientwidth
 int Element::client_width() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().width();
-    return 0;
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
+
+    // 2. If the element is the root element and the element’s node document is not in quirks mode,
+    //    or if the element is the HTML body element and the element’s node document is in quirks mode,
+    //    return the viewport width excluding the size of a rendered scroll bar (if any).
+    if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
+        || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
+        return document().browsing_context()->viewport_rect().width();
+    }
+
+    // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
+    // ignoring any transforms that apply to the element and its ancestors.
+    return paint_box()->absolute_padding_box_rect().width();
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientheight
 int Element::client_height() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().height();
-    return 0;
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
+
+    // 2. If the element is the root element and the element’s node document is not in quirks mode,
+    //    or if the element is the HTML body element and the element’s node document is in quirks mode,
+    //    return the viewport height excluding the size of a rendered scroll bar (if any).
+    if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
+        || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
+        return document().browsing_context()->viewport_rect().height();
+    }
+
+    // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return paint_box()->absolute_padding_box_rect().height();
 }
 
 void Element::children_changed()

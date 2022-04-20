@@ -15,7 +15,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>

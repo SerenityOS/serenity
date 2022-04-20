@@ -45,14 +45,16 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
+// Both of these edge functions return positive values for counter-clockwise rotation of vertices.
+// Note that they return the area of a parallelogram with sides {a, b} and {b, c}, so _double_ the area of the triangle {a, b, c}.
 constexpr static float edge_function(FloatVector2 const& a, FloatVector2 const& b, FloatVector2 const& c)
 {
-    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
+    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
 constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const& b, Vector2<f32x4> const& c)
 {
-    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
+    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
 template<typename T, typename U>
@@ -184,12 +186,11 @@ void Device::rasterize_triangle(Triangle const& triangle)
     if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
 
-    // Vertices
     GPU::Vertex const& vertex0 = triangle.vertices[0];
     GPU::Vertex const& vertex1 = triangle.vertices[1];
     GPU::Vertex const& vertex2 = triangle.vertices[2];
 
-    // Calculate area of the triangle for later tests
+    // Determine the area of a parallelogram with sides (v0,v1) and (v1,v2) to calculate barycentrics
     FloatVector2 const v0 = vertex0.window_coordinates.xy();
     FloatVector2 const v1 = vertex1.window_coordinates.xy();
     FloatVector2 const v2 = vertex2.window_coordinates.xy();
@@ -212,16 +213,15 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
     // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
     // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
-    // question is a "top" or "left" edge. We can detect those easily by testing for Y2 <= Y1,
-    // since we know our vertices are in CCW order. By changing a float epsilon to 0, we
-    // effectively change the comparisons against the edge values below from "> 0" into ">= 0".
+    // question is a "top" or "left" edge. By changing a float epsilon to 0, we effectively change
+    // the comparisons against the edge values below from "> 0" into ">= 0".
     constexpr auto epsilon = NumericLimits<float>::epsilon();
     FloatVector3 zero { epsilon, epsilon, epsilon };
-    if (v2.y() <= v1.y())
+    if (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x()))
         zero.set_x(0.f);
-    if (v0.y() <= v2.y())
+    if (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x()))
         zero.set_y(0.f);
-    if (v1.y() <= v0.y())
+    if (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x()))
         zero.set_z(0.f);
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
@@ -246,9 +246,9 @@ void Device::rasterize_triangle(Triangle const& triangle)
     f32x4 vertex1_fog_depth;
     f32x4 vertex2_fog_depth;
     if (m_options.fog_enabled) {
-        vertex0_fog_depth = expand4(fabsf(vertex0.eye_coordinates.z()));
-        vertex1_fog_depth = expand4(fabsf(vertex1.eye_coordinates.z()));
-        vertex2_fog_depth = expand4(fabsf(vertex2.eye_coordinates.z()));
+        vertex0_fog_depth = expand4(AK::abs(vertex0.eye_coordinates.z()));
+        vertex1_fog_depth = expand4(AK::abs(vertex1.eye_coordinates.z()));
+        vertex2_fog_depth = expand4(AK::abs(vertex2.eye_coordinates.z()));
     }
 
     float const render_bounds_left = render_bounds.left();
@@ -872,10 +872,6 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         // https://learnopengl.com/Getting-started/Coordinate-Systems
         // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
         // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
-        //
-        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
-
-        // Okay, let's do some face culling first
 
         m_clipped_vertices.clear_with_capacity();
         m_clipped_vertices.append(triangle.vertices[0]);
@@ -924,19 +920,12 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     }
 
     for (auto& triangle : m_processed_triangles) {
-        // Let's calculate the (signed) area of the triangle
-        // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].window_coordinates.x() - triangle.vertices[1].window_coordinates.x(); // A.x - B.x
-        float dxBC = triangle.vertices[1].window_coordinates.x() - triangle.vertices[2].window_coordinates.x(); // B.X - C.x
-        float dyAB = triangle.vertices[0].window_coordinates.y() - triangle.vertices[1].window_coordinates.y();
-        float dyBC = triangle.vertices[1].window_coordinates.y() - triangle.vertices[2].window_coordinates.y();
-        float area = (dxAB * dyBC) - (dxBC * dyAB);
-
-        if (area == 0.0f)
+        auto area = edge_function(triangle.vertices[0].window_coordinates.xy(), triangle.vertices[1].window_coordinates.xy(), triangle.vertices[2].window_coordinates.xy());
+        if (area == 0.f)
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0 : area < 0);
+            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0.f : area < 0.f);
 
             if (!is_front && m_options.cull_back)
                 continue;
@@ -945,7 +934,8 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
                 continue;
         }
 
-        if (area > 0)
+        // Force counter-clockwise ordering of vertices
+        if (area < 0.f)
             swap(triangle.vertices[0], triangle.vertices[1]);
 
         if (texture_coordinate_generation_enabled) {
@@ -991,6 +981,12 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), dst_alpha));
             break;
         }
+        case GPU::TextureEnvMode::Add:
+            quad.out_color.set_x(quad.out_color.x() + texel.x());
+            quad.out_color.set_y(quad.out_color.y() + texel.y());
+            quad.out_color.set_z(quad.out_color.z() + texel.z());
+            quad.out_color.set_w(quad.out_color.w() * texel.w()); // FIXME: If texture format is `GL_INTENSITY` alpha components must be added (https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glTexEnv.xml)
+            break;
         default:
             VERIFY_NOT_REACHED();
         }

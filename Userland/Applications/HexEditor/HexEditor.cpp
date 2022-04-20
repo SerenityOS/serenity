@@ -21,7 +21,7 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>

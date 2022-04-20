@@ -12,7 +12,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 namespace HackStudio {
 

@@ -16,6 +16,9 @@ public:
 
     HTMLPreElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLPreElement() override;
+
+private:
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }

@@ -344,16 +344,16 @@ String format_time_zone_offset_string(double offset_nanoseconds)
     // 7. Let hours be floor(offsetNanoseconds / (3.6 × 10^12)).
     auto hours = offset / 3600000000000;
 
-    // 8. Let h be hours, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 8. Let h be ToZeroPaddedDecimalString(hours, 2).
     builder.appendff("{:02}", hours);
-    // 9. Let m be minutes, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 9. Let m be ToZeroPaddedDecimalString(minutes, 2).
     builder.appendff(":{:02}", minutes);
-    // 10. Let s be seconds, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // Handled by steps 10 & 11
+    // 10. Let s be ToZeroPaddedDecimalString(seconds, 2).
+    // NOTE: Handled by steps 11 & 12
 
     // 11. If nanoseconds ≠ 0, then
     if (nanoseconds != 0) {
-        // a. Let fraction be nanoseconds, formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        // a. Let fraction be ToZeroPaddedDecimalString(nanoseconds, 9).
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
         builder.appendff(":{:02}.{}", seconds, String::formatted("{:09}", nanoseconds).trim("0"sv, TrimMode::Right));
@@ -391,8 +391,8 @@ String format_iso_time_zone_offset_string(double offset_nanoseconds)
     // 6. Let hours be floor(offsetNanoseconds / (3600 × 10^9)).
     auto hours = floor(offset_nanoseconds / 3600000000000);
 
-    // 7. Let h be hours, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 8. Let m be minutes, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 7. Let h be ToZeroPaddedDecimalString(hours, 2).
+    // 8. Let m be ToZeroPaddedDecimalString(minutes, 2).
     // 9. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), and m.
     return String::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes);
 }

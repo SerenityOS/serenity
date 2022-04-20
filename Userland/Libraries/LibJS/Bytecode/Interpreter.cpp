@@ -40,7 +40,7 @@ Interpreter::~Interpreter()
     s_current = nullptr;
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& executable, BasicBlock const* entry_point)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -64,15 +64,13 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     }
 
     auto block = entry_point ?: &executable.basic_blocks.first();
-    if (!m_manually_entered_frames.is_empty() && m_manually_entered_frames.last()) {
-        m_register_windows.append(make<RegisterWindow>(m_register_windows.last()));
-    } else {
+    if (in_frame)
+        m_register_windows.append(in_frame);
+    else
         m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap())));
-    }
 
     registers().resize(executable.number_of_registers);
     registers()[Register::global_object_index] = Value(&global_object());
-    m_manually_entered_frames.append(false);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());
@@ -147,18 +145,14 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         }
     }
 
-    OwnPtr<RegisterWindow> frame;
-    if (!m_manually_entered_frames.last()) {
-        frame = m_register_windows.take_last();
-        m_manually_entered_frames.take_last();
-    }
+    auto frame = m_register_windows.take_last();
 
     auto return_value = m_return_value.value_or(js_undefined());
     m_return_value = {};
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
     if (!m_register_windows.is_empty())
-        m_register_windows.last().registers[0] = return_value;
+        window().registers[0] = return_value;
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
@@ -174,10 +168,14 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_saved_exception.is_null()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
-        return { throw_completion(thrown_value), move(frame) };
+        if (auto* register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
+            return { throw_completion(thrown_value), move(*register_window) };
+        return { throw_completion(thrown_value), nullptr };
     }
 
-    return { return_value, move(frame) };
+    if (auto register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
+        return { return_value, move(*register_window) };
+    return { return_value, nullptr };
 }
 
 void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)

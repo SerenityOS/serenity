@@ -50,12 +50,14 @@ public:
         // 2. Let newContext be a new execution context.
         auto& new_context = interpreter->m_global_execution_context;
 
-        // 3. Set the Function of newContext to null. (This is done for us when the execution context is constructed)
+        // 3. Set the Function of newContext to null.
+        // NOTE: This was done during execution context construction.
 
         // 4. Set the Realm of newContext to realm.
         new_context.realm = realm;
 
-        // 5. Set the ScriptOrModule of newContext to null. (This was done during execution context construction)
+        // 5. Set the ScriptOrModule of newContext to null.
+        // NOTE: This was done during execution context construction.
 
         // 6. Push newContext onto the execution context stack; newContext is now the running execution context.
         vm.push_execution_context(new_context);

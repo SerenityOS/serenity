@@ -51,6 +51,7 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -980,7 +981,7 @@ NonnullRefPtr<Event> Document::create_event(String const& interface)
     } else if (interface_lowercase == "messageevent") {
         event = HTML::MessageEvent::create("");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create("", 0, 0, 0, 0);
+        event = UIEvents::MouseEvent::create("");
     } else if (interface_lowercase == "storageevent") {
         event = Event::create(""); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
@@ -1353,11 +1354,11 @@ void Document::evaluate_media_queries_and_report_changes()
     // 1. For each MediaQueryList object target that has doc as its document,
     //    in the order they were created, oldest first, run these substeps:
     for (auto& media_query_list_ptr : m_media_query_lists) {
-        // 1.1. If target’s matches state has changed since the last time these steps
-        //      were run, fire an event at target using the MediaQueryListEvent constructor,
-        //      with its type attribute initialized to change, its isTrusted attribute
-        //      initialized to true, its media attribute initialized to target’s media,
-        //      and its matches attribute initialized to target’s matches state.
+        // 1. If target’s matches state has changed since the last time these steps
+        //    were run, fire an event at target using the MediaQueryListEvent constructor,
+        //    with its type attribute initialized to change, its isTrusted attribute
+        //    initialized to true, its media attribute initialized to target’s media,
+        //    and its matches attribute initialized to target’s matches state.
         if (media_query_list_ptr.is_null())
             continue;
         auto media_query_list = media_query_list_ptr.strong_ref();
@@ -1558,6 +1559,50 @@ void Document::invalidate_stacking_context_tree()
 {
     if (auto* paint_box = this->paint_box())
         const_cast<Painting::PaintableBox*>(paint_box)->invalidate_stacking_context();
+}
+
+void Document::check_favicon_after_loading_link_resource()
+{
+    // https://html.spec.whatwg.org/multipage/links.html#rel-icon
+    // NOTE: firefox also load favicons outside the head tag, which is against spec (see table 4.6.7)
+    auto head_element = head();
+    auto favicon_link_elements = HTMLCollection::create(*head_element, [](Element const& element) {
+        if (!is<HTML::HTMLLinkElement>(element))
+            return false;
+
+        return static_cast<HTML::HTMLLinkElement const&>(element).has_loaded_icon();
+    });
+
+    if (favicon_link_elements->length() == 0) {
+        dbgln_if(SPAM_DEBUG, "No favicon found to be used");
+        return;
+    }
+
+    // 4.6.7.8 Link type "icon"
+    //
+    // If there are multiple equally appropriate icons, user agents must use the last one declared
+    // in tree order at the time that the user agent collected the list of icons.
+    //
+    // If multiple icons are provided, the user agent must select the most appropriate icon
+    // according to the type, media, and sizes attributes.
+    //
+    // FIXME: There is no selective behavior yet for favicons.
+    for (auto i = favicon_link_elements->length(); i-- > 0;) {
+        auto favicon_element = favicon_link_elements->item(i);
+
+        if (favicon_element == m_active_element)
+            return;
+
+        // If the user agent tries to use an icon but that icon is determined, upon closer examination,
+        // to in fact be inappropriate (...), then the user agent must try the next-most-appropriate icon
+        // as determined by the attributes.
+        if (static_cast<HTML::HTMLLinkElement*>(favicon_element)->load_favicon_and_use_if_window_is_active()) {
+            m_active_favicon = favicon_element;
+            return;
+        }
+    }
+
+    dbgln_if(SPAM_DEBUG, "No favicon found to be used");
 }
 
 }

@@ -157,8 +157,8 @@ void Job::register_on_ready_to_read(Function<void()> callback)
 ErrorOr<String> Job::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
-    auto nread = TRY(m_socket->read_until(buffer, "\r\n"sv));
-    return String::copy(buffer.span().slice(0, nread));
+    auto bytes_read = TRY(m_socket->read_until(buffer, "\r\n"sv));
+    return String::copy(bytes_read);
 }
 
 ErrorOr<ByteBuffer> Job::receive(size_t size)
@@ -172,7 +172,7 @@ ErrorOr<ByteBuffer> Job::receive(size_t size)
         auto result = m_socket->read(buffer);
         if (result.is_error() && result.error().is_errno() && result.error().code() == EINTR)
             continue;
-        nread = TRY(result);
+        nread = TRY(result).size();
         break;
     } while (true);
     return buffer.slice(0, nread);

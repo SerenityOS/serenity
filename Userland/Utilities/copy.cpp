@@ -25,7 +25,7 @@ struct Options {
 static Options parse_options(Main::Arguments arguments)
 {
     char const* type = "text/plain";
-    Vector<char const*> text;
+    Vector<String> text;
     bool clear = false;
 
     Core::ArgsParser args_parser;
@@ -64,7 +64,7 @@ static Options parse_options(Main::Arguments arguments)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Options options = parse_options(arguments);
 

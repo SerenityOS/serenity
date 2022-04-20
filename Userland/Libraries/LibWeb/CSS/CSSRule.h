@@ -24,13 +24,13 @@ public:
 
     virtual ~CSSRule() = default;
 
-    enum class Type : u32 {
-        Style,
-        Import,
-        Media,
-        Supports,
-        FontFace,
-        __Count,
+    // https://drafts.csswg.org/cssom/#dom-cssrule-type
+    enum class Type : u16 {
+        Style = 1,
+        Import = 3,
+        Media = 4,
+        FontFace = 5,
+        Supports = 12,
     };
 
     virtual StringView class_name() const = 0;

@@ -500,11 +500,14 @@ public:
     template<typename Callback>
     ErrorOr<void> for_each_coredump_property(Callback callback) const
     {
-        for (auto const& property : m_coredump_properties) {
-            if (property.key && property.value)
-                TRY(callback(*property.key, *property.value));
-        }
-        return {};
+        return m_coredump_properties.with([&](auto const& coredump_properties) -> ErrorOr<void> {
+            for (auto const& property : coredump_properties) {
+                if (property.key && property.value)
+                    TRY(callback(*property.key, *property.value));
+            }
+
+            return {};
+        });
     }
 
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
@@ -833,7 +836,7 @@ private:
         OwnPtr<KString> value;
     };
 
-    Array<CoredumpProperty, 4> m_coredump_properties;
+    SpinlockProtected<Array<CoredumpProperty, 4>> m_coredump_properties;
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;

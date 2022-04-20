@@ -11,7 +11,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FontPicker.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 namespace DisplaySettings {
 

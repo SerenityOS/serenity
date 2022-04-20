@@ -1,8 +1,8 @@
 diff --git a/makefile b/makefile
-index 427d696..653a5d3 100644
+index 8730b6c..bc1fefb 100644
 --- a/makefile
 +++ b/makefile
-@@ -1,20 +1,58 @@
+@@ -1,25 +1,55 @@
 -.PHONY: all
 -.PHONY: clean
 +prefix = ${DESTDIR}/usr/local
@@ -12,7 +12,7 @@ index 427d696..653a5d3 100644
 -.PHONY: linux
 -linux:
 -	make -f makefile.linux
--	rm -f sys/*/*.o src/*.o
+-	rm -f sys/*/*.o src/*.o lib/*/*.o
 +LD = $(CC)
 +AS = $(CC)
 +INSTALL = /usr/bin/install -c
@@ -20,17 +20,21 @@ index 427d696..653a5d3 100644
 -.PHONY: windows
 -windows:
 -	make -f makefile.windows
--	rm -f sys/*/*.o src/*.o
+-	rm -f sys/*/*.o src/*.o lib/*/*.o
 +CFLAGS =  -std=c99 -Wall -O3 -I./include
 +LDFLAGS = $(CFLAGS)  -s -lSDL2
 +ASFLAGS = $(CFLAGS)
  
+-.PHONY: mingw
+-mingw:
+-	make -f makefile.mingw
+-	rm -f sys/*/*.o src/*.o lib/*/*.o
++TARGETS =  sdl2gnuboy
+ 
 -.PHONY: osx
 -osx:
 -	make -f makefile.osx
--	rm -f sys/*/*.o src/*.o
-+TARGETS =  sdl2gnuboy
-+
+-	rm -f sys/*/*.o src/*.o lib/*/*.o
 +SYS_DEFS = -DIS_LITTLE_ENDIAN  -DIS_LINUX -DSOUND
 +SYS_OBJS = sys/nix/nix.o
 +SYS_INCS = -I./sys/nix
@@ -71,9 +75,6 @@ index 427d696..653a5d3 100644
 +	$(INSTALL) -m 755 $(TARGETS) $(bindir)
  
  clean:
--	rm -f *gnuboy sdl2gnuboy.exe mac-sdl2gnuboy gmon.out *.o sys/*.o sys/*/*.o src/*.o
+-	rm -f *gnuboy sdl2gnuboy.exe mac-sdl2gnuboy gmon.out *.o sys/*.o lib/*/*.o sys/*/*.o src/*.o
 \ No newline at end of file
 +	rm -f *gnuboy sdl2gnuboy.exe gmon.out *.o sys/*.o sys/*/*.o $(OBJS)
-+
-+
-+

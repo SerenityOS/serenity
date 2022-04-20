@@ -211,12 +211,6 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 }
 
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_i64(PutChFunc putch, CharType*& bufptr, i64 number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
-{
-    return print_decimal(putch, bufptr, (number < 0) ? 0 - number : number, number < 0, always_sign, left_pad, zero_pad, field_width, has_precision, precision);
-}
-
-template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
 {
     u32 divisor = 134217728;
@@ -307,8 +301,9 @@ ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, T str, size_t
 }
 
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, int number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, i64 number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
 {
+    // FIXME: `0 - number` overflows if we are trying to negate the smallest possible value.
     return print_decimal(putch, bufptr, (number < 0) ? 0 - number : number, number < 0, always_sign, left_pad, zero_pad, field_width, has_precision, precision);
 }
 
@@ -358,10 +353,15 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_d(ModifierState const& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_i64(m_putch, m_bufptr, NextArgument<i64>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        i64 number = [&]() -> i64 {
+            if (state.long_qualifiers >= 2)
+                return NextArgument<long long int>()(ap);
+            if (state.long_qualifiers == 1)
+                return NextArgument<long int>()(ap);
+            return NextArgument<int>()(ap);
+        }();
 
-        return print_signed_number(m_putch, m_bufptr, NextArgument<int>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        return print_signed_number(m_putch, m_bufptr, number, state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
     }
     ALWAYS_INLINE int format_i(ModifierState const& state, ArgumentListRefT ap) const
     {
@@ -369,9 +369,15 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_u(ModifierState const& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_decimal(m_putch, m_bufptr, NextArgument<u64>()(ap), false, false, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-        return print_decimal(m_putch, m_bufptr, NextArgument<u32>()(ap), false, false, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        u64 number = [&]() -> u64 {
+            if (state.long_qualifiers >= 2)
+                return NextArgument<unsigned long long int>()(ap);
+            if (state.long_qualifiers == 1)
+                return NextArgument<unsigned long int>()(ap);
+            return NextArgument<unsigned int>()(ap);
+        }();
+
+        return print_decimal(m_putch, m_bufptr, number, false, false, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
     }
     ALWAYS_INLINE int format_Q(ModifierState const& state, ArgumentListRefT ap) const
     {
@@ -393,17 +399,25 @@ struct PrintfImpl {
     {
         return print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
     }
+    ALWAYS_INLINE int format_unsigned_hex(ModifierState const& state, ArgumentListRefT ap, bool uppercase) const
+    {
+        u64 number = [&]() -> u64 {
+            if (state.long_qualifiers >= 2)
+                return NextArgument<unsigned long long int>()(ap);
+            if (state.long_qualifiers == 1)
+                return NextArgument<unsigned long int>()(ap);
+            return NextArgument<unsigned int>()(ap);
+        }();
+
+        return print_hex(m_putch, m_bufptr, number, uppercase, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+    }
     ALWAYS_INLINE int format_x(ModifierState const& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        return format_unsigned_hex(state, ap, false);
     }
     ALWAYS_INLINE int format_X(ModifierState const& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        return format_unsigned_hex(state, ap, true);
     }
     ALWAYS_INLINE int format_n(ModifierState const&, ArgumentListRefT ap) const
     {

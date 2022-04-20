@@ -29,15 +29,15 @@ public:
     // FIXME: It doesn't make sense to truncate a memory stream. Therefore, we don't do anything here. Is that fine?
     virtual ErrorOr<void> truncate(off_t) override { return Error::from_errno(ENOTSUP); }
 
-    virtual ErrorOr<size_t> read(Bytes bytes) override
+    virtual ErrorOr<Bytes> read(Bytes bytes) override
     {
         auto to_read = min(remaining(), bytes.size());
         if (to_read == 0)
-            return 0;
+            return Bytes {};
 
         m_bytes.slice(m_offset, to_read).copy_to(bytes);
         m_offset += to_read;
-        return bytes.size();
+        return bytes.trim(to_read);
     }
 
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override

@@ -41,7 +41,7 @@ bool Stream::read_or_error(Bytes buffer)
             return false;
         }
 
-        nread += result.value();
+        nread += result.value().size();
     } while (nread < buffer.size());
 
     return true;
@@ -117,32 +117,37 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
     return file;
 }
 
-ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
+int File::open_mode_to_options(OpenMode mode)
 {
-    VERIFY(m_fd == -1);
-
     int flags = 0;
-    if (has_flag(m_mode, OpenMode::ReadWrite)) {
+    if (has_flag(mode, OpenMode::ReadWrite)) {
         flags |= O_RDWR | O_CREAT;
-    } else if (has_flag(m_mode, OpenMode::Read)) {
+    } else if (has_flag(mode, OpenMode::Read)) {
         flags |= O_RDONLY;
-    } else if (has_flag(m_mode, OpenMode::Write)) {
+    } else if (has_flag(mode, OpenMode::Write)) {
         flags |= O_WRONLY | O_CREAT;
-        bool should_truncate = !has_any_flag(m_mode, OpenMode::Append | OpenMode::MustBeNew);
+        bool should_truncate = !has_any_flag(mode, OpenMode::Append | OpenMode::MustBeNew);
         if (should_truncate)
             flags |= O_TRUNC;
     }
 
-    if (has_flag(m_mode, OpenMode::Append))
+    if (has_flag(mode, OpenMode::Append))
         flags |= O_APPEND;
-    if (has_flag(m_mode, OpenMode::Truncate))
+    if (has_flag(mode, OpenMode::Truncate))
         flags |= O_TRUNC;
-    if (has_flag(m_mode, OpenMode::MustBeNew))
+    if (has_flag(mode, OpenMode::MustBeNew))
         flags |= O_EXCL;
-    if (!has_flag(m_mode, OpenMode::KeepOnExec))
+    if (!has_flag(mode, OpenMode::KeepOnExec))
         flags |= O_CLOEXEC;
-    if (!has_flag(m_mode, OpenMode::Nonblocking))
+    if (!has_flag(mode, OpenMode::Nonblocking))
         flags |= O_NONBLOCK;
+    return flags;
+}
+
+ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
+{
+    VERIFY(m_fd == -1);
+    auto flags = open_mode_to_options(m_mode);
 
     m_fd = TRY(System::open(filename.characters_without_null_termination(), flags, permissions));
     return {};
@@ -151,7 +156,7 @@ ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
 bool File::is_readable() const { return has_flag(m_mode, OpenMode::Read); }
 bool File::is_writable() const { return has_flag(m_mode, OpenMode::Write); }
 
-ErrorOr<size_t> File::read(Bytes buffer)
+ErrorOr<Bytes> File::read(Bytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Read)) {
         // NOTE: POSIX says that if the fd is not open for reading, the call
@@ -162,7 +167,7 @@ ErrorOr<size_t> File::read(Bytes buffer)
 
     ssize_t nread = TRY(System::read(m_fd, buffer));
     m_last_read_was_eof = nread == 0;
-    return nread;
+    return buffer.trim(nread);
 }
 
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)
@@ -317,7 +322,7 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
     return System::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
 }
 
-ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
+ErrorOr<Bytes> PosixSocketHelper::read(Bytes buffer, int flags)
 {
     if (!is_open()) {
         return Error::from_errno(ENOTCONN);
@@ -332,7 +337,7 @@ ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer, int flags)
     if (m_last_read_was_eof && m_notifier)
         m_notifier->set_enabled(false);
 
-    return nread;
+    return buffer.trim(nread);
 }
 
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
@@ -547,7 +552,7 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #endif
 }
 
-ErrorOr<size_t> LocalSocket::read_without_waiting(Bytes buffer)
+ErrorOr<Bytes> LocalSocket::read_without_waiting(Bytes buffer)
 {
     return m_helper.read(buffer, MSG_DONTWAIT);
 }

@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix"));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd"));
 

@@ -100,7 +100,7 @@ Result<bool, DecodeError> Decoder::decode_boolean(ReadonlyBytes data)
     if (data.size() != 1)
         return DecodeError::InvalidInputFormat;
 
-    return data[0] == 0;
+    return data[0] != 0;
 }
 
 Result<UnsignedBigInteger, DecodeError> Decoder::decode_arbitrary_sized_integer(ReadonlyBytes data)
@@ -169,7 +169,7 @@ Result<StringView, DecodeError> Decoder::decode_printable_string(ReadonlyBytes d
     return StringView { data };
 }
 
-Result<const BitmapView, DecodeError> Decoder::decode_bit_string(ReadonlyBytes data)
+Result<BitStringView, DecodeError> Decoder::decode_bit_string(ReadonlyBytes data)
 {
     if (data.size() < 1)
         return DecodeError::InvalidInputFormat;
@@ -180,7 +180,7 @@ Result<const BitmapView, DecodeError> Decoder::decode_bit_string(ReadonlyBytes d
     if (unused_bits > total_size_in_bits)
         return DecodeError::Overflow;
 
-    return BitmapView { const_cast<u8*>(data.offset_pointer(1)), total_size_in_bits - unused_bits };
+    return BitStringView { data.slice(1), unused_bits };
 }
 
 Result<Tag, DecodeError> Decoder::peek()

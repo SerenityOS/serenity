@@ -1151,6 +1151,8 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
 
     auto has_final = match_keyword("final");
 
+    NonnullRefPtrVector<Name> baseclasses;
+
     // FIXME: Don't ignore this.
     if (peek(has_final ? 1 : 0).type() == Token::Type::Colon) {
         if (has_final)
@@ -1162,9 +1164,11 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
             while (match_keyword("private") || match_keyword("public") || match_keyword("protected") || match_keyword("virtual"))
                 consume();
 
-            (void)parse_name(get_dummy_node());
+            baseclasses.append(parse_name(*decl));
         } while (peek().type() == Token::Type::Comma);
     }
+
+    decl->set_baseclasses(move(baseclasses));
 
     consume(Token::Type::LeftCurly);
 

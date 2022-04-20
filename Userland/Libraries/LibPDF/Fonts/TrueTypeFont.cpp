@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/TrueTypeFont.h>
 #include <LibPDF/Fonts/Type1Font.h>

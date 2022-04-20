@@ -18,18 +18,18 @@ constexpr static size_t MaximumApplicationDataChunkSize = 16 * KiB;
 
 namespace TLS {
 
-ErrorOr<size_t> TLSv12::read(Bytes bytes)
+ErrorOr<Bytes> TLSv12::read(Bytes bytes)
 {
     m_eof = false;
     auto size_to_read = min(bytes.size(), m_context.application_buffer.size());
     if (size_to_read == 0) {
         m_eof = true;
-        return 0;
+        return Bytes {};
     }
 
     m_context.application_buffer.span().slice(0, size_to_read).copy_to(bytes);
     m_context.application_buffer = m_context.application_buffer.slice(size_to_read, m_context.application_buffer.size() - size_to_read);
-    return size_to_read;
+    return Bytes { bytes.data(), size_to_read };
 }
 
 String TLSv12::read_line(size_t max_size)
@@ -95,7 +95,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, u16 port, Opt
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream::Socket& underlying_stream, Options options)
 {
-    StreamVariantType socket { &underlying_stream };
+    TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
     tls_socket->set_sni(host);
     Core::EventLoop loop;
@@ -186,7 +186,7 @@ ErrorOr<void> TLSv12::read_from_socket()
 
     u8 buffer[16 * KiB];
     Bytes bytes { buffer, array_size(buffer) };
-    size_t nread = 0;
+    Bytes read_bytes {};
     auto& stream = underlying_stream();
     do {
         auto result = stream.read(bytes);
@@ -198,9 +198,9 @@ ErrorOr<void> TLSv12::read_from_socket()
             }
             continue;
         }
-        nread = result.release_value();
-        consume(bytes.slice(0, nread));
-    } while (nread > 0 && !m_context.critical_error);
+        read_bytes = result.release_value();
+        consume(read_bytes);
+    } while (!read_bytes.is_empty() && !m_context.critical_error);
 
     return {};
 }

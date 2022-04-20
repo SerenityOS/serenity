@@ -97,18 +97,15 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
 template<typename T>
 inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
-    // 1. Assert: O is an Integer-Indexed exotic object.
-
-    // 2. If ! IsValidIntegerIndex(O, index) is false, return undefined.
+    // 1. If IsValidIntegerIndex(O, index) is false, return undefined.
     if (!is_valid_integer_index(typed_array, property_index))
         return js_undefined();
 
-    // 3. Let offset be O.[[ByteOffset]].
+    // 2. Let offset be O.[[ByteOffset]].
     auto offset = typed_array.byte_offset();
 
-    // 4. Let arrayTypeName be the String value of O.[[TypedArrayName]].
-    // 5. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
-    // 6. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+    // 3. Let elementSize be TypedArrayElementSize(O).
+    // 4. Let indexedPosition be (ℝ(index) × elementSize) + offset.
     Checked<size_t> indexed_position = property_index.as_index();
     indexed_position *= typed_array.element_size();
     indexed_position += offset;
@@ -119,8 +116,8 @@ inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Cano
         return js_undefined();
     }
 
-    // 7. Let elementType be the Element Type value in Table 64 for arrayTypeName.
-    // 8. Return GetValueFromBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, true, Unordered).
+    // 5. Let elementType be TypedArrayElementType(O).
+    // 6. Return GetValueFromBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, true, Unordered).
     return typed_array.viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
 }
 
@@ -132,18 +129,16 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
     VERIFY(!value.is_empty());
     auto& global_object = typed_array.global_object();
 
-    // 1. Assert: O is an Integer-Indexed exotic object.
-
     Value num_value;
 
-    // 2. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+    // 1. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
         num_value = TRY(value.to_bigint(global_object));
-    // 3. Otherwise, let numValue be ? ToNumber(value).
+    // 2. Otherwise, let numValue be ? ToNumber(value).
     else
         num_value = TRY(value.to_number(global_object));
 
-    // 4. If ! IsValidIntegerIndex(O, index) is true, then
+    // 3. If IsValidIntegerIndex(O, index) is true, then
     // NOTE: Inverted for flattened logic.
     if (!is_valid_integer_index(typed_array, property_index))
         return {};
@@ -151,9 +146,8 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
     // a. Let offset be O.[[ByteOffset]].
     auto offset = typed_array.byte_offset();
 
-    // b. Let arrayTypeName be the String value of O.[[TypedArrayName]].
-    // c. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
-    // d. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+    // b. Let elementSize be TypedArrayElementSize(O).
+    // c. Let indexedPosition be (ℝ(index) × elementSize) + offset.
     Checked<size_t> indexed_position = property_index.as_index();
     indexed_position *= typed_array.element_size();
     indexed_position += offset;
@@ -164,11 +158,11 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
         return {};
     }
 
-    // e. Let elementType be the Element Type value in Table 64 for arrayTypeName.
-    // f. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, numValue, true, Unordered).
+    // d. Let elementType be TypedArrayElementType(O).
+    // e. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, numValue, true, Unordered).
     typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
 
-    // 5. Return NormalCompletion(undefined).
+    // 4. Return unused.
     return {};
 }
 

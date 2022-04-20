@@ -9,7 +9,7 @@
 
 #include <AK/Function.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font/BitmapFont.h>
 
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)

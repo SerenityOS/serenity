@@ -8,7 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>
@@ -39,7 +39,7 @@ public:
     auto const& properties() const { return m_property_values; }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
-    Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
+    NonnullRefPtr<StyleValue> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;
@@ -55,7 +55,7 @@ public:
     Optional<CSS::Cursor> cursor() const;
     Optional<CSS::WhiteSpace> white_space() const;
     Optional<CSS::LineStyle> line_style(CSS::PropertyID) const;
-    Optional<CSS::TextDecorationLine> text_decoration_line() const;
+    Vector<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextDecorationStyle> text_decoration_style() const;
     Optional<CSS::TextTransform> text_transform() const;
     Vector<CSS::ShadowData> text_shadow() const;
@@ -74,7 +74,7 @@ public:
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
     Vector<CSS::ShadowData> box_shadow() const;
-    CSS::BoxSizing box_sizing() const;
+    Optional<CSS::BoxSizing> box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
     Optional<CSS::FontVariant> font_variant() const;

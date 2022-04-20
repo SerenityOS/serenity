@@ -8,7 +8,7 @@
 #include "HackStudio.h"
 #include "ToDoEntries.h"
 #include <LibGUI/BoxLayout.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 namespace HackStudio {
 

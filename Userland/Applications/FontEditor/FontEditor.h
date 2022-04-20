@@ -13,7 +13,7 @@
 #include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font/BitmapFont.h>
 
 class GlyphEditorWidget;
 

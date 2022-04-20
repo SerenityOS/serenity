@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ClassFieldDefinition.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -556,17 +557,36 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
 }
 
 // 7.3.32 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
-ThrowCompletionOr<void> Object::define_field(Variant<PropertyKey, PrivateName> name, ECMAScriptFunctionObject* initializer)
+ThrowCompletionOr<void> Object::define_field(ClassFieldDefinition const& field)
 {
-    Value init_value = js_undefined();
-    if (initializer)
-        init_value = TRY(call(global_object(), *initializer, this));
+    // 1. Let fieldName be fieldRecord.[[Name]].
+    auto const& field_name = field.name;
 
-    if (auto* property_key_ptr = name.get_pointer<PropertyKey>())
-        TRY(create_data_property_or_throw(*property_key_ptr, init_value));
-    else
-        TRY(private_field_add(name.get<PrivateName>(), init_value));
+    // 2. Let initializer be fieldRecord.[[Initializer]].
+    auto const& initializer = field.initializer;
 
+    auto init_value = js_undefined();
+
+    // 3. If initializer is not empty, then
+    if (!initializer.is_null()) {
+        // a. Let initValue be ? Call(initializer, receiver).
+        init_value = TRY(call(global_object(), initializer.cell(), this));
+    }
+    // 4. Else, let initValue be undefined.
+
+    // 5. If fieldName is a Private Name, then
+    if (field_name.has<PrivateName>()) {
+        // a. Perform ? PrivateFieldAdd(receiver, fieldName, initValue).
+        TRY(private_field_add(field_name.get<PrivateName>(), init_value));
+    }
+    // 6. Else,
+    else {
+        // a. Assert: IsPropertyKey(fieldName) is true.
+        // b. Perform ? CreateDataPropertyOrThrow(receiver, fieldName, initValue).
+        TRY(create_data_property_or_throw(field_name.get<PropertyKey>(), init_value));
+    }
+
+    // 7. Return unused.
     return {};
 }
 

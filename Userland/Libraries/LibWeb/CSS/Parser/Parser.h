@@ -16,26 +16,21 @@
 #include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
+#include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
-#include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
+#include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/Supports.h>
 #include <LibWeb/CSS/UnicodeRange.h>
+#include <LibWeb/Forward.h>
 
-namespace Web::CSS {
-
-class CSSStyleSheet;
-class CSSRule;
-class CSSStyleRule;
-struct StyleProperty;
-enum class PropertyID;
+namespace Web::CSS::Parser {
 
 class ParsingContext {
 public:
@@ -126,18 +121,18 @@ private:
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
         Optional<AK::URL> location;
-        NonnullRefPtrVector<StyleRule> rules;
+        NonnullRefPtrVector<Rule> rules;
     };
     template<typename T>
     ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
 
     // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
-    NonnullRefPtrVector<StyleRule> parse_a_list_of_rules(TokenStream<T>&);
+    NonnullRefPtrVector<Rule> parse_a_list_of_rules(TokenStream<T>&);
 
     // "Parse a rule" is intended for use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     template<typename T>
-    RefPtr<StyleRule> parse_a_rule(TokenStream<T>&);
+    RefPtr<Rule> parse_a_rule(TokenStream<T>&);
 
     // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
@@ -184,11 +179,11 @@ private:
         Yes
     };
     template<typename T>
-    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
+    [[nodiscard]] NonnullRefPtrVector<Rule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
+    [[nodiscard]] NonnullRefPtr<Rule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
-    RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    RefPtr<Rule> consume_a_qualified_rule(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_style_blocks_contents(TokenStream<T>&);
     template<typename T>
@@ -198,16 +193,16 @@ private:
     template<typename T>
     [[nodiscard]] ComponentValue consume_a_component_value(TokenStream<T>&);
     template<typename T>
-    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+    NonnullRefPtr<Block> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
-    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+    NonnullRefPtr<Function> consume_a_function(TokenStream<T>&);
 
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
     RefPtr<CSSRule> parse_font_face_rule(TokenStream<ComponentValue>&);
     Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
-    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
+    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<Rule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
@@ -324,6 +319,7 @@ private:
     RefPtr<StyleValue> parse_shadow_value(Vector<ComponentValue> const&, AllowInsetKeyword);
     RefPtr<StyleValue> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
     RefPtr<StyleValue> parse_text_decoration_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
 
@@ -380,13 +376,13 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const&, StringView, Optional<AK::URL> location = {});
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView, DOM::Element&);
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView);
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<AK::URL> location = {});
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const&, StringView);
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const&, StringView);
 
 }

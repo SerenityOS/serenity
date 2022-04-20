@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool force = false;
     bool verbose = false;
 
-    Vector<char const*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force", "force", 'f');
@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     struct stat st;
 
-    int rc = lstat(original_new_path, &st);
+    int rc = lstat(original_new_path.characters(), &st);
     if (rc != 0 && errno != ENOENT) {
         perror("lstat");
         return 1;
@@ -57,14 +57,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto& old_path : paths) {
         String combined_new_path;
-        char const* new_path = original_new_path;
+        auto new_path = original_new_path;
         if (S_ISDIR(st.st_mode)) {
             auto old_basename = LexicalPath::basename(old_path);
             combined_new_path = String::formatted("{}/{}", original_new_path, old_basename);
             new_path = combined_new_path.characters();
         }
 
-        rc = rename(old_path, new_path);
+        rc = rename(old_path.characters(), new_path.characters());
         if (rc < 0) {
             if (errno == EXDEV) {
                 auto result = Core::File::copy_file_or_directory(
@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     warnln("mv: could not move '{}': {}", old_path, static_cast<Error const&>(result.error()));
                     return 1;
                 }
-                rc = unlink(old_path);
+                rc = unlink(old_path.characters());
                 if (rc < 0)
                     warnln("mv: unlink '{}': {}", old_path, strerror(errno));
             } else {

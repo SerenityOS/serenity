@@ -8,7 +8,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Wizards/CoverWizardPage.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace GUI {

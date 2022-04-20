@@ -356,7 +356,7 @@ bool GLContextWidget::load_file(Core::File& file)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec"));
 

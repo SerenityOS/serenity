@@ -12,13 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <utime.h>
 
-static bool file_exists(char const* path)
+static bool file_exists(String const& path)
 {
     struct stat st;
-    int rc = stat(path, &st);
+    int rc = stat(path.characters(), &st);
     if (rc < 0) {
         if (errno == ENOENT)
             return false;
@@ -34,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath cpath fattr"));
 
-    Vector<char const*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a file, or update its mtime (time of last modification).");

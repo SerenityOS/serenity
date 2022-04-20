@@ -275,10 +275,10 @@ ThrowCompletionOr<String> temporal_date_time_to_string(GlobalObject& global_obje
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
     // 2. Let year be ! PadISOYear(isoYear).
-    // 3. Let month be isoMonth formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 4. Let day be isoDay formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 5. Let hour be hour formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 6. Let minute be minute formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 3. Let month be ToZeroPaddedDecimalString(isoMonth, 2).
+    // 4. Let day be ToZeroPaddedDecimalString(isoDay, 2).
+    // 5. Let hour be ToZeroPaddedDecimalString(hour, 2).
+    // 6. Let minute be ToZeroPaddedDecimalString(minute, 2).
 
     // 7. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
     auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);

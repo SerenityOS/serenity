@@ -67,6 +67,9 @@ public:
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
 
+    String url_string() const { return m_url.to_string(); }
+    String document_uri() const { return m_url.to_string(); }
+
     Origin origin() const;
     void set_origin(Origin const& origin);
 
@@ -339,6 +342,9 @@ public:
 
     bool in_removed_last_ref() const { return m_in_removed_last_ref; }
 
+    bool has_active_favicon() const { return m_active_favicon; }
+    void check_favicon_after_loading_link_resource();
+
 private:
     explicit Document(const AK::URL&);
 
@@ -374,6 +380,7 @@ private:
     RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
+    RefPtr<Node> m_active_favicon;
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;
 

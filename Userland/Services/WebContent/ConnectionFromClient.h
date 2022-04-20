@@ -59,6 +59,7 @@ private:
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual void set_content_filters(Vector<String> const&) override;
+    virtual void set_proxy_mappings(Vector<String> const&, HashMap<String, size_t> const&) override;
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;

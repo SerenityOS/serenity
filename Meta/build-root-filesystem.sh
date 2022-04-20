@@ -10,7 +10,7 @@ window_gid=13
 
 CP="cp"
 
-# cp on macOS and BSD systems do not support the -d option.
+# cp on macOS and BSD systems do not support the --preserve= option.
 # gcp comes with coreutils, which is already a dependency.
 OS="$(uname -s)"
 if [ "$OS" = "Darwin" ] || echo "$OS" | grep -qe 'BSD$'; then
@@ -46,14 +46,14 @@ LLVM_VERSION="${LLVM_VERSION:-13.0.0}"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/
-    $CP "$TOOLCHAIN_DIR"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib
+    $CP --preserve=timestamps "$TOOLCHAIN_DIR"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib
     mkdir -p mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
-    $CP -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
-    $CP -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
+    $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
+    $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
 elif [ "$SERENITY_ARCH" != "aarch64" ]; then
-    $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
-    $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libstdc++.a mnt/usr/lib
-    $CP -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/include/c++ mnt/usr/include
+    $CP --preserve=timestamps "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
+    $CP --preserve=timestamps "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libstdc++.a mnt/usr/lib
+    $CP --preserve=timestamps -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/include/c++ mnt/usr/include
 fi
 
 # If umask was 027 or similar when the repo was cloned,

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021-2022, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,6 +53,9 @@ public:
     GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device>, Gfx::Bitmap&);
     ~GLContext();
 
+    NonnullRefPtr<Gfx::Bitmap> frontbuffer() const { return m_frontbuffer; };
+    void present();
+
     void gl_begin(GLenum mode);
     void gl_clear(GLbitfield mask);
     void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
@@ -101,6 +105,7 @@ public:
     void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param);
+    void gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params);
     void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_tex_env(GLenum target, GLenum pname, GLfloat param);
@@ -156,7 +161,9 @@ public:
     void gl_color_material(GLenum face, GLenum mode);
     void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type);
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
-    void present();
+    void gl_clip_plane(GLenum plane, GLdouble const* equation);
+    void gl_array_element(GLint i);
+    void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
 private:
     void sync_device_config();
@@ -365,6 +372,7 @@ private:
             decltype(&GLContext::gl_hint),
             decltype(&GLContext::gl_read_buffer),
             decltype(&GLContext::gl_tex_parameter),
+            decltype(&GLContext::gl_tex_parameterfv),
             decltype(&GLContext::gl_depth_mask),
             decltype(&GLContext::gl_draw_arrays),
             decltype(&GLContext::gl_draw_elements),
@@ -396,7 +404,10 @@ private:
             decltype(&GLContext::gl_materialfv),
             decltype(&GLContext::gl_materialiv),
             decltype(&GLContext::gl_color_material),
-            decltype(&GLContext::gl_get_light)>;
+            decltype(&GLContext::gl_get_light),
+            decltype(&GLContext::gl_clip_plane),
+            decltype(&GLContext::gl_array_element),
+            decltype(&GLContext::gl_copy_tex_sub_image_2d)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

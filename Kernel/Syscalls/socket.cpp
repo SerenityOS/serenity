@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 
 ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> address, socklen_t address_length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
@@ -78,7 +78,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 
 ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::accept));
     auto params = TRY(copy_typed_from_user(user_params));
 
@@ -88,9 +88,8 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
     int flags = params.flags;
 
     socklen_t address_size = 0;
-    if (user_address) {
+    if (user_address)
         TRY(copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)));
-    }
 
     ScopedDescriptionAllocation fd_allocation;
     RefPtr<OpenFileDescription> accepting_socket_description;
@@ -104,17 +103,17 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
         return ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
 
-    if (!socket.can_accept()) {
-        if (accepting_socket_description->is_blocking()) {
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags).was_interrupted())
-                return EINTR;
-        } else {
+    RefPtr<Socket> accepted_socket;
+    for (;;) {
+        accepted_socket = socket.accept();
+        if (accepted_socket)
+            break;
+        if (!accepting_socket_description->is_blocking())
             return EAGAIN;
-        }
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        if (Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags).was_interrupted())
+            return EINTR;
     }
-    auto accepted_socket = socket.accept();
-    VERIFY(accepted_socket);
 
     if (user_address) {
         sockaddr_un address_buffer {};
@@ -146,7 +145,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
 
 ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> user_address, socklen_t user_address_size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
 
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
@@ -159,7 +158,7 @@ ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> use
 
 ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
     if (how & ~SHUT_RDWR)
         return EINVAL;
@@ -325,7 +324,7 @@ ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_para
 
 ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     auto params = TRY(copy_typed_from_user(user_params));
 
     int sockfd = params.sockfd;
@@ -348,7 +347,7 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params
 
 ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     auto params = TRY(copy_typed_from_user(user_params));
 
     Userspace<void const*> user_value((FlatPtr)params.value);

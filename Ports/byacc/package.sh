@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=byacc
-version=20210808
+version=20220128
 files="https://invisible-mirror.net/archives/byacc/byacc-${version}.tgz byacc-${version}.tgz
 https://invisible-mirror.net/archives/byacc/byacc-${version}.tgz.asc byacc-${version}.tgz.asc"
 useconfigure=true

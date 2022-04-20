@@ -46,7 +46,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments, Core::EventLoop::MakeInspectable::Yes));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("SystemMonitor");
 

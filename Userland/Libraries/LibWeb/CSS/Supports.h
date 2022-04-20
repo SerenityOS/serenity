@@ -18,7 +18,7 @@ namespace Web::CSS {
 
 // https://www.w3.org/TR/css-conditional-4/#at-supports
 class Supports final : public RefCounted<Supports> {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     struct Declaration {

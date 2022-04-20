@@ -33,21 +33,28 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
+template<typename T>
+class RoleModel final : public GUI::ItemListModel<T> {
 public:
-    explicit ColorRoleModel(Vector<Gfx::ColorRole> const& data)
-        : ItemListModel<Gfx::ColorRole>(data)
+    static ErrorOr<NonnullRefPtr<RoleModel>> try_create(Vector<T> const& data)
     {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) RoleModel<T>(data));
     }
 
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
         if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
+            return Gfx::to_string(this->m_data[index.row()]);
         if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
+            return this->m_data[index.row()];
 
-        return ItemListModel::data(index, role);
+        return GUI::ItemListModel<T>::data(index, role);
+    }
+
+private:
+    explicit RoleModel(Vector<T> const& data)
+        : GUI::ItemListModel<T>(data)
+    {
     }
 };
 
@@ -85,83 +92,11 @@ private:
     Vector<AlignmentValue> m_alignments;
 };
 
-class AlignmentRoleModel final : public GUI::ItemListModel<Gfx::AlignmentRole> {
-public:
-    explicit AlignmentRoleModel(Vector<Gfx::AlignmentRole> const& data)
-        : ItemListModel<Gfx::AlignmentRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class FlagRoleModel final : public GUI::ItemListModel<Gfx::FlagRole> {
-public:
-    explicit FlagRoleModel(Vector<Gfx::FlagRole> const& data)
-        : ItemListModel<Gfx::FlagRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class MetricRoleModel final : public GUI::ItemListModel<Gfx::MetricRole> {
-public:
-    explicit MetricRoleModel(Vector<Gfx::MetricRole> const& data)
-        : ItemListModel<Gfx::MetricRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
-class PathRoleModel final : public GUI::ItemListModel<Gfx::PathRole> {
-public:
-    explicit PathRoleModel(Vector<Gfx::PathRole> const& data)
-        : ItemListModel<Gfx::PathRole>(data)
-    {
-    }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(m_data[(size_t)index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return m_data[(size_t)index.row()];
-
-        return ItemListModel::data(index, role);
-    }
-};
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     char const* file_to_edit = nullptr;
 
@@ -239,7 +174,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& path_input = *main_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
     auto& path_picker_button = *main_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
 
-    color_combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
+    color_combo_box.set_model(TRY(RoleModel<Gfx::ColorRole>::try_create(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_widget.preview_palette().color(role));
@@ -254,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
 
-    alignment_combo_box.set_model(adopt_ref(*new AlignmentRoleModel(alignment_roles)));
+    alignment_combo_box.set_model(TRY(RoleModel<Gfx::AlignmentRole>::try_create(alignment_roles)));
     alignment_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_alignment_role();
         alignment_input.set_selected_index((size_t)preview_widget.preview_palette().alignment(role), GUI::AllowCallback::No);
@@ -272,7 +207,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_widget.set_preview_palette(preview_palette);
     };
 
-    flag_combo_box.set_model(adopt_ref(*new FlagRoleModel(flag_roles)));
+    flag_combo_box.set_model(TRY(RoleModel<Gfx::FlagRole>::try_create(flag_roles)));
     flag_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_flag_role();
         flag_input.set_checked(preview_widget.preview_palette().flag(role), GUI::AllowCallback::No);
@@ -287,7 +222,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     flag_input.set_checked(startup_preview_palette.flag(Gfx::FlagRole::IsDark), GUI::AllowCallback::No);
 
-    metric_combo_box.set_model(adopt_ref(*new MetricRoleModel(metric_roles)));
+    metric_combo_box.set_model(TRY(RoleModel<Gfx::MetricRole>::try_create(metric_roles)));
     metric_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_metric_role();
         metric_input.set_value(preview_widget.preview_palette().metric(role), GUI::AllowCallback::No);
@@ -302,7 +237,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     metric_input.set_value(startup_preview_palette.metric(Gfx::MetricRole::TitleButtonHeight), GUI::AllowCallback::No);
 
-    path_combo_box.set_model(adopt_ref(*new PathRoleModel(path_roles)));
+    path_combo_box.set_model(TRY(RoleModel<Gfx::PathRole>::try_create(path_roles)));
     path_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
         path_input.set_text(preview_widget.preview_palette().path(role));

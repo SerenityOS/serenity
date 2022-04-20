@@ -45,7 +45,7 @@ fi
 if command -v wslpath >/dev/null; then
     gdb_host=$(powershell.exe "(Test-Connection -ComputerName (hostname) -Count 1).IPV4Address.IPAddressToString" | tr -d '\r\n')
 else
-    gdb_host=localhost
+    gdb_host=${SERENITY_HOST_IP:-127.0.0.1}
 fi
 
 

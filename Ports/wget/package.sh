@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=wget
-version=1.21.2
+version=1.21.3
 useconfigure="true"
 use_fresh_config_sub=true
 config_sub_path=build-aux/config.sub

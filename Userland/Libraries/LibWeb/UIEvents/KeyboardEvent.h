@@ -58,6 +58,8 @@ public:
 
     bool get_modifier_state(String const& key_arg);
 
+    virtual u32 which() const override { return m_key_code; }
+
 private:
     KeyboardEvent(FlyString const& event_name, KeyboardEventInit const& event_init)
         : UIEvent(event_name, event_init)
