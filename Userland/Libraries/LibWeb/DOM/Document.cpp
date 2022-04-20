@@ -1354,11 +1354,11 @@ void Document::evaluate_media_queries_and_report_changes()
     // 1. For each MediaQueryList object target that has doc as its document,
     //    in the order they were created, oldest first, run these substeps:
     for (auto& media_query_list_ptr : m_media_query_lists) {
-        // 1.1. If target’s matches state has changed since the last time these steps
-        //      were run, fire an event at target using the MediaQueryListEvent constructor,
-        //      with its type attribute initialized to change, its isTrusted attribute
-        //      initialized to true, its media attribute initialized to target’s media,
-        //      and its matches attribute initialized to target’s matches state.
+        // 1. If target’s matches state has changed since the last time these steps
+        //    were run, fire an event at target using the MediaQueryListEvent constructor,
+        //    with its type attribute initialized to change, its isTrusted attribute
+        //    initialized to true, its media attribute initialized to target’s media,
+        //    and its matches attribute initialized to target’s matches state.
         if (media_query_list_ptr.is_null())
             continue;
         auto media_query_list = media_query_list_ptr.strong_ref();

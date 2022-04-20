@@ -77,7 +77,7 @@ bool HTMLObjectElement::has_ancestor_media_element_or_object_element_not_showing
 void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
 {
     queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
-        // 1. FIXME: If the user has indicated a preference that this object element's fallback content be shown instead of the element's usual behavior, then jump to the step below labeled fallback.
+        // FIXME: 1. If the user has indicated a preference that this object element's fallback content be shown instead of the element's usual behavior, then jump to the step below labeled fallback.
 
         // 2. If the element has an ancestor media element, or has an ancestor object element that is not showing its fallback content, or if the element is not in a document whose browsing context is non-null, or if the element's node document is not fully active, or if the element is still in the stack of open elements of an HTML parser or XML parser, or if the element is not being rendered, then jump to the step below labeled fallback.
         if (!document().browsing_context() || !document().is_fully_active())
@@ -85,7 +85,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
         if (has_ancestor_media_element_or_object_element_not_showing_fallback_content())
             return run_object_representation_fallback_steps();
 
-        // 3. FIXME: If the classid attribute is present, and has a value that isn't the empty string, then: if the user agent can find a plugin suitable according to the value of the classid attribute, and plugins aren't being sandboxed, then that plugin should be used, and the value of the data attribute, if any, should be passed to the plugin. If no suitable plugin can be found, or if the plugin reports an error, jump to the step below labeled fallback.
+        // FIXME: 3. If the classid attribute is present, and has a value that isn't the empty string, then: if the user agent can find a plugin suitable according to the value of the classid attribute, and plugins aren't being sandboxed, then that plugin should be used, and the value of the data attribute, if any, should be passed to the plugin. If no suitable plugin can be found, or if the plugin reports an error, jump to the step below labeled fallback.
 
         // 4. If the data attribute is present and its value is not the empty string, then:
         if (auto data = attribute(HTML::AttributeNames::data); !data.is_empty()) {
@@ -135,8 +135,8 @@ void HTMLObjectElement::resource_did_load()
     // 1. Let the resource type be unknown.
     Optional<String> resource_type;
 
-    // 2. FIXME: If the user agent is configured to strictly obey Content-Type headers for this resource, and the resource has associated Content-Type metadata, then let the resource type be the type specified in the resource's Content-Type metadata, and jump to the step below labeled handler.
-    // 3. FIXME: If there is a type attribute present on the object element, and that attribute's value is not a type that the user agent supports, but it is a type that a plugin supports, then let the resource type be the type specified in that type attribute, and jump to the step below labeled handler.
+    // FIXME: 2. If the user agent is configured to strictly obey Content-Type headers for this resource, and the resource has associated Content-Type metadata, then let the resource type be the type specified in the resource's Content-Type metadata, and jump to the step below labeled handler.
+    // FIXME: 3. If there is a type attribute present on the object element, and that attribute's value is not a type that the user agent supports, but it is a type that a plugin supports, then let the resource type be the type specified in that type attribute, and jump to the step below labeled handler.
 
     // 4. Run the appropriate set of steps from the following list:
     // * If the resource has associated Content-Type metadata
@@ -144,7 +144,7 @@ void HTMLObjectElement::resource_did_load()
         // 1. Let binary be false.
         bool binary = false;
 
-        // 2. FIXME: If the type specified in the resource's Content-Type metadata is "text/plain", and the result of applying the rules for distinguishing if a resource is text or binary to the resource is that the resource is not text/plain, then set binary to true.
+        // FIXME: 2. If the type specified in the resource's Content-Type metadata is "text/plain", and the result of applying the rules for distinguishing if a resource is text or binary to the resource is that the resource is not text/plain, then set binary to true.
 
         // 3. If the type specified in the resource's Content-Type metadata is "application/octet-stream", then set binary to true.
         if (it->value == "application/octet-stream"sv)
@@ -183,7 +183,7 @@ void HTMLObjectElement::resource_did_load()
             resource_type = move(tentative_type);
     }
 
-    // 5. FIXME: If applying the URL parser algorithm to the URL of the specified resource (after any redirects) results in a URL record whose path component matches a pattern that a plugin supports, then let resource type be the type that that plugin can handle.
+    // FIXME: 5. If applying the URL parser algorithm to the URL of the specified resource (after any redirects) results in a URL record whose path component matches a pattern that a plugin supports, then let resource type be the type that that plugin can handle.
 
     run_object_representation_handler_steps(move(resource_type));
 }

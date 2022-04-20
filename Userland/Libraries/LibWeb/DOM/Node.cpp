@@ -358,59 +358,58 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 
     // 4. If node is a DocumentFragment node, then:
     if (is<DocumentFragment>(*node)) {
-        // 4.1 Remove its children with the suppress observers flag set.
+        // 1. Remove its children with the suppress observers flag set.
         node->remove_all_children(true);
 
-        // 4.2 FIXME: Queue a tree mutation record for node with « », nodes, null, and null.
+        // FIXME: 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
     }
 
     // 5. If child is non-null, then:
     if (child) {
-        // 5.1 For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
+        // 1. For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->start_container() == this && range->start_offset() > child->index())
                 range->set_start(*range->start_container(), range->start_offset() + count);
         }
 
-        // 5.2 For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
+        // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->end_container() == this && range->end_offset() > child->index())
                 range->set_end(*range->end_container(), range->end_offset() + count);
         }
     }
 
-    // 6. FIXME: Let previousSibling be child’s previous sibling or parent’s last child if child is null. (Currently unused so not included)
+    // FIXME: 6. Let previousSibling be child’s previous sibling or parent’s last child if child is null. (Currently unused so not included)
 
     // 7. For each node in nodes, in tree order:
     // FIXME: In tree order
     for (auto& node_to_insert : nodes) {
-        // 7.1 Adopt node into parent’s node document.
+        // 1. Adopt node into parent’s node document.
         document().adopt_node(node_to_insert);
 
-        // 7.2 If child is null, then append node to parent’s children.
+        // 2. If child is null, then append node to parent’s children.
         if (!child)
             TreeNode<Node>::append_child(node_to_insert);
+        // 3. Otherwise, insert node into parent’s children before child’s index.
         else
-            // 7.3 Otherwise, insert node into parent’s children before child’s index.
             TreeNode<Node>::insert_before(node_to_insert, child);
 
-        // FIXME: 7.4 If parent is a shadow host and node is a slottable, then assign a slot for node.
-        // FIXME: 7.5 If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
-        // FIXME: 7.6 Run assign slottables for a tree with node’s root.
+        // FIXME: 4. If parent is a shadow host and node is a slottable, then assign a slot for node.
+        // FIXME: 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
+        // FIXME: 6. Run assign slottables for a tree with node’s root.
 
         // FIXME: This should be shadow-including.
-        // 7.7 For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
+        // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
         node_to_insert.for_each_in_inclusive_subtree([&](Node& inclusive_descendant) {
-            // 7.7.1 Run the insertion steps with inclusiveDescendant.
+            // 1. Run the insertion steps with inclusiveDescendant.
             inclusive_descendant.inserted();
 
-            // 7.7.2 If inclusiveDescendant is connected, then:
+            // 2. If inclusiveDescendant is connected, then:
             if (inclusive_descendant.is_connected()) {
-                // 7.7.2.1 FIXME: If inclusiveDescendant is custom, then enqueue a custom element callback reaction with inclusiveDescendant,
-                //        callback name "connectedCallback", and an empty argument list.
+                // FIXME: 1. If inclusiveDescendant is custom, then enqueue a custom element callback reaction with inclusiveDescendant, callback name "connectedCallback", and an empty argument list.
 
-                // 7.7.2.2 FIXME: Otherwise, try to upgrade inclusiveDescendant.
+                // FIXME: 2. Otherwise, try to upgrade inclusiveDescendant.
                 // NOTE: If this successfully upgrades inclusiveDescendant, its connectedCallback will be enqueued automatically during the upgrade an element algorithm.
             }
 
@@ -518,42 +517,42 @@ void Node::remove(bool suppress_observers)
         node_iterator.run_pre_removing_steps(*this);
     });
 
-    // 9. FIXME: Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
-    // 10. FIXME: Let oldNextSibling be node’s next sibling. (Currently unused so not included)
+    // FIXME: 9. Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
+    // FIXME: 10. Let oldNextSibling be node’s next sibling. (Currently unused so not included)
 
     // 11. Remove node from its parent’s children.
     parent->TreeNode::remove_child(*this);
 
-    // 12. FIXME: If node is assigned, then run assign slottables for node’s assigned slot.
+    // FIXME: 12. If node is assigned, then run assign slottables for node’s assigned slot.
 
-    // 13. FIXME: If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
+    // FIXME: 13. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
 
-    // 14. FIXME: If node has an inclusive descendant that is a slot, then:
-    // 14.1 Run assign slottables for a tree with parent’s root.
-    // 14.2 Run assign slottables for a tree with node.
+    // FIXME: 14. If node has an inclusive descendant that is a slot, then:
+    //     1. Run assign slottables for a tree with parent’s root.
+    //     2. Run assign slottables for a tree with node.
 
     // 15. Run the removing steps with node and parent.
     removed_from(parent);
 
-    // 16. FIXME: Let isParentConnected be parent’s connected. (Currently unused so not included)
+    // FIXME: 16. Let isParentConnected be parent’s connected. (Currently unused so not included)
 
-    // 17. FIXME: If node is custom and isParentConnected is true, then enqueue a custom element callback reaction with node,
+    // FIXME: 17. If node is custom and isParentConnected is true, then enqueue a custom element callback reaction with node,
     //        callback name "disconnectedCallback", and an empty argument list.
     // NOTE: It is intentional for now that custom elements do not get parent passed. This might change in the future if there is a need.
 
     // FIXME: This should be shadow-including.
     // 18. For each shadow-including descendant descendant of node, in shadow-including tree order, then:
     for_each_in_subtree([&](Node& descendant) {
-        // 18.1 Run the removing steps with descendant
+        // 1. Run the removing steps with descendant
         descendant.removed_from(nullptr);
 
-        // 18.2 FIXME: If descendant is custom and isParentConnected is true, then enqueue a custom element callback reaction with descendant,
+        //  FIXME: 2. If descendant is custom and isParentConnected is true, then enqueue a custom element callback reaction with descendant,
         //        callback name "disconnectedCallback", and an empty argument list.
 
         return IterationDecision::Continue;
     });
 
-    // 19. FIXME: For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
+    // FIXME: 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
     //      if registered’s options["subtree"] is true, then append a new transient registered observer
     //      whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
 
@@ -624,24 +623,24 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
     if (reference_child == node)
         reference_child = node->next_sibling();
 
-    // 9. FIXME: Let previousSibling be child’s previous sibling. (Currently unused so not included)
-    // 10. FIXME: Let removedNodes be the empty set. (Currently unused so not included)
+    // FIXME: 9. Let previousSibling be child’s previous sibling. (Currently unused so not included)
+    // FIXME: 10. Let removedNodes be the empty set. (Currently unused so not included)
 
     // 11. If child’s parent is non-null, then:
     // NOTE: The above can only be false if child is node.
     if (child->parent()) {
-        // 11.1 FIXME: Set removedNodes to « child ».
+        // FIXME: 1. Set removedNodes to « child ».
 
-        // 11.2 Remove child with the suppress observers flag set.
+        // 2. Remove child with the suppress observers flag set.
         child->remove(true);
     }
 
-    // 12. FIXME: Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ». (Currently unused so not included)
+    // FIXME: 12. Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ». (Currently unused so not included)
 
     // 13. Insert node into parent before referenceChild with the suppress observers flag set.
     insert_before(node, reference_child, true);
 
-    // 14. FIXME: Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
+    // FIXME: 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
 
     // 15. Return child.
     return child;
@@ -657,14 +656,14 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
 
     // 2. If node is an element, then:
     if (is<Element>(this)) {
-        // 2.1 Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
+        // 1. Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
         auto& element = *verify_cast<Element>(this);
         auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_() /* FIXME: node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset */);
 
-        // 2.2 For each attribute in node’s attribute list:
+        // 2. For each attribute in node’s attribute list:
         element.for_each_attribute([&](auto& name, auto& value) {
-            // 2.2.1 Let copyAttribute be a clone of attribute.
-            // 2.2.2 Append copyAttribute to copy.
+            // 1. Let copyAttribute be a clone of attribute.
+            // 2. Append copyAttribute to copy.
             element_copy->set_attribute(name, value);
         });
         copy = move(element_copy);
@@ -886,15 +885,15 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 
     // 5. If node2 is an attribute, then:
     if (is<Attribute>(node2)) {
-        // 5.1 Set attr2 to node2 and node2 to attr2’s element.
+        // 1. Set attr2 to node2 and node2 to attr2’s element.
         attr2 = verify_cast<Attribute>(node2);
         node2 = const_cast<Element*>(attr2->owner_element());
 
-        // 5.2 If attr1 and node1 are non-null, and node2 is node1, then:
+        // 2. If attr1 and node1 are non-null, and node2 is node1, then:
         if (attr1 && node1 && node2 == node1) {
-            // 5.2.1 FIXME: For each attr in node2’s attribute list:
-            // 5.2.1.1 FIXME: If attr equals attr1, then return the result of adding DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC and DOCUMENT_POSITION_PRECEDING.
-            // 5.2.1.2 FIXME: If attr equals attr2, then return the result of adding DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC and DOCUMENT_POSITION_FOLLOWING.
+            // FIXME: 1. For each attr in node2’s attribute list:
+            //     1. If attr equals attr1, then return the result of adding DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC and DOCUMENT_POSITION_PRECEDING.
+            //     2. If attr equals attr2, then return the result of adding DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC and DOCUMENT_POSITION_FOLLOWING.
         }
     }
 
@@ -1085,10 +1084,10 @@ bool Node::is_shadow_including_inclusive_ancestor_of(Node const& other) const
 // https://dom.spec.whatwg.org/#concept-node-replace-all
 void Node::replace_all(RefPtr<Node> node)
 {
-    // 1. FIXME: Let removedNodes be parent’s children. (Current unused so not included)
-    // 2. FIXME: Let addedNodes be the empty set. (Currently unused so not included)
-    // 3. FIXME: If node is a DocumentFragment node, then set addedNodes to node’s children.
-    // 4. FIXME: Otherwise, if node is non-null, set addedNodes to « node ».
+    // FIXME: 1. Let removedNodes be parent’s children. (Current unused so not included)
+    // FIXME: 2. Let addedNodes be the empty set. (Currently unused so not included)
+    // FIXME: 3. If node is a DocumentFragment node, then set addedNodes to node’s children.
+    // FIXME: 4. Otherwise, if node is non-null, set addedNodes to « node ».
 
     // 5. Remove all parent’s children, in tree order, with the suppress observers flag set.
     remove_all_children(true);
@@ -1097,7 +1096,7 @@ void Node::replace_all(RefPtr<Node> node)
     if (node)
         insert_before(*node, nullptr, true);
 
-    // 7. FIXME: If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
+    // FIXME: 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
@@ -1117,13 +1116,13 @@ void Node::string_replace_all(String const& string)
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-serializing-algorithm
 String Node::serialize_fragment(/* FIXME: Requires well-formed flag */) const
 {
-    // 1. FIXME: Let context document be the value of node's node document.
+    // FIXME: 1. Let context document be the value of node's node document.
 
-    // 2. FIXME: If context document is an HTML document, return an HTML serialization of node.
+    // FIXME: 2. If context document is an HTML document, return an HTML serialization of node.
     //        (We currently always do this)
     return HTML::HTMLParser::serialize_html_fragment(*this);
 
-    // 3. FIXME: Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
+    // FIXME: 3. Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
 }
 
 // https://dom.spec.whatwg.org/#dom-node-issamenode

@@ -204,13 +204,13 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
     // 2. If previousId was given, let id be previousId; otherwise, let id be an implementation-defined integer that is greater than zero and does not already exist in global's map of active timers.
     auto id = previous_id.has_value() ? previous_id.value() : m_timer_id_allocator.allocate();
 
-    // 3. FIXME: If the surrounding agent's event loop's currently running task is a task that was created by this algorithm, then let nesting level be the task's timer nesting level. Otherwise, let nesting level be zero.
+    // FIXME: 3. If the surrounding agent's event loop's currently running task is a task that was created by this algorithm, then let nesting level be the task's timer nesting level. Otherwise, let nesting level be zero.
 
     // 4. If timeout is less than 0, then set timeout to 0.
     if (timeout < 0)
         timeout = 0;
 
-    // 5. FIXME: If nesting level is greater than 5, and timeout is less than 4, then set timeout to 4.
+    // FIXME: 5. If nesting level is greater than 5, and timeout is less than 4, then set timeout to 4.
 
     // 6. Let callerRealm be the current Realm Record, and calleeRealm be global's relevant Realm.
     // FIXME: Implement this when step 9.2 is implemented.
@@ -237,7 +237,7 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
             // 3. Otherwise:
             [&](String const& source) {
                 // 1. Assert: handler is a string.
-                // 2. FIXME: Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
+                // FIXME: 2. Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
 
                 // 3. Let settings object be global's relevant settings object.
                 auto& settings_object = window->associated_document().relevant_settings_object();
@@ -272,8 +272,8 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
         }
     };
 
-    // 10. FIXME: Increment nesting level by one.
-    // 11. FIXME: Set task's timer nesting level to nesting level.
+    // FIXME: 10. Increment nesting level by one.
+    // FIXME: 11. Set task's timer nesting level to nesting level.
 
     // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
     auto completion_step = [weak_window = make_weak_ptr(), task = move(task)]() mutable {

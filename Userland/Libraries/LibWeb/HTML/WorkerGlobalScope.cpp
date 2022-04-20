@@ -34,15 +34,15 @@ DOM::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)
     // which if provided will be used when invoking fetch a classic worker-imported script.
     // NOTE: Service Workers is an example of a specification that runs this algorithm with its own options for the perform the fetch hook.
 
-    // 1. FIXME: If worker global scope's type is "module", throw a TypeError exception.
-    // 2. FIXME: Let settings object be the current settings object.
+    // FIXME: 1. If worker global scope's type is "module", throw a TypeError exception.
+    // FIXME: 2. Let settings object be the current settings object.
 
     // 3. If urls is empty, return.
     if (urls.is_empty())
         return {};
 
-    // 4. FIXME: Parse each value in urls relative to settings object. If any fail, throw a "SyntaxError" DOMException.
-    // 5. FIXME: For each url in the resulting URL records, run these substeps:
+    // FIXME: 4. Parse each value in urls relative to settings object. If any fail, throw a "SyntaxError" DOMException.
+    // FIXME: 5. For each url in the resulting URL records, run these substeps:
     //     1. Fetch a classic worker-imported script given url and settings object, passing along any custom perform the fetch steps provided.
     //        If this succeeds, let script be the result. Otherwise, rethrow the exception.
     //     2. Run the classic script script, with the rethrow errors argument set to true.

@@ -36,17 +36,17 @@ static EventTarget* retarget(EventTarget* left, EventTarget* right)
     // To retarget an object A against an object B, repeat these steps until they return an object:
     for (;;) {
         // 1. If one of the following is true then return A.
-        // 1.1 A is not a node
+        // - A is not a node
         if (!is<Node>(left))
             return left;
 
-        // 1.2 A’s root is not a shadow root
+        // - A’s root is not a shadow root
         auto* left_node = verify_cast<Node>(left);
         auto& left_root = left_node->root();
         if (!is<ShadowRoot>(left_root))
             return left;
 
-        // B is a node and A’s root is a shadow-including inclusive ancestor of B
+        // - B is a node and A’s root is a shadow-including inclusive ancestor of B
         if (is<Node>(right) && left_root.is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*right)))
             return left;
 
@@ -181,11 +181,11 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
 
     // 9. If found is false and event’s isTrusted attribute is true, then:
     if (!found && event.is_trusted()) {
-        // 9.1 Let originalEventType be event’s type attribute value.
+        // 1. Let originalEventType be event’s type attribute value.
         auto original_event_type = event.type();
 
-        // 9.2 If event’s type attribute value is a match for any of the strings in the first column in the following table,
-        // set event’s type attribute value to the string in the second column on the same row as the matching string, and return otherwise.
+        // 2. If event’s type attribute value is a match for any of the strings in the first column in the following table,
+        //    set event’s type attribute value to the string in the second column on the same row as the matching string, and return otherwise.
         if (event.type() == "animationend")
             event.set_type("webkitAnimationEnd");
         else if (event.type() == "animationiteration")
@@ -197,10 +197,10 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
         else
             return;
 
-        // 9.3 Inner invoke with event, listeners, phase, invocationTargetInShadowTree, and legacyOutputDidListenersThrowFlag if given.
+        // 3. Inner invoke with event, listeners, phase, invocationTargetInShadowTree, and legacyOutputDidListenersThrowFlag if given.
         inner_invoke(event, listeners, phase, invocation_target_in_shadow_tree);
 
-        // 9.4 Set event’s type attribute value to originalEventType.
+        // 4. Set event’s type attribute value to originalEventType.
         event.set_type(original_event_type);
     }
 }
@@ -229,95 +229,96 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
     bool clear_targets = false;
     // 5. If target is not relatedTarget or target is event’s relatedTarget, then:
     if (related_target != target || event->related_target() == target) {
-        // 5.1 Let touchTargets be a new list.
+        // 1. Let touchTargets be a new list.
         Event::TouchTargetList touch_targets;
 
-        // 5.2 For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against target to touchTargets.
+        // 2. For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against target to touchTargets.
         for (auto& touch_target : event->touch_target_list()) {
             touch_targets.append(retarget(touch_target, target));
         }
 
-        // 5.3 Append to an event path with event, target, targetOverride, relatedTarget, touchTargets, and false.
+        // 3. Append to an event path with event, target, targetOverride, relatedTarget, touchTargets, and false.
         event->append_to_path(*target, target_override, related_target, touch_targets, false);
 
-        // 5.4 Let isActivationEvent be true, if event is a MouseEvent object and event’s type attribute is "click"; otherwise false.
+        // 4. Let isActivationEvent be true, if event is a MouseEvent object and event’s type attribute is "click"; otherwise false.
         bool is_activation_event = is<UIEvents::MouseEvent>(*event) && event->type() == HTML::EventNames::click;
 
-        // 5.5 If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
+        // 5. If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
         if (is_activation_event && target->activation_behavior)
             activation_target = target;
 
-        // 5.6 FIXME: Let slottable be target, if target is a slottable and is assigned, and null otherwise.
+        // FIXME: 6. Let slottable be target, if target is a slottable and is assigned, and null otherwise.
 
-        // 5.7 Let slot-in-closed-tree be false
+        // 7. Let slot-in-closed-tree be false
         bool slot_in_closed_tree = false;
 
-        // 5.8 Let parent be the result of invoking target’s get the parent with event.
+        // 8. Let parent be the result of invoking target’s get the parent with event.
         auto* parent = target->get_parent(event);
 
-        // 5.9 While parent is non-null:
+        // 9. While parent is non-null:
         while (parent) {
-            // FIXME:
-            // 5.9.1 If slottable is non-null:
-            // 5.9.1.1 Assert: parent is a slot.
-            // 5.9.1.2 Set slottable to null.
-            // 5.9.1.3 If parent’s root is a shadow root whose mode is "closed", then set slot-in-closed-tree to true.
-            // 5.9.2 If parent is a slottable and is assigned, then set slottable to parent.
+            // FIXME: 1. If slottable is non-null:
+            //     1. Assert: parent is a slot.
+            //     2. Set slottable to null.
+            //     3. If parent’s root is a shadow root whose mode is "closed", then set slot-in-closed-tree to true.
+            // FIXME: 2. If parent is a slottable and is assigned, then set slottable to parent.
 
-            // 5.9.3 Let relatedTarget be the result of retargeting event’s relatedTarget against parent.
+            // 3. Let relatedTarget be the result of retargeting event’s relatedTarget against parent.
             related_target = retarget(event->related_target(), parent);
 
-            // 5.9.4 Let touchTargets be a new list.
+            // 4. Let touchTargets be a new list.
             touch_targets.clear();
 
-            // 5.9.5 For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against parent to touchTargets.
+            // 5. For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against parent to touchTargets.
             for (auto& touch_target : event->touch_target_list()) {
                 touch_targets.append(retarget(touch_target, parent));
             }
 
-            // 5.9.6 If parent is a Window object, or parent is a node and target’s root is a shadow-including inclusive ancestor of parent, then:
+            // 6. If parent is a Window object, or parent is a node and target’s root is a shadow-including inclusive ancestor of parent, then:
             if (is<HTML::Window>(parent)
                 || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
-                // 5.9.6.1 If isActivationEvent is true, event’s bubbles attribute is true, activationTarget is null, and parent has activation behavior, then set activationTarget to parent.
+                // 1. If isActivationEvent is true, event’s bubbles attribute is true, activationTarget is null, and parent has activation behavior, then set activationTarget to parent.
                 if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behavior)
                     activation_target = parent;
 
-                // 5.9.6.2 Append to an event path with event, parent, null, relatedTarget, touchTargets, and slot-in-closed-tree.
+                // 2. Append to an event path with event, parent, null, relatedTarget, touchTargets, and slot-in-closed-tree.
                 event->append_to_path(*parent, nullptr, related_target, touch_targets, slot_in_closed_tree);
 
-            } else if (related_target == parent) {
-                // 5.9.7 Otherwise, if parent is relatedTarget, then set parent to null.
+            }
+            // 7. Otherwise, if parent is relatedTarget, then set parent to null.
+            else if (related_target == parent) {
                 parent = nullptr;
-            } else {
-                // 5.9.8 Otherwise, set target to parent and then:
+            }
+            // 8. Otherwise, set target to parent and then:
+            else {
                 target = *parent;
 
-                // 5.9.8.1 If isActivationEvent is true, activationTarget is null, and target has activation behavior, then set activationTarget to target.
+                // 1. If isActivationEvent is true, activationTarget is null, and target has activation behavior, then set activationTarget to target.
                 if (is_activation_event && !activation_target && target->activation_behavior)
                     activation_target = target;
 
-                // 5.9.8.2 Append to an event path with event, parent, target, relatedTarget, touchTargets, and slot-in-closed-tree.
+                // 2. Append to an event path with event, parent, target, relatedTarget, touchTargets, and slot-in-closed-tree.
                 event->append_to_path(*parent, target, related_target, touch_targets, slot_in_closed_tree);
             }
 
-            // 5.9.9 If parent is non-null, then set parent to the result of invoking parent’s get the parent with event.
+            // 9. If parent is non-null, then set parent to the result of invoking parent’s get the parent with event.
             if (parent) {
                 parent = parent->get_parent(event);
             }
 
-            // 5.9.10 Set slot-in-closed-tree to false.
+            // 10. Set slot-in-closed-tree to false.
             slot_in_closed_tree = false;
         }
 
-        // 5.10 Let clearTargetsStruct be the last struct in event’s path whose shadow-adjusted target is non-null.
+        // 10. Let clearTargetsStruct be the last struct in event’s path whose shadow-adjusted target is non-null.
         auto clear_targets_struct = event->path().last_matching([](auto& entry) {
             return !entry.shadow_adjusted_target.is_null();
         });
 
         VERIFY(clear_targets_struct.has_value());
 
-        // 5.11 Let clearTargets be true if clearTargetsStruct’s shadow-adjusted target, clearTargetsStruct’s relatedTarget,
-        // or an EventTarget object in clearTargetsStruct’s touch target list is a node and its root is a shadow root; otherwise false.
+        // 11. Let clearTargets be true if clearTargetsStruct’s shadow-adjusted target, clearTargetsStruct’s relatedTarget,
+        //     or an EventTarget object in clearTargetsStruct’s touch target list is a node and its root is a shadow root; otherwise false.
         if (is<Node>(clear_targets_struct.value().shadow_adjusted_target.ptr())) {
             auto& shadow_adjusted_target_node = verify_cast<Node>(*clear_targets_struct.value().shadow_adjusted_target);
             if (is<ShadowRoot>(shadow_adjusted_target_node.root()))
@@ -342,39 +343,40 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             }
         }
 
-        // 5.12 If activationTarget is non-null and activationTarget has legacy-pre-activation behavior, then run activationTarget’s legacy-pre-activation behavior.
+        // 12. If activationTarget is non-null and activationTarget has legacy-pre-activation behavior, then run activationTarget’s legacy-pre-activation behavior.
         if (activation_target)
             activation_target->legacy_pre_activation_behavior();
 
-        // 5.13 For each struct in event’s path, in reverse order:
+        // 13. For each struct in event’s path, in reverse order:
         for (auto& entry : event->path().in_reverse()) {
-            // 5.13.1 If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
+            // 1. If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
             if (entry.shadow_adjusted_target)
                 event->set_phase(Event::Phase::AtTarget);
+            // 2. Otherwise, set event’s eventPhase attribute to CAPTURING_PHASE.
             else
-                // 5.13.2 Otherwise, set event’s eventPhase attribute to CAPTURING_PHASE.
                 event->set_phase(Event::Phase::CapturingPhase);
 
-            // 5.13.3 Invoke with struct, event, "capturing", and legacyOutputDidListenersThrowFlag if given.
+            // 3. Invoke with struct, event, "capturing", and legacyOutputDidListenersThrowFlag if given.
             invoke(entry, event, Event::Phase::CapturingPhase);
         }
 
-        // 5.14 For each struct in event’s path:
+        // 14. For each struct in event’s path:
         for (auto& entry : event->path()) {
-            // 5.14.1 If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
+            // 1. If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
             if (entry.shadow_adjusted_target) {
                 event->set_phase(Event::Phase::AtTarget);
-            } else {
-                // 5.14.2 Otherwise:
-                // 5.14.2.1 If event’s bubbles attribute is false, then continue.
+            }
+            // 2. Otherwise:
+            else {
+                // 1. If event’s bubbles attribute is false, then continue.
                 if (!event->bubbles())
                     continue;
 
-                // 5.14.2.2 Set event’s eventPhase attribute to BUBBLING_PHASE.
+                // 2. Set event’s eventPhase attribute to BUBBLING_PHASE.
                 event->set_phase(Event::Phase::BubblingPhase);
             }
 
-            // 5.14.3 Invoke with struct, event, "bubbling", and legacyOutputDidListenersThrowFlag if given.
+            // 3. Invoke with struct, event, "bubbling", and legacyOutputDidListenersThrowFlag if given.
             invoke(entry, event, Event::Phase::BubblingPhase);
         }
     }
@@ -395,24 +397,25 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
 
     // 10. If clearTargets, then:
     if (clear_targets) {
-        // 10.1 Set event’s target to null.
+        // 1. Set event’s target to null.
         event->set_target(nullptr);
 
-        // 10.2 Set event’s relatedTarget to null.
+        // 2. Set event’s relatedTarget to null.
         event->set_related_target(nullptr);
 
-        // 10.3 Set event’s touch target list to the empty list.
+        // 3. Set event’s touch target list to the empty list.
         event->clear_touch_target_list();
     }
 
     // 11. If activationTarget is non-null, then:
     if (activation_target) {
-        // 11.1 If event’s canceled flag is unset, then run activationTarget’s activation behavior with event.
+        // 1. If event’s canceled flag is unset, then run activationTarget’s activation behavior with event.
         if (!event->cancelled()) {
             activation_target->activation_behavior(event);
             activation_target->legacy_cancelled_activation_behavior_was_not_called();
-        } else {
-            // 11.2 Otherwise, if activationTarget has legacy-canceled-activation behavior, then run activationTarget’s legacy-canceled-activation behavior.
+        }
+        // 2. Otherwise, if activationTarget has legacy-canceled-activation behavior, then run activationTarget’s legacy-canceled-activation behavior.
+        else {
             activation_target->legacy_cancelled_activation_behavior();
         }
     }
