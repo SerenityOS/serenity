@@ -421,7 +421,7 @@ void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
 
 void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body)
 {
-    add_entry_to_cache(name);
+    add_entry_to_cache({ RunnablePath::Kind::Function, name });
     m_functions.set(name, { name, move(argnames), move(body) });
 }
 
@@ -517,14 +517,47 @@ String Shell::resolve_alias(StringView name) const
     return m_aliases.get(name).value_or({});
 }
 
-bool Shell::is_runnable(StringView name)
+Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
 {
     auto parts = name.split_view('/');
     auto path = name.to_string();
-    if (parts.size() > 1 && access(path.characters(), X_OK) == 0)
-        return true;
+    if (parts.size() > 1) {
+        auto file = Core::File::open(path.characters(), Core::OpenMode::ReadOnly);
+        if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
+            return RunnablePath { RunnablePath::Kind::Executable, name };
+    }
 
-    return binary_search(cached_path.span(), path, nullptr);
+    auto* found = binary_search(cached_path.span(), path, nullptr, RunnablePathComparator {});
+    if (!found)
+        return {};
+
+    return *found;
+}
+
+Optional<String> Shell::help_path_for(Vector<RunnablePath> visited, Shell::RunnablePath const& runnable_path)
+{
+    switch (runnable_path.kind) {
+    case RunnablePath::Kind::Executable: {
+        LexicalPath lexical_path(runnable_path.path);
+        return lexical_path.basename();
+    }
+
+    case RunnablePath::Kind::Alias: {
+        if (visited.contains_slow(runnable_path))
+            return {}; // Break out of an alias loop
+
+        auto resolved = resolve_alias(runnable_path.path);
+        auto* runnable = binary_search(cached_path.span(), resolved, nullptr, RunnablePathComparator {});
+        if (!runnable)
+            return {};
+
+        visited.append(runnable_path);
+        return help_path_for(visited, *runnable);
+    }
+
+    default:
+        return {};
+    }
 }
 
 int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_override)
@@ -1336,14 +1369,14 @@ void Shell::cache_path()
 
     // Add shell builtins to the cache.
     for (auto const& builtin_name : builtin_names)
-        cached_path.append(escape_token(builtin_name));
+        cached_path.append({ RunnablePath::Kind::Builtin, escape_token(builtin_name) });
 
     // Add functions to the cache.
     for (auto& function : m_functions) {
         auto name = escape_token(function.key);
         if (cached_path.contains_slow(name))
             continue;
-        cached_path.append(name);
+        cached_path.append({ RunnablePath::Kind::Function, name });
     }
 
     // Add aliases to the cache.
@@ -1351,7 +1384,7 @@ void Shell::cache_path()
         auto name = escape_token(alias.key);
         if (cached_path.contains_slow(name))
             continue;
-        cached_path.append(name);
+        cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
     String path = getenv("PATH");
@@ -1366,7 +1399,7 @@ void Shell::cache_path()
                 if (cached_path.contains_slow(escaped_name))
                     continue;
                 if (access(program_path.characters(), X_OK) == 0)
-                    cached_path.append(escaped_name);
+                    cached_path.append({ RunnablePath::Kind::Executable, escaped_name });
             }
         }
     }
@@ -1374,15 +1407,15 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
-void Shell::add_entry_to_cache(String const& entry)
+void Shell::add_entry_to_cache(RunnablePath const& entry)
 {
     size_t index = 0;
-    auto match = binary_search(cached_path.span(), entry, &index);
+    auto match = binary_search(cached_path.span(), entry, &index, RunnablePathComparator {});
 
     if (match)
         return;
 
-    while (index < cached_path.size() && strcmp(cached_path[index].characters(), entry.characters()) < 0) {
+    while (index < cached_path.size() && strcmp(cached_path[index].path.characters(), entry.path.characters()) < 0) {
         index++;
     }
     cached_path.insert(index, entry);
@@ -1391,7 +1424,7 @@ void Shell::add_entry_to_cache(String const& entry)
 void Shell::remove_entry_from_cache(StringView entry)
 {
     size_t index { 0 };
-    auto match = binary_search(cached_path.span(), entry, &index);
+    auto match = binary_search(cached_path.span(), entry, &index, RunnablePathComparator {});
 
     if (match)
         cached_path.remove(index);
@@ -1518,14 +1551,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         [](auto& name, auto& program) {
             return strncmp(
                 name.characters_without_null_termination(),
-                program.characters(),
+                program.path.characters(),
                 name.length());
         });
 
     if (!match)
         return complete_path("", name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
 
-    String completion = *match;
+    String completion = match->path;
     auto token_length = escape_token(name, escape_mode).length();
     auto invariant_offset = token_length;
     size_t static_offset = 0;
@@ -1539,11 +1572,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
     Vector<Line::CompletionSuggestion> suggestions;
 
     int index = match - cached_path.data();
-    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i)
-        suggestions.append({ cached_path[i], " " });
-    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i)
-        suggestions.append({ cached_path[i], " " });
-    suggestions.append({ cached_path[index], " " });
+    for (int i = index - 1; i >= 0 && cached_path[i].path.starts_with(name); --i)
+        suggestions.append({ cached_path[i].path, " " });
+    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].path.starts_with(name); ++i)
+        suggestions.append({ cached_path[i].path, " " });
+    suggestions.append({ cached_path[index].path, " " });
 
     for (auto& entry : suggestions) {
         entry.input_offset = token_length;
@@ -1670,7 +1703,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     completion_command = expand_aliases({ completion_command }).last();
 
     auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]);
-    if (binary_search(cached_path, completion_utility_name))
+    if (binary_search(cached_path.span(), completion_utility_name, nullptr, RunnablePathComparator {}) != nullptr)
         completion_command.argv[0] = completion_utility_name;
     else if (!options.invoke_program_for_autocomplete)
         return Error::from_string_literal("Refusing to use the program itself as completion source");
