@@ -171,7 +171,7 @@ MainWidget::MainWidget()
     };
 }
 
-void MainWidget::set_start_page(String const& start_page, int section)
+void MainWidget::set_start_page(StringView start_page, u32 section)
 {
     bool set_start_page = false;
     if (!start_page.is_null()) {

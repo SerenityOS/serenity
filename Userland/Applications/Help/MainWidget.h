@@ -20,7 +20,7 @@ public:
     virtual ~MainWidget() override = default;
 
     ErrorOr<void> initialize_fallibles(GUI::Window&);
-    void set_start_page(String const& page, int section);
+    void set_start_page(StringView page, u32 section);
 
 private:
     MainWidget();
