@@ -13,5 +13,5 @@ configure() {
 }
 
 install() {
-    run make DESTDIR=$SERENITY_BUILD_DIR/Root install
+    run make install
 }
