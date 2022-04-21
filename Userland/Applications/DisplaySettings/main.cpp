@@ -12,6 +12,7 @@
 #include "MonitorSettingsWidget.h"
 #include "ThemesSettingsWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -25,6 +26,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("WindowManager");
 
+    StringView selected_tab;
+    Core::ArgsParser args_parser;
+    args_parser.add_option(selected_tab, "Tab, one of 'background', 'fonts', 'monitor', 'themes', or 'workspaces'", "open-tab", 't', "tab");
+    args_parser.parse(arguments);
+
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
     bool background_settings_changed = false;
@@ -35,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts", "fonts"));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor", "monitor"));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces", "workspaces"));
+    window->set_active_tab(selected_tab);
 
     window->set_icon(app_icon.bitmap_for_size(16));
 

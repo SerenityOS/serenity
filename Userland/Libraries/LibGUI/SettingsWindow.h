@@ -42,6 +42,9 @@ public:
         return tab;
     }
 
+    Optional<NonnullRefPtr<Tab>> get_tab(StringView id) const;
+    void set_active_tab(StringView id);
+
 private:
     SettingsWindow() = default;
 

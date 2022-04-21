@@ -76,4 +76,18 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     return window;
 }
 
+Optional<NonnullRefPtr<SettingsWindow::Tab>> SettingsWindow::get_tab(StringView id) const
+{
+    auto tab = m_tabs.find(id);
+    if (tab == m_tabs.end())
+        return {};
+    return tab->value;
+}
+
+void SettingsWindow::set_active_tab(StringView id)
+{
+    if (auto tab = get_tab(id); tab.has_value())
+        m_tab_widget->set_active_widget(tab.value());
+}
+
 }

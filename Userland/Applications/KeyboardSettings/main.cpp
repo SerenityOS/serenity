@@ -6,6 +6,7 @@
  */
 
 #include "KeyboardSettingsWidget.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/SettingsWindow.h>
@@ -20,6 +21,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("KeyboardSettings");
 
+    StringView selected_tab;
+    Core::ArgsParser args_parser;
+    args_parser.add_option(selected_tab, "Tab, only option is 'keyboard'", "open-tab", 't', "tab");
+    args_parser.parse(arguments);
+
     TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
@@ -32,6 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Keyboard Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
     auto keyboard_settings_widget = TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard", "keyboard"));
+    window->set_active_tab(selected_tab);
 
     window->on_active_window_change = [&](bool is_active_window) {
         keyboard_settings_widget->window_activated(is_active_window);
