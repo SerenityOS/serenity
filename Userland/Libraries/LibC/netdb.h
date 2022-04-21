@@ -90,11 +90,11 @@ struct addrinfo {
 #define NI_MAXHOST 1025
 #define NI_MAXSERV 32
 
-#define NI_NUMERICHOST 1
-#define NI_NUMERICSERV 2
-#define NI_NAMEREQD 3
-#define NI_NOFQDN 4
-#define NI_DGRAM 5
+#define NI_NUMERICHOST (1 << 0)
+#define NI_NUMERICSERV (1 << 1)
+#define NI_NAMEREQD (1 << 2)
+#define NI_NOFQDN (1 << 3)
+#define NI_DGRAM (1 << 4)
 
 int getaddrinfo(char const* __restrict node, char const* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
