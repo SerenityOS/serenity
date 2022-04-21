@@ -7,6 +7,7 @@
 #include "ClockSettingsWidget.h"
 #include "TimeZoneSettingsWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -20,6 +21,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Taskbar");
+
+    StringView selected_tab;
+    Core::ArgsParser args_parser;
+    args_parser.add_option(selected_tab, "Tab, one of 'clock' or 'time-zone'", "open-tab", 't', "tab");
+    args_parser.parse(arguments);
+
     TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/timezone", "x"));
@@ -33,6 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone", "time-zone"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(540, 570);
+    window->set_active_tab(selected_tab);
 
     window->show();
     return app->exec();
