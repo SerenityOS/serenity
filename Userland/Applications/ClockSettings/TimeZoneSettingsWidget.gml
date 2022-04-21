@@ -9,7 +9,7 @@
         title: "Time Zone Settings"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
-            spacing: 16
+            spacing: 14
         }
 
         @GUI::Label {
