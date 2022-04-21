@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, cflip <cflip@cflip.net>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,11 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 
+constexpr StringView time_format_12h = "%I:%M %p";
+constexpr StringView time_format_12h_seconds = "%r";
+constexpr StringView time_format_24h = "%R";
+constexpr StringView time_format_24h_seconds = "%T";
+
 ClockSettingsWidget::ClockSettingsWidget()
 {
     load_from_gml(clock_settings_widget_gml);
@@ -19,10 +25,28 @@ ClockSettingsWidget::ClockSettingsWidget()
     auto& twelve_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("12hour_radio");
     m_show_seconds_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("seconds_checkbox");
     auto& custom_radio = *find_descendant_of_type_named<GUI::RadioButton>("custom_radio");
-    custom_radio.set_checked(true);
 
+    auto saved_format = Config::read_string("Taskbar", "Clock", "TimeFormat");
     m_custom_format_input = *find_descendant_of_type_named<GUI::TextBox>("custom_format_input");
-    m_custom_format_input->set_text(Config::read_string("Taskbar", "Clock", "TimeFormat"));
+    m_custom_format_input->set_text(saved_format);
+    m_custom_format_input->set_enabled(false);
+
+    if (saved_format == time_format_12h) {
+        twelve_hour_radio.set_checked(true, GUI::AllowCallback::No);
+        m_show_seconds_checkbox->set_checked(false, GUI::AllowCallback::No);
+    } else if (saved_format == time_format_12h_seconds) {
+        twelve_hour_radio.set_checked(true, GUI::AllowCallback::No);
+        m_show_seconds_checkbox->set_checked(true, GUI::AllowCallback::No);
+    } else if (saved_format == time_format_24h) {
+        m_24_hour_radio->set_checked(true, GUI::AllowCallback::No);
+        m_show_seconds_checkbox->set_checked(false, GUI::AllowCallback::No);
+    } else if (saved_format == time_format_24h_seconds) {
+        m_24_hour_radio->set_checked(true, GUI::AllowCallback::No);
+        m_show_seconds_checkbox->set_checked(true, GUI::AllowCallback::No);
+    } else {
+        custom_radio.set_checked(true);
+        m_custom_format_input->set_enabled(true);
+    }
 
     m_24_hour_radio->on_checked = [&](bool) {
         m_show_seconds_checkbox->set_enabled(true);
@@ -55,14 +79,14 @@ void ClockSettingsWidget::reset_default_values()
 {
     m_24_hour_radio->set_checked(true);
     m_show_seconds_checkbox->set_checked(true);
-    Config::write_string("Taskbar", "Clock", "TimeFormat", "%T");
+    Config::write_string("Taskbar", "Clock", "TimeFormat", time_format_24h_seconds);
 }
 
 void ClockSettingsWidget::update_time_format_string()
 {
     bool show_seconds = m_show_seconds_checkbox->is_checked();
     if (m_24_hour_radio->is_checked())
-        m_custom_format_input->set_text(show_seconds ? "%T" : "%R");
+        m_custom_format_input->set_text(show_seconds ? time_format_24h_seconds : time_format_24h);
     else
-        m_custom_format_input->set_text(show_seconds ? "%r" : "%I:%M %p");
+        m_custom_format_input->set_text(show_seconds ? time_format_12h_seconds : time_format_12h);
 }
