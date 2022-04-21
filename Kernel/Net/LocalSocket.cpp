@@ -124,11 +124,11 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
 ErrorOr<void> LocalSocket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
-    if (address_size != sizeof(sockaddr_un))
+    if (address_size > sizeof(sockaddr_un))
         return set_so_error(EINVAL);
 
     sockaddr_un address = {};
-    SOCKET_TRY(copy_from_user(&address, user_address, sizeof(sockaddr_un)));
+    SOCKET_TRY(copy_from_user(&address, user_address, address_size));
 
     if (address.sun_family != AF_LOCAL)
         return set_so_error(EINVAL);
