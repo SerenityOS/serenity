@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021-2022, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
@@ -34,10 +35,10 @@ public:
     virtual ~SettingsWindow() override = default;
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> add_tab(String title, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> add_tab(String title, StringView id, Args&&... args)
     {
         auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
-        TRY(m_tabs.try_append(tab));
+        TRY(m_tabs.try_set(id, tab));
         return tab;
     }
 
@@ -45,7 +46,7 @@ private:
     SettingsWindow() = default;
 
     RefPtr<GUI::TabWidget> m_tab_widget;
-    NonnullRefPtrVector<Tab> m_tabs;
+    HashMap<StringView, NonnullRefPtr<Tab>> m_tabs;
 
     RefPtr<GUI::Button> m_ok_button;
     RefPtr<GUI::Button> m_cancel_button;

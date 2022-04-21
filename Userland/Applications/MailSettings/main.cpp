@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mail");
 
     auto window = TRY(GUI::SettingsWindow::create("Mail Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<MailSettingsWidget>("Mail"));
+    (void)TRY(window->add_tab<MailSettingsWidget>("Mail", "mail"));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

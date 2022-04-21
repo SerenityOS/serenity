@@ -2,7 +2,7 @@
  * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021-2022, the SerenityOS developers.
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,9 +41,9 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
         window->m_reset_button = TRY(button_container->try_add<GUI::Button>("Defaults"));
         window->m_reset_button->set_fixed_width(75);
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-            for (auto& tab : window->m_tabs) {
-                tab.reset_default_values();
-                tab.apply_settings();
+            for (auto& [id, tab] : window->m_tabs) {
+                tab->reset_default_values();
+                tab->apply_settings();
             }
         };
     }
@@ -53,24 +53,24 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     window->m_ok_button = TRY(button_container->try_add<GUI::Button>("OK"));
     window->m_ok_button->set_fixed_width(75);
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& tab : window->m_tabs)
-            tab.apply_settings();
+        for (auto& [id, tab] : window->m_tabs)
+            tab->apply_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_cancel_button = TRY(button_container->try_add<GUI::Button>("Cancel"));
     window->m_cancel_button->set_fixed_width(75);
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& tab : window->m_tabs)
-            tab.cancel_settings();
+        for (auto& [id, tab] : window->m_tabs)
+            tab->cancel_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_apply_button = TRY(button_container->try_add<GUI::Button>("Apply"));
     window->m_apply_button->set_fixed_width(75);
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& tab : window->m_tabs)
-            tab.apply_settings();
+        for (auto& [id, tab] : window->m_tabs)
+            tab->apply_settings();
     };
 
     return window;

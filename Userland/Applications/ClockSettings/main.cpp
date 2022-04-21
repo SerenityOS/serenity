@@ -29,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-analog-clock"); // FIXME: Create a ClockSettings icon.
 
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"));
-    (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone"));
+    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock", "clock"));
+    (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone", "time-zone"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(540, 570);
 

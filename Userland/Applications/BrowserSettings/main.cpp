@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,8 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"));
-    (void)TRY(window->add_tab<ContentFilterSettingsWidget>("Content Filtering"));
+    (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser", "browser"));
+    (void)TRY(window->add_tab<ContentFilterSettingsWidget>("Content Filtering", "content-filtering"));
 
     window->show();
     return app->exec();
