@@ -2,29 +2,20 @@
 set -eu
 
 SCRIPT="$(dirname "${0}")"
-export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
-export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GCC}"
-
-if [ -z "${HOST_CC:=}" ]; then
-    export HOST_CC="${CC:=cc}"
-    export HOST_CXX="${CXX:=c++}"
-    export HOST_AR="${AR:=ar}"
-    export HOST_RANLIB="${RANLIB:=ranlib}"
-    export HOST_PATH="${PATH:=}"
-    export HOST_READELF="${READELF:=readelf}"
-    export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
-    export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
-    export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
-    export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
-fi
-
-DESTDIR="/"
 
 maybe_source() {
     if [ -f "$1" ]; then
         . "$1"
     fi
 }
+
+target_env() {
+    maybe_source "${SCRIPT}/.hosted_defs.sh"
+}
+
+target_env
+
+DESTDIR="${SERENITY_INSTALL_ROOT}"
 
 enable_ccache() {
     if command -v ccache &>/dev/null; then
@@ -37,11 +28,7 @@ enable_ccache() {
     fi
 }
 
-target_env() {
-    maybe_source "${SCRIPT}/.hosted_defs.sh"
-}
-
-target_env
+enable_ccache
 
 host_env() {
     export CC="${HOST_CC}"
