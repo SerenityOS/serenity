@@ -100,14 +100,20 @@ LocalSocket::~LocalSocket()
 
 void LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
 {
+    auto& address_un = *reinterpret_cast<sockaddr_un*>(address);
+    address_un = {
+        .sun_family = AF_UNIX,
+        .sun_path = {},
+    };
+
     if (!m_path || m_path->is_empty()) {
-        size_t bytes_to_copy = min(static_cast<size_t>(*address_size), sizeof(sockaddr_un));
-        memset(address, 0, bytes_to_copy);
-    } else {
-        size_t bytes_to_copy = min(m_path->length(), min(static_cast<size_t>(*address_size), sizeof(sockaddr_un)));
-        memcpy(address, m_path->characters(), bytes_to_copy);
+        *address_size = sizeof(address_un.sun_family);
+        return;
     }
-    *address_size = sizeof(sockaddr_un);
+
+    size_t bytes_to_copy = min(m_path->length() + 1, min(static_cast<size_t>(*address_size), sizeof(address_un.sun_path)));
+    memcpy(address_un.sun_path, m_path->characters(), bytes_to_copy);
+    *address_size = sizeof(address_un.sun_family) + bytes_to_copy;
 }
 
 void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
