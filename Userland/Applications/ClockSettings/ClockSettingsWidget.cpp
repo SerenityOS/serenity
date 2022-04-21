@@ -48,13 +48,17 @@ ClockSettingsWidget::ClockSettingsWidget()
         m_custom_format_input->set_enabled(true);
     }
 
-    m_24_hour_radio->on_checked = [&](bool) {
+    m_24_hour_radio->on_checked = [&](bool checked) {
+        if (!checked)
+            return;
         m_show_seconds_checkbox->set_enabled(true);
         m_custom_format_input->set_enabled(false);
         update_time_format_string();
     };
 
-    twelve_hour_radio.on_checked = [&](bool) {
+    twelve_hour_radio.on_checked = [&](bool checked) {
+        if (!checked)
+            return;
         m_show_seconds_checkbox->set_enabled(true);
         m_custom_format_input->set_enabled(false);
         update_time_format_string();
@@ -64,7 +68,9 @@ ClockSettingsWidget::ClockSettingsWidget()
         update_time_format_string();
     };
 
-    custom_radio.on_checked = [&](bool) {
+    custom_radio.on_checked = [&](bool checked) {
+        if (!checked)
+            return;
         m_show_seconds_checkbox->set_enabled(false);
         m_custom_format_input->set_enabled(true);
     };
