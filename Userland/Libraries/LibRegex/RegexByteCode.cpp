@@ -458,16 +458,18 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
 
-        if (compare_type == CharacterCompareType::Inverse)
+        if (compare_type == CharacterCompareType::Inverse) {
             inverse = true;
+            continue;
 
-        else if (compare_type == CharacterCompareType::TemporaryInverse) {
+        } else if (compare_type == CharacterCompareType::TemporaryInverse) {
             // If "TemporaryInverse" is given, negate the current inversion state only for the next opcode.
             // it follows that this cannot be the last compare element.
             VERIFY(i != arguments_count() - 1);
 
             temporary_inverse = true;
             reset_temp_inverse = false;
+            continue;
 
         } else if (compare_type == CharacterCompareType::Char) {
             u32 ch = m_bytecode->at(offset++);
@@ -597,6 +599,11 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
             break;
+        }
+
+        if (current_inversion_state() && !inverse_matched) {
+            advance_string_position(state, input.view);
+            inverse_matched = true;
         }
     }
 
