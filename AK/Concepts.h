@@ -79,6 +79,16 @@ concept ArrayLike = requires(ArrayT array, SizeT index)
     -> SameAs<RemoveReference<ContainedT>*>;
 };
 
+// Any indexable data structure.
+template<typename ArrayT, typename ContainedT, typename SizeT = size_t>
+concept Indexable = requires(ArrayT array, SizeT index)
+{
+    {
+        array[index]
+    }
+    -> OneOf<RemoveReference<ContainedT>&, RemoveReference<ContainedT>>;
+};
+
 template<typename Func, typename... Args>
 concept VoidFunction = requires(Func func, Args... args)
 {
@@ -130,6 +140,7 @@ using AK::Concepts::Enum;
 using AK::Concepts::FallibleFunction;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Fundamental;
+using AK::Concepts::Indexable;
 using AK::Concepts::Integral;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
