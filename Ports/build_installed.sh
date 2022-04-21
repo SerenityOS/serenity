@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+. ".hosted_defs.sh"
 
-packagesdb="${SERENITY_BUILD_DIR}/packages.db"
+packagesdb="${SERENITY_INSTALL_ROOT}/usr/Ports/packages.db"
 
 clean=false
 case "$1" in
