@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +29,7 @@ extern int errno;
 extern __thread int errno;
 #endif
 
-#define errno errno
+int* __errno_location() __attribute__((const));
+#define errno (*__errno_location())
 
 __END_DECLS
