@@ -2,7 +2,7 @@
  * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 
     auto window = TRY(GUI::SettingsWindow::create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<MouseWidget>("Mouse"));
-    (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme"));
+    (void)TRY(window->add_tab<MouseWidget>("Mouse", "mouse"));
+    (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme", "cursor-theme"));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

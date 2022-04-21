@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Keyboard Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto keyboard_settings_widget = TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard"));
+    auto keyboard_settings_widget = TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard", "keyboard"));
 
     window->on_active_window_change = [&](bool is_active_window) {
         keyboard_settings_widget->window_activated(is_active_window);
