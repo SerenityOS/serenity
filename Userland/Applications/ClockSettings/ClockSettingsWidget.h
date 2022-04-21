@@ -19,10 +19,14 @@ private:
     virtual void reset_default_values() override;
 
     void update_time_format_string();
+    void update_clock_preview();
 
     RefPtr<GUI::RadioButton> m_24_hour_radio;
     RefPtr<GUI::CheckBox> m_show_seconds_checkbox;
     RefPtr<GUI::TextBox> m_custom_format_input;
+    RefPtr<GUI::Label> m_clock_preview;
 
-    String m_date_format;
+    RefPtr<Core::Timer> m_clock_preview_update_timer;
+
+    String m_time_format;
 };
