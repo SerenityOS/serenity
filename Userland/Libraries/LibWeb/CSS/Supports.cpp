@@ -73,4 +73,44 @@ bool Supports::Feature::evaluate() const
         });
 }
 
+String Supports::Declaration::to_string() const
+{
+    return String::formatted("({})", declaration);
+}
+
+String Supports::Selector::to_string() const
+{
+    return String::formatted("selector({})", selector);
+}
+
+String Supports::Feature::to_string() const
+{
+    return value.visit([](auto& it) { return it.to_string(); });
+}
+
+String Supports::InParens::to_string() const
+{
+    return value.visit(
+        [](NonnullOwnPtr<Condition> const& condition) -> String { return String::formatted("({})", condition->to_string()); },
+        [](auto& it) -> String { return it.to_string(); });
+}
+
+String Supports::Condition::to_string() const
+{
+    switch (type) {
+    case Type::Not:
+        return String::formatted("not {}", children.first().to_string());
+    case Type::And:
+        return String::join(" and ", children);
+    case Type::Or:
+        return String::join(" or ", children);
+    }
+    VERIFY_NOT_REACHED();
+}
+
+String Supports::to_string() const
+{
+    return m_condition->to_string();
+}
+
 }
