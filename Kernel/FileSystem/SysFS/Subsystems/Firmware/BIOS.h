@@ -57,9 +57,6 @@ struct [[gnu::packed]] EntryPoint64bit {
 
 namespace Kernel {
 
-ErrorOr<Memory::MappedROM> map_bios();
-ErrorOr<Memory::MappedROM> map_ebda();
-
 class BIOSSysFSComponent : public SysFSComponent {
 public:
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
