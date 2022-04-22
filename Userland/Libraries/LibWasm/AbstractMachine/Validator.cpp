@@ -1420,6 +1420,7 @@ VALIDATE_INSTRUCTION(local_tee)
 
     auto& value_type = m_context.locals[index.value()];
     TRY(stack.take(value_type));
+    stack.append(value_type);
 
     return {};
 }
