@@ -17,6 +17,9 @@ CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules, Optional<AK::UR
 {
     if (location.has_value())
         set_location(location->to_string());
+
+    for (auto& rule : *m_rules)
+        rule.set_parent_style_sheet(this);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
@@ -36,9 +39,13 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 
     // 6. Return the result of invoking insert a CSS rule rule in the CSS rules at index.
-    auto result = m_rules->insert_a_css_rule(parsed_rule.release_nonnull(), index);
+    auto parsed_rule_nonnull = parsed_rule.release_nonnull();
+    auto result = m_rules->insert_a_css_rule(parsed_rule_nonnull, index);
 
     if (!result.is_exception()) {
+        // NOTE: The spec doesn't say where to set the parent style sheet, so we'll do it here.
+        parsed_rule_nonnull->set_parent_style_sheet(this);
+
         if (m_style_sheet_list) {
             m_style_sheet_list->document().style_computer().invalidate_rule_cache();
             m_style_sheet_list->document().invalidate_style();
