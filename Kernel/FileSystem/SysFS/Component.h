@@ -56,6 +56,20 @@ private:
     InodeIndex m_component_index {};
 };
 
+class SysFSSymbolicLink : public SysFSComponent {
+public:
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override final;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
+
+protected:
+    ErrorOr<NonnullOwnPtr<KString>> try_generate_return_path_to_mount_point() const;
+    ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
+
+    explicit SysFSSymbolicLink(SysFSDirectory const& parent_directory, SysFSComponent const& pointed_component);
+
+    RefPtr<SysFSComponent> m_pointed_component;
+};
+
 class SysFSDirectory : public SysFSComponent {
 public:
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;

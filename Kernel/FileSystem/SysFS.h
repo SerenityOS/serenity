@@ -62,6 +62,19 @@ protected:
     NonnullRefPtr<SysFSComponent> m_associated_component;
 };
 
+class SysFSLinkInode : public SysFSInode {
+    friend class SysFS;
+
+public:
+    static ErrorOr<NonnullRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
+    virtual ~SysFSLinkInode() override;
+
+protected:
+    SysFSLinkInode(SysFS const&, SysFSComponent const&);
+    // ^Inode
+    virtual InodeMetadata metadata() const override;
+};
+
 class SysFSDirectoryInode : public SysFSInode {
     friend class SysFS;
 
