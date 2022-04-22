@@ -23,7 +23,7 @@
 #include <Kernel/FileSystem/DeviceFileTypes.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/DeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

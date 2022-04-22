@@ -5,16 +5,16 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/CharacterDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-NonnullRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::must_create(SysFSDevicesDirectory const& devices_directory)
+NonnullRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::must_create(SysFSDeviceIdentifiersDirectory const& devices_directory)
 {
     return adopt_ref_if_nonnull(new SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
 }
-SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
+SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDeviceIdentifiersDirectory const& devices_directory)
     : SysFSDirectory(devices_directory)
 {
 }

@@ -5,16 +5,16 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/BlockDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-NonnullRefPtr<SysFSBlockDevicesDirectory> SysFSBlockDevicesDirectory::must_create(SysFSDevicesDirectory const& devices_directory)
+NonnullRefPtr<SysFSBlockDevicesDirectory> SysFSBlockDevicesDirectory::must_create(SysFSDeviceIdentifiersDirectory const& devices_directory)
 {
     return adopt_ref_if_nonnull(new SysFSBlockDevicesDirectory(devices_directory)).release_nonnull();
 }
-SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
+SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDeviceIdentifiersDirectory const& devices_directory)
     : SysFSDirectory(devices_directory)
 {
 }
