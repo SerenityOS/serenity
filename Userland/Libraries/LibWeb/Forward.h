@@ -509,6 +509,7 @@ class ImageDataWrapper;
 class IntersectionObserverWrapper;
 class KeyboardEventWrapper;
 class LocationObject;
+class MediaListWrapper;
 class MediaQueryListEventWrapper;
 class MediaQueryListWrapper;
 class MessageChannelWrapper;
