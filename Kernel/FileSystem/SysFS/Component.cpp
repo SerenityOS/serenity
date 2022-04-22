@@ -7,6 +7,7 @@
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
+#include <Kernel/KLexicalPath.h>
 
 namespace Kernel {
 
@@ -21,9 +22,34 @@ static size_t allocate_inode_index()
     return s_next_inode_index.value();
 }
 
+SysFSComponent::SysFSComponent(SysFSDirectory const& parent_directory)
+    : m_parent_directory(parent_directory)
+    , m_component_index(allocate_inode_index())
+{
+}
+
 SysFSComponent::SysFSComponent()
     : m_component_index(allocate_inode_index())
 {
+}
+
+ErrorOr<NonnullOwnPtr<KString>> SysFSComponent::relative_path(NonnullOwnPtr<KString> name, size_t current_hop) const
+{
+    if (current_hop >= 128)
+        return Error::from_errno(ELOOP);
+    if (!m_parent_directory)
+        return name;
+    auto joined_name = TRY(KLexicalPath::try_join(m_parent_directory->name(), name->view()));
+    return m_parent_directory->relative_path(move(joined_name), current_hop + 1);
+}
+
+ErrorOr<size_t> SysFSComponent::relative_path_hops_count_from_mountpoint(size_t current_hop) const
+{
+    if (current_hop >= 128)
+        return Error::from_errno(ELOOP);
+    if (!m_parent_directory)
+        return current_hop;
+    return m_parent_directory->relative_path_hops_count_from_mountpoint(current_hop + 1);
 }
 
 mode_t SysFSComponent::permissions() const
@@ -56,8 +82,7 @@ RefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
 }
 
 SysFSDirectory::SysFSDirectory(SysFSDirectory const& parent_directory)
-    : SysFSComponent()
-    , m_parent_directory(parent_directory)
+    : SysFSComponent(parent_directory)
 {
 }
 

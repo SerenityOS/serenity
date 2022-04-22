@@ -23,6 +23,7 @@ struct SysFSInodeData : public OpenFileDescriptionData {
     OwnPtr<KBuffer> buffer;
 };
 
+class SysFSDirectory;
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual StringView name() const = 0;
@@ -42,8 +43,14 @@ public:
 
     virtual ~SysFSComponent() = default;
 
+    ErrorOr<NonnullOwnPtr<KString>> relative_path(NonnullOwnPtr<KString>, size_t current_hop = 0) const;
+    ErrorOr<size_t> relative_path_hops_count_from_mountpoint(size_t current_hop = 0) const;
+
 protected:
+    explicit SysFSComponent(SysFSDirectory const& parent_directory);
     SysFSComponent();
+
+    RefPtr<SysFSDirectory> m_parent_directory;
 
 private:
     InodeIndex m_component_index {};
@@ -57,10 +64,9 @@ public:
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
-    SysFSDirectory() = default;
+    SysFSDirectory() {};
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
     NonnullRefPtrVector<SysFSComponent> m_components;
-    RefPtr<SysFSDirectory> m_parent_directory;
 };
 
 }
