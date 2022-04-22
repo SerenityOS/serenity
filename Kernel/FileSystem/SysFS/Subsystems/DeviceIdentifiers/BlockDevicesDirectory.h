@@ -7,19 +7,19 @@
 #pragma once
 
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
 
 namespace Kernel {
 
-class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
+class SysFSBlockDevicesDirectory final : public SysFSDirectory {
 public:
-    virtual StringView name() const override { return "char"sv; }
-    static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDevicesDirectory const&);
+    virtual StringView name() const override { return "block"sv; }
+    static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
 private:
-    explicit SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const&);
+    explicit SysFSBlockDevicesDirectory(SysFSDeviceIdentifiersDirectory const&);
 };
 
 }

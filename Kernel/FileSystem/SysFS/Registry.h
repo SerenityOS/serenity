@@ -10,7 +10,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/DeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
 #include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {

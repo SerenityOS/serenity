@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/Device.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/DeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

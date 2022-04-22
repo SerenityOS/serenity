@@ -11,13 +11,13 @@
 
 namespace Kernel {
 
-class SysFSDevicesDirectory final : public SysFSDirectory {
+class SysFSDeviceIdentifiersDirectory final : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "dev"sv; }
-    static NonnullRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
+    static NonnullRefPtr<SysFSDeviceIdentifiersDirectory> must_create(SysFSRootDirectory const&);
 
 private:
-    explicit SysFSDevicesDirectory(SysFSRootDirectory const&);
+    explicit SysFSDeviceIdentifiersDirectory(SysFSRootDirectory const&);
 };
 
 }

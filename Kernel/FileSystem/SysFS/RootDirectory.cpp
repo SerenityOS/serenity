@@ -7,7 +7,7 @@
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -33,9 +33,9 @@ ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Funct
 SysFSRootDirectory::SysFSRootDirectory()
 {
     auto buses_directory = SysFSBusDirectory::must_create(*this);
-    auto devices_directory = SysFSDevicesDirectory::must_create(*this);
+    auto device_identifiers_directory = SysFSDeviceIdentifiersDirectory::must_create(*this);
     m_components.append(buses_directory);
-    m_components.append(devices_directory);
+    m_components.append(device_identifiers_directory);
     m_buses_directory = buses_directory;
 }
 
