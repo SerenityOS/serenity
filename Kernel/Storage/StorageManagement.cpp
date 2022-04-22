@@ -30,6 +30,7 @@ namespace Kernel {
 
 static Singleton<StorageManagement> s_the;
 static Atomic<u32> s_device_minor_number;
+static Atomic<u32> s_controller_id;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -242,6 +243,13 @@ MinorNumber StorageManagement::generate_storage_minor_number()
     auto minor_number = s_device_minor_number.load();
     s_device_minor_number++;
     return minor_number;
+}
+
+u32 StorageManagement::generate_controller_id()
+{
+    auto controller_id = s_controller_id.load();
+    s_controller_id++;
+    return controller_id;
 }
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const

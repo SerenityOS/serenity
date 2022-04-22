@@ -19,13 +19,13 @@
 #include <Kernel/Sections.h>
 
 namespace Kernel {
-Atomic<u8> NVMeController::controller_id {};
+Atomic<u8> NVMeController::s_controller_id {};
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
 {
     auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier)));
     TRY(controller->initialize(is_queue_polled));
-    NVMeController::controller_id++;
+    NVMeController::s_controller_id++;
     return controller;
 }
 
@@ -207,7 +207,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
-            m_namespaces.append(TRY(NVMeNameSpace::try_create(m_queues, controller_id.load(), nsid, block_counts, block_size)));
+            m_namespaces.append(TRY(NVMeNameSpace::try_create(*this, m_queues, s_controller_id.load(), nsid, block_counts, block_size)));
             m_device_count++;
             dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
         }

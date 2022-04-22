@@ -77,6 +77,6 @@ private:
     AK::Time m_ready_timeout;
     u32 m_bar { 0 };
     u8 m_dbl_stride { 0 };
-    static Atomic<u8> controller_id;
+    static Atomic<u8> s_controller_id;
 };
 }

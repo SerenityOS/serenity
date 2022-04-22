@@ -116,6 +116,7 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeQueue.cpp
     Storage/Ramdisk/Controller.cpp
     Storage/Ramdisk/Device.cpp
+    Storage/StorageController.cpp
     Storage/StorageDevice.cpp
     Storage/StorageManagement.cpp
     DoubleBuffer.cpp

@@ -45,6 +45,20 @@ public:
         NVMe,
     };
 
+    // Note: The most reliable way to address this device from userspace interfaces,
+    // such as SysFS, is to have one way to enumerate everything in the eyes of userspace.
+    // Therefore, SCSI LUN (logical unit number) addressing seem to be the most generic way to do this.
+    // For example, on a legacy ATA instance, one might connect an harddrive to the second IDE controller,
+    // to the Primary channel as a slave device, which translates to LUN 1:0:1.
+    // On NVMe, for example, connecting a second PCIe NVMe storage device as a sole NVMe namespace translates
+    // to LUN 1:0:0.
+    // TODO: LUNs are also useful also when specifying the boot drive on boot. Consider doing that.
+    struct LUNAddress {
+        u32 controller_id;
+        u32 target_id;
+        u32 disk_id;
+    };
+
 public:
     virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
@@ -62,6 +76,8 @@ public:
 
     void add_partition(NonnullRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
 
+    LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
+
     virtual CommandSet command_set() const = 0;
 
     StringView interface_type_to_string_view() const;
@@ -71,7 +87,7 @@ public:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
 
 protected:
-    StorageDevice(MajorNumber, MinorNumber, size_t, u64, NonnullOwnPtr<KString>);
+    StorageDevice(LUNAddress, MajorNumber, MinorNumber, size_t, u64, NonnullOwnPtr<KString>);
     // ^DiskDevice
     virtual StringView class_name() const override;
 
@@ -82,6 +98,7 @@ private:
 
     // FIXME: Remove this method after figuring out another scheme for naming.
     NonnullOwnPtr<KString> m_early_storage_device_name;
+    LUNAddress const m_logical_unit_number_address;
     u64 m_max_addressable_block { 0 };
     size_t m_blocks_per_page { 0 };
 };
