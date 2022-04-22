@@ -25,8 +25,8 @@ NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& cont
     return device_or_error.release_value();
 }
 
-RamdiskDevice::RamdiskDevice(RamdiskController const&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor, NonnullOwnPtr<KString> device_name)
-    : StorageDevice(major, minor, 512, region->size() / 512, move(device_name))
+RamdiskDevice::RamdiskDevice(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor, NonnullOwnPtr<KString> device_name)
+    : StorageDevice(LUNAddress { controller.controller_id(), 0, 0 }, major, minor, 512, region->size() / 512, move(device_name))
     , m_region(move(region))
 {
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
