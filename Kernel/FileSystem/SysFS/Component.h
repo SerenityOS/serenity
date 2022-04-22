@@ -81,6 +81,8 @@ protected:
     SysFSDirectory() {};
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
     NonnullRefPtrVector<SysFSComponent> m_components;
+
+    mutable Mutex m_traverse_lock;
 };
 
 }

@@ -19,7 +19,7 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 
 ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
+    MutexLocker locker(m_traverse_lock);
     TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
     TRY(callback({ ".."sv, { fsid, 0 }, 0 }));
 
