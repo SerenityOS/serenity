@@ -461,18 +461,21 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::return_.value(): {
         auto& frame = configuration.frame();
-        size_t end = configuration.stack().size() - frame.arity();
-        size_t start = end;
-        for (; start + 1 > 0 && start < configuration.stack().size(); --start) {
-            auto& entry = configuration.stack().entries()[start];
-            if (entry.has<Frame>()) {
-                // Leave the frame, _and_ its label.
-                start += 2;
-                break;
+        Checked checked_index { configuration.stack().size() };
+        checked_index -= frame.arity();
+        VERIFY(!checked_index.has_overflow());
+
+        auto index = checked_index.value();
+        size_t i = 1;
+        for (; i <= index; ++i) {
+            auto& entry = configuration.stack().entries()[index - i];
+            if (entry.has<Label>()) {
+                if (configuration.stack().entries()[index - i - 1].has<Frame>())
+                    break;
             }
         }
 
-        configuration.stack().entries().remove(start, end - start);
+        configuration.stack().entries().remove(index - i + 1, i - 1);
 
         // Jump past the call/indirect instruction
         configuration.ip() = configuration.frame().expression().instructions().size();
