@@ -138,7 +138,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
     }
 
     configuration.stack().entries().ensure_capacity(configuration.stack().size() + result.values().size());
-    for (auto& entry : result.values())
+    for (auto& entry : result.values().in_reverse())
         configuration.stack().entries().unchecked_append(move(entry));
 }
 
