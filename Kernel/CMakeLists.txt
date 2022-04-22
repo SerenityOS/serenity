@@ -143,7 +143,9 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS.cpp
     FileSystem/SysFS.cpp
     FileSystem/SysFS/Component.cpp
-    FileSystem/SysFS/Subsystems/Bus/PCI/SysFSPCI.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS.cpp

@@ -9,32 +9,9 @@
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>
 
-namespace Kernel::PCI {
-
-class PCIBusSysFSDirectory final : public SysFSDirectory {
-public:
-    static void initialize();
-    virtual StringView name() const override { return "pci"sv; }
-
-private:
-    PCIBusSysFSDirectory();
-};
-
-class PCIDeviceSysFSDirectory final : public SysFSDirectory {
-public:
-    static NonnullRefPtr<PCIDeviceSysFSDirectory> create(SysFSDirectory const&, Address);
-    Address const& address() const { return m_address; }
-
-    virtual StringView name() const override { return m_device_directory_name->view(); }
-
-private:
-    PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const&, Address);
-
-    Address m_address;
-
-    NonnullOwnPtr<KString> m_device_directory_name;
-};
+namespace Kernel {
 
 class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
