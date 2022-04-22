@@ -54,6 +54,7 @@ class Scheduler;
 class Socket;
 class SysFS;
 class SysFSDirectory;
+class SysFSRootDirectory;
 class SysFSBusDirectory;
 class SysFSDirectoryInode;
 class SysFSInode;

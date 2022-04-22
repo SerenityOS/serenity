@@ -143,11 +143,18 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS.cpp
     FileSystem/SysFS.cpp
     FileSystem/SysFS/Component.cpp
+    FileSystem/SysFS/Registry.cpp
+    FileSystem/SysFS/RootDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
+    FileSystem/SysFS/Subsystems/Bus/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/BlockDevicesDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/CharacterDevicesDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/DeviceComponent.cpp
+    FileSystem/SysFS/Subsystems/Devices/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/EntryPointBlob.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Table.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp

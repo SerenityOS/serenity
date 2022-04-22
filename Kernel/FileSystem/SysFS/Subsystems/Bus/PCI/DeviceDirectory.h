@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Bus/PCI/Definitions.h>
-#include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/KString.h>
 
 namespace Kernel {
