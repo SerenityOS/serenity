@@ -14,18 +14,33 @@ interface HTMLDetailsElement : HTMLElement {
 };
 ```
 
-2. If the IDL starts with `[Exposed=Window]`, remove that line from the .idl file, and add the following to [`LibWeb/Bindings/WindowObjectHelper.h`](../../Userland/Libraries/LibWeb/Bindings/WindowObjectHelper.h):
+2. If the IDL refers to other IDL types, you need to import those. For example, `CSSRule` has an attribute that returns a `CSSStyleSheet`, so that needs to be imported:
+```webidl
+#import <CSS/CSSStyleSheet.idl>
+
+interface CSSRule {
+    readonly attribute CSSStyleSheet? parentStyleSheet;
+};
+```
+
+3. If the IDL starts with `[Exposed=Window]`, add the following to [`LibWeb/Bindings/WindowObjectHelper.h`](../../Userland/Libraries/LibWeb/Bindings/WindowObjectHelper.h):
     - `#include <LibWeb/Bindings/HTMLDetailsElementConstructor.h>` and
     - `#include <LibWeb/Bindings/HTMLDetailsElementPrototype.h>` to the includes list.
     - `ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)      \` to the macro at the bottom.
 
-3. Add a `libweb_js_wrapper()` call to [`LibWeb/CMakeLists.txt`](../../Userland/Libraries/LibWeb/CMakeLists.txt)
+4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/CMakeLists.txt`](../../Userland/Libraries/LibWeb/CMakeLists.txt)
 
-4. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
+5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
     - `HTMLDetailsElement` in its namespace.
     - `HTMLDetailsElementWrapper` in the `Web::Bindings` namespace.
 
-5. If your interface is an Event type:
-    - Add `#import <DOM/Event.idl>` at the top of the IDL file.
-    - Open [`LibWeb/Bindings/EventWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/EventWrapperFactory.cpp) and add an `#include` directive and `if` statement for your new Event type.
+6. The C++ class equivalent of the IDL interface has a few requirements:
+   - It must inherit from `public RefCounted<HTMLDetailsElement>` and `public Bindings::Wrappable`
+   - It must have a public `using WrapperType = Bindings::HTMLDetailsElementWrapper;`
 
+7. Depending on what kind of thing your interface is, you may need to add it to the `WrapperFactory` of that kind:
+   - CSSRules: [`LibWeb/Bindings/CSSRuleWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/CSSRuleWrapperFactory.cpp)
+   - Events: [`LibWeb/Bindings/EventWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/EventWrapperFactory.cpp)
+   - Elements: [`LibWeb/Bindings/NodeWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/NodeWrapperFactory.cpp)
+
+   Open the relevant wrapper factory file, and add `#include` directives and an `if` statement for your new type.
