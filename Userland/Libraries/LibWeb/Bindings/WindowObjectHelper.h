@@ -15,6 +15,8 @@
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
+#include <LibWeb/Bindings/CSSConditionRuleConstructor.h>
+#include <LibWeb/Bindings/CSSConditionRulePrototype.h>
 #include <LibWeb/Bindings/CSSFontFaceRuleConstructor.h>
 #include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
 #include <LibWeb/Bindings/CSSGroupingRuleConstructor.h>
@@ -358,7 +360,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
-    ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSConditionRule)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSFontFaceRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSGroupingRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                                                            \
@@ -371,6 +373,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                                                            \
+    ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(CustomEvent)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                                                           \
