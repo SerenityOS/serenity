@@ -7,8 +7,8 @@
 
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/PowerStateSwitch.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>

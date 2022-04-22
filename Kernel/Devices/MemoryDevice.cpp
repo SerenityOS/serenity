@@ -8,7 +8,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/MemoryDevice.h>
-#include <Kernel/Firmware/BIOS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

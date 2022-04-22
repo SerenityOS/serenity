@@ -26,8 +26,6 @@ set(KERNEL_SOURCES
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
     Bus/PCI/Initializer.cpp
-    Bus/PCI/SysFSPCI.cpp
-    Bus/USB/SysFSUSB.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp
@@ -144,16 +142,18 @@ set(KERNEL_SOURCES
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
     FileSystem/SysFS.cpp
-    FileSystem/SysFSComponent.cpp
+    FileSystem/SysFS/Component.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/SysFSPCI.cpp
+    FileSystem/SysFS/Subsystems/Bus/USB/SysFSUSB.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS.cpp
+    FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
+    FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/Hypervisor/VMWareBackdoor.cpp
     Firmware/MultiProcessor/Parser.cpp
-    Firmware/BIOS.cpp
-    Firmware/PowerStateSwitch.cpp
-    Firmware/SysFSFirmware.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp

@@ -7,7 +7,7 @@
 
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
-#include <Kernel/Bus/USB/SysFSUSB.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/SysFSUSB.h>
 #include <Kernel/KBufferBuilder.h>
 
 namespace Kernel::USB {

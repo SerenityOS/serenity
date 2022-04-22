@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/BIOS.h>
-#include <Kernel/Firmware/PowerStateSwitch.h>
-#include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

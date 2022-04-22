@@ -7,7 +7,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Firmware/BIOS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
