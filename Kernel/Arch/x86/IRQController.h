@@ -8,6 +8,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 namespace Kernel {
 
