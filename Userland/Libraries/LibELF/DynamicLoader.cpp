@@ -37,7 +37,7 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filename)
+Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filename, String filepath)
 {
     struct stat stat;
     if (fstat(fd, &stat) < 0) {
@@ -49,20 +49,21 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
     if (size < sizeof(ElfW(Ehdr)))
         return DlErrorMessage { String::formatted("File {} has invalid ELF header", filename) };
 
-    String file_mmap_name = String::formatted("ELF_DYN: {}", filename);
+    String file_mmap_name = String::formatted("ELF_DYN: {}", filepath);
     auto* data = mmap_with_name(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, file_mmap_name.characters());
     if (data == MAP_FAILED) {
         return DlErrorMessage { "DynamicLoader::try_create mmap" };
     }
 
-    auto loader = adopt_ref(*new DynamicLoader(fd, move(filename), data, size));
+    auto loader = adopt_ref(*new DynamicLoader(fd, move(filename), data, size, filepath));
     if (!loader->is_valid())
         return DlErrorMessage { "ELF image validation failed" };
     return loader;
 }
 
-DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
+DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size, String filepath)
     : m_filename(move(filename))
+    , m_filepath(move(filepath))
     , m_file_size(size)
     , m_image_fd(fd)
     , m_file_data(data)
@@ -236,7 +237,7 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
         }
 
 #ifdef __serenity__
-        if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, String::formatted("{}: .relro", m_filename).characters()) < 0) {
+        if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, String::formatted("{}: .relro", m_filepath).characters()) < 0) {
             return DlErrorMessage { String::formatted("set_mmap_name .relro: {}", strerror(errno)) };
         }
 #endif
@@ -344,7 +345,7 @@ void DynamicLoader::load_program_headers()
         FlatPtr ph_end = ph_base + round_up_to_power_of_two(region.size_in_memory() + region.desired_load_address().get() - ph_base, PAGE_SIZE);
 
         StringBuilder builder;
-        builder.append(m_filename);
+        builder.append(m_filepath);
         if (region.is_executable())
             builder.append(": .text");
         else
@@ -396,7 +397,7 @@ void DynamicLoader::load_program_headers()
             MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
             0,
             0,
-            String::formatted("{}: .data", m_filename).characters());
+            String::formatted("{}: .data", m_filepath).characters());
 
         if (MAP_FAILED == data_segment) {
             perror("mmap writable");

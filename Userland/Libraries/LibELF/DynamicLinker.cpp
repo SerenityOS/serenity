@@ -84,9 +84,9 @@ static String get_library_name(String path)
     return LexicalPath::basename(move(path));
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd, String const& filepath)
 {
-    auto result = ELF::DynamicLoader::try_create(fd, filename);
+    auto result = ELF::DynamicLoader::try_create(fd, filename, filepath);
     if (result.is_error()) {
         return result;
     }
@@ -136,7 +136,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
         int fd = open(name.characters(), O_RDONLY);
         if (fd < 0)
             return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
-        return map_library(name, fd);
+        return map_library(name, fd, name);
     }
 
     auto resolved_library_name = resolve_library(name, parent_object);
@@ -147,7 +147,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
     if (fd < 0)
         return DlErrorMessage { String::formatted("Could not open resolved shared library '{}': {}", resolved_library_name.value(), strerror(errno)) };
 
-    return map_library(name, fd);
+    return map_library(name, fd, resolved_library_name.value());
 }
 
 static Vector<String> get_dependencies(String const& name)
@@ -559,7 +559,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     // NOTE: We always map the main library first, since it may require
     //       placement at a specific address.
-    auto result1 = map_library(main_program_name, main_program_fd);
+    auto result1 = map_library(main_program_name, main_program_fd, main_program_name);
     if (result1.is_error()) {
         warnln("{}", result1.error().text);
         fflush(stderr);
