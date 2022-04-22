@@ -17,8 +17,7 @@ CSSSupportsRule::CSSSupportsRule(NonnullRefPtr<Supports>&& supports, NonnullRefP
 
 String CSSSupportsRule::condition_text() const
 {
-    // FIXME: Serializing supports rules!
-    return "<supports-condition>";
+    return m_supports->to_string();
 }
 
 void CSSSupportsRule::set_condition_text(String text)

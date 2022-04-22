@@ -24,16 +24,19 @@ public:
     struct Declaration {
         String declaration;
         bool evaluate() const;
+        String to_string() const;
     };
 
     struct Selector {
         String selector;
         bool evaluate() const;
+        String to_string() const;
     };
 
     struct Feature {
         Variant<Declaration, Selector> value;
         bool evaluate() const;
+        String to_string() const;
     };
 
     struct Condition;
@@ -41,6 +44,7 @@ public:
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
         bool evaluate() const;
+        String to_string() const;
     };
 
     struct Condition {
@@ -53,6 +57,7 @@ public:
         Vector<InParens> children;
 
         bool evaluate() const;
+        String to_string() const;
     };
 
     static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)
@@ -61,6 +66,7 @@ public:
     }
 
     bool matches() const { return m_matches; }
+    String to_string() const;
 
 private:
     Supports(NonnullOwnPtr<Condition>&&);
@@ -70,3 +76,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::Supports::InParens> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Supports::InParens const& in_parens)
+    {
+        return Formatter<StringView>::format(builder, in_parens.to_string());
+    }
+};
