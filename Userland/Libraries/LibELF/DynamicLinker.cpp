@@ -101,15 +101,8 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
     return loader;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& name, DynamicObject const& parent_object)
+static Optional<String> resolve_library(String const& name, DynamicObject const& parent_object)
 {
-    if (name.contains("/"sv)) {
-        int fd = open(name.characters(), O_RDONLY);
-        if (fd < 0)
-            return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
-        return map_library(name, fd);
-    }
-
     Vector<StringView> search_paths;
 
     // Search RPATH values indicated by the ELF (only if RUNPATH is not present).
@@ -128,15 +121,33 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
 
     for (auto const& search_path : search_paths) {
         LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(s_main_program_name)));
-        int fd = open(library_path.append(name).string().characters(), O_RDONLY);
+        String library_name = library_path.append(name).string();
 
+        if (access(library_name.characters(), F_OK) == 0)
+            return library_name;
+    }
+
+    return {};
+}
+
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& name, DynamicObject const& parent_object)
+{
+    if (name.contains("/"sv)) {
+        int fd = open(name.characters(), O_RDONLY);
         if (fd < 0)
-            continue;
-
+            return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
         return map_library(name, fd);
     }
 
-    return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
+    auto resolved_library_name = resolve_library(name, parent_object);
+    if (!resolved_library_name.has_value())
+        return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
+
+    int fd = open(resolved_library_name.value().characters(), O_RDONLY);
+    if (fd < 0)
+        return DlErrorMessage { String::formatted("Could not open resolved shared library '{}': {}", resolved_library_name.value(), strerror(errno)) };
+
+    return map_library(name, fd);
 }
 
 static Vector<String> get_dependencies(String const& name)
