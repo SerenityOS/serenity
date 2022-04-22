@@ -230,6 +230,8 @@
 #include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/Bindings/LocationConstructor.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
+#include <LibWeb/Bindings/MediaListConstructor.h>
+#include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
@@ -462,6 +464,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Location)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryListEvent)                                                \
+    ADD_WINDOW_OBJECT_INTERFACE(MediaList)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                                                         \
