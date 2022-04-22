@@ -132,9 +132,9 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
     // 19.2.1.2 HostEnsureCanCompileStrings ( callerRealm, calleeRealm ), https://tc39.es/ecma262/#sec-hostensurecancompilestrings
-    host_ensure_can_compile_strings = [](Realm&, Realm&) -> ThrowCompletionOr<void> {
-        // The host-defined abstract operation HostEnsureCanCompileStrings takes arguments callerRealm (a Realm Record) and calleeRealm (a Realm Record)
-        // and returns either a normal completion containing unused or an abrupt completion.
+    host_ensure_can_compile_strings = [](Realm&) -> ThrowCompletionOr<void> {
+        // The host-defined abstract operation HostEnsureCanCompileStrings takes argument calleeRealm (a Realm Record)
+        // and returns either a normal completion containing unused or a throw completion.
         // It allows host environments to block certain ECMAScript functions which allow developers to compile strings into ECMAScript code.
         // An implementation of HostEnsureCanCompileStrings must conform to the following requirements:
         //   - If the returned Completion Record is a normal completion, it must be a normal completion containing unused.

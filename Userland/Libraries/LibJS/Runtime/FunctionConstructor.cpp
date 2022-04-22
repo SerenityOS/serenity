@@ -40,22 +40,13 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: The execution context stack has at least two elements.
-    VERIFY(vm.execution_context_stack().size() >= 2);
+    // 1. Let currentRealm be the current Realm Record.
+    auto& current_realm = *vm.running_execution_context().realm;
 
-    // 2. Let callerContext be the second to top element of the execution context stack.
-    auto& caller_context = *vm.execution_context_stack().at(vm.execution_context_stack().size() - 2);
+    // 2. Perform ? HostEnsureCanCompileStrings(currentRealm).
+    TRY(vm.host_ensure_can_compile_strings(current_realm));
 
-    // 3. Let callerRealm be callerContext's Realm.
-    auto& caller_realm = *caller_context.realm;
-
-    // 4. Let calleeRealm be the current Realm Record.
-    auto& callee_realm = *vm.running_execution_context().realm;
-
-    // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
-    TRY(vm.host_ensure_can_compile_strings(caller_realm, callee_realm));
-
-    // 6. If newTarget is undefined, set newTarget to constructor.
+    // 3. If newTarget is undefined, set newTarget to constructor.
     if (new_target == nullptr)
         new_target = &constructor;
 
@@ -63,7 +54,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     Object* (GlobalObject::*fallback_prototype)() = nullptr;
 
     switch (kind) {
-    // 7. If kind is normal, then
+    // 4. If kind is normal, then
     case FunctionKind::Normal:
         // a. Let prefix be "function".
         prefix = "function"sv;
@@ -76,7 +67,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         fallback_prototype = &GlobalObject::function_prototype;
         break;
 
-    // 8. Else if kind is generator, then
+    // 5. Else if kind is generator, then
     case FunctionKind::Generator:
         // a. Let prefix be "function*".
         prefix = "function*"sv;
@@ -89,7 +80,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         fallback_prototype = &GlobalObject::generator_function_prototype;
         break;
 
-    // 9. Else if kind is async, then
+    // 6. Else if kind is async, then
     case FunctionKind::Async:
         // a. Let prefix be "async function".
         prefix = "async function"sv;
@@ -102,7 +93,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         fallback_prototype = &GlobalObject::async_function_prototype;
         break;
 
-    // 10. Else,
+    // 7. Else,
     case FunctionKind::AsyncGenerator:
         // a. Assert: kind is asyncGenerator.
 
@@ -121,23 +112,23 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         VERIFY_NOT_REACHED();
     }
 
-    // 11. Let argCount be the number of elements in args.
+    // 8. Let argCount be the number of elements in args.
     auto arg_count = args.size();
 
-    // 12. Let P be the empty String.
+    // 9. Let P be the empty String.
     String parameters_string = "";
 
     Optional<Value> body_arg;
 
-    // 13. If argCount = 0, let bodyArg be the empty String.
+    // 10. If argCount = 0, let bodyArg be the empty String.
     if (arg_count == 0) {
         // Optimization: Instead of creating a js_string() here, we just check if body_arg is empty in step 16.
     }
-    // 14. Else if argCount = 1, let bodyArg be args[0].
+    // 11. Else if argCount = 1, let bodyArg be args[0].
     else if (arg_count == 1) {
         body_arg = args[0];
     }
-    // 15. Else,
+    // 12. Else,
     else {
         // a. Assert: argCount > 1.
         VERIFY(arg_count > 1);
@@ -167,11 +158,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         body_arg = args[k];
     }
 
-    // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
+    // 13. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
     auto body_string = String::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_string(global_object)) : "");
 
-    // 17. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
-    // 18. Let sourceText be StringToCodePoints(sourceString).
+    // 14. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
+    // 15. Let sourceText be StringToCodePoints(sourceString).
     auto source_text = String::formatted("{} anonymous({}\n) {{{}}}", prefix, parameters_string, body_string);
 
     u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName;
@@ -180,18 +171,18 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     if (kind == FunctionKind::Generator || kind == FunctionKind::AsyncGenerator)
         parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
 
-    // 19. Let parameters be ParseText(StringToCodePoints(P), parameterSym).
+    // 16. Let parameters be ParseText(StringToCodePoints(P), parameterSym).
     i32 function_length = 0;
     auto parameters_parser = Parser { Lexer { parameters_string } };
     auto parameters = parameters_parser.parse_formal_parameters(function_length, parse_options);
 
-    // 20. If parameters is a List of errors, throw a SyntaxError exception.
+    // 17. If parameters is a List of errors, throw a SyntaxError exception.
     if (parameters_parser.has_errors()) {
         auto error = parameters_parser.errors()[0];
         return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
-    // 21. Let body be ParseText(StringToCodePoints(bodyString), bodySym).
+    // 18. Let body be ParseText(StringToCodePoints(bodyString), bodySym).
     bool contains_direct_call_to_eval = false;
     auto body_parser = Parser { Lexer { body_string } };
     // Set up some parser state to accept things like return await, and yield in the plain function body.
@@ -202,45 +193,45 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         body_parser.m_state.in_generator_function_context = true;
     (void)body_parser.parse_function_body(parameters, kind, contains_direct_call_to_eval);
 
-    // 22. If body is a List of errors, throw a SyntaxError exception.
+    // 19. If body is a List of errors, throw a SyntaxError exception.
     if (body_parser.has_errors()) {
         auto error = body_parser.errors()[0];
         return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
-    // 23. NOTE: The parameters and body are parsed separately to ensure that each is valid alone. For example, new Function("/*", "*/ ) {") is not legal.
-    // 24. NOTE: If this step is reached, sourceText must have the syntax of exprSym (although the reverse implication does not hold). The purpose of the next two steps is to enforce any Early Error rules which apply to exprSym directly.
+    // 20. NOTE: The parameters and body are parsed separately to ensure that each is valid alone. For example, new Function("/*", "*/ ) {") is not legal.
+    // 21. NOTE: If this step is reached, sourceText must have the syntax of exprSym (although the reverse implication does not hold). The purpose of the next two steps is to enforce any Early Error rules which apply to exprSym directly.
 
-    // 25. Let expr be ParseText(sourceText, exprSym).
+    // 22. Let expr be ParseText(sourceText, exprSym).
     auto source_parser = Parser { Lexer { source_text } };
     // This doesn't need any parse_options, it determines those & the function type based on the tokens that were found.
     auto expr = source_parser.parse_function_node<FunctionExpression>();
 
-    // 26. If expr is a List of errors, throw a SyntaxError exception.
+    // 23. If expr is a List of errors, throw a SyntaxError exception.
     if (source_parser.has_errors()) {
         auto error = source_parser.errors()[0];
         return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
-    // 27. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
+    // 24. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
     auto* prototype = TRY(get_prototype_from_constructor(global_object, *new_target, fallback_prototype));
 
-    // 28. Let realmF be the current Realm Record.
+    // 25. Let realmF be the current Realm Record.
     auto* realm = vm.current_realm();
 
-    // 29. Let env be realmF.[[GlobalEnv]].
+    // 26. Let env be realmF.[[GlobalEnv]].
     auto* environment = &realm->global_environment();
 
-    // 30. Let privateEnv be null.
+    // 27. Let privateEnv be null.
     PrivateEnvironment* private_environment = nullptr;
 
-    // 31. Let F be OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, env, privateEnv).
+    // 28. Let F be OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, env, privateEnv).
     auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), environment, private_environment, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
 
     // FIXME: Remove the name argument from create() and do this instead.
-    // 32. Perform SetFunctionName(F, "anonymous").
+    // 29. Perform SetFunctionName(F, "anonymous").
 
-    // 33. If kind is generator, then
+    // 30. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
         prototype = Object::create(global_object, global_object.generator_function_prototype_prototype());
@@ -248,7 +239,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
-    // 34. Else if kind is asyncGenerator, then
+    // 31. Else if kind is asyncGenerator, then
     else if (kind == FunctionKind::AsyncGenerator) {
         // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
         prototype = Object::create(global_object, global_object.async_generator_function_prototype_prototype());
@@ -256,7 +247,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
-    // 35. Else if kind is normal, perform MakeConstructor(F).
+    // 32. Else if kind is normal, perform MakeConstructor(F).
     else if (kind == FunctionKind::Normal) {
         // FIXME: Implement MakeConstructor
         prototype = Object::create(global_object, global_object.object_prototype());
@@ -264,9 +255,9 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
 
-    // 36. NOTE: Functions whose kind is async are not constructible and do not have a [[Construct]] internal method or a "prototype" property.
+    // 33. NOTE: Functions whose kind is async are not constructible and do not have a [[Construct]] internal method or a "prototype" property.
 
-    // 37. Return F.
+    // 34. Return F.
     return function;
 }
 
