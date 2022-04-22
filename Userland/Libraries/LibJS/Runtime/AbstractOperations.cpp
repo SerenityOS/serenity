@@ -579,9 +579,14 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
         return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
-    auto strict_eval = strict_caller == CallerMode::Strict;
-    if (program->is_strict_mode())
+    bool strict_eval = false;
+
+    // 12. If strictCaller is true, let strictEval be true.
+    if (strict_caller == CallerMode::Strict)
         strict_eval = true;
+    // 13. Else, let strictEval be IsStrict of script.
+    else
+        strict_eval = program->is_strict_mode();
 
     // 14. Let runningContext be the running execution context.
     // 15. NOTE: If direct is true, runningContext will be the execution context that performed the direct eval. If direct is false, runningContext will be the execution context for the invocation of the eval function.
