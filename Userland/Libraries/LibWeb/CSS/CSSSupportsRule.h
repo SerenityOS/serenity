@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,12 +21,14 @@ class CSSSupportsRule final : public CSSConditionRule {
     AK_MAKE_NONMOVABLE(CSSSupportsRule);
 
 public:
+    using WrapperType = Bindings::CSSSupportsRuleWrapper;
+
     static NonnullRefPtr<CSSSupportsRule> create(NonnullRefPtr<Supports>&& supports, NonnullRefPtrVector<CSSRule>&& rules)
     {
         return adopt_ref(*new CSSSupportsRule(move(supports), move(rules)));
     }
 
-    ~CSSSupportsRule() = default;
+    virtual ~CSSSupportsRule() = default;
 
     virtual StringView class_name() const override { return "CSSSupportsRule"; };
     virtual Type type() const override { return Type::Supports; };

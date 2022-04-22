@@ -418,6 +418,7 @@ class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;
 class CSSStyleRuleWrapper;
 class CSSStyleSheetWrapper;
+class CSSSupportsRuleWrapper;
 class CustomEventWrapper;
 class DocumentFragmentWrapper;
 class DocumentTypeWrapper;

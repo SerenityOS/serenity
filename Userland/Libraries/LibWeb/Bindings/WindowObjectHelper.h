@@ -35,6 +35,8 @@
 #include <LibWeb/Bindings/CSSStyleRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
+#include <LibWeb/Bindings/CSSSupportsRuleConstructor.h>
+#include <LibWeb/Bindings/CSSSupportsRulePrototype.h>
 #include <LibWeb/Bindings/CanvasGradientConstructor.h>
 #include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
@@ -374,6 +376,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleRule)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSSupportsRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasGradient)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)                                           \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)                                                      \
