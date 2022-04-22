@@ -148,7 +148,10 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/EntryPointBlob.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Table.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
     FileSystem/TmpFS.cpp

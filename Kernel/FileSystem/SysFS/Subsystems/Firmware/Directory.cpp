@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
