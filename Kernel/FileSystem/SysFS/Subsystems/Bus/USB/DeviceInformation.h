@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,9 +9,10 @@
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/KString.h>
 #include <Kernel/Locking/Mutex.h>
 
-namespace Kernel::USB {
+namespace Kernel {
 
 class SysFSUSBDeviceInformation : public SysFSComponent {
     friend class SysFSUSBBusDirectory;
@@ -38,28 +39,6 @@ private:
     virtual ErrorOr<void> refresh_data(OpenFileDescription& description) const override;
     mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
     NonnullOwnPtr<KString> m_device_name;
-};
-
-class SysFSUSBBusDirectory final : public SysFSDirectory {
-public:
-    static void initialize();
-    static SysFSUSBBusDirectory& the();
-
-    virtual StringView name() const override { return "usb"sv; }
-
-    void plug(USB::Device&);
-    void unplug(USB::Device&);
-
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
-
-private:
-    explicit SysFSUSBBusDirectory(SysFSBusDirectory&);
-
-    RefPtr<SysFSUSBDeviceInformation> device_node_for(USB::Device& device);
-
-    IntrusiveList<&SysFSUSBDeviceInformation::m_list_node> m_device_nodes;
-    mutable Spinlock m_lock;
 };
 
 }

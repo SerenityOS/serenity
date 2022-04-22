@@ -144,7 +144,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS.cpp
     FileSystem/SysFS/Component.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/SysFSPCI.cpp
-    FileSystem/SysFS/Subsystems/Bus/USB/SysFSUSB.cpp
+    FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
