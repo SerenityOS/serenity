@@ -17,7 +17,7 @@
 
 namespace Audio {
 
-static constexpr size_t maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
+static constexpr size_t const maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
 
 WavLoaderPlugin::WavLoaderPlugin(StringView path)
     : m_file(Core::File::construct(path))
@@ -47,12 +47,12 @@ WavLoaderPlugin::WavLoaderPlugin(Bytes const& buffer)
     m_memory_stream = static_cast<InputMemoryStream*>(m_stream.ptr());
 }
 
-LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
+LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
 {
     if (!m_stream)
         return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(m_loaded_samples), "No stream" };
 
-    int remaining_samples = m_total_samples - m_loaded_samples;
+    auto remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0)
         return FixedArray<Sample> {};
 
@@ -62,9 +62,9 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
         = m_num_channels * pcm_bits_per_sample(m_sample_format) / 8;
 
     // Might truncate if not evenly divisible by the sample size
-    int max_samples_to_read = static_cast<int>(max_bytes_to_read_from_input) / bytes_per_sample;
-    int samples_to_read = min(max_samples_to_read, remaining_samples);
-    size_t bytes_to_read = samples_to_read * bytes_per_sample;
+    auto max_samples_to_read = max_samples_to_read_from_input / bytes_per_sample;
+    auto samples_to_read = min(max_samples_to_read, remaining_samples);
+    auto bytes_to_read = samples_to_read * bytes_per_sample;
 
     dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes WAV with num_channels {} sample rate {}, "
                                "bits per sample {}, sample format {}",
@@ -73,11 +73,11 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
 
     auto sample_data_result = ByteBuffer::create_zeroed(bytes_to_read);
     if (sample_data_result.is_error())
-        return LoaderError { LoaderError::Category::IO, static_cast<size_t>(m_loaded_samples), "Couldn't allocate sample buffer" };
+        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Couldn't allocate sample buffer" };
     auto sample_data = sample_data_result.release_value();
     m_stream->read_or_error(sample_data.bytes());
     if (m_stream->handle_any_error())
-        return LoaderError { LoaderError::Category::IO, static_cast<size_t>(m_loaded_samples), "Stream read error" };
+        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Stream read error" };
 
     auto buffer = LegacyBuffer::from_pcm_data(
         sample_data.bytes(),
@@ -85,24 +85,24 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
         m_sample_format);
 
     if (buffer.is_error())
-        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(m_loaded_samples), "Couldn't allocate sample buffer" };
+        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
     return LOADER_TRY(buffer.value()->to_sample_array());
 }
 
-MaybeLoaderError WavLoaderPlugin::seek(int const sample_index)
+MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 {
     dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
-    if (sample_index < 0 || sample_index >= m_total_samples)
-        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(m_loaded_samples), "Seek outside the sample range" };
+    if (sample_index < 0 || sample_index >= static_cast<int>(m_total_samples))
+        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Seek outside the sample range" };
 
-    size_t sample_offset = m_byte_offset_of_data_samples + (sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
+    size_t sample_offset = m_byte_offset_of_data_samples + static_cast<size_t>(sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
 
     // AK::InputStream does not define seek, hence the special-cases for file and stream.
     if (m_file) {
-        m_file->seek(sample_offset);
+        m_file->seek(static_cast<int>(sample_offset));
     } else {
         m_memory_stream->seek(sample_offset);
     }
@@ -244,7 +244,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
     // Read chunks until we find DATA
     bool found_data = false;
-    u32 data_sz = 0;
+    u32 data_size = 0;
     u8 search_byte = 0;
     while (true) {
         search_byte = read_u8();
@@ -262,7 +262,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         if (search_remaining != 0x6174) // TA
             continue;
 
-        data_sz = read_u32();
+        data_size = read_u32();
         found_data = true;
         break;
     }
@@ -270,13 +270,13 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     ok = ok && found_data;
     CHECK_OK(LoaderError::Category::Format, "Found no data chunk");
 
-    ok = ok && data_sz < maximum_wav_size;
+    ok = ok && data_size < maximum_wav_size;
     CHECK_OK(LoaderError::Category::Format, "Data was too large");
 
-    m_total_samples = data_sz / block_size_bytes;
+    m_total_samples = data_size / block_size_bytes;
 
     dbgln_if(AWAVLOADER_DEBUG, "WAV data size {}, bytes per sample {}, total samples {}",
-        data_sz,
+        data_size,
         block_size_bytes,
         m_total_samples);
 
