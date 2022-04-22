@@ -451,6 +451,7 @@ endfunction()
 
 libweb_js_wrapper(Crypto/Crypto)
 libweb_js_wrapper(Crypto/SubtleCrypto)
+libweb_js_wrapper(CSS/CSSConditionRule)
 libweb_js_wrapper(CSS/CSSFontFaceRule)
 libweb_js_wrapper(CSS/CSSGroupingRule)
 libweb_js_wrapper(CSS/CSSRule)
