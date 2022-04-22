@@ -80,7 +80,9 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     // 5. Remove rule old rule from list at the zero-indexed position index.
     m_rules.remove(index);
 
-    // FIXME: 6. Set old rule’s parent CSS rule and parent CSS style sheet to null.
+    // 6. Set old rule’s parent CSS rule and parent CSS style sheet to null.
+    old_rule.set_parent_rule(nullptr);
+    old_rule.set_parent_style_sheet(nullptr);
 
     return {};
 }

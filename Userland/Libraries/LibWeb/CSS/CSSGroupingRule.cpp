@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,23 +12,33 @@ namespace Web::CSS {
 CSSGroupingRule::CSSGroupingRule(NonnullRefPtrVector<CSSRule>&& rules)
     : m_rules(CSSRuleList::create(move(rules)))
 {
+    for (auto& rule : *m_rules)
+        rule.set_parent_rule(this);
 }
 
-size_t CSSGroupingRule::insert_rule(StringView, size_t)
+DOM::ExceptionOr<u32> CSSGroupingRule::insert_rule(StringView rule, u32 index)
 {
-    // https://www.w3.org/TR/cssom-1/#insert-a-css-rule
-    TODO();
+    TRY(m_rules->insert_a_css_rule(rule, index));
+    // NOTE: The spec doesn't say where to set the parent rule, so we'll do it here.
+    m_rules->item(index)->set_parent_rule(this);
+    return index;
 }
 
-void CSSGroupingRule::delete_rule(size_t)
+DOM::ExceptionOr<void> CSSGroupingRule::delete_rule(u32 index)
 {
-    // https://www.w3.org/TR/cssom-1/#remove-a-css-rule
-    TODO();
+    return m_rules->remove_a_css_rule(index);
 }
 
 void CSSGroupingRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
     m_rules->for_each_effective_style_rule(callback);
+}
+
+void CSSGroupingRule::set_parent_style_sheet(CSSStyleSheet* parent_style_sheet)
+{
+    CSSRule::set_parent_style_sheet(parent_style_sheet);
+    for (auto& rule : *m_rules)
+        rule.set_parent_style_sheet(parent_style_sheet);
 }
 
 }

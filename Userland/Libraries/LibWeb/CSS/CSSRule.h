@@ -39,11 +39,20 @@ public:
     String css_text() const;
     void set_css_text(StringView);
 
+    CSSRule* parent_rule() { return m_parent_rule; }
+    void set_parent_rule(CSSRule*);
+
+    CSSStyleSheet* parent_style_sheet() { return m_parent_style_sheet; }
+    virtual void set_parent_style_sheet(CSSStyleSheet*);
+
     template<typename T>
     bool fast_is() const = delete;
 
 protected:
     virtual String serialized() const = 0;
+
+    WeakPtr<CSSRule> m_parent_rule;
+    WeakPtr<CSSStyleSheet> m_parent_style_sheet;
 };
 
 }

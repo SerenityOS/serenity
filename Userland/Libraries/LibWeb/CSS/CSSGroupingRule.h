@@ -26,10 +26,12 @@ public:
     CSSRuleList const& css_rules() const { return m_rules; }
     CSSRuleList& css_rules() { return m_rules; }
     NonnullRefPtr<CSSRuleList> css_rules_for_bindings() { return m_rules; }
-    size_t insert_rule(StringView rule, size_t index = 0);
-    void delete_rule(size_t index);
+    DOM::ExceptionOr<u32> insert_rule(StringView rule, u32 index = 0);
+    DOM::ExceptionOr<void> delete_rule(u32 index);
 
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
+
+    virtual void set_parent_style_sheet(CSSStyleSheet*) override;
 
 protected:
     explicit CSSGroupingRule(NonnullRefPtrVector<CSSRule>&&);
