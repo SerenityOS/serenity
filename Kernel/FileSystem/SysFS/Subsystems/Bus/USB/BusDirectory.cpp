@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/KBufferBuilder.h>
 

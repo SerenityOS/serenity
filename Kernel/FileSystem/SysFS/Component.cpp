@@ -6,6 +6,7 @@
 
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
+#include <Kernel/FileSystem/SysFS/Registry.h>
 
 namespace Kernel {
 

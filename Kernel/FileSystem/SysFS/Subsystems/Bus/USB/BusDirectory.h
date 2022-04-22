@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Bus/USB/USBDevice.h>
-#include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
 #include <Kernel/Locking/Spinlock.h>
 

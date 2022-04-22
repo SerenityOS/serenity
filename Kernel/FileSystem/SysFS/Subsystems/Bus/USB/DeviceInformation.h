@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Bus/USB/USBDevice.h>
-#include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KString.h>
 #include <Kernel/Locking/Mutex.h>
