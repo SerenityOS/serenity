@@ -1,13 +1,15 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Definitions.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/EntryPointBlob.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Table.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
 #include <Kernel/Firmware/BIOS.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -19,58 +21,6 @@ namespace Kernel {
 #define SMBIOS_BASE_SEARCH_ADDR 0xf0000
 #define SMBIOS_END_SEARCH_ADDR 0xfffff
 #define SMBIOS_SEARCH_AREA_SIZE (SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR)
-
-UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlob::must_create(PhysicalAddress dmi_entry_point, size_t blob_size)
-{
-    return adopt_ref(*new (nothrow) DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
-}
-
-UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent()
-{
-}
-
-ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
-{
-    auto blob = TRY(try_to_generate_buffer());
-
-    if ((size_t)offset >= blob->size())
-        return 0;
-
-    ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
-    TRY(buffer.write(blob->data() + offset, nread));
-    return nread;
-}
-
-UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size)
-    : BIOSSysFSComponent()
-    , m_dmi_entry_point(dmi_entry_point)
-    , m_dmi_entry_point_length(blob_size)
-{
-}
-
-ErrorOr<NonnullOwnPtr<KBuffer>> DMIEntryPointExposedBlob::try_to_generate_buffer() const
-{
-    auto dmi_blob = TRY(Memory::map_typed<u8>((m_dmi_entry_point), m_dmi_entry_point_length));
-    return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_dmi_entry_point_length });
-}
-
-UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::must_create(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
-{
-    return adopt_ref(*new (nothrow) SMBIOSExposedTable(smbios_structure_table, smbios_structure_table_length));
-}
-
-UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
-    : BIOSSysFSComponent()
-    , m_smbios_structure_table(smbios_structure_table)
-    , m_smbios_structure_table_length(smbios_structure_table_length)
-{
-}
-
-ErrorOr<NonnullOwnPtr<KBuffer>> SMBIOSExposedTable::try_to_generate_buffer() const
-{
-    auto dmi_blob = TRY(Memory::map_typed<u8>((m_smbios_structure_table), m_smbios_structure_table_length));
-    return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
-}
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_64_bit_entry_initialization_values()
 {
