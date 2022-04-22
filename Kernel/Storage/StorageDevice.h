@@ -33,6 +33,18 @@ public:
         NVMe,
     };
 
+    // Note: this attribute describes the interface type of a Storage device.
+    // For example, an ordinary harddrive utilizes the ATA command set, while
+    // an ATAPI device (e.g. Optical drive) that is connected to the ATA bus,
+    // is actually using SCSI commands (packets) encapsulated inside an ATA command.
+    // Therefore, an ATAPI device is still using the ATA interface.
+    enum class InterfaceType {
+        PlainMemory,
+        SCSI,
+        ATA,
+        NVMe,
+    };
+
 public:
     virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
@@ -52,6 +64,9 @@ public:
 
     virtual CommandSet command_set() const = 0;
 
+    StringView interface_type_to_string_view() const;
+    StringView command_set_to_string_view() const;
+
     // ^File
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
 
@@ -61,6 +76,7 @@ protected:
     virtual StringView class_name() const override;
 
 private:
+    virtual InterfaceType interface_type() const = 0;
     mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
     NonnullRefPtrVector<DiskPartition> m_partitions;
 
