@@ -29,6 +29,7 @@ public:
     void start_request(AsyncBlockDeviceRequest& request) override;
 
 private:
+    virtual InterfaceType interface_type() const override { return InterfaceType::NVMe; }
     u16 m_nsid;
     NonnullRefPtrVector<NVMeQueue> m_queues;
 };
