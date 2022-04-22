@@ -15,7 +15,16 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent()
+NonnullRefPtr<BIOSSysFSComponent> BIOSSysFSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+{
+    return adopt_ref_if_nonnull(new (nothrow) BIOSSysFSComponent(type, blob_paddr, blob_size)).release_nonnull();
+}
+
+UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+    : SysFSComponent()
+    , m_blob_paddr(blob_paddr)
+    , m_blob_length(blob_size)
+    , m_type(type)
 {
 }
 
@@ -31,4 +40,22 @@ ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserO
     return nread;
 }
 
+StringView BIOSSysFSComponent::name() const
+{
+    switch (m_type) {
+    case Type::DMIEntryPoint:
+        return "smbios_entry_point"sv;
+    case Type::SMBIOSTable:
+        return "DMI"sv;
+    default:
+        break;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<NonnullOwnPtr<KBuffer>> BIOSSysFSComponent::try_to_generate_buffer() const
+{
+    auto blob = TRY(Memory::map_typed<u8>((m_blob_paddr), m_blob_length));
+    return KBuffer::try_create_with_bytes(Span<u8> { blob.ptr(), m_blob_length });
+}
 }
