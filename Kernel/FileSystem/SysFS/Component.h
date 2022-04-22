@@ -25,6 +25,8 @@ struct SysFSInodeData : public OpenFileDescriptionData {
 
 class SysFSDirectory;
 class SysFSComponent : public RefCounted<SysFSComponent> {
+    friend class SysFSDirectory;
+
 public:
     virtual StringView name() const = 0;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
@@ -52,6 +54,8 @@ protected:
 
     RefPtr<SysFSDirectory> m_parent_directory;
 
+    IntrusiveListNode<SysFSComponent, NonnullRefPtr<SysFSComponent>> m_list_node;
+
 private:
     InodeIndex m_component_index {};
 };
@@ -72,17 +76,19 @@ protected:
 
 class SysFSDirectory : public SysFSComponent {
 public:
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
+    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override final;
+    virtual RefPtr<SysFSComponent> lookup(StringView name) override final;
 
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
+    using ChildList = SpinlockProtected<IntrusiveList<&SysFSComponent::m_list_node>>;
+
 protected:
+    virtual bool is_root_directory() const { return false; }
+
     SysFSDirectory() {};
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
-    NonnullRefPtrVector<SysFSComponent> m_components;
-
-    mutable Mutex m_traverse_lock;
+    ChildList m_child_components;
 };
 
 }

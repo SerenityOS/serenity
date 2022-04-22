@@ -17,9 +17,9 @@ class SysFSRootDirectory final : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "."sv; }
     static NonnullRefPtr<SysFSRootDirectory> create();
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
 
 private:
+    virtual bool is_root_directory() const override final { return true; }
     SysFSRootDirectory();
     RefPtr<SysFSBusDirectory> m_buses_directory;
 };

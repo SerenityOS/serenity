@@ -32,7 +32,10 @@ UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
 UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
     SpinlockLocker locker(m_root_directory_lock);
-    m_root_directory->m_components.append(component);
+    MUST(m_root_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        list.append(component);
+        return {};
+    }));
 }
 
 SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
@@ -43,7 +46,10 @@ SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
 void SysFSComponentRegistry::register_new_bus_directory(SysFSDirectory& new_bus_directory)
 {
     VERIFY(!m_root_directory->m_buses_directory.is_null());
-    m_root_directory->m_buses_directory->m_components.append(new_bus_directory);
+    MUST(m_root_directory->m_buses_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        list.append(new_bus_directory);
+        return {};
+    }));
 }
 
 }
