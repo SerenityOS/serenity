@@ -155,8 +155,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/CharacterDevicesDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/DeviceComponent.cpp
     FileSystem/SysFS/Subsystems/Devices/Directory.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/EntryPointBlob.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Table.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp

@@ -6,9 +6,8 @@
 
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Definitions.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/EntryPointBlob.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Table.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
 #include <Kernel/Firmware/BIOS.h>
 #include <Kernel/KBufferBuilder.h>
@@ -59,8 +58,8 @@ void BIOSSysFSDirectory::create_components()
         dbgln("BIOSSysFSDirectory: invalid smbios structure table length");
         return;
     }
-    m_components.append(DMIEntryPointExposedBlob::must_create(m_dmi_entry_point, m_dmi_entry_point_length));
-    m_components.append(SMBIOSExposedTable::must_create(m_smbios_structure_table, m_smbios_structure_table_length));
+    m_components.append(BIOSSysFSComponent::must_create(BIOSSysFSComponent::Type::DMIEntryPoint, m_dmi_entry_point, m_dmi_entry_point_length));
+    m_components.append(BIOSSysFSComponent::must_create(BIOSSysFSComponent::Type::SMBIOSTable, m_smbios_structure_table, m_smbios_structure_table_length));
 }
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
