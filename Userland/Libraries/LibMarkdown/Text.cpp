@@ -327,7 +327,7 @@ Vector<Text::Token> Text::tokenize(StringView str)
             in_space = false;
         }
 
-        if (ch == '\\' && offset + 1 < str.length()) {
+        if (ch == '\\' && offset + 1 < str.length() && ispunct(str[offset + 1])) {
             current_token.append(str[offset + 1]);
             ++offset;
         } else if (ch == '*' || ch == '_' || ch == '`') {
