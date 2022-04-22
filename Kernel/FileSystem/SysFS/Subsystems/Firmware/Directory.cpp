@@ -22,10 +22,13 @@ UNMAP_AFTER_INIT void FirmwareSysFSDirectory::initialize()
 
 void FirmwareSysFSDirectory::create_components()
 {
-    m_components.append(BIOSSysFSDirectory::must_create(*this));
-    if (ACPI::is_enabled())
-        m_components.append(ACPI::ACPISysFSDirectory::must_create(*this));
-    m_components.append(PowerStateSwitchNode::must_create(*this));
+    MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        list.append(BIOSSysFSDirectory::must_create(*this));
+        if (ACPI::is_enabled())
+            list.append(ACPI::ACPISysFSDirectory::must_create(*this));
+        list.append(PowerStateSwitchNode::must_create(*this));
+        return {};
+    }));
 }
 
 UNMAP_AFTER_INIT FirmwareSysFSDirectory::FirmwareSysFSDirectory()

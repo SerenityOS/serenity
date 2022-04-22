@@ -25,7 +25,6 @@ public:
 
 private:
     SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const&);
-    IntrusiveListNode<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>> m_list_node;
     bool m_block_device;
 
     NonnullOwnPtr<KString> m_major_minor_formatted_device_name;

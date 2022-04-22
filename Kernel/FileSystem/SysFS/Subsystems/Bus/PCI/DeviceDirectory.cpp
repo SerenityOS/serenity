@@ -17,7 +17,26 @@ UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory:
 {
     // FIXME: Handle allocation failure gracefully
     auto device_name = MUST(KString::formatted("{:04x}:{:02x}:{:02x}.{}", address.domain(), address.bus(), address.device(), address.function()));
-    return adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
+    auto directory = adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
+    MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::VENDOR_ID, 2));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::DEVICE_ID, 2));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::CLASS, 1));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::SUBCLASS, 1));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::REVISION_ID, 1));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::PROG_IF, 1));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID, 2));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::SUBSYSTEM_ID, 2));
+
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR0, 4));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR1, 4));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR2, 4));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR3, 4));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR4, 4));
+        list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::BAR5, 4));
+        return {};
+    }));
+    return directory;
 }
 
 UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, PCI::Address address)
@@ -25,21 +44,6 @@ UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<
     , m_address(address)
     , m_device_directory_name(move(device_directory_name))
 {
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::VENDOR_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::DEVICE_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::CLASS, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::SUBCLASS, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::REVISION_ID, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::PROG_IF, 1));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::SUBSYSTEM_VENDOR_ID, 2));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::SUBSYSTEM_ID, 2));
-
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR0, 4));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR1, 4));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR2, 4));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR3, 4));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR4, 4));
-    m_components.append(PCIDeviceAttributeSysFSComponent::create(*this, PCI::RegisterOffset::BAR5, 4));
 }
 
 }

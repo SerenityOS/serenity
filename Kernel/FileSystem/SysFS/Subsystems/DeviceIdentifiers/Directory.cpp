@@ -15,8 +15,12 @@ namespace Kernel {
 UNMAP_AFTER_INIT NonnullRefPtr<SysFSDeviceIdentifiersDirectory> SysFSDeviceIdentifiersDirectory::must_create(SysFSRootDirectory const& root_directory)
 {
     auto devices_directory = adopt_ref_if_nonnull(new SysFSDeviceIdentifiersDirectory(root_directory)).release_nonnull();
-    devices_directory->m_components.append(SysFSBlockDevicesDirectory::must_create(*devices_directory));
-    devices_directory->m_components.append(SysFSCharacterDevicesDirectory::must_create(*devices_directory));
+    MUST(devices_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        list.append(SysFSBlockDevicesDirectory::must_create(*devices_directory));
+        list.append(SysFSCharacterDevicesDirectory::must_create(*devices_directory));
+        return {};
+    }));
+
     return devices_directory;
 }
 SysFSDeviceIdentifiersDirectory::SysFSDeviceIdentifiersDirectory(SysFSRootDirectory const& root_directory)

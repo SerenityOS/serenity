@@ -12,32 +12,6 @@ namespace Kernel {
 
 static SysFSUSBBusDirectory* s_procfs_usb_bus_directory;
 
-ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
-{
-    SpinlockLocker lock(m_lock);
-    // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
-    VERIFY(m_parent_directory);
-    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
-    TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
-
-    for (auto const& device_node : m_device_nodes) {
-        InodeIdentifier identifier = { fsid, device_node.component_index() };
-        TRY(callback({ device_node.name(), identifier, 0 }));
-    }
-    return {};
-}
-
-RefPtr<SysFSComponent> SysFSUSBBusDirectory::lookup(StringView name)
-{
-    SpinlockLocker lock(m_lock);
-    for (auto& device_node : m_device_nodes) {
-        if (device_node.name() == name) {
-            return device_node;
-        }
-    }
-    return {};
-}
-
 RefPtr<SysFSUSBDeviceInformation> SysFSUSBBusDirectory::device_node_for(USB::Device& device)
 {
     RefPtr<USB::Device> checked_device = device;

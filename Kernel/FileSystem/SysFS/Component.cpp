@@ -106,26 +106,33 @@ SysFSSymbolicLink::SysFSSymbolicLink(SysFSDirectory const& parent_directory, Sys
 
 ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(m_traverse_lock);
-    VERIFY(m_parent_directory);
     TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
-    TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
-
-    for (auto& component : m_components) {
-        InodeIdentifier identifier = { fsid, component.component_index() };
-        TRY(callback({ component.name(), identifier, 0 }));
+    if (is_root_directory()) {
+        TRY(callback({ ".."sv, { fsid, component_index() }, 0 }));
+    } else {
+        VERIFY(m_parent_directory);
+        TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
     }
-    return {};
+
+    return m_child_components.with([&](auto& list) -> ErrorOr<void> {
+        for (auto& child_component : list) {
+            InodeIdentifier identifier = { fsid, child_component.component_index() };
+            TRY(callback({ child_component.name(), identifier, 0 }));
+        }
+        return {};
+    });
 }
 
 RefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
 {
-    for (auto& component : m_components) {
-        if (component.name() == name) {
-            return component;
+    return m_child_components.with([&](auto& list) -> RefPtr<SysFSComponent> {
+        for (auto& child_component : list) {
+            if (child_component.name() == name) {
+                return child_component;
+            }
         }
-    }
-    return {};
+        return nullptr;
+    });
 }
 
 SysFSDirectory::SysFSDirectory(SysFSDirectory const& parent_directory)
