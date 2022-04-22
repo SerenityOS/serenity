@@ -6,8 +6,8 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/SysFSPCI.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/SysFSPCI.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::PCI {

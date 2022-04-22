@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/Firmware/SysFSFirmware.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Memory/MappedROM.h>
 #include <Kernel/Memory/Region.h>

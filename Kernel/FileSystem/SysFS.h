@@ -8,7 +8,7 @@
 
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {

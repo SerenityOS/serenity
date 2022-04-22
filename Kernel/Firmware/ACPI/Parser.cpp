@@ -13,8 +13,8 @@
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>

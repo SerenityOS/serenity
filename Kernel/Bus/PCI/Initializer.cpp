@@ -8,8 +8,8 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/PCI/SysFSPCI.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/SysFSPCI.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
