@@ -1873,6 +1873,7 @@ VALIDATE_INSTRUCTION(memory_grow)
 {
     TRY(validate(MemoryIndex { 0 }));
     TRY((stack.take<ValueType::I32>()));
+    stack.append(ValueType(ValueType::I32));
 
     return {};
 }
