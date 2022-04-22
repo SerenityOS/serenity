@@ -22,12 +22,12 @@
 
 namespace Audio {
 
-// defines for handling the WAV header data
-#define WAVE_FORMAT_PCM 0x0001        // PCM
-#define WAVE_FORMAT_IEEE_FLOAT 0x0003 // IEEE float
-#define WAVE_FORMAT_ALAW 0x0006       // 8-bit ITU-T G.711 A-law
-#define WAVE_FORMAT_MULAW 0x0007      // 8-bit ITU-T G.711 µ-law
-#define WAVE_FORMAT_EXTENSIBLE 0xFFFE // Determined by SubFormat
+// constants for handling the WAV header data
+static constexpr unsigned const WAVE_FORMAT_PCM = 0x0001;        // PCM
+static constexpr unsigned const WAVE_FORMAT_IEEE_FLOAT = 0x0003; // IEEE float
+static constexpr unsigned const WAVE_FORMAT_ALAW = 0x0006;       // 8-bit ITU-T G.711 A-law
+static constexpr unsigned const WAVE_FORMAT_MULAW = 0x0007;      // 8-bit ITU-T G.711 µ-law
+static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined by SubFormat
 
 // Parses a WAV file and produces an Audio::LegacyBuffer.
 class WavLoaderPlugin : public LoaderPlugin {
@@ -37,18 +37,16 @@ public:
 
     virtual MaybeLoaderError initialize() override;
 
-    // The Buffer returned contains input data resampled at the
-    // destination audio device sample rate.
-    virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
+    virtual LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) override;
 
     virtual MaybeLoaderError reset() override { return seek(0); }
 
     // sample_index 0 is the start of the raw audio sample data
     // within the file/stream.
-    virtual MaybeLoaderError seek(int const sample_index) override;
+    virtual MaybeLoaderError seek(int sample_index) override;
 
-    virtual int loaded_samples() override { return m_loaded_samples; }
-    virtual int total_samples() override { return m_total_samples; }
+    virtual int loaded_samples() override { return static_cast<int>(m_loaded_samples); }
+    virtual int total_samples() override { return static_cast<int>(m_total_samples); }
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
     virtual String format_name() override { return "RIFF WAVE (.wav)"; }
@@ -68,8 +66,8 @@ private:
     PcmSampleFormat m_sample_format;
     size_t m_byte_offset_of_data_samples { 0 };
 
-    int m_loaded_samples { 0 };
-    int m_total_samples { 0 };
+    size_t m_loaded_samples { 0 };
+    size_t m_total_samples { 0 };
 };
 
 }
