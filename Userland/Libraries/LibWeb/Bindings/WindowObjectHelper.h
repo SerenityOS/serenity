@@ -23,6 +23,8 @@
 #include <LibWeb/Bindings/CSSGroupingRulePrototype.h>
 #include <LibWeb/Bindings/CSSImportRuleConstructor.h>
 #include <LibWeb/Bindings/CSSImportRulePrototype.h>
+#include <LibWeb/Bindings/CSSMediaRuleConstructor.h>
+#include <LibWeb/Bindings/CSSMediaRulePrototype.h>
 #include <LibWeb/Bindings/CSSRuleConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
@@ -366,6 +368,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CSSFontFaceRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSGroupingRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSImportRule)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSMediaRule)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)                                                \

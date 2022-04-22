@@ -412,6 +412,7 @@ class CSSConditionRuleWrapper;
 class CSSFontFaceRuleWrapper;
 class CSSGroupingRuleWrapper;
 class CSSImportRuleWrapper;
+class CSSMediaRuleWrapper;
 class CSSRuleListWrapper;
 class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;
