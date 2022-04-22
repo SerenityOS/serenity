@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +19,13 @@ class CSSGroupingRule : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSGroupingRule);
 
 public:
-    ~CSSGroupingRule() = default;
+    using WrapperType = Bindings::CSSGroupingRuleWrapper;
+
+    virtual ~CSSGroupingRule() = default;
 
     CSSRuleList const& css_rules() const { return m_rules; }
     CSSRuleList& css_rules() { return m_rules; }
+    NonnullRefPtr<CSSRuleList> css_rules_for_bindings() { return m_rules; }
     size_t insert_rule(StringView rule, size_t index = 0);
     void delete_rule(size_t index);
 
