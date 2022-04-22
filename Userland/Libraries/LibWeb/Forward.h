@@ -411,6 +411,7 @@ class CryptoWrapper;
 class CSSConditionRuleWrapper;
 class CSSFontFaceRuleWrapper;
 class CSSGroupingRuleWrapper;
+class CSSImportRuleWrapper;
 class CSSRuleListWrapper;
 class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;

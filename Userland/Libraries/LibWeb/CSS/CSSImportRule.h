@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,25 +14,30 @@
 
 namespace Web::CSS {
 
-class CSSImportRule
+class CSSImportRule final
     : public CSSRule
     , public ResourceClient {
     AK_MAKE_NONCOPYABLE(CSSImportRule);
     AK_MAKE_NONMOVABLE(CSSImportRule);
 
 public:
+    using WrapperType = Bindings::CSSImportRuleWrapper;
+
     static NonnullRefPtr<CSSImportRule> create(AK::URL url, DOM::Document& document)
     {
         return adopt_ref(*new CSSImportRule(move(url), document));
     }
 
-    ~CSSImportRule() = default;
+    virtual ~CSSImportRule() = default;
 
-    const AK::URL& url() const { return m_url; }
+    AK::URL const& url() const { return m_url; }
+    // FIXME: This should return only the specified part of the url. eg, "stuff/foo.css", not "https://example.com/stuff/foo.css".
+    String href() const { return m_url.to_string(); }
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
     RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }
     RefPtr<CSSStyleSheet> const loaded_style_sheet() const { return m_style_sheet; }
+    NonnullRefPtr<CSSStyleSheet> style_sheet_for_bindings() { return *m_style_sheet; }
     void set_style_sheet(RefPtr<CSSStyleSheet> const& style_sheet) { m_style_sheet = style_sheet; }
 
     virtual StringView class_name() const override { return "CSSImportRule"; };
