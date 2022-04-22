@@ -15,7 +15,8 @@ namespace Kernel {
 class SysFSDeviceComponent final
     : public SysFSComponent
     , public Weakable<SysFSDeviceComponent> {
-    friend class SysFSComponentRegistry;
+    friend class SysFSBlockDevicesDirectory;
+    friend class SysFSCharacterDevicesDirectory;
 
 public:
     static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);

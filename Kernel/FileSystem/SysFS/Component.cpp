@@ -106,7 +106,7 @@ SysFSSymbolicLink::SysFSSymbolicLink(SysFSDirectory const& parent_directory, Sys
 
 ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
+    MutexLocker locker(m_traverse_lock);
     VERIFY(m_parent_directory);
     TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
     TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));

@@ -31,13 +31,8 @@ UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
 
 UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
-    MutexLocker locker(m_lock);
+    SpinlockLocker locker(m_root_directory_lock);
     m_root_directory->m_components.append(component);
-}
-
-SysFSComponentRegistry::DevicesList& SysFSComponentRegistry::devices_list()
-{
-    return m_devices_list;
 }
 
 SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
