@@ -27,6 +27,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             outln(" extracting: {}", zip_member.name);
         return true;
     }
+    MUST(Core::Directory::create(LexicalPath(zip_member.name).parent(), Core::Directory::CreateDirectories::Yes));
     auto new_file = Core::File::construct(zip_member.name);
     if (!new_file->open(Core::OpenMode::WriteOnly)) {
         warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
