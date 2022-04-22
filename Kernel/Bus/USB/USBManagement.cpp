@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/SysFSUSB.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::USB {
@@ -67,7 +67,7 @@ bool USBManagement::initialized()
 UNMAP_AFTER_INIT void USBManagement::initialize()
 {
     if (!s_initialized_sys_fs_directory) {
-        USB::SysFSUSBBusDirectory::initialize();
+        SysFSUSBBusDirectory::initialize();
         s_initialized_sys_fs_directory = true;
     }
 

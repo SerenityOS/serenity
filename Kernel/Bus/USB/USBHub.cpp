@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/SysFSUSB.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
