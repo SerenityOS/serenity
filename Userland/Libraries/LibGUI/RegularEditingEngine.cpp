@@ -57,10 +57,7 @@ void RegularEditingEngine::sort_selected_lines()
 
     auto& lines = m_editor->document().lines();
 
-    auto start = lines.begin() + (int)first_line;
-    auto end = lines.begin() + (int)last_line + 1;
-
-    quick_sort(start, end, [](auto& a, auto& b) {
+    dual_pivot_quick_sort(lines, static_cast<int>(first_line), static_cast<int>(last_line + 1), [](auto& a, auto& b) {
         return strcmp_utf32(a.code_points(), b.code_points(), min(a.length(), b.length())) < 0;
     });
 

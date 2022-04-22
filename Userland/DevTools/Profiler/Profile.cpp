@@ -25,7 +25,7 @@ namespace Profiler {
 
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 {
-    quick_sort(nodes.begin(), nodes.end(), [](auto& a, auto& b) {
+    quick_sort(nodes, [](auto& a, auto& b) {
         return a->event_count() >= b->event_count();
     });
 

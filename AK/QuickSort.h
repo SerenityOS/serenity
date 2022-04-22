@@ -136,18 +136,6 @@ void single_pivot_quick_sort(Iterator start, Iterator end, LessThan less_than)
     }
 }
 
-template<typename Iterator>
-void quick_sort(Iterator start, Iterator end)
-{
-    single_pivot_quick_sort(start, end, [](auto& a, auto& b) { return a < b; });
-}
-
-template<typename Iterator, typename LessThan>
-void quick_sort(Iterator start, Iterator end, LessThan less_than)
-{
-    single_pivot_quick_sort(start, end, move(less_than));
-}
-
 template<typename Collection, typename LessThan>
 void quick_sort(Collection& collection, LessThan less_than)
 {
