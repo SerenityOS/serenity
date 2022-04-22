@@ -153,6 +153,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/Hypervisor/VMWareBackdoor.cpp

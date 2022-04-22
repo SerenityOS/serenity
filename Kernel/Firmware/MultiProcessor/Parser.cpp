@@ -8,7 +8,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS.h>
+#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Memory/TypedMapping.h>
