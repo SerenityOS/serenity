@@ -25,6 +25,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     readonly attribute DOMString responseText;
     readonly attribute any response;
     attribute XMLHttpRequestResponseType responseType;
+    attribute unsigned long timeout;
 
     undefined open(DOMString method, DOMString url);
     undefined open(ByteString method, USVString url, boolean async, optional USVString? username = {}, optional USVString? password = {});

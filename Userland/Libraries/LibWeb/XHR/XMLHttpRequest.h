@@ -71,6 +71,9 @@ public:
 
     DOM::ExceptionOr<void> override_mime_type(String const& mime);
 
+    DOM::ExceptionOr<void> set_timeout(u32 timeout);
+    u32 timeout() const;
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
@@ -96,6 +99,7 @@ private:
     ReadyState m_ready_state { ReadyState::Unsent };
     unsigned m_status { 0 };
     bool m_send { false };
+    u32 m_timeout { 0 };
 
     String m_method;
     AK::URL m_url;
