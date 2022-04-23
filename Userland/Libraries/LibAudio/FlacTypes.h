@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "Buffer.h"
+#include "Queue.h"
+#include "SampleFormats.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>

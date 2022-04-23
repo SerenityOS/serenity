@@ -7,7 +7,6 @@
 
 #include "SampleWidget.h"
 #include <AK/Math.h>
-#include <LibAudio/Buffer.h>
 #include <LibGUI/Painter.h>
 
 SampleWidget::SampleWidget()

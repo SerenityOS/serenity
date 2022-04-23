@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Buffer.h"
 #include "Loader.h"
 #include "MP3Types.h"
+#include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
 #include <LibCore/FileStream.h>
 #include <LibDSP/MDCT.h>

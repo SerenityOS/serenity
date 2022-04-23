@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Buffer.h"
 #include "FlacTypes.h"
 #include "Loader.h"
 #include <AK/Error.h>

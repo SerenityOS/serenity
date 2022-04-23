@@ -8,7 +8,6 @@
 #pragma once
 
 #include "VisualizationWidget.h"
-#include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
 class AlbumCoverVisualizationWidget final : public VisualizationWidget {

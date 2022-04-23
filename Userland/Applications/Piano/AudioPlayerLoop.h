@@ -8,8 +8,9 @@
 #pragma once
 
 #include "Music.h"
-#include <LibAudio/Buffer.h>
 #include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/Resampler.h>
+#include <LibAudio/Sample.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>

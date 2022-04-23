@@ -7,6 +7,7 @@
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/Random.h>
+#include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 #include <LibDSP/Processor.h>
 #include <LibDSP/Synthesizers.h>
