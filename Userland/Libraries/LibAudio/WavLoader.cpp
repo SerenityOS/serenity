@@ -6,10 +6,11 @@
  */
 
 #include "WavLoader.h"
-#include "Buffer.h"
 #include "LoaderError.h"
 #include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <AK/NumericLimits.h>
 #include <AK/Try.h>
 #include <LibCore/MemoryStream.h>
 
@@ -36,6 +37,85 @@ MaybeLoaderError WavLoaderPlugin::initialize()
 WavLoaderPlugin::WavLoaderPlugin(Bytes const& buffer)
     : m_backing_memory(buffer)
 {
+}
+
+template<typename SampleReader>
+MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(Core::Stream::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
+{
+    switch (m_num_channels) {
+    case 1:
+        for (auto& sample : samples)
+            sample = Sample(LOADER_TRY(read_sample(stream)));
+        break;
+    case 2:
+        for (auto& sample : samples) {
+            auto left_channel_sample = LOADER_TRY(read_sample(stream));
+            auto right_channel_sample = LOADER_TRY(read_sample(stream));
+            sample = Sample(left_channel_sample, right_channel_sample);
+        }
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return {};
+}
+
+// There's no i24 type + we need to do the endianness conversion manually anyways.
+static ErrorOr<double> read_sample_int24(Core::Stream::Stream& stream)
+{
+    u8 byte = 0;
+    TRY(stream.read(Bytes { &byte, 1 }));
+    i32 sample1 = byte;
+    TRY(stream.read(Bytes { &byte, 1 }));
+    i32 sample2 = byte;
+    TRY(stream.read(Bytes { &byte, 1 }));
+    i32 sample3 = byte;
+
+    i32 value = 0;
+    value = sample1 << 8;
+    value |= sample2 << 16;
+    value |= sample3 << 24;
+    return static_cast<double>(value) / static_cast<double>((1 << 24) - 1);
+}
+
+template<typename T>
+static ErrorOr<double> read_sample(Core::Stream::Stream& stream)
+{
+    T sample { 0 };
+    TRY(stream.read(Bytes { &sample, sizeof(T) }));
+    if constexpr (IsIntegral<T>) {
+        return static_cast<double>(AK::convert_between_host_and_little_endian(sample)) / static_cast<double>(NumericLimits<T>::max());
+    } else {
+        return static_cast<double>(AK::convert_between_host_and_little_endian(sample));
+    }
+}
+
+LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
+{
+    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::try_create(samples_to_read));
+    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(move(data)));
+
+    switch (m_sample_format) {
+    case PcmSampleFormat::Uint8:
+        TRY(read_samples_from_stream(*stream, read_sample<u8>, samples));
+        break;
+    case PcmSampleFormat::Int16:
+        TRY(read_samples_from_stream(*stream, read_sample<i16>, samples));
+        break;
+    case PcmSampleFormat::Int24:
+        TRY(read_samples_from_stream(*stream, read_sample_int24, samples));
+        break;
+    case PcmSampleFormat::Float32:
+        TRY(read_samples_from_stream(*stream, read_sample<float>, samples));
+        break;
+    case PcmSampleFormat::Float64:
+        TRY(read_samples_from_stream(*stream, read_sample<double>, samples));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    return samples;
 }
 
 LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
@@ -65,17 +145,9 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_
     auto sample_data = LOADER_TRY(ByteBuffer::create_zeroed(bytes_to_read));
     LOADER_TRY(m_stream->read(sample_data.bytes()));
 
-    auto buffer = LegacyBuffer::from_pcm_data(
-        sample_data.bytes(),
-        m_num_channels,
-        m_sample_format);
-
-    if (buffer.is_error())
-        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
-
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
-    return LOADER_TRY(buffer.value()->to_sample_array());
+    return samples_from_pcm_data(sample_data.bytes(), samples_to_read);
 }
 
 MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
