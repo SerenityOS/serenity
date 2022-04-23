@@ -21,9 +21,20 @@ Device::Device(MajorNumber major, MinorNumber minor)
 {
 }
 
-void Device::after_inserting()
+void Device::before_will_be_destroyed_remove_from_device_management()
+{
+    DeviceManagement::the().before_device_removal({}, *this);
+    m_state = State::BeingRemoved;
+}
+
+void Device::after_inserting_add_to_device_management()
 {
     DeviceManagement::the().after_inserting_device({}, *this);
+}
+
+void Device::after_inserting()
+{
+    after_inserting_add_to_device_management();
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
@@ -52,8 +63,7 @@ void Device::will_be_destroyed()
             list.remove(*m_sysfs_component);
         });
     }
-    DeviceManagement::the().before_device_removal({}, *this);
-    m_state = State::BeingRemoved;
+    before_will_be_destroyed_remove_from_device_management();
 }
 
 Device::~Device()
