@@ -51,7 +51,7 @@ public:
         PollForEvents,
     };
 
-    // processe events, generally called by exec() in a loop.
+    // process events, generally called by exec() in a loop.
     // this should really only be used for integrating with other event loops
     size_t pump(WaitMode = WaitMode::WaitForEvents);
 
