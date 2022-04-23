@@ -7,18 +7,15 @@
 
 #pragma once
 
-#include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Span.h>
-#include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/WeakPtr.h>
-#include <LibAudio/Buffer.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
+#include <LibCore/Stream.h>
 
 namespace Audio {
 
@@ -29,7 +26,7 @@ static constexpr unsigned const WAVE_FORMAT_ALAW = 0x0006;       // 8-bit ITU-T 
 static constexpr unsigned const WAVE_FORMAT_MULAW = 0x0007;      // 8-bit ITU-T G.711 µ-law
 static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined by SubFormat
 
-// Parses a WAV file and produces an Audio::LegacyBuffer.
+// Parses and reads audio data from a WAV file.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(StringView path);
@@ -56,10 +53,11 @@ public:
 private:
     MaybeLoaderError parse_header();
 
+    // This is only kept around for compatibility for now.
     RefPtr<Core::File> m_file;
-    OwnPtr<AK::InputStream> m_stream;
-    AK::InputMemoryStream* m_memory_stream;
-    Optional<LoaderError> m_error {};
+    OwnPtr<Core::Stream::SeekableStream> m_stream;
+    // The constructor might set this so that we can initialize the data stream later.
+    Optional<Bytes const&> m_backing_memory;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
