@@ -425,11 +425,6 @@ public:
     }
 
 private:
-    bool is_main_event_loop()
-    {
-        return s_main_event_loop.with_locked([this](auto* main_event_loop) { return &m_event_loop == main_event_loop; });
-    }
-
     EventLoop& m_event_loop;
 };
 
