@@ -18,6 +18,12 @@
 
 namespace GUI {
 
+// Word is defined as a-zA-Z0-9_.
+constexpr bool is_part_of_word(u32 code_point)
+{
+    return is_ascii_alphanumeric(code_point) || code_point == '_';
+}
+
 NonnullRefPtr<TextDocument> TextDocument::create(Client* client)
 {
     return adopt_ref(*new TextDocument(client));
@@ -651,11 +657,11 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
 
     while (target.column() > 0 && is_ascii_blank(line.code_points()[target.column() - modifier]))
         target.set_column(target.column() - 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column() - modifier]);
+    auto is_start_of_word = is_part_of_word(line.code_points()[target.column() - modifier]);
 
     while (target.column() > 0) {
         auto prev_code_point = line.code_points()[target.column() - 1];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(prev_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(prev_code_point)))
+        if ((is_start_of_word && !is_part_of_word(prev_code_point)) || (!is_start_of_word && is_part_of_word(prev_code_point)))
             break;
         target.set_column(target.column() - 1);
     }
@@ -677,11 +683,11 @@ TextPosition TextDocument::first_word_break_after(TextPosition const& position) 
 
     while (target.column() < line.length() && is_ascii_space(line.code_points()[target.column()]))
         target.set_column(target.column() + 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column()]);
+    auto is_start_of_word = is_part_of_word(line.code_points()[target.column()]);
 
     while (target.column() < line.length()) {
         auto next_code_point = line.code_points()[target.column()];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(next_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(next_code_point)))
+        if ((is_start_of_word && !is_part_of_word(next_code_point)) || (!is_start_of_word && is_part_of_word(next_code_point)))
             break;
         target.set_column(target.column() + 1);
     }
