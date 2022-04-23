@@ -7,12 +7,12 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/WeakPtr.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
@@ -52,6 +52,10 @@ public:
 
 private:
     MaybeLoaderError parse_header();
+
+    LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
+    template<typename SampleReader>
+    MaybeLoaderError read_samples_from_stream(Core::Stream::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const;
 
     // This is only kept around for compatibility for now.
     RefPtr<Core::File> m_file;
