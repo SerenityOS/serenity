@@ -68,6 +68,9 @@ protected:
     void set_uid(UserID uid) { m_uid = uid; }
     void set_gid(GroupID gid) { m_gid = gid; }
 
+    void after_inserting_add_to_device_management();
+    void before_will_be_destroyed_remove_from_device_management();
+
 private:
     MajorNumber const m_major { 0 };
     MinorNumber const m_minor { 0 };
