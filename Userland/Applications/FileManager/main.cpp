@@ -131,8 +131,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation)
 {
-    if (selected_file_paths.is_empty())
-        VERIFY_NOT_REACHED();
+    VERIFY(!selected_file_paths.is_empty());
 
     StringBuilder copy_text;
     if (file_operation == FileOperation::Move) {
@@ -343,9 +342,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Move);
         },
@@ -355,9 +352,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto copy_action = GUI::CommonActions::make_copy_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Copy);
         },
@@ -727,12 +722,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
             if (paths.is_empty())
                 paths = tree_view_selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Move);
             refresh_tree_view();
@@ -743,12 +735,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     auto copy_action = GUI::CommonActions::make_copy_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
             if (paths.is_empty())
                 paths = tree_view_selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Copy);
             refresh_tree_view();
