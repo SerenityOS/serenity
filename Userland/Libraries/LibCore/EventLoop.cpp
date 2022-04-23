@@ -61,8 +61,6 @@ struct EventLoop::Private {
     Threading::Mutex lock;
 };
 
-// The main event loop is global to the program, so it may be accessed from multiple threads.
-Threading::MutexProtected<EventLoop*> s_main_event_loop;
 static Threading::MutexProtected<NeverDestroyed<IDAllocator>> s_id_allocator;
 static Threading::MutexProtected<RefPtr<InspectorServerConnection>> s_inspector_server_connection;
 
@@ -323,27 +321,25 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
         s_timers = new HashMap<int, NonnullOwnPtr<EventLoopTimer>>;
         s_notifiers = new HashTable<Notifier*>;
     }
-    s_main_event_loop.with_locked([&, this](auto*& main_event_loop) {
-        if (main_event_loop == nullptr) {
-            main_event_loop = this;
-            s_pid = getpid();
-            s_event_loop_stack->append(*this);
+
+    if (s_event_loop_stack->is_empty()) {
+        s_pid = getpid();
+        s_event_loop_stack->append(*this);
 
 #ifdef __serenity__
-            if (getuid() != 0) {
-                if (getenv("MAKE_INSPECTABLE") == "1"sv)
-                    make_inspectable = Core::EventLoop::MakeInspectable::Yes;
+        if (getuid() != 0) {
+            if (getenv("MAKE_INSPECTABLE") == "1"sv)
+                make_inspectable = Core::EventLoop::MakeInspectable::Yes;
 
-                if (make_inspectable == MakeInspectable::Yes
-                    // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
-                    && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
-                    if (!connect_to_inspector_server())
-                        dbgln("Core::EventLoop: Failed to connect to InspectorServer");
-                }
+            if (make_inspectable == MakeInspectable::Yes
+                // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
+                && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
+                if (!connect_to_inspector_server())
+                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
             }
-#endif
         }
-    });
+#endif
+    }
 
     initialize_wake_pipes();
 
@@ -352,13 +348,8 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
 
 EventLoop::~EventLoop()
 {
-    // NOTE: Pop the main event loop off of the stack when destroyed.
-    s_main_event_loop.with_locked([this](auto*& main_event_loop) {
-        if (this == main_event_loop) {
-            s_event_loop_stack->take_last();
-            main_event_loop = nullptr;
-        }
-    });
+    if (!s_event_loop_stack->is_empty() && &s_event_loop_stack->last() == this)
+        s_event_loop_stack->take_last();
 }
 
 bool connect_to_inspector_server()
@@ -639,7 +630,6 @@ void EventLoop::notify_forked(ForkEvent event)
     VERIFY_EVENT_LOOP_INITIALIZED();
     switch (event) {
     case ForkEvent::Child:
-        s_main_event_loop.with_locked([]([[maybe_unused]] auto*& main_event_loop) { main_event_loop = nullptr; });
         s_event_loop_stack->clear();
         s_timers->clear();
         s_notifiers->clear();
@@ -650,9 +640,6 @@ void EventLoop::notify_forked(ForkEvent event)
             info->next_signal_id = 0;
         }
         s_pid = 0;
-#ifdef __serenity__
-        s_main_event_loop.with_locked([]([[maybe_unused]] auto*& main_event_loop) { main_event_loop = nullptr; });
-#endif
         return;
     }
 

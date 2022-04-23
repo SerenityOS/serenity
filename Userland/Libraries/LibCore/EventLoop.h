@@ -26,8 +26,6 @@
 
 namespace Core {
 
-extern Threading::MutexProtected<EventLoop*> s_main_event_loop;
-
 class EventLoop {
 public:
     enum class MakeInspectable {
@@ -59,14 +57,6 @@ public:
 
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&, ShouldWake = ShouldWake::No);
 
-    template<typename Callback>
-    static decltype(auto) with_main_locked(Callback callback)
-    {
-        return s_main_event_loop.with_locked([&callback](auto*& event_loop) {
-            VERIFY(event_loop != nullptr);
-            return callback(event_loop);
-        });
-    }
     static EventLoop& current();
 
     bool was_exit_requested() const { return m_exit_requested; }
