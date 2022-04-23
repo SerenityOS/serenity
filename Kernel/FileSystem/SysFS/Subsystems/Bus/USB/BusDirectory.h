@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <Kernel/Bus/USB/USBDevice.h>
+#include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -20,15 +22,11 @@ public:
 
     virtual StringView name() const override { return "usb"sv; }
 
-    void plug(USB::Device&);
-    void unplug(USB::Device&);
+    void plug(Badge<USB::Hub>, SysFSUSBDeviceInformation&);
+    void unplug(Badge<USB::Hub>, SysFSUSBDeviceInformation&);
 
 private:
     explicit SysFSUSBBusDirectory(SysFSBusDirectory&);
-
-    RefPtr<SysFSUSBDeviceInformation> device_node_for(USB::Device& device);
-
-    IntrusiveList<&SysFSUSBDeviceInformation::m_list_node> m_device_nodes;
     mutable Spinlock m_lock;
 };
 

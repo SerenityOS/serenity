@@ -23,14 +23,10 @@ public:
     static ErrorOr<NonnullRefPtr<SysFSUSBDeviceInformation>> create(USB::Device&);
     virtual StringView name() const override { return m_device_name->view(); }
 
-    RefPtr<USB::Device> device() const { return m_device; }
-
 protected:
     SysFSUSBDeviceInformation(NonnullOwnPtr<KString> device_name, USB::Device& device);
 
     virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-
-    IntrusiveListNode<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>> m_list_node;
 
     NonnullRefPtr<USB::Device> m_device;
 
