@@ -64,14 +64,6 @@ protected:
     void move_page_down();
     void move_to_first_line();
     void move_to_last_line();
-    TextPosition find_beginning_of_next_word();
-    void move_to_beginning_of_next_word();
-    TextPosition find_end_of_next_word();
-    void move_to_end_of_next_word();
-    TextPosition find_end_of_previous_word();
-    void move_to_end_of_previous_word();
-    TextPosition find_beginning_of_previous_word();
-    void move_to_beginning_of_previous_word();
 
     void move_up(double page_height_factor);
     void move_down(double page_height_factor);
