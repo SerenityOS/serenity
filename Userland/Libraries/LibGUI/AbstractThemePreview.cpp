@@ -139,7 +139,8 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
     painter.fill_rect(rect.translated(-frame_rect.location()), m_preview_palette.color(Gfx::ColorRole::Background));
 
     for (auto& button : buttons) {
-        Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
+        if (!m_preview_palette.title_buttons_icon_only())
+            Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
         auto bitmap_rect = button.bitmap->rect().centered_within(button.rect);
         painter.blit(bitmap_rect.location(), *button.bitmap, button.bitmap->rect());
     }
