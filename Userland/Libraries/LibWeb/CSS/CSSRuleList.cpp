@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +9,7 @@
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::CSS {
 
@@ -26,7 +26,7 @@ bool CSSRuleList::is_supported_property_index(u32 index) const
 }
 
 // https://www.w3.org/TR/cssom/#insert-a-css-rule
-DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(NonnullRefPtr<CSSRule> rule, u32 index)
+DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, NonnullRefPtr<CSSRule>> rule, u32 index)
 {
     // 1. Set length to the number of items in list.
     auto length = m_rules.size();
@@ -35,16 +35,27 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(NonnullRefPtr<CSSRule>
     if (index > length)
         return DOM::IndexSizeError::create("CSS rule index out of bounds.");
 
-    // NOTE: These steps don't apply since we're receiving a parsed rule.
     // 3. Set new rule to the results of performing parse a CSS rule on argument rule.
+    // NOTE: The insert-a-css-rule spec expects `rule` to be a string, but the CSSStyleSheet.insertRule()
+    //       spec calls this algorithm with an already-parsed CSSRule. So, we use a Variant and skip step 3
+    //       if that variant holds a CSSRule already.
+    RefPtr<CSSRule> new_rule;
+    if (rule.has<StringView>()) {
+        new_rule = parse_css_rule(CSS::Parser::ParsingContext {}, rule.get<StringView>());
+    } else {
+        new_rule = rule.get<NonnullRefPtr<CSSRule>>();
+    }
+
     // 4. If new rule is a syntax error, throw a SyntaxError exception.
+    if (!new_rule)
+        return DOM::SyntaxError::create("Unable to parse CSS rule.");
 
     // FIXME: 5. If new rule cannot be inserted into list at the zero-index position index due to constraints specified by CSS, then throw a HierarchyRequestError exception. [CSS21]
 
     // FIXME: 6. If new rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
 
     // 7. Insert new rule into list at the zero-indexed position index.
-    m_rules.insert(index, move(rule));
+    m_rules.insert(index, new_rule.release_nonnull());
 
     // 8. Return index.
     return index;
