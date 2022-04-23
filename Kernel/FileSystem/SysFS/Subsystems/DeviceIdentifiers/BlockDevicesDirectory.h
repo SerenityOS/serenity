@@ -13,7 +13,11 @@
 namespace Kernel {
 
 class Device;
+class StorageDevice;
 class SysFSBlockDevicesDirectory final : public SysFSDirectory {
+    friend class Device;
+    friend class StorageDevice;
+
 public:
     virtual StringView name() const override { return "block"sv; }
     static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);

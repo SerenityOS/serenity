@@ -56,6 +56,7 @@ class SysFS;
 class SysFSDirectory;
 class SysFSRootDirectory;
 class SysFSBusDirectory;
+class SysFSDevicesDirectory;
 class SysFSDirectoryInode;
 class SysFSInode;
 class TCPSocket;

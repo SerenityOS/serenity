@@ -152,6 +152,11 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.cpp
     FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.cpp
     FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.cpp
+    FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.cpp
+    FileSystem/SysFS/Subsystems/Devices/Storage/DeviceAttribute.cpp
+    FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Storage/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp

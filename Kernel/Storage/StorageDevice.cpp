@@ -7,7 +7,12 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibC/sys/ioctl_numbers.h>
@@ -21,6 +26,33 @@ StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, MajorNumber
     , m_max_addressable_block(max_addressable_block)
     , m_blocks_per_page(PAGE_SIZE / block_size())
 {
+}
+
+void StorageDevice::after_inserting()
+{
+    after_inserting_add_to_device_management();
+    auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
+    m_sysfs_device_directory = sysfs_storage_device_directory;
+    SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
+    VERIFY(!m_symlink_sysfs_component);
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSDeviceIdentifiersDirectory::the(), *this, *m_sysfs_device_directory));
+    m_symlink_sysfs_component = sys_fs_component;
+    VERIFY(is_block_device());
+    SysFSBlockDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
+        list.append(sys_fs_component);
+    });
+}
+
+void StorageDevice::will_be_destroyed()
+{
+    VERIFY(m_symlink_sysfs_component);
+    VERIFY(is_block_device());
+    SysFSBlockDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
+        list.remove(*m_symlink_sysfs_component);
+    });
+    m_symlink_sysfs_component.clear();
+    SysFSStorageDirectory::the().unplug({}, *m_sysfs_device_directory);
+    before_will_be_destroyed_remove_from_device_management();
 }
 
 StringView StorageDevice::class_name() const

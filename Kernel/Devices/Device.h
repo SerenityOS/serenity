@@ -24,6 +24,7 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -82,6 +83,10 @@ private:
     Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
     RefPtr<SysFSDeviceComponent> m_sysfs_component;
+
+protected:
+    RefPtr<SysFSSymbolicLinkDeviceComponent> m_symlink_sysfs_component;
+    RefPtr<SysFSDirectory> m_sysfs_device_directory;
 };
 
 }
