@@ -693,4 +693,23 @@ DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 
     return {};
 }
+
+// https://xhr.spec.whatwg.org/#ref-for-dom-xmlhttprequest-timeout%E2%91%A2
+DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
+{
+    // 1. If the current global object is a Window object and this’s synchronous flag is set,
+    //    then throw an "InvalidAccessError" DOMException.
+    auto& global_object = wrapper()->global_object();
+    if (global_object.class_name() == "WindowObject" && m_synchronous)
+        return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
+
+    // 2. Set this’s timeout to the given value.
+    m_timeout = timeout;
+
+    return {};
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-timeout
+u32 XMLHttpRequest::timeout() const { return m_timeout; }
+
 }
