@@ -16,6 +16,8 @@ public:
     virtual StringView name() const override { return "dev"sv; }
     static NonnullRefPtr<SysFSDeviceIdentifiersDirectory> must_create(SysFSRootDirectory const&);
 
+    static SysFSDeviceIdentifiersDirectory& the();
+
 private:
     explicit SysFSDeviceIdentifiersDirectory(SysFSRootDirectory const&);
 };

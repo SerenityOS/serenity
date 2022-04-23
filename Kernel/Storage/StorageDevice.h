@@ -17,6 +17,7 @@ namespace Kernel {
 
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
+    friend class DeviceManagement;
 
 public:
     // Note: this attribute describes the internal command set of a Storage device.
@@ -92,6 +93,9 @@ protected:
     virtual StringView class_name() const override;
 
 private:
+    virtual void after_inserting() override;
+    virtual void will_be_destroyed() override;
+
     virtual InterfaceType interface_type() const = 0;
     mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
     NonnullRefPtrVector<DiskPartition> m_partitions;
