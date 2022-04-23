@@ -38,9 +38,10 @@ protected:
         m_block_size_log = AK::log2(m_block_size);
     }
 
-private:
+protected:
     virtual bool is_block_device() const final { return true; }
 
+private:
     size_t m_block_size { 0 };
     u8 m_block_size_log { 0 };
 };
