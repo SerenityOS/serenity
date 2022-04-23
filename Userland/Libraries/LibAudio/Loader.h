@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
@@ -14,8 +15,9 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
-#include <LibAudio/Buffer.h>
 #include <LibAudio/LoaderError.h>
+#include <LibAudio/Sample.h>
+#include <LibAudio/SampleFormats.h>
 #include <LibCore/File.h>
 
 namespace Audio {

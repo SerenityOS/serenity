@@ -16,7 +16,7 @@
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Queue.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibThreading/ConditionVariable.h>

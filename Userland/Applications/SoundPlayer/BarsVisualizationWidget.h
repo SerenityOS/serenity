@@ -11,7 +11,6 @@
 #include <AK/Array.h>
 #include <AK/Complex.h>
 #include <AK/FixedArray.h>
-#include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
 class BarsVisualizationWidget final : public VisualizationWidget {

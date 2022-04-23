@@ -9,7 +9,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Forward.h>
 #include <AK/TypedTransfer.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Sample.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
 
