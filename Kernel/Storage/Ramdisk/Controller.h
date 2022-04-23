@@ -19,7 +19,6 @@ class AsyncBlockDeviceRequest;
 
 class RamdiskController final : public StorageController {
 public:
-public:
     static NonnullRefPtr<RamdiskController> initialize();
     virtual ~RamdiskController() override;
 
