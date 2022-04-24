@@ -686,8 +686,8 @@ void TextEditor::paint_event(PaintEvent& event)
             }
 
             if (physical_line_has_selection && window()->focused_widget() == this) {
-                size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
-                size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
+                size_t const start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
+                size_t const end_of_selection_within_visual_line = min(selection_end_column_within_line - start_of_visual_line, visual_line_text.length());
 
                 bool current_visual_line_has_selection = start_of_selection_within_visual_line != end_of_selection_within_visual_line
                     && ((line_index != selection.start().line() && line_index != selection.end().line())
