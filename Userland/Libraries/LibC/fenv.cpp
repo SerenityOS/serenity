@@ -13,7 +13,7 @@ static_assert(sizeof(__x87_floating_point_environment) == 28);
 static u16 read_status_register()
 {
     u16 status_register;
-    asm volatile("fstsw %0"
+    asm volatile("fnstsw %0"
                  : "=m"(status_register));
     return status_register;
 }
@@ -21,7 +21,7 @@ static u16 read_status_register()
 static u16 read_control_word()
 {
     u16 control_word;
-    asm volatile("fstcw %0"
+    asm volatile("fnstcw %0"
                  : "=m"(control_word));
     return control_word;
 }
@@ -53,7 +53,7 @@ int fegetenv(fenv_t* env)
     if (!env)
         return 1;
 
-    asm volatile("fstenv %0"
+    asm volatile("fnstenv %0"
                  : "=m"(env->__x87_fpu_env)::"memory");
 
     env->__mxcsr = read_mxcsr();
