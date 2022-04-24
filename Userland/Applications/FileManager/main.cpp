@@ -671,7 +671,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     layout_location_action->set_checked(show_location);
     breadcrumb_toolbar.set_visible(show_location);
 
-    toolbar_container.set_visible(show_location | show_toolbar);
+    toolbar_container.set_visible(show_location || show_toolbar);
 
     layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
@@ -694,7 +694,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     location_textbox.on_focusout = [&] {
         if (show_location)
             breadcrumb_toolbar.set_visible(true);
-        if (!(show_location | show_toolbar))
+        if (!(show_location || show_toolbar))
             toolbar_container.set_visible(false);
 
         location_toolbar.set_visible(false);
