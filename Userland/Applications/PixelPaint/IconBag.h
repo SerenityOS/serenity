@@ -41,5 +41,6 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> merge_active_layer_up { nullptr };
     RefPtr<Gfx::Bitmap> merge_active_layer_down { nullptr };
     RefPtr<Gfx::Bitmap> filter { nullptr };
+    RefPtr<Gfx::Bitmap> levels { nullptr };
 };
 }
