@@ -2,9 +2,14 @@
 
 # Note: This is done before `set -e` to let `command` fail if needed
 FUSE2FS_PATH=$(command -v fuse2fs)
+RESIZE2FS_PATH=$(command -v resize2fs)
 
 if [ -z "$FUSE2FS_PATH" ]; then
     FUSE2FS_PATH=/usr/sbin/fuse2fs
+fi
+
+if [ -z "$RESIZE2FS_PATH" ]; then
+    RESIZE2FS_PATH=/usr/sbin/resize2fs
 fi
 
 set -e
@@ -113,7 +118,7 @@ if [ $USE_EXISTING -eq 1 ];  then
     if [ "$DISK_SIZE_BYTES" -gt "$OLD_DISK_SIZE_BYTES" ]; then
         echo "resizing disk image..."
         qemu-img resize -f raw _disk_image "$DISK_SIZE_BYTES" || die "could not resize disk image"
-        if ! resize2fs _disk_image; then
+        if ! "$RESIZE2FS_PATH" _disk_image; then
             rm -f _disk_image
             USE_EXISTING=0
             echo "failed, not using existing image"
