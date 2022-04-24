@@ -139,7 +139,9 @@ int ValueSlider::value_at(Gfx::IntPoint const& position) const
     if (position.x() > bar_rect().right())
         return max();
     float relative_offset = (float)(position.x() - bar_rect().left()) / (float)bar_rect().width();
-    return (int)(relative_offset * (float)max());
+
+    int range = max() - min();
+    return min() + (int)(relative_offset * (float)range);
 }
 
 void ValueSlider::set_value(int value, AllowCallback allow_callback, DoClamp do_clamp)
