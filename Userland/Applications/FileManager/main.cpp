@@ -938,7 +938,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(select_all_action));
 
-    auto action_show_dotfiles = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+    auto show_dotfiles_action = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view->set_should_show_dotfiles(action.is_checked());
         directories_model->set_should_show_dotfiles(action.is_checked());
         refresh_tree_view();
@@ -947,11 +947,11 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     auto show_dotfiles = Config::read_bool("FileManager", "DirectoryView", "ShowDotFiles", false);
     directory_view->set_should_show_dotfiles(show_dotfiles);
-    action_show_dotfiles->set_checked(show_dotfiles);
+    show_dotfiles_action->set_checked(show_dotfiles);
 
     auto const initial_location_contains_dotfile = initial_location.contains("/."sv);
-    action_show_dotfiles->set_checked(initial_location_contains_dotfile);
-    action_show_dotfiles->on_activation(action_show_dotfiles);
+    show_dotfiles_action->set_checked(initial_location_contains_dotfile);
+    show_dotfiles_action->on_activation(show_dotfiles_action);
 
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
@@ -966,7 +966,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(view_menu->try_add_action(directory_view->view_as_table_action()));
     TRY(view_menu->try_add_action(directory_view->view_as_columns_action()));
     TRY(view_menu->try_add_separator());
-    TRY(view_menu->try_add_action(action_show_dotfiles));
+    TRY(view_menu->try_add_action(show_dotfiles_action));
 
     auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         toolbar_container.set_visible(true);
@@ -1142,7 +1142,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(directory_view_context_menu->try_add_action(paste_action));
     TRY(directory_view_context_menu->try_add_action(directory_view->open_terminal_action()));
     TRY(directory_view_context_menu->try_add_separator());
-    TRY(directory_view_context_menu->try_add_action(action_show_dotfiles));
+    TRY(directory_view_context_menu->try_add_action(show_dotfiles_action));
     TRY(directory_view_context_menu->try_add_separator());
     TRY(directory_view_context_menu->try_add_action(properties_action));
 
