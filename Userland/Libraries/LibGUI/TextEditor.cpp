@@ -466,6 +466,10 @@ void TextEditor::paint_event(PaintEvent& event)
         for (size_t i = first_visible_line; i <= last_visible_line; ++i) {
             bool is_current_line = i == m_cursor.line();
             auto ruler_line_rect = ruler_content_rect(i);
+            // NOTE: Shrink the rectangle to be only on the first visual line.
+            auto const line_height = font().preferred_line_height();
+            if (ruler_line_rect.height() > line_height)
+                ruler_line_rect.set_height(line_height);
             // NOTE: Use Painter::draw_text() directly here, as we want to always draw the line numbers in clear text.
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0),
