@@ -36,7 +36,7 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 
 namespace Web::CSS::Parser {
 
-ParsingContext::ParsingContext(DOM::Document const& document, Optional<AK::URL> const url)
+ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
     : m_document(&document)
     , m_url(move(url))
 {
@@ -62,7 +62,7 @@ bool ParsingContext::in_quirks_mode() const
 // https://www.w3.org/TR/css-values-4/#relative-urls
 AK::URL ParsingContext::complete_url(String const& addr) const
 {
-    return m_url.has_value() ? m_url->complete_url(addr) : AK::URL::create_with_url_or_path(addr);
+    return m_url.complete_url(addr);
 }
 
 template<typename T>
