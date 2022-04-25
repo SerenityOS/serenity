@@ -6,13 +6,11 @@
 
 #pragma once
 
-namespace Kernel {
-namespace PCI {
+namespace Kernel::PCI {
 
 extern bool g_pci_access_io_probe_failed;
 extern bool g_pci_access_is_disabled_from_commandline;
 
 void initialize();
 
-}
 }
