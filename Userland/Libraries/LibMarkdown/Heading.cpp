@@ -57,7 +57,7 @@ OwnPtr<Heading> Heading::parse(LineIterator& lines)
             break;
     }
 
-    if (!level || level >= line.length() || line[level] != ' ')
+    if (!level || level >= line.length() || line[level] != ' ' || level > 6)
         return {};
 
     StringView title_view = line.substring_view(level + 1, line.length() - level - 1);
