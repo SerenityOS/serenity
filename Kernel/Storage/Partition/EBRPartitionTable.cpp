@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,13 +9,13 @@
 
 namespace Kernel {
 
-Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTable::try_to_initialize(StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(StorageDevice const& device)
 {
-    auto table = adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)));
     if (table->is_protective_mbr())
-        return { PartitionTable::Error::MBRProtective };
+        return Error::from_errno(ENOTSUP);
     if (!table->is_valid())
-        return { PartitionTable::Error::Invalid };
+        return Error::from_errno(EINVAL);
     return table;
 }
 
