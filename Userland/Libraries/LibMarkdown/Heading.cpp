@@ -50,17 +50,28 @@ OwnPtr<Heading> Heading::parse(LineIterator& lines)
         return {};
 
     StringView line = *lines;
+    size_t indent = 0;
+
+    // Allow for up to 3 spaces of indentation.
+    // https://spec.commonmark.org/0.30/#example-68
+    for (size_t i = 0; i < 3; ++i) {
+        if (line[i] != ' ')
+            break;
+
+        ++indent;
+    }
+
     size_t level;
 
-    for (level = 0; level < line.length(); level++) {
-        if (line[level] != '#')
+    for (level = 0; indent + level < line.length(); level++) {
+        if (line[indent + level] != '#')
             break;
     }
 
-    if (!level || level >= line.length() || line[level] != ' ' || level > 6)
+    if (!level || indent + level >= line.length() || line[indent + level] != ' ' || level > 6)
         return {};
 
-    StringView title_view = line.substring_view(level + 1, line.length() - level - 1);
+    StringView title_view = line.substring_view(indent + level + 1);
     auto text = Text::parse(title_view);
     auto heading = make<Heading>(move(text), level);
 
