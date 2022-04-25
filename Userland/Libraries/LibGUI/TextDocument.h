@@ -12,6 +12,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
+#include <AK/Time.h>
 #include <AK/Utf32View.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
@@ -24,6 +25,8 @@
 #include <LibRegex/Regex.h>
 
 namespace GUI {
+
+constexpr Time COMMAND_COMMIT_TIME = Time::from_milliseconds(400);
 
 struct TextDocumentSpan {
     TextRange range;
@@ -202,6 +205,9 @@ public:
     }
 
 protected:
+    bool commit_time_expired() const { return Time::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
+
+    Time m_timestamp = Time::now_monotonic();
     TextDocument& m_document;
     TextDocument::Client const* m_client { nullptr };
 };
