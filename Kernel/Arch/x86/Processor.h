@@ -17,6 +17,7 @@
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
+#include <Kernel/Arch/x86/SIMDState.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -46,9 +47,15 @@ extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
-struct [[gnu::aligned(16)]] FPUState
+struct [[gnu::aligned(64), gnu::packed]] FPUState
 {
-    u8 buffer[512];
+    SIMD::LegacyRegion legacy_region;
+    SIMD::Header xsave_header;
+
+    // FIXME: This should be dynamically allocated! For now, we only save the `YMM` registers here,
+    // so this will do for now. The size of the area is queried via CPUID(EAX=0dh, ECX=2):EAX.
+    // https://www.intel.com/content/dam/develop/external/us/en/documents/36945
+    u8 ext_save_area[256];
 };
 
 class Processor;

@@ -565,7 +565,7 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 
         if (has_feature(CPUFeature::AVX)) {
             // Turn on SSE, AVX and x87 flags
-            write_xcr0(read_xcr0() | 0x7);
+            write_xcr0(read_xcr0() | SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87);
         }
     }
 
@@ -663,12 +663,18 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     if (cpu == 0) {
         VERIFY((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
-        if (has_feature(CPUFeature::FXSR))
+        // Initialize AVX state
+        if (has_feature(CPUFeature::XSAVE | CPUFeature::AVX)) {
+            asm volatile("xsave %0\n"
+                         : "=m"(s_clean_fpu_state)
+                         : "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
+        } else if (has_feature(CPUFeature::FXSR)) {
             asm volatile("fxsave %0"
                          : "=m"(s_clean_fpu_state));
-        else
+        } else {
             asm volatile("fnsave %0"
                          : "=m"(s_clean_fpu_state));
+        }
 
         if (has_feature(CPUFeature::HYPERVISOR))
             detect_hypervisor();
@@ -1563,6 +1569,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(to_thread->state() == Thread::State::Running);
 
     bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
+    bool has_xsave_avx_support = Processor::current().has_feature(CPUFeature::XSAVE) && Processor::current().has_feature(CPUFeature::AVX);
     Processor::set_current_thread(*to_thread);
 
     auto& from_regs = from_thread->regs();
@@ -1572,12 +1579,19 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     //       instead of carrying on with elevated I/O privileges.
     VERIFY(get_iopl_from_eflags(to_regs.flags()) == 0);
 
-    if (has_fxsr)
+    if (has_xsave_avx_support) {
+        // The specific state components saved correspond to the bits set in the requested-feature bitmap (RFBM), which is the logical-AND of EDX:EAX and XCR0.
+        // https://www.moritz.systems/blog/how-debuggers-work-getting-and-setting-x86-registers-part-2/
+        asm volatile("xsave %0\n"
+                     : "=m"(from_thread->fpu_state())
+                     : "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
+    } else if (has_fxsr) {
         asm volatile("fxsave %0"
                      : "=m"(from_thread->fpu_state()));
-    else
+    } else {
         asm volatile("fnsave %0"
                      : "=m"(from_thread->fpu_state()));
+    }
 
 #if ARCH(I386)
     from_regs.fs = get_fs();
@@ -1614,7 +1628,9 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(in_critical > 0);
     Processor::restore_in_critical(in_critical);
 
-    if (has_fxsr)
+    if (has_xsave_avx_support)
+        asm volatile("xrstor %0" ::"m"(to_thread->fpu_state()), "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
+    else if (has_fxsr)
         asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
     else
         asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
