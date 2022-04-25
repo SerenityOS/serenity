@@ -67,7 +67,7 @@ NonnullRefPtr<Action> make_undo_action(Function<void(Action&)> callback, Core::O
 
 NonnullRefPtr<Action> make_redo_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("&Redo", { Mod_Ctrl, Key_Y }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/redo.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    return Action::create("&Redo", { Mod_Ctrl | Mod_Shift, Key_Z }, { Mod_Ctrl, Key_Y }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/redo.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core::Object* parent)
@@ -181,12 +181,12 @@ NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)> callback, Cor
 
 NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return GUI::Action::create("Rotate Clock&wise", { Mod_Ctrl | Mod_Shift, Key_X }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    return GUI::Action::create("Rotate Clock&wise", { Mod_Ctrl | Mod_Shift, Key_GreaterThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return GUI::Action::create("Rotate &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_Z }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    return GUI::Action::create("Rotate &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
 }
