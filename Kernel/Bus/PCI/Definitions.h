@@ -14,9 +14,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
-
-namespace PCI {
+namespace Kernel::PCI {
 
 enum class HeaderType {
     Device = 0,
@@ -293,7 +291,6 @@ private:
 
 class Domain;
 class Device;
-}
 
 }
 
