@@ -108,11 +108,11 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
         }
 
         bool any = try_parse_block<Table>(lines, blocks)
+            || try_parse_block<HorizontalRule>(lines, blocks)
             || try_parse_block<List>(lines, blocks)
             || try_parse_block<CodeBlock>(lines, blocks)
             || try_parse_block<CommentBlock>(lines, blocks)
             || try_parse_block<Heading>(lines, blocks)
-            || try_parse_block<HorizontalRule>(lines, blocks)
             || try_parse_block<BlockQuote>(lines, blocks);
 
         if (any) {

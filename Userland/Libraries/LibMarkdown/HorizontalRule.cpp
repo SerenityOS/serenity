@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/HorizontalRule.h>
 #include <LibMarkdown/Visitor.h>
+#include <LibRegex/Regex.h>
 
 namespace Markdown {
 
@@ -34,6 +35,8 @@ RecursionDecision HorizontalRule::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
+static Regex<ECMA262> thematic_break_re("^ {0,3}([\\*\\-_])(\\s*\\1\\s*){2,}$");
+
 OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)
 {
     if (lines.is_end())
@@ -41,16 +44,9 @@ OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)
 
     StringView line = *lines;
 
-    if (line.length() < 3)
+    auto match = thematic_break_re.match(line);
+    if (!match.success)
         return {};
-    if (!line.starts_with('-') && !line.starts_with('_') && !line.starts_with('*'))
-        return {};
-
-    auto first_character = line.characters_without_null_termination()[0];
-    for (auto ch : line) {
-        if (ch != first_character)
-            return {};
-    }
 
     ++lines;
     return make<HorizontalRule>();
