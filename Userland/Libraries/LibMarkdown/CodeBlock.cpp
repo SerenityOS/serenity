@@ -34,7 +34,7 @@ String CodeBlock::render_to_html(bool) const
     else
         builder.append(escape_html_entities(m_code));
 
-    builder.append("\n</code>");
+    builder.append("</code>");
 
     if (m_style.length() >= 2)
         builder.append("</strong>");
@@ -142,7 +142,6 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines)
 
     ++lines;
 
-    bool first = true;
     StringBuilder builder;
 
     while (true) {
@@ -157,11 +156,8 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines)
             if (close_fence[0] == fence[0] && close_fence.length() >= fence.length())
                 break;
         }
-
-        if (!first)
-            builder.append('\n');
         builder.append(line);
-        first = false;
+        builder.append('\n');
     }
 
     return make<CodeBlock>(language, style, builder.build());
@@ -169,7 +165,6 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines)
 
 OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
 {
-    bool first = true;
     StringBuilder builder;
 
     while (true) {
@@ -184,10 +179,8 @@ OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
         line = line.substring_view(prefix_length.value());
         ++lines;
 
-        if (!first)
-            builder.append('\n');
         builder.append(line);
-        first = false;
+        builder.append('\n');
     }
 
     return make<CodeBlock>("", "", builder.build());
