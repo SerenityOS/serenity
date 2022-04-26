@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (!value_to_write.is_empty()) {
+    if (!value_to_write.is_null()) {
         Config::write_string(domain, group, key, value_to_write);
         return 0;
     }
