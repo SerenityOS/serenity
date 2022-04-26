@@ -225,6 +225,15 @@ Optional<u8> HexEditor::get_byte(size_t position)
     return {};
 }
 
+Vector<u8> HexEditor::get_selected_bytes()
+{
+    Vector<u8> byte_vector;
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
+        byte_vector.append(m_document->get(i).value);
+
+    return byte_vector;
+}
+
 void HexEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Primary) {
