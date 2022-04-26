@@ -245,6 +245,18 @@ Optional<u8> HexEditor::get_byte(size_t position)
     return {};
 }
 
+ByteBuffer HexEditor::get_selected_bytes()
+{
+    auto num_selected_bytes = m_selection_end - m_selection_start;
+    ByteBuffer data;
+    data.ensure_capacity(num_selected_bytes);
+
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
+        data.append(m_document->get(i).value);
+
+    return data;
+}
+
 void HexEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Primary) {
