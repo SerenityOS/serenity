@@ -279,6 +279,8 @@ void HexEditorWidget::update_inspector_values(size_t position)
         unsigned_64_bit_int = (unsigned_64_bit_int << (8 * bytes_left_to_read));
     }
 
+    Vector<u8> selected_bytes = m_editor->get_selected_bytes();
+
     // Populate the model
     NonnullRefPtr<ValueInspectorModel> value_inspector_model = make_ref_counted<ValueInspectorModel>(m_value_inspector_little_endian);
     if (byte_read_count >= 1) {
@@ -357,6 +359,19 @@ void HexEditorWidget::update_inspector_values(size_t position)
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }
+
+    StringBuilder ascii_string_builder;
+    for (size_t i = 0; i < selected_bytes.size(); i++) {
+        char byte_char = static_cast<char>(selected_bytes[i]);
+
+        if (!is_ascii_control(byte_char) && is_ascii(byte_char)) {
+            ascii_string_builder.append(byte_char);
+        } else {
+            ascii_string_builder.append(" ");
+        }
+    }
+
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string_builder.to_string());
 
     // FIXME: Parse as other values like Timestamp etc
 
