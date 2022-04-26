@@ -22,6 +22,7 @@ SCRIPT_DIR="$(dirname "${0}")"
 if [ -z ${SERENITY_VIRTUALIZATION_SUPPORT+x} ]; then
     VIRTUALIZATION_SUPPORT="0"
     [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && [ "$(uname -m)" != "aarch64" ] && VIRTUALIZATION_SUPPORT="1"
+    command -v wslpath >/dev/null && VIRTUALIZATION_SUPPORT="1"
 else
     VIRTUALIZATION_SUPPORT="$SERENITY_VIRTUALIZATION_SUPPORT"
 fi
