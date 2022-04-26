@@ -40,6 +40,8 @@ private:
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
+    ErrorOr<String> make_display_string(StringView string);
+
     RefPtr<HexEditor> m_editor;
     DeprecatedString m_path;
     DeprecatedString m_name;

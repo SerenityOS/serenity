@@ -309,7 +309,9 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, DeprecatedString::number(static_cast<i8>(unsigned_byte_value)));
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, DeprecatedString::number(unsigned_byte_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, DeprecatedString::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
+        auto ascii_char = DeprecatedString::formatted("{:c}", static_cast<char>(unsigned_byte_value));
+        auto ascii_display_char = make_display_string(ascii_char).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, ascii_display_char);
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
@@ -356,46 +358,55 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, "");
     }
 
-    // FIXME: This probably doesn't honour endianness correctly.
     Utf8View utf8_view { ReadonlyBytes { reinterpret_cast<u8 const*>(&unsigned_64_bit_int), 4 } };
     size_t valid_bytes;
     utf8_view.validate(valid_bytes);
     if (valid_bytes == 0)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, "");
-    else
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
+    else {
+        auto utf8_char = utf8_view.unicode_substring_view(0, 1).as_string();
+        auto utf8_display_char = make_display_string(utf8_char).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_display_char);
+    }
 
+    // FIXME: The byte read count doesn't need to be even for UTF-16 to be valid
     if (byte_read_count % 2 == 0) {
         Utf16View utf16_view { ReadonlySpan<u16> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
         size_t valid_code_units;
         utf16_view.validate(valid_code_units);
-        if (valid_code_units == 0)
+        if (valid_code_units == 0) {
             value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
-        else
-            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_deprecated_string().release_value_but_fixme_should_propagate_errors());
+        } else {
+            auto utf16_char = utf16_view.unicode_substring_view(0, 1).to_utf8().release_value_but_fixme_should_propagate_errors();
+            auto utf16_display_char = make_display_string(utf16_char).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_display_char);
+        }
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }
 
     auto selected_bytes = m_editor->get_selected_bytes();
 
-    auto ascii_string = DeprecatedString { ReadonlyBytes { selected_bytes } };
-    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string);
+    auto ascii_bytes = selected_bytes;
+    auto ascii_display_string = make_display_string(ascii_bytes).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_display_string);
 
     Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
     utf8_string_view.validate(valid_bytes);
-    if (valid_bytes == 0)
+    if (valid_bytes == 0) {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
-    else
-        // FIXME: replace control chars with something else - we don't want line breaks here ;)
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
+    } else {
+        auto utf8_string = utf8_string_view.as_string();
+        auto utf8_display_string = make_display_string(utf8_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_display_string);
+    }
 
     // FIXME: Parse as other values like Timestamp etc
 
     auto decoder = TextCodec::decoder_for(m_value_inspector_little_endian ? "utf-16le"sv : "utf-16be"sv);
-    DeprecatedString utf16_string = decoder->to_utf8(StringView(selected_bytes.span())).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-
-    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
+    auto utf16_string = decoder->to_utf8(selected_bytes).release_value_but_fixme_should_propagate_errors();
+    auto utf16_display_string = make_display_string(utf16_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_display_string);
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
@@ -609,4 +620,26 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
         open_file(response.value().filename(), response.value().release_stream());
     }
+}
+
+ErrorOr<String> HexEditorWidget::make_display_string(StringView string)
+{
+    // FIXME: We probably want to replace all control characters here
+    StringBuilder builder;
+    for (auto code_point : Utf8View(string)) {
+        if (code_point == '\t')
+            builder.append("␉"sv);
+        else if (code_point == '\n')
+            builder.append("␊"sv);
+        else if (code_point == '\v')
+            builder.append("␋"sv);
+        else if (code_point == '\f')
+            builder.append("␌"sv);
+        else if (code_point == '\r')
+            builder.append("␍"sv);
+        else {
+            builder.append_code_point(code_point);
+        }
+    }
+    return builder.to_string();
 }
