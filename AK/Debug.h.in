@@ -386,6 +386,10 @@
 #cmakedefine01 SH_LANGUAGE_SERVER_DEBUG
 #endif
 
+#ifndef SHARED_QUEUE_DEBUG
+#cmakedefine01 SHARED_QUEUE_DEBUG
+#endif
+
 #ifndef SHELL_JOB_DEBUG
 #cmakedefine01 SHELL_JOB_DEBUG
 #endif

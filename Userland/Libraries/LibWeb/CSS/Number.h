@@ -68,11 +68,6 @@ public:
         return { Type::Number, m_value / other.m_value };
     }
 
-    auto operator<=>(Number const& other) const
-    {
-        return m_value - other.m_value;
-    }
-
 private:
     float m_value { 0 };
     Type m_type;

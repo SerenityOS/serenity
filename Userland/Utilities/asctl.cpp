@@ -30,6 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
     auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
+    audio_client->async_pause_playback();
 
     String command = String::empty();
     Vector<StringView> command_arguments;
@@ -43,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio rpath wpath recvfd"));
+    TRY(Core::System::pledge("stdio rpath wpath recvfd thread"));
 
     if (command.equals_ignoring_case("get") || command == "g") {
         // Get variables

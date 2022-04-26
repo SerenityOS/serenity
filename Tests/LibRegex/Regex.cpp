@@ -1034,3 +1034,14 @@ TEST_CASE(single_match_flag)
         EXPECT_EQ(result.matches.first().view.to_string(), "A"sv);
     }
 }
+
+TEST_CASE(inversion_state_in_char_class)
+{
+    // #13755, /[\S\s]/.exec("hello") should be [ "h" ], not null.
+    Regex<ECMA262> re("[\\S\\s]", ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
+
+    auto result = re.match("hello");
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.matches.size(), 1u);
+    EXPECT_EQ(result.matches.first().view.to_string(), "h"sv);
+}

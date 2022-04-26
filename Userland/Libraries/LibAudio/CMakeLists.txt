@@ -8,6 +8,7 @@ set(SOURCES
     FlacLoader.cpp
     WavWriter.cpp
     MP3Loader.cpp
+    UserSampleQueue.cpp
 )
 
 set(GENERATED_SOURCES
@@ -16,4 +17,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibAudio audio)
-target_link_libraries(LibAudio LibCore LibIPC)
+target_link_libraries(LibAudio LibCore LibIPC LibThreading)

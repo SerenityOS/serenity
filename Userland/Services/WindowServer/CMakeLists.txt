@@ -25,6 +25,8 @@ set(SOURCES
     MultiScaleBitmaps.cpp
     Overlays.cpp
     Screen.cpp
+    HardwareScreenBackend.cpp
+    VirtualScreenBackend.cpp
     ScreenLayout.cpp
     Window.cpp
     WindowFrame.cpp

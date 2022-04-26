@@ -15,8 +15,10 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <arpa/inet.h>
 #include <net/if_arp.h>
 #include <net/route.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -25,12 +27,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty inet"));
+    TRY(Core::System::pledge("stdio rpath tty inet unix"));
     TRY(Core::System::unveil("/proc/net/arp", "r"));
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     static bool flag_set;
     static bool flag_delete;
+    static bool flag_numeric;
     StringView value_ipv4_address;
     StringView value_hw_address;
 
@@ -38,6 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Display or modify the system ARP cache");
     args_parser.add_option(flag_set, "Set an ARP table entry", "set", 's');
     args_parser.add_option(flag_delete, "Delete an ARP table entry", "delete", 'd');
+    args_parser.add_option(flag_numeric, "Display numerical addresses. Don't resolve hostnames", "numeric", 'n');
     args_parser.add_positional_argument(value_ipv4_address, "IPv4 protocol address", "address", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -107,6 +112,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& if_object = value.as_object();
 
             auto ip_address = if_object.get("ip_address").to_string();
+
+            if (!flag_numeric) {
+                auto from_string = IPv4Address::from_string(ip_address);
+                auto addr = from_string.value().to_in_addr_t();
+                auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
+                if (hostent != nullptr) {
+                    auto host_name = StringView(hostent->h_name);
+                    if (!host_name.is_empty())
+                        ip_address = host_name;
+                }
+            }
+
             auto mac_address = if_object.get("mac_address").to_string();
 
             if (proto_address_column != -1)

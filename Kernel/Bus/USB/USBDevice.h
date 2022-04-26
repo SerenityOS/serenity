@@ -8,11 +8,14 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
+#include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 
 namespace Kernel::USB {
 
 class USBController;
+class USBConfiguration;
 
 //
 // Some nice info from FTDI on device enumeration and how some of this
@@ -44,6 +47,8 @@ public:
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }
 
+    ErrorOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
+
 protected:
     Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
 
@@ -55,6 +60,7 @@ protected:
     u16 m_vendor_id { 0 };                      // This device's vendor ID assigned by the USB group
     u16 m_product_id { 0 };                     // This device's product ID assigned by the USB group
     USBDeviceDescriptor m_device_descriptor {}; // Device Descriptor obtained from USB Device
+    Vector<USBConfiguration> m_configurations;  // Configurations for this device
 
     NonnullRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration

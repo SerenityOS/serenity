@@ -22,9 +22,6 @@ ErrorOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescripti
     if (offset != 0)
         return EINVAL;
 
-    if (range.size() != m_vmobject->size())
-        return EINVAL;
-
     return process.address_space().allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
 }
 

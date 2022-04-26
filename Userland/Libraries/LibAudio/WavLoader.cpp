@@ -8,6 +8,7 @@
 #include "WavLoader.h"
 #include "Buffer.h"
 #include <AK/Debug.h>
+#include <AK/FixedArray.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
 #include <AK/Try.h>
@@ -53,7 +54,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
 
     int remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0)
-        return Buffer::create_empty();
+        return FixedArray<Sample> {};
 
     // One "sample" contains data from all channels.
     // In the Wave spec, this is also called a block.
@@ -78,7 +79,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     if (m_stream->handle_any_error())
         return LoaderError { LoaderError::Category::IO, static_cast<size_t>(m_loaded_samples), "Stream read error" };
 
-    auto buffer = Buffer::from_pcm_data(
+    auto buffer = LegacyBuffer::from_pcm_data(
         sample_data.bytes(),
         m_num_channels,
         m_sample_format);
@@ -88,7 +89,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
-    return buffer.release_value();
+    return LOADER_TRY(buffer.value()->to_sample_array());
 }
 
 MaybeLoaderError WavLoaderPlugin::seek(int const sample_index)

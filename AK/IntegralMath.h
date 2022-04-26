@@ -10,8 +10,6 @@
 #include <AK/Concepts.h>
 #include <AK/Types.h>
 
-#include <AK/Format.h>
-
 namespace AK {
 
 template<Integral T>

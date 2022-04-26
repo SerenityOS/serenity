@@ -67,7 +67,7 @@ int Shell::builtin_alias(int argc, char const** argv)
             }
         } else {
             m_aliases.set(parts[0], parts[1]);
-            add_entry_to_cache(parts[0]);
+            add_entry_to_cache({ RunnablePath::Kind::Alias, parts[0] });
         }
     }
 

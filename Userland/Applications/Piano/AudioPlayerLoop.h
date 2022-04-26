@@ -11,6 +11,7 @@
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ConnectionFromClient.h>
 #include <LibAudio/WavWriter.h>
+#include <LibCore/Event.h>
 #include <LibCore/Object.h>
 
 class TrackManager;
@@ -28,9 +29,11 @@ public:
 private:
     AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
 
+    virtual void timer_event(Core::TimerEvent&) override;
+
     TrackManager& m_track_manager;
     Array<Sample, sample_count> m_buffer;
-    Optional<Audio::ResampleHelper<double>> m_resampler;
+    Optional<Audio::ResampleHelper<Sample>> m_resampler;
     RefPtr<Audio::ConnectionFromClient> m_audio_client;
 
     bool m_should_play_audio = true;

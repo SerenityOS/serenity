@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,11 @@
 #include "Compositor.h"
 #include "Event.h"
 #include "EventLoop.h"
+#include "ScreenBackend.h"
+#include "VirtualScreenBackend.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <Kernel/API/FB.h>
 #include <Kernel/API/MousePacket.h>
 #include <fcntl.h>
@@ -25,7 +29,7 @@ Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
 Vector<int, default_scale_factors_in_use_count> Screen::s_scale_factors_in_use;
 
-struct ScreenFBData {
+struct FlushRectData {
     Vector<FBRect, 32> pending_flush_rects;
     bool too_many_pending_flush_rects { false };
 };
@@ -95,7 +99,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
 
     for (auto& it : screens_with_resolution_change) {
         auto& existing_screen = *it.key;
-        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device);
+        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device.value_or("<virtual screen>"));
         existing_screen.close_device();
     }
 
@@ -208,7 +212,7 @@ void Screen::update_scale_factors_in_use()
 
 Screen::Screen(size_t screen_index)
     : m_index(screen_index)
-    , m_framebuffer_data(adopt_own(*new ScreenFBData()))
+    , m_flush_rects(adopt_own(*new FlushRectData()))
     , m_compositor_screen_data(Compositor::create_screen_data({}))
 {
     update_virtual_rect();
@@ -224,38 +228,36 @@ bool Screen::open_device()
 {
     close_device();
     auto& info = screen_layout_info();
-    m_framebuffer_fd = open(info.device.characters(), O_RDWR | O_CLOEXEC);
-    if (m_framebuffer_fd < 0) {
-        perror(String::formatted("failed to open {}", info.device).characters());
+
+    switch (info.mode) {
+    case ScreenLayout::Screen::Mode::Device: {
+        m_backend = make<HardwareScreenBackend>(info.device.value());
+        auto return_value = m_backend->open();
+        if (return_value.is_error()) {
+            dbgln("Screen #{}: Failed to open backend: {}", index(), return_value.error());
+            return false;
+        }
+
+        set_resolution(true);
+        return true;
+    }
+    case ScreenLayout::Screen::Mode::Virtual: {
+        m_backend = make<VirtualScreenBackend>();
+        // Virtual device open should never fail.
+        MUST(m_backend->open());
+
+        set_resolution(true);
+        return true;
+    }
+    default:
+        dbgln("Unsupported screen type {}", ScreenLayout::Screen::mode_to_string(info.mode));
         return false;
     }
-
-    FBProperties properties;
-    if (fb_get_properties(m_framebuffer_fd, &properties) < 0) {
-        perror(String::formatted("failed to ioctl {}", info.device).characters());
-        return false;
-    }
-
-    m_can_device_flush_buffers = properties.partial_flushing_support;
-    m_can_set_buffer = properties.doublebuffer_support;
-
-    set_resolution(true);
-    return true;
 }
 
 void Screen::close_device()
 {
-    if (m_framebuffer_fd >= 0) {
-        close(m_framebuffer_fd);
-        m_framebuffer_fd = -1;
-    }
-    if (m_framebuffer) {
-        int rc = munmap(m_framebuffer, m_size_in_bytes);
-        VERIFY(rc == 0);
-
-        m_framebuffer = nullptr;
-        m_size_in_bytes = 0;
-    }
+    m_backend = nullptr;
 }
 
 void Screen::update_virtual_rect()
@@ -320,48 +322,22 @@ bool Screen::set_resolution(bool initial)
 
     auto& info = screen_layout_info();
 
-    int rc = -1;
+    ErrorOr<void> return_value = Error::from_errno(EINVAL);
     {
         // FIXME: Add multihead support for one framebuffer
         FBHeadResolution physical_resolution { 0, 0, info.resolution.width(), info.resolution.height() };
-        rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
+        return_value = m_backend->set_head_resolution(physical_resolution);
     }
 
-    dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - return code {}", index(), rc);
+    dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - success", index());
 
-    auto on_change_resolution = [&]() {
+    auto on_change_resolution = [&]() -> ErrorOr<void> {
         if (initial) {
-            if (m_framebuffer) {
-                size_t previous_size_in_bytes = m_size_in_bytes;
-                int rc = munmap(m_framebuffer, previous_size_in_bytes);
-                VERIFY(rc == 0);
-            }
-            FBHeadProperties properties;
-            properties.head_index = 0;
-            int rc = fb_get_head_properties(m_framebuffer_fd, &properties);
-            VERIFY(rc == 0);
-            m_size_in_bytes = properties.buffer_length;
-
-            m_framebuffer = (Gfx::ARGB32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
-            VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
-
-            if (m_can_set_buffer) {
-                // Note: fall back to assuming the second buffer starts right after the last line of the first
-                // Note: for now, this calculation works quite well, so need to defer it to another function
-                // that does ioctl to figure out the correct offset. If a Framebuffer device ever happens to
-                // to set the second buffer at different location than this, we might need to consider bringing
-                // back a function with ioctl to check this.
-                m_back_buffer_offset = properties.pitch * properties.height;
-            } else {
-                m_back_buffer_offset = 0;
-            }
+            TRY(m_backend->unmap_framebuffer());
+            TRY(m_backend->map_framebuffer());
         }
-        FBHeadProperties properties;
-        properties.head_index = 0;
-        int rc = fb_get_head_properties(m_framebuffer_fd, &properties);
-        VERIFY(rc == 0);
+        auto properties = TRY(m_backend->get_head_properties());
         info.resolution = { properties.width, properties.height };
-        m_pitch = properties.pitch;
 
         update_virtual_rect();
 
@@ -373,16 +349,17 @@ bool Screen::set_resolution(bool initial)
             auto& screen_input = ScreenInput::the();
             screen_input.set_cursor_location(screen_input.cursor_location().constrained(rect()));
         }
+        return {};
     };
 
-    if (rc == 0) {
-        on_change_resolution();
-        return true;
+    if (!return_value.is_error()) {
+        return_value = on_change_resolution();
+        if (!return_value.is_error())
+            return true;
     }
-    if (rc == -1) {
-        int err = errno;
-        dbgln("Screen #{}: Failed to set resolution {}: {}", index(), info.resolution, strerror(err));
-        on_change_resolution();
+    if (return_value.is_error()) {
+        dbgln("Screen #{}: Failed to set resolution {}: {}", index(), info.resolution, return_value.error());
+        MUST(on_change_resolution());
         return false;
     }
     VERIFY_NOT_REACHED();
@@ -390,14 +367,7 @@ bool Screen::set_resolution(bool initial)
 
 void Screen::set_buffer(int index)
 {
-    VERIFY(m_can_set_buffer);
-    VERIFY(index <= 1 && index >= 0);
-    FBHeadVerticalOffset offset;
-    memset(&offset, 0, sizeof(FBHeadVerticalOffset));
-    if (index == 1)
-        offset.offsetted = 1;
-    int rc = fb_set_head_vertical_offset_buffer(m_framebuffer_fd, &offset);
-    VERIFY(rc == 0);
+    m_backend->set_head_buffer(index);
 }
 
 size_t Screen::buffer_offset(int index) const
@@ -405,7 +375,7 @@ size_t Screen::buffer_offset(int index) const
     if (index == 0)
         return 0;
     if (index == 1)
-        return m_back_buffer_offset;
+        return m_backend->m_back_buffer_offset;
     VERIFY_NOT_REACHED();
 }
 
@@ -479,20 +449,20 @@ void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
 
 void Screen::constrain_pending_flush_rects()
 {
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.pending_flush_rects.is_empty())
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.pending_flush_rects.is_empty())
         return;
     Gfx::IntRect screen_rect({}, rect().size());
     Gfx::DisjointRectSet rects;
-    for (auto& fb_rect : fb_data.pending_flush_rects) {
+    for (auto& fb_rect : flush_rects.pending_flush_rects) {
         Gfx::IntRect rect { (int)fb_rect.x, (int)fb_rect.y, (int)fb_rect.width, (int)fb_rect.height };
         auto intersected_rect = rect.intersected(screen_rect);
         if (!intersected_rect.is_empty())
             rects.add(intersected_rect);
     }
-    fb_data.pending_flush_rects.clear_with_capacity();
+    flush_rects.pending_flush_rects.clear_with_capacity();
     for (auto const& rect : rects.rects()) {
-        fb_data.pending_flush_rects.append({
+        flush_rects.pending_flush_rects.append({
             .head_index = 0,
             .x = (unsigned)rect.x(),
             .y = (unsigned)rect.y(),
@@ -507,12 +477,12 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
     // NOTE: we don't scale until in Screen::flush_display so that when
     // there are too many rectangles that we end up throwing away, we didn't
     // waste accounting for scale factor!
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.too_many_pending_flush_rects) {
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.too_many_pending_flush_rects) {
         // We already have too many, just make sure we extend it if needed
-        VERIFY(!fb_data.pending_flush_rects.is_empty());
-        if (fb_data.pending_flush_rects.size() == 1) {
-            auto& union_rect = fb_data.pending_flush_rects[0];
+        VERIFY(!flush_rects.pending_flush_rects.is_empty());
+        if (flush_rects.pending_flush_rects.size() == 1) {
+            auto& union_rect = flush_rects.pending_flush_rects[0];
             auto new_union = flush_region.united(Gfx::IntRect((int)union_rect.x, (int)union_rect.y, (int)union_rect.width, (int)union_rect.height));
             union_rect.x = new_union.left();
             union_rect.y = new_union.top();
@@ -521,10 +491,10 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
         } else {
             // Convert all the rectangles into one union
             auto new_union = flush_region;
-            for (auto& flush_rect : fb_data.pending_flush_rects)
+            for (auto& flush_rect : flush_rects.pending_flush_rects)
                 new_union = new_union.united(Gfx::IntRect((int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height));
-            fb_data.pending_flush_rects.resize(1, true);
-            auto& union_rect = fb_data.pending_flush_rects[0];
+            flush_rects.pending_flush_rects.resize(1, true);
+            auto& union_rect = flush_rects.pending_flush_rects[0];
             union_rect.x = new_union.left();
             union_rect.y = new_union.top();
             union_rect.width = new_union.width();
@@ -532,28 +502,28 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
         }
         return;
     }
-    VERIFY(fb_data.pending_flush_rects.size() < fb_data.pending_flush_rects.capacity());
-    fb_data.pending_flush_rects.append({ 0,
+    VERIFY(flush_rects.pending_flush_rects.size() < flush_rects.pending_flush_rects.capacity());
+    flush_rects.pending_flush_rects.append({ 0,
         (unsigned)flush_region.left(),
         (unsigned)flush_region.top(),
         (unsigned)flush_region.width(),
         (unsigned)flush_region.height() });
-    if (fb_data.pending_flush_rects.size() == fb_data.pending_flush_rects.capacity()) {
+    if (flush_rects.pending_flush_rects.size() == flush_rects.pending_flush_rects.capacity()) {
         // If we get one more rectangle then we need to convert it to a single union rectangle
-        fb_data.too_many_pending_flush_rects = true;
+        flush_rects.too_many_pending_flush_rects = true;
     }
 }
 
 void Screen::flush_display(int buffer_index)
 {
-    VERIFY(m_can_device_flush_buffers);
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.pending_flush_rects.is_empty())
+    VERIFY(m_backend->m_can_device_flush_buffers);
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.pending_flush_rects.is_empty())
         return;
 
     // Now that we have a final set of rects, apply the scale factor
     auto scale_factor = this->scale_factor();
-    for (auto& flush_rect : fb_data.pending_flush_rects) {
+    for (auto& flush_rect : flush_rects.pending_flush_rects) {
         VERIFY(Gfx::IntRect({}, m_virtual_rect.size()).contains({ (int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height }));
         flush_rect.x *= scale_factor;
         flush_rect.y *= scale_factor;
@@ -561,21 +531,17 @@ void Screen::flush_display(int buffer_index)
         flush_rect.height *= scale_factor;
     }
 
-    if (fb_flush_buffers(m_framebuffer_fd, buffer_index, fb_data.pending_flush_rects.data(), (unsigned)fb_data.pending_flush_rects.size()) < 0) {
-        int err = errno;
-        if (err == ENOTSUP)
-            m_can_device_flush_buffers = false;
-        else
-            dbgln("Screen #{}: Error ({}) flushing display: {}", index(), err, strerror(err));
-    }
+    auto return_value = m_backend->flush_framebuffer_rects(buffer_index, flush_rects.pending_flush_rects.span());
+    if (return_value.is_error())
+        dbgln("Screen #{}: Error flushing display: {}", index(), return_value.error());
 
-    fb_data.too_many_pending_flush_rects = false;
-    fb_data.pending_flush_rects.clear_with_capacity();
+    flush_rects.too_many_pending_flush_rects = false;
+    flush_rects.pending_flush_rects.clear_with_capacity();
 }
 
 void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& rect)
 {
-    VERIFY(m_can_device_flush_buffers);
+    VERIFY(m_backend->m_can_device_flush_buffers);
     auto scale_factor = this->scale_factor();
     FBRect flush_rect {
         .head_index = 0,
@@ -586,13 +552,10 @@ void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& re
     };
 
     VERIFY(Gfx::IntRect({}, m_virtual_rect.size()).contains(rect));
-    if (fb_flush_buffers(m_framebuffer_fd, front_buffer_index, &flush_rect, 1) < 0) {
-        int err = errno;
-        if (err == ENOTSUP)
-            m_can_device_flush_buffers = false;
-        else
-            dbgln("Screen #{}: Error ({}) flushing display front buffer: {}", index(), err, strerror(err));
-    }
+
+    auto return_value = m_backend->flush_framebuffer_rects(front_buffer_index, { &flush_rect, 1 });
+    if (return_value.is_error())
+        dbgln("Screen #{}: Error flushing display front buffer: {}", index(), return_value.error());
 }
 
 }

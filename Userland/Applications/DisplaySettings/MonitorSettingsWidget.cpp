@@ -144,14 +144,22 @@ void MonitorSettingsWidget::load_current_settings()
 
     m_screens.clear();
     m_screen_edids.clear();
+
+    size_t virtual_screen_count = 0;
     for (size_t i = 0; i < m_screen_layout.screens.size(); i++) {
         String screen_display_name;
-        if (auto edid = EDID::Parser::from_framebuffer_device(m_screen_layout.screens[i].device, 0); !edid.is_error()) { // TODO: multihead
-            screen_display_name = display_name_from_edid(edid.value());
-            m_screen_edids.append(edid.release_value());
+        if (m_screen_layout.screens[i].mode == WindowServer::ScreenLayout::Screen::Mode::Device) {
+            if (auto edid = EDID::Parser::from_framebuffer_device(m_screen_layout.screens[i].device.value(), 0); !edid.is_error()) { // TODO: multihead
+                screen_display_name = display_name_from_edid(edid.value());
+                m_screen_edids.append(edid.release_value());
+            } else {
+                dbgln("Error getting EDID from device {}: {}", m_screen_layout.screens[i].device.value(), edid.error());
+                screen_display_name = m_screen_layout.screens[i].device.value();
+                m_screen_edids.append({});
+            }
         } else {
-            dbgln("Error getting EDID from device {}: {}", m_screen_layout.screens[i].device, edid.error());
-            screen_display_name = m_screen_layout.screens[i].device;
+            dbgln("Frame buffer {} is virtual.", i);
+            screen_display_name = String::formatted("Virtual screen {}", virtual_screen_count++);
             m_screen_edids.append({});
         }
         if (i == m_screen_layout.main_screen_index)

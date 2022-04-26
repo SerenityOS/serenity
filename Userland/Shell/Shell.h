@@ -93,8 +93,52 @@ public:
         Optional<AST::Position> position;
     };
 
+    struct RunnablePath {
+        enum class Kind {
+            Builtin,
+            Function,
+            Alias,
+            Executable,
+        };
+
+        Kind kind;
+        String path;
+
+        bool operator<(RunnablePath const& other) const
+        {
+            return path < other.path;
+        }
+
+        bool operator==(RunnablePath const&) const = default;
+    };
+
+    struct RunnablePathComparator {
+        int operator()(RunnablePath const& lhs, RunnablePath const& rhs)
+        {
+            if (lhs.path > rhs.path)
+                return 1;
+
+            if (lhs.path < rhs.path)
+                return -1;
+
+            return 0;
+        }
+
+        int operator()(StringView lhs, RunnablePath const& rhs)
+        {
+            if (lhs > rhs.path)
+                return 1;
+
+            if (lhs < rhs.path)
+                return -1;
+
+            return 0;
+        }
+    };
+
     int run_command(StringView, Optional<SourcePosition> = {});
-    bool is_runnable(StringView);
+    Optional<RunnablePath> runnable_path_for(StringView);
+    Optional<String> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(String const&, bool explicitly_invoked = true);
@@ -269,7 +313,7 @@ public:
     Vector<String> directory_stack;
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
     HashMap<u64, NonnullRefPtr<Job>> jobs;
-    Vector<String, 256> cached_path;
+    Vector<RunnablePath, 256> cached_path;
 
     String current_script;
 
@@ -346,7 +390,7 @@ private:
     void bring_cursor_to_beginning_of_a_line() const;
 
     Optional<int> resolve_job_spec(StringView);
-    void add_entry_to_cache(String const&);
+    void add_entry_to_cache(RunnablePath const&);
     void remove_entry_from_cache(StringView);
     void stop_all_jobs();
     Job const* m_current_job { nullptr };
@@ -487,5 +531,29 @@ inline size_t find_offset_into_node(StringView unescaped_text, size_t escaped_of
         return do_find_offset(view);
     return do_find_offset(unescaped_text);
 }
+
+}
+
+namespace AK {
+
+template<>
+struct Traits<Shell::Shell::RunnablePath> : public GenericTraits<Shell::Shell::RunnablePath> {
+    static constexpr bool is_trivial() { return false; }
+
+    static bool equals(Shell::Shell::RunnablePath const& self, Shell::Shell::RunnablePath const& other)
+    {
+        return self == other;
+    }
+
+    static bool equals(Shell::Shell::RunnablePath const& self, StringView other)
+    {
+        return self.path == other;
+    }
+
+    static bool equals(Shell::Shell::RunnablePath const& self, String const& other)
+    {
+        return self.path == other;
+    }
+};
 
 }

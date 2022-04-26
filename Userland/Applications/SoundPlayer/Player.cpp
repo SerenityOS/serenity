@@ -12,7 +12,7 @@ Player::Player(Audio::ConnectionFromClient& audio_client_connection)
     , m_playback_manager(audio_client_connection)
 {
     m_playback_manager.on_update = [&]() {
-        auto samples_played = m_audio_client_connection.get_played_samples();
+        auto samples_played = m_playback_manager.loader()->loaded_samples();
         auto sample_rate = m_playback_manager.loader()->sample_rate();
         float source_to_dest_ratio = static_cast<float>(sample_rate) / m_playback_manager.device_sample_rate();
         samples_played *= source_to_dest_ratio;

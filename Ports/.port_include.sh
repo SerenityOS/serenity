@@ -630,15 +630,15 @@ do_generate_patch_readme() {
         fi
     fi
 
-    rm -fr .patches.tmp
-    mkdir .patches.tmp
+    local tempdir="$(pwd)/.patches.tmp"
+    rm -fr "$tempdir"
+    mkdir "$tempdir"
 
     echo "# Patches for $port on SerenityOS" > patches/ReadMe.md
     echo >> patches/ReadMe.md
 
     pushd patches
 
-    local tempdir="../.patches.tmp"
     local count=0
     for patch in *.patch; do
         git mailinfo \

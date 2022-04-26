@@ -7,8 +7,6 @@
 #pragma once
 
 #include "Mixer.h"
-#include <compare>
-
 namespace AudioServer {
 
 // This is in buffer counts.
@@ -50,16 +48,6 @@ public:
         if (!is_fading())
             return m_new_value;
         return m_old_value * (1 - m_current_fade) + m_new_value * (m_current_fade);
-    }
-
-    auto operator<=>(FadingProperty<T> const& other) const
-    {
-        return static_cast<T>(this) <=> static_cast<T>(other);
-    }
-
-    auto operator<=>(T const& other) const
-    {
-        return static_cast<T>(*this) <=> other;
     }
 
     void advance_time()

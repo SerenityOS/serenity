@@ -239,11 +239,15 @@ String DateTime::to_string(StringView format) const
                 format_time_zone_offset(false);
                 break;
             case ':':
-                if (++i == format_len)
-                    return String::empty();
-                if (format[i] != 'z')
-                    return String::empty();
-
+                if (++i == format_len) {
+                    builder.append("%:");
+                    break;
+                }
+                if (format[i] != 'z') {
+                    builder.append("%:");
+                    builder.append(format[i]);
+                    break;
+                }
                 format_time_zone_offset(true);
                 break;
             case 'Z':
@@ -253,7 +257,9 @@ String DateTime::to_string(StringView format) const
                 builder.append('%');
                 break;
             default:
-                return String();
+                builder.append('%');
+                builder.append(format[i]);
+                break;
             }
         }
     }

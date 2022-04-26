@@ -61,6 +61,19 @@
                 max_height: 94
             }
 
+            @GUI::GroupBox {
+                title: "Histogram"
+                max_height: 90
+                layout: @GUI::VerticalBoxLayout {
+                    margins: [6]
+                }
+
+                @PixelPaint::HistogramWidget {
+                    name: "histogram_widget"
+                    max_height: 65
+                }
+            }
+
             @PixelPaint::ToolPropertiesWidget {
                 name: "tool_properties_widget"
                 max_height: 144

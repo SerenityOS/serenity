@@ -33,7 +33,7 @@ bool ScreenLayout::is_valid(String* error_msg) const
     int smallest_y = 0;
     for (size_t i = 0; i < screens.size(); i++) {
         auto& screen = screens[i];
-        if (screen.device.is_null() || screen.device.is_empty()) {
+        if (screen.mode == Screen::Mode::Device && (screen.device->is_empty() || screen.device->is_null())) {
             if (error_msg)
                 *error_msg = String::formatted("Screen #{} has no path", i);
             return false;
@@ -235,7 +235,16 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
         auto group_name = String::formatted("Screen{}", index);
         if (!config_file.has_group(group_name))
             break;
-        screens.append({ config_file.read_entry(group_name, "Device"),
+        auto str_mode = config_file.read_entry(group_name, "Mode");
+        auto mode = str_mode == "Device" ? Screen::Mode::Device : str_mode == "Virtual" ? Screen::Mode::Virtual
+                                                                                        : Screen::Mode::Invalid;
+        if (mode == Screen::Mode::Invalid) {
+            *error_msg = String::formatted("Invalid screen mode '{}'", str_mode);
+            *this = {};
+            return false;
+        }
+        auto device = (mode == Screen::Mode::Device) ? config_file.read_entry(group_name, "Device") : Optional<String> {};
+        screens.append({ mode, device,
             { config_file.read_num_entry(group_name, "Left"), config_file.read_num_entry(group_name, "Top") },
             { config_file.read_num_entry(group_name, "Width"), config_file.read_num_entry(group_name, "Height") },
             config_file.read_num_entry(group_name, "ScaleFactor", 1) });
@@ -255,7 +264,9 @@ bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
     while (index < screens.size()) {
         auto& screen = screens[index];
         auto group_name = String::formatted("Screen{}", index);
-        config_file.write_entry(group_name, "Device", screen.device);
+        config_file.write_entry(group_name, "Mode", Screen::mode_to_string(screen.mode));
+        if (screen.mode == Screen::Mode::Device)
+            config_file.write_entry(group_name, "Device", screen.device.value());
         config_file.write_num_entry(group_name, "Left", screen.location.x());
         config_file.write_num_entry(group_name, "Top", screen.location.y());
         config_file.write_num_entry(group_name, "Width", screen.resolution.width());
@@ -321,7 +332,8 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
     }
 
     auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
-        screens.append({ .device = device_path,
+        screens.append({ .mode = Screen::Mode::Device,
+            .device = device_path,
             .location = new_screen_rect.location(),
             .resolution = new_screen_rect.size(),
             .scale_factor = 1 });
@@ -379,13 +391,15 @@ namespace IPC {
 
 bool encode(Encoder& encoder, const WindowServer::ScreenLayout::Screen& screen)
 {
-    encoder << screen.device << screen.location << screen.resolution << screen.scale_factor;
+    encoder << screen.mode << screen.device << screen.location << screen.resolution << screen.scale_factor;
     return true;
 }
 
 ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& screen)
 {
-    String device;
+    WindowServer::ScreenLayout::Screen::Mode mode;
+    TRY(decoder.decode(mode));
+    Optional<String> device;
     TRY(decoder.decode(device));
     Gfx::IntPoint location;
     TRY(decoder.decode(location));
@@ -393,7 +407,7 @@ ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& scree
     TRY(decoder.decode(resolution));
     int scale_factor = 0;
     TRY(decoder.decode(scale_factor));
-    screen = { device, location, resolution, scale_factor };
+    screen = { mode, device, location, resolution, scale_factor };
     return {};
 }
 

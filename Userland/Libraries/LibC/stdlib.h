@@ -101,4 +101,6 @@ int posix_openpt(int flags);
 int grantpt(int fd);
 int unlockpt(int fd);
 
+int posix_memalign(void**, size_t alignment, size_t size);
+
 __END_DECLS

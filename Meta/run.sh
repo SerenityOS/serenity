@@ -18,12 +18,12 @@ SCRIPT_DIR="$(dirname "${0}")"
 
 # FIXME: Enable for SERENITY_ARCH=aarch64 if on an aarch64 host?
 
-# Check if SERENITY_KVM_SUPPORT is unset
-if [ -z ${SERENITY_KVM_SUPPORT+x} ]; then
-    KVM_SUPPORT="0"
-    [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && [ "$(uname -m)" != "aarch64" ] && KVM_SUPPORT="1"
+# Check if SERENITY_VIRTUALIZATION_SUPPORT is unset
+if [ -z ${SERENITY_VIRTUALIZATION_SUPPORT+x} ]; then
+    VIRTUALIZATION_SUPPORT="0"
+    [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && [ "$(uname -m)" != "aarch64" ] && VIRTUALIZATION_SUPPORT="1"
 else
-    KVM_SUPPORT="$SERENITY_KVM_SUPPORT"
+    VIRTUALIZATION_SUPPORT="$SERENITY_VIRTUALIZATION_SUPPORT"
 fi
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
@@ -61,11 +61,10 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
         PATH=$PATH:/mnt/c/Windows/System32
         QEMU_INSTALL_DIR=$(reg.exe query 'HKLM\Software\QEMU' /v Install_Dir /t REG_SZ | grep '^    Install_Dir' | sed 's/    / /g' | cut -f4- -d' ')
         if [ -z "$QEMU_INSTALL_DIR" ]; then
-            if [ "$KVM_SUPPORT" -eq "0" ]; then
+            if [ "$VIRTUALIZATION_SUPPORT" -eq "0" ]; then
                 die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
             fi
         else
-            KVM_SUPPORT="0"
             QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
             QEMU_BINARY_SUFFIX=".exe"
         fi
@@ -79,7 +78,6 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
     fi
 fi
 
-[ "$KVM_SUPPORT" -eq "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 # For default values, see Kernel/CommandLine.cpp
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
@@ -124,11 +122,14 @@ if command -v wslpath >/dev/null; then
     case "$SERENITY_QEMU_BIN" in
         /mnt/?/*)
             if [ -z "$SERENITY_VIRT_TECH_ARG" ]; then
-                if [ "$installed_major_version" -gt 5 ]; then
-                    SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off -accel tcg"
-                else
-                    SERENITY_VIRT_TECH_ARG="-accel whpx -accel tcg"
+                if [ "$VIRTUALIZATION_SUPPORT" -eq "1" ]; then
+                    if [ "$installed_major_version" -gt 5 ]; then
+                        SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"
+                    else
+                        SERENITY_VIRT_TECH_ARG="-accel whpx"
+                    fi
                 fi
+                SERENITY_VIRT_TECH_ARG="$SERENITY_VIRT_TECH_ARG -accel tcg"
             fi
             [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
             SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
@@ -136,6 +137,8 @@ if command -v wslpath >/dev/null; then
             ;;
     esac
 fi
+
+[ "$VIRTUALIZATION_SUPPORT" -eq "1" ] && [ "$NATIVE_WINDOWS_QEMU" -ne "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 

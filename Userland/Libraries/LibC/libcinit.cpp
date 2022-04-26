@@ -1,20 +1,21 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Types.h>
 #include <assert.h>
+#include <errno.h>
 #include <sys/internals.h>
 #include <unistd.h>
 
 extern "C" {
 
 #ifdef NO_TLS
-int errno;
+int errno_storage;
 #else
-__thread int errno;
+__thread int errno_storage;
 #endif
 char** environ;
 bool __environ_is_malloced;
@@ -23,6 +24,11 @@ bool s_global_initializers_ran;
 void* __auxiliary_vector;
 
 static void __auxiliary_vector_init();
+
+int* __errno_location()
+{
+    return &errno_storage;
+}
 
 void __libc_init()
 {
