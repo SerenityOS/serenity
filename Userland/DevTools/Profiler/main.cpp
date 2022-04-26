@@ -222,6 +222,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
+    auto const format_sample_count = [&profile](auto sample_count) {
+        if (profile->show_percentages())
+            return String::formatted("{:.3f}%", sample_count.as_float_or(0.0));
+        return String::formatted("{} Samples", sample_count.to_i32());
+    };
+
     auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
     auto statusbar_update = [&] {
         auto& view = *timeline_view;
@@ -230,11 +236,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto flamegraph_hovered_index = flamegraph_view->hovered_index();
         if (flamegraph_hovered_index.is_valid()) {
             auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_string();
-            auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount)).to_i32();
-            auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount)).to_i32();
+            auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount));
+            auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount));
             builder.appendff("{}, ", stack);
-            builder.appendff("Samples: {}{}, ", sample_count, profile->show_percentages() ? "%" : " Samples");
-            builder.appendff("Self: {}{}", self_count, profile->show_percentages() ? "%" : " Samples");
+            builder.appendff("Samples: {}, ", format_sample_count(sample_count));
+            builder.appendff("Self: {}", format_sample_count(self_count));
         } else {
             u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
             u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
