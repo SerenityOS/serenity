@@ -371,15 +371,13 @@ ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
 {
     struct pollfd the_fd = { .fd = m_fd, .events = POLLIN, .revents = 0 };
 
-    // FIXME: Convert this to Core::System
-    int rc;
+    ErrorOr<int> result = 0;
     do {
-        rc = ::poll(&the_fd, 1, timeout);
-    } while (rc < 0 && errno == EINTR);
+        result = System::poll(&the_fd, 1, timeout);
+    } while (result.is_error() && result.error().code() == EINTR);
 
-    if (rc < 0) {
-        return Error::from_syscall("poll", -errno);
-    }
+    if (result.is_error())
+        return result.error();
 
     return (the_fd.revents & POLLIN) > 0;
 }
