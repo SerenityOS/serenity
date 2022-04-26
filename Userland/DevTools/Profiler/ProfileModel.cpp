@@ -111,14 +111,19 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         return {};
     }
     if (role == GUI::ModelRole::Display) {
+        auto round_percentages = [this](auto percentage) {
+            return roundf(static_cast<float>(percentage) / static_cast<float>(m_profile.filtered_event_indices().size())
+                       * percent_digits_rounding_constant)
+                * 100.0f / percent_digits_rounding_constant;
+        };
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
-                return ((float)node->event_count() / (float)m_profile.filtered_event_indices().size()) * 100.0f;
+                return round_percentages(node->event_count());
             return node->event_count();
         }
         if (index.column() == Column::SelfCount) {
             if (m_profile.show_percentages())
-                return ((float)node->self_count() / (float)m_profile.filtered_event_indices().size()) * 100.0f;
+                return round_percentages(node->self_count());
             return node->self_count();
         }
         if (index.column() == Column::ObjectName)
