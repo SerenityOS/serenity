@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Sun, 24 Apr 2022 20:16:56 +0200
+Subject: [PATCH] serenity: Add library dependencies
+
+---
+ src/unix/mod.rs | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index 30b638cf521c06dbce57f579b280cbc8e6e6507e..64df24638a41a6c6295555495874d369acfc822c 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -386,6 +386,10 @@ cfg_if! {
+         #[cfg_attr(feature = "rustc-dep-of-std",
+                    link(name = "c", cfg(not(target_feature = "crt-static"))))]
+         extern {}
++    } else if #[cfg(target_os = "serenity")] {
++        #[link(name = "c")]
++        #[link(name = "unwind")]
++        extern {}
+     } else {
+         #[link(name = "c")]
+         #[link(name = "m")]

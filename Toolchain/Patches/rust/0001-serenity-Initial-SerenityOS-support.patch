@@ -1,0 +1,527 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Fri, 4 Nov 2022 14:41:37 -0600
+Subject: [PATCH] serenity: Initial SerenityOS support
+
+Co-Authored-By: Andreas Kling <kling@serenityos.org>
+Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
+---
+ compiler/rustc_target/src/spec/mod.rs         |   3 +
+ .../rustc_target/src/spec/serenity_base.rs    |  16 +++
+ .../src/spec/x86_64_unknown_serenity.rs       |  20 +++
+ library/std/build.rs                          |   1 +
+ library/std/src/os/mod.rs                     |   2 +
+ library/std/src/os/serenity/fs.rs             | 117 ++++++++++++++++++
+ library/std/src/os/serenity/mod.rs            |   6 +
+ library/std/src/os/serenity/raw.rs            |  73 +++++++++++
+ library/std/src/os/unix/mod.rs                |   2 +
+ library/std/src/sys/unix/args.rs              |   3 +-
+ library/std/src/sys/unix/env.rs               |  11 ++
+ library/std/src/sys/unix/fd.rs                |   2 +
+ library/std/src/sys/unix/fs.rs                |   3 +-
+ library/std/src/sys/unix/os.rs                |   9 +-
+ library/std/src/sys/unix/rand.rs              |  10 ++
+ library/std/src/sys/unix/thread.rs            |   7 ++
+ src/bootstrap/lib.rs                          |   2 +-
+ 17 files changed, 281 insertions(+), 6 deletions(-)
+ create mode 100644 compiler/rustc_target/src/spec/serenity_base.rs
+ create mode 100644 compiler/rustc_target/src/spec/x86_64_unknown_serenity.rs
+ create mode 100644 library/std/src/os/serenity/fs.rs
+ create mode 100644 library/std/src/os/serenity/mod.rs
+ create mode 100644 library/std/src/os/serenity/raw.rs
+
+diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
+index dc16739bd560c7d78b9352969f25552a8d3ad8ed..a474642a6d67c146b8594a537a2f84decff2f29a 100644
+--- a/compiler/rustc_target/src/spec/mod.rs
++++ b/compiler/rustc_target/src/spec/mod.rs
+@@ -78,6 +78,7 @@
+ mod netbsd_base;
+ mod openbsd_base;
+ mod redox_base;
++mod serenity_base;
+ mod solaris_base;
+ mod solid_base;
+ mod thumb_base;
+@@ -1138,6 +1139,8 @@ fn $module() {
+     ("x86_64-unknown-none", x86_64_unknown_none),
+ 
+     ("mips64-openwrt-linux-musl", mips64_openwrt_linux_musl),
++
++    ("x86_64-unknown-serenity", x86_64_unknown_serenity),
+ }
+ 
+ /// Cow-Vec-Str: Cow<'static, [Cow<'static, str>]>
+diff --git a/compiler/rustc_target/src/spec/serenity_base.rs b/compiler/rustc_target/src/spec/serenity_base.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..9ab7a45cf164164d12efd076f25b7c625d016340
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/serenity_base.rs
+@@ -0,0 +1,16 @@
++use crate::spec::{cvs, FramePointer, PanicStrategy, RelroLevel, TargetOptions, TlsModel};
++
++pub fn opts() -> TargetOptions {
++    TargetOptions {
++        os: "serenity".into(),
++        dynamic_linking: true,
++        executables: true,
++        tls_model: TlsModel::InitialExec,
++        position_independent_executables: true,
++        panic_strategy: PanicStrategy::Abort,
++        families: cvs!["unix"],
++        relro_level: RelroLevel::Full,
++        frame_pointer: FramePointer::Always,
++        ..Default::default()
++    }
++}
+diff --git a/compiler/rustc_target/src/spec/x86_64_unknown_serenity.rs b/compiler/rustc_target/src/spec/x86_64_unknown_serenity.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..e9d9d6a09195ea2ccaf6a2a7201509359e919824
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/x86_64_unknown_serenity.rs
+@@ -0,0 +1,20 @@
++use crate::spec::{LinkerFlavor, StackProbeType, Target};
++
++pub fn target() -> Target {
++    let mut base = super::serenity_base::opts();
++    base.cpu = "x86-64".into();
++    base.max_atomic_width = Some(64);
++    base.pre_link_args.insert(LinkerFlavor::Gcc, vec!["-m64".into()]);
++    // don't use probe-stack=inline-asm until rust#83139 and rust#84667 are resolved
++    base.stack_probes = StackProbeType::Call;
++    base.position_independent_executables = true;
++
++    Target {
++        llvm_target: "x86_64-unknown-serenity".into(),
++        pointer_width: 64,
++        data_layout: "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
++            .into(),
++        arch: "x86_64".into(),
++        options: base,
++    }
++}
+diff --git a/library/std/build.rs b/library/std/build.rs
+index 8b1a06ee750fb0e84316d1452e682cdafb5c90f6..91419e00539ea52523d01b16bee1e8a6048e051c 100644
+--- a/library/std/build.rs
++++ b/library/std/build.rs
+@@ -31,6 +31,7 @@ fn main() {
+         || target.contains("espidf")
+         || target.contains("solid")
+         || target.contains("nintendo-3ds")
++        || target.contains("serenity")
+     {
+         // These platforms don't have any special requirements.
+     } else {
+diff --git a/library/std/src/os/mod.rs b/library/std/src/os/mod.rs
+index 18c64b51007647b3d2683147f204af06db49ff65..e578d299c0a66b757fcf2d4835661ad500c78959 100644
+--- a/library/std/src/os/mod.rs
++++ b/library/std/src/os/mod.rs
+@@ -139,6 +139,8 @@ pub mod windows {}
+ pub mod openbsd;
+ #[cfg(target_os = "redox")]
+ pub mod redox;
++#[cfg(target_os = "serenity")]
++pub mod serenity;
+ #[cfg(target_os = "solaris")]
+ pub mod solaris;
+ #[cfg(target_os = "solid_asp3")]
+diff --git a/library/std/src/os/serenity/fs.rs b/library/std/src/os/serenity/fs.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..50206195dd901f0bc594cf63e42df59fbde4114b
+--- /dev/null
++++ b/library/std/src/os/serenity/fs.rs
+@@ -0,0 +1,117 @@
++#![stable(feature = "metadata_ext", since = "1.1.0")]
++
++use crate::fs::Metadata;
++use crate::sys_common::AsInner;
++
++#[allow(deprecated)]
++use crate::os::serenity::raw;
++
++/// OS-specific extensions to [`fs::Metadata`].
++///
++/// [`fs::Metadata`]: crate::fs::Metadata
++#[stable(feature = "metadata_ext", since = "1.1.0")]
++pub trait MetadataExt {
++    /// Gain a reference to the underlying `stat` structure which contains
++    /// the raw information returned by the OS.
++    ///
++    /// The contents of the returned `stat` are **not** consistent across
++    /// Unix platforms. The `os::unix::fs::MetadataExt` trait contains the
++    /// cross-Unix abstractions contained within the raw stat.
++    #[stable(feature = "metadata_ext", since = "1.1.0")]
++    #[deprecated(
++        since = "1.8.0",
++        note = "deprecated in favor of the accessor \
++                  methods of this trait"
++    )]
++    #[allow(deprecated)]
++    fn as_raw_stat(&self) -> &raw::stat;
++
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_dev(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_ino(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_mode(&self) -> u32;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_nlink(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_uid(&self) -> u32;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_gid(&self) -> u32;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_rdev(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_size(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_atime(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_atime_nsec(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_mtime(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_mtime_nsec(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_ctime(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_ctime_nsec(&self) -> i64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_blksize(&self) -> u64;
++    #[stable(feature = "metadata_ext2", since = "1.8.0")]
++    fn st_blocks(&self) -> u64;
++}
++
++#[stable(feature = "metadata_ext", since = "1.1.0")]
++impl MetadataExt for Metadata {
++    #[allow(deprecated)]
++    fn as_raw_stat(&self) -> &raw::stat {
++        unsafe { &*(self.as_inner().as_inner() as *const libc::stat as *const raw::stat) }
++    }
++    fn st_dev(&self) -> u64 {
++        self.as_inner().as_inner().st_dev as u64
++    }
++    fn st_ino(&self) -> u64 {
++        self.as_inner().as_inner().st_ino as u64
++    }
++    fn st_mode(&self) -> u32 {
++        self.as_inner().as_inner().st_mode as u32
++    }
++    fn st_nlink(&self) -> u64 {
++        self.as_inner().as_inner().st_nlink as u64
++    }
++    fn st_uid(&self) -> u32 {
++        self.as_inner().as_inner().st_uid as u32
++    }
++    fn st_gid(&self) -> u32 {
++        self.as_inner().as_inner().st_gid as u32
++    }
++    fn st_rdev(&self) -> u64 {
++        self.as_inner().as_inner().st_rdev as u64
++    }
++    fn st_size(&self) -> u64 {
++        self.as_inner().as_inner().st_size as u64
++    }
++    fn st_atime(&self) -> i64 {
++        self.as_inner().as_inner().st_atime as i64
++    }
++    fn st_atime_nsec(&self) -> i64 {
++        self.as_inner().as_inner().st_atime_nsec as i64
++    }
++    fn st_mtime(&self) -> i64 {
++        self.as_inner().as_inner().st_mtime as i64
++    }
++    fn st_mtime_nsec(&self) -> i64 {
++        self.as_inner().as_inner().st_mtime_nsec as i64
++    }
++    fn st_ctime(&self) -> i64 {
++        self.as_inner().as_inner().st_ctime as i64
++    }
++    fn st_ctime_nsec(&self) -> i64 {
++        self.as_inner().as_inner().st_ctime_nsec as i64
++    }
++    fn st_blksize(&self) -> u64 {
++        self.as_inner().as_inner().st_blksize as u64
++    }
++    fn st_blocks(&self) -> u64 {
++        self.as_inner().as_inner().st_blocks as u64
++    }
++}
+diff --git a/library/std/src/os/serenity/mod.rs b/library/std/src/os/serenity/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..be4c4b3a18c8bf89cd5c2ee01ab6c93490409520
+--- /dev/null
++++ b/library/std/src/os/serenity/mod.rs
+@@ -0,0 +1,6 @@
++//! SerenityOS-specific definitions
++
++#![stable(feature = "raw_ext", since = "1.1.0")]
++
++pub mod fs;
++pub mod raw;
+diff --git a/library/std/src/os/serenity/raw.rs b/library/std/src/os/serenity/raw.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..96dac78726ad4f84c91f52bf81d39c34d87730b1
+--- /dev/null
++++ b/library/std/src/os/serenity/raw.rs
+@@ -0,0 +1,73 @@
++//! SerenityOS-specific raw type definitions
++
++#![stable(feature = "raw_ext", since = "1.1.0")]
++#![deprecated(
++    since = "1.8.0",
++    note = "these type aliases are no longer supported by \
++              the standard library, the `libc` crate on \
++              crates.io should be used instead for the correct \
++              definitions"
++)]
++#![allow(deprecated)]
++
++use crate::os::raw::c_long;
++
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type blkcnt_t = u32;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type blksize_t = u32;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type dev_t = u64;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type fflags_t = u32;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type ino_t = u64;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type mode_t = u16;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type nlink_t = u32;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type off_t = i64;
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub type time_t = i64;
++
++#[stable(feature = "pthread_t", since = "1.8.0")]
++pub type pthread_t = i32;
++
++#[repr(C)]
++#[derive(Clone)]
++#[stable(feature = "raw_ext", since = "1.1.0")]
++pub struct stat {
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_dev: i32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_ino: u64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_mode: u16,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_nlink: u32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_uid: u32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_gid: u32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_rdev: i32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_size: i64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_blocks: i64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_blksize: i32,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_atime: i64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_atime_nsec: c_long,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_mtime: i64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_mtime_nsec: c_long,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_ctime: i64,
++    #[stable(feature = "raw_ext", since = "1.1.0")]
++    pub st_ctime_nsec: c_long,
++}
+diff --git a/library/std/src/os/unix/mod.rs b/library/std/src/os/unix/mod.rs
+index 411cc0925c4b0869d0a303c95a7876cad872d8ac..eb05e4f856d6f789bf170a36ff796756996dda21 100644
+--- a/library/std/src/os/unix/mod.rs
++++ b/library/std/src/os/unix/mod.rs
+@@ -69,6 +69,8 @@ mod platform {
+     pub use crate::os::openbsd::*;
+     #[cfg(target_os = "redox")]
+     pub use crate::os::redox::*;
++    #[cfg(target_os = "serenity")]
++    pub use crate::os::serenity::*;
+     #[cfg(target_os = "solaris")]
+     pub use crate::os::solaris::*;
+     #[cfg(target_os = "vxworks")]
+diff --git a/library/std/src/sys/unix/args.rs b/library/std/src/sys/unix/args.rs
+index a342f0f5e8597848fc6a2998bce3d62ba391842d..68e8f0c799442cd784f5a01f9b91c7f3d5cce5bd 100644
+--- a/library/std/src/sys/unix/args.rs
++++ b/library/std/src/sys/unix/args.rs
+@@ -69,7 +69,8 @@ fn next_back(&mut self) -> Option<OsString> {
+     target_os = "fuchsia",
+     target_os = "redox",
+     target_os = "vxworks",
+-    target_os = "horizon"
++    target_os = "horizon",
++    target_os = "serenity",
+ ))]
+ mod imp {
+     use super::Args;
+diff --git a/library/std/src/sys/unix/env.rs b/library/std/src/sys/unix/env.rs
+index c9ba661c829fabe03506124a6f8ef522a40f9965..debf387794445c6f10f139d4a81df4049affcc21 100644
+--- a/library/std/src/sys/unix/env.rs
++++ b/library/std/src/sys/unix/env.rs
+@@ -217,3 +217,14 @@ pub mod os {
+     pub const EXE_SUFFIX: &str = "";
+     pub const EXE_EXTENSION: &str = "";
+ }
++
++#[cfg(target_os = "serenity")]
++pub mod os {
++    pub const FAMILY: &str = "unix";
++    pub const OS: &str = "serenity";
++    pub const DLL_PREFIX: &str = "lib";
++    pub const DLL_SUFFIX: &str = ".so";
++    pub const DLL_EXTENSION: &str = "so";
++    pub const EXE_SUFFIX: &str = "";
++    pub const EXE_EXTENSION: &str = "";
++}
+diff --git a/library/std/src/sys/unix/fd.rs b/library/std/src/sys/unix/fd.rs
+index dbaa3c33e2e577f13afb6c98181648bef6e7cf54..37612e4f9b1bca6274631248bb354de0b3ff1d80 100644
+--- a/library/std/src/sys/unix/fd.rs
++++ b/library/std/src/sys/unix/fd.rs
+@@ -212,6 +212,7 @@ pub fn get_cloexec(&self) -> io::Result<bool> {
+         target_os = "linux",
+         target_os = "haiku",
+         target_os = "redox",
++        target_os = "serenity",
+         target_os = "vxworks"
+     )))]
+     pub fn set_cloexec(&self) -> io::Result<()> {
+@@ -230,6 +231,7 @@ pub fn set_cloexec(&self) -> io::Result<()> {
+         target_os = "linux",
+         target_os = "haiku",
+         target_os = "redox",
++        target_os = "serenity",
+         target_os = "vxworks"
+     ))]
+     pub fn set_cloexec(&self) -> io::Result<()> {
+diff --git a/library/std/src/sys/unix/fs.rs b/library/std/src/sys/unix/fs.rs
+index cc347e3586ae337fdcd6d45592f39f1e261e17c8..8ada84292dbd3df4f722d2b4a0b7c248cc69a751 100644
+--- a/library/std/src/sys/unix/fs.rs
++++ b/library/std/src/sys/unix/fs.rs
+@@ -772,6 +772,7 @@ pub fn file_type(&self) -> io::Result<FileType> {
+         target_os = "l4re",
+         target_os = "fuchsia",
+         target_os = "redox",
++        target_os = "serenity",
+         target_os = "vxworks",
+         target_os = "espidf",
+         target_os = "horizon"
+@@ -1381,7 +1382,7 @@ pub fn link(original: &Path, link: &Path) -> io::Result<()> {
+     let original = cstr(original)?;
+     let link = cstr(link)?;
+     cfg_if::cfg_if! {
+-        if #[cfg(any(target_os = "vxworks", target_os = "redox", target_os = "android", target_os = "espidf", target_os = "horizon"))] {
++        if #[cfg(any(target_os = "vxworks", target_os = "redox", target_os = "android", target_os = "espidf", target_os = "horizon", target_os = "serenity"))] {
+             // VxWorks, Redox and ESP-IDF lack `linkat`, so use `link` instead. POSIX leaves
+             // it implementation-defined whether `link` follows symlinks, so rely on the
+             // `symlink_hard_link` test in library/std/src/fs/tests.rs to check the behavior.
+diff --git a/library/std/src/sys/unix/os.rs b/library/std/src/sys/unix/os.rs
+index 46545a0839fe8b416a7cd17a8f57058d34f0f360..4f97c796a2d5cf1d6fe8df574bf80004f22f76e9 100644
+--- a/library/std/src/sys/unix/os.rs
++++ b/library/std/src/sys/unix/os.rs
+@@ -45,6 +45,7 @@
+             target_os = "linux",
+             target_os = "emscripten",
+             target_os = "fuchsia",
++            target_os = "serenity",
+             target_os = "l4re"
+         ),
+         link_name = "__errno_location"
+@@ -350,7 +351,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
+     }
+ }
+ 
+-#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
++#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten", target_os = "serenity"))]
+ pub fn current_exe() -> io::Result<PathBuf> {
+     match crate::fs::read_link("/proc/self/exe") {
+         Err(ref e) if e.kind() == io::ErrorKind::NotFound => Err(io::const_io_error!(
+@@ -603,7 +604,8 @@ pub fn home_dir() -> Option<PathBuf> {
+         target_os = "redox",
+         target_os = "vxworks",
+         target_os = "espidf",
+-        target_os = "horizon"
++        target_os = "horizon",
++        target_os = "serenity"
+     ))]
+     unsafe fn fallback() -> Option<OsString> {
+         None
+@@ -616,7 +618,8 @@ unsafe fn fallback() -> Option<OsString> {
+         target_os = "redox",
+         target_os = "vxworks",
+         target_os = "espidf",
+-        target_os = "horizon"
++        target_os = "horizon",
++        target_os = "serenity"
+     )))]
+     unsafe fn fallback() -> Option<OsString> {
+         let amt = match libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) {
+diff --git a/library/std/src/sys/unix/rand.rs b/library/std/src/sys/unix/rand.rs
+index a6fe07873d7ee4263b9362d9a5dda75c35916582..a37d9ad15088cfc6f2a56b971e635d10faddb4d4 100644
+--- a/library/std/src/sys/unix/rand.rs
++++ b/library/std/src/sys/unix/rand.rs
+@@ -20,6 +20,7 @@ pub fn hashmap_random_keys() -> (u64, u64) {
+     not(target_os = "netbsd"),
+     not(target_os = "fuchsia"),
+     not(target_os = "redox"),
++    not(target_os = "serenity"),
+     not(target_os = "vxworks")
+ ))]
+ mod imp {
+@@ -174,6 +175,15 @@ pub fn fill_bytes(v: &mut [u8]) {
+     }
+ }
+ 
++#[cfg(target_os = "serenity")]
++mod imp {
++    pub fn fill_bytes(v: &mut [u8]) {
++        for s in v.chunks_mut(4096) {
++            unsafe { libc::arc4random_buf(s.as_mut_ptr() as *mut libc::c_void, s.len()) };
++        }
++    }
++}
++
+ #[cfg(target_os = "openbsd")]
+ mod imp {
+     use crate::sys::os::errno;
+diff --git a/library/std/src/sys/unix/thread.rs b/library/std/src/sys/unix/thread.rs
+index f6b627afc1223fd408dbb48f7701c79dbdcdafd3..2de46fb109b64564a3897ae4881735c6d87be861 100644
+--- a/library/std/src/sys/unix/thread.rs
++++ b/library/std/src/sys/unix/thread.rs
+@@ -148,6 +148,13 @@ pub fn set_name(name: &CStr) {
+         }
+     }
+ 
++    #[cfg(target_os = "serenity")]
++    pub fn set_name(name: &CStr) {
++        unsafe {
++            libc::pthread_setname_np(libc::pthread_self(), name.as_ptr());
++        }
++    }
++
+     #[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+     pub fn set_name(name: &CStr) {
+         unsafe {
+diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
+index cc0cf12bd187a7fc48ed6c06bfa09a9af5e064b0..d54c114e24f779fe8177f184de916110b8d07055 100644
+--- a/src/bootstrap/lib.rs
++++ b/src/bootstrap/lib.rs
+@@ -205,7 +205,7 @@ pub unsafe fn setup(_build: &mut crate::Build) {}
+     (Some(Mode::Std), "backtrace_in_libstd", None),
+     /* Extra values not defined in the built-in targets yet, but used in std */
+     (Some(Mode::Std), "target_env", Some(&["libnx"])),
+-    (Some(Mode::Std), "target_os", Some(&["watchos"])),
++    (Some(Mode::Std), "target_os", Some(&["watchos", "serenity"])),
+     (
+         Some(Mode::Std),
+         "target_arch",

@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <kling@serenityos.org>
+Date: Thu, 21 Apr 2022 13:18:39 +0200
+Subject: [PATCH] serenity: Add wrappers for sendfd(), recvfd() and
+ anon_create()
+
+---
+ src/unix/serenity/mod.rs | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/unix/serenity/mod.rs b/src/unix/serenity/mod.rs
+index 7f536dfa8802d37bebfa03033f875bd5f142ad72..e573b1f47d754322a469c907da357452a50a2d86 100644
+--- a/src/unix/serenity/mod.rs
++++ b/src/unix/serenity/mod.rs
+@@ -986,6 +986,9 @@ extern "C" {
+         result: *mut *mut passwd,
+     ) -> ::c_int;
+ 
++    // serenity.h
++    pub fn anon_create(size: ::size_t, options: ::c_int) -> ::c_int;
++
+     // signal.h
+     pub fn pthread_sigmask(
+         how: ::c_int,
+@@ -1030,6 +1033,8 @@ extern "C" {
+         addr: *mut ::sockaddr,
+         addrlen: *mut ::socklen_t,
+     ) -> ::ssize_t;
++    pub fn sendfd(sockfd: ::c_int, fd: ::c_int) -> ::c_int;
++    pub fn recvfd(sockfd: ::c_int, options: ::c_int) -> ::c_int;
+ 
+     // sys/stat.h
+     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;

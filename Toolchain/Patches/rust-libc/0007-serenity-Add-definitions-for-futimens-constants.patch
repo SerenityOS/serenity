@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <akaster@serenityos.org>
+Date: Fri, 4 Nov 2022 18:35:01 -0600
+Subject: [PATCH] serenity: Add definitions for futimens constants
+
+---
+ src/unix/serenity/mod.rs | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/unix/serenity/mod.rs b/src/unix/serenity/mod.rs
+index 2cdf82e1c55c0fd44080ed03640e3f4767b20f0b..bc8de204abd91bdb61f1eae8bcd41ba854efe491 100644
+--- a/src/unix/serenity/mod.rs
++++ b/src/unix/serenity/mod.rs
+@@ -640,6 +640,9 @@ pub const S_IROTH: u16 = 0o0_004;
+ pub const S_IWOTH: u16 = 0o0_002;
+ pub const S_IXOTH: u16 = 0o0_001;
+ 
++pub const UTIME_OMIT: c_long = -1;
++pub const UTIME_NOW: c_long = -2;
++
+ // stdlib.h
+ pub const EXIT_SUCCESS: ::c_int = 0;
+ pub const EXIT_FAILURE: ::c_int = 1;

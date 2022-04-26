@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Mon, 25 Apr 2022 22:11:14 +0200
+Subject: [PATCH] Add support for SerenityOS
+
+---
+ library/backtrace/src/symbolize/gimli.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/library/backtrace/src/symbolize/gimli.rs b/library/backtrace/src/symbolize/gimli.rs
+index 5f10122ddce9d995e37dee5972d208ea8cd305b8..cd6ced3e3bc77784a3ebfb360083d91bd1a797e8 100644
+--- a/library/backtrace/src/symbolize/gimli.rs
++++ b/library/backtrace/src/symbolize/gimli.rs
+@@ -39,6 +39,7 @@ cfg_if::cfg_if! {
+         target_os = "linux",
+         target_os = "macos",
+         target_os = "openbsd",
++        target_os = "serenity",
+         target_os = "solaris",
+         target_os = "illumos",
+     ))] {
+@@ -178,6 +179,7 @@ cfg_if::cfg_if! {
+             target_os = "fuchsia",
+             target_os = "freebsd",
+             target_os = "openbsd",
++            target_os = "serenity",
+             all(target_os = "android", feature = "dl_iterate_phdr"),
+         ),
+         not(target_env = "uclibc"),

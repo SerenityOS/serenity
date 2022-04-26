@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <kling@serenityos.org>
+Date: Mon, 25 Apr 2022 23:43:37 +0200
+Subject: [PATCH] serenity: Add declaration for arc4random_buf()
+
+---
+ src/unix/serenity/mod.rs | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/unix/serenity/mod.rs b/src/unix/serenity/mod.rs
+index 5dcbd77b668a392e9c5dba0626d1ffd213821ce0..2cdf82e1c55c0fd44080ed03640e3f4767b20f0b 100644
+--- a/src/unix/serenity/mod.rs
++++ b/src/unix/serenity/mod.rs
+@@ -1000,6 +1000,9 @@ extern "C" {
+     pub fn pledge(promises: *const ::c_char, execpromises: *const ::c_char) -> ::c_int;
+     pub fn unveil(path: *const ::c_char, permissions: *const ::c_char) -> ::c_int;
+ 
++    // stdlib.h
++    pub fn arc4random_buf(buffer: *mut ::c_void, size: ::size_t);
++
+     // malloc.h
+     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
+ 

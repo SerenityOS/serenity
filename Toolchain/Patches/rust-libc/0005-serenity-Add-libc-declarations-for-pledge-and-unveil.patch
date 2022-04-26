@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <kling@serenityos.org>
+Date: Mon, 25 Apr 2022 22:18:31 +0200
+Subject: [PATCH] serenity: Add libc declarations for pledge() and unveil()
+
+---
+ src/unix/serenity/mod.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/unix/serenity/mod.rs b/src/unix/serenity/mod.rs
+index 2a2ddd6d90e54a8c32908e09f8c19d2cc4fd1db3..5dcbd77b668a392e9c5dba0626d1ffd213821ce0 100644
+--- a/src/unix/serenity/mod.rs
++++ b/src/unix/serenity/mod.rs
+@@ -997,6 +997,8 @@ extern "C" {
+ 
+     // unistd.h
+     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
++    pub fn pledge(promises: *const ::c_char, execpromises: *const ::c_char) -> ::c_int;
++    pub fn unveil(path: *const ::c_char, permissions: *const ::c_char) -> ::c_int;
+ 
+     // malloc.h
+     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
