@@ -20,8 +20,9 @@ echo SYSROOT is "$SYSROOT"
 mkdir -p "$DIR/Tarballs"
 
 pushd "$DIR/Tarballs"
-    if [ ! -e "$QEMU_VERSION.tar.xz" ]; then
-        curl -O "https://download.qemu.org/$QEMU_VERSION.tar.xz"
+    md5="$(md5sum $QEMU_VERSION.tar.xz | cut -f1 -d' ')"
+    if [ ! -e "$QEMU_VERSION.tar.xz" ] || [ "$md5" != "$QEMU_MD5SUM" ]; then
+        curl -C - -O "https://download.qemu.org/$QEMU_VERSION.tar.xz"
     else
         echo "Skipped downloading $QEMU_VERSION"
     fi
