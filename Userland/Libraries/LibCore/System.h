@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <poll.h>
 #include <pwd.h>
 #include <signal.h>
 #include <spawn.h>
@@ -158,5 +159,6 @@ ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode);
+ErrorOr<int> poll(struct pollfd* fds, nfds_t nfds, int timeout_ms);
 
 }

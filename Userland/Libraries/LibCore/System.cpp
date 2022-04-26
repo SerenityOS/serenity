@@ -1260,4 +1260,12 @@ ErrorOr<void> access(StringView pathname, int mode)
 #endif
 }
 
+ErrorOr<int> poll(struct pollfd* fds, nfds_t nfds, int timeout_ms)
+{
+    auto const rc = ::poll(fds, nfds, timeout_ms);
+    if (rc < 0)
+        return Error::from_syscall("poll"sv, -errno);
+    return rc;
+}
+
 }
