@@ -222,9 +222,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
-    auto const format_sample_count = [&profile](auto sample_count) {
+    // FIXME: Make this constexpr once String is able to.
+    auto const sample_count_percent_format_string = String::formatted("{{:.{}f}}%", number_of_percent_digits);
+    auto const format_sample_count = [&profile, sample_count_percent_format_string](auto const sample_count) {
         if (profile->show_percentages())
-            return String::formatted("{:.3f}%", sample_count.as_float_or(0.0));
+            return String::formatted(sample_count_percent_format_string, sample_count.as_float_or(0.0));
         return String::formatted("{} Samples", sample_count.to_i32());
     };
 
