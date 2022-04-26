@@ -33,6 +33,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibTextCodec/Decoder.h>
 #include <string.h>
 
 REGISTER_WIDGET(HexEditor, HexEditor);
@@ -376,7 +377,23 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }
 
+    auto selected_bytes = m_editor->get_selected_bytes();
+
+    auto ascii_string = DeprecatedString { ReadonlyBytes { selected_bytes } };
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string);
+
+    Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
+    utf8_string_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
+    else
+        // FIXME: replace control chars with something else - we don't want line breaks here ;)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
+
     // FIXME: Parse as other values like Timestamp etc
+
+    DeprecatedString utf16_string = TextCodec::decoder_for("utf-16le"sv)->to_utf8(StringView(selected_bytes.span()));
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
