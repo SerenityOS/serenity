@@ -169,11 +169,7 @@ private:
     template<typename T>
     RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
-    enum class AllowTrailingTokens {
-        No,
-        Yes
-    };
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<ComponentValue>&, AllowTrailingTokens = AllowTrailingTokens::No);
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<ComponentValue>&);
 
     enum class TopLevel {
         No,

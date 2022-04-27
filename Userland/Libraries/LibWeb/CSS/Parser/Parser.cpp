@@ -557,14 +557,14 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
     if (pseudo_class_token.is_function()) {
         auto parse_nth_child_selector = [this](auto pseudo_class, Vector<ComponentValue> const& function_values, bool allow_of = false) -> ParseErrorOr<Selector::SimpleSelector> {
             auto tokens = TokenStream<ComponentValue>(function_values);
-            auto nth_child_pattern = parse_a_n_plus_b_pattern(tokens, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
+            auto nth_child_pattern = parse_a_n_plus_b_pattern(tokens);
             if (!nth_child_pattern.has_value()) {
                 dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid An+B format for {}", pseudo_class_name(pseudo_class));
                 return ParseError::SyntaxError;
             }
 
             tokens.skip_whitespace();
-            if (!allow_of || !tokens.has_next_token()) {
+            if (!tokens.has_next_token()) {
                 return Selector::SimpleSelector {
                     .type = Selector::SimpleSelector::Type::PseudoClass,
                     .value = Selector::SimpleSelector::PseudoClass {
@@ -572,6 +572,9 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                         .nth_child_pattern = nth_child_pattern.release_value() }
                 };
             }
+
+            if (!allow_of)
+                return ParseError::SyntaxError;
 
             // Parse the `of <selector-list>` syntax
             auto const& maybe_of = tokens.next_token();
@@ -5184,7 +5187,7 @@ RefPtr<StyleValue> Parser::parse_css_value(ComponentValue const& component_value
     return {};
 }
 
-Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values, AllowTrailingTokens allow_trailing_tokens)
+Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values)
 {
     int a = 0;
     int b = 0;
@@ -5195,20 +5198,6 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             values.dump_all_tokens();
         }
         return {};
-    };
-
-    auto make_return_value = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
-        // When we think we are done, but there are more non-whitespace tokens, then it's a parse error.
-        values.skip_whitespace();
-        if (values.has_next_token() && allow_trailing_tokens == AllowTrailingTokens::No) {
-            if constexpr (CSS_PARSER_DEBUG) {
-                dbgln_if(CSS_PARSER_DEBUG, "Extra tokens at end of An+B value:");
-                values.dump_all_tokens();
-            }
-            return syntax_error();
-        } else {
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        }
     };
 
     auto is_n = [](ComponentValue const& value) -> bool {
@@ -5304,16 +5293,16 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (ident.equals_ignoring_case("odd")) {
             a = 2;
             b = 1;
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         } else if (ident.equals_ignoring_case("even")) {
             a = 2;
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
     }
     // <integer>
     if (is_integer(first_value)) {
         b = first_value.token().to_integer();
-        return make_return_value();
+        return Selector::SimpleSelector::ANPlusBPattern { a, b };
     }
     // <n-dimension>
     // <n-dimension> <signed-integer>
@@ -5323,7 +5312,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // <n-dimension>
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5331,7 +5320,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signed_integer(second_value)) {
             // <n-dimension> <signed-integer>
             b = second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5339,7 +5328,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // <n-dimension> ['+' | '-'] <signless-integer>
             b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5351,7 +5340,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signless_integer(second_value)) {
             a = first_value.token().dimension_value_int();
             b = -second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5363,7 +5352,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto maybe_b = dimension.dimension_unit().substring_view(1).to_int();
         if (maybe_b.has_value()) {
             b = maybe_b.value();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5374,7 +5363,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto maybe_b = first_value.token().ident().substring_view(2).to_int();
         if (maybe_b.has_value()) {
             b = maybe_b.value();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5386,7 +5375,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         a = -1;
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // -n
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5394,7 +5383,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signed_integer(second_value)) {
             // -n <signed-integer>
             b = second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5402,7 +5391,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // -n ['+' | '-'] <signless-integer>
             b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5414,7 +5403,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signless_integer(second_value)) {
             a = -1;
             b = -second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5441,7 +5430,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         a = 1;
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // '+'?† n
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5449,7 +5438,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signed_integer(second_value)) {
             // '+'?† n <signed-integer>
             b = second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         values.skip_whitespace();
@@ -5457,7 +5446,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // '+'?† n ['+' | '-'] <signless-integer>
             b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5470,7 +5459,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (is_signless_integer(second_value)) {
             a = 1;
             b = -second_value.token().to_integer();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
@@ -5482,7 +5471,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto maybe_b = first_after_plus.token().ident().substring_view(1).to_int();
         if (maybe_b.has_value()) {
             b = maybe_b.value();
-            return make_return_value();
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
         return syntax_error();
