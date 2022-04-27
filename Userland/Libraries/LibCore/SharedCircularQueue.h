@@ -115,15 +115,12 @@ public:
         ErrorOr<void, QueueStatus> result;
         while (true) {
             result = try_enqueue(to_insert);
-
-            if (result.is_error()) {
-                if (result.error() == QueueStatus::Full)
-                    wait_function();
-                else
-                    return Error::from_string_literal("Unexpected error while enqueuing"sv);
-            } else {
+            if (!result.is_error())
                 break;
-            }
+            if (result.error() != QueueStatus::Full)
+                return Error::from_string_literal("Unexpected error while enqueuing"sv);
+
+            wait_function();
         }
         return {};
     }
