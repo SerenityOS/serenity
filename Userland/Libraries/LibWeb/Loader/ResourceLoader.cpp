@@ -137,10 +137,17 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
 {
     auto& url = request.url();
     request.start_timer();
+    RefPtr<ResourceLoaderConnectorRequest> protocol_request;
+    if (timeout.has_value() && timeout.value() > 0) {
+        m_timer = Core::Timer::create_single_shot(timeout.value(), [&protocol_request] {
+            protocol_request->stop();
+        });
+        m_timer->start();
+    }
 
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
@@ -241,7 +248,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             headers.set(it.key, it.value);
         }
 
-        auto protocol_request = m_connector->start_request(request.method(), url, headers, request.body(), proxy);
+        protocol_request = m_connector->start_request(request.method(), url, headers, request.body(), proxy);
         if (!protocol_request) {
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);
@@ -250,6 +257,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             return;
         }
         m_active_requests.set(*protocol_request);
+
         protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             --m_pending_loads;
             if (on_load_counter_change)
@@ -287,11 +295,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
 {
     LoadRequest request;
     request.set_url(url);
-    load(request, move(success_callback), move(error_callback));
+    load(request, move(success_callback), move(error_callback), timeout);
 }
 
 bool ResourceLoader::is_port_blocked(int port)
