@@ -637,7 +637,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                 xhr.set_ready_state(ReadyState::Done);
                 xhr.set_status(status_code.value_or(0));
                 xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
-            });
+            },
+            m_timeout);
     } else {
         TODO();
     }
