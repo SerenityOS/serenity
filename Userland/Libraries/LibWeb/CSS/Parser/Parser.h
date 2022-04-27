@@ -55,6 +55,43 @@ private:
 template<typename T>
 class TokenStream {
 public:
+    class StateTransaction {
+    public:
+        explicit StateTransaction(TokenStream<T>& token_stream)
+            : m_token_stream(token_stream)
+            , m_saved_iterator_offset(token_stream.m_iterator_offset)
+        {
+        }
+
+        ~StateTransaction()
+        {
+            if (!m_commit)
+                m_token_stream.m_iterator_offset = m_saved_iterator_offset;
+        }
+
+        StateTransaction create_child() { return StateTransaction(*this); }
+
+        void commit()
+        {
+            m_commit = true;
+            if (m_parent)
+                m_parent->commit();
+        }
+
+    private:
+        explicit StateTransaction(StateTransaction& parent)
+            : m_parent(&parent)
+            , m_token_stream(parent.m_token_stream)
+            , m_saved_iterator_offset(parent.m_token_stream.m_iterator_offset)
+        {
+        }
+
+        StateTransaction* m_parent { nullptr };
+        TokenStream<T>& m_token_stream;
+        int m_saved_iterator_offset { 0 };
+        bool m_commit { false };
+    };
+
     explicit TokenStream(Vector<T> const&);
     ~TokenStream() = default;
 
@@ -66,6 +103,7 @@ public:
     T const& current_token();
     void reconsume_current_input_token();
 
+    StateTransaction begin_transaction() { return StateTransaction(*this); }
     int position() const { return m_iterator_offset; }
     void rewind_to_position(int);
 
