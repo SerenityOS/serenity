@@ -121,6 +121,21 @@ public:
         virtual RecursionDecision walk(Visitor&) const override;
     };
 
+    class StrikeThroughNode : public Node {
+    public:
+        NonnullOwnPtr<Node> striked_text;
+
+        StrikeThroughNode(NonnullOwnPtr<Node> striked_text)
+            : striked_text(move(striked_text))
+        {
+        }
+
+        virtual void render_to_html(StringBuilder& builder) const override;
+        virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual size_t terminal_length() const override;
+        virtual RecursionDecision walk(Visitor&) const override;
+    };
+
     size_t terminal_length() const;
 
     String render_to_html() const;
@@ -172,6 +187,7 @@ private:
     static NonnullOwnPtr<Node> parse_emph(Vector<Token>::ConstIterator& tokens, bool in_link);
     static NonnullOwnPtr<Node> parse_code(Vector<Token>::ConstIterator& tokens);
     static NonnullOwnPtr<Node> parse_link(Vector<Token>::ConstIterator& tokens);
+    static NonnullOwnPtr<Node> parse_strike_through(Vector<Token>::ConstIterator& tokens);
 
     OwnPtr<Node> m_node;
 };
