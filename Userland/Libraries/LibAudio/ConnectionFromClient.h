@@ -11,8 +11,6 @@
 #include <AK/FixedArray.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AudioServer/AudioClientEndpoint.h>
-#include <AudioServer/AudioServerEndpoint.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/EventLoop.h>
@@ -20,6 +18,8 @@
 #include <LibIPC/ConnectionToServer.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
+#include <Userland/Services/AudioServer/AudioClientEndpoint.h>
+#include <Userland/Services/AudioServer/AudioServerEndpoint.h>
 
 namespace Audio {
 
