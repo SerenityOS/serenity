@@ -104,8 +104,6 @@ public:
     void reconsume_current_input_token();
 
     StateTransaction begin_transaction() { return StateTransaction(*this); }
-    int position() const { return m_iterator_offset; }
-    void rewind_to_position(int);
 
     void skip_whitespace();
 
