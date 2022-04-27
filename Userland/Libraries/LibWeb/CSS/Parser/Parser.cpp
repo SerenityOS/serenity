@@ -5189,6 +5189,7 @@ RefPtr<StyleValue> Parser::parse_css_value(ComponentValue const& component_value
 
 Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values)
 {
+    auto transaction = values.begin_transaction();
     auto syntax_error = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         if constexpr (CSS_PARSER_DEBUG) {
             dbgln_if(CSS_PARSER_DEBUG, "Invalid An+B value:");
@@ -5211,6 +5212,9 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     };
     auto is_delim = [](ComponentValue const& value, u32 delim) -> bool {
         return value.is(Token::Type::Delim) && value.token().delim() == delim;
+    };
+    auto is_sign = [](ComponentValue const& value) -> bool {
+        return value.is(Token::Type::Delim) && (value.token().delim() == '+' || value.token().delim() == '-');
     };
     auto is_n_dimension = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
@@ -5287,14 +5291,19 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // odd | even
     if (first_value.is(Token::Type::Ident)) {
         auto ident = first_value.token().ident();
-        if (ident.equals_ignoring_case("odd"))
+        if (ident.equals_ignoring_case("odd")) {
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 1 };
-        if (ident.equals_ignoring_case("even"))
+        }
+        if (ident.equals_ignoring_case("even")) {
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 0 };
+        }
     }
     // <integer>
     if (is_integer(first_value)) {
         int b = first_value.token().to_integer();
+        transaction.commit();
         return Selector::SimpleSelector::ANPlusBPattern { 0, b };
     }
     // <n-dimension>
@@ -5302,29 +5311,32 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // <n-dimension> ['+' | '-'] <signless-integer>
     if (is_n_dimension(first_value)) {
         int a = first_value.token().dimension_value_int();
-
-        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
-            // <n-dimension>
-            return Selector::SimpleSelector::ANPlusBPattern { a, 0 };
-        }
-
         values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (is_signed_integer(second_value)) {
-            // <n-dimension> <signed-integer>
-            int b = second_value.token().to_integer();
+
+        // <n-dimension> <signed-integer>
+        if (is_signed_integer(values.peek_token())) {
+            int b = values.next_token().token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
-        values.skip_whitespace();
-        auto& third_value = values.next_token();
-        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
-            // <n-dimension> ['+' | '-'] <signless-integer>
-            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+        // <n-dimension> ['+' | '-'] <signless-integer>
+        {
+            auto child_transaction = transaction.create_child();
+            auto& second_value = values.next_token();
+            values.skip_whitespace();
+            auto& third_value = values.next_token();
+
+            if (is_sign(second_value) && is_signless_integer(third_value)) {
+                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                child_transaction.commit();
+                return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            }
         }
 
-        return syntax_error();
+        // <n-dimension>
+        transaction.commit();
+        return Selector::SimpleSelector::ANPlusBPattern { a, 0 };
     }
     // <ndash-dimension> <signless-integer>
     if (is_ndash_dimension(first_value)) {
@@ -5332,7 +5344,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
             int a = first_value.token().dimension_value_int();
-            int b = -second_value.token().to_integer();
+            int b = -values.next_token().token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
@@ -5343,16 +5356,20 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& dimension = first_value.token();
         int a = dimension.dimension_value_int();
         auto maybe_b = dimension.dimension_unit().substring_view(1).to_int();
-        if (maybe_b.has_value())
+        if (maybe_b.has_value()) {
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, maybe_b.value() };
+        }
 
         return syntax_error();
     }
     // <dashndashdigit-ident>
     if (is_dashndashdigit_ident(first_value)) {
         auto maybe_b = first_value.token().ident().substring_view(2).to_int();
-        if (maybe_b.has_value())
+        if (maybe_b.has_value()) {
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { -1, maybe_b.value() };
+        }
 
         return syntax_error();
     }
@@ -5360,28 +5377,32 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // -n <signed-integer>
     // -n ['+' | '-'] <signless-integer>
     if (is_dashn(first_value)) {
-        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
-            // -n
-            return Selector::SimpleSelector::ANPlusBPattern { -1, 0 };
-        }
-
         values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (is_signed_integer(second_value)) {
-            // -n <signed-integer>
-            int b = second_value.token().to_integer();
+
+        // -n <signed-integer>
+        if (is_signed_integer(values.peek_token())) {
+            int b = values.next_token().token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { -1, b };
         }
 
-        values.skip_whitespace();
-        auto& third_value = values.next_token();
-        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
-            // -n ['+' | '-'] <signless-integer>
-            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return Selector::SimpleSelector::ANPlusBPattern { -1, b };
+        // -n ['+' | '-'] <signless-integer>
+        {
+            auto child_transaction = transaction.create_child();
+            auto& second_value = values.next_token();
+            values.skip_whitespace();
+            auto& third_value = values.next_token();
+
+            if (is_sign(second_value) && is_signless_integer(third_value)) {
+                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                child_transaction.commit();
+                return Selector::SimpleSelector::ANPlusBPattern { -1, b };
+            }
         }
 
-        return syntax_error();
+        // -n
+        transaction.commit();
+        return Selector::SimpleSelector::ANPlusBPattern { -1, 0 };
     }
     // -n- <signless-integer>
     if (is_dashndash(first_value)) {
@@ -5389,6 +5410,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
             int b = -second_value.token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { -1, b };
         }
 
@@ -5413,28 +5435,31 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† n <signed-integer>
     // '+'?† n ['+' | '-'] <signless-integer>
     if (is_n(first_after_plus)) {
-        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
-            // '+'?† n
-            return Selector::SimpleSelector::ANPlusBPattern { 1, 0 };
-        }
-
         values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (is_signed_integer(second_value)) {
-            // '+'?† n <signed-integer>
-            int b = second_value.token().to_integer();
+
+        // '+'?† n <signed-integer>
+        if (is_signed_integer(values.peek_token())) {
+            int b = values.next_token().token().to_integer();
             return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
-        values.skip_whitespace();
-        auto& third_value = values.next_token();
-        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
-            // '+'?† n ['+' | '-'] <signless-integer>
-            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return Selector::SimpleSelector::ANPlusBPattern { 1, b };
+        // '+'?† n ['+' | '-'] <signless-integer>
+        {
+            auto child_transaction = transaction.create_child();
+            auto& second_value = values.next_token();
+            values.skip_whitespace();
+            auto& third_value = values.next_token();
+
+            if (is_sign(second_value) && is_signless_integer(third_value)) {
+                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                child_transaction.commit();
+                return Selector::SimpleSelector::ANPlusBPattern { 1, b };
+            }
         }
 
-        return syntax_error();
+        // '+'?† n
+        transaction.commit();
+        return Selector::SimpleSelector::ANPlusBPattern { 1, 0 };
     }
 
     // '+'?† n- <signless-integer>
@@ -5443,6 +5468,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
             int b = -second_value.token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
@@ -5452,8 +5478,10 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† <ndashdigit-ident>
     if (is_ndashdigit_ident(first_after_plus)) {
         auto maybe_b = first_after_plus.token().ident().substring_view(1).to_int();
-        if (maybe_b.has_value())
+        if (maybe_b.has_value()) {
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, maybe_b.value() };
+        }
 
         return syntax_error();
     }
