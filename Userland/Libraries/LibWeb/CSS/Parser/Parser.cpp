@@ -5189,9 +5189,6 @@ RefPtr<StyleValue> Parser::parse_css_value(ComponentValue const& component_value
 
 Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values)
 {
-    int a = 0;
-    int b = 0;
-
     auto syntax_error = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         if constexpr (CSS_PARSER_DEBUG) {
             dbgln_if(CSS_PARSER_DEBUG, "Invalid An+B value:");
@@ -5290,36 +5287,32 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // odd | even
     if (first_value.is(Token::Type::Ident)) {
         auto ident = first_value.token().ident();
-        if (ident.equals_ignoring_case("odd")) {
-            a = 2;
-            b = 1;
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        } else if (ident.equals_ignoring_case("even")) {
-            a = 2;
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        }
+        if (ident.equals_ignoring_case("odd"))
+            return Selector::SimpleSelector::ANPlusBPattern { 2, 1 };
+        if (ident.equals_ignoring_case("even"))
+            return Selector::SimpleSelector::ANPlusBPattern { 2, 0 };
     }
     // <integer>
     if (is_integer(first_value)) {
-        b = first_value.token().to_integer();
-        return Selector::SimpleSelector::ANPlusBPattern { a, b };
+        int b = first_value.token().to_integer();
+        return Selector::SimpleSelector::ANPlusBPattern { 0, b };
     }
     // <n-dimension>
     // <n-dimension> <signed-integer>
     // <n-dimension> ['+' | '-'] <signless-integer>
     if (is_n_dimension(first_value)) {
-        a = first_value.token().dimension_value_int();
+        int a = first_value.token().dimension_value_int();
 
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // <n-dimension>
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            return Selector::SimpleSelector::ANPlusBPattern { a, 0 };
         }
 
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signed_integer(second_value)) {
             // <n-dimension> <signed-integer>
-            b = second_value.token().to_integer();
+            int b = second_value.token().to_integer();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
@@ -5327,7 +5320,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& third_value = values.next_token();
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // <n-dimension> ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
@@ -5338,8 +5331,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
-            a = first_value.token().dimension_value_int();
-            b = -second_value.token().to_integer();
+            int a = first_value.token().dimension_value_int();
+            int b = -second_value.token().to_integer();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
 
@@ -5348,23 +5341,18 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // <ndashdigit-dimension>
     if (is_ndashdigit_dimension(first_value)) {
         auto& dimension = first_value.token();
-        a = dimension.dimension_value_int();
+        int a = dimension.dimension_value_int();
         auto maybe_b = dimension.dimension_unit().substring_view(1).to_int();
-        if (maybe_b.has_value()) {
-            b = maybe_b.value();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        }
+        if (maybe_b.has_value())
+            return Selector::SimpleSelector::ANPlusBPattern { a, maybe_b.value() };
 
         return syntax_error();
     }
     // <dashndashdigit-ident>
     if (is_dashndashdigit_ident(first_value)) {
-        a = -1;
         auto maybe_b = first_value.token().ident().substring_view(2).to_int();
-        if (maybe_b.has_value()) {
-            b = maybe_b.value();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        }
+        if (maybe_b.has_value())
+            return Selector::SimpleSelector::ANPlusBPattern { -1, maybe_b.value() };
 
         return syntax_error();
     }
@@ -5372,26 +5360,25 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // -n <signed-integer>
     // -n ['+' | '-'] <signless-integer>
     if (is_dashn(first_value)) {
-        a = -1;
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // -n
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            return Selector::SimpleSelector::ANPlusBPattern { -1, 0 };
         }
 
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signed_integer(second_value)) {
             // -n <signed-integer>
-            b = second_value.token().to_integer();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = second_value.token().to_integer();
+            return Selector::SimpleSelector::ANPlusBPattern { -1, b };
         }
 
         values.skip_whitespace();
         auto& third_value = values.next_token();
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // -n ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+            return Selector::SimpleSelector::ANPlusBPattern { -1, b };
         }
 
         return syntax_error();
@@ -5401,9 +5388,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
-            a = -1;
-            b = -second_value.token().to_integer();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = -second_value.token().to_integer();
+            return Selector::SimpleSelector::ANPlusBPattern { -1, b };
         }
 
         return syntax_error();
@@ -5427,26 +5413,25 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† n <signed-integer>
     // '+'?† n ['+' | '-'] <signless-integer>
     if (is_n(first_after_plus)) {
-        a = 1;
         if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // '+'?† n
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            return Selector::SimpleSelector::ANPlusBPattern { 1, 0 };
         }
 
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signed_integer(second_value)) {
             // '+'?† n <signed-integer>
-            b = second_value.token().to_integer();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = second_value.token().to_integer();
+            return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
         values.skip_whitespace();
         auto& third_value = values.next_token();
         if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // '+'?† n ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+            return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
         return syntax_error();
@@ -5457,9 +5442,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         values.skip_whitespace();
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
-            a = 1;
-            b = -second_value.token().to_integer();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+            int b = -second_value.token().to_integer();
+            return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
         return syntax_error();
@@ -5467,12 +5451,9 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
     // '+'?† <ndashdigit-ident>
     if (is_ndashdigit_ident(first_after_plus)) {
-        a = 1;
         auto maybe_b = first_after_plus.token().ident().substring_view(1).to_int();
-        if (maybe_b.has_value()) {
-            b = maybe_b.value();
-            return Selector::SimpleSelector::ANPlusBPattern { a, b };
-        }
+        if (maybe_b.has_value())
+            return Selector::SimpleSelector::ANPlusBPattern { 1, maybe_b.value() };
 
         return syntax_error();
     }
