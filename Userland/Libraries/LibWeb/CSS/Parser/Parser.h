@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
-#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/FontFace.h>
@@ -112,11 +112,12 @@ public:
     static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
 
 private:
-    enum class ParsingResult {
-        Done,
+    enum class ParseError {
         IncludesIgnoredVendorPrefix,
         SyntaxError,
     };
+    template<typename T>
+    using ParseErrorOr = ErrorOr<T, ParseError>;
 
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
@@ -161,7 +162,7 @@ private:
         Relative
     };
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
+    ParseErrorOr<SelectorList> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
 
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
@@ -283,7 +284,7 @@ private:
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
-    Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
+    ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_css_value(ComponentValue const&);
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<StyleValue> parse_dynamic_value(ComponentValue const&);
@@ -336,13 +337,13 @@ private:
     OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<ComponentValue> const&);
 
-    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
-    Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
+    ParseErrorOr<Optional<Selector::CompoundSelector>> parse_compound_selector(TokenStream<ComponentValue>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<ComponentValue>&);
 
-    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(ComponentValue const&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<ComponentValue>&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<Selector::SimpleSelector> parse_attribute_simple_selector(ComponentValue const&);
+    ParseErrorOr<Selector::SimpleSelector> parse_pseudo_simple_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<Optional<Selector::SimpleSelector>> parse_simple_selector(TokenStream<ComponentValue>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<ComponentValue>&);
     OwnPtr<MediaCondition> parse_media_condition(TokenStream<ComponentValue>&, MediaCondition::AllowOr allow_or);
