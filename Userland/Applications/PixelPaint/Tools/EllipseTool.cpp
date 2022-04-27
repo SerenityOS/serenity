@@ -11,14 +11,15 @@
 #include "../Layer.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ValueSlider.h>
-#include <LibGfx/Rect.h>
 #include <LibGfx/AntiAliasingPainter.h>
+#include <LibGfx/Rect.h>
 
 namespace PixelPaint {
 
@@ -36,7 +37,10 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
     case FillMode::Outline:
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
         break;
-    case FillMode::Fill: {
+    case FillMode::Fill:
+        painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        break;
+    case FillMode::FillAntiAliased: {
         Gfx::AntiAliasingPainter aa_painter { painter };
         aa_painter.draw_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
         break;
@@ -142,24 +146,38 @@ GUI::Widget* EllipseTool::get_properties_widget()
         set_primary_slider(&thickness_slider);
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
-        mode_container.set_fixed_height(46);
+        mode_container.set_fixed_height(70);
         mode_container.set_layout<GUI::HorizontalBoxLayout>();
         auto& mode_label = mode_container.add<GUI::Label>("Mode:");
         mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        mode_label.set_fixed_size(80, 20);
 
         auto& mode_radio_container = mode_container.add<GUI::Widget>();
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
         auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
         auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
+        auto& aa_enable_checkbox = mode_radio_container.add<GUI::CheckBox>("Anti-alias");
 
-        outline_mode_radio.on_checked = [&](bool) {
-            m_fill_mode = FillMode::Outline;
+        aa_enable_checkbox.on_checked = [&](bool checked) {
+            if (fill_mode_radio.is_checked())
+                m_fill_mode = checked ? FillMode::FillAntiAliased : FillMode::Fill;
         };
-        fill_mode_radio.on_checked = [&](bool) {
-            m_fill_mode = FillMode::Fill;
+        outline_mode_radio.on_checked = [&](bool checked) {
+            if (checked) {
+                m_fill_mode = FillMode::Outline;
+                aa_enable_checkbox.set_enabled(false);
+                m_last_aa_checkbox_state = aa_enable_checkbox.is_checked();
+                aa_enable_checkbox.set_checked(false);
+            }
+        };
+        fill_mode_radio.on_checked = [&](bool checked) {
+            if (checked) {
+                m_fill_mode = FillMode::Fill;
+                aa_enable_checkbox.set_checked(m_last_aa_checkbox_state);
+                aa_enable_checkbox.set_enabled(true);
+            }
         };
 
+        aa_enable_checkbox.set_checked(false);
         outline_mode_radio.set_checked(true);
 
         auto& aspect_container = m_properties_widget->add<GUI::Widget>();
