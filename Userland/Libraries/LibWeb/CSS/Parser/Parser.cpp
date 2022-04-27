@@ -1347,8 +1347,8 @@ RefPtr<Supports> Parser::parse_a_supports(TokenStream<T>& tokens)
 
 OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<ComponentValue>& tokens)
 {
+    auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-    auto start_position = tokens.position();
 
     auto& peeked_token = tokens.peek_token();
     // `not <supports-in-parens>`
@@ -1356,15 +1356,14 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
         tokens.next_token();
         tokens.skip_whitespace();
         auto child = parse_supports_in_parens(tokens);
-        if (child.has_value()) {
-            auto* condition = new Supports::Condition;
-            condition->type = Supports::Condition::Type::Not;
-            condition->children.append(child.release_value());
-            return adopt_own(*condition);
-        }
+        if (!child.has_value())
+            return {};
 
-        tokens.rewind_to_position(start_position);
-        return {};
+        transaction.commit();
+        auto condition = make<Supports::Condition>();
+        condition->type = Supports::Condition::Type::Not;
+        condition->children.append(child.release_value());
+        return condition;
     }
 
     // `  <supports-in-parens> [ and <supports-in-parens> ]*
@@ -1382,20 +1381,16 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
         return {};
     };
 
-    bool is_invalid = false;
     while (tokens.has_next_token()) {
         if (!children.is_empty()) {
             // Expect `and` or `or` here
             auto maybe_combination = as_condition_type(tokens.next_token());
-            if (!maybe_combination.has_value()) {
-                is_invalid = true;
-                break;
-            }
+            if (!maybe_combination.has_value())
+                return {};
             if (!condition_type.has_value()) {
                 condition_type = maybe_combination.value();
             } else if (maybe_combination != condition_type) {
-                is_invalid = true;
-                break;
+                return {};
             }
         }
 
@@ -1404,47 +1399,40 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
         if (auto in_parens = parse_supports_in_parens(tokens); in_parens.has_value()) {
             children.append(in_parens.release_value());
         } else {
-            is_invalid = true;
-            break;
+            return {};
         }
 
         tokens.skip_whitespace();
     }
 
-    if (!is_invalid && !children.is_empty()) {
-        auto* condition = new Supports::Condition;
-        condition->type = condition_type.value_or(Supports::Condition::Type::Or);
-        condition->children = move(children);
-        return adopt_own(*condition);
-    }
+    if (children.is_empty())
+        return {};
 
-    tokens.rewind_to_position(start_position);
-    return {};
+    transaction.commit();
+    auto condition = make<Supports::Condition>();
+    condition->type = condition_type.value_or(Supports::Condition::Type::Or);
+    condition->children = move(children);
+    return condition;
 }
 
 Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<ComponentValue>& tokens)
 {
-    tokens.skip_whitespace();
-    auto start_position = tokens.position();
-
-    auto& first_token = tokens.peek_token();
     // `( <supports-condition> )`
+    auto& first_token = tokens.peek_token();
     if (first_token.is_block() && first_token.block().is_paren()) {
+        auto transaction = tokens.begin_transaction();
         tokens.next_token();
         tokens.skip_whitespace();
 
         TokenStream child_tokens { first_token.block().values() };
         if (auto condition = parse_supports_condition(child_tokens)) {
-            if (child_tokens.has_next_token()) {
-                tokens.rewind_to_position(start_position);
+            if (child_tokens.has_next_token())
                 return {};
-            }
+            transaction.commit();
             return Supports::InParens {
                 .value = { condition.release_nonnull() }
             };
         }
-
-        tokens.rewind_to_position(start_position);
     }
 
     // `<supports-feature>`
@@ -1461,58 +1449,61 @@ Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<Compon
         };
     }
 
-    tokens.rewind_to_position(start_position);
     return {};
 }
 
 Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<ComponentValue>& tokens)
 {
+    auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-    auto start_position = tokens.position();
-
     auto& first_token = tokens.next_token();
+
     // `<supports-decl>`
     if (first_token.is_block() && first_token.block().is_paren()) {
         TokenStream block_tokens { first_token.block().values() };
         // FIXME: Parsing and then converting back to a string is weird.
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
+            transaction.commit();
             return Supports::Feature {
                 Supports::Declaration { declaration->to_string() }
             };
         }
     }
+
     // `<supports-selector-fn>`
     if (first_token.is_function() && first_token.function().name().equals_ignoring_case("selector"sv)) {
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
             builder.append(item.to_string());
+        transaction.commit();
         return Supports::Feature {
             Supports::Selector { builder.to_string() }
         };
     }
 
-    tokens.rewind_to_position(start_position);
     return {};
 }
 
 // https://www.w3.org/TR/mediaqueries-4/#typedef-general-enclosed
 Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentValue>& tokens)
 {
+    auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-    auto start_position = tokens.position();
-
     auto& first_token = tokens.next_token();
 
     // `[ <function-token> <any-value>? ) ]`
-    if (first_token.is_function())
+    if (first_token.is_function()) {
+        transaction.commit();
         return GeneralEnclosed { first_token.to_string() };
+    }
 
     // `( <any-value>? )`
-    if (first_token.is_block() && first_token.block().is_paren())
+    if (first_token.is_block() && first_token.block().is_paren()) {
+        transaction.commit();
         return GeneralEnclosed { first_token.to_string() };
+    }
 
-    tokens.rewind_to_position(start_position);
     return {};
 }
 
