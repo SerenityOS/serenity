@@ -1909,20 +1909,19 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the next input token has already been checked to
     // be an <ident-token>.
+    // NOTE: This is not true in our implementation! For convenience, we both skip whitespace
+    //       and gracefully handle the first token not being an <ident-token>.
 
     // To consume a declaration:
 
     // Consume the next input token.
+    auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-    auto start_position = tokens.position();
     auto& token = tokens.next_token();
 
-    // Note: Not to spec, handle the case where the input token *isn't* an <ident-token>.
-    // FIXME: Perform this check before calling consume_a_declaration().
-    if (!token.is(Token::Type::Ident)) {
-        tokens.rewind_to_position(start_position);
+    // NOTE: Not to spec, handle the case where the input token *isn't* an <ident-token>.
+    if (!token.is(Token::Type::Ident))
         return {};
-    }
 
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
@@ -1939,7 +1938,6 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     auto& maybe_colon = tokens.peek_token();
     if (!maybe_colon.is(Token::Type::Colon)) {
         log_parse_error();
-        tokens.rewind_to_position(start_position);
         return {};
     }
     // Otherwise, consume the next input token.
@@ -2007,6 +2005,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     }
 
     // 7. Return the declaration.
+    transaction.commit();
     return Declaration { move(declaration_name), move(declaration_values), move(declaration_important) };
 }
 
@@ -2674,34 +2673,32 @@ Optional<Length> Parser::parse_length(ComponentValue const& component_value)
 
 Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
 {
-    auto position = tokens.position();
+    auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-
-    auto error = [&]() -> Optional<Ratio> {
-        tokens.rewind_to_position(position);
-        return {};
-    };
 
     // `<ratio> = <number [0,∞]> [ / <number [0,∞]> ]?`
     // FIXME: I think either part is allowed to be calc(), which makes everything complicated.
     auto first_number = tokens.next_token();
     if (!first_number.is(Token::Type::Number) || first_number.token().number_value() < 0)
-        return error();
+        return {};
 
-    auto position_after_first_number = tokens.position();
-
-    tokens.skip_whitespace();
-    auto solidus = tokens.next_token();
-    tokens.skip_whitespace();
-    auto second_number = tokens.next_token();
-    if (solidus.is(Token::Type::Delim) && solidus.token().delim() == '/'
-        && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
-        // Two-value ratio
-        return Ratio { static_cast<float>(first_number.token().number_value()), static_cast<float>(second_number.token().number_value()) };
+    {
+        auto two_value_transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        auto solidus = tokens.next_token();
+        tokens.skip_whitespace();
+        auto second_number = tokens.next_token();
+        if (solidus.is(Token::Type::Delim) && solidus.token().delim() == '/'
+            && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
+            // Two-value ratio
+            two_value_transaction.commit();
+            transaction.commit();
+            return Ratio { static_cast<float>(first_number.token().number_value()), static_cast<float>(second_number.token().number_value()) };
+        }
     }
 
     // Single-value ratio
-    tokens.rewind_to_position(position_after_first_number);
+    transaction.commit();
     return Ratio { static_cast<float>(first_number.token().number_value()) };
 }
 
@@ -3411,17 +3408,16 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
                 background_position = maybe_background_position.release_nonnull();
 
                 // Attempt to parse `/ <background-size>`
-                auto before_slash = tokens.position();
+                auto transaction = tokens.begin_transaction();
                 auto& maybe_slash = tokens.next_token();
                 if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == '/') {
                     if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
+                        transaction.commit();
                         background_size = maybe_background_size.release_nonnull();
                         continue;
                     }
                     return nullptr;
                 }
-
-                tokens.rewind_to_position(before_slash);
                 continue;
             }
             return nullptr;
@@ -3501,11 +3497,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
     //           - https://www.w3.org/TR/css-values-4/#typedef-position
     //       So, we'll need a separate function to parse <position> later.
 
-    auto start_position = tokens.position();
-    auto error = [&]() {
-        tokens.rewind_to_position(start_position);
-        return nullptr;
-    };
+    auto transaction = tokens.begin_transaction();
 
     auto to_edge = [](ValueID identifier) -> Optional<PositionEdge> {
         switch (identifier) {
@@ -3573,7 +3565,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
             } else if (!vertical.has_value()) {
                 vertical = EdgeOffset { PositionEdge::Top, value->as_percentage().percentage(), false, true };
             } else {
-                return error();
+                return nullptr;
             }
             continue;
         }
@@ -3584,7 +3576,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
             } else if (!vertical.has_value()) {
                 vertical = EdgeOffset { PositionEdge::Top, value->to_length(), false, true };
             } else {
-                return error();
+                return nullptr;
             }
             continue;
         }
@@ -3618,7 +3610,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
             } else if (identifier == ValueID::Center) {
                 found_center = true;
             } else {
-                return error();
+                return nullptr;
             }
             continue;
         }
@@ -3629,7 +3621,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
 
     if (found_center) {
         if (horizontal.has_value() && vertical.has_value())
-            return error();
+            return nullptr;
         if (!horizontal.has_value())
             horizontal = EdgeOffset { PositionEdge::Left, center_offset, true, false };
         if (!vertical.has_value())
@@ -3637,7 +3629,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
     }
 
     if (!horizontal.has_value() && !vertical.has_value())
-        return error();
+        return nullptr;
 
     // Unpack `<edge> <length>`:
     // The loop above reads this pattern as a single EdgeOffset, when actually, it should be treated
@@ -3660,6 +3652,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
     if (!vertical.has_value())
         vertical = EdgeOffset { PositionEdge::Top, center_offset, false, false };
 
+    transaction.commit();
     return PositionStyleValue::create(
         horizontal->edge, horizontal->offset,
         vertical->edge, vertical->offset);
@@ -3667,11 +3660,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
 
 RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<ComponentValue>& tokens)
 {
-    auto start_position = tokens.position();
-    auto error = [&]() {
-        tokens.rewind_to_position(start_position);
-        return nullptr;
-    };
+    auto transaction = tokens.begin_transaction();
 
     auto is_directional_repeat = [](StyleValue const& value) -> bool {
         auto value_id = value.to_identifier();
@@ -3696,11 +3685,12 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
     auto& token = tokens.next_token();
     auto maybe_x_value = parse_css_value(token);
     if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
-        return error();
+        return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
     if (is_directional_repeat(*x_value)) {
         auto value_id = x_value->to_identifier();
+        transaction.commit();
         return BackgroundRepeatStyleValue::create(
             value_id == ValueID::RepeatX ? Repeat::Repeat : Repeat::NoRepeat,
             value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat);
@@ -3711,22 +3701,20 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
     auto maybe_y_value = parse_css_value(second_token);
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
+        transaction.commit();
         return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(x_value->to_identifier()));
     }
     tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
-        return error();
+        return nullptr;
+    transaction.commit();
     return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
 {
-    auto start_position = tokens.position();
-    auto error = [&]() {
-        tokens.rewind_to_position(start_position);
-        return nullptr;
-    };
+    auto transaction = tokens.begin_transaction();
 
     auto get_length_percentage = [](StyleValue& style_value) -> Optional<LengthPercentage> {
         if (style_value.is_percentage())
@@ -3738,7 +3726,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
 
     auto maybe_x_value = parse_css_value(tokens.next_token());
     if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_x_value))
-        return error();
+        return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
     if (x_value->to_identifier() == ValueID::Cover || x_value->to_identifier() == ValueID::Contain)
@@ -3748,19 +3736,22 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value)) {
         auto x_size = get_length_percentage(*x_value);
         if (!x_size.has_value())
-            return error();
+            return nullptr;
+
+        transaction.commit();
         return BackgroundSizeStyleValue::create(x_size.value(), x_size.value());
     }
-
     tokens.next_token();
+
     auto y_value = maybe_y_value.release_nonnull();
     auto x_size = get_length_percentage(*x_value);
     auto y_size = get_length_percentage(*y_value);
 
-    if (x_size.has_value() && y_size.has_value())
-        return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
+    if (!x_size.has_value() || !y_size.has_value())
+        return nullptr;
 
-    return error();
+    transaction.commit();
+    return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
@@ -3927,11 +3918,7 @@ RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& comp
 
 RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>& tokens, AllowInsetKeyword allow_inset_keyword)
 {
-    auto start_position = tokens.position();
-    auto error = [&]() {
-        tokens.rewind_to_position(start_position);
-        return nullptr;
-    };
+    auto transaction = tokens.begin_transaction();
 
     Optional<Color> color;
     Optional<Length> offset_x;
@@ -3945,7 +3932,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
 
         if (auto maybe_color = parse_color(token); maybe_color.has_value()) {
             if (color.has_value())
-                return error();
+                return nullptr;
             color = maybe_color.release_value();
             tokens.next_token();
             continue;
@@ -3954,16 +3941,16 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
         if (auto maybe_offset_x = parse_length(token); maybe_offset_x.has_value()) {
             // horizontal offset
             if (offset_x.has_value())
-                return error();
+                return nullptr;
             offset_x = maybe_offset_x.release_value();
             tokens.next_token();
 
             // vertical offset
             if (!tokens.has_next_token())
-                return error();
+                return nullptr;
             auto maybe_offset_y = parse_length(tokens.peek_token());
             if (!maybe_offset_y.has_value())
-                return error();
+                return nullptr;
             offset_y = maybe_offset_y.release_value();
             tokens.next_token();
 
@@ -3991,7 +3978,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
         if (allow_inset_keyword == AllowInsetKeyword::Yes
             && token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
             if (placement.has_value())
-                return error();
+                return nullptr;
             placement = ShadowPlacement::Inner;
             tokens.next_token();
             continue;
@@ -4000,7 +3987,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
         if (token.is(Token::Type::Comma))
             break;
 
-        return error();
+        return nullptr;
     }
 
     // FIXME: If color is absent, default to `currentColor`
@@ -4009,7 +3996,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
 
     // x/y offsets are required
     if (!offset_x.has_value() || !offset_y.has_value())
-        return error();
+        return nullptr;
 
     // Other lengths default to 0
     if (!blur_radius.has_value())
@@ -4021,6 +4008,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
     if (!placement.has_value())
         placement = ShadowPlacement::Outer;
 
+    transaction.commit();
     return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
