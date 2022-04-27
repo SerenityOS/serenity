@@ -5108,9 +5108,9 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecorationLine: {
-        TokenStream tokens { component_values };
-        auto parsed_value = parse_text_decoration_line_value(tokens);
-        if (parsed_value && !tokens.has_next_token())
+        TokenStream value_tokens { component_values };
+        auto parsed_value = parse_text_decoration_line_value(value_tokens);
+        if (parsed_value && !value_tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     }
