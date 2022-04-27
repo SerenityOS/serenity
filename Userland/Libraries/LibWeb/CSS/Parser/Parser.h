@@ -310,7 +310,7 @@ private:
     Optional<Length> parse_length(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
-    Optional<UnicodeRange> create_unicode_range_from_tokens(TokenStream<ComponentValue>&, int start_position, int end_position);
+    Optional<UnicodeRange> parse_unicode_range(StringView);
 
     enum class AllowedDataUrlType {
         None,
