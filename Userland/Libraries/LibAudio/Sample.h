@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Math.h>
 
 namespace Audio {
@@ -143,6 +144,18 @@ struct Sample {
 
     double left { 0 };
     double right { 0 };
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<Audio::Sample> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Audio::Sample const& value)
+    {
+        return Formatter<FormatString>::format(builder, "[{}, {}]", value.left, value.right);
+    }
 };
 
 }
