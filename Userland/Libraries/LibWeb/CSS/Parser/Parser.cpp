@@ -1202,28 +1202,8 @@ Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<ComponentVa
     }
 
     auto ident = token.token().ident();
-    if (ident.equals_ignoring_case("all")) {
-        return MediaQuery::MediaType::All;
-    } else if (ident.equals_ignoring_case("aural")) {
-        return MediaQuery::MediaType::Aural;
-    } else if (ident.equals_ignoring_case("braille")) {
-        return MediaQuery::MediaType::Braille;
-    } else if (ident.equals_ignoring_case("embossed")) {
-        return MediaQuery::MediaType::Embossed;
-    } else if (ident.equals_ignoring_case("handheld")) {
-        return MediaQuery::MediaType::Handheld;
-    } else if (ident.equals_ignoring_case("print")) {
-        return MediaQuery::MediaType::Print;
-    } else if (ident.equals_ignoring_case("projection")) {
-        return MediaQuery::MediaType::Projection;
-    } else if (ident.equals_ignoring_case("screen")) {
-        return MediaQuery::MediaType::Screen;
-    } else if (ident.equals_ignoring_case("speech")) {
-        return MediaQuery::MediaType::Speech;
-    } else if (ident.equals_ignoring_case("tty")) {
-        return MediaQuery::MediaType::TTY;
-    } else if (ident.equals_ignoring_case("tv")) {
-        return MediaQuery::MediaType::TV;
+    if (auto media_type = media_type_from_string(ident); media_type.has_value()) {
+        return media_type.release_value();
     }
 
     tokens.rewind_to_position(position);

@@ -326,41 +326,7 @@ String MediaQuery::to_string() const
         builder.append("not ");
 
     if (m_negated || m_media_type != MediaType::All || !m_media_condition) {
-        switch (m_media_type) {
-        case MediaType::All:
-            builder.append("all");
-            break;
-        case MediaType::Aural:
-            builder.append("aural");
-            break;
-        case MediaType::Braille:
-            builder.append("braille");
-            break;
-        case MediaType::Embossed:
-            builder.append("embossed");
-            break;
-        case MediaType::Handheld:
-            builder.append("handheld");
-            break;
-        case MediaType::Print:
-            builder.append("print");
-            break;
-        case MediaType::Projection:
-            builder.append("projection");
-            break;
-        case MediaType::Screen:
-            builder.append("screen");
-            break;
-        case MediaType::Speech:
-            builder.append("speech");
-            break;
-        case MediaType::TTY:
-            builder.append("tty");
-            break;
-        case MediaType::TV:
-            builder.append("tv");
-            break;
-        }
+        builder.append(CSS::to_string(m_media_type));
         if (m_media_condition)
             builder.append(" and ");
     }
@@ -476,6 +442,62 @@ bool is_media_feature_name(StringView name)
     // FIXME: Add other level 5 feature names
 
     return false;
+}
+
+Optional<MediaQuery::MediaType> media_type_from_string(StringView name)
+{
+    if (name.equals_ignoring_case("all"sv))
+        return MediaQuery::MediaType::All;
+    if (name.equals_ignoring_case("aural"sv))
+        return MediaQuery::MediaType::Aural;
+    if (name.equals_ignoring_case("braille"sv))
+        return MediaQuery::MediaType::Braille;
+    if (name.equals_ignoring_case("embossed"sv))
+        return MediaQuery::MediaType::Embossed;
+    if (name.equals_ignoring_case("handheld"sv))
+        return MediaQuery::MediaType::Handheld;
+    if (name.equals_ignoring_case("print"sv))
+        return MediaQuery::MediaType::Print;
+    if (name.equals_ignoring_case("projection"sv))
+        return MediaQuery::MediaType::Projection;
+    if (name.equals_ignoring_case("screen"sv))
+        return MediaQuery::MediaType::Screen;
+    if (name.equals_ignoring_case("speech"sv))
+        return MediaQuery::MediaType::Speech;
+    if (name.equals_ignoring_case("tty"sv))
+        return MediaQuery::MediaType::TTY;
+    if (name.equals_ignoring_case("tv"sv))
+        return MediaQuery::MediaType::TV;
+    return {};
+}
+
+StringView to_string(MediaQuery::MediaType media_type)
+{
+    switch (media_type) {
+    case MediaQuery::MediaType::All:
+        return "all"sv;
+    case MediaQuery::MediaType::Aural:
+        return "aural"sv;
+    case MediaQuery::MediaType::Braille:
+        return "braille"sv;
+    case MediaQuery::MediaType::Embossed:
+        return "embossed"sv;
+    case MediaQuery::MediaType::Handheld:
+        return "handheld"sv;
+    case MediaQuery::MediaType::Print:
+        return "print"sv;
+    case MediaQuery::MediaType::Projection:
+        return "projection"sv;
+    case MediaQuery::MediaType::Screen:
+        return "screen"sv;
+    case MediaQuery::MediaType::Speech:
+        return "speech"sv;
+    case MediaQuery::MediaType::TTY:
+        return "tty"sv;
+    case MediaQuery::MediaType::TV:
+        return "tv"sv;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }
