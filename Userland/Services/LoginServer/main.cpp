@@ -72,15 +72,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         window->set_password("");
 
+        auto fail_message = "Can't log in: invalid username or password.";
+
         auto account = Core::Account::from_name(username.characters());
         if (account.is_error()) {
-            window->set_fail_message(String::formatted("Can't log in: {}.", account.error()));
+            window->set_fail_message(fail_message);
             dbgln("failed graphical login for user {}: {}", username, account.error());
             return;
         }
 
         if (!account.value().authenticate(password)) {
-            window->set_fail_message("Can't log in: invalid password.");
+            window->set_fail_message(fail_message);
             dbgln("failed graphical login for user {}: invalid password", username);
             return;
         }
