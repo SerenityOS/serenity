@@ -1,7 +1,9 @@
 Not sure why this is missing, but okay.
---- a/includes.h.orig
+diff --git a/includes.h b/includes.h
+index 1e00002..2208f94 100644
+--- a/includes.h
 +++ b/includes.h
-@@ -38,6 +38,7 @@
+@@ -37,6 +37,7 @@
  #include <sys/un.h>
  #include <sys/wait.h>
  #include <sys/resource.h>

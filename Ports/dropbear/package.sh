@@ -1,12 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=dropbear
-version=2019.78
-files="https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2 dropbear-${version}.tar.bz2
-https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2.asc dropbear-${version}.tar.bz2.asc
-https://mirror.dropbear.nl/mirror/releases/dropbear-key-2015.asc dropbear-key-2015.asc"
-
-auth_type="sig"
-auth_opts=("--keyring" "./dropbear-key-2015.asc" "dropbear-${version}.tar.bz2.asc")
+version=2022.82
+files="https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2 dropbear-${version}.tar.bz2 3a038d2bbc02bf28bbdd20c012091f741a3ec5cbe460691811d714876aad75d1"
+auth_type="sha256"
 useconfigure=true
 use_fresh_config_sub=true
 # don't care about zlib, less deps is better
