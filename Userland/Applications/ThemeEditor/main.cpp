@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
@@ -58,19 +58,11 @@ private:
     }
 };
 
-struct AlignmentValue {
-    String title;
-    Gfx::TextAlignment setting_value;
-};
-
 class AlignmentModel final : public GUI::Model {
-
 public:
-    AlignmentModel()
+    static ErrorOr<NonnullRefPtr<AlignmentModel>> try_create()
     {
-        m_alignments.empend("Center", Gfx::TextAlignment::Center);
-        m_alignments.empend("Left", Gfx::TextAlignment::CenterLeft);
-        m_alignments.empend("Right", Gfx::TextAlignment::CenterRight);
+        return adopt_nonnull_ref_or_enomem(new (nothrow) AlignmentModel());
     }
 
     virtual ~AlignmentModel() = default;
@@ -89,7 +81,17 @@ public:
     }
 
 private:
-    Vector<AlignmentValue> m_alignments;
+    AlignmentModel() = default;
+
+    struct AlignmentValue {
+        String title;
+        Gfx::TextAlignment setting_value;
+    };
+    Vector<AlignmentValue> m_alignments {
+        { "Center", Gfx::TextAlignment::Center },
+        { "Left", Gfx::TextAlignment::CenterLeft },
+        { "Right", Gfx::TextAlignment::CenterRight },
+    };
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -197,7 +199,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     alignment_combo_box.set_selected_index((size_t)Gfx::AlignmentRole::TitleAlignment - 1);
 
     alignment_input.set_only_allow_values_from_model(true);
-    alignment_input.set_model(adopt_ref(*new AlignmentModel()));
+    alignment_input.set_model(TRY(AlignmentModel::try_create()));
     alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment));
     alignment_input.on_change = [&](auto&, auto& index) {
         auto role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
