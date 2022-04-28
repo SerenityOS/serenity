@@ -256,11 +256,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons));
 
     path_picker_button.on_click = [&](auto) {
-        // FIXME: Open at the path_input location. Right now that's panicking the kernel though! :^(
         auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
         bool open_folder = (role == Gfx::PathRole::TitleButtonIcons);
         auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", path_combo_box.text());
-        auto result = GUI::FilePicker::get_open_filepath(window, window_title, "/res/icons", open_folder);
+        auto target_path = path_input.text();
+        if (Core::File::exists(target_path)) {
+            if (!Core::File::is_directory(target_path))
+                target_path = LexicalPath::dirname(target_path);
+        } else {
+            target_path = "/res/icons";
+        }
+        auto result = GUI::FilePicker::get_open_filepath(window, window_title, target_path, open_folder);
         if (!result.has_value())
             return;
         path_input.set_text(*result);
