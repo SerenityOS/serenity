@@ -377,9 +377,6 @@ void init_stage2(void*)
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_text_after_init();
 
-    // FIXME: It would be nicer to set the mode from userspace.
-    // FIXME: It would be smarter to not hardcode that the first tty is the only graphical one
-    ConsoleManagement::the().first_tty()->set_graphical(GraphicsManagement::the().framebuffer_devices_exist());
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
