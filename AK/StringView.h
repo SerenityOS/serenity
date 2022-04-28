@@ -61,6 +61,7 @@ public:
         return m_characters == nullptr;
     }
     [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
+    [[nodiscard]] constexpr bool is_not_empty() const { return !is_empty(); }
 
     [[nodiscard]] constexpr char const* characters_without_null_termination() const { return m_characters; }
     [[nodiscard]] constexpr size_t length() const { return m_length; }
