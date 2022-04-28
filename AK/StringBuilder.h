@@ -68,6 +68,7 @@ public:
 
     [[nodiscard]] size_t length() const { return m_buffer.size(); }
     [[nodiscard]] bool is_empty() const { return m_buffer.is_empty(); }
+    [[nodiscard]] bool is_not_empty() const { return !is_empty(); }
     void trim(size_t count) { m_buffer.resize(m_buffer.size() - count); }
 
     template<class SeparatorType, class CollectionType>
