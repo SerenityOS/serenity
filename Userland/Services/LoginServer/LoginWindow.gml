@@ -30,8 +30,6 @@
                 text_alignment: "CenterLeft"
             }
 
-            @GUI::Widget {}
-
             @GUI::Button {
                 name: "log_in"
                 text: "Log in"

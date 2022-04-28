@@ -31,12 +31,8 @@ Box::~Box()
 
 void Box::set_needs_display()
 {
-    if (!is_inline()) {
+    if (paint_box())
         browsing_context().set_needs_display(enclosing_int_rect(paint_box()->absolute_rect()));
-        return;
-    }
-
-    Node::set_needs_display();
 }
 
 bool Box::is_body() const

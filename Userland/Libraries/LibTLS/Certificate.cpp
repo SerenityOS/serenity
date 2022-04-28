@@ -6,6 +6,7 @@
 
 #include "Certificate.h"
 #include <AK/Debug.h>
+#include <AK/IPv4Address.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
@@ -28,7 +29,9 @@ constexpr static Array<int, 7>
     rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 };
 
 constexpr static Array<int, 4>
-    subject_alternative_name_oid { 2, 5, 29, 17 };
+    key_usage_oid { 2, 5, 29, 15 },
+    subject_alternative_name_oid { 2, 5, 29, 17 },
+    basic_constraints_oid { 2, 5, 29, 19 };
 
 Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 {
@@ -91,6 +94,11 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
     } while (0)
 
     Certificate certificate;
+    auto copy_buffer_result = ByteBuffer::copy(buffer.data(), buffer.size());
+    if (copy_buffer_result.is_error())
+        return {};
+    certificate.original_asn1 = copy_buffer_result.release_value();
+
     Crypto::ASN1::Decoder decoder { buffer };
     // Certificate ::= Sequence {
     //     certificate          TBSCertificate,
@@ -301,9 +309,9 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         if (!parse_algorithm_identifier(certificate.key_algorithm).has_value())
             return {};
 
-        READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
+        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
         // Note: Once we support other kinds of keys, make sure to check the kind here!
-        auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
+        auto key = Crypto::PK::RSA::parse_rsa_key(value.raw_bytes());
         if (!key.public_key.length()) {
             dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
             return {};
@@ -409,7 +417,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 break;
                             case 2: {
                                 // DNS Name
-                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::DNSName");
+                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::Name");
                                 certificate.SAN.append(name);
                                 break;
                             }
@@ -434,11 +442,13 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                 certificate.SAN.append(name);
                                 break;
                             }
-                            case 7:
+                            case 7: {
                                 // IP Address
-                                // We can't handle these.
-                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
+                                READ_OBJECT_OR_FAIL(OctetString, StringView, ip_addr_sv, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
+                                IPv4Address ip_addr { ip_addr_sv.bytes().data() };
+                                certificate.SAN.append(ip_addr.to_string());
                                 break;
+                            }
                             case 8:
                                 // Registered ID
                                 // We can't handle these.
@@ -452,6 +462,37 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
                                     DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::???");
                             }
                         }
+                    } else if (extension_id == key_usage_oid) {
+                        // RFC5280 section 4.2.1.3: The keyCertSign bit is asserted when the subject public key is used
+                        // for verifying signatures on public key certificates. If the keyCertSign bit is asserted,
+                        // then the cA bit in the basic constraints extension MUST also be asserted.
+                        Crypto::ASN1::Decoder decoder { extension_value.bytes() };
+                        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, usage, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::KeyUsage");
+
+                        // keyCertSign (5)
+                        certificate.is_allowed_to_sign_certificate = usage.get(5);
+                    } else if (extension_id == basic_constraints_oid) {
+                        // RFC5280 section 4.2.1.9: The cA boolean indicates whether the certified public key may be
+                        // used to verify certificate signatures. If the cA boolean is not asserted, then the keyCertSign
+                        // bit in the key usage extension MUST NOT be asserted. If the basic constraints extension is
+                        // not present in a version 3 certificate, or the extension is present but the cA boolean is
+                        // not asserted, then the certified public key MUST NOT be used to verify certificate signatures.
+                        Crypto::ASN1::Decoder decoder { extension_value.bytes() };
+                        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints");
+
+                        if (auto tag = decoder.peek(); !tag.is_error() && tag.value().kind == Crypto::ASN1::Kind::Boolean) {
+                            READ_OBJECT_OR_FAIL(Boolean, bool, is_certificate_authority, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints::cA");
+                            certificate.is_certificate_authority = is_certificate_authority;
+
+                            if (auto tag = decoder.peek(); !tag.is_error() && tag.value().kind == Crypto::ASN1::Kind::Integer) {
+                                READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, path_length_constraint, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::BasicConstraints::pathLenConstraint");
+                                certificate.path_length_constraint = path_length_constraint.to_u64();
+                            }
+                        }
+                    } else {
+                        dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::Extensions::$::Extension::extension_id: unknown extension {} (critical: {})", extension_id, is_critical);
+                        if (is_critical)
+                            return {};
                     }
 
                     EXIT_SCOPE("Certificate::TBSCertificate::Extensions::$::Extension");
@@ -463,8 +504,25 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         }
     }
 
-    // Just ignore the rest of the data for now.
     EXIT_SCOPE("Certificate::TBSCertificate");
+
+    // signature_algorithm
+    {
+        if (!parse_algorithm_identifier(certificate.signature_algorithm).has_value())
+            return {};
+    }
+
+    // signature_value
+    {
+        READ_OBJECT_OR_FAIL(BitString, Crypto::ASN1::BitStringView, value, "Certificate");
+        auto signature_data_result = ByteBuffer::copy(value.raw_bytes());
+        if (signature_data_result.is_error()) {
+            dbgln("Certificate::signature_value: out of memory");
+            return {};
+        }
+        certificate.signature_value = signature_data_result.release_value();
+    }
+
     EXIT_SCOPE("Certificate");
 
     dbgln_if(TLS_DEBUG, "Certificate issued for {} by {}", certificate.subject.subject, certificate.issuer.subject);

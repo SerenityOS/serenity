@@ -197,8 +197,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
     Array<u8, 1024> buffer;
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#'))
             continue;
@@ -264,8 +263,7 @@ static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList&
     Array<u8, 1024> buffer;
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#'))
             continue;
@@ -311,8 +309,7 @@ static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList
     };
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#')) {
             if (line.ends_with("Properties"sv))
@@ -345,8 +342,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
     Array<u8, 1024> buffer;
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#'))
             continue;
@@ -387,8 +383,7 @@ static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, St
     };
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#'))
             continue;
@@ -421,8 +416,7 @@ static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file,
     Array<u8, 1024> buffer;
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty() || line.starts_with('#'))
             continue;
@@ -518,8 +512,7 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
 {
     Array<u8, 1024> buffer;
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
@@ -547,8 +540,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
     Array<u8, 1024> buffer;
 
     while (TRY(file.can_read_line())) {
-        auto nread = TRY(file.read_line(buffer));
-        StringView line { buffer.data(), nread };
+        auto line = TRY(file.read_line(buffer));
 
         if (line.is_empty())
             continue;

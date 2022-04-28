@@ -120,6 +120,7 @@ private:
     NonnullRefPtr<GUI::Action> create_run_action();
     NonnullRefPtr<GUI::Action> create_stop_action();
     NonnullRefPtr<GUI::Action> create_toggle_syntax_highlighting_mode_action();
+    NonnullRefPtr<GUI::Action> create_open_project_configuration_action();
     void create_location_history_actions();
 
     void add_new_editor_tab_widget(GUI::Widget& parent);
@@ -238,6 +239,7 @@ private:
     RefPtr<GUI::Action> m_locations_history_back_action;
     RefPtr<GUI::Action> m_locations_history_forward_action;
     RefPtr<GUI::Action> m_toggle_semantic_highlighting_action;
+    RefPtr<GUI::Action> m_open_project_configuration_action;
 
     RefPtr<Gfx::Font> read_editor_font_from_config();
     void change_editor_font(RefPtr<Gfx::Font>);

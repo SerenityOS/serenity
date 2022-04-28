@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool no_auto_compress = false;
     StringView archive_file;
     char const* directory = nullptr;
-    Vector<char const*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');

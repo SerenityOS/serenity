@@ -10,12 +10,11 @@
 #include <LibCore/GetPassword.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 #include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<char const*> command;
+    Vector<StringView> command;
     Core::ArgsParser args_parser;
     uid_t as_user_uid = 0;
     args_parser.set_stop_on_first_non_option(true);
@@ -46,23 +45,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath exec"));
 
-    Vector<char const*> exec_arguments;
-    for (auto const& arg : command)
-        exec_arguments.append(arg);
-    exec_arguments.append(nullptr);
-
-    Vector<String> environment_strings;
-    if (auto* term = getenv("TERM"))
-        environment_strings.append(String::formatted("TERM={}", term));
-
-    Vector<char const*> exec_environment;
-    for (auto& item : environment_strings)
-        exec_environment.append(item.characters());
-    exec_environment.append(nullptr);
-
-    if (execvpe(command.at(0), const_cast<char**>(exec_arguments.data()), const_cast<char**>(exec_environment.data())) < 0) {
-        perror("execvpe");
-        exit(1);
+    Vector<String> exec_environment_strings;
+    Vector<StringView> exec_environment;
+    if (auto* term = getenv("TERM")) {
+        exec_environment_strings.append(String::formatted("TERM={}", term));
+        exec_environment.append(exec_environment_strings.last());
     }
+
+    Vector<String> exec_arguments;
+    exec_arguments.ensure_capacity(command.size());
+    for (auto const& it : command)
+        exec_arguments.append(it.to_string());
+
+    TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
     return 0;
 }

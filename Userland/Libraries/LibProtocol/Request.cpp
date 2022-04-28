@@ -51,10 +51,10 @@ void Request::stream_into_impl(T& stream)
                 break;
             if (result.is_error())
                 continue;
-            auto nread = result.value();
-            if (nread == 0)
+            auto read_bytes = result.release_value();
+            if (read_bytes.is_empty())
                 break;
-            if (!stream.write_or_error({ buf, nread })) {
+            if (!stream.write_or_error(read_bytes)) {
                 // FIXME: What do we do here?
                 TODO();
             }

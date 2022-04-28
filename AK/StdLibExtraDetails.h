@@ -593,6 +593,12 @@ inline constexpr bool IsHashCompatible<T, T> = true;
 template<typename T, typename... Ts>
 inline constexpr bool IsOneOf = (IsSame<T, Ts> || ...);
 
+template<typename T, typename U>
+inline constexpr bool IsSameIgnoringCV = IsSame<RemoveCV<T>, RemoveCV<U>>;
+
+template<typename T, typename... Ts>
+inline constexpr bool IsOneOfIgnoringCV = (IsSameIgnoringCV<T, Ts> || ...);
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddConstToReferencedType;
@@ -630,10 +636,12 @@ using AK::Detail::IsMoveAssignable;
 using AK::Detail::IsMoveConstructible;
 using AK::Detail::IsNullPointer;
 using AK::Detail::IsOneOf;
+using AK::Detail::IsOneOfIgnoringCV;
 using AK::Detail::IsPOD;
 using AK::Detail::IsPointer;
 using AK::Detail::IsRvalueReference;
 using AK::Detail::IsSame;
+using AK::Detail::IsSameIgnoringCV;
 using AK::Detail::IsSigned;
 using AK::Detail::IsSpecializationOf;
 using AK::Detail::IsTrivial;

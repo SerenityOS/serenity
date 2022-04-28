@@ -42,6 +42,13 @@ public:
 
     void set_icon(RefPtr<MultiScaleBitmaps> const& icon) { m_icon = icon; }
 
+    enum class Style {
+        Normal,
+        IconOnly
+    };
+
+    void set_style(Style style) { m_style = style; }
+
 private:
     WindowFrame& m_frame;
     Gfx::IntRect m_relative_rect;
@@ -49,6 +56,7 @@ private:
     bool m_pressed { false };
     bool m_visible { true };
     bool m_hovered { false };
+    Style m_style { Style::Normal };
 };
 
 }

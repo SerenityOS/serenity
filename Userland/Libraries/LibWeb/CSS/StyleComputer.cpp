@@ -114,7 +114,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern char const default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -125,7 +125,7 @@ static StyleSheet& quirks_mode_stylesheet()
     if (!sheet) {
         extern char const quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -292,9 +292,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderRadius) {
-        if (value.is_value_list()) {
-            auto const& values_list = value.as_value_list();
-            assign_edge_values(PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius, values_list.values());
+        if (value.is_border_radius_shorthand()) {
+            auto const& shorthand = value.as_border_radius_shorthand();
+            style.set_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left());
+            style.set_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right());
+            style.set_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right());
+            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left());
             return;
         }
 
@@ -526,10 +529,10 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
     return nullptr;
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<ComponentValue> const& source, Vector<ComponentValue>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<Parser::ComponentValue> const& source, Vector<Parser::ComponentValue>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
-    // We build a copy of the tree of StyleComponentValueRules, with all var()s and attr()s replaced with their contents.
+    // We build a copy of the tree of ComponentValues, with all var()s and attr()s replaced with their contents.
     // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
 
     // Arbitrary large value chosen to avoid the billion-laughs attack.
@@ -557,7 +560,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                     return false;
 
                 auto const& custom_property_name_token = var_contents.first();
-                if (!custom_property_name_token.is(Token::Type::Ident))
+                if (!custom_property_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto custom_property_name = custom_property_name_token.token().ident();
                 if (!custom_property_name.starts_with("--"))
@@ -582,7 +585,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 }
 
                 // Use the provided fallback value, if any.
-                if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
+                if (var_contents.size() > 2 && var_contents[1].is(Parser::Token::Type::Comma)) {
                     if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
                         return false;
                     continue;
@@ -594,7 +597,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                     return false;
 
                 auto const& attr_name_token = attr_contents.first();
-                if (!attr_name_token.is(Token::Type::Ident))
+                if (!attr_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto attr_name = attr_name_token.token().ident();
 
@@ -602,13 +605,13 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
                 if (!attr_value.is_null()) {
                     // FIXME: attr() should also accept an optional type argument, not just strings.
-                    dest.empend(Token::of_string(attr_value));
+                    dest.empend(Parser::Token::of_string(attr_value));
                     continue;
                 }
 
                 // 2. Otherwise, if the attr() function has a fallback value as its last argument, replace the attr() function by the fallback value.
                 //    If there are any var() or attr() references in the fallback, substitute them as well.
-                if (attr_contents.size() > 2 && attr_contents[1].is(Token::Type::Comma)) {
+                if (attr_contents.size() > 2 && attr_contents[1].is(Parser::Token::Type::Comma)) {
                     if (!expand_unresolved_values(element, property_name, dependencies, attr_contents, dest, 2))
                         return false;
                     continue;
@@ -619,20 +622,20 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             }
 
             auto const& source_function = value.function();
-            Vector<ComponentValue> function_values;
+            Vector<Parser::ComponentValue> function_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
                 return false;
-            NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
+            NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
             dest.empend(function);
             continue;
         }
         if (value.is_block()) {
             auto const& source_block = value.block();
-            Vector<ComponentValue> block_values;
+            Vector<Parser::ComponentValue> block_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
                 return false;
-            NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
-            dest.empend(block);
+            NonnullRefPtr<Parser::Block> block = Parser::Block::create(source_block.token(), move(block_values));
+            dest.empend(move(block));
             continue;
         }
         dest.empend(value.token());
@@ -647,12 +650,12 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var_or_attr());
 
-    Vector<ComponentValue> expanded_values;
+    Vector<Parser::ComponentValue> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
         return {};
 
-    if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
+    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
         return parsed_value.release_nonnull();
 
     return {};
@@ -772,7 +775,7 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
 
     if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(property_id);
-    return parent_element->computed_css_values()->property(property_id).release_value();
+    return parent_element->computed_css_values()->property(property_id);
 };
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -835,11 +838,9 @@ float StyleComputer::root_element_font_size() const
     if (!computed_root_style)
         return default_root_element_font_size;
 
-    auto maybe_root_value = computed_root_style->property(CSS::PropertyID::FontSize);
-    if (!maybe_root_value.has_value())
-        return default_root_element_font_size;
+    auto root_value = computed_root_style->property(CSS::PropertyID::FontSize);
 
-    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
+    return root_value->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -853,9 +854,9 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     auto* parent_element = get_parent_element(element, pseudo_element);
 
-    auto font_size = style.property(CSS::PropertyID::FontSize).value();
-    auto font_style = style.property(CSS::PropertyID::FontStyle).value();
-    auto font_weight = style.property(CSS::PropertyID::FontWeight).value();
+    auto font_size = style.property(CSS::PropertyID::FontSize);
+    auto font_style = style.property(CSS::PropertyID::FontStyle);
+    auto font_weight = style.property(CSS::PropertyID::FontWeight);
 
     int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
@@ -930,7 +931,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         auto parent_font_size = [&]() -> float {
             if (!parent_element || !parent_element->computed_css_values())
                 return font_size_in_px;
-            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
+            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                 if (length.is_absolute() || length.is_relative())
@@ -1028,7 +1029,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     RefPtr<Gfx::Font> found_font;
 
-    auto family_value = style.property(PropertyID::FontFamily).value();
+    auto family_value = style.property(PropertyID::FontFamily);
     if (family_value->is_value_list()) {
         auto const& family_list = static_cast<StyleValueList const&>(*family_value).values();
         for (auto const& family : family_list) {
@@ -1068,7 +1069,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 {
     auto font_metrics = style.computed_font().pixel_metrics();
     float root_font_size = root_element_font_size();
-    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
+    float font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];

@@ -9,6 +9,7 @@
 #include <AK/Hex.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
@@ -26,6 +27,9 @@ public:
         UnsignedLong,
         Float,
         Double,
+        ASCII,
+        UTF8,
+        UTF16,
         __Count
     };
 
@@ -34,7 +38,8 @@ public:
         Value
     };
 
-    explicit ValueInspectorModel()
+    explicit ValueInspectorModel(bool is_little_endian)
+        : m_is_little_endian(is_little_endian)
     {
         for (int i = 0; i < ValueType::__Count; i++)
             set_parsed_value(static_cast<ValueType>(i), "");
@@ -61,7 +66,7 @@ public:
         case Column::Type:
             return "Type";
         case Column::Value:
-            return "Value";
+            return m_is_little_endian ? "Value (Little Endian)" : "Value (Big Endian)";
         }
         VERIFY_NOT_REACHED();
     }
@@ -89,6 +94,12 @@ public:
             return "Float";
         case Double:
             return "Double";
+        case ASCII:
+            return "ASCII";
+        case UTF8:
+            return "UTF-8";
+        case UTF16:
+            return "UTF-16";
         default:
             return "";
         }
@@ -111,6 +122,7 @@ public:
             switch (selected_type) {
             case SignedByte:
             case UnsignedByte:
+            case ASCII:
                 return 1;
             case SignedShort:
             case UnsignedShort:
@@ -123,6 +135,18 @@ public:
             case UnsignedLong:
             case Double:
                 return 8;
+            case UTF8: {
+                auto utf8_view = Utf8View(m_values.at(index.row()));
+                if (utf8_view.validate())
+                    return static_cast<i32>(utf8_view.byte_length());
+                return 0;
+            }
+            case UTF16: {
+                auto utf16_view = Utf16View(utf8_to_utf16(m_values.at(index.row())));
+                if (utf16_view.validate())
+                    return static_cast<i32>(utf16_view.length_in_code_units() * 2);
+                return 0;
+            }
             default:
                 return 0;
             }
@@ -131,5 +155,6 @@ public:
     }
 
 private:
+    bool m_is_little_endian = false;
     Array<String, ValueType::__Count> m_values = {};
 };

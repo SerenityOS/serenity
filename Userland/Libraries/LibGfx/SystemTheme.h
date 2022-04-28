@@ -105,7 +105,8 @@ namespace Gfx {
     C(TitleAlignment)
 
 #define ENUMERATE_FLAG_ROLES(C) \
-    C(IsDark)
+    C(IsDark)                   \
+    C(TitleButtonsIconOnly)
 
 #define ENUMERATE_METRIC_ROLES(C) \
     C(BorderThickness)            \

@@ -31,6 +31,7 @@ set(SOURCES
     Filters/LaplaceDiagonal.cpp
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
+    HistogramWidget.cpp
     IconBag.cpp
     Image.cpp
     ImageEditor.cpp

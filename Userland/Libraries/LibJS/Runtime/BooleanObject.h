@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
+
 class BooleanObject : public Object {
     JS_OBJECT(BooleanObject, Object);
 
@@ -23,4 +24,5 @@ public:
 private:
     bool m_value { false };
 };
+
 }

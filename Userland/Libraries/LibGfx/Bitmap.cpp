@@ -582,4 +582,22 @@ Vector<ARGB32> Bitmap::palette_to_vector() const
         vector.unchecked_append(palette_color(i).value());
     return vector;
 }
+
+bool Bitmap::visually_equals(Bitmap const& other) const
+{
+    auto own_width = width();
+    auto own_height = height();
+    if (other.width() != own_width || other.height() != own_height)
+        return false;
+
+    for (auto y = 0; y < own_height; ++y) {
+        for (auto x = 0; x < own_width; ++x) {
+            if (get_pixel(x, y) != other.get_pixel(x, y))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 }

@@ -72,13 +72,13 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     m_notifier = Core::Notifier::construct(helper_pipe_fd, Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
         auto line_buffer = ByteBuffer::create_zeroed(1 * KiB).release_value_but_fixme_should_propagate_errors();
-        auto line_length_or_error = m_helper_pipe->read_line(line_buffer.bytes());
-        if (line_length_or_error.is_error() || line_length_or_error.value() == 0) {
+        auto line_or_error = m_helper_pipe->read_line(line_buffer.bytes());
+        if (line_or_error.is_error() || line_or_error.value().is_empty()) {
             did_error("Read from pipe returned null."sv);
             return;
         }
 
-        StringView line { line_buffer.bytes().data(), line_length_or_error.value() };
+        auto line = line_or_error.release_value();
 
         auto parts = line.split_view(' ');
         VERIFY(!parts.is_empty());

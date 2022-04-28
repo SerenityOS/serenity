@@ -120,12 +120,22 @@ void WindowFrame::set_button_icons()
     if (m_window.is_frameless())
         return;
 
-    if (m_window.is_closeable())
+    auto button_style = WindowManager::the().palette().title_buttons_icon_only()
+        ? Button::Style::IconOnly
+        : Button::Style::Normal;
+
+    if (m_window.is_closeable()) {
         m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
-    if (m_window.is_minimizable())
+        m_close_button->set_style(button_style);
+    }
+    if (m_window.is_minimizable()) {
         m_minimize_button->set_icon(s_minimize_icon);
-    if (m_window.is_resizable())
+        m_minimize_button->set_style(button_style);
+    }
+    if (m_window.is_resizable()) {
         m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
+        m_maximize_button->set_style(button_style);
+    }
 }
 
 void WindowFrame::reload_config()

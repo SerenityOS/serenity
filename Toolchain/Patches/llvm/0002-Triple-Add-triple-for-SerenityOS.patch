@@ -1,0 +1,59 @@
+From 0cf66d1dbcd3b7c0e2ddd65177066955c41352b7 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Thu, 14 Apr 2022 09:51:24 +0200
+Subject: [PATCH 2/8] [Triple] Add triple for SerenityOS
+
+---
+ llvm/include/llvm/ADT/Triple.h | 8 +++++++-
+ llvm/lib/Support/Triple.cpp    | 2 ++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
+index 42277c013..b0378dd3a 100644
+--- a/llvm/include/llvm/ADT/Triple.h
++++ b/llvm/include/llvm/ADT/Triple.h
+@@ -205,7 +205,8 @@ public:
+     Hurd,       // GNU/Hurd
+     WASI,       // Experimental WebAssembly OS
+     Emscripten,
+-    LastOSType = Emscripten
++    Serenity,
++    LastOSType = Serenity
+   };
+   enum EnvironmentType {
+     UnknownEnvironment,
+@@ -612,6 +613,11 @@ public:
+     return getOS() == Triple::AIX;
+   }
+ 
++  /// Tests whether the OS is SerenityOS
++  bool isOSSerenity() const {
++    return getOS() == Triple::Serenity;
++  }
++
+   /// Tests whether the OS uses the ELF binary format.
+   bool isOSBinFormatELF() const {
+     return getObjectFormat() == Triple::ELF;
+diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
+index a9afcc9db..aef8c7549 100644
+--- a/llvm/lib/Support/Triple.cpp
++++ b/llvm/lib/Support/Triple.cpp
+@@ -224,6 +224,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+   case PS4: return "ps4";
+   case RTEMS: return "rtems";
+   case Solaris: return "solaris";
++  case Serenity: return "serenity";
+   case TvOS: return "tvos";
+   case WASI: return "wasi";
+   case WatchOS: return "watchos";
+@@ -548,6 +549,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+     .StartsWith("hurd", Triple::Hurd)
+     .StartsWith("wasi", Triple::WASI)
+     .StartsWith("emscripten", Triple::Emscripten)
++    .StartsWith("serenity", Triple::Serenity)
+     .Default(Triple::UnknownOS);
+ }
+ 
+-- 
+2.35.3
+

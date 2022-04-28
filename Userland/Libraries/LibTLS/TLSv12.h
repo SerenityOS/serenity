@@ -252,6 +252,7 @@ struct Options {
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
     OPTION_WITH_DEFAULTS(bool, validate_certificates, true)
+    OPTION_WITH_DEFAULTS(bool, allow_self_signed_certificates, false)
     OPTION_WITH_DEFAULTS(Optional<Vector<Certificate>>, root_certificates, )
     OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
     OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
@@ -261,7 +262,8 @@ struct Options {
 };
 
 struct Context {
-    bool verify_chain() const;
+    bool verify_chain(StringView host) const;
+    bool verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const;
 
     Options options;
 
@@ -321,7 +323,7 @@ struct Context {
     // message flags
     u8 handshake_messages[11] { 0 };
     ByteBuffer user_data;
-    Vector<Certificate> root_certificates;
+    HashMap<String, Certificate> root_certificates;
 
     Vector<String> alpn;
     StringView negotiated_alpn;
@@ -356,9 +358,9 @@ public:
 
     /// Reads into a buffer, with the maximum size being the size of the buffer.
     /// The amount of bytes read can be smaller than the size of the buffer.
-    /// Returns either the amount of bytes read, or an errno in the case of
+    /// Returns either the bytes that were read, or an errno in the case of
     /// failure.
-    virtual ErrorOr<size_t> read(Bytes) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
 
     /// Tries to write the entire contents of the buffer. It is possible for
     /// less than the full buffer to be written. Returns either the amount of
@@ -559,8 +561,6 @@ private:
     bool expand_key();
 
     bool compute_master_secret_from_pre_master_secret(size_t length);
-
-    Optional<size_t> verify_chain_and_get_matching_certificate(StringView host) const;
 
     void try_disambiguate_error() const;
 

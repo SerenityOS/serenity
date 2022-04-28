@@ -31,9 +31,9 @@ public:
     virtual bool is_readable() const { return false; }
     /// Reads into a buffer, with the maximum size being the size of the buffer.
     /// The amount of bytes read can be smaller than the size of the buffer.
-    /// Returns either the amount of bytes read, or an errno in the case of
+    /// Returns either the bytes that were read, or an errno in the case of
     /// failure.
-    virtual ErrorOr<size_t> read(Bytes) = 0;
+    virtual ErrorOr<Bytes> read(Bytes) = 0;
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
     virtual bool read_or_error(Bytes);
@@ -194,7 +194,7 @@ public:
     }
 
     virtual bool is_readable() const override;
-    virtual ErrorOr<size_t> read(Bytes) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
     virtual bool is_writable() const override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;
@@ -243,7 +243,7 @@ public:
     int fd() const { return m_fd; }
     void set_fd(int fd) { m_fd = fd; }
 
-    ErrorOr<size_t> read(Bytes, int flags = 0);
+    ErrorOr<Bytes> read(Bytes, int flags = 0);
     ErrorOr<size_t> write(ReadonlyBytes);
 
     bool is_eof() const { return !is_open() || m_last_read_was_eof; }
@@ -292,7 +292,7 @@ public:
 
     virtual bool is_readable() const override { return is_open(); }
     virtual bool is_writable() const override { return is_open(); }
-    virtual ErrorOr<size_t> read(Bytes buffer) override { return m_helper.read(buffer); }
+    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_helper.read(buffer); }
     virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_helper.write(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.is_open(); };
@@ -351,7 +351,7 @@ public:
         return *this;
     }
 
-    virtual ErrorOr<size_t> read(Bytes buffer) override
+    virtual ErrorOr<Bytes> read(Bytes buffer) override
     {
         auto pending_bytes = TRY(this->pending_bytes());
         if (pending_bytes > buffer.size()) {
@@ -426,7 +426,7 @@ public:
 
     virtual bool is_readable() const override { return is_open(); }
     virtual bool is_writable() const override { return is_open(); }
-    virtual ErrorOr<size_t> read(Bytes buffer) override { return m_helper.read(buffer); }
+    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_helper.read(buffer); }
     virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_helper.write(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.is_open(); }
@@ -444,7 +444,7 @@ public:
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
     ErrorOr<pid_t> peer_pid() const;
-    ErrorOr<size_t> read_without_waiting(Bytes buffer);
+    ErrorOr<Bytes> read_without_waiting(Bytes buffer);
 
     /// Release the fd associated with this LocalSocket. After the fd is
     /// released, the socket will be considered "closed" and all operations done
@@ -523,7 +523,7 @@ public:
     T& stream() { return *m_stream; }
     T const& stream() const { return *m_stream; }
 
-    ErrorOr<size_t> read(Bytes buffer)
+    ErrorOr<Bytes> read(Bytes buffer)
     {
         if (!stream().is_open())
             return Error::from_errno(ENOTCONN);
@@ -552,24 +552,24 @@ public:
             m_buffered_size -= amount_to_take;
         }
 
-        return buffer_nread;
+        return Bytes { buffer.data(), buffer_nread };
     }
 
     // Reads into the buffer until \n is encountered.
     // The size of the Bytes object is the maximum amount of bytes that will be
-    // read. Returns the amount of bytes read.
-    ErrorOr<size_t> read_line(Bytes buffer)
+    // read. Returns the bytes read as a StringView.
+    ErrorOr<StringView> read_line(Bytes buffer)
     {
-        return read_until(buffer, "\n"sv);
+        return StringView { TRY(read_until(buffer, "\n"sv)) };
     }
 
-    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate)
+    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate)
     {
         return read_until_any_of(buffer, Array { candidate });
     }
 
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
     {
         if (!stream().is_open())
             return Error::from_errno(ENOTCONN);
@@ -579,7 +579,7 @@ public:
 
         // We fill the buffer through can_read_line.
         if (!TRY(can_read_line()))
-            return 0;
+            return Bytes {};
 
         if (stream().is_eof()) {
             if (buffer.size() < m_buffered_size) {
@@ -623,7 +623,7 @@ public:
 
             m_buffered_size -= size_written_to_user_buffer + match_size;
 
-            return size_written_to_user_buffer;
+            return buffer.slice(0, size_written_to_user_buffer);
         }
 
         // If we still haven't found anything, then it's most likely the case
@@ -638,7 +638,7 @@ public:
 
         m_buffered_size -= readable_size;
 
-        return readable_size;
+        return buffer.slice(0, readable_size);
     }
 
     // Returns whether a line can be read, populating the buffer in the process.
@@ -715,7 +715,7 @@ private:
                     break;
                 return result.error();
             }
-            auto read_size = result.value();
+            auto read_size = result.value().size();
             m_buffered_size += read_size;
             nread += read_size;
             break;
@@ -752,7 +752,7 @@ public:
     BufferedSeekable& operator=(BufferedSeekable&& other) = default;
 
     virtual bool is_readable() const override { return m_helper.stream().is_readable(); }
-    virtual ErrorOr<size_t> read(Bytes buffer) override { return m_helper.read(move(buffer)); }
+    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_helper.read(move(buffer)); }
     virtual bool is_writable() const override { return m_helper.stream().is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_helper.stream().write(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
@@ -769,10 +769,10 @@ public:
         return m_helper.stream().truncate(length);
     }
 
-    ErrorOr<size_t> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
-    ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
+    ErrorOr<StringView> read_line(Bytes buffer) { return m_helper.read_line(move(buffer)); }
+    ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     ErrorOr<bool> can_read_line() { return m_helper.can_read_line(); }
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
@@ -790,8 +790,8 @@ private:
 
 class BufferedSocketBase : public Socket {
 public:
-    virtual ErrorOr<size_t> read_line(Bytes buffer) = 0;
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) = 0;
+    virtual ErrorOr<StringView> read_line(Bytes buffer) = 0;
+    virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) = 0;
     virtual ErrorOr<bool> can_read_line() = 0;
     virtual size_t buffer_size() const = 0;
 };
@@ -823,7 +823,7 @@ public:
     }
 
     virtual bool is_readable() const override { return m_helper.stream().is_readable(); }
-    virtual ErrorOr<size_t> read(Bytes buffer) override { return m_helper.read(move(buffer)); }
+    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_helper.read(move(buffer)); }
     virtual bool is_writable() const override { return m_helper.stream().is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_helper.stream().write(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
@@ -838,10 +838,10 @@ public:
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_helper.stream().set_close_on_exec(enabled); }
     virtual void set_notifications_enabled(bool enabled) override { m_helper.stream().set_notifications_enabled(enabled); }
 
-    virtual ErrorOr<size_t> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
-    virtual ErrorOr<size_t> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
+    virtual ErrorOr<StringView> read_line(Bytes buffer) override { return m_helper.read_line(move(buffer)); }
+    virtual ErrorOr<Bytes> read_until(Bytes buffer, StringView candidate) override { return m_helper.read_until(move(buffer), move(candidate)); }
     template<size_t N>
-    ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
+    ErrorOr<Bytes> read_until_any_of(Bytes buffer, Array<StringView, N> candidates) { return m_helper.read_until_any_of(move(buffer), move(candidates)); }
     virtual ErrorOr<bool> can_read_line() override { return m_helper.can_read_line(); }
 
     virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
@@ -911,7 +911,7 @@ public:
     }
 
     virtual bool is_readable() const override { return m_socket.is_readable(); }
-    virtual ErrorOr<size_t> read(Bytes buffer) override { return m_socket.read(move(buffer)); }
+    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_socket.read(move(buffer)); }
     virtual bool is_writable() const override { return m_socket.is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_socket.write(buffer); }
     virtual bool is_eof() const override { return m_socket.is_eof(); }

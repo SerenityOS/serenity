@@ -19,7 +19,7 @@ SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, DOM::QualifiedNa
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
-    CSS::ParsingContext parsing_context { document() };
+    CSS::Parser::ParsingContext parsing_context { document() };
     for_each_attribute([&](auto& name, auto& value) {
         if (name.equals_ignoring_case("fill")) {
             // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.

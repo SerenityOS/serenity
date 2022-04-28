@@ -107,7 +107,7 @@ ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Stream:
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send version identifier and method selection message");
 
     Socks5InitialResponse response;
-    size = TRY(socket.read({ &response, sizeof(response) }));
+    size = TRY(socket.read({ &response, sizeof(response) })).size();
     if (size != sizeof(response))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive initial response");
 
@@ -169,7 +169,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request");
 
     Socks5ConnectResponseHeader response_header;
-    size = TRY(socket.read({ &response_header, sizeof(response_header) }));
+    size = TRY(socket.read({ &response_header, sizeof(response_header) })).size();
     if (size != sizeof(response_header))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response header");
 
@@ -177,26 +177,26 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
         return Error::from_string_literal("SOCKS negotiation failed: Invalid version identifier");
 
     u8 response_address_type;
-    size = TRY(socket.read({ &response_address_type, sizeof(response_address_type) }));
+    size = TRY(socket.read({ &response_address_type, sizeof(response_address_type) })).size();
     if (size != sizeof(response_address_type))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address type");
 
     switch (AddressType(response_address_type)) {
     case AddressType::IPV4: {
         u8 response_address_data[4];
-        size = TRY(socket.read({ response_address_data, sizeof(response_address_data) }));
+        size = TRY(socket.read({ response_address_data, sizeof(response_address_data) })).size();
         if (size != sizeof(response_address_data))
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address data");
         break;
     }
     case AddressType::DomainName: {
         u8 response_address_length;
-        size = TRY(socket.read({ &response_address_length, sizeof(response_address_length) }));
+        size = TRY(socket.read({ &response_address_length, sizeof(response_address_length) })).size();
         if (size != sizeof(response_address_length))
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address length");
         ByteBuffer buffer;
         buffer.resize(response_address_length);
-        size = TRY(socket.read(buffer));
+        size = TRY(socket.read(buffer)).size();
         if (size != response_address_length)
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address data");
         break;
@@ -207,7 +207,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
     }
 
     u16 bound_port;
-    size = TRY(socket.read({ &bound_port, sizeof(bound_port) }));
+    size = TRY(socket.read({ &bound_port, sizeof(bound_port) })).size();
     if (size != sizeof(bound_port))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response bound port");
 
@@ -247,7 +247,7 @@ ErrorOr<u8> send_username_password_authentication_message(Core::Stream::Socket& 
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     Socks5UsernamePasswordResponse response;
-    size = TRY(socket.read({ &response, sizeof(response) }));
+    size = TRY(socket.read({ &response, sizeof(response) })).size();
     if (size != sizeof(response))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive username/password authentication response");
 

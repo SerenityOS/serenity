@@ -151,7 +151,8 @@ void Console::process_control_message(ControlMessage message)
 {
     switch (message.event) {
     case (u16)ControlEvent::DeviceAdd: {
-        g_io_work->queue([message, this]() -> void {
+        // FIXME: Do something sanely here if we can't allocate a work queue?
+        MUST(g_io_work->try_queue([message, this]() -> void {
             u32 id = message.id;
             if (id >= m_ports.size()) {
                 dbgln("Device provided an invalid port number {}. max_nr_ports: {}", id, m_ports.size());
@@ -172,7 +173,7 @@ void Console::process_control_message(ControlMessage message)
                 .value = (u16)ControlMessage::Status::Success
             };
             write_control_message(ready_event);
-        });
+        }));
 
         break;
     }

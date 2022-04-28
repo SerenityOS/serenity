@@ -25,6 +25,7 @@ namespace Web::SVG::TagNames {
 #define ENUMERATE_SVG_TAGS             \
     ENUMERATE_SVG_GRAPHICS_TAGS        \
     __ENUMERATE_SVG_TAG(clipPath)      \
+    __ENUMERATE_SVG_TAG(defs)          \
     __ENUMERATE_SVG_TAG(desc)          \
     __ENUMERATE_SVG_TAG(foreignObject) \
     __ENUMERATE_SVG_TAG(script)        \

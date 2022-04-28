@@ -44,8 +44,9 @@ public:
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
     FunctionObject* eval_function() const { return m_eval_function; }
-    FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
     FunctionObject* json_parse_function() const { return m_json_parse_function; }
+    FunctionObject* object_prototype_to_string_function() const { return m_object_prototype_to_string_function; }
+    FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
@@ -115,8 +116,9 @@ private:
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_date_constructor_now_function { nullptr };
     FunctionObject* m_eval_function { nullptr };
-    FunctionObject* m_throw_type_error_function { nullptr };
     FunctionObject* m_json_parse_function { nullptr };
+    FunctionObject* m_object_prototype_to_string_function { nullptr };
+    FunctionObject* m_throw_type_error_function { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \

@@ -43,8 +43,7 @@ static ErrorOr<void> load_content_filters()
     auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(ad_filter_list->can_read_line())) {
-        auto length = TRY(ad_filter_list->read_line(buffer));
-        StringView line { buffer.data(), length };
+        auto line = TRY(ad_filter_list->read_line(buffer));
         if (!line.is_empty())
             Browser::g_content_filters.append(line);
     }
@@ -67,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");

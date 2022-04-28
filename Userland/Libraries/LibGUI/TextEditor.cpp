@@ -466,6 +466,10 @@ void TextEditor::paint_event(PaintEvent& event)
         for (size_t i = first_visible_line; i <= last_visible_line; ++i) {
             bool is_current_line = i == m_cursor.line();
             auto ruler_line_rect = ruler_content_rect(i);
+            // NOTE: Shrink the rectangle to be only on the first visual line.
+            auto const line_height = font().preferred_line_height();
+            if (ruler_line_rect.height() > line_height)
+                ruler_line_rect.set_height(line_height);
             // NOTE: Use Painter::draw_text() directly here, as we want to always draw the line numbers in clear text.
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0),
@@ -686,8 +690,8 @@ void TextEditor::paint_event(PaintEvent& event)
             }
 
             if (physical_line_has_selection && window()->focused_widget() == this) {
-                size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
-                size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
+                size_t const start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
+                size_t const end_of_selection_within_visual_line = min(selection_end_column_within_line - start_of_visual_line, visual_line_text.length());
 
                 bool current_visual_line_has_selection = start_of_selection_within_visual_line != end_of_selection_within_visual_line
                     && ((line_index != selection.start().line() && line_index != selection.end().line())
@@ -1444,6 +1448,19 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
         set_cursor(original_cursor_position);
     }
+}
+
+void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
+{
+    auto start = GUI::TextPosition(0, 0);
+    auto last_line_index = line_count() - 1;
+    auto end = GUI::TextPosition(last_line_index, line(last_line_index).length());
+    auto range = GUI::TextRange(start, end);
+    auto normalized_range = range.normalized();
+    execute<ReplaceAllTextCommand>(text, range, "GML Playground Format Text");
+    did_change();
+    set_cursor(normalized_range.start());
+    update();
 }
 
 void TextEditor::cut()

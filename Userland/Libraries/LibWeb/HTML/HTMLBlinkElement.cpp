@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/HTML/HTMLBlinkElement.h>
 
 namespace Web::HTML {

@@ -56,15 +56,15 @@ void WebSocketImpl::connect(ConnectionInfo const& connection_info)
 ErrorOr<ByteBuffer> WebSocketImpl::read(int max_size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(max_size));
-    auto nread = TRY(m_socket->read(buffer));
-    return buffer.slice(0, nread);
+    auto read_bytes = TRY(m_socket->read(buffer));
+    return buffer.slice(0, read_bytes.size());
 }
 
 ErrorOr<String> WebSocketImpl::read_line(size_t size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
-    auto nread = TRY(m_socket->read_line(buffer));
-    return String::copy(buffer.span().slice(0, nread));
+    auto line = TRY(m_socket->read_line(buffer));
+    return line.to_string();
 }
 
 }

@@ -10,11 +10,11 @@
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 {
@@ -27,6 +27,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             outln(" extracting: {}", zip_member.name);
         return true;
     }
+    MUST(Core::Directory::create(LexicalPath(zip_member.name).parent(), Core::Directory::CreateDirectories::Yes));
     auto new_file = Core::File::construct(zip_member.name);
     if (!new_file->open(Core::OpenMode::WriteOnly)) {
         warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
@@ -120,9 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!output_directory_path.is_null()) {
-        auto mkdir_error = Core::System::mkdir(output_directory_path, 0755);
-        if (mkdir_error.is_error() && mkdir_error.error().code() != EEXIST)
-            return mkdir_error.release_error();
+        TRY(Core::Directory::create(output_directory_path, Core::Directory::CreateDirectories::Yes));
         TRY(Core::System::chdir(output_directory_path));
     }
 

@@ -762,18 +762,25 @@ String InsertTextCommand::action_text() const
 
 bool InsertTextCommand::merge_with(GUI::Command const& other)
 {
-    if (!is<InsertTextCommand>(other))
+    if (!is<InsertTextCommand>(other) || commit_time_expired())
         return false;
-    auto& typed_other = static_cast<InsertTextCommand const&>(other);
+
+    auto const& typed_other = static_cast<InsertTextCommand const&>(other);
+    if (typed_other.m_text.is_whitespace() && !m_text.is_whitespace())
+        return false; // Skip if other is whitespace while this is not
+
     if (m_range.end() != typed_other.m_range.start())
         return false;
     if (m_range.start().line() != m_range.end().line())
         return false;
+
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(m_text);
     builder.append(typed_other.m_text);
     m_text = builder.to_string();
     m_range.set_end(typed_other.m_range.end());
+
+    m_timestamp = Time::now_monotonic();
     return true;
 }
 
@@ -856,19 +863,24 @@ String RemoveTextCommand::action_text() const
 
 bool RemoveTextCommand::merge_with(GUI::Command const& other)
 {
-    if (!is<RemoveTextCommand>(other))
+    if (!is<RemoveTextCommand>(other) || commit_time_expired())
         return false;
-    auto& typed_other = static_cast<RemoveTextCommand const&>(other);
+
+    auto const& typed_other = static_cast<RemoveTextCommand const&>(other);
+
     if (m_range.start() != typed_other.m_range.end())
         return false;
     if (m_range.start().line() != m_range.end().line())
         return false;
+
     // Merge backspaces
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(typed_other.m_text);
     builder.append(m_text);
     m_text = builder.to_string();
     m_range.set_start(typed_other.m_range.start());
+
+    m_timestamp = Time::now_monotonic();
     return true;
 }
 
@@ -882,6 +894,42 @@ void RemoveTextCommand::undo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_document.set_all_cursors(new_cursor);
+}
+
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text)
+    : TextDocumentUndoCommand(document)
+    , m_text(text)
+    , m_range(range)
+    , m_action_text(action_text)
+{
+}
+
+void ReplaceAllTextCommand::redo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
+    m_range.set_end(new_cursor);
+    m_document.set_all_cursors(new_cursor);
+}
+
+void ReplaceAllTextCommand::undo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    m_range.set_end(new_cursor);
+    m_document.set_all_cursors(new_cursor);
+}
+
+bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
+{
+    return false;
+}
+
+String ReplaceAllTextCommand::action_text() const
+{
+    return m_action_text;
 }
 
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)

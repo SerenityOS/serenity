@@ -7,6 +7,7 @@
 #include "HelpWindow.h"
 #include "SpreadsheetWidget.h"
 #include <AK/LexicalPath.h>
+#include <AK/QuickSort.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ListView.h>
@@ -45,6 +46,7 @@ public:
         object.for_each_member([this](auto& name, auto&) {
             m_keys.append(name);
         });
+        AK::quick_sort(m_keys);
         invalidate();
     }
 

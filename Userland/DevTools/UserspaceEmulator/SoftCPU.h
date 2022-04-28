@@ -418,9 +418,9 @@ public:
         case 5:
             return !zf(); // NE, NZ
         case 6:
-            return (cf() | zf()); // BE, NA
+            return cf() || zf(); // BE, NA
         case 7:
-            return !(cf() | zf()); // NBE, A
+            return !(cf() || zf()); // NBE, A
         case 8:
             return sf(); // S
         case 9:
@@ -430,13 +430,13 @@ public:
         case 11:
             return !pf(); // NP, PO
         case 12:
-            return sf() ^ of(); // L, NGE
+            return sf() != of(); // L, NGE
         case 13:
-            return !(sf() ^ of()); // NL, GE
+            return sf() == of(); // NL, GE
         case 14:
-            return (sf() ^ of()) | zf(); // LE, NG
+            return (sf() != of()) || zf(); // LE, NG
         case 15:
-            return !((sf() ^ of()) | zf()); // NLE, G
+            return !((sf() != of()) || zf()); // NLE, G
         default:
             VERIFY_NOT_REACHED();
         }

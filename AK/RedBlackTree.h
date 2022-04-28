@@ -467,6 +467,14 @@ public:
         return &node->value;
     }
 
+    [[nodiscard]] V* find_smallest_not_below(K key)
+    {
+        auto* node = static_cast<Node*>(BaseTree::find_smallest_not_below(this->m_root, key));
+        if (!node)
+            return nullptr;
+        return &node->value;
+    }
+
     ErrorOr<void> try_insert(K key, V const& value)
     {
         return try_insert(key, V(value));

@@ -7,6 +7,7 @@
  */
 
 #include "MainWidget.h"
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -15,6 +16,15 @@
 #include <LibMain/Main.h>
 
 using namespace Help;
+
+static String parse_input(char const* input)
+{
+    AK::URL url(input);
+    if (url.is_valid())
+        return url.basename();
+
+    return input;
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -27,8 +37,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    char const* start_page = nullptr;
-    unsigned section = 0;
+    String start_page;
+    u32 section = 0;
 
     Core::ArgsParser args_parser;
     // FIXME: These custom Args are a hack. What we want to do is have an optional int arg, then an optional string.
@@ -47,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             // Otherwise, use it as the start_page
-            start_page = input;
+            start_page = parse_input(input);
             return true;
         } });
     args_parser.add_positional_argument(Core::ArgsParser::Arg {
@@ -57,9 +67,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .max_values = 1,
         .accept_value = [&](char const* input) {
             // If start_page was already set by our section arg, then it can't be set again
-            if (start_page)
+            if (start_page.is_empty())
                 return false;
-            start_page = input;
+            start_page = parse_input(input);
             return true;
         } });
     args_parser.parse(arguments);

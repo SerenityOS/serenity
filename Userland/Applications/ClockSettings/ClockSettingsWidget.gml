@@ -8,7 +8,7 @@
     @GUI::GroupBox {
         title: "Time Format"
         shrink_to_fit: false
-        fixed_height: 160
+        fixed_height: 240
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
         }
@@ -26,13 +26,20 @@
 
             @GUI::RadioButton {
                 name: "24hour_radio"
-                text: "24-hour (12:34:56)"
+                text: "24-hour"
             }
 
             @GUI::RadioButton {
                 name: "12hour_radio"
-                text: "12-hour (12:34 a.m)"
+                text: "12-hour"
             }
+
+            @GUI::CheckBox {
+                name: "seconds_checkbox"
+                text: "Show seconds"
+            }
+
+            @GUI::HorizontalSeparator {}
 
             @GUI::RadioButton {
                 name: "custom_radio"
@@ -41,6 +48,26 @@
 
             @GUI::TextBox {
                 name: "custom_format_input"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 4
+            }
+
+            @GUI::Label {
+                text: "Preview:"
+                text_alignment: "CenterLeft"
+            }
+
+            @GUI::Frame {
+                layout: @GUI::VerticalBoxLayout {}
+
+                @GUI::Label {
+                    name: "clock_preview"
+                    text: "12:34:56"
+                }
             }
         }
     }

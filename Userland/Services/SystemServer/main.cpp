@@ -76,9 +76,7 @@ static ErrorOr<void> determine_system_mode()
     // FIXME: Support more than one framebuffer detection
     struct stat file_state;
     int rc = lstat("/dev/fb0", &file_state);
-    if (rc < 0 && g_system_mode == "graphical") {
-        g_system_mode = "text";
-    } else if (rc == 0 && g_system_mode == "text") {
+    if (rc == 0 && g_system_mode == "text") {
         dbgln("WARNING: Text mode with framebuffers won't work as expected! Consider using 'fbdev=off'.");
     }
     dbgln("System in {} mode", g_system_mode);

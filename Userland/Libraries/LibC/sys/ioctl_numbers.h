@@ -119,6 +119,8 @@ enum IOCtlNumber {
     FIBMAP,
     FIONBIO,
     FIONREAD,
+    FIOCLEX,
+    FIONCLEX,
     KCOV_SETBUFSIZE,
     KCOV_ENABLE,
     KCOV_DISABLE,

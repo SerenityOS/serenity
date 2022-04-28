@@ -203,14 +203,17 @@ void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
 ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event)
 {
+    // 1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if (event->dispatched())
         return DOM::InvalidStateError::create("The event is already being dispatched.");
 
     if (!event->initialized())
         return DOM::InvalidStateError::create("Cannot dispatch an uninitialized event.");
 
+    // 2. Initialize event’s isTrusted attribute to false.
     event->set_is_trusted(false);
 
+    // 3. Return the result of dispatching event to this.
     return dispatch_event(event);
 }
 
@@ -269,7 +272,7 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
     if (!event_target_element.document().is_active())
         return nullptr;
 
-    // Return eventTarget's node document's relevant global object.
+    // 4. Return eventTarget's node document's relevant global object.
     return &event_target_element.document().window();
 }
 

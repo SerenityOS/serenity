@@ -33,6 +33,9 @@ private:
     String m_code;
     String m_language;
     String m_style;
+
+    static OwnPtr<CodeBlock> parse_backticks(LineIterator& lines);
+    static OwnPtr<CodeBlock> parse_indent(LineIterator& lines);
 };
 
 }

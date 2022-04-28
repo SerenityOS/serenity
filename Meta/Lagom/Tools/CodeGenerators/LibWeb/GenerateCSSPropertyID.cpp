@@ -150,6 +150,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::Stream:
 
     generator.append(R"~~~(
 #include <AK/Assertions.h>
+#include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -312,7 +313,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
     static bool initialized = false;
     if (!initialized) {
         initialized = true;
-        ParsingContext parsing_context;
+        Parser::ParsingContext parsing_context;
 )~~~");
 
     // NOTE: Parsing a shorthand property requires that its longhands are already available here.
@@ -334,7 +335,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
         member_generator.set("initial_value_string", initial_value_string);
         member_generator.append(R"~~~(
         {
-            auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@);
+            auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@", PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
             initial_values[to_underlying(PropertyID::@name:titlecase@)] = parsed_value.release_nonnull();
         }
@@ -512,8 +513,13 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         } else if (type_name == "url") {
                             // FIXME: Handle urls!
                         } else {
-                            warnln("Unrecognized valid-type name: '{}'", type_name);
-                            VERIFY_NOT_REACHED();
+                            // Assume that any other type names are defined in Enums.json.
+                            // If they're not, the output won't compile, but that's fine since it's invalid.
+                            property_generator.set("type_name:snakecase", snake_casify(type_name));
+                            property_generator.append(R"~~~(
+        if (auto converted_identifier = value_id_to_@type_name:snakecase@(style_value.to_identifier()); converted_identifier.has_value())
+            return true;
+)~~~");
                         }
                     }
                 }

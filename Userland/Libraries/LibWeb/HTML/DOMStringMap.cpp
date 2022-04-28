@@ -52,7 +52,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
                     // Skip the next character
                     ++character_index;
 
-                    return;
+                    continue;
                 }
             }
 

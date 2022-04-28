@@ -126,7 +126,7 @@ void HTMLStyleElement::update_a_style_block()
 
     // FIXME: This is a bit awkward, as the spec doesn't actually tell us when to parse the CSS text,
     //        so we just do it here and pass the parsed sheet to create_a_css_style_sheet().
-    auto sheet = parse_css_stylesheet(CSS::ParsingContext(document()), text_content());
+    auto sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document()), text_content());
     if (!sheet)
         return;
 

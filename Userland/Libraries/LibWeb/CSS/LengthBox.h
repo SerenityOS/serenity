@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Length.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/Percentage.h>
 
 namespace Web::CSS {
 

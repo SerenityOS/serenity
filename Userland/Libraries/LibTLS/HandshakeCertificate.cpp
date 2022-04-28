@@ -82,10 +82,8 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
             auto certificate = Certificate::parse_asn1(buffer.slice(res_cert, certificate_size_specific), false);
             if (certificate.has_value()) {
-                if (certificate.value().is_valid()) {
-                    m_context.certificates.append(certificate.value());
-                    valid_certificate = true;
-                }
+                m_context.certificates.append(certificate.value());
+                valid_certificate = true;
             }
             res_cert += certificate_size_specific;
         } while (remaining > 0);

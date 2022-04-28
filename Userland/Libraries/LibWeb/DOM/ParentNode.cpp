@@ -17,7 +17,7 @@ namespace Web::DOM {
 
 ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text)
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 
@@ -40,7 +40,7 @@ ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text
 
 ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView selector_text)
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 

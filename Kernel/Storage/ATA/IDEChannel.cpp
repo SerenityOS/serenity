@@ -129,7 +129,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // This is important so that we can safely write the buffer back,
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
-    g_io_work->queue([this, result]() {
+    auto work_item_creation_result = g_io_work->try_queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
         MutexLocker locker(m_lock);
         VERIFY(m_current_request);
@@ -137,6 +137,11 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
         m_current_request.clear();
         current_request->complete(result);
     });
+    if (work_item_creation_result.is_error()) {
+        auto current_request = m_current_request;
+        m_current_request.clear();
+        current_request->complete(AsyncDeviceRequest::OutOfMemory);
+    }
 }
 
 static void print_ide_status(u8 status)
@@ -218,7 +223,7 @@ bool IDEChannel::handle_irq(RegisterState const&)
     // Now schedule reading/writing the buffer as soon as we leave the irq handler.
     // This is important so that we can safely access the buffers, which could
     // trigger page faults
-    g_io_work->queue([this]() {
+    auto work_item_creation_result = g_io_work->try_queue([this]() {
         MutexLocker locker(m_lock);
         SpinlockLocker lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
@@ -249,6 +254,11 @@ bool IDEChannel::handle_irq(RegisterState const&)
             }
         }
     });
+    if (work_item_creation_result.is_error()) {
+        auto current_request = m_current_request;
+        m_current_request.clear();
+        current_request->complete(AsyncDeviceRequest::OutOfMemory);
+    }
     return true;
 }
 

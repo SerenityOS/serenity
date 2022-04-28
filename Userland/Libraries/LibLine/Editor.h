@@ -451,6 +451,7 @@ private:
     bool m_has_origin_reset_scheduled { false };
 
     OwnPtr<SuggestionDisplay> m_suggestion_display;
+    Vector<u32, 32> m_remembered_suggestion_static_data;
 
     String m_new_prompt;
 

@@ -165,4 +165,29 @@ void SheetModel::update()
     m_sheet->update();
     did_update(UpdateFlag::DontInvalidateIndices);
 }
+
+CellsUndoCommand::CellsUndoCommand(Vector<CellChange> cell_changes)
+{
+    m_cell_changes = cell_changes;
+}
+
+CellsUndoCommand::CellsUndoCommand(Cell& cell, String const& previous_data)
+{
+    m_cell_changes.append(CellChange(cell, previous_data));
+}
+
+void CellsUndoCommand::undo()
+{
+    for (size_t i = 0; i < m_cell_changes.size(); ++i) {
+        m_cell_changes[i].cell().set_data(m_cell_changes[i].previous_data());
+    }
+}
+
+void CellsUndoCommand::redo()
+{
+    for (size_t i = 0; i < m_cell_changes.size(); ++i) {
+        m_cell_changes[i].cell().set_data(m_cell_changes[i].new_data());
+    }
+}
+
 }

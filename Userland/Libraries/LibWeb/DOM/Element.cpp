@@ -293,6 +293,11 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     TODO();
 }
 
+CSS::CSSStyleDeclaration const* Element::inline_style() const
+{
+    return m_inline_style;
+}
+
 void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
@@ -305,7 +310,10 @@ void Element::parse_attribute(FlyString const& name, String const& value)
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        m_inline_style = parse_css_style_attribute(CSS::ParsingContext(document()), value, *this);
+        // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
+        if (m_inline_style && m_inline_style->is_updating())
+            return;
+        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
         set_needs_style_update(true);
     }
 }
@@ -414,7 +422,7 @@ RefPtr<DOMTokenList> const& Element::class_list()
 // https://dom.spec.whatwg.org/#dom-element-matches
 DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 
@@ -429,7 +437,7 @@ DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 // https://dom.spec.whatwg.org/#dom-element-closest
 DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) const
 {
-    auto maybe_selectors = parse_selector(CSS::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+    auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
         return DOM::SyntaxError::create("Failed to parse selector");
 

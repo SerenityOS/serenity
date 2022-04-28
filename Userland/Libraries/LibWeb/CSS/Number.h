@@ -11,11 +11,7 @@
 
 namespace Web::CSS {
 
-class Tokenizer;
-
 class Number {
-    friend class Tokenizer;
-
 public:
     enum class Type {
         Number,
@@ -70,11 +66,6 @@ public:
     Number operator/(Number const& other) const
     {
         return { Type::Number, m_value / other.m_value };
-    }
-
-    auto operator<=>(Number const& other) const
-    {
-        return m_value - other.m_value;
     }
 
 private:

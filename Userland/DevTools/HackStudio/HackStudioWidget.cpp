@@ -137,6 +137,8 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
         m_stop_action->set_enabled(false);
     };
 
+    m_open_project_configuration_action = create_open_project_configuration_action();
+
     m_build_action = create_build_action();
     m_run_action = create_run_action();
     m_stop_action = create_stop_action();
@@ -183,6 +185,7 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
     }
 
     m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
+    project().model().set_should_show_dotfiles(Config::read_bool("HackStudio", "Global", "ShowDotfiles", false));
 }
 
 void HackStudioWidget::update_actions()
@@ -365,6 +368,7 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
     current_editor().set_focus(true);
 
     current_editor().on_cursor_change = [this] { on_cursor_change(); };
+    current_editor().on_change = [this] { update_window_title(); };
     current_editor_wrapper().on_change = [this] { update_gml_preview(); };
     current_editor().set_cursor(line, column);
     update_gml_preview();
@@ -1366,6 +1370,9 @@ void HackStudioWidget::create_edit_menu(GUI::Window& window)
     });
     vim_emulation_setting_action->set_checked(false);
     edit_menu.add_action(vim_emulation_setting_action);
+
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_open_project_configuration_action);
 }
 
 void HackStudioWidget::create_build_menu(GUI::Window& window)
@@ -1389,7 +1396,9 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
         project().model().set_should_show_dotfiles(checked.is_checked());
+        Config::write_bool("HackStudio", "Global", "ShowDotfiles", checked.is_checked());
     });
+    show_dotfiles_action->set_checked(Config::read_bool("HackStudio", "Global", "ShowDotfiles", false));
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(hide_action_tabs_action);
@@ -1580,6 +1589,7 @@ void HackStudioWidget::update_tree_view()
 void HackStudioWidget::update_window_title()
 {
     window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+    window()->set_modified(any_document_is_dirty());
 }
 
 void HackStudioWidget::update_current_editor_title()
@@ -1646,6 +1656,33 @@ void HackStudioWidget::create_location_history_actions()
         update_history_actions();
     });
     m_locations_history_forward_action->set_enabled(false);
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_action()
+{
+    return GUI::Action::create("Project Configuration", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value(), [&](auto&) {
+        auto parent_directory = LexicalPath::dirname(Project::config_file_path);
+        auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path);
+
+        if (!Core::File::exists(absolute_config_file_path)) {
+            if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
+                GUI::MessageBox::show_error(window(), String::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
+                return;
+            }
+
+            mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory).characters(), 0755);
+
+            auto file = Core::File::open(absolute_config_file_path, Core::OpenMode::WriteOnly);
+            file.value()->write(
+                "{\n"
+                "    \"build_command\": \"your build command here\",\n"
+                "    \"run_command\": \"your run command here\"\n"
+                "}\n");
+            file.value()->close();
+        }
+
+        open_file(Project::config_file_path);
+    });
 }
 
 HackStudioWidget::ProjectLocation HackStudioWidget::current_project_location() const

@@ -1420,6 +1420,7 @@ VALIDATE_INSTRUCTION(local_tee)
 
     auto& value_type = m_context.locals[index.value()];
     TRY(stack.take(value_type));
+    stack.append(value_type);
 
     return {};
 }
@@ -1872,6 +1873,7 @@ VALIDATE_INSTRUCTION(memory_grow)
 {
     TRY(validate(MemoryIndex { 0 }));
     TRY((stack.take<ValueType::I32>()));
+    stack.append(ValueType(ValueType::I32));
 
     return {};
 }

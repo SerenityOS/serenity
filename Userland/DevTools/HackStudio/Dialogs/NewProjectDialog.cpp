@@ -202,7 +202,7 @@ void NewProjectDialog::do_create_project()
             return;
 
         auto created = Core::Directory::create(maybe_project_full_path.value(), Core::Directory::CreateDirectories::Yes);
-        if (!created.is_error()) {
+        if (created.is_error()) {
             GUI::MessageBox::show_error(this, String::formatted("Could not create directory {}", create_in));
             return;
         }

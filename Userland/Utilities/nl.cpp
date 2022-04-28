@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* separator = "  ";
     int start_number = 1;
     int number_width = 6;
-    Vector<char const*> files;
+    Vector<String> files;
 
     Core::ArgsParser args_parser;
 
@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<FILE*> file_pointers;
     if (!files.is_empty()) {
         for (auto& file : files) {
-            FILE* file_pointer = fopen(file, "r");
+            FILE* file_pointer = fopen(file.characters(), "r");
             if (!file_pointer) {
                 warnln("Failed to open {}: {}", file, strerror(errno));
                 continue;

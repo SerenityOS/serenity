@@ -203,7 +203,8 @@ public:
         return TypedTransfer<StorageType>::compare(data(), other.data(), size());
     }
 
-    bool contains_slow(VisibleType const& value) const
+    template<typename V>
+    bool contains_slow(V const& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
             if (Traits<VisibleType>::equals(at(i), value))

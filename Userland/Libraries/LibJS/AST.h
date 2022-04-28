@@ -19,6 +19,7 @@
 #include <LibJS/Bytecode/CodeGenerationError.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/ClassFieldDefinition.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/FunctionKind.h>
@@ -1247,13 +1248,6 @@ public:
 
     virtual ElementKind class_element_kind() const = 0;
     bool is_static() const { return m_is_static; }
-
-    using ClassElementName = Variant<PropertyKey, PrivateName>;
-
-    struct ClassFieldDefinition {
-        ClassElementName name;
-        Handle<ECMAScriptFunctionObject> initializer;
-    };
 
     // We use the Completion also as a ClassStaticBlockDefinition Record.
     using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;

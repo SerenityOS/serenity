@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
     }
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     Optional<Gfx::IntRect> crop_region;
     if (select_region) {
         auto window = GUI::Window::construct();

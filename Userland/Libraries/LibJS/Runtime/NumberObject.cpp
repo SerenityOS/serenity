@@ -19,4 +19,5 @@ NumberObject::NumberObject(double value, Object& prototype)
     , m_value(value)
 {
 }
+
 }

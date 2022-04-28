@@ -31,6 +31,7 @@ public:
         Success,
         Failure,
         MemoryFault,
+        OutOfMemory,
         Cancelled
     };
 

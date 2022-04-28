@@ -36,6 +36,7 @@ set(SOURCES
     CSS/CSSSupportsRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
+    CSS/Enums.cpp
     CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
@@ -44,8 +45,13 @@ set(SOURCES
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
+    CSS/Parser/Block.cpp
+    CSS/Parser/ComponentValue.cpp
+    CSS/Parser/Declaration.cpp
+    CSS/Parser/DeclarationOrAtRule.cpp
+    CSS/Parser/Function.cpp
     CSS/Parser/Parser.cpp
-    CSS/Parser/StyleRules.cpp
+    CSS/Parser/Rule.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
     CSS/Percentage.cpp
@@ -68,6 +74,7 @@ set(SOURCES
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
+    CSS/TransformFunctions.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
     Cookie/ParsedCookie.cpp
@@ -318,6 +325,7 @@ set(SOURCES
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
     SVG/SVGClipPathElement.cpp
+    SVG/SVGDefsElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
@@ -584,6 +592,7 @@ libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
 libweb_js_wrapper(ResizeObserver/ResizeObserver)
 libweb_js_wrapper(SVG/SVGAnimatedLength)
 libweb_js_wrapper(SVG/SVGClipPathElement)
+libweb_js_wrapper(SVG/SVGDefsElement)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
@@ -610,6 +619,16 @@ libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
 
 invoke_generator(
+    "Enums"
+    Lagom::GenerateCSSEnums
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
+    ""
+    "CSS/Enums.h"
+    "CSS/Enums.cpp"
+    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
+)
+
+invoke_generator(
     "MediaFeatureID"
     Lagom::GenerateCSSMediaFeatureID
     "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json"
@@ -627,6 +646,16 @@ invoke_generator(
     "CSS/PropertyID.h"
     "CSS/PropertyID.cpp"
     arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json"
+)
+
+invoke_generator(
+    "TransformFunctions"
+    Lagom::GenerateCSSTransformFunctions
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
+    ""
+    "CSS/TransformFunctions.h"
+    "CSS/TransformFunctions.cpp"
+    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
 )
 
 invoke_generator(

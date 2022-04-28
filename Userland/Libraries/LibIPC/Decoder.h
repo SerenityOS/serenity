@@ -11,7 +11,10 @@
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
+#include <AK/Try.h>
+#include <LibCore/SharedCircularQueue.h>
 #include <LibCore/Stream.h>
+#include <LibIPC/File.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
@@ -114,6 +117,18 @@ public:
             TRY(decode(value));
             vector.template unchecked_append(move(value));
         }
+        return {};
+    }
+
+    template<typename T, size_t Size>
+    ErrorOr<void> decode(Core::SharedSingleProducerCircularQueue<T, Size>& queue)
+    {
+        // FIXME: We don't support decoding into valid queues.
+        VERIFY(!queue.is_valid());
+
+        IPC::File anon_file;
+        TRY(decode(anon_file));
+        queue = TRY((Core::SharedSingleProducerCircularQueue<T, Size>::try_create(anon_file.take_fd())));
         return {};
     }
 

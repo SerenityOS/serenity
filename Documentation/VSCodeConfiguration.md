@@ -10,14 +10,17 @@ Both C++ comprehension tools listed below report fake errors.
 
 ### clangd
 
-The official clangd extension can be used for C++ comprehension. You'll have to use the following .clangd:
+The official clangd extension can be used for C++ comprehension. It is recommended in general, as it is most likely to work on all platforms. You'll have to use the following .clangd:
 
 ```yaml
 CompileFlags:
+  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/11.2.0, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/11.2.0/i686-pc-serenity]
   CompilationDatabase: Build/i686
 ```
 
-Run cmake at least once for this to work. clangd has difficulty finding specific methods and types, especially with inheritance trees. Also, include errors are wrong in 90% of cases.
+You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `i686`, with the one you're compiling most often. And finally, the compiler version (`11.2.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
+
+A known issue with clangd in general is that it likes to crash. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
 
 ### Microsoft C/C++ tools
 
@@ -96,7 +99,7 @@ There's a syntax highlighter extension for both IPC and GML called "SerenityOS D
 
 ## Formatting
 
-clang-format is included with the Microsoft tools (see above). The settings below include a key that makes it use the proper style. Alternatively, you can use the clang-format extension itself, which should work out of the box.
+clang-format is included with the Microsoft tools (see above); there's also a separate extension which works well. The settings below include a key that makes it use the proper style. Alternatively, you can use the clang-format extension itself, which should work out of the box.
 
 ## Settings
 
@@ -121,7 +124,7 @@ These belong in the `.vscode/settings.json` of Serenity.
         "Build/**": true,
         "build/**": true,
     },
-    // Force clang-format to respect Serenity's .clang-format style file.
+    // Force clang-format to respect Serenity's .clang-format style file. This is not necessary if you're not using the Microsoft C++ extension.
     "C_Cpp.clang_format_style": "file",
     // Tab settings
     "editor.tabSize": 4,

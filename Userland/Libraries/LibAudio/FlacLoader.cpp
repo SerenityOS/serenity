@@ -114,7 +114,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     [[maybe_unused]] u128 md5_checksum;
     VERIFY(streaminfo_data->is_aligned_to_byte_boundary());
     auto md5_bytes_read = LOADER_TRY(streaminfo_data->read(md5_checksum.bytes()));
-    FLAC_VERIFY(md5_bytes_read == md5_checksum.my_size(), LoaderError::Category::IO, "MD5 Checksum size");
+    FLAC_VERIFY(md5_bytes_read.size() == md5_checksum.my_size(), LoaderError::Category::IO, "MD5 Checksum size");
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
     // Parse other blocks
@@ -242,7 +242,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0)
-        return Buffer::create_empty();
+        return FixedArray<Sample> {};
 
     // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
@@ -267,10 +267,8 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     }
 
     m_loaded_samples += sample_index;
-    auto maybe_buffer = Buffer::create_with_samples(move(samples));
-    if (maybe_buffer.is_error())
-        return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };
-    return maybe_buffer.release_value();
+
+    return samples;
 }
 
 MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)

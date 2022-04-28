@@ -1025,7 +1025,7 @@ public:
     static IterationDecision for_each(Callback);
 
     static constexpr u32 default_kernel_stack_size = 65536;
-    static constexpr u32 default_userspace_stack_size = 1 * MiB;
+    static constexpr u32 default_userspace_stack_size = 4 * MiB;
 
     u64 time_in_user() const { return m_total_time_scheduled_user; }
     u64 time_in_kernel() const { return m_total_time_scheduled_kernel; }

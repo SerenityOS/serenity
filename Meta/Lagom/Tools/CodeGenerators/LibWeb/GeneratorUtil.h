@@ -49,6 +49,11 @@ String camel_casify(StringView dashy_name)
     return builder.to_string();
 }
 
+String snake_casify(String const& dashy_name)
+{
+    return dashy_name.replace("-", "_", true);
+}
+
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
 {
     auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));

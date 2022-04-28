@@ -63,4 +63,36 @@ describe("normal behavior", () => {
         // [ "foo", <circular>, [ 1, 2, <circular> ], [ "bar" ] ]
         expect(a.toString()).toBe("foo,,1,2,,bar");
     });
+
+    test("this value object remains the same in the %Object.prototype.toString% fallback", () => {
+        let arrayPrototypeToStringThis;
+        let objectPrototypeToStringThis;
+
+        // Inject a Proxy into the Number prototype chain, so we can
+        // observe Get() operations on the different object created
+        // from the primitive number value.
+        Number.prototype.__proto__ = new Proxy(
+            {},
+            {
+                get(target, prop, receiver) {
+                    // In Array.prototype.toString():
+                    // 2. Let func be ? Get(array, "join").
+                    if (prop === "join") {
+                        arrayPrototypeToStringThis = receiver;
+                    }
+
+                    // In Object.prototype.toString():
+                    // 15. Let tag be ? Get(O, @@toStringTag).
+                    if (prop === Symbol.toStringTag) {
+                        objectPrototypeToStringThis = receiver;
+                    }
+                },
+            }
+        );
+
+        Array.prototype.toString.call(123);
+        expect(typeof arrayPrototypeToStringThis).toBe("object");
+        expect(typeof objectPrototypeToStringThis).toBe("object");
+        expect(arrayPrototypeToStringThis).toBe(objectPrototypeToStringThis);
+    });
 });

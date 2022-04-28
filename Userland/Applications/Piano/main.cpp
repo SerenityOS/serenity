@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix"));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TrackManager track_manager;
 
@@ -38,8 +38,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool need_to_write_wav = false;
 
     auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
-    audio_loop->enqueue_audio();
-    audio_loop->enqueue_audio();
 
     auto app_icon = GUI::Icon::default_icon("app-piano");
     auto window = GUI::Window::construct();

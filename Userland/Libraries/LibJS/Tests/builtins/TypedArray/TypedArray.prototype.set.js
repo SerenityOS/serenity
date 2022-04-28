@@ -82,6 +82,28 @@ test("length is 1", () => {
     });
 });
 
+test("detached buffer", () => {
+    TYPED_ARRAYS.forEach(({ array: T }) => {
+        let typedArray = new T(2);
+        typedArray[0] = 1;
+        typedArray[1] = 2;
+
+        let object = { length: 2 };
+
+        Object.defineProperty(object, 0, {
+            get: () => {
+                detachArrayBuffer(typedArray.buffer);
+            },
+        });
+
+        expect(() => {
+            typedArray.set(object);
+        }).not.toThrow();
+
+        expect(typedArray.length).toBe(0);
+    });
+});
+
 describe("errors", () => {
     function argumentErrorTests(T) {
         test(`requires at least one argument (${T.name})`, () => {

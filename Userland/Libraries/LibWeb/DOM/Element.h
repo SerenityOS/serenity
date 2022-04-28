@@ -103,7 +103,7 @@ public:
     void set_computed_css_values(RefPtr<CSS::StyleProperties> style) { m_computed_css_values = move(style); }
     NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
 
-    const CSS::CSSStyleDeclaration* inline_style() const { return m_inline_style; }
+    CSS::CSSStyleDeclaration const* inline_style() const;
 
     NonnullRefPtr<CSS::CSSStyleDeclaration> style_for_bindings();
 
@@ -152,7 +152,7 @@ private:
     String m_html_uppercased_qualified_name;
     NonnullRefPtr<NamedNodeMap> m_attributes;
 
-    RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
+    RefPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -1084,13 +1084,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 // 21.4.4.41.1 TimeString ( tv ), https://tc39.es/ecma262/#sec-timestring
 String time_string(double time)
 {
-    // 1. Let hour be the String representation of HourFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 1. Let hour be ToZeroPaddedDecimalString(ℝ(HourFromTime(tv)), 2).
     auto hour = hour_from_time(time);
 
-    // 2. Let minute be the String representation of MinFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 2. Let minute be ToZeroPaddedDecimalString(ℝ(MinFromTime(tv)), 2).
     auto minute = min_from_time(time);
 
-    // 3. Let second be the String representation of SecFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 3. Let second be ToZeroPaddedDecimalString(ℝ(SecFromTime(tv)), 2).
     auto second = sec_from_time(time);
 
     // 4. Return the string-concatenation of hour, ":", minute, ":", second, the code unit 0x0020 (SPACE), and "GMT".
@@ -1106,7 +1106,7 @@ String date_string(double time)
     // 2. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
     auto month = short_month_names[month_from_time(time)];
 
-    // 3. Let day be the String representation of DateFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 3. Let day be ToZeroPaddedDecimalString(ℝ(DateFromTime(tv)), 2).
     auto day = date_from_time(time);
 
     // 4. Let yv be YearFromTime(tv).
@@ -1115,12 +1115,9 @@ String date_string(double time)
     // 5. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
-    // 6. Let year be the String representation of abs(ℝ(yv)), formatted as a decimal number.
-    year = abs(year);
-
-    // 7. Let paddedYear be ! StringPad(year, 4𝔽, "0", start).
-    // 8. Return the string-concatenation of weekday, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), yearSign, and paddedYear.
-    return String::formatted("{} {} {:02} {}{:04}", weekday, month, day, year_sign, year);
+    // 6. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
+    // 7. Return the string-concatenation of weekday, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), yearSign, and paddedYear.
+    return String::formatted("{} {} {:02} {}{:04}", weekday, month, day, year_sign, abs(year));
 }
 
 // 21.4.4.41.3 TimeZoneString ( tv ), https://tc39.es/ecma262/#sec-timezoneestring
@@ -1145,10 +1142,10 @@ String time_zone_string(double time)
         offset *= -1;
     }
 
-    // 4. Let offsetMin be the String representation of MinFromTime(absOffset), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 4. Let offsetMin be ToZeroPaddedDecimalString(ℝ(MinFromTime(absOffset)), 2).
     auto offset_min = min_from_time(offset);
 
-    // 5. Let offsetHour be the String representation of HourFromTime(absOffset), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 5. Let offsetHour be ToZeroPaddedDecimalString(ℝ(HourFromTime(absOffset)), 2).
     auto offset_hour = hour_from_time(offset);
 
     // 6. Let tzName be an implementation-defined string that is either the empty String or the string-concatenation of the code unit 0x0020 (SPACE), the code unit 0x0028 (LEFT PARENTHESIS), an implementation-defined timezone name, and the code unit 0x0029 (RIGHT PARENTHESIS).
@@ -1226,7 +1223,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     // 5. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
     auto month = short_month_names[month_from_time(time.as_double())];
 
-    // 6. Let day be the String representation of DateFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
+    // 6. Let day be ToZeroPaddedDecimalString(ℝ(DateFromTime(tv)), 2).
     auto day = date_from_time(time.as_double());
 
     // 7. Let yv be YearFromTime(tv).
@@ -1235,12 +1232,9 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     // 8. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
-    // 9. Let year be the String representation of abs(ℝ(yv)), formatted as a decimal number.
-    year = abs(year);
-
-    // 10. Let paddedYear be ! StringPad(year, 4𝔽, "0", start).
-    // 11. Return the string-concatenation of weekday, ",", the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), yearSign, paddedYear, the code unit 0x0020 (SPACE), and TimeString(tv).
-    auto string = String::formatted("{}, {:02} {} {}{:04} {}", weekday, day, month, year_sign, year, time_string(time.as_double()));
+    // 9. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
+    // 10. Return the string-concatenation of weekday, ",", the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), yearSign, paddedYear, the code unit 0x0020 (SPACE), and TimeString(tv).
+    auto string = String::formatted("{}, {:02} {} {}{:04} {}", weekday, day, month, year_sign, abs(year), time_string(time.as_double()));
     return js_string(vm, move(string));
 }
 

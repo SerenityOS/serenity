@@ -121,9 +121,9 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
 
     u8 buffer[4096];
     while (m_socket->is_open()) {
-        auto maybe_nread = m_socket->read_without_waiting({ buffer, 4096 });
-        if (maybe_nread.is_error()) {
-            auto error = maybe_nread.release_error();
+        auto maybe_bytes_read = m_socket->read_without_waiting({ buffer, 4096 });
+        if (maybe_bytes_read.is_error()) {
+            auto error = maybe_bytes_read.release_error();
             if (error.is_syscall() && error.code() == EAGAIN) {
                 break;
             }
@@ -133,13 +133,13 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
             VERIFY_NOT_REACHED();
         }
 
-        auto nread = maybe_nread.release_value();
-        if (nread == 0) {
+        auto bytes_read = maybe_bytes_read.release_value();
+        if (bytes_read.is_empty()) {
             deferred_invoke([this] { shutdown(); });
             return Error::from_string_literal("IPC connection EOF"sv);
         }
 
-        bytes.append(buffer, nread);
+        bytes.append(bytes_read.data(), bytes_read.size());
     }
 
     if (!bytes.is_empty()) {

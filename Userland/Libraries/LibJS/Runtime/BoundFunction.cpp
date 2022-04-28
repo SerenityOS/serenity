@@ -11,7 +11,7 @@
 
 namespace JS {
 
-// 10.4.1.3 BoundFunctionCreate ( targetFunction, boundThis, boundArgs ), https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-boundfunctioncreate
+// 10.4.1.3 BoundFunctionCreate ( targetFunction, boundThis, boundArgs ), https://tc39.es/ecma262/#sec-boundfunctioncreate
 ThrowCompletionOr<BoundFunction*> BoundFunction::create(GlobalObject& global_object, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments)
 {
     // 1. Let proto be ? targetFunction.[[GetPrototypeOf]]().

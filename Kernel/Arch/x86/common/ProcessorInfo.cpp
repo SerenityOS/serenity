@@ -37,6 +37,7 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
         m_display_model = model;
     }
 }
+
 static void emit_u32(StringBuilder& builder, u32 value)
 {
     builder.appendff("{:c}{:c}{:c}{:c}",
@@ -44,7 +45,7 @@ static void emit_u32(StringBuilder& builder, u32 value)
         (value >> 8) & 0xff,
         (value >> 16) & 0xff,
         (value >> 24) & 0xff);
-};
+}
 
 NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
 {
@@ -53,7 +54,8 @@ NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
     emit_u32(builder, cpuid.ebx());
     emit_u32(builder, cpuid.edx());
     emit_u32(builder, cpuid.ecx());
-    return KString::must_create(builder.string_view());
+    // NOTE: This isn't necessarily fixed length and might have null terminators at the end.
+    return KString::must_create(builder.string_view().trim("\0"sv, TrimMode::Right));
 }
 
 NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(Processor const& processor)
@@ -66,7 +68,8 @@ NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(Processo
     emit_u32(builder, cpuid.ebx());
     emit_u32(builder, cpuid.ecx());
     emit_u32(builder, cpuid.edx());
-    return KString::must_create(builder.string_view());
+    // NOTE: This isn't necessarily fixed length and might have null terminators at the end.
+    return KString::must_create(builder.string_view().trim("\0"sv, TrimMode::Right));
 }
 
 NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
@@ -87,10 +90,8 @@ NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
     append_brand_string_part_to_builder(0);
     append_brand_string_part_to_builder(1);
     append_brand_string_part_to_builder(2);
-    auto string_view = builder.string_view();
-    // NOTE: Unlike the vendor ID strings, the brand string isn't necessarily fixed length and might have a null terminator in it.
-    //       Try to find it and use a substring from 0 to that index, or the full length as a fallback.
-    return KString::must_create(string_view.substring_view(0, string_view.find('\0').value_or(string_view.length())));
+    // NOTE: This isn't necessarily fixed length and might have null terminators at the end.
+    return KString::must_create(builder.string_view().trim("\0"sv, TrimMode::Right));
 }
 
 NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& processor)

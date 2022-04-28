@@ -13,6 +13,8 @@
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <math.h>
 
+namespace Web::CSS::Parser {
+
 // U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
 static constexpr u32 TOKENIZER_EOF = 0xFFFFFFFF;
@@ -189,8 +191,6 @@ static inline bool is_E(u32 code_point)
 {
     return code_point == 0x45;
 }
-
-namespace Web::CSS {
 
 Tokenizer::Tokenizer(StringView input, String const& encoding)
 {

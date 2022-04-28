@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/String.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
@@ -15,339 +17,205 @@
 
 namespace GUI {
 
-class Variant {
+namespace Detail {
+struct Boolean {
+    bool value;
+};
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, String, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap>, NonnullRefPtr<Gfx::Font>, GUI::Icon>;
+}
+
+class Variant : public Detail::VariantUnderlyingType {
 public:
-    Variant();
-    Variant(bool);
-    Variant(float);
-    Variant(i32);
-    Variant(i64);
-    Variant(u32);
-    Variant(u64);
-    Variant(char const*);
-    Variant(StringView);
-    Variant(String const&);
-    Variant(FlyString const&);
-    Variant(Gfx::Bitmap const&);
-    Variant(const GUI::Icon&);
-    Variant(Gfx::IntPoint const&);
-    Variant(Gfx::IntSize const&);
-    Variant(Gfx::IntRect const&);
-    Variant(Gfx::Font const&);
-    Variant(const Gfx::TextAlignment);
-    Variant(const Gfx::ColorRole);
-    Variant(const Gfx::AlignmentRole);
-    Variant(const Gfx::FlagRole);
-    Variant(const Gfx::MetricRole);
-    Variant(const Gfx::PathRole);
+    using Detail::VariantUnderlyingType::Variant;
+    using Detail::VariantUnderlyingType::operator=;
+
     Variant(JsonValue const&);
-    Variant(Color);
-
-    Variant(Variant const&);
-    Variant& operator=(Variant const&);
-
-    Variant(Variant&&) = delete;
-    Variant& operator=(Variant&&);
-
-    void clear();
-    ~Variant();
-
-    enum class Type {
-        Invalid,
-        Bool,
-        Int32,
-        Int64,
-        UnsignedInt32,
-        UnsignedInt64,
-        Float,
-        String,
-        Bitmap,
-        Color,
-        Icon,
-        Point,
-        Size,
-        Rect,
-        Font,
-        TextAlignment,
-        ColorRole,
-        AlignmentRole,
-        FlagRole,
-        MetricRole,
-        PathRole,
-    };
-
-    bool is_valid() const { return m_type != Type::Invalid; }
-    bool is_bool() const { return m_type == Type::Bool; }
-    bool is_i32() const { return m_type == Type::Int32; }
-    bool is_i64() const { return m_type == Type::Int64; }
-    bool is_u32() const { return m_type == Type::UnsignedInt32; }
-    bool is_u64() const { return m_type == Type::UnsignedInt64; }
-    bool is_float() const { return m_type == Type::Float; }
-    bool is_string() const { return m_type == Type::String; }
-    bool is_bitmap() const { return m_type == Type::Bitmap; }
-    bool is_color() const { return m_type == Type::Color; }
-    bool is_icon() const { return m_type == Type::Icon; }
-    bool is_point() const { return m_type == Type::Point; }
-    bool is_size() const { return m_type == Type::Size; }
-    bool is_rect() const { return m_type == Type::Rect; }
-    bool is_font() const { return m_type == Type::Font; }
-    bool is_text_alignment() const { return m_type == Type::TextAlignment; }
-    bool is_color_role() const { return m_type == Type::ColorRole; }
-    bool is_alignment_role() const { return m_type == Type::AlignmentRole; }
-    bool is_flag_role() const { return m_type == Type::FlagRole; }
-    bool is_metric_role() const { return m_type == Type::MetricRole; }
-    bool is_path_role() const { return m_type == Type::PathRole; }
-    Type type() const { return m_type; }
-
-    bool as_bool() const
+    Variant& operator=(JsonValue const&);
+    Variant(bool v)
+        : Variant(Detail::Boolean { v })
     {
-        VERIFY(type() == Type::Bool);
-        return m_value.as_bool;
     }
-
-    bool to_bool() const
+    Variant& operator=(bool v)
     {
-        if (type() == Type::Bool)
-            return as_bool();
-        if (type() == Type::String)
-            return !!m_value.as_string;
-        if (type() == Type::Int32)
-            return m_value.as_i32 != 0;
-        if (type() == Type::Int64)
-            return m_value.as_i64 != 0;
-        if (type() == Type::UnsignedInt32)
-            return m_value.as_u32 != 0;
-        if (type() == Type::UnsignedInt64)
-            return m_value.as_u64 != 0;
-        if (type() == Type::Rect)
-            return !as_rect().is_null();
-        if (type() == Type::Size)
-            return !as_size().is_null();
-        if (type() == Type::Point)
-            return !as_point().is_null();
-        return is_valid();
-    }
-
-    int as_i32() const
-    {
-        VERIFY(type() == Type::Int32);
-        return m_value.as_i32;
-    }
-
-    int as_i64() const
-    {
-        VERIFY(type() == Type::Int64);
-        return m_value.as_i64;
-    }
-
-    u32 as_u32() const
-    {
-        VERIFY(type() == Type::UnsignedInt32);
-        return m_value.as_u32;
-    }
-
-    u64 as_u64() const
-    {
-        VERIFY(type() == Type::UnsignedInt64);
-        return m_value.as_u64;
+        set(Detail::Boolean { v });
+        return *this;
     }
 
     template<typename T>
+    Variant(T&& value) requires(IsConstructible<String, T>)
+        : Variant(String(forward<T>(value)))
+    {
+    }
+    template<typename T>
+    Variant& operator=(T&& v) requires(IsConstructible<String, T>)
+    {
+        set(String(v));
+        return *this;
+    }
+
+    template<OneOfIgnoringCV<Gfx::Bitmap, Gfx::Font> T>
+    Variant(T const& value)
+        : Variant(NonnullRefPtr<RemoveCV<T>>(value))
+    {
+    }
+    template<OneOfIgnoringCV<Gfx::Bitmap, Gfx::Font> T>
+    Variant& operator=(T&& value)
+    {
+        set(NonnullRefPtr<RemoveCV<T>>(forward<T>(value)));
+        return *this;
+    }
+
+    ~Variant() = default;
+
+    bool is_valid() const { return !has<Empty>(); }
+    bool is_bool() const { return has<Detail::Boolean>(); }
+    bool is_i32() const { return has<i32>(); }
+    bool is_i64() const { return has<i64>(); }
+    bool is_u32() const { return has<u32>(); }
+    bool is_u64() const { return has<u64>(); }
+    bool is_float() const { return has<float>(); }
+    bool is_string() const { return has<String>(); }
+    bool is_bitmap() const { return has<NonnullRefPtr<Gfx::Bitmap>>(); }
+    bool is_color() const { return has<Color>(); }
+    bool is_icon() const { return has<GUI::Icon>(); }
+    bool is_point() const { return has<Gfx::IntPoint>(); }
+    bool is_size() const { return has<Gfx::IntSize>(); }
+    bool is_rect() const { return has<Gfx::IntRect>(); }
+    bool is_font() const { return has<NonnullRefPtr<Gfx::Font>>(); }
+    bool is_text_alignment() const { return has<Gfx::TextAlignment>(); }
+    bool is_color_role() const { return has<Gfx::ColorRole>(); }
+    bool is_alignment_role() const { return has<Gfx::AlignmentRole>(); }
+    bool is_flag_role() const { return has<Gfx::FlagRole>(); }
+    bool is_metric_role() const { return has<Gfx::MetricRole>(); }
+    bool is_path_role() const { return has<Gfx::PathRole>(); }
+
+    bool as_bool() const { return get<Detail::Boolean>().value; }
+
+    bool to_bool() const
+    {
+        return visit(
+            [](Empty) { return false; },
+            [](Detail::Boolean v) { return v.value; },
+            [](String const& v) { return !v.is_null(); },
+            [](Integral auto v) { return v != 0; },
+            [](OneOf<Gfx::IntRect, Gfx::IntPoint, Gfx::IntSize> auto const& v) { return !v.is_null(); },
+            [](Enum auto const&) { return true; },
+            [](OneOf<float, String, Color, NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Gfx::Bitmap>, GUI::Icon> auto const&) { return true; });
+    }
+
+    i32 as_i32() const { return get<i32>(); }
+    i64 as_i64() const { return get<i64>(); }
+    u32 as_u32() const { return get<u32>(); }
+    u64 as_u64() const { return get<u64>(); }
+
+    template<Integral T>
     T to_integer() const
     {
-        if (is_i32())
-            return as_i32();
-        if (is_i64())
-            return as_i64();
-        if (is_bool())
-            return as_bool() ? 1 : 0;
-        if (is_float())
-            return (int)as_float();
-        if (is_u32()) {
-            VERIFY(as_u32() <= INT32_MAX);
-            return static_cast<i32>(as_u32());
-        }
-        if (is_u64()) {
-            VERIFY(as_u64() <= INT64_MAX);
-            return static_cast<i64>(as_u64());
-        }
-        if (is_string())
-            return as_string().to_int().value_or(0);
-        return 0;
+        return visit(
+            [](Empty) -> T { return 0; },
+            [](Integral auto v) { return static_cast<T>(v); },
+            [](FloatingPoint auto v) { return (T)v; },
+            [](Detail::Boolean v) -> T { return v.value ? 1 : 0; },
+            [](String const& v) {
+                if constexpr (IsUnsigned<T>)
+                    return v.to_uint<T>().value_or(0u);
+                else
+                    return v.to_int<T>().value_or(0);
+            },
+            [](Enum auto const&) -> T { return 0; },
+            [](OneOf<Gfx::IntPoint, Gfx::IntRect, Gfx::IntSize, Color, NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Gfx::Bitmap>, GUI::Icon> auto const&) -> T { return 0; });
     }
 
-    i32 to_i32() const
-    {
-        return to_integer<i32>();
-    }
-
-    i64 to_i64() const
-    {
-        return to_integer<i64>();
-    }
-
-    float as_float() const
-    {
-        VERIFY(type() == Type::Float);
-        return m_value.as_float;
-    }
+    i32 to_i32() const { return to_integer<i32>(); }
+    i64 to_i64() const { return to_integer<i64>(); }
+    float as_float() const { return get<float>(); }
 
     float as_float_or(float fallback) const
     {
-        if (is_float())
-            return as_float();
+        if (auto const* p = get_pointer<float>())
+            return *p;
         return fallback;
     }
 
-    Gfx::IntPoint as_point() const
-    {
-        return { m_value.as_point.x, m_value.as_point.y };
-    }
-
-    Gfx::IntSize as_size() const
-    {
-        return { m_value.as_size.width, m_value.as_size.height };
-    }
-
-    Gfx::IntRect as_rect() const
-    {
-        return { as_point(), as_size() };
-    }
-
-    String as_string() const
-    {
-        VERIFY(type() == Type::String);
-        return m_value.as_string;
-    }
-
-    Gfx::Bitmap const& as_bitmap() const
-    {
-        VERIFY(type() == Type::Bitmap);
-        return *m_value.as_bitmap;
-    }
-
-    GUI::Icon as_icon() const
-    {
-        VERIFY(type() == Type::Icon);
-        return GUI::Icon(*m_value.as_icon);
-    }
-
-    Color as_color() const
-    {
-        VERIFY(type() == Type::Color);
-        return Color::from_argb(m_value.as_color);
-    }
-
-    Gfx::Font const& as_font() const
-    {
-        VERIFY(type() == Type::Font);
-        return *m_value.as_font;
-    }
+    Gfx::IntPoint as_point() const { return get<Gfx::IntPoint>(); }
+    Gfx::IntSize as_size() const { return get<Gfx::IntSize>(); }
+    Gfx::IntRect as_rect() const { return get<Gfx::IntRect>(); }
+    String as_string() const { return get<String>(); }
+    Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap>>(); }
+    GUI::Icon as_icon() const { return get<GUI::Icon>(); }
+    Color as_color() const { return get<Color>(); }
+    Gfx::Font const& as_font() const { return *get<NonnullRefPtr<Gfx::Font>>(); }
 
     Gfx::TextAlignment to_text_alignment(Gfx::TextAlignment default_value) const
     {
-        if (type() != Type::TextAlignment)
-            return default_value;
-        return m_value.as_text_alignment;
+        if (auto const* p = get_pointer<Gfx::TextAlignment>())
+            return *p;
+        return default_value;
     }
 
     Gfx::ColorRole to_color_role() const
     {
-        if (type() != Type::ColorRole)
-            return Gfx::ColorRole::NoRole;
-        return m_value.as_color_role;
+        if (auto const* p = get_pointer<Gfx::ColorRole>())
+            return *p;
+        return Gfx::ColorRole::NoRole;
     }
 
     Gfx::AlignmentRole to_alignment_role() const
     {
-        if (type() != Type::AlignmentRole)
-            return Gfx::AlignmentRole::NoRole;
-        return m_value.as_alignment_role;
+        if (auto const* p = get_pointer<Gfx::AlignmentRole>())
+            return *p;
+        return Gfx::AlignmentRole::NoRole;
     }
 
     Gfx::FlagRole to_flag_role() const
     {
-        if (type() != Type::FlagRole)
-            return Gfx::FlagRole::NoRole;
-        return m_value.as_flag_role;
+        if (auto const* p = get_pointer<Gfx::FlagRole>())
+            return *p;
+        return Gfx::FlagRole::NoRole;
     }
 
     Gfx::MetricRole to_metric_role() const
     {
-        if (type() != Type::MetricRole)
-            return Gfx::MetricRole::NoRole;
-        return m_value.as_metric_role;
+        if (auto const* p = get_pointer<Gfx::MetricRole>())
+            return *p;
+        return Gfx::MetricRole::NoRole;
     }
 
     Gfx::PathRole to_path_role() const
     {
-        if (type() != Type::PathRole)
-            return Gfx::PathRole::NoRole;
-        return m_value.as_path_role;
+        if (auto const* p = get_pointer<Gfx::PathRole>())
+            return *p;
+        return Gfx::PathRole::NoRole;
     }
 
     Color to_color(Color default_value = {}) const
     {
-        if (type() == Type::Color)
-            return as_color();
-        if (type() == Type::String) {
-            auto color = Color::from_string(as_string());
-            if (color.has_value())
-                return color.value();
-        }
+        if (auto const* p = get_pointer<Color>())
+            return *p;
+        if (auto const* p = get_pointer<String>())
+            return Color::from_string(*p).value_or(default_value);
         return default_value;
     }
 
-    String to_string() const;
+    String to_string() const
+    {
+        return visit(
+            [](Empty) -> String { return "[null]"; },
+            [](Gfx::TextAlignment v) { return String::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
+            [](Gfx::ColorRole v) { return String::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
+            [](Gfx::AlignmentRole v) { return String::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
+            [](Gfx::FlagRole v) { return String::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
+            [](Gfx::MetricRole v) { return String::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
+            [](Gfx::PathRole v) { return String::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
+            [](NonnullRefPtr<Gfx::Font> const& font) { return String::formatted("[Font: {}]", font->name()); },
+            [](NonnullRefPtr<Gfx::Bitmap> const&) -> String { return "[Gfx::Bitmap]"; },
+            [](GUI::Icon const&) -> String { return "[GUI::Icon]"; },
+            [](Detail::Boolean v) { return String::formatted("{}", v.value); },
+            [](auto const& v) { return String::formatted("{}", v); });
+    }
 
     bool operator==(Variant const&) const;
     bool operator<(Variant const&) const;
-
-private:
-    void copy_from(Variant const&);
-    void move_from(Variant&&);
-
-    struct RawPoint {
-        int x;
-        int y;
-    };
-
-    struct RawSize {
-        int width;
-        int height;
-    };
-
-    struct RawRect {
-        RawPoint location;
-        RawSize size;
-    };
-
-    union {
-        StringImpl* as_string;
-        Gfx::Bitmap* as_bitmap;
-        GUI::IconImpl* as_icon;
-        Gfx::Font* as_font;
-        bool as_bool;
-        i32 as_i32;
-        i64 as_i64;
-        u32 as_u32;
-        u64 as_u64;
-        float as_float;
-        Gfx::ARGB32 as_color;
-        Gfx::TextAlignment as_text_alignment;
-        Gfx::ColorRole as_color_role;
-        Gfx::AlignmentRole as_alignment_role;
-        Gfx::FlagRole as_flag_role;
-        Gfx::MetricRole as_metric_role;
-        Gfx::PathRole as_path_role;
-        RawPoint as_point;
-        RawSize as_size;
-        RawRect as_rect;
-    } m_value;
-
-    Type m_type { Type::Invalid };
 };
-
-char const* to_string(Variant::Type);
 
 }

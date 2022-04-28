@@ -420,6 +420,8 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
 
 static inline bool bounds_okay(const size_t cursor, const size_t delta, const size_t bound)
 {
+    if (Checked<size_t>::addition_would_overflow(delta, cursor))
+        return false;
     return (delta + cursor) < bound;
 }
 

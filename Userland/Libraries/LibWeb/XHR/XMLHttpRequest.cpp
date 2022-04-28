@@ -390,8 +390,15 @@ static bool is_forbidden_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-method
 static bool is_method(String const& method)
 {
-    Regex<ECMA262Parser> regex { R"~~~(^.*["(),\/:;<=>?@\\[\]{}]+.*$)~~~" };
-    return !regex.has_match(method);
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    return regex.has_match(method);
+}
+
+// https://fetch.spec.whatwg.org/#header-name
+static bool is_header_name(String const& header_name)
+{
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    return regex.has_match(header_name);
 }
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
@@ -406,41 +413,73 @@ static String normalize_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
 static String normalize_header_value(String const& header_value)
 {
-    // FIXME: I'm not sure if this is the right trim, it should only be HTML whitespace bytes.
-    return header_value.trim_whitespace();
+    return header_value.trim(StringView { http_whitespace_bytes });
+}
+
+// https://fetch.spec.whatwg.org/#header-value
+static bool is_header_value(String const& header_value)
+{
+    for (auto const& character : header_value.view()) {
+        if (character == '\0' || character == '\n' || character == '\r')
+            return false;
+    }
+    return true;
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& header, String const& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, String const& value)
 {
+    // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
+    // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
     if (m_send)
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
-    // FIXME: Check if name matches the name production.
-    // FIXME: Check if value matches the value production.
+    // 3. Normalize value.
+    auto normalized_value = normalize_header_value(value);
 
-    if (is_forbidden_header_name(header))
+    // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
+    if (!is_header_name(name))
+        return DOM::SyntaxError::create("Header name contains invalid characters.");
+    if (!is_header_value(value))
+        return DOM::SyntaxError::create("Header value contains invalid characters.");
+
+    // 5. If name is a forbidden header name, then return.
+    if (is_forbidden_header_name(name))
         return {};
 
-    // FIXME: Combine
-    m_request_headers.set(header, normalize_header_value(value));
+    // 6. Combine (name, value) in this’s author request headers.
+    // FIXME: The header name look-up should be case-insensitive.
+    if (m_request_headers.contains(name)) {
+        // 1. If list contains name, then set the value of the first such header to its value,
+        //    followed by 0x2C 0x20, followed by value.
+        auto maybe_header_value = m_request_headers.get(name);
+        m_request_headers.set(name, String::formatted("{}, {}", maybe_header_value.release_value(), normalized_value));
+    } else {
+        // 2. Otherwise, append (name, value) to list.
+        m_request_headers.set(name, normalized_value);
+    }
+
     return {};
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
 DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
 {
+    // 8. If the async argument is omitted, set async to true, and set username and password to null.
     return open(method, url, true, {}, {});
 }
 
 DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url, bool async, String const& username, String const& password)
 {
-    // FIXME: 1. Let settingsObject be this’s relevant settings object.
+    // 1. Let settingsObject be this’s relevant settings object.
+    auto& settings_object = m_window->associated_document().relevant_settings_object();
 
-    // FIXME: 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
+    // 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
+    if (!settings_object.responsible_document().is_null() && !settings_object.responsible_document()->is_active())
+        return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
     if (!is_method(method))
@@ -454,13 +493,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     auto normalized_method = normalize_method(method);
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
-    // FIXME: Should use relevant settings object and not assume it's the Window object
-    auto parsed_url = m_window->associated_document().parse_url(url);
+    auto parsed_url = settings_object.responsible_document()->parse_url(url);
+
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
 
-    // FIXME: 8. If the async argument is omitted, set async to true, and set username and password to null.
+    // 8. If the async argument is omitted, set async to true, and set username and password to null.
+    // NOTE: This is handled in the overload lacking the async argument.
 
     // 9. If parsedURL’s host is non-null, then:
     if (!parsed_url.host().is_null()) {
@@ -502,6 +542,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
         // 2. Fire an event named readystatechange at this.
         set_ready_state(ReadyState::Opened);
     }
+
     return {};
 }
 

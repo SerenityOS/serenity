@@ -92,7 +92,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         if (screen_layout.load_config(*wm_config, &error_msg)) {
             for (auto& screen_info : screen_layout.screens)
-                fb_devices_configured.set(screen_info.device);
+                if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device)
+                    fb_devices_configured.set(screen_info.device.value());
 
             add_unconfigured_devices();
 
