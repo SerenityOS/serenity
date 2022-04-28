@@ -35,10 +35,12 @@ private:
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
+    void paint_hightlight_window();
     void update_preview_window_locations();
 
     Gfx::IntRect m_active_window_rect;
     Gfx::IntRect m_inactive_window_rect;
+    Gfx::IntRect m_highlight_window_rect;
 
     OwnPtr<Gfx::ColorBlindnessFilter> m_color_filter = nullptr;
     RefPtr<MiniWidgetGallery> m_gallery;
