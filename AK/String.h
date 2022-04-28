@@ -165,6 +165,7 @@ public:
 
     [[nodiscard]] bool is_null() const { return !m_impl; }
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return length() == 0; }
+    [[nodiscard]] ALWAYS_INLINE bool is_not_empty() const { return !is_empty(); }
     [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
     // Includes NUL-terminator, if non-nullptr.
     [[nodiscard]] ALWAYS_INLINE char const* characters() const { return m_impl ? m_impl->characters() : nullptr; }
