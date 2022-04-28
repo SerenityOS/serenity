@@ -1,6 +1,8 @@
---- a/default_options.h.orig
+diff --git a/default_options.h b/default_options.h
+index 536f4e7..5073b7c 100644
+--- a/default_options.h
 +++ b/default_options.h
-@@ -59,8 +59,8 @@
+@@ -72,8 +72,8 @@ IMPORTANT: Some options will require "make clean" after changes */
  #define DROPBEAR_SVR_REMOTETCPFWD 1
  
  /* Enable Authentication Agent Forwarding */
@@ -11,7 +13,7 @@
  
  /* Note: Both DROPBEAR_CLI_PROXYCMD and DROPBEAR_CLI_NETCAT must be set to
   * allow multihop dbclient connections */
-@@ -179,7 +179,7 @@
+@@ -210,7 +210,7 @@ group1 in Dropbear server too */
  
  /* Authentication Types - at least one required.
     RFC Draft requires pubkey auth, and recommends password */
