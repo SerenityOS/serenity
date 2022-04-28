@@ -50,6 +50,7 @@ public:
     }
 
     bool is_empty() const { return !m_impl || !m_impl->length(); }
+    bool is_not_empty() const { return !is_empty(); }
     bool is_null() const { return !m_impl; }
 
     bool operator==(FlyString const& other) const { return m_impl == other.m_impl; }
