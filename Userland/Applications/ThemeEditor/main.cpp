@@ -26,6 +26,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
@@ -312,8 +313,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (auto sync_result = theme->sync(); sync_result.is_error()) {
-            // FIXME: Expose this to the user, since failing to save is important to know about!
-            dbgln("Failed to save theme file: {}", sync_result.error());
+            GUI::MessageBox::show_error(window, String::formatted("Failed to save theme file: {}", sync_result.error()));
         }
     };
 
