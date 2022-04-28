@@ -65,7 +65,7 @@ private:
 
     virtual void resize_event(GUI::ResizeEvent&) override
     {
-        m_editor->set_relative_rect(10, 70, 200, 140);
+        m_editor->set_relative_rect(10, 70, 200, 125);
         m_button->set_relative_rect(10, 10, 200, 20);
         m_checkbox->set_relative_rect(10, 30, 200, 20);
         m_radio->set_relative_rect(10, 50, 200, 20);
@@ -84,6 +84,7 @@ PreviewWidget::PreviewWidget(Gfx::Palette const& initial_preview_palette)
 {
     on_palette_change = [&] {
         m_gallery->set_preview_palette(preview_palette());
+        update_preview_window_locations();
     };
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);
@@ -95,21 +96,45 @@ void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_fil
     repaint();
 }
 
+void PreviewWidget::update_preview_window_locations()
+{
+    auto to_frame_rect = [&](Gfx::IntRect rect) {
+        return Gfx::WindowTheme::current().frame_rect_for_window(
+            Gfx::WindowTheme::WindowType::Normal, rect, preview_palette(), 0);
+    };
+
+    constexpr int inactive_offset_x = -20;
+    constexpr int inactive_offset_y = -20;
+
+    m_active_window_rect = Gfx::IntRect(0, 0, 320, 220);
+    m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
+    auto active_frame = to_frame_rect(m_active_window_rect);
+    auto x_delta = m_active_window_rect.x() - active_frame.x();
+    auto y_delta = m_active_window_rect.y() - active_frame.y();
+
+    // Center preview windows accounting for the window frames,
+    // which can vary in size depending on properties of the theme.
+    auto combind_frame_rect = active_frame.united(to_frame_rect(m_inactive_window_rect)).centered_within(frame_inner_rect());
+    m_inactive_window_rect.set_x(combind_frame_rect.x() + x_delta);
+    m_inactive_window_rect.set_y(combind_frame_rect.y() + y_delta);
+    m_active_window_rect.set_x(m_inactive_window_rect.x() - inactive_offset_x);
+    m_active_window_rect.set_y(m_inactive_window_rect.y() - inactive_offset_y);
+
+    m_gallery->set_relative_rect(m_active_window_rect);
+}
+
 void PreviewWidget::paint_preview(GUI::PaintEvent&)
 {
-    auto active_rect = Gfx::IntRect(0, 0, 320, 240).centered_within(frame_inner_rect()).translated(0, 20);
-    auto inactive_rect = active_rect.translated(-20, -20);
-
-    paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, active_window_icon());
-    paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active, inactive_window_icon());
+    paint_window("Inactive window", m_inactive_window_rect, Gfx::WindowTheme::WindowState::Inactive, active_window_icon());
+    paint_window("Active window", m_active_window_rect, Gfx::WindowTheme::WindowState::Active, inactive_window_icon());
 }
 
 void PreviewWidget::second_paint_event(GUI::PaintEvent&)
 {
+    GUI::Painter painter(*this);
+
     if (!m_color_filter)
         return;
-
-    GUI::Painter painter(*this);
 
     auto target = painter.target();
     auto bitmap_clone_or_error = target->clone();
@@ -124,7 +149,7 @@ void PreviewWidget::second_paint_event(GUI::PaintEvent&)
 
 void PreviewWidget::resize_event(GUI::ResizeEvent&)
 {
-    m_gallery->set_relative_rect(Gfx::IntRect(0, 0, 320, 240).centered_within(rect()).translated(0, 20));
+    update_preview_window_locations();
 }
 
 void PreviewWidget::drop_event(GUI::DropEvent& event)
