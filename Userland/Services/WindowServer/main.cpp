@@ -21,7 +21,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction exec"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction exec tty"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec tty"));
 
     auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
@@ -49,6 +49,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
+
+    {
+        // FIXME: Map switched tty from screens.
+        // FIXME: Gracefully cleanup the TTY graphics mode.
+        int tty_fd = TRY(Core::System::open("/dev/tty", O_RDWR));
+        TRY(Core::System::ioctl(tty_fd, KDSETMODE, KD_GRAPHICS));
+        TRY(Core::System::close(tty_fd));
+    }
 
     WindowServer::EventLoop loop;
 
