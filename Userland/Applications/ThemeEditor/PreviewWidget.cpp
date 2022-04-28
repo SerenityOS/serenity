@@ -105,6 +105,8 @@ void PreviewWidget::update_preview_window_locations()
 
     constexpr int inactive_offset_x = -20;
     constexpr int inactive_offset_y = -20;
+    constexpr int hightlight_offset_x = 140;
+    constexpr int hightlight_offset_y = 60;
 
     m_active_window_rect = Gfx::IntRect(0, 0, 320, 220);
     m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
@@ -119,6 +121,10 @@ void PreviewWidget::update_preview_window_locations()
     m_inactive_window_rect.set_y(combind_frame_rect.y() + y_delta);
     m_active_window_rect.set_x(m_inactive_window_rect.x() - inactive_offset_x);
     m_active_window_rect.set_y(m_inactive_window_rect.y() - inactive_offset_y);
+    m_highlight_window_rect = Gfx::IntRect(0, 0, 160, 70)
+                                  .translated(m_active_window_rect.x(), m_active_window_rect.y())
+                                  .translated(hightlight_offset_x, hightlight_offset_y)
+                                  .translated(x_delta, y_delta);
 
     m_gallery->set_relative_rect(m_active_window_rect);
 }
@@ -129,9 +135,20 @@ void PreviewWidget::paint_preview(GUI::PaintEvent&)
     paint_window("Active window", m_active_window_rect, Gfx::WindowTheme::WindowState::Active, inactive_window_icon());
 }
 
+void PreviewWidget::paint_hightlight_window()
+{
+    GUI::Painter painter(*this);
+    paint_window("Highlight window", m_highlight_window_rect, Gfx::WindowTheme::WindowState::Highlighted, inactive_window_icon(), 1);
+    auto button_rect = Gfx::IntRect(0, 0, 80, 22).centered_within(m_highlight_window_rect);
+    Gfx::StylePainter::paint_button(painter, button_rect, preview_palette(), Gfx::ButtonStyle::Normal, false, false, false, true, false, false);
+    painter.draw_text(button_rect, ":^)", Gfx::TextAlignment::Center, preview_palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
+}
+
 void PreviewWidget::second_paint_event(GUI::PaintEvent&)
 {
     GUI::Painter painter(*this);
+
+    paint_hightlight_window();
 
     if (!m_color_filter)
         return;
