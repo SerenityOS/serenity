@@ -58,7 +58,7 @@ constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const&
 }
 
 template<typename T, typename U>
-constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, Vector3<U> const& barycentric_coords)
+constexpr static auto interpolate(T const& v0, T const& v1, T const& v2, Vector3<U> const& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
