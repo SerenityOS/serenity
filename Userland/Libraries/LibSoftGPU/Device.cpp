@@ -23,13 +23,13 @@
 
 namespace SoftGPU {
 
-static long long g_num_rasterized_triangles;
-static long long g_num_pixels;
-static long long g_num_pixels_shaded;
-static long long g_num_pixels_blended;
-static long long g_num_sampler_calls;
-static long long g_num_stencil_writes;
-static long long g_num_quads;
+static u64 g_num_rasterized_triangles;
+static u64 g_num_pixels;
+static u64 g_num_pixels_shaded;
+static u64 g_num_pixels_blended;
+static u64 g_num_sampler_calls;
+static u64 g_num_stencil_writes;
+static u64 g_num_quads;
 
 using AK::SIMD::any;
 using AK::SIMD::exp;
