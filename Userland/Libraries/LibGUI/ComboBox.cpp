@@ -274,9 +274,9 @@ String ComboBox::text() const
     return m_editor->text();
 }
 
-void ComboBox::set_text(String const& text)
+void ComboBox::set_text(String const& text, AllowCallback allow_callback)
 {
-    m_editor->set_text(text);
+    m_editor->set_text(text, allow_callback);
 }
 
 void ComboBox::set_only_allow_values_from_model(bool b)
