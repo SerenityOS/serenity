@@ -209,7 +209,11 @@ static void populate_devtmpfs_devices_based_on_devctl()
             break;
         }
         case 28: {
-            create_devtmpfs_block_device(String::formatted("/dev/gpu{}", minor_number), 0666, 28, minor_number);
+            create_devtmpfs_block_device(String::formatted("/dev/gpu/render{}", minor_number), 0666, 28, minor_number);
+            break;
+        }
+        case 226: {
+            create_devtmpfs_char_device(String::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
             break;
         }
         case 29: {
@@ -395,6 +399,8 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
+
+    TRY(Core::System::mkdir("/dev/gpu", 0755));
 
     populate_devtmpfs();
 
