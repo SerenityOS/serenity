@@ -232,8 +232,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::with)
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
     fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
 
-    // 12. Return ? YearMonthFromFields(calendar, fields, options).
-    return TRY(year_month_from_fields(global_object, calendar, *fields, options));
+    // 12. Return ? CalendarYearMonthFromFields(calendar, fields, options).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *fields, options));
 }
 
 // 9.3.12 Temporal.PlainYearMonth.prototype.add ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.add
@@ -283,8 +283,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
     // 12. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
     MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
 
-    // 13. Let date be ? DateFromFields(calendar, fields, undefined).
-    auto* date = TRY(date_from_fields(global_object, calendar, *fields, nullptr));
+    // 13. Let date be ? CalendarDateFromFields(calendar, fields, undefined).
+    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields, nullptr));
 
     // 14. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
@@ -310,8 +310,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
     // 19. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
     auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, {}));
 
-    // 20. Return ? YearMonthFromFields(calendar, addedDateFields, optionsCopy).
-    return TRY(year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
+    // 20. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
 }
 
 // 9.3.13 Temporal.PlainYearMonth.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.subtract
@@ -368,8 +368,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
     // 13. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
     MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
 
-    // 14. Let date be ? DateFromFields(calendar, fields, undefined).
-    auto* date = TRY(date_from_fields(global_object, calendar, *fields, nullptr));
+    // 14. Let date be ? CalendarDateFromFields(calendar, fields, undefined).
+    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields, nullptr));
 
     // 15. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
@@ -395,8 +395,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
     // 20. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
     auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, {}));
 
-    // 21. Return ? YearMonthFromFields(calendar, addedDateFields, optionsCopy).
-    return TRY(year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
+    // 21. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
 }
 
 // 9.3.14 Temporal.PlainYearMonth.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.until
@@ -446,8 +446,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
     // 15. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
-    // 16. Let otherDate be ? DateFromFields(calendar, otherFields).
-    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields));
+    // 16. Let otherDate be ? CalendarDateFromFields(calendar, otherFields).
+    auto* other_date = TRY(calendar_date_from_fields(global_object, calendar, *other_fields));
 
     // 17. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
     auto* this_fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
@@ -455,8 +455,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
     // 18. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
-    // 19. Let thisDate be ? DateFromFields(calendar, thisFields).
-    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields));
+    // 19. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
+    auto* this_date = TRY(calendar_date_from_fields(global_object, calendar, *this_fields));
 
     // 20. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
@@ -527,8 +527,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
     // 16. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
-    // 17. Let otherDate be ? DateFromFields(calendar, otherFields).
-    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields));
+    // 17. Let otherDate be ? CalendarDateFromFields(calendar, otherFields).
+    auto* other_date = TRY(calendar_date_from_fields(global_object, calendar, *other_fields));
 
     // 18. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
     auto* this_fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
@@ -536,8 +536,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
     // 19. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
-    // 20. Let thisDate be ? DateFromFields(calendar, thisFields).
-    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields));
+    // 20. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
+    auto* this_date = TRY(calendar_date_from_fields(global_object, calendar, *this_fields));
 
     // 21. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
@@ -684,8 +684,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
     MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
 
-    // 14. Return ? DateFromFields(calendar, mergedFields, options).
-    return TRY(date_from_fields(global_object, calendar, *merged_fields, options));
+    // 14. Return ? CalendarDateFromFields(calendar, mergedFields, options).
+    return TRY(calendar_date_from_fields(global_object, calendar, *merged_fields, options));
 }
 
 // 9.3.22 Temporal.PlainYearMonth.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.getisofields

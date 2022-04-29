@@ -121,8 +121,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::with)
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
     fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
 
-    // 12. Return ? MonthDayFromFields(calendar, fields, options).
-    return TRY(month_day_from_fields(global_object, calendar, *fields, options));
+    // 12. Return ? CalendarMonthDayFromFields(calendar, fields, options).
+    return TRY(calendar_month_day_from_fields(global_object, calendar, *fields, options));
 }
 
 // 10.3.7 Temporal.PlainMonthDay.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals
@@ -251,8 +251,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
     MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
 
-    // 14. Return ? DateFromFields(calendar, mergedFields, options).
-    return TRY(date_from_fields(global_object, calendar, *merged_fields, options));
+    // 14. Return ? CalendarDateFromFields(calendar, mergedFields, options).
+    return TRY(calendar_date_from_fields(global_object, calendar, *merged_fields, options));
 }
 
 // 10.3.13 Temporal.PlainMonthDay.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.getisofields

@@ -292,8 +292,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_year_month)
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
 
-    // 6. Return ? YearMonthFromFields(calendar, fields).
-    return TRY(year_month_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
 }
 
 // 3.3.17 Temporal.PlainDate.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainmonthday
@@ -312,8 +312,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
 
-    // 6. Return ? MonthDayFromFields(calendar, fields).
-    return TRY(month_day_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
+    return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
 }
 
 // 3.3.18 Temporal.PlainDate.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.getisofields
@@ -418,8 +418,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
     fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
 
-    // 12. Return ? DateFromFields(calendar, fields, options).
-    return TRY(date_from_fields(global_object, calendar, *fields, options));
+    // 12. Return ? CalendarDateFromFields(calendar, fields, options).
+    return TRY(calendar_date_from_fields(global_object, calendar, *fields, options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar

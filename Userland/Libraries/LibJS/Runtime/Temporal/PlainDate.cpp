@@ -115,8 +115,8 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
-        // g. Return ? DateFromFields(calendar, fields, options).
-        return date_from_fields(global_object, *calendar, *fields, options);
+        // g. Return ? CalendarDateFromFields(calendar, fields, options).
+        return calendar_date_from_fields(global_object, *calendar, *fields, options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).

@@ -458,69 +458,60 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
     return to_temporal_calendar_with_iso_default(global_object, calendar_like);
 }
 
-// 12.1.24 DateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
-ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+// 12.1.24 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
+ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(calendar) is Object.
-    // 2. Assert: Type(fields) is Object.
-    // 3. If options is not present, set options to undefined.
-    // 4. Assert: Type(options) is Object or Undefined.
+    // 1. If options is not present, set options to undefined.
 
-    // 5. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
+    // 2. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
     auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, options ?: js_undefined()));
 
-    // 6. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
+    // 3. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
     auto* date_object = TRY(date.to_object(global_object));
     if (!is<PlainDate>(date_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
-    // 7. Return date.
+    // 4. Return date.
     return static_cast<PlainDate*>(date_object);
 }
 
-// 12.1.25 YearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-yearmonthfromfields
-ThrowCompletionOr<PlainYearMonth*> year_month_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+// 12.1.25 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
+ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(calendar) is Object.
-    // 2. Assert: Type(fields) is Object.
-    // 3. If options is not present, set options to undefined.
-    // 4. Assert: Type(options) is Object or Undefined.
+    // 1. If options is not present, set options to undefined.
 
-    // 5. Let yearMonth be ? Invoke(calendar, "yearMonthFromFields", « fields, options »).
+    // 2. Let yearMonth be ? Invoke(calendar, "yearMonthFromFields", « fields, options »).
     auto year_month = TRY(Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined()));
 
-    // 6. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    // 3. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month_object = TRY(year_month.to_object(global_object));
     if (!is<PlainYearMonth>(year_month_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
 
-    // 7. Return yearMonth.
+    // 4. Return yearMonth.
     return static_cast<PlainYearMonth*>(year_month_object);
 }
 
-// 12.1.26 MonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-monthdayfromfields
-ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+// 12.1.26 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
+ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(calendar) is Object.
-    // 2. Assert: Type(fields) is Object.
-    // 3. If options is not present, set options to undefined.
-    // 4. Assert: Type(options) is Object or Undefined.
+    // 1. If options is not present, set options to undefined.
 
-    // 5. Let monthDay be ? Invoke(calendar, "monthDayFromFields", « fields, options »).
+    // 2. Let monthDay be ? Invoke(calendar, "monthDayFromFields", « fields, options »).
     auto month_day = TRY(Value(&calendar).invoke(global_object, vm.names.monthDayFromFields, &fields, options ?: js_undefined()));
 
-    // 6. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    // 3. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
     auto* month_day_object = TRY(month_day.to_object(global_object));
     if (!is<PlainMonthDay>(month_day_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
 
-    // 7. Return monthDay.
+    // 4. Return monthDay.
     return static_cast<PlainMonthDay*>(month_day_object);
 }
 
