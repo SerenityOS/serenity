@@ -11,6 +11,13 @@
 
 __BEGIN_DECLS
 
+#define POSIX_FADV_DONTNEED 1
+#define POSIX_FADV_NOREUSE 2
+#define POSIX_FADV_NORMAL 3
+#define POSIX_FADV_RANDOM 4
+#define POSIX_FADV_SEQUENTIAL 5
+#define POSIX_FADV_WILLNEED 6
+
 int creat(char const* path, mode_t);
 int open(char const* path, int options, ...);
 int openat(int dirfd, char const* path, int options, ...);
