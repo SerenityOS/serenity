@@ -361,7 +361,6 @@ private:
     bool m_ruler_visible { false };
     bool m_gutter_visible { false };
     bool m_needs_rehighlight { false };
-    bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
     bool m_visualize_trailing_whitespace { true };
