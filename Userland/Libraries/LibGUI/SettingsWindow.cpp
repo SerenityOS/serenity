@@ -10,10 +10,18 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
+
+void SettingsWindow::set_modified(bool modified)
+{
+    Window::set_modified(modified);
+    if (m_apply_button)
+        m_apply_button->set_enabled(modified);
+}
 
 ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, ShowDefaultsButton show_defaults_button)
 {
@@ -41,10 +49,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
         window->m_reset_button = TRY(button_container->try_add<GUI::Button>("Defaults"));
         window->m_reset_button->set_fixed_width(75);
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-            for (auto& [id, tab] : window->m_tabs) {
-                tab->reset_default_values();
-                tab->apply_settings();
-            }
+            window->reset_default_values();
         };
     }
 
@@ -53,24 +58,38 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     window->m_ok_button = TRY(button_container->try_add<GUI::Button>("OK"));
     window->m_ok_button->set_fixed_width(75);
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& [id, tab] : window->m_tabs)
-            tab->apply_settings();
+        window->apply_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_cancel_button = TRY(button_container->try_add<GUI::Button>("Cancel"));
     window->m_cancel_button->set_fixed_width(75);
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& [id, tab] : window->m_tabs)
-            tab->cancel_settings();
+        window->cancel_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_apply_button = TRY(button_container->try_add<GUI::Button>("Apply"));
     window->m_apply_button->set_fixed_width(75);
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
-        for (auto& [id, tab] : window->m_tabs)
-            tab->apply_settings();
+        window->apply_settings();
+    };
+
+    window->on_close_request = [window = window->make_weak_ptr<SettingsWindow>()]() mutable -> Window::CloseRequestDecision {
+        if (!window->is_modified())
+            return Window::CloseRequestDecision::Close;
+
+        auto result = MessageBox::show(window, "Apply these settings before closing?", "Unsaved changes", MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
+        switch (result) {
+        case MessageBox::ExecYes:
+            window->apply_settings();
+            return Window::CloseRequestDecision::Close;
+        case MessageBox::ExecNo:
+            window->cancel_settings();
+            return Window::CloseRequestDecision::Close;
+        default:
+            return Window::CloseRequestDecision::StayOpen;
+        }
     };
 
     return window;
@@ -88,6 +107,28 @@ void SettingsWindow::set_active_tab(StringView id)
 {
     if (auto tab = get_tab(id); tab.has_value())
         m_tab_widget->set_active_widget(tab.value());
+}
+
+void SettingsWindow::apply_settings()
+{
+    for (auto& [id, tab] : m_tabs)
+        tab->apply_settings();
+    set_modified(false);
+}
+
+void SettingsWindow::cancel_settings()
+{
+    for (auto& [id, tab] : m_tabs)
+        tab->cancel_settings();
+}
+
+void SettingsWindow::reset_default_values()
+{
+    for (auto& [id, tab] : m_tabs) {
+        tab->reset_default_values();
+        tab->apply_settings();
+    }
+    set_modified(false);
 }
 
 }
