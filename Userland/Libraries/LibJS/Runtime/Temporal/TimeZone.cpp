@@ -197,6 +197,7 @@ BigInt* get_iana_time_zone_next_transition(GlobalObject&, [[maybe_unused]] BigIn
 {
     // The implementation-defined abstract operation GetIANATimeZoneNextTransition takes arguments epochNanoseconds (a BigInt) and timeZoneIdentifier (a String) and returns a BigInt or null.
     // The returned value represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the first time zone transition after epochNanoseconds in the IANA time zone identified by timeZoneIdentifier, or null if no such transition exists.
+    // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
 
     // TODO: Implement this
     return nullptr;
@@ -207,6 +208,7 @@ BigInt* get_iana_time_zone_previous_transition(GlobalObject&, [[maybe_unused]] B
 {
     // The implementation-defined abstract operation GetIANATimeZonePreviousTransition takes arguments epochNanoseconds (a BigInt) and timeZoneIdentifier (a String) and returns a BigInt or null.
     // The returned value represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the last time zone transition before epochNanoseconds in the IANA time zone identified by timeZoneIdentifier, or null if no such transition exists.
+    // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
 
     // TODO: Implement this
     return nullptr;
