@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -129,24 +129,16 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
     }
 }
 
-UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
 {
-    auto mbr_table_or_result = MBRPartitionTable::try_to_initialize(device);
-    if (!mbr_table_or_result.is_error())
-        return move(mbr_table_or_result.value());
-    if (mbr_table_or_result.error() == PartitionTable::Error::MBRProtective) {
-        auto gpt_table_or_result = GUIDPartitionTable::try_to_initialize(device);
-        if (gpt_table_or_result.is_error())
-            return {};
-        return move(gpt_table_or_result.value());
+    auto mbr_table_or_error = MBRPartitionTable::try_to_initialize(device);
+    if (!mbr_table_or_error.is_error())
+        return mbr_table_or_error.release_value();
+    auto ebr_table_or_error = EBRPartitionTable::try_to_initialize(device);
+    if (!ebr_table_or_error.is_error()) {
+        return ebr_table_or_error.release_value();
     }
-    if (mbr_table_or_result.error() == PartitionTable::Error::ContainsEBR) {
-        auto ebr_table_or_result = EBRPartitionTable::try_to_initialize(device);
-        if (ebr_table_or_result.is_error())
-            return {};
-        return move(ebr_table_or_result.value());
-    }
-    return {};
+    return TRY(GUIDPartitionTable::try_to_initialize(device));
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
@@ -154,9 +146,10 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
     VERIFY(!m_storage_devices.is_empty());
     size_t device_index = 0;
     for (auto& device : m_storage_devices) {
-        auto partition_table = try_to_initialize_partition_table(device);
-        if (!partition_table)
+        auto partition_table_or_error = try_to_initialize_partition_table(device);
+        if (partition_table_or_error.is_error())
             continue;
+        auto partition_table = partition_table_or_error.release_value();
         for (size_t partition_index = 0; partition_index < partition_table->partitions_count(); partition_index++) {
             auto partition_metadata = partition_table->partition(partition_index);
             if (!partition_metadata.has_value())

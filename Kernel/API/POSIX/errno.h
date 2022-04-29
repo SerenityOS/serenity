@@ -89,6 +89,7 @@
     E(ENOTRECOVERABLE, "State not recoverable")                       \
     E(ECANCELED, "Operation cancelled")                               \
     E(EPROMISEVIOLATION, "The process has a promise violation")       \
+    E(ESTALE, "Stale network file handle")                            \
     E(EMAXERRNO, "The highest errno +1 :^)")
 
 enum ErrnoCode {

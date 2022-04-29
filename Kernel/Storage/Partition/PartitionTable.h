@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,13 +15,6 @@
 namespace Kernel {
 
 class PartitionTable {
-public:
-    enum class Error {
-        Invalid,
-        MBRProtective,
-        ContainsEBR,
-    };
-
 public:
     Optional<DiskPartitionMetadata> partition(unsigned index);
     size_t partitions_count() const { return m_partitions.size(); }

@@ -152,7 +152,7 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_obje
     // 1. Let integer be ? ToIntegerOrInfinity(argument).
     auto integer = TRY(argument.to_integer_or_infinity(global_object));
 
-    // 2. If integer is −∞ or +∞ , then
+    // 2. If integer is -∞ or +∞ , then
     if (Value(integer).is_infinity()) {
         // a. Throw a RangeError exception.
         return vm.template throw_completion<RangeError>(global_object, error_type, args...);
@@ -171,7 +171,7 @@ ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_objec
     // 1. Let number be ? ToNumber(argument).
     auto number = TRY(argument.to_number(global_object));
 
-    // 2. If number is NaN, +0𝔽, or −0𝔽 return 0.
+    // 2. If number is NaN, +0𝔽, or -0𝔽 return 0.
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return 0;
 

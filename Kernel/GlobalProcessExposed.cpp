@@ -47,16 +47,16 @@ private:
             auto obj = TRY(array.add_object());
             TRY(obj.add("name", adapter.name()));
             TRY(obj.add("class_name", adapter.class_name()));
-            auto mac_address = adapter.mac_address().to_string().release_value_but_fixme_should_propagate_errors();
+            auto mac_address = TRY(adapter.mac_address().to_string());
             TRY(obj.add("mac_address", mac_address->view()));
             if (!adapter.ipv4_address().is_zero()) {
-                auto ipv4_address = adapter.ipv4_address().to_string().release_value_but_fixme_should_propagate_errors();
+                auto ipv4_address = TRY(adapter.ipv4_address().to_string());
                 TRY(obj.add("ipv4_address", ipv4_address->view()));
-                auto ipv4_netmask = adapter.ipv4_netmask().to_string().release_value_but_fixme_should_propagate_errors();
+                auto ipv4_netmask = TRY(adapter.ipv4_netmask().to_string());
                 TRY(obj.add("ipv4_netmask", ipv4_netmask->view()));
             }
             if (!adapter.ipv4_gateway().is_zero()) {
-                auto ipv4_gateway = adapter.ipv4_gateway().to_string().release_value_but_fixme_should_propagate_errors();
+                auto ipv4_gateway = TRY(adapter.ipv4_gateway().to_string());
                 TRY(obj.add("ipv4_gateway", ipv4_gateway->view()));
             }
             TRY(obj.add("packets_in", adapter.packets_in()));
@@ -87,10 +87,38 @@ private:
         TRY(arp_table().with([&](auto const& table) -> ErrorOr<void> {
             for (auto& it : table) {
                 auto obj = TRY(array.add_object());
-                auto mac_address = it.value.to_string().release_value_but_fixme_should_propagate_errors();
+                auto mac_address = TRY(it.value.to_string());
                 TRY(obj.add("mac_address", mac_address->view()));
-                auto ip_address = it.key.to_string().release_value_but_fixme_should_propagate_errors();
+                auto ip_address = TRY(it.key.to_string());
                 TRY(obj.add("ip_address", ip_address->view()));
+                TRY(obj.finish());
+            }
+            return {};
+        }));
+        TRY(array.finish());
+        return {};
+    }
+};
+
+class ProcFSRoute final : public ProcFSGlobalInformation {
+public:
+    static NonnullRefPtr<ProcFSRoute> must_create();
+
+private:
+    ProcFSRoute();
+    virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
+    {
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(routing_table().with([&](auto const& table) -> ErrorOr<void> {
+            for (auto& it : table) {
+                auto obj = TRY(array.add_object());
+                auto destination = TRY(it.destination.to_string());
+                TRY(obj.add("destination", destination->view()));
+                auto gateway = TRY(it.gateway.to_string());
+                TRY(obj.add("gateway", gateway->view()));
+                auto netmask = TRY(it.netmask.to_string());
+                TRY(obj.add("genmask", netmask->view()));
+                TRY(obj.add("interface", it.adapter->name()));
                 TRY(obj.finish());
             }
             return {};
@@ -111,10 +139,10 @@ private:
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(TCPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
-            auto local_address = socket.local_address().to_string().release_value_but_fixme_should_propagate_errors();
+            auto local_address = TRY(socket.local_address().to_string());
             TRY(obj.add("local_address", local_address->view()));
             TRY(obj.add("local_port", socket.local_port()));
-            auto peer_address = socket.peer_address().to_string().release_value_but_fixme_should_propagate_errors();
+            auto peer_address = TRY(socket.peer_address().to_string());
             TRY(obj.add("peer_address", peer_address->view()));
             TRY(obj.add("peer_port", socket.peer_port()));
             TRY(obj.add("state", TCPSocket::to_string(socket.state())));
@@ -174,10 +202,10 @@ private:
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(UDPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
-            auto local_address = socket.local_address().to_string().release_value_but_fixme_should_propagate_errors();
+            auto local_address = TRY(socket.local_address().to_string());
             TRY(obj.add("local_address", local_address->view()));
             TRY(obj.add("local_port", socket.local_port()));
-            auto peer_address = socket.peer_address().to_string().release_value_but_fixme_should_propagate_errors();
+            auto peer_address = TRY(socket.peer_address().to_string());
             TRY(obj.add("peer_address", peer_address->view()));
             TRY(obj.add("peer_port", socket.peer_port()));
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
@@ -217,6 +245,10 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSARP> ProcFSARP::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSARP).release_nonnull();
 }
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRoute> ProcFSRoute::must_create()
+{
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSRoute).release_nonnull();
+}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSTCP> ProcFSTCP::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSTCP).release_nonnull();
@@ -235,6 +267,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::m
     auto directory = adopt_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
     directory->m_components.append(ProcFSAdapters::must_create());
     directory->m_components.append(ProcFSARP::must_create());
+    directory->m_components.append(ProcFSRoute::must_create());
     directory->m_components.append(ProcFSTCP::must_create());
     directory->m_components.append(ProcFSLocalNet::must_create());
     directory->m_components.append(ProcFSUDP::must_create());
@@ -247,6 +280,10 @@ UNMAP_AFTER_INIT ProcFSAdapters::ProcFSAdapters()
 }
 UNMAP_AFTER_INIT ProcFSARP::ProcFSARP()
     : ProcFSGlobalInformation("arp"sv)
+{
+}
+UNMAP_AFTER_INIT ProcFSRoute::ProcFSRoute()
+    : ProcFSGlobalInformation("route"sv)
 {
 }
 UNMAP_AFTER_INIT ProcFSTCP::ProcFSTCP()

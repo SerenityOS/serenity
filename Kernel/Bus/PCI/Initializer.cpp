@@ -14,8 +14,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
-namespace PCI {
+namespace Kernel::PCI {
 
 READONLY_AFTER_INIT bool g_pci_access_io_probe_failed;
 READONLY_AFTER_INIT bool g_pci_access_is_disabled_from_commandline;
@@ -82,5 +81,4 @@ UNMAP_AFTER_INIT bool test_pci_io()
     return false;
 }
 
-}
 }

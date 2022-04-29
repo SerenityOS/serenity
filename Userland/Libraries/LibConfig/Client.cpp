@@ -57,17 +57,17 @@ bool Client::read_bool(StringView domain, StringView group, StringView key, bool
 
 void Client::write_string(StringView domain, StringView group, StringView key, StringView value)
 {
-    async_write_string_value(domain, group, key, value);
+    write_string_value(domain, group, key, value);
 }
 
 void Client::write_i32(StringView domain, StringView group, StringView key, i32 value)
 {
-    async_write_i32_value(domain, group, key, value);
+    write_i32_value(domain, group, key, value);
 }
 
 void Client::write_bool(StringView domain, StringView group, StringView key, bool value)
 {
-    async_write_bool_value(domain, group, key, value);
+    write_bool_value(domain, group, key, value);
 }
 
 void Client::remove_key(StringView domain, StringView group, StringView key)

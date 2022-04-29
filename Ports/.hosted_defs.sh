@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+SCRIPT="$(dirname "${0}")"
+
+export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
+export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GCC}"
+
+if [ -z "${HOST_CC:=}" ]; then
+    export HOST_CC="${CC:=cc}"
+    export HOST_CXX="${CXX:=c++}"
+    export HOST_AR="${AR:=ar}"
+    export HOST_RANLIB="${RANLIB:=ranlib}"
+    export HOST_PATH="${PATH:=}"
+    export HOST_READELF="${READELF:=readelf}"
+    export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
+    export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
+    export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
+    export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
+fi
+
 export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
@@ -26,7 +44,4 @@ export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
 export PKG_CONFIG_LIBDIR="${PKG_CONFIG_SYSROOT_DIR}/usr/lib/pkgconfig/:${PKG_CONFIG_SYSROOT_DIR}/usr/local/lib/pkgconfig"
 
-enable_ccache
-
-DESTDIR="${SERENITY_BUILD_DIR}/Root"
-export SERENITY_INSTALL_ROOT="$DESTDIR"
+export SERENITY_INSTALL_ROOT="${SERENITY_BUILD_DIR}/Root"

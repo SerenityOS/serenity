@@ -53,7 +53,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
     // 3. Let parseResult be ParseText(StringToCodePoints(identifier), TimeZoneNumericUTCOffset).
     // 4. If parseResult is a List of errors, then
     if (!is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
-        // a. If ! IsValidTimeZoneName(identifier) is false, then
+        // a. If IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, identifier);

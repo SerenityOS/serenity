@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
-#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/FontFace.h>
@@ -36,7 +36,7 @@ class ParsingContext {
 public:
     ParsingContext() = default;
     explicit ParsingContext(DOM::Document const&);
-    explicit ParsingContext(DOM::Document const&, Optional<AK::URL> const);
+    explicit ParsingContext(DOM::Document const&, AK::URL);
     explicit ParsingContext(DOM::ParentNode&);
 
     bool in_quirks_mode() const;
@@ -49,12 +49,49 @@ public:
 private:
     DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
-    Optional<AK::URL> m_url;
+    AK::URL m_url;
 };
 
 template<typename T>
 class TokenStream {
 public:
+    class StateTransaction {
+    public:
+        explicit StateTransaction(TokenStream<T>& token_stream)
+            : m_token_stream(token_stream)
+            , m_saved_iterator_offset(token_stream.m_iterator_offset)
+        {
+        }
+
+        ~StateTransaction()
+        {
+            if (!m_commit)
+                m_token_stream.m_iterator_offset = m_saved_iterator_offset;
+        }
+
+        StateTransaction create_child() { return StateTransaction(*this); }
+
+        void commit()
+        {
+            m_commit = true;
+            if (m_parent)
+                m_parent->commit();
+        }
+
+    private:
+        explicit StateTransaction(StateTransaction& parent)
+            : m_parent(&parent)
+            , m_token_stream(parent.m_token_stream)
+            , m_saved_iterator_offset(parent.m_token_stream.m_iterator_offset)
+        {
+        }
+
+        StateTransaction* m_parent { nullptr };
+        TokenStream<T>& m_token_stream;
+        int m_saved_iterator_offset { 0 };
+        bool m_commit { false };
+    };
+
     explicit TokenStream(Vector<T> const&);
     ~TokenStream() = default;
 
@@ -66,8 +103,7 @@ public:
     T const& current_token();
     void reconsume_current_input_token();
 
-    int position() const { return m_iterator_offset; }
-    void rewind_to_position(int);
+    StateTransaction begin_transaction() { return StateTransaction(*this); }
 
     void skip_whitespace();
 
@@ -112,11 +148,12 @@ public:
     static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
 
 private:
-    enum class ParsingResult {
-        Done,
+    enum class ParseError {
         IncludesIgnoredVendorPrefix,
         SyntaxError,
     };
+    template<typename T>
+    using ParseErrorOr = ErrorOr<T, ParseError>;
 
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
@@ -161,18 +198,14 @@ private:
         Relative
     };
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
+    ParseErrorOr<SelectorList> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
 
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
     template<typename T>
     RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
-    enum class AllowTrailingTokens {
-        No,
-        Yes
-    };
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<ComponentValue>&, AllowTrailingTokens = AllowTrailingTokens::No);
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<ComponentValue>&);
 
     enum class TopLevel {
         No,
@@ -275,7 +308,7 @@ private:
     Optional<Length> parse_length(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
-    Optional<UnicodeRange> create_unicode_range_from_tokens(TokenStream<ComponentValue>&, int start_position, int end_position);
+    Optional<UnicodeRange> parse_unicode_range(StringView);
 
     enum class AllowedDataUrlType {
         None,
@@ -283,7 +316,7 @@ private:
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
-    Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
+    ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_css_value(ComponentValue const&);
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<StyleValue> parse_dynamic_value(ComponentValue const&);
@@ -336,13 +369,13 @@ private:
     OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<ComponentValue> const&);
 
-    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
-    Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
+    ParseErrorOr<Optional<Selector::CompoundSelector>> parse_compound_selector(TokenStream<ComponentValue>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<ComponentValue>&);
 
-    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(ComponentValue const&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<ComponentValue>&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<Selector::SimpleSelector> parse_attribute_simple_selector(ComponentValue const&);
+    ParseErrorOr<Selector::SimpleSelector> parse_pseudo_simple_selector(TokenStream<ComponentValue>&);
+    ParseErrorOr<Optional<Selector::SimpleSelector>> parse_simple_selector(TokenStream<ComponentValue>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<ComponentValue>&);
     OwnPtr<MediaCondition> parse_media_condition(TokenStream<ComponentValue>&, MediaCondition::AllowOr allow_or);

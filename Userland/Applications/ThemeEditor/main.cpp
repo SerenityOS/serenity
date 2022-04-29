@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
@@ -26,6 +26,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
@@ -58,19 +59,11 @@ private:
     }
 };
 
-struct AlignmentValue {
-    String title;
-    Gfx::TextAlignment setting_value;
-};
-
 class AlignmentModel final : public GUI::Model {
-
 public:
-    AlignmentModel()
+    static ErrorOr<NonnullRefPtr<AlignmentModel>> try_create()
     {
-        m_alignments.empend("Center", Gfx::TextAlignment::Center);
-        m_alignments.empend("Left", Gfx::TextAlignment::CenterLeft);
-        m_alignments.empend("Right", Gfx::TextAlignment::CenterRight);
+        return adopt_nonnull_ref_or_enomem(new (nothrow) AlignmentModel());
     }
 
     virtual ~AlignmentModel() = default;
@@ -89,7 +82,17 @@ public:
     }
 
 private:
-    Vector<AlignmentValue> m_alignments;
+    AlignmentModel() = default;
+
+    struct AlignmentValue {
+        String title;
+        Gfx::TextAlignment setting_value;
+    };
+    Vector<AlignmentValue> m_alignments {
+        { "Center", Gfx::TextAlignment::Center },
+        { "Left", Gfx::TextAlignment::CenterLeft },
+        { "Right", Gfx::TextAlignment::CenterRight },
+    };
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -127,6 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::Palette startup_preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
 
     auto window = GUI::Window::construct();
+    auto last_modified_time = Time::now_monotonic();
 
     Vector<Gfx::ColorRole> color_roles;
 #define __ENUMERATE_COLOR_ROLE(role) color_roles.append(Gfx::ColorRole::role);
@@ -177,7 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     color_combo_box.set_model(TRY(RoleModel<Gfx::ColorRole>::try_create(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_widget.preview_palette().color(role));
+        color_input.set_color(preview_widget.preview_palette().color(role), GUI::AllowCallback::No);
     };
     color_combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
@@ -187,7 +191,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
-    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
+    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window), GUI::AllowCallback::No);
 
     alignment_combo_box.set_model(TRY(RoleModel<Gfx::AlignmentRole>::try_create(alignment_roles)));
     alignment_combo_box.on_change = [&](auto&, auto& index) {
@@ -197,8 +201,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     alignment_combo_box.set_selected_index((size_t)Gfx::AlignmentRole::TitleAlignment - 1);
 
     alignment_input.set_only_allow_values_from_model(true);
-    alignment_input.set_model(adopt_ref(*new AlignmentModel()));
-    alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment));
+    alignment_input.set_model(TRY(AlignmentModel::try_create()));
+    alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment), GUI::AllowCallback::No);
     alignment_input.on_change = [&](auto&, auto& index) {
         auto role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
         auto preview_palette = preview_widget.preview_palette();
@@ -240,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     path_combo_box.set_model(TRY(RoleModel<Gfx::PathRole>::try_create(path_roles)));
     path_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(preview_widget.preview_palette().path(role));
+        path_input.set_text(preview_widget.preview_palette().path(role), GUI::AllowCallback::No);
     };
     path_combo_box.set_selected_index((size_t)Gfx::PathRole::TitleButtonIcons - 1);
 
@@ -250,14 +254,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_palette.set_path(role, path_input.text());
         preview_widget.set_preview_palette(preview_palette);
     };
-    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons));
+    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons), GUI::AllowCallback::No);
 
     path_picker_button.on_click = [&](auto) {
-        // FIXME: Open at the path_input location. Right now that's panicking the kernel though! :^(
         auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
         bool open_folder = (role == Gfx::PathRole::TitleButtonIcons);
         auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", path_combo_box.text());
-        auto result = GUI::FilePicker::get_open_filepath(window, window_title, "/res/icons", open_folder);
+        auto target_path = path_input.text();
+        if (Core::File::exists(target_path)) {
+            if (!Core::File::is_directory(target_path))
+                target_path = LexicalPath::dirname(target_path);
+        } else {
+            target_path = "/res/icons";
+        }
+        auto result = GUI::FilePicker::get_open_filepath(window, window_title, target_path, open_folder);
         if (!result.has_value())
             return;
         path_input.set_text(*result);
@@ -266,7 +276,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto update_window_title = [&] {
-        window->set_title(String::formatted("{} - Theme Editor", path.value_or("Untitled")));
+        window->set_title(String::formatted("{}[*] - Theme Editor", path.value_or("Untitled")));
+    };
+
+    preview_widget.on_palette_change = [&] {
+        window->set_modified(true);
     };
 
     preview_widget.on_theme_load_from_file = [&](String const& new_path) {
@@ -274,7 +288,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_window_title();
 
         auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_widget.preview_palette().color(selected_color_role));
+        color_input.set_color(preview_widget.preview_palette().color(selected_color_role), GUI::AllowCallback::No);
+
+        auto selected_alignment_role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
+        alignment_input.set_selected_index((size_t)(preview_widget.preview_palette().alignment(selected_alignment_role), GUI::AllowCallback::No));
 
         auto selected_flag_role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
         flag_input.set_checked(preview_widget.preview_palette().flag(selected_flag_role), GUI::AllowCallback::No);
@@ -283,7 +300,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         metric_input.set_value(preview_widget.preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
 
         auto selected_path_role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(preview_widget.preview_palette().path(selected_path_role));
+        path_input.set_text(preview_widget.preview_palette().path(selected_path_role), GUI::AllowCallback::No);
+
+        last_modified_time = Time::now_monotonic();
+        window->set_modified(false);
     };
 
     auto save_to_result = [&](auto const& response) {
@@ -309,9 +329,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             theme->write_entry("Paths", to_string(role), preview_widget.preview_palette().path(role));
         }
 
-        if (auto sync_result = theme->sync(); sync_result.is_error()) {
-            // FIXME: Expose this to the user, since failing to save is important to know about!
-            dbgln("Failed to save theme file: {}", sync_result.error());
+        auto sync_result = theme->sync();
+        if (sync_result.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Failed to save theme file: {}", sync_result.error()));
+        } else {
+            last_modified_time = Time::now_monotonic();
+            window->set_modified(false);
         }
     };
 
@@ -322,13 +345,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_widget.set_theme_from_file(*response.value());
     })));
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
+    auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
             save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         } else {
             save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         }
-    })));
+    });
+    TRY(file_menu->try_add_action(save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
@@ -402,6 +426,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window)));
 
     update_window_title();
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (!window->is_modified())
+            return GUI::Window::CloseRequestDecision::Close;
+
+        auto result = GUI::MessageBox::ask_about_unsaved_changes(window, path.value_or(""), last_modified_time);
+        if (result == GUI::MessageBox::ExecYes) {
+            save_action->activate();
+            if (window->is_modified())
+                return GUI::Window::CloseRequestDecision::StayOpen;
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        if (result == GUI::MessageBox::ExecNo)
+            return GUI::Window::CloseRequestDecision::Close;
+
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     window->resize(480, 520);
     window->set_resizable(false);

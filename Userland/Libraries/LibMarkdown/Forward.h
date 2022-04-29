@@ -16,7 +16,7 @@ class BlockQuote;
 class CodeBlock;
 class ContainerBlock;
 class Heading;
-class HoriziontalRule;
+class HorizontalRule;
 class List;
 class Paragraph;
 class Table;

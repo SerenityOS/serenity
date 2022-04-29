@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/Utf8View.h>
 
@@ -203,7 +204,7 @@ Utf8CodePointIterator& Utf8CodePointIterator::operator++()
     if (code_point_length_in_bytes > m_length) {
         // We don't have enough data for the next code point. Skip one character and try again.
         // The rest of the code will output replacement characters as needed for any eventual extension bytes we might encounter afterwards.
-        dbgln("Expected code point size {} is too big for the remaining length {}. Moving forward one byte.", code_point_length_in_bytes, m_length);
+        dbgln_if(UTF8_DEBUG, "Expected code point size {} is too big for the remaining length {}. Moving forward one byte.", code_point_length_in_bytes, m_length);
         m_ptr += 1;
         m_length -= 1;
         return *this;
@@ -252,20 +253,20 @@ u32 Utf8CodePointIterator::operator*() const
 
     if (!first_byte_makes_sense) {
         // The first byte of the code point doesn't make sense: output a replacement character
-        dbgln("First byte doesn't make sense: {:#02x}.", m_ptr[0]);
+        dbgln_if(UTF8_DEBUG, "First byte doesn't make sense: {:#02x}.", m_ptr[0]);
         return 0xFFFD;
     }
 
     if (code_point_length_in_bytes > m_length) {
         // There is not enough data left for the full code point: output a replacement character
-        dbgln("Not enough bytes (need {}, have {}), first byte is: {:#02x}.", code_point_length_in_bytes, m_length, m_ptr[0]);
+        dbgln_if(UTF8_DEBUG, "Not enough bytes (need {}, have {}), first byte is: {:#02x}.", code_point_length_in_bytes, m_length, m_ptr[0]);
         return 0xFFFD;
     }
 
     for (size_t offset = 1; offset < code_point_length_in_bytes; offset++) {
         if (m_ptr[offset] >> 6 != 2) {
             // One of the extension bytes of the code point doesn't make sense: output a replacement character
-            dbgln("Extension byte {:#02x} in {} position after first byte {:#02x} doesn't make sense.", m_ptr[offset], offset, m_ptr[0]);
+            dbgln_if(UTF8_DEBUG, "Extension byte {:#02x} in {} position after first byte {:#02x} doesn't make sense.", m_ptr[offset], offset, m_ptr[0]);
             return 0xFFFD;
         }
 

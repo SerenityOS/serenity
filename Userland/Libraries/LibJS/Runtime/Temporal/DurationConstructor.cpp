@@ -159,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     if (ns1 > ns2)
         return Value(1);
 
-    // 12. If ns1 < ns2, return −1𝔽.
+    // 12. If ns1 < ns2, return -1𝔽.
     if (ns1 < ns2)
         return Value(-1);
 

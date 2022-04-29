@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,7 +45,7 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    OwnPtr<PartitionTable> try_to_initialize_partition_table(StorageDevice const&) const;
+    ErrorOr<NonnullOwnPtr<PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;
 

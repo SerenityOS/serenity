@@ -9,8 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 
-namespace Kernel {
-namespace PCI {
+namespace Kernel::PCI {
 
 class Device {
 public:
@@ -36,5 +35,4 @@ private:
     Address m_pci_address;
 };
 
-}
 }

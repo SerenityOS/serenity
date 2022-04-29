@@ -84,7 +84,7 @@ static Vector<StringView> available_time_zones()
 
     // 3. For each element name of names, do
     for (auto name : names) {
-        // a. Assert: ! IsValidTimeZoneName( name ) is true.
+        // a. Assert: IsValidTimeZoneName( name ) is true.
         // b. Let canonical be ! CanonicalizeTimeZoneName( name ).
         auto canonical = TimeZone::canonicalize_time_zone(name).value();
 

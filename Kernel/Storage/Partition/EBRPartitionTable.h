@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
@@ -20,7 +21,7 @@ class EBRPartitionTable : public MBRPartitionTable {
 public:
     ~EBRPartitionTable();
 
-    static Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> try_to_initialize(StorageDevice const&);
+    static ErrorOr<NonnullOwnPtr<EBRPartitionTable>> try_to_initialize(StorageDevice const&);
     explicit EBRPartitionTable(StorageDevice const&);
     virtual bool is_valid() const override { return m_valid; };
 

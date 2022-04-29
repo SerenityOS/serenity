@@ -368,6 +368,7 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
     current_editor().set_focus(true);
 
     current_editor().on_cursor_change = [this] { on_cursor_change(); };
+    current_editor().on_change = [this] { update_window_title(); };
     current_editor_wrapper().on_change = [this] { update_gml_preview(); };
     current_editor().set_cursor(line, column);
     update_gml_preview();
@@ -1588,6 +1589,7 @@ void HackStudioWidget::update_tree_view()
 void HackStudioWidget::update_window_title()
 {
     window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+    window()->set_modified(any_document_is_dirty());
 }
 
 void HackStudioWidget::update_current_editor_title()

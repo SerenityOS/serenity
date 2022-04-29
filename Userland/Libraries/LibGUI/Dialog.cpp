@@ -116,7 +116,7 @@ void Dialog::event(Core::Event& event)
 void Dialog::close()
 {
     Window::close();
-    m_event_loop->quit(ExecCancel);
+    done(ExecCancel);
 }
 
 }

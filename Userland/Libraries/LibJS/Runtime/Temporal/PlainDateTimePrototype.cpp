@@ -395,10 +395,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 12. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto result = TRY(interpret_temporal_date_time_fields(global_object, calendar, *fields, *options));
 
-    // 13. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    // 13. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
-    // 14. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    // 14. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
     VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
     // 15. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
@@ -474,10 +474,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::add)
     // 5. Let result be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], options).
     auto result = TRY(add_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), date_time->calendar(), duration.years, duration.months, duration.weeks, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds, options));
 
-    // 6. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    // 6. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
-    // 7. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    // 7. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
     VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
     // 8. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
@@ -497,13 +497,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::subtract)
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
-    // 5. Let result be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], −duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]], options).
+    // 5. Let result be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], -duration.[[Years]], -duration.[[Months]], -duration.[[Weeks]], -duration.[[Days]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]], options).
     auto result = TRY(add_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), date_time->calendar(), -duration.years, -duration.months, -duration.weeks, -duration.days, -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds, options));
 
-    // 6. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    // 6. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
-    // 7. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    // 7. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
     VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
     // 8. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
@@ -617,7 +617,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
     // 17. Let result be ! BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], largestUnit).
     auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds), *largest_unit));
 
-    // 18. Return ? CreateTemporalDuration(−roundResult.[[Years]], −roundResult.[[Months]], −roundResult.[[Weeks]], −result.[[Days]], −result.[[Hours]], −result.[[Minutes]], −result.[[Seconds]], −result.[[Milliseconds]], −result.[[Microseconds]], −result.[[Nanoseconds]]).
+    // 18. Return ? CreateTemporalDuration(-roundResult.[[Years]], -roundResult.[[Months]], -roundResult.[[Weeks]], -result.[[Days]], -result.[[Hours]], -result.[[Minutes]], -result.[[Seconds]], -result.[[Milliseconds]], -result.[[Microseconds]], -result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, -round_result.weeks, -result.days, -result.hours, -result.minutes, -result.seconds, -result.milliseconds, -result.microseconds, -result.nanoseconds));
 }
 
@@ -802,8 +802,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
-    // 6. Return ? YearMonthFromFields(calendar, fields).
-    return TRY(year_month_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
 }
 
 // 5.3.39 Temporal.PlainDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainmonthday
@@ -822,8 +822,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
-    // 6. Return ? MonthDayFromFields(calendar, fields).
-    return TRY(month_day_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
+    return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
 }
 
 // 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime

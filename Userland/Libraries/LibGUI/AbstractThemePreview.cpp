@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -71,9 +71,9 @@ void AbstractThemePreview::load_theme_bitmaps()
 void AbstractThemePreview::set_preview_palette(Gfx::Palette const& palette)
 {
     m_preview_palette = palette;
-    if (on_palette_change) {
+    palette_changed();
+    if (on_palette_change)
         on_palette_change();
-    }
     load_theme_bitmaps();
     update();
 }

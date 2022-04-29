@@ -624,16 +624,20 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return ENODEV;
 
         switch (request) {
-        case SIOCADDRT:
+        case SIOCADDRT: {
             if (!Process::current().is_superuser())
                 return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
                 return EAFNOSUPPORT;
             if ((route.rt_flags & (RTF_UP | RTF_GATEWAY)) != (RTF_UP | RTF_GATEWAY))
                 return EINVAL; // FIXME: Find the correct value to return
-            adapter->set_ipv4_gateway(IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr));
-            return {};
 
+            auto destination = IPv4Address(((sockaddr_in&)route.rt_dst).sin_addr.s_addr);
+            auto gateway = IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr);
+            auto genmask = IPv4Address(((sockaddr_in&)route.rt_genmask).sin_addr.s_addr);
+
+            return update_routing_table(destination, gateway, genmask, adapter, UpdateTable::Set);
+        }
         case SIOCDELRT:
             // FIXME: Support gateway deletion
             return {};
@@ -653,7 +657,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
                 return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
                 return EAFNOSUPPORT;
-            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Set);
+            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateTable::Set);
             return {};
 
         case SIOCDARP:
@@ -661,7 +665,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
                 return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
                 return EAFNOSUPPORT;
-            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Delete);
+            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateTable::Delete);
             return {};
         }
 

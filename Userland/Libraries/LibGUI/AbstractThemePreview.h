@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -44,6 +44,8 @@ protected:
         VERIFY(m_inactive_window_icon);
         return *m_inactive_window_icon;
     }
+
+    virtual void palette_changed() {};
 
 private:
     virtual void paint_preview(GUI::PaintEvent&) = 0;

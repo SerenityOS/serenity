@@ -226,7 +226,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // a. Set timeZone to ? ToString(timeZone).
         time_zone = TRY(time_zone_value.to_string(global_object));
 
-        // b. If the result of ! IsValidTimeZoneName(timeZone) is false, then
+        // b. If the result of IsValidTimeZoneName(timeZone) is false, then
         if (!Temporal::is_valid_time_zone_name(time_zone)) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);

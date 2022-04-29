@@ -462,6 +462,10 @@
 #cmakedefine01 URL_PARSER_DEBUG
 #endif
 
+#ifndef UTF8_DEBUG
+#cmakedefine01 UTF8_DEBUG
+#endif
+
 #ifndef WASM_BINPARSER_DEBUG
 #cmakedefine01 WASM_BINPARSER_DEBUG
 #endif

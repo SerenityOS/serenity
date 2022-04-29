@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,11 +47,11 @@ struct [[gnu::packed]] GUIDPartitionHeader {
     u32 crc32_entries_array;
 };
 
-Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTable::try_to_initialize(StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(StorageDevice const& device)
 {
-    auto table = adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)));
     if (!table->is_valid())
-        return { PartitionTable::Error::Invalid };
+        return Error::from_errno(EINVAL);
     return table;
 }
 

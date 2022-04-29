@@ -12,6 +12,7 @@
 #include "GoToOffsetDialog.h"
 #include "SearchResultsModel.h"
 #include "ValueInspectorModel.h"
+#include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
@@ -54,7 +55,7 @@ HexEditorWidget::HexEditorWidget()
         if (!index.is_valid())
             return;
         m_selecting_from_inspector = true;
-        m_editor->set_selection(m_editor->selection_start_offset(), index.data(GUI::ModelRole::Custom).as_i32());
+        m_editor->set_selection(m_editor->selection_start_offset(), index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         m_editor->update();
     };
 
@@ -285,9 +286,11 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, String::number(static_cast<i8>(unsigned_byte_value)));
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, String::number(unsigned_byte_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, String::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, "");
     }
 
     if (byte_read_count >= 2) {
@@ -330,7 +333,28 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, "");
     }
 
-    // FIXME: Parse as other values like ASCII, UTF8, UTF16, Timestamp etc
+    // FIXME: This probably doesn't honour endianness correctly.
+    Utf8View utf8_view { ReadonlyBytes { reinterpret_cast<u8 const*>(&unsigned_64_bit_int), 4 } };
+    size_t valid_bytes;
+    utf8_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, "");
+    else
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
+
+    if (byte_read_count % 2 == 0) {
+        Utf16View utf16_view { Span<u16 const> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
+        size_t valid_code_units;
+        utf8_view.validate(valid_code_units);
+        if (valid_code_units == 0)
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+        else
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_utf8());
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+    }
+
+    // FIXME: Parse as other values like Timestamp etc
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();

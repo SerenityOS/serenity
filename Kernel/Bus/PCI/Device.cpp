@@ -8,8 +8,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 
-namespace Kernel {
-namespace PCI {
+namespace Kernel::PCI {
 
 Device::Device(Address address)
     : m_pci_address(address)
@@ -55,5 +54,4 @@ void Device::disable_extended_message_signalled_interrupts()
     TODO();
 }
 
-}
 }

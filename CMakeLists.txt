@@ -155,6 +155,7 @@ endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h DESTINATION usr/include/AK)
 
 set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
