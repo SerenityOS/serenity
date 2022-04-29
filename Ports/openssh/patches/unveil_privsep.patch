@@ -1,0 +1,46 @@
+diff --git a/sshd.c b/sshd.c
+index 6f8f11a..cdbc003 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -461,12 +461,9 @@ privsep_preauth_child(void)
+ 
+ 	/* Demote the child */
+ 	if (privsep_chroot) {
+-		/* Change our root directory */
+-		if (chroot(_PATH_PRIVSEP_CHROOT_DIR) == -1)
+-			fatal("chroot(\"%s\"): %s", _PATH_PRIVSEP_CHROOT_DIR,
+-			    strerror(errno));
+-		if (chdir("/") == -1)
+-			fatal("chdir(\"/\"): %s", strerror(errno));
++		/* Hide the whole filesystem */
++		if (unveil(NULL, NULL) < 0)
++			fatal("unveil(NULL, NULL): %s", strerror(errno));
+ 
+ 		/* Drop our privileges */
+ 		debug3("privsep user:group %u:%u", (u_int)privsep_pw->pw_uid,
+@@ -1899,25 +1896,6 @@ main(int ac, char **av)
+ 		    sshkey_type(key));
+ 	}
+ 
+-	if (privsep_chroot) {
+-		struct stat st;
+-
+-		if ((stat(_PATH_PRIVSEP_CHROOT_DIR, &st) == -1) ||
+-		    (S_ISDIR(st.st_mode) == 0))
+-			fatal("Missing privilege separation directory: %s",
+-			    _PATH_PRIVSEP_CHROOT_DIR);
+-
+-#ifdef HAVE_CYGWIN
+-		if (check_ntsec(_PATH_PRIVSEP_CHROOT_DIR) &&
+-		    (st.st_uid != getuid () ||
+-		    (st.st_mode & (S_IWGRP|S_IWOTH)) != 0))
+-#else
+-		if (st.st_uid != 0 || (st.st_mode & (S_IWGRP|S_IWOTH)) != 0)
+-#endif
+-			fatal("%s must be owned by root and not group or "
+-			    "world-writable.", _PATH_PRIVSEP_CHROOT_DIR);
+-	}
+-
+ 	if (test_flag > 1) {
+ 		/*
+ 		 * If no connection info was provided by -C then use

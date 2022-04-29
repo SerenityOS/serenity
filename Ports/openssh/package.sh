@@ -30,5 +30,8 @@ install() {
         if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ecdsa_key" ]; then
             ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ecdsa_key" -C serenity -N "" -t ecdsa -b 521
         fi
+        if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ed25519_key" ]; then
+            ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ed25519_key" -C serenity -N "" -t ed25519
+        fi
     fi
 }
