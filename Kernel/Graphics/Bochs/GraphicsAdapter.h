@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
