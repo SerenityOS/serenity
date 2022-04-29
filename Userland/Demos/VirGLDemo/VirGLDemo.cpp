@@ -134,7 +134,7 @@ static Vector<VertexData> gen_vertex_data()
 static void init()
 {
     // Open the device
-    gpu_fd = open("/dev/gpu0", O_RDWR);
+    gpu_fd = open("/dev/gpu/render0", O_RDWR);
     VERIFY(gpu_fd >= 0);
     // Create a virgl context for this file descriptor
     VERIFY(ioctl(gpu_fd, VIRGL_IOCTL_CREATE_CONTEXT) >= 0);
