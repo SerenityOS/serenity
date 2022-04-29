@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -34,6 +34,7 @@ private:
     virtual void second_paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
+    virtual void palette_changed() override;
 
     void paint_hightlight_window();
     void update_preview_window_locations();
