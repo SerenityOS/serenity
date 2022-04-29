@@ -1,0 +1,26 @@
+From dabdeae308c1c15a2bfac2aea8f9ebfeb437fc79 Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Wed, 20 Apr 2022 23:36:34 +0200
+Subject: [PATCH 2/2] Do no use strptime
+
+Hack duktape not to use strptime.
+---
+ src/thirdparty/duktape/duk_config.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/thirdparty/duktape/duk_config.h b/src/thirdparty/duktape/duk_config.h
+index 4ac2e1d..e7d65ec 100644
+--- a/src/thirdparty/duktape/duk_config.h
++++ b/src/thirdparty/duktape/duk_config.h
+@@ -1020,6 +1020,8 @@
+ /* Rely on autodetection for byte order, alignment, and packed tval. */
+ #endif  /* autodetect architecture */
+ 
++#undef DUK_USE_DATE_PRS_STRPTIME
++
+ /*
+  *  Compiler autodetection
+  */
+-- 
+2.32.0 (Apple Git-132)
+
