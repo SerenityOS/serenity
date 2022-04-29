@@ -64,6 +64,11 @@ ALWAYS_INLINE int fb_set_head_mode_setting(int fd, FBHeadModeSetting* mode_setti
     return ioctl(fd, FB_IOCTL_SET_HEAD_MODE_SETTING, mode_setting);
 }
 
+ALWAYS_INLINE int fb_set_safe_head_mode_setting(int fd)
+{
+    return ioctl(fd, FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING, nullptr);
+}
+
 ALWAYS_INLINE int fb_get_head_mode_setting(int fd, FBHeadModeSetting* mode_setting)
 {
     FBHeadModeSetting head_mode_setting;

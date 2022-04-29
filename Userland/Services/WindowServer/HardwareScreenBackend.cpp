@@ -66,8 +66,15 @@ ErrorOr<void> HardwareScreenBackend::set_head_resolution(FBHeadResolution resolu
         mode_setting.vertical_active = resolution.height;
         mode_setting.horizontal_stride = resolution.pitch;
         auto rc = fb_set_head_mode_setting(m_framebuffer_fd, &mode_setting);
-        if (rc != 0)
-            return Error::from_syscall("fb_set_head_mode_setting", rc);
+        if (rc != 0) {
+            dbgln("Failed to set backend mode setting: falling back to safe resolution");
+            rc = fb_set_safe_head_mode_setting(m_framebuffer_fd);
+            if (rc != 0) {
+                dbgln("Failed to set backend safe mode setting: aborting");
+                return Error::from_syscall("fb_set_safe_head_mode_setting", rc);
+            }
+            dbgln("Failed to set backend mode setting: falling back to safe resolution - success.");
+        }
     }
 
     return {};

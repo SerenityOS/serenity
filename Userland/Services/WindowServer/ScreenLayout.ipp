@@ -250,7 +250,7 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
             *this = {};
             return false;
         }
-        auto device = (mode == Screen::Mode::Device) ? config_file.read_entry(group_name, "Device") : Optional<String> {};
+        auto device = (mode == Screen::Mode::Device || mode == Screen::Mode::DisplayConnectorDevice) ? config_file.read_entry(group_name, "Device") : Optional<String> {};
         screens.append({ mode, device,
             { config_file.read_num_entry(group_name, "Left"), config_file.read_num_entry(group_name, "Top") },
             { config_file.read_num_entry(group_name, "Width"), config_file.read_num_entry(group_name, "Height") },
