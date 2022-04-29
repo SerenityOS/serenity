@@ -16,10 +16,12 @@ TEST_CASE(construct_empty)
 {
     EXPECT(String().is_null());
     EXPECT(String().is_empty());
+    EXPECT(!String().is_not_empty());
     EXPECT(!String().characters());
 
     EXPECT(!String("").is_null());
     EXPECT(String("").is_empty());
+    EXPECT(!String("").is_not_empty());
     EXPECT(String("").characters() != nullptr);
 
     EXPECT(String("").impl() == String::empty().impl());
@@ -29,6 +31,7 @@ TEST_CASE(construct_contents)
 {
     String test_string = "ABCDEF";
     EXPECT(!test_string.is_empty());
+    EXPECT(test_string.is_not_empty());
     EXPECT(!test_string.is_null());
     EXPECT_EQ(test_string.length(), 6u);
     EXPECT_EQ(test_string.length(), strlen(test_string.characters()));
