@@ -2260,6 +2260,9 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
 
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
+    if (auto result = m_config->sync(); result.is_error()) {
+        dbgln("Failed to save config file: {}", result.error());
+    }
 }
 
 }
