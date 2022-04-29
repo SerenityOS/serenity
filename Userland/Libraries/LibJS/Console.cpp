@@ -433,7 +433,7 @@ ThrowCompletionOr<String> Console::value_vector_to_string(Vector<Value>& values)
 {
     StringBuilder builder;
     for (auto const& item : values) {
-        if (!builder.is_empty())
+        if (builder.is_not_empty())
             builder.append(' ');
         builder.append(TRY(item.to_string(global_object())));
     }
@@ -446,7 +446,7 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
     auto duration = TRY(Temporal::balance_duration(global_object(), 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"));
 
     auto append = [&](StringBuilder& builder, auto format, auto... number) {
-        if (!builder.is_empty())
+        if (builder.is_not_empty())
             builder.append(' ');
         builder.appendff(format, number...);
     };

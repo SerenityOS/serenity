@@ -28,7 +28,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
 
     for (auto const& cookie : cookie_list) {
         // If there is an unprocessed cookie in the cookie-list, output the characters %x3B and %x20 ("; ")
-        if (!builder.is_empty())
+        if (builder.is_not_empty())
             builder.append("; ");
 
         // Output the cookie's name, the %x3D ("=") character, and the cookie's value.

@@ -901,7 +901,7 @@ String LanguageID::to_string() const
     auto append_segment = [&](Optional<String> const& segment) {
         if (!segment.has_value())
             return;
-        if (!builder.is_empty())
+        if (builder.is_not_empty())
             builder.append('-');
         builder.append(*segment);
     };
@@ -922,7 +922,7 @@ String LocaleID::to_string() const
     auto append_segment = [&](Optional<String> const& segment) {
         if (!segment.has_value() || segment->is_empty())
             return;
-        if (!builder.is_empty())
+        if (builder.is_not_empty())
             builder.append('-');
         builder.append(*segment);
     };

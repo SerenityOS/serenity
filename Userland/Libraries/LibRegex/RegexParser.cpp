@@ -625,7 +625,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         while (match(TokenType::Char)) {
             number_builder.append(consume().value());
         }
-        if (!number_builder.is_empty()) {
+        if (number_builder.is_not_empty()) {
             auto value = number_builder.build().to_uint();
             if (!value.has_value() || minimum > value.value() || *value > s_maximum_repetition_count)
                 return set_error(Error::InvalidBraceContent);

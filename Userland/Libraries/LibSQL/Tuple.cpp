@@ -178,7 +178,7 @@ String Tuple::to_string() const
 {
     StringBuilder builder;
     for (auto& part : m_data) {
-        if (!builder.is_empty()) {
+        if (builder.is_not_empty()) {
             builder.append('|');
         }
         builder.append(part.to_string());

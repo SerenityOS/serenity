@@ -424,7 +424,7 @@ String Document::title() const
         if (is_ascii_space(code_point)) {
             last_was_space = true;
         } else {
-            if (last_was_space && !builder.is_empty())
+            if (last_was_space && builder.is_not_empty())
                 builder.append(' ');
             builder.append_code_point(code_point);
             last_was_space = false;
