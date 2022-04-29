@@ -285,6 +285,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_widget.preview_palette().color(selected_color_role), GUI::AllowCallback::No);
 
+        auto selected_alignment_role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
+        alignment_input.set_selected_index((size_t)(preview_widget.preview_palette().alignment(selected_alignment_role), GUI::AllowCallback::No));
+
         auto selected_flag_role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
         flag_input.set_checked(preview_widget.preview_palette().flag(selected_flag_role), GUI::AllowCallback::No);
 
