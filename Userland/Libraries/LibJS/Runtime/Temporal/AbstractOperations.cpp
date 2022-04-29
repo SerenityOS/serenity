@@ -320,7 +320,7 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     }
     // 3. Else if dividend is more than 1, then
     else if (*dividend > 1) {
-        // a. Let maximum be 𝔽(dividend − 1).
+        // a. Let maximum be 𝔽(dividend - 1).
         maximum = *dividend - 1;
     }
     // 4. Else,
@@ -444,20 +444,20 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 
     // 11. If digits is 1, 2, or 3, then
     if (digits == 1 || digits == 2 || digits == 3) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 − digits) }.
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - digits) }.
         return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
     }
 
     // 12. If digits is 4, 5, or 6, then
     if (digits == 4 || digits == 5 || digits == 6) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 − digits) }.
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - digits) }.
         return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
     }
 
     // 13. Assert: digits is 7, 8, or 9.
     VERIFY(digits == 7 || digits == 8 || digits == 9);
 
-    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 − digits) }.
+    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - digits) }.
     return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
 }
 
@@ -997,7 +997,7 @@ i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 
     // 4. If roundingMode is "ceil", then
     if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be −floor(−quotient).
+        // a. Let rounded be -floor(-quotient).
         rounded = -floor(-quotient);
     }
     // 5. Else if roundingMode is "floor", then
@@ -1044,7 +1044,7 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
     Crypto::SignedBigInteger rounded = move(division_result.quotient);
     // 4. If roundingMode is "ceil", then
     if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be −floor(−quotient).
+        // a. Let rounded be -floor(-quotient).
         if (!division_result.remainder.is_negative())
             rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
     }
@@ -1466,7 +1466,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     // 18. If sign contains the code point 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
     if (sign_part.has_value() && sign_part->is_one_of("-", "\u2212")) {
-        // a. Let factor be −1.
+        // a. Let factor be -1.
         factor = -1;
     }
     // 19. Else,

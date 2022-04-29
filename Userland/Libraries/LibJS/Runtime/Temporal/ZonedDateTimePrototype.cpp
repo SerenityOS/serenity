@@ -516,7 +516,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
     // 14. Let tomorrowInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, tomorrow, "compatible").
     auto* tomorrow_instant = TRY(builtin_time_zone_get_instant_for(global_object, &time_zone, *tomorrow, "compatible"sv));
 
-    // 15. Let diffNs be tomorrowInstant.[[Nanoseconds]] − todayInstant.[[Nanoseconds]].
+    // 15. Let diffNs be tomorrowInstant.[[Nanoseconds]] - todayInstant.[[Nanoseconds]].
     auto diff_ns = tomorrow_instant->nanoseconds().big_integer().minus(today_instant->nanoseconds().big_integer());
 
     // 16. Return 𝔽(diffNs / (3.6 × 10^12)).
@@ -937,7 +937,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::subtract)
     // 6. Let calendar be zonedDateTime.[[Calendar]].
     auto& calendar = zoned_date_time->calendar();
 
-    // 7. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, −duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]], options).
+    // 7. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, -duration.[[Years]], -duration.[[Months]], -duration.[[Weeks]], -duration.[[Days]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]], options).
     auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time->nanoseconds(), &time_zone, calendar, -duration.years, -duration.months, -duration.weeks, -duration.days, -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds, options));
 
     // 8. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
@@ -1069,7 +1069,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
         // b. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, largestUnit).
         auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), *largest_unit));
 
-        // c. Return ? CreateTemporalDuration(0, 0, 0, 0, −balanceResult.[[Hours]], −balanceResult.[[Minutes]], −balanceResult.[[Seconds]], −balanceResult.[[Milliseconds]], −balanceResult.[[Microseconds]], −balanceResult.[[Nanoseconds]]).
+        // c. Return ? CreateTemporalDuration(0, 0, 0, 0, -balanceResult.[[Hours]], -balanceResult.[[Minutes]], -balanceResult.[[Seconds]], -balanceResult.[[Milliseconds]], -balanceResult.[[Microseconds]], -balanceResult.[[Nanoseconds]]).
         return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, -balance_result.hours, -balance_result.minutes, -balance_result.seconds, -balance_result.milliseconds, -balance_result.microseconds, -balance_result.nanoseconds));
     }
 
@@ -1091,7 +1091,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
     // 19. Let result be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, zonedDateTime).
     auto result = TRY(adjust_rounded_duration_days(global_object, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, zoned_date_time));
 
-    // 20. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], −result.[[Hours]], −result.[[Minutes]], −result.[[Seconds]], −result.[[Milliseconds]], −result.[[Microseconds]], −result.[[Nanoseconds]]).
+    // 20. Return ! CreateTemporalDuration(-result.[[Years]], -result.[[Months]], -result.[[Weeks]], -result.[[Days]], -result.[[Hours]], -result.[[Minutes]], -result.[[Seconds]], -result.[[Milliseconds]], -result.[[Microseconds]], -result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(global_object, -result.years, -result.months, -result.weeks, -result.days, -result.hours, -result.minutes, -result.seconds, -result.milliseconds, -result.microseconds, -result.nanoseconds));
 }
 
@@ -1170,7 +1170,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     // TODO: Shouldn't `zonedDateTime.[[Calendar]]` be `calendar` for consistency?
     auto* end_ns = TRY(add_zoned_date_time(global_object, start_ns, &time_zone, zoned_date_time->calendar(), 0, 0, 0, 1, 0, 0, 0, 0, 0, 0));
 
-    // 19. Let dayLengthNs be ℝ(endNs − startNs).
+    // 19. Let dayLengthNs be ℝ(endNs - startNs).
     auto day_length_ns = end_ns->big_integer().minus(start_ns.big_integer()).to_double();
 
     // 20. If dayLengthNs is 0, then
