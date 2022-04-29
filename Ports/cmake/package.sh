@@ -12,7 +12,7 @@ configure() {
 }
 
 build() {
-    run ninja
+    run ninja -j${MAKEJOBS}
 }
 
 install() {
