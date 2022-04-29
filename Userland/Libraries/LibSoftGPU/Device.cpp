@@ -46,14 +46,16 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
-// Both of these edge functions return positive values for counter-clockwise rotation of vertices.
-// Note that they return the area of a parallelogram with sides {a, b} and {b, c}, so _double_ the area of the triangle {a, b, c}.
-constexpr static float edge_function(FloatVector2 const& a, FloatVector2 const& b, FloatVector2 const& c)
+static constexpr int subpixel_factor = 1 << SUBPIXEL_BITS;
+
+// Returns positive values for counter-clockwise rotation of vertices. Note that it returns the
+// area of a parallelogram with sides {a, b} and {b, c}, so _double_ the area of the triangle {a, b, c}.
+constexpr static i32 edge_function(IntVector2 const& a, IntVector2 const& b, IntVector2 const& c)
 {
     return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
-constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const& b, Vector2<f32x4> const& c)
+constexpr static i32x4 edge_function4(IntVector2 const& a, IntVector2 const& b, Vector2<i32x4> const& c)
 {
     return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
@@ -187,24 +189,22 @@ void Device::rasterize_triangle(Triangle const& triangle)
     if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
 
-    GPU::Vertex const& vertex0 = triangle.vertices[0];
-    GPU::Vertex const& vertex1 = triangle.vertices[1];
-    GPU::Vertex const& vertex2 = triangle.vertices[2];
+    auto const& vertex0 = triangle.vertices[0];
+    auto const& vertex1 = triangle.vertices[1];
+    auto const& vertex2 = triangle.vertices[2];
 
-    // Determine the area of a parallelogram with sides (v0,v1) and (v1,v2) to calculate barycentrics
-    FloatVector2 const v0 = vertex0.window_coordinates.xy();
-    FloatVector2 const v1 = vertex1.window_coordinates.xy();
-    FloatVector2 const v2 = vertex2.window_coordinates.xy();
+    auto const& v0 = triangle.subpixel_coordinates[0];
+    auto const& v1 = triangle.subpixel_coordinates[1];
+    auto const& v2 = triangle.subpixel_coordinates[2];
 
-    auto const area = edge_function(v0, v1, v2);
-    auto const one_over_area = 1.0f / area;
+    auto const one_over_area = 1.0f / triangle.area;
 
     auto render_bounds = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
         render_bounds.intersect(m_options.scissor_box);
 
     // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values4 = [v0, v1, v2](Vector2<f32x4> const& p) -> Vector3<f32x4> {
+    auto calculate_edge_values4 = [v0, v1, v2](Vector2<i32x4> const& p) -> Vector3<i32x4> {
         return {
             edge_function4(v1, v2, p),
             edge_function4(v2, v0, p),
@@ -214,19 +214,16 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
     // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
     // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
-    // question is a "top" or "left" edge. By changing a float epsilon to 0, we effectively change
-    // the comparisons against the edge values below from "> 0" into ">= 0".
-    constexpr auto epsilon = NumericLimits<float>::epsilon();
-    FloatVector3 zero { epsilon, epsilon, epsilon };
-    if (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x()))
-        zero.set_x(0.f);
-    if (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x()))
-        zero.set_y(0.f);
-    if (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x()))
-        zero.set_z(0.f);
+    // question is a "top" or "left" edge. By setting either a 1 or 0, we effectively change the
+    // comparisons against the edge values below from "> 0" into ">= 0".
+    IntVector3 const zero {
+        (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x())) ? 0 : 1,
+        (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x())) ? 0 : 1,
+        (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x())) ? 0 : 1,
+    };
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point4 = [zero](Vector3<f32x4> const& edges) -> i32x4 {
+    auto test_point4 = [zero](Vector3<i32x4> const& edges) -> i32x4 {
         return edges.x() >= zero.x()
             && edges.y() >= zero.y()
             && edges.z() >= zero.z();
@@ -234,10 +231,10 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
     // Calculate block-based bounds
     // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x())) & ~1;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x())) & ~1) + 2;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y())) & ~1;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) & ~1) + 2;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1) + 2;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1) + 2;
     // clang-format on
 
     // Calculate depth of fragment for fog;
@@ -252,12 +249,12 @@ void Device::rasterize_triangle(Triangle const& triangle)
         };
     }
 
-    float const render_bounds_left = render_bounds.left();
-    float const render_bounds_right = render_bounds.right();
-    float const render_bounds_top = render_bounds.top();
-    float const render_bounds_bottom = render_bounds.bottom();
+    auto const render_bounds_left = render_bounds.left();
+    auto const render_bounds_right = render_bounds.right();
+    auto const render_bounds_top = render_bounds.top();
+    auto const render_bounds_bottom = render_bounds.bottom();
 
-    auto const half_pixel_offset = Vector2<f32x4> { expand4(.5f), expand4(.5f) };
+    auto const half_pixel_offset = Vector2<i32x4> { expand4(subpixel_factor / 2), expand4(subpixel_factor / 2) };
 
     auto color_buffer = m_frame_buffer->color_buffer();
     auto depth_buffer = m_frame_buffer->depth_buffer();
@@ -314,17 +311,15 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by += 2) {
-        auto const f_by = static_cast<float>(by);
         for (int bx = bx0; bx < bx1; bx += 2) {
             PixelQuad quad;
 
-            auto const f_bx = static_cast<float>(bx);
             quad.screen_coordinates = {
-                f32x4 { f_bx, f_bx + 1, f_bx, f_bx + 1 },
-                f32x4 { f_by, f_by, f_by + 1, f_by + 1 },
+                i32x4 { bx, bx + 1, bx, bx + 1 },
+                i32x4 { by, by, by + 1, by + 1 },
             };
 
-            auto edge_values = calculate_edge_values4(quad.screen_coordinates + half_pixel_offset);
+            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor + half_pixel_offset);
 
             // Generate triangle coverage mask
             quad.mask = test_point4(edge_values);
@@ -401,7 +396,11 @@ void Device::rasterize_triangle(Triangle const& triangle)
             }
 
             // Calculate barycentric coordinates from previously calculated edge values
-            quad.barycentrics = edge_values * one_over_area;
+            quad.barycentrics = Vector3<f32x4> {
+                to_f32x4(edge_values.x()),
+                to_f32x4(edge_values.y()),
+                to_f32x4(edge_values.z()),
+            } * one_over_area;
 
             // Depth testing
             GPU::DepthType* depth_ptrs[4] = {
@@ -926,12 +925,16 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     }
 
     for (auto& triangle : m_processed_triangles) {
-        auto area = edge_function(triangle.vertices[0].window_coordinates.xy(), triangle.vertices[1].window_coordinates.xy(), triangle.vertices[2].window_coordinates.xy());
-        if (area == 0.f)
+        triangle.subpixel_coordinates[0] = (triangle.vertices[0].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+        triangle.subpixel_coordinates[1] = (triangle.vertices[1].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+        triangle.subpixel_coordinates[2] = (triangle.vertices[2].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+
+        auto triangle_area = edge_function(triangle.subpixel_coordinates[0], triangle.subpixel_coordinates[1], triangle.subpixel_coordinates[2]);
+        if (triangle_area == 0)
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0.f : area < 0.f);
+            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? triangle_area > 0 : triangle_area < 0);
 
             if (!is_front && m_options.cull_back)
                 continue;
@@ -941,8 +944,12 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         }
 
         // Force counter-clockwise ordering of vertices
-        if (area < 0.f)
+        if (triangle_area < 0) {
             swap(triangle.vertices[0], triangle.vertices[1]);
+            swap(triangle.subpixel_coordinates[0], triangle.subpixel_coordinates[1]);
+            triangle_area *= -1;
+        }
+        triangle.area = triangle_area;
 
         if (texture_coordinate_generation_enabled) {
             generate_texture_coordinates(triangle.vertices[0], m_options);
