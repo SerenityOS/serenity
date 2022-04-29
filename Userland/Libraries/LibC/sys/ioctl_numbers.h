@@ -26,6 +26,7 @@ struct FBProperties {
     unsigned char refresh_rate_support;
 };
 
+// FIXME: Remove this once framebuffer devices are removed.
 struct FBHeadProperties {
     int head_index;
 
@@ -52,6 +53,7 @@ struct FBHeadModeSetting {
     int vertical_offset;
 };
 
+// FIXME: Remove this once framebuffer devices are removed.
 struct FBHeadResolution {
     int head_index;
     int pitch;
@@ -181,6 +183,9 @@ enum IOCtlNumber {
 #define FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER
 #define FB_IOCTL_FLUSH_HEAD_BUFFERS FB_IOCTL_FLUSH_HEAD_BUFFERS
 #define FB_IOCTL_FLUSH_HEAD FB_IOCTL_FLUSH_HEAD
+#define FB_IOCTL_SET_HEAD_MODE_SETTING FB_IOCTL_SET_HEAD_MODE_SETTING
+#define FB_IOCTL_GET_HEAD_MODE_SETTING FB_IOCTL_GET_HEAD_MODE_SETTING
+#define FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING
 #define KEYBOARD_IOCTL_GET_NUM_LOCK KEYBOARD_IOCTL_GET_NUM_LOCK
 #define KEYBOARD_IOCTL_SET_NUM_LOCK KEYBOARD_IOCTL_SET_NUM_LOCK
 #define KEYBOARD_IOCTL_GET_CAPS_LOCK KEYBOARD_IOCTL_GET_CAPS_LOCK

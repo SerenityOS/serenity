@@ -236,8 +236,15 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
         if (!config_file.has_group(group_name))
             break;
         auto str_mode = config_file.read_entry(group_name, "Mode");
-        auto mode = str_mode == "Device" ? Screen::Mode::Device : str_mode == "Virtual" ? Screen::Mode::Virtual
-                                                                                        : Screen::Mode::Invalid;
+        Screen::Mode mode { Screen::Mode::Invalid };
+        if (str_mode == "Device") {
+            mode = Screen::Mode::Device;
+        } else if (str_mode == "DisplayConnectorDevice") {
+            mode = Screen::Mode::DisplayConnectorDevice;
+        } else if (str_mode == "Virtual") {
+            mode = Screen::Mode::Virtual;
+        }
+
         if (mode == Screen::Mode::Invalid) {
             *error_msg = String::formatted("Invalid screen mode '{}'", str_mode);
             *this = {};
@@ -302,6 +309,90 @@ bool ScreenLayout::operator!=(const ScreenLayout& other) const
     return false;
 }
 
+bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
+{
+    int display_connector_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
+    if (display_connector_fd < 0) {
+        int err = errno;
+        dbgln("Error ({}) opening display connector device {}", err, device_path);
+        return false;
+    }
+    ScopeGuard fd_guard([&] {
+        close(display_connector_fd);
+    });
+
+    FBHeadModeSetting mode_setting {};
+    memset(&mode_setting, 0, sizeof(FBHeadModeSetting));
+    if (fb_get_head_mode_setting(display_connector_fd, &mode_setting) < 0) {
+        int err = errno;
+        dbgln("Error ({}) querying resolution from display connector device {}", err, device_path);
+        return false;
+    }
+    if (mode_setting.horizontal_active == 0 || mode_setting.vertical_active == 0) {
+        // Looks like the display is not turned on. Since we don't know what the desired
+        // resolution should be, use the main display as reference.
+        if (screens.is_empty())
+            return false;
+        auto& main_screen = screens[main_screen_index];
+        mode_setting.horizontal_active = main_screen.resolution.width();
+        mode_setting.vertical_active = main_screen.resolution.height();
+    }
+
+    auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
+        screens.append({ .mode = Screen::Mode::DisplayConnectorDevice,
+            .device = device_path,
+            .location = new_screen_rect.location(),
+            .resolution = new_screen_rect.size(),
+            .scale_factor = 1 });
+    };
+
+    if (screens.is_empty()) {
+        append_screen({ 0, 0, mode_setting.horizontal_active, mode_setting.vertical_active });
+        return true;
+    }
+
+    auto original_screens = move(screens);
+    screens = original_screens;
+    ArmedScopeGuard screens_guard([&] {
+        screens = move(original_screens);
+    });
+
+    // Now that we know the current resolution, try to find a location that we can add onto
+    // TODO: make this a little more sophisticated in case a more complex layout is already configured
+    for (auto& screen : screens) {
+        auto screen_rect = screen.virtual_rect();
+        Gfx::IntRect new_screen_rect {
+            screen_rect.right() + 1,
+            screen_rect.top(),
+            (int)mode_setting.horizontal_active,
+            (int)mode_setting.vertical_active
+        };
+
+        bool collision = false;
+        for (auto& other_screen : screens) {
+            if (&screen == &other_screen)
+                continue;
+            if (other_screen.virtual_rect().intersects(new_screen_rect)) {
+                collision = true;
+                break;
+            }
+        }
+
+        if (!collision) {
+            append_screen(new_screen_rect);
+            if (is_valid()) {
+                // We got lucky!
+                screens_guard.disarm();
+                return true;
+            }
+        }
+    }
+
+    dbgln("Failed to add display connector device {} with resolution {}x{} to screen layout", device_path, mode_setting.horizontal_active, mode_setting.vertical_active);
+    return false;
+}
+
+// FIXME: Remove this once framebuffer devices are removed.
 bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
 {
     int framebuffer_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);

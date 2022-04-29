@@ -231,10 +231,21 @@ bool Screen::open_device()
 
     switch (info.mode) {
     case ScreenLayout::Screen::Mode::Device: {
-        m_backend = make<HardwareScreenBackend>(info.device.value());
+        m_backend = make<HardwareScreenBackend>(info.device.value(), false);
         auto return_value = m_backend->open();
         if (return_value.is_error()) {
             dbgln("Screen #{}: Failed to open backend: {}", index(), return_value.error());
+            return false;
+        }
+
+        set_resolution(true);
+        return true;
+    }
+    case ScreenLayout::Screen::Mode::DisplayConnectorDevice: {
+        m_backend = make<HardwareScreenBackend>(info.device.value(), true);
+        auto return_value = m_backend->open();
+        if (return_value.is_error()) {
+            dbgln("Screen #{}: Failed to open display connector backend: {}", index(), return_value.error());
             return false;
         }
 
@@ -537,6 +548,11 @@ void Screen::flush_display(int buffer_index)
 
     flush_rects.too_many_pending_flush_rects = false;
     flush_rects.pending_flush_rects.clear_with_capacity();
+}
+
+void Screen::write_all_display_contents()
+{
+    MUST(m_backend->write_all_contents(m_virtual_rect));
 }
 
 void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& rect)

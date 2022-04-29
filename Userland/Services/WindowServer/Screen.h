@@ -174,6 +174,8 @@ public:
 
     CompositorScreenData& compositor_screen_data() { return *m_compositor_screen_data; }
 
+    void write_all_display_contents();
+
 private:
     Screen(size_t);
     bool open_device();
