@@ -50,7 +50,7 @@ configure() {
 }
 
 build() {
-    ninja -C llvm-build
+    ninja -j${MAKEJOBS} -C llvm-build
 }
 
 install() {
