@@ -18,7 +18,7 @@ class HardwareScreenBackend : public ScreenBackend {
 public:
     virtual ~HardwareScreenBackend();
 
-    HardwareScreenBackend(String device);
+    HardwareScreenBackend(String device, bool display_connector_device_backed);
 
     virtual ErrorOr<void> open() override;
 
@@ -32,8 +32,17 @@ public:
     virtual ErrorOr<void> set_head_resolution(FBHeadResolution) override;
     virtual ErrorOr<FBHeadProperties> get_head_properties() override;
 
+    virtual ErrorOr<void> write_all_contents(Gfx::IntRect const&) override;
+
     String m_device {};
     int m_framebuffer_fd { -1 };
+    bool const display_connector_device_backed { false };
+
+    Gfx::ARGB32* scanline(int buffer_index, int y) const
+    {
+        size_t buffer_offset = buffer_index == 1 ? m_back_buffer_offset : 0;
+        return reinterpret_cast<Gfx::ARGB32*>(((u8*)m_framebuffer) + buffer_offset + (y * m_pitch));
+    }
 };
 
 }
