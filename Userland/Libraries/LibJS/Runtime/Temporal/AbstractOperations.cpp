@@ -1007,7 +1007,7 @@ i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
     }
     // 6. Else if roundingMode is "trunc", then
     else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        // a. Let rounded be RoundTowardsZero(quotient).
         rounded = trunc(quotient);
     }
     // 7. Else,
@@ -1056,7 +1056,7 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
     }
     // 6. Else if roundingMode is "trunc", then
     else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        // a. Let rounded be the RoundTowardsZero(quotient).
         // NOTE: This is a no-op
     }
     // 7. Else,

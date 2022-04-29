@@ -1590,19 +1590,19 @@ String temporal_duration_to_string(double years, double months, double weeks, do
     // 5. Let sign be ! DurationSign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto sign = duration_sign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 
-    // 6. Set microseconds to microseconds + the integral part of nanoseconds / 1000.
+    // 6. Set microseconds to microseconds + RoundTowardsZero(nanoseconds / 1000).
     microseconds += trunc(nanoseconds / 1000);
 
     // 7. Set nanoseconds to remainder(nanoseconds, 1000).
     nanoseconds = fmod(nanoseconds, 1000);
 
-    // 8. Set milliseconds to milliseconds + the integral part of microseconds / 1000.
+    // 8. Set milliseconds to milliseconds + RoundTowardsZero(microseconds / 1000).
     milliseconds += trunc(microseconds / 1000);
 
     // 9. Set microseconds to remainder(microseconds, 1000).
     microseconds = fmod(microseconds, 1000);
 
-    // 10. Set seconds to seconds + the integral part of milliseconds / 1000.
+    // 10. Set seconds to seconds + RoundTowardsZero(milliseconds / 1000).
     seconds += trunc(milliseconds / 1000);
 
     // 11. Set milliseconds to remainder(milliseconds, 1000).
