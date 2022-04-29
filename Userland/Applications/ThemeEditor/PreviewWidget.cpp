@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -82,12 +82,14 @@ private:
 PreviewWidget::PreviewWidget(Gfx::Palette const& initial_preview_palette)
     : GUI::AbstractThemePreview(initial_preview_palette)
 {
-    on_palette_change = [&] {
-        m_gallery->set_preview_palette(preview_palette());
-        update_preview_window_locations();
-    };
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);
+}
+
+void PreviewWidget::palette_changed()
+{
+    m_gallery->set_preview_palette(preview_palette());
+    update_preview_window_locations();
 }
 
 void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
