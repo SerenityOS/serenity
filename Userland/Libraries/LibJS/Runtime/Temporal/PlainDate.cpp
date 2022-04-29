@@ -46,11 +46,11 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
     // 3. Assert: isoDay is an integer.
     // 4. Assert: Type(calendar) is Object.
 
-    // 5. If ! IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
+    // 5. If IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-    // 6. If ! ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
+    // 6. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
@@ -128,7 +128,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
     // 6. Let result be ? ParseTemporalDateString(string).
     auto result = TRY(parse_temporal_date_string(global_object, string));
 
-    // 7. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    // 7. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
     // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
@@ -339,7 +339,7 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
         auto y = static_cast<i32>(year);
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
-        // a. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+        // a. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (!is_valid_iso_date(y, m, d))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 

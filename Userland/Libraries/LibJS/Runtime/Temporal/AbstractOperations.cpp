@@ -680,7 +680,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         if (time_zone_name.has_value()) {
             // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
             if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
-                // 1. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+                // 1. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
                 if (!is_valid_time_zone_name(*time_zone_name))
                     return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
@@ -1187,11 +1187,11 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         nanosecond = 0;
     }
 
-    // 18. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+    // 18. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
     if (!is_valid_iso_date(year, month, day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidISODate);
 
-    // 19. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    // 19. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
 

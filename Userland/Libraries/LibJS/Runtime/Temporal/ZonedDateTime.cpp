@@ -58,7 +58,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
 
     // 4. If offsetBehaviour is exact, or offsetOption is "use", then
     if (offset_behavior == OffsetBehavior::Exact || offset_option == "use"sv) {
-        // a. Let epochNanoseconds be ! GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
+        // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
         // b. Return epochNanoseconds − offsetNanoseconds.
@@ -199,7 +199,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
 
         // f. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
         if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
-            // i. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+            // i. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(*time_zone_name))
                 return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 

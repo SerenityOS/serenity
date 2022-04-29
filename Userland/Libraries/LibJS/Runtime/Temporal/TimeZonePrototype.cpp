@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
     if (time_zone->offset_nanoseconds().has_value())
         return Value(*time_zone->offset_nanoseconds());
 
-    // 5. Return 𝔽(! GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]])).
+    // 5. Return 𝔽(GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]])).
     return Value((double)get_iana_time_zone_offset_nanoseconds(instant->nanoseconds(), time_zone->identifier()));
 }
 
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 
     // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, then
     if (time_zone->offset_nanoseconds().has_value()) {
-        // a. Let epochNanoseconds be ! GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+        // a. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
         // b. Let instant be ! CreateTemporalInstant(ℤ(epochNanoseconds − timeZone.[[OffsetNanoseconds]])).
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
         return Array::create_from(global_object, { instant });
     }
 
-    // 5. Let possibleEpochNanoseconds be ? GetIANATimeZoneEpochValue(timeZone.[[Identifier]], dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    // 5. Let possibleEpochNanoseconds be GetIANATimeZoneEpochValue(timeZone.[[Identifier]], dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     auto possible_epoch_nanoseconds = get_iana_time_zone_epoch_value(global_object, time_zone->identifier(), date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
     // 6. Let possibleInstants be a new empty List.
@@ -180,7 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_next_transition)
     if (!time_zone->offset_nanoseconds().has_value())
         return js_null();
 
-    // 5. Let transition be ? GetIANATimeZoneNextTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
+    // 5. Let transition be GetIANATimeZoneNextTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
     auto* transition = get_iana_time_zone_next_transition(global_object, starting_point->nanoseconds(), time_zone->identifier());
 
     // 6. If transition is null, return null.
@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_previous_transition)
     if (!time_zone->offset_nanoseconds().has_value())
         return js_null();
 
-    // 5. Let transition be ? GetIANATimeZonePreviousTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
+    // 5. Let transition be GetIANATimeZonePreviousTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
     auto* transition = get_iana_time_zone_previous_transition(global_object, starting_point->nanoseconds(), time_zone->identifier());
 
     // 6. If transition is null, return null.

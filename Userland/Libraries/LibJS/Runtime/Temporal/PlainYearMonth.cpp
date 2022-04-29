@@ -203,7 +203,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
     // 1. Assert: isoYear, isoMonth, and referenceISODay are integers.
     // 2. Assert: Type(calendar) is Object.
 
-    // 3. If ! IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
+    // 3. If IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, reference_iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
