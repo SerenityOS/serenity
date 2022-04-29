@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
     if (time_zone->offset_nanoseconds().has_value())
         return Value(*time_zone->offset_nanoseconds());
 
-    // 5. Return ! GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]]).
+    // 5. Return 𝔽(! GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]])).
     return Value((double)get_iana_time_zone_offset_nanoseconds(instant->nanoseconds(), time_zone->identifier()));
 }
 
