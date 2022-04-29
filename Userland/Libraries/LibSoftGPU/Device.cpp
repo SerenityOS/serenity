@@ -1010,7 +1010,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 
     // FIXME: exponential fog is not vectorized, we should add a SIMD exp function that calculates an approximation.
     if (m_options.fog_enabled) {
-        auto factor = expand4(0.0f);
+        f32x4 factor;
         switch (m_options.fog_mode) {
         case GPU::FogMode::Linear:
             factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
