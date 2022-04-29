@@ -196,7 +196,7 @@ void BrowserWindow::build_menus()
     m_copy_selection_action = GUI::CommonActions::make_copy_action([this](auto&) {
         auto& tab = active_tab();
         auto selected_text = tab.view().selected_text();
-        if (!selected_text.is_empty())
+        if (selected_text.is_not_empty())
             GUI::Clipboard::the().set_plain_text(selected_text);
     });
 
@@ -477,7 +477,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     search_engine_menu.add_action(custom_search_engine_action);
     m_search_engine_actions.add_action(custom_search_engine_action);
 
-    if (!search_engine_set && !g_search_engine.is_empty()) {
+    if (!search_engine_set && g_search_engine.is_not_empty()) {
         custom_search_engine_action->set_checked(true);
         custom_search_engine_action->set_status_tip(g_search_engine);
     }

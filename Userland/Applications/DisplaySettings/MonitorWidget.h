@@ -52,7 +52,7 @@ private:
 
     bool is_different_to_current_wallpaper_path(String const& path)
     {
-        return (!path.is_empty() && path != m_desktop_wallpaper_path) || (path.is_empty() && m_desktop_wallpaper_path != nullptr);
+        return (path.is_not_empty() && path != m_desktop_wallpaper_path) || (path.is_empty() && m_desktop_wallpaper_path != nullptr);
     }
 };
 

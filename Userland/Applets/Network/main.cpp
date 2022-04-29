@@ -144,7 +144,7 @@ private:
             if (ip_address != "null")
                 connected_adapters++;
 
-            if (!adapter_info.is_empty())
+            if (adapter_info.is_not_empty())
                 adapter_info.append('\n');
 
             adapter_info.appendff("{}: {} ", ifname, ip_address);

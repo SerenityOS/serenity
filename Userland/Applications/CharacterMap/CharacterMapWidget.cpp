@@ -70,7 +70,7 @@ CharacterMapWidget::CharacterMapWidget()
 
     m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && input.is_not_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
