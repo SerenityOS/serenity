@@ -31,6 +31,7 @@ static u64 g_num_sampler_calls;
 static u64 g_num_stencil_writes;
 static u64 g_num_quads;
 
+using AK::abs;
 using AK::SIMD::any;
 using AK::SIMD::exp;
 using AK::SIMD::expand4;
@@ -242,13 +243,13 @@ void Device::rasterize_triangle(Triangle const& triangle)
     // Calculate depth of fragment for fog;
     // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
     // eye-coordinate distance from the eye to each fragment center by |Ze|."
-    f32x4 vertex0_fog_depth;
-    f32x4 vertex1_fog_depth;
-    f32x4 vertex2_fog_depth;
+    Vector3<f32x4> fog_depth;
     if (m_options.fog_enabled) {
-        vertex0_fog_depth = expand4(AK::abs(vertex0.eye_coordinates.z()));
-        vertex1_fog_depth = expand4(AK::abs(vertex1.eye_coordinates.z()));
-        vertex2_fog_depth = expand4(AK::abs(vertex2.eye_coordinates.z()));
+        fog_depth = {
+            expand4(abs(vertex0.eye_coordinates.z())),
+            expand4(abs(vertex1.eye_coordinates.z())),
+            expand4(abs(vertex2.eye_coordinates.z())),
+        };
     }
 
     float const render_bounds_left = render_bounds.left();
@@ -261,6 +262,17 @@ void Device::rasterize_triangle(Triangle const& triangle)
     auto color_buffer = m_frame_buffer->color_buffer();
     auto depth_buffer = m_frame_buffer->depth_buffer();
     auto stencil_buffer = m_frame_buffer->stencil_buffer();
+
+    auto const window_z_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.z()),
+        expand4(vertex1.window_coordinates.z()),
+        expand4(vertex2.window_coordinates.z()),
+    };
+    auto const window_w_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.w()),
+        expand4(vertex1.window_coordinates.w()),
+        expand4(vertex2.window_coordinates.w()),
+    };
 
     // Stencil configuration and writing
     auto const& stencil_configuration = m_stencil_configuration[GPU::Face::Front];
@@ -401,7 +413,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
             if (m_options.enable_depth_test) {
                 auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
 
-                quad.depth = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), quad.barycentrics);
+                quad.depth = window_z_coordinates.dot(quad.barycentrics);
                 // FIXME: Also apply depth_offset_factor which depends on the depth gradient
                 if (m_options.depth_offset_enabled)
                     quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
@@ -496,14 +508,8 @@ void Device::rasterize_triangle(Triangle const& triangle)
             INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, maskcount(quad.mask));
 
             // Draw the pixels according to the previously generated mask
-            auto const w_coordinates = Vector3<f32x4> {
-                expand4(vertex0.window_coordinates.w()),
-                expand4(vertex1.window_coordinates.w()),
-                expand4(vertex2.window_coordinates.w()),
-            };
-
-            auto const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), quad.barycentrics);
-            quad.barycentrics = quad.barycentrics * w_coordinates / interpolated_reciprocal_w;
+            auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
+            quad.barycentrics = quad.barycentrics * window_w_coordinates / interpolated_reciprocal_w;
 
             // FIXME: make this more generic. We want to interpolate more than just color and uv
             if (m_options.shade_smooth)
@@ -515,7 +521,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
                 quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
             if (m_options.fog_enabled)
-                quad.fog_depth = interpolate(vertex0_fog_depth, vertex1_fog_depth, vertex2_fog_depth, quad.barycentrics);
+                quad.fog_depth = fog_depth.dot(quad.barycentrics);
 
             shade_fragments(quad);
 
