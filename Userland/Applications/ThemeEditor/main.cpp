@@ -180,7 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     color_combo_box.set_model(TRY(RoleModel<Gfx::ColorRole>::try_create(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_widget.preview_palette().color(role));
+        color_input.set_color(preview_widget.preview_palette().color(role), GUI::AllowCallback::No);
     };
     color_combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
@@ -190,7 +190,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
-    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
+    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window), GUI::AllowCallback::No);
 
     alignment_combo_box.set_model(TRY(RoleModel<Gfx::AlignmentRole>::try_create(alignment_roles)));
     alignment_combo_box.on_change = [&](auto&, auto& index) {
@@ -201,7 +201,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     alignment_input.set_only_allow_values_from_model(true);
     alignment_input.set_model(TRY(AlignmentModel::try_create()));
-    alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment));
+    alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment), GUI::AllowCallback::No);
     alignment_input.on_change = [&](auto&, auto& index) {
         auto role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
         auto preview_palette = preview_widget.preview_palette();
@@ -243,7 +243,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     path_combo_box.set_model(TRY(RoleModel<Gfx::PathRole>::try_create(path_roles)));
     path_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(preview_widget.preview_palette().path(role));
+        path_input.set_text(preview_widget.preview_palette().path(role), GUI::AllowCallback::No);
     };
     path_combo_box.set_selected_index((size_t)Gfx::PathRole::TitleButtonIcons - 1);
 
@@ -253,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_palette.set_path(role, path_input.text());
         preview_widget.set_preview_palette(preview_palette);
     };
-    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons));
+    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons), GUI::AllowCallback::No);
 
     path_picker_button.on_click = [&](auto) {
         auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
@@ -283,7 +283,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_window_title();
 
         auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_widget.preview_palette().color(selected_color_role));
+        color_input.set_color(preview_widget.preview_palette().color(selected_color_role), GUI::AllowCallback::No);
 
         auto selected_flag_role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
         flag_input.set_checked(preview_widget.preview_palette().flag(selected_flag_role), GUI::AllowCallback::No);
@@ -292,7 +292,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         metric_input.set_value(preview_widget.preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
 
         auto selected_path_role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(preview_widget.preview_palette().path(selected_path_role));
+        path_input.set_text(preview_widget.preview_palette().path(selected_path_role), GUI::AllowCallback::No);
     };
 
     auto save_to_result = [&](auto const& response) {
