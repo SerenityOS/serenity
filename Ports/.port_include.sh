@@ -2,6 +2,7 @@
 set -eu
 
 SCRIPT="$(dirname "${0}")"
+export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
 
 maybe_source() {
     if [ -f "$1" ]; then
@@ -46,7 +47,7 @@ host_env() {
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
-makeopts=("-j$(nproc)")
+makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
 configopts=()
