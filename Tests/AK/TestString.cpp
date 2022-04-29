@@ -161,6 +161,7 @@ TEST_CASE(flystring)
         StringBuilder builder;
         builder.append('f');
         builder.append("oo");
+        EXPECT(builder.is_not_empty());
         FlyString c = builder.to_string();
         EXPECT_EQ(a.impl(), b.impl());
         EXPECT_EQ(a.impl(), c.impl());
