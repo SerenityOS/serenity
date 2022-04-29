@@ -23,6 +23,18 @@ public:
         virtual void apply_settings() = 0;
         virtual void cancel_settings() { }
         virtual void reset_default_values() { }
+
+        SettingsWindow& settings_window() { return *m_window; }
+        void set_settings_window(SettingsWindow& settings_window) { m_window = settings_window; }
+
+        void set_modified(bool modified)
+        {
+            if (m_window)
+                m_window->set_modified(modified);
+        }
+
+    private:
+        WeakPtr<SettingsWindow> m_window;
     };
 
     enum class ShowDefaultsButton {
@@ -39,11 +51,18 @@ public:
     {
         auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
         TRY(m_tabs.try_set(id, tab));
+        tab->set_settings_window(*this);
         return tab;
     }
 
     Optional<NonnullRefPtr<Tab>> get_tab(StringView id) const;
     void set_active_tab(StringView id);
+
+    void apply_settings();
+    void cancel_settings();
+    void reset_default_values();
+
+    void set_modified(bool);
 
 private:
     SettingsWindow() = default;
