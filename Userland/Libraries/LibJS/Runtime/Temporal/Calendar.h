@@ -30,8 +30,9 @@ private:
     String m_identifier; // [[Identifier]]
 };
 
-ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject const* new_target = nullptr);
 bool is_builtin_calendar(String const& identifier);
+Span<StringView const> available_calendars();
+ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject&, String const& identifier);
 Calendar* get_iso8601_calendar(GlobalObject&);
 ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject&, Object& calendar, Vector<StringView> const& field_names);

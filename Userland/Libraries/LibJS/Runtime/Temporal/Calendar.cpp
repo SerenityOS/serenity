@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS::Temporal {
 
@@ -30,10 +31,34 @@ Calendar::Calendar(String identifier, Object& prototype)
 {
 }
 
-// 12.1.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
+// 12.1.1 IsBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-isbuiltincalendar
+bool is_builtin_calendar(String const& identifier)
+{
+    // 1. Let calendars be AvailableCalendars().
+    auto calendars = available_calendars();
+
+    // 2. If calendars contains id, return true.
+    if (calendars.contains_slow(identifier))
+        return true;
+
+    // 3. Return false.
+    return false;
+}
+
+// 12.1.2 AvailableCalendars ( ), https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars
+// NOTE: This is the minimum AvailableCalendars implementation for engines without ECMA-402.
+// NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.
+Span<StringView const> available_calendars()
+{
+    // 1. Return « "iso8601" ».
+    static constexpr AK::Array values { "iso8601"sv };
+    return values.span();
+}
+
+// 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
 ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
 {
-    // 1. Assert: ! IsBuiltinCalendar(identifier) is true.
+    // 1. Assert: IsBuiltinCalendar(identifier) is true.
     VERIFY(is_builtin_calendar(identifier));
 
     // 2. If newTarget is not provided, set newTarget to %Temporal.Calendar%.
@@ -48,24 +73,12 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject& global_objec
     return object;
 }
 
-// 12.1.2 IsBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-isbuiltincalendar
-// NOTE: This is the minimum IsBuiltinCalendar implementation for engines without ECMA-402.
-bool is_builtin_calendar(String const& identifier)
-{
-    // 1. If id is not "iso8601", return false.
-    if (identifier != "iso8601"sv)
-        return false;
-
-    // 2. Return true.
-    return true;
-}
-
-// 12.1.3 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
+// 12.2.2 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
 ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, String const& identifier)
 {
     auto& vm = global_object.vm();
 
-    // 1. If ! IsBuiltinCalendar(id) is false, throw a RangeError exception.
+    // 1. If IsBuiltinCalendar(id) is false, throw a RangeError exception.
     if (!is_builtin_calendar(identifier))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
@@ -73,14 +86,14 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
     return MUST(create_temporal_calendar(global_object, identifier));
 }
 
-// 12.1.4 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
+// 12.2.3 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
 Calendar* get_iso8601_calendar(GlobalObject& global_object)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
     return MUST(get_builtin_calendar(global_object, "iso8601"));
 }
 
-// 12.1.5 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
+// 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
 ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, Object& calendar, Vector<StringView> const& field_names)
 {
     auto& vm = global_object.vm();
@@ -109,7 +122,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     return result;
 }
 
-// 12.1.6 CalendarMergeFields ( calendar, fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields
+// 12.2.5 CalendarMergeFields ( calendar, fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields
 ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& additional_fields)
 {
     auto& vm = global_object.vm();
@@ -134,7 +147,7 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
     return &result.as_object();
 }
 
-// 12.1.7 CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
+// 12.2.6 CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
 ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
 {
     // NOTE: `date` is a `Value` because we sometimes need to pass a PlainDate, sometimes a PlainDateTime, and sometimes undefined.
@@ -160,7 +173,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Obj
     return static_cast<PlainDate*>(added_date_object);
 }
 
-// 12.1.8 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
+// 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
 ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until)
 {
     auto& vm = global_object.vm();
@@ -183,7 +196,7 @@ ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Ob
     return static_cast<Duration*>(duration_object);
 }
 
-// 12.1.9 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
+// 12.2.8 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
 ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -200,7 +213,7 @@ ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& cal
     return TRY(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
-// 12.1.10 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
+// 12.2.9 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
 ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -217,7 +230,7 @@ ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& ca
     return TRY(to_positive_integer(global_object, result));
 }
 
-// 12.1.11 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
+// 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
 ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -234,7 +247,7 @@ ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Objec
     return result.to_string(global_object);
 }
 
-// 12.1.12 CalendarDay ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarday
+// 12.2.11 CalendarDay ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarday
 ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -251,7 +264,7 @@ ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& cale
     return TRY(to_positive_integer(global_object, result));
 }
 
-// 12.1.13 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
+// 12.2.12 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
 ThrowCompletionOr<Value> calendar_day_of_week(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -261,7 +274,7 @@ ThrowCompletionOr<Value> calendar_day_of_week(GlobalObject& global_object, Objec
     return TRY(Value(&calendar).invoke(global_object, vm.names.dayOfWeek, &date_like));
 }
 
-// 12.1.14 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
+// 12.2.13 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
 ThrowCompletionOr<Value> calendar_day_of_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -271,7 +284,7 @@ ThrowCompletionOr<Value> calendar_day_of_year(GlobalObject& global_object, Objec
     return TRY(Value(&calendar).invoke(global_object, vm.names.dayOfYear, &date_like));
 }
 
-// 12.1.15 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
+// 12.2.14 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
 ThrowCompletionOr<Value> calendar_week_of_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -281,7 +294,7 @@ ThrowCompletionOr<Value> calendar_week_of_year(GlobalObject& global_object, Obje
     return TRY(Value(&calendar).invoke(global_object, vm.names.weekOfYear, &date_like));
 }
 
-// 12.1.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
+// 12.2.14 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
 ThrowCompletionOr<Value> calendar_days_in_week(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -291,7 +304,7 @@ ThrowCompletionOr<Value> calendar_days_in_week(GlobalObject& global_object, Obje
     return TRY(Value(&calendar).invoke(global_object, vm.names.daysInWeek, &date_like));
 }
 
-// 12.1.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
+// 12.2.16 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
 ThrowCompletionOr<Value> calendar_days_in_month(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -301,7 +314,7 @@ ThrowCompletionOr<Value> calendar_days_in_month(GlobalObject& global_object, Obj
     return TRY(Value(&calendar).invoke(global_object, vm.names.daysInMonth, &date_like));
 }
 
-// 12.1.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
+// 12.2.17 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
 ThrowCompletionOr<Value> calendar_days_in_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -311,7 +324,7 @@ ThrowCompletionOr<Value> calendar_days_in_year(GlobalObject& global_object, Obje
     return TRY(Value(&calendar).invoke(global_object, vm.names.daysInYear, &date_like));
 }
 
-// 12.1.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
+// 12.2.18 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
 ThrowCompletionOr<Value> calendar_months_in_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -321,7 +334,7 @@ ThrowCompletionOr<Value> calendar_months_in_year(GlobalObject& global_object, Ob
     return TRY(Value(&calendar).invoke(global_object, vm.names.monthsInYear, &date_like));
 }
 
-// 12.1.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
+// 12.2.29 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
 ThrowCompletionOr<Value> calendar_in_leap_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -331,7 +344,7 @@ ThrowCompletionOr<Value> calendar_in_leap_year(GlobalObject& global_object, Obje
     return TRY(Value(&calendar).invoke(global_object, vm.names.inLeapYear, &date_like));
 }
 
-// 15.6.1.2 CalendarEra ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarera
+// 15.6.1.1 CalendarEra ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarera
 ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -349,7 +362,7 @@ ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calen
     return result;
 }
 
-// 15.6.1.3 CalendarEraYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarerayear
+// 15.6.1.2 CalendarEraYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarerayear
 ThrowCompletionOr<Value> calendar_era_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {
     auto& vm = global_object.vm();
@@ -367,7 +380,7 @@ ThrowCompletionOr<Value> calendar_era_year(GlobalObject& global_object, Object& 
     return result;
 }
 
-// 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
+// 12.2.20 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
 {
     auto& vm = global_object.vm();
@@ -405,12 +418,12 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     // 2. Let identifier be ? ToString(temporalCalendarLike).
     auto identifier = TRY(temporal_calendar_like.to_string(global_object));
 
-    // 3. If ! IsBuiltinCalendar(identifier) is false, then
+    // 3. If IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Set identifier to ? ParseTemporalCalendarString(identifier).
         identifier = TRY(parse_temporal_calendar_string(global_object, identifier));
 
-        // b. If ! IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
+        // b. If IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
         if (!is_builtin_calendar(identifier))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
     }
@@ -419,7 +432,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     return MUST(create_temporal_calendar(global_object, identifier));
 }
 
-// 12.1.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
+// 12.2.21 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
 ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(GlobalObject& global_object, Value temporal_calendar_like)
 {
     // 1. If temporalCalendarLike is undefined, then
@@ -431,7 +444,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(GlobalObject& g
     return to_temporal_calendar(global_object, temporal_calendar_like);
 }
 
-// 12.1.23 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
+// 12.2.22 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
 ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& global_object, Object& item)
 {
     auto& vm = global_object.vm();
@@ -458,7 +471,7 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
     return to_temporal_calendar_with_iso_default(global_object, calendar_like);
 }
 
-// 12.1.24 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
+// 12.2.23 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
 ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
@@ -477,7 +490,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_obj
     return static_cast<PlainDate*>(date_object);
 }
 
-// 12.1.25 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
+// 12.2.24 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
 ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
@@ -496,7 +509,7 @@ ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject&
     return static_cast<PlainYearMonth*>(year_month_object);
 }
 
-// 12.1.26 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
+// 12.2.25 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
 ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
@@ -515,7 +528,7 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(GlobalObject& g
     return static_cast<PlainMonthDay*>(month_day_object);
 }
 
-// 12.1.27 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
+// 12.2.26 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
 String format_calendar_annotation(StringView id, StringView show_calendar)
 {
     // 1. Assert: showCalendar is "auto", "always", or "never".
@@ -533,7 +546,7 @@ String format_calendar_annotation(StringView id, StringView show_calendar)
     return String::formatted("[u-ca={}]", id);
 }
 
-// 12.1.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
+// 12.2.27 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
 ThrowCompletionOr<bool> calendar_equals(GlobalObject& global_object, Object& one, Object& two)
 {
     // 1. If one and two are the same Object value, return true.
@@ -554,7 +567,7 @@ ThrowCompletionOr<bool> calendar_equals(GlobalObject& global_object, Object& one
     return false;
 }
 
-// 12.1.29 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
+// 12.2.28 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
 ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Object& one, Object& two)
 {
     auto& vm = global_object.vm();
@@ -584,7 +597,7 @@ ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Ob
     return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendar);
 }
 
-// 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
+// 12.2.29 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
 bool is_iso_leap_year(i32 year)
 {
     // 1. Assert: year is an integer.
@@ -605,7 +618,7 @@ bool is_iso_leap_year(i32 year)
     return true;
 }
 
-// 12.1.31 ISODaysInYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinyear
+// 12.2.30 ISODaysInYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinyear
 u16 iso_days_in_year(i32 year)
 {
     // 1. Assert: year is an integer.
@@ -620,7 +633,7 @@ u16 iso_days_in_year(i32 year)
     return 365;
 }
 
-// 12.1.32 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
+// 12.2.31 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 u8 iso_days_in_month(i32 year, u8 month)
 {
     // 1. Assert: year is an integer.
@@ -644,7 +657,7 @@ u8 iso_days_in_month(i32 year, u8 month)
     return 28;
 }
 
-// 12.1.33 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+// 12.2.32 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
 {
     // 1. Assert: year is an integer.
@@ -664,7 +677,7 @@ u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
     return day_of_week == 0 ? 7 : day_of_week;
 }
 
-// 12.1.34 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+// 12.2.33 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: year is an integer.
@@ -679,7 +692,7 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     return days;
 }
 
-// 12.1.35 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
+// 12.2.34 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
 u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: year is an integer.
@@ -711,7 +724,7 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
     return week;
 }
 
-// 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
+// 12.2.35 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
 String build_iso_month_code(u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
@@ -719,7 +732,7 @@ String build_iso_month_code(u8 month)
     return String::formatted("M{:02}", month);
 }
 
-// 12.1.37 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
+// 12.2.36 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
 ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object const& fields)
 {
     auto& vm = global_object.vm();
@@ -779,7 +792,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     return number_part_integer;
 }
 
-// 12.1.38 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
+// 12.2.37 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
 ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -813,7 +826,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
-// 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
+// 12.2.38 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
 ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -843,7 +856,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
-// 12.1.40 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
+// 12.2.39 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
 ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -901,7 +914,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
-// 12.1.41 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
+// 12.2.40 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
 i32 iso_year(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOYear]] internal slot.
@@ -919,7 +932,7 @@ i32 iso_year(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.1.42 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
+// 12.2.41 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
 u8 iso_month(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
@@ -937,7 +950,7 @@ u8 iso_month(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.1.43 ISOMonthCode ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.42 ISOMonthCode ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 String iso_month_code(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
@@ -955,7 +968,7 @@ String iso_month_code(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.1.44 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.43 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 u8 iso_day(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISODay]] internal slot.
@@ -973,7 +986,7 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.1.45 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
+// 12.2.44 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
 ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();
