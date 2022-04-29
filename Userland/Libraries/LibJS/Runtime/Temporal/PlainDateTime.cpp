@@ -49,27 +49,22 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
-
-    // 2. Assert: ! IsValidISODate(year, month, day) is true.
+    // 1. Assert: IsValidISODate(year, month, day) is true.
     VERIFY(is_valid_iso_date(year, month, day));
 
-    // 3. Assert: ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is true.
-    VERIFY(is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond));
-
-    // 4. Let date be MakeDay(𝔽(year), 𝔽(month − 1), 𝔽(day)).
+    // 2. Let date be MakeDay(𝔽(year), 𝔽(month − 1), 𝔽(day)).
     auto date = make_day(global_object, Value(year), Value(month - 1), Value(day));
 
-    // 5. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
+    // 3. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
     auto time = make_time(global_object, Value(hour), Value(minute), Value(second), Value(millisecond));
 
-    // 6. Let ms be MakeDate(date, time).
+    // 4. Let ms be MakeDate(date, time).
     auto ms = make_date(date, time);
 
-    // 7. Assert: ms is finite.
+    // 5. Assert: ms is finite.
     VERIFY(ms.is_finite_number());
 
-    // 8. Return ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond.
+    // 6. Return ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond.
     return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms.as_double())).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
@@ -81,23 +76,21 @@ auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
 bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
-    // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
-
-    // 2. Let ns be ! GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
+    // 1. Let ns be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
     auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
-    // 3. If ns ≤ -8.64 × 10^21 - 8.64 × 10^13, then
+    // 2. If ns ≤ -8.64 × 10^21 - 8.64 × 10^13, then
     if (ns->big_integer() <= DATETIME_NANOSECONDS_MIN) {
         // a. Return false.
         return false;
     }
 
-    // 4. If ns ≥ 8.64 × 10^21 + 8.64 × 10^13, then
+    // 3. If ns ≥ 8.64 × 10^21 + 8.64 × 10^13, then
     if (ns->big_integer() >= DATETIME_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
     }
-    // 5. Return true.
+    // 4. Return true.
     return true;
 }
 
@@ -193,10 +186,10 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         // c. Let result be ? ParseTemporalDateTimeString(string).
         result = TRY(parse_temporal_date_time_string(global_object, string));
 
-        // d. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+        // d. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
         VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
-        // e. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+        // e. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
         VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
         // f. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
@@ -234,15 +227,15 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(GlobalObject& global
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
     // 2. Assert: Type(calendar) is Object.
 
-    // 3. If ! IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
+    // 3. If IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
 
-    // 4. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    // 4. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
 
-    // 5. If ! ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
+    // 5. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);

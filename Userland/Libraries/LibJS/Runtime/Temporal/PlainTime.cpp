@@ -136,7 +136,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         // b. Let result be ? ParseTemporalTimeString(string).
         result = TRY(parse_temporal_time_string(global_object, string));
 
-        // c. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+        // c. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
         VERIFY(is_valid_time(result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
 
         // d. If result.[[Calendar]] is not one of undefined or "iso8601", then
@@ -213,7 +213,7 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
 
     // 4. If overflow is "reject", then
     if (overflow == "reject"sv) {
-        // a. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+        // a. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
         if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
@@ -227,45 +227,43 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
 // 4.5.5 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
-    // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
-
-    // 2. If hour < 0 or hour > 23, then
+    // 1. If hour < 0 or hour > 23, then
     if (hour > 23) {
         // a. Return false.
         return false;
     }
 
-    // 3. If minute < 0 or minute > 59, then
+    // 2. If minute < 0 or minute > 59, then
     if (minute > 59) {
         // a. Return false.
         return false;
     }
 
-    // 4. If second < 0 or second > 59, then
+    // 3. If second < 0 or second > 59, then
     if (second > 59) {
         // a. Return false.
         return false;
     }
 
-    // 5. If millisecond < 0 or millisecond > 999, then
+    // 4. If millisecond < 0 or millisecond > 999, then
     if (millisecond > 999) {
         // a. Return false.
         return false;
     }
 
-    // 6. If microsecond < 0 or microsecond > 999, then
+    // 5. If microsecond < 0 or microsecond > 999, then
     if (microsecond > 999) {
         // a. Return false.
         return false;
     }
 
-    // 7. If nanosecond < 0 or nanosecond > 999, then
+    // 6. If nanosecond < 0 or nanosecond > 999, then
     if (nanosecond > 999) {
         // a. Return false.
         return false;
     }
 
-    // 8. Return true.
+    // 7. Return true.
     return true;
 }
 
@@ -357,7 +355,7 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, 
 
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
-    // 2. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    // 2. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
