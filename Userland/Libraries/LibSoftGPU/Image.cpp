@@ -9,10 +9,123 @@
 
 namespace SoftGPU {
 
+static constexpr FloatVector4 unpack_color(void const* ptr, GPU::ImageFormat format)
+{
+    constexpr auto one_over_255 = 1.0f / 255;
+    switch (format) {
+    case GPU::ImageFormat::RGB888: {
+        auto rgb = reinterpret_cast<u8 const*>(ptr);
+        return {
+            rgb[0] * one_over_255,
+            rgb[1] * one_over_255,
+            rgb[2] * one_over_255,
+            1.0f,
+        };
+    }
+    case GPU::ImageFormat::BGR888: {
+        auto bgr = reinterpret_cast<u8 const*>(ptr);
+        return {
+            bgr[2] * one_over_255,
+            bgr[1] * one_over_255,
+            bgr[0] * one_over_255,
+            1.0f,
+        };
+    }
+    case GPU::ImageFormat::RGBA8888: {
+        auto rgba = *reinterpret_cast<u32 const*>(ptr);
+        return {
+            (rgba & 0xff) * one_over_255,
+            ((rgba >> 8) & 0xff) * one_over_255,
+            ((rgba >> 16) & 0xff) * one_over_255,
+            ((rgba >> 24) & 0xff) * one_over_255,
+        };
+    }
+    case GPU::ImageFormat::BGRA8888: {
+        auto bgra = *reinterpret_cast<u32 const*>(ptr);
+        return {
+            ((bgra >> 16) & 0xff) * one_over_255,
+            ((bgra >> 8) & 0xff) * one_over_255,
+            (bgra & 0xff) * one_over_255,
+            ((bgra >> 24) & 0xff) * one_over_255,
+        };
+    }
+    case GPU::ImageFormat::RGB565: {
+        auto rgb = *reinterpret_cast<u16 const*>(ptr);
+        return {
+            ((rgb >> 11) & 0x1f) / 31.f,
+            ((rgb >> 5) & 0x3f) / 63.f,
+            (rgb & 0x1f) / 31.f,
+            1.0f
+        };
+    }
+    case GPU::ImageFormat::L8: {
+        auto luminance = *reinterpret_cast<u8 const*>(ptr);
+        auto clamped_luminance = luminance * one_over_255;
+        return {
+            clamped_luminance,
+            clamped_luminance,
+            clamped_luminance,
+            1.0f,
+        };
+    }
+    case GPU::ImageFormat::L8A8: {
+        auto luminance_and_alpha = reinterpret_cast<u8 const*>(ptr);
+        auto clamped_luminance = luminance_and_alpha[0] * one_over_255;
+        return {
+            clamped_luminance,
+            clamped_luminance,
+            clamped_luminance,
+            luminance_and_alpha[1] * one_over_255,
+        };
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static constexpr void pack_color(FloatVector4 const& color, void* ptr, GPU::ImageFormat format)
+{
+    auto r = static_cast<u8>(clamp(color.x(), 0.0f, 1.0f) * 255);
+    auto g = static_cast<u8>(clamp(color.y(), 0.0f, 1.0f) * 255);
+    auto b = static_cast<u8>(clamp(color.z(), 0.0f, 1.0f) * 255);
+    auto a = static_cast<u8>(clamp(color.w(), 0.0f, 1.0f) * 255);
+
+    switch (format) {
+    case GPU::ImageFormat::RGB888:
+        reinterpret_cast<u8*>(ptr)[0] = r;
+        reinterpret_cast<u8*>(ptr)[1] = g;
+        reinterpret_cast<u8*>(ptr)[2] = b;
+        return;
+    case GPU::ImageFormat::BGR888:
+        reinterpret_cast<u8*>(ptr)[2] = b;
+        reinterpret_cast<u8*>(ptr)[1] = g;
+        reinterpret_cast<u8*>(ptr)[0] = r;
+        return;
+    case GPU::ImageFormat::RGBA8888:
+        *reinterpret_cast<u32*>(ptr) = r | (g << 8) | (b << 16) | (a << 24);
+        return;
+    case GPU::ImageFormat::BGRA8888:
+        *reinterpret_cast<u32*>(ptr) = b | (g << 8) | (r << 16) | (a << 24);
+        return;
+    case GPU::ImageFormat::RGB565:
+        *reinterpret_cast<u16*>(ptr) = (r & 0x1f) | ((g & 0x3f) << 5) | ((b & 0x1f) << 11);
+        return;
+    case GPU::ImageFormat::L8:
+        *reinterpret_cast<u8*>(ptr) = r;
+        return;
+    case GPU::ImageFormat::L8A8:
+        reinterpret_cast<u8*>(ptr)[0] = r;
+        reinterpret_cast<u8*>(ptr)[1] = a;
+        return;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 Image::Image(void* const ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
     : GPU::Image(ownership_token)
     , m_num_layers(layers)
-    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<GPU::ColorType>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
+    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
 {
     VERIFY(width > 0);
     VERIFY(height > 0);
@@ -27,7 +140,7 @@ Image::Image(void* const ownership_token, unsigned width, unsigned height, unsig
     unsigned level;
     for (level = 0; level < max_levels; ++level) {
         for (unsigned layer = 0; layer < layers; ++layer)
-            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<GPU::ColorType>::try_create(width, height, depth));
+            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width, height, depth));
 
         if (width <= 1 && height <= 1 && depth <= 1)
             break;
