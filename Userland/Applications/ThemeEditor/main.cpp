@@ -130,6 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::Palette startup_preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
 
     auto window = GUI::Window::construct();
+    auto last_modified_time = Time::now_monotonic();
 
     Vector<Gfx::ColorRole> color_roles;
 #define __ENUMERATE_COLOR_ROLE(role) color_roles.append(Gfx::ColorRole::role);
@@ -275,7 +276,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto update_window_title = [&] {
-        window->set_title(String::formatted("{} - Theme Editor", path.value_or("Untitled")));
+        window->set_title(String::formatted("{}[*] - Theme Editor", path.value_or("Untitled")));
+    };
+
+    preview_widget.on_palette_change = [&] {
+        window->set_modified(true);
     };
 
     preview_widget.on_theme_load_from_file = [&](String const& new_path) {
@@ -296,6 +301,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto selected_path_role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
         path_input.set_text(preview_widget.preview_palette().path(selected_path_role), GUI::AllowCallback::No);
+
+        last_modified_time = Time::now_monotonic();
+        window->set_modified(false);
     };
 
     auto save_to_result = [&](auto const& response) {
@@ -321,8 +329,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             theme->write_entry("Paths", to_string(role), preview_widget.preview_palette().path(role));
         }
 
-        if (auto sync_result = theme->sync(); sync_result.is_error()) {
+        auto sync_result = theme->sync();
+        if (sync_result.is_error()) {
             GUI::MessageBox::show_error(window, String::formatted("Failed to save theme file: {}", sync_result.error()));
+        } else {
+            last_modified_time = Time::now_monotonic();
+            window->set_modified(false);
         }
     };
 
@@ -333,13 +345,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         preview_widget.set_theme_from_file(*response.value());
     })));
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
+    auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
             save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         } else {
             save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         }
-    })));
+    });
+    TRY(file_menu->try_add_action(save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
@@ -413,6 +426,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window)));
 
     update_window_title();
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (!window->is_modified())
+            return GUI::Window::CloseRequestDecision::Close;
+
+        auto result = GUI::MessageBox::ask_about_unsaved_changes(window, path.value_or(""), last_modified_time);
+        if (result == GUI::MessageBox::ExecYes) {
+            save_action->activate();
+            if (window->is_modified())
+                return GUI::Window::CloseRequestDecision::StayOpen;
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        if (result == GUI::MessageBox::ExecNo)
+            return GUI::Window::CloseRequestDecision::Close;
+
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     window->resize(480, 520);
     window->set_resizable(false);
