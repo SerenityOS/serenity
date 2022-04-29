@@ -95,15 +95,34 @@ void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x
 
 void GraphicsManagement::deactivate_graphical_mode()
 {
+    // FIXME: Remove this once we don't support Framebuffer devices anymore.
     for (auto& graphics_device : m_graphics_devices) {
         graphics_device.enable_consoles();
+    }
+
+    for (auto& connector : m_display_connector_nodes) {
+        connector.set_display_mode({}, DisplayConnector::DisplayMode::Console);
     }
 }
 void GraphicsManagement::activate_graphical_mode()
 {
+    // FIXME: Remove this once we don't support Framebuffer devices anymore.
     for (auto& graphics_device : m_graphics_devices) {
         graphics_device.disable_consoles();
     }
+
+    for (auto& connector : m_display_connector_nodes) {
+        connector.set_display_mode({}, DisplayConnector::DisplayMode::Graphical);
+    }
+}
+
+void GraphicsManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+{
+    m_display_connector_nodes.append(connector);
+}
+void GraphicsManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+{
+    m_display_connector_nodes.remove(connector);
 }
 
 static inline bool is_vga_compatible_pci_device(PCI::DeviceIdentifier const& device_identifier)
