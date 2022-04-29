@@ -26,7 +26,6 @@
 #include <LibGPU/TexCoordGenerationConfig.h>
 #include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
