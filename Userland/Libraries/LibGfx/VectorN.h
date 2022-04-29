@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -27,8 +28,12 @@
 #endif
 
 namespace Gfx {
+
 template<size_t N, typename T>
 requires(N >= 2 && N <= 4) class VectorN final {
+    template<size_t U, typename V>
+    friend class VectorN;
+
     static_assert(LOOP_UNROLL_N >= N, "Unroll the entire loop for performance.");
 
 public:
@@ -226,7 +231,22 @@ public:
             return String::formatted("[{},{},{},{}]", x(), y(), z(), w());
     }
 
+    template<typename U>
+    [[nodiscard]] VectorN<N, U> to_rounded() const
+    {
+        VectorN<N, U> result;
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i) {
+            if constexpr (IsSame<T, float>)
+                result.m_data[i] = static_cast<U>(lrintf(m_data[i]));
+            else
+                result.m_data[i] = static_cast<U>(lrint(m_data[i]));
+        }
+        return result;
+    }
+
 private:
     AK::Array<T, N> m_data;
 };
+
 }
