@@ -106,8 +106,8 @@ ThemeWidget::ThemeWidget()
     m_cursors_tableview->set_column_headers_visible(false);
     m_cursors_tableview->set_highlight_key_column(false);
 
-    auto mouse_cursor_model = MouseCursorModel::create();
-    auto sorting_proxy_model = MUST(GUI::SortingProxyModel::create(mouse_cursor_model));
+    m_mouse_cursor_model = MouseCursorModel::create();
+    auto sorting_proxy_model = MUST(GUI::SortingProxyModel::create(*m_mouse_cursor_model));
     sorting_proxy_model->set_sort_role(GUI::ModelRole::Display);
 
     m_cursors_tableview->set_model(sorting_proxy_model);
@@ -115,17 +115,16 @@ ThemeWidget::ThemeWidget()
     m_cursors_tableview->set_column_width(0, 25);
     m_cursors_tableview->model()->invalidate();
 
-    m_theme_name = GUI::ConnectionToWindowServer::the().get_cursor_theme();
-    mouse_cursor_model->change_theme(m_theme_name);
+    auto theme_name = GUI::ConnectionToWindowServer::the().get_cursor_theme();
+    m_mouse_cursor_model->change_theme(theme_name);
 
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
-    m_theme_name_box->on_change = [this, mouse_cursor_model](String const& value, GUI::ModelIndex const&) mutable {
-        m_theme_name = value;
-        mouse_cursor_model->change_theme(m_theme_name);
+    m_theme_name_box->on_change = [this](String const& value, GUI::ModelIndex const&) mutable {
+        m_mouse_cursor_model->change_theme(value);
     };
     m_theme_name_box->set_model(ThemeModel::create());
     m_theme_name_box->model()->invalidate();
-    m_theme_name_box->set_text(m_theme_name);
+    m_theme_name_box->set_text(theme_name);
 }
 
 void ThemeWidget::apply_settings()
@@ -136,4 +135,6 @@ void ThemeWidget::apply_settings()
 void ThemeWidget::reset_default_values()
 {
     m_theme_name_box->set_text("Default");
+    // FIXME: ComboBox::set_text() doesn't fire the on_change callback, so we have to set the theme here manually.
+    m_mouse_cursor_model->change_theme("Default");
 }
