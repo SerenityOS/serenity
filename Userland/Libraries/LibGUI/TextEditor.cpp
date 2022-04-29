@@ -1576,14 +1576,8 @@ void TextEditor::did_change(AllowCallback allow_callback)
     recompute_all_visual_lines();
     hide_autocomplete_if_needed();
     m_needs_rehighlight = true;
-    if (!m_has_pending_change_notification) {
-        m_has_pending_change_notification = true;
-        deferred_invoke([this, allow_callback] {
-            m_has_pending_change_notification = false;
-            if (on_change && allow_callback == AllowCallback::Yes)
-                on_change();
-        });
-    }
+    if (on_change && allow_callback == AllowCallback::Yes)
+        on_change();
 }
 void TextEditor::set_mode(const Mode mode)
 {
