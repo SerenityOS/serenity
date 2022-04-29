@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
@@ -28,6 +29,9 @@ public:
 
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
+
+    void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);
+    void detach_display_connector(Badge<DisplayConnector>, DisplayConnector&);
 
     bool framebuffer_devices_console_only() const;
     bool framebuffer_devices_use_bootloader_framebuffer() const;
@@ -54,6 +58,8 @@ private:
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
     RefPtr<VGACompatibleAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
+
+    IntrusiveList<&DisplayConnector::m_list_node> m_display_connector_nodes;
 
     RecursiveSpinlock m_main_vga_lock;
     bool m_vga_access_is_disabled { false };

@@ -23,6 +23,7 @@ struct FBProperties {
     unsigned char doublebuffer_support;
     unsigned char flushing_support;
     unsigned char partial_flushing_support;
+    unsigned char refresh_rate_support;
 };
 
 struct FBHeadProperties {
@@ -34,6 +35,21 @@ struct FBHeadProperties {
 
     unsigned offset;
     unsigned buffer_length;
+};
+
+struct FBHeadModeSetting {
+    int horizontal_stride;
+    int pixel_clock_in_khz;
+    int horizontal_active;
+    int horizontal_front_porch_pixels;
+    int horizontal_sync_time_pixels;
+    int horizontal_blank_pixels;
+    int vertical_active;
+    int vertical_front_porch_lines;
+    int vertical_sync_time_lines;
+    int vertical_blank_lines;
+    int horizontal_offset;
+    int vertical_offset;
 };
 
 struct FBHeadResolution {
@@ -103,6 +119,9 @@ enum IOCtlNumber {
     FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER,
     FB_IOCTL_FLUSH_HEAD_BUFFERS,
     FB_IOCTL_FLUSH_HEAD,
+    FB_IOCTL_SET_HEAD_MODE_SETTING,
+    FB_IOCTL_GET_HEAD_MODE_SETTING,
+    FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING,
     KEYBOARD_IOCTL_GET_NUM_LOCK,
     KEYBOARD_IOCTL_SET_NUM_LOCK,
     KEYBOARD_IOCTL_GET_CAPS_LOCK,
