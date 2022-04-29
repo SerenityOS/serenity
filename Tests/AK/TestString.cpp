@@ -151,6 +151,8 @@ TEST_CASE(flystring)
         FlyString a("foo");
         FlyString b("foo");
         EXPECT_EQ(a.impl(), b.impl());
+        EXPECT(a.is_not_empty());
+        EXPECT(b.is_not_empty());
     }
 
     {
