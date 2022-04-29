@@ -447,8 +447,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 16. Let otherDate be ? DateFromFields(calendar, otherFields).
-    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
-    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields, options));
+    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields));
 
     // 17. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
     auto* this_fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
@@ -457,8 +456,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 19. Let thisDate be ? DateFromFields(calendar, thisFields).
-    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
-    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields, options));
+    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields));
 
     // 20. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
@@ -530,8 +528,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 17. Let otherDate be ? DateFromFields(calendar, otherFields).
-    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
-    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields, options));
+    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields));
 
     // 18. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
     auto* this_fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
@@ -540,8 +537,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 20. Let thisDate be ? DateFromFields(calendar, thisFields).
-    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
-    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields, options));
+    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields));
 
     // 21. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
