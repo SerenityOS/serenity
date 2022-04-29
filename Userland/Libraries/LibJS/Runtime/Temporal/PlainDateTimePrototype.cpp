@@ -802,8 +802,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
-    // 6. Return ? YearMonthFromFields(calendar, fields).
-    return TRY(year_month_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
+    return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
 }
 
 // 5.3.39 Temporal.PlainDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainmonthday
@@ -822,8 +822,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
 
-    // 6. Return ? MonthDayFromFields(calendar, fields).
-    return TRY(month_day_from_fields(global_object, calendar, *fields));
+    // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
+    return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
 }
 
 // 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime

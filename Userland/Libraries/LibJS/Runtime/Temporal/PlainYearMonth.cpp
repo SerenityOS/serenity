@@ -57,8 +57,8 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
-        // e. Return ? YearMonthFromFields(calendar, fields, options).
-        return year_month_from_fields(global_object, *calendar, *fields, options);
+        // e. Return ? CalendarYearMonthFromFields(calendar, fields, options).
+        return calendar_year_month_from_fields(global_object, *calendar, *fields, options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
@@ -77,8 +77,8 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
 
     // 9. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISODay]] internal slot of the result.
-    // 10. Return ? YearMonthFromFields(calendar, result).
-    return year_month_from_fields(global_object, *calendar, *creation_result);
+    // 10. Return ? CalendarYearMonthFromFields(calendar, result).
+    return calendar_year_month_from_fields(global_object, *calendar, *creation_result);
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
