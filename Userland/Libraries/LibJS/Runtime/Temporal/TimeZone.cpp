@@ -586,10 +586,10 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
-    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds − 8.64 × 10^13).
+    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds − 8.64 × 10^13ℤ).
     auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus("86400000000000"_sbigint))));
 
-    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + 8.64 × 10^13).
+    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + 8.64 × 10^13ℤ).
     auto* day_after = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().plus("86400000000000"_sbigint))));
 
     // 10. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
