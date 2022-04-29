@@ -64,7 +64,7 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     // 5. Assert: ms is finite.
     VERIFY(ms.is_finite_number());
 
-    // 6. Return ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond.
+    // 6. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
     return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms.as_double())).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
@@ -76,17 +76,17 @@ auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
 bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
-    // 1. Let ns be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
-    auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+    // 1. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
+    auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)->big_integer();
 
     // 2. If ns ≤ -8.64 × 10^21 - 8.64 × 10^13, then
-    if (ns->big_integer() <= DATETIME_NANOSECONDS_MIN) {
+    if (ns <= DATETIME_NANOSECONDS_MIN) {
         // a. Return false.
         return false;
     }
 
     // 3. If ns ≥ 8.64 × 10^21 + 8.64 × 10^13, then
-    if (ns->big_integer() >= DATETIME_NANOSECONDS_MAX) {
+    if (ns >= DATETIME_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
     }

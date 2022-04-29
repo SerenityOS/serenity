@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
         // a. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
-        // b. Let instant be ! CreateTemporalInstant(ℤ(epochNanoseconds − timeZone.[[OffsetNanoseconds]])).
+        // b. Let instant be ! CreateTemporalInstant(epochNanoseconds − ℤ(timeZone.[[OffsetNanoseconds]])).
         auto* instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds())))));
 
         // c. Return CreateArrayFromList(« instant »).
