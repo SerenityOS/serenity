@@ -983,7 +983,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
 // it uses mathematical values which can be arbitrarily (but not infinitely) large.
 // Incidentally V8's Temporal implementation does the same :^)
 
-// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.29 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 {
     // 1. Assert: x and increment are mathematical values.
