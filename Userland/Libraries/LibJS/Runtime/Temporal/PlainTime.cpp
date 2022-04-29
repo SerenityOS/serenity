@@ -42,22 +42,22 @@ void PlainTime::visit_edges(Visitor& visitor)
 // 4.5.1 DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-differencetime
 TimeDurationRecord difference_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {
-    // 1. Let hours be h2 − h1.
+    // 1. Let hours be h2 - h1.
     auto hours = hour2 - hour1;
 
-    // 2. Let minutes be min2 − min1.
+    // 2. Let minutes be min2 - min1.
     auto minutes = minute2 - minute1;
 
-    // 3. Let seconds be s2 − s1.
+    // 3. Let seconds be s2 - s1.
     auto seconds = second2 - second1;
 
-    // 4. Let milliseconds be ms2 − ms1.
+    // 4. Let milliseconds be ms2 - ms1.
     auto milliseconds = millisecond2 - millisecond1;
 
-    // 5. Let microseconds be mus2 − mus1.
+    // 5. Let microseconds be mus2 - mus1.
     auto microseconds = microsecond2 - microsecond1;
 
-    // 6. Let nanoseconds be ns2 − ns1.
+    // 6. Let nanoseconds be ns2 - ns1.
     auto nanoseconds = nanosecond2 - nanosecond1;
 
     // 7. Let sign be ! DurationSign(0, 0, 0, 0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
@@ -525,7 +525,7 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, and increment are integers.
 
-    // 2. Let fractionalSecond be nanosecond × 10−9 + microsecond × 10−6 + millisecond × 10−3 + second.
+    // 2. Let fractionalSecond be nanosecond × 10-9 + microsecond × 10-6 + millisecond × 10-3 + second.
     double fractional_second = nanosecond * 0.000000001 + microsecond * 0.000001 + millisecond * 0.001 + second;
     double quantity;
 
@@ -555,12 +555,12 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
     }
     // 7. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
-        // a. Let quantity be nanosecond × 10−6 + microsecond × 10−3 + millisecond.
+        // a. Let quantity be nanosecond × 10-6 + microsecond × 10-3 + millisecond.
         quantity = nanosecond * 0.000001 + 0.001 * microsecond + millisecond;
     }
     // 8. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
-        // a. Let quantity be nanosecond × 10−3 + microsecond.
+        // a. Let quantity be nanosecond × 10-3 + microsecond.
         quantity = nanosecond * 0.001 + microsecond;
     }
     // 9. Else,

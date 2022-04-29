@@ -52,7 +52,7 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     // 1. Assert: IsValidISODate(year, month, day) is true.
     VERIFY(is_valid_iso_date(year, month, day));
 
-    // 2. Let date be MakeDay(𝔽(year), 𝔽(month − 1), 𝔽(day)).
+    // 2. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
     auto date = make_day(global_object, Value(year), Value(month - 1), Value(day));
 
     // 3. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).

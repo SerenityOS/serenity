@@ -200,7 +200,7 @@ i8 duration_sign(double years, double months, double weeks, double days, double 
 {
     // 1. For each value v of « years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds », do
     for (auto& v : { years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds }) {
-        // a. If v < 0, return −1.
+        // a. If v < 0, return -1.
         if (v < 0)
             return -1;
 
@@ -361,7 +361,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject& global_objec
 // 7.5.15 CreateNegatedTemporalDuration ( duration ), https://tc39.es/proposal-temporal/#sec-temporal-createnegatedtemporalduration
 Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration)
 {
-    // 1. Return ! CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
+    // 1. Return ! CreateTemporalDuration(-duration.[[Years]], -duration.[[Months]], -duration.[[Weeks]], -duration.[[Days]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]]).
     return MUST(create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()));
 }
 
@@ -389,7 +389,7 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Va
     // 6. Let offsetAfter be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instantAfter).
     auto offset_after = TRY(get_offset_nanoseconds_for(global_object, &relative_to.time_zone(), *instant_after));
 
-    // 7. Return offsetAfter − offsetBefore.
+    // 7. Return offsetAfter - offsetBefore.
     return offset_after - offset_before;
 }
 
@@ -406,7 +406,7 @@ Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, d
 
     // 2. If days ≠ 0, then
     if (days != 0) {
-        // a. Set nanoseconds to nanoseconds − offsetShift.
+        // a. Set nanoseconds to nanoseconds - offsetShift.
         result_nanoseconds = result_nanoseconds.minus(Crypto::SignedBigInteger::create_from(offset_shift));
     }
     // 3. Set hours to ℝ(hours) + ℝ(days) × 24.
@@ -436,7 +436,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // a. Let endNs be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         auto* end_ns = TRY(add_zoned_date_time(global_object, relative_to_zoned_date_time.nanoseconds(), &relative_to_zoned_date_time.time_zone(), relative_to_zoned_date_time.calendar(), 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds.to_double()));
 
-        // b. Set nanoseconds to ℝ(endNs − relativeTo.[[Nanoseconds]]).
+        // b. Set nanoseconds to ℝ(endNs - relativeTo.[[Nanoseconds]]).
         total_nanoseconds = end_ns->big_integer().minus(relative_to_zoned_date_time.nanoseconds().big_integer());
     }
     // 3. Else,
@@ -468,7 +468,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
     milliseconds = 0;
     microseconds = 0;
 
-    // 7. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    // 7. If nanoseconds < 0, let sign be -1; else, let sign be 1.
     i8 sign = total_nanoseconds.is_negative() ? -1 : 1;
 
     // 8. Set nanoseconds to abs(nanoseconds).
@@ -641,7 +641,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
             // vi. Set relativeTo to newRelativeTo.
             relative_to = new_relative_to;
 
-            // vii. Set years to years − sign.
+            // vii. Set years to years - sign.
             years -= sign;
 
             // viii. Set months to months + oneYearMonths.
@@ -667,7 +667,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
             // iii. Set days to days + moveResult.[[Days]].
             days += move_result.days;
 
-            // iv. Set years to years − sign.
+            // iv. Set years to years - sign.
             years -= sign;
         }
 
@@ -682,7 +682,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
             // iii. Set days to days + moveResult.[[Days]].
             days += move_result.days;
 
-            // iv. Set months to months − sign.
+            // iv. Set months to months - sign.
             months -= sign;
         }
     }
@@ -707,7 +707,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
                 // 3. Set days to days + moveResult.[[Days]].
                 days += move_result.days;
 
-                // 4. Set years to years − sign.
+                // 4. Set years to years - sign.
                 years -= sign;
             }
 
@@ -722,7 +722,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
                 // 3. Set days to days +moveResult.[[Days]].
                 days += move_result.days;
 
-                // 4. Set months to months − sign.
+                // 4. Set months to months - sign.
                 months -= sign;
             }
 
@@ -737,7 +737,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
                 // 3. Set days to days + moveResult.[[Days]].
                 days += move_result.days;
 
-                // 4. Set weeks to weeks − sign.
+                // 4. Set weeks to weeks - sign.
                 weeks -= sign;
             }
         }
@@ -795,7 +795,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 
         // d. Repeat, while abs(days) ≥ abs(oneYearDays),
         while (fabs(days) >= fabs(one_year_days)) {
-            // i. Set days to days − oneYearDays.
+            // i. Set days to days - oneYearDays.
             days -= one_year_days;
 
             // ii. Set years to years + sign.
@@ -822,7 +822,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 
         // h. Repeat, while abs(days) ≥ abs(oneMonthDays),
         while (fabs(days) >= fabs(one_month_days)) {
-            // i. Set days to days − oneMonthDays.
+            // i. Set days to days - oneMonthDays.
             days -= one_month_days;
 
             // ii. Set months to months + sign.
@@ -861,7 +861,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 
         // p. Repeat, while abs(months) ≥ abs(oneYearMonths),
         while (fabs(months) >= fabs(one_year_months)) {
-            // i. Set months to months − oneYearMonths.
+            // i. Set months to months - oneYearMonths.
             months -= one_year_months;
 
             // ii. Set years to years + sign.
@@ -899,7 +899,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 
         // d. Repeat, while abs(days) ≥ abs(oneMonthDays),
         while (fabs(days) >= fabs(one_month_days)) {
-            // i. Set days to days − oneMonthDays.
+            // i. Set days to days - oneMonthDays.
             days -= one_month_days;
 
             // ii. Set months to months + sign.
@@ -931,7 +931,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 
         // e. Repeat, while abs(days) ≥ abs(oneWeekDays),
         while (fabs(days) >= fabs(one_week_days)) {
-            // i. Set days to days − oneWeekDays.
+            // i. Set days to days - oneWeekDays.
             days -= one_week_days;
 
             // ii. Set weeks to weeks + sign.
@@ -1164,7 +1164,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     }
     // 8. Else,
     else {
-        // a. Let fractionalSeconds be nanoseconds × 10^−9 + microseconds × 10^−6 + milliseconds × 10^−3 + seconds.
+        // a. Let fractionalSeconds be nanoseconds × 10^-9 + microseconds × 10^-6 + milliseconds × 10^-3 + seconds.
         fractional_seconds = nanoseconds * 0.000000001 + microseconds * 0.000001 + milliseconds * 0.001 + seconds;
     }
 
@@ -1235,7 +1235,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // t. Set days to days - daysPassed.
         days -= days_passed;
 
-        // u. If days < 0, let sign be −1; else, let sign be 1.
+        // u. If days < 0, let sign be -1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
         // v. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
@@ -1289,7 +1289,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // h. Let days be days + weeksInDays.
         days += weeks_in_days;
 
-        // i. If days < 0, let sign be −1; else, let sign be 1.
+        // i. If days < 0, let sign be -1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
         // j. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
@@ -1309,7 +1309,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             // i. Set months to months + sign.
             months += sign;
 
-            // ii. Set days to days − oneMonthDays.
+            // ii. Set days to days - oneMonthDays.
             days -= one_month_days;
 
             // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
@@ -1339,7 +1339,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     else if (unit == "week"sv) {
         VERIFY(relative_to);
 
-        // a. If days < 0, let sign be −1; else, let sign be 1.
+        // a. If days < 0, let sign be -1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
         // b. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
@@ -1359,7 +1359,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             // i. Set weeks to weeks + sign.
             weeks += sign;
 
-            // ii. Set days to days − oneWeekDays.
+            // ii. Set days to days - oneWeekDays.
             days -= one_week_days;
 
             // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneWeek).
@@ -1445,7 +1445,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     }
     // 17. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
-        // a. Let fractionalMilliseconds be nanoseconds × 10^−6 + microseconds × 10^−3 + milliseconds.
+        // a. Let fractionalMilliseconds be nanoseconds × 10^-6 + microseconds × 10^-3 + milliseconds.
         auto fractional_milliseconds = nanoseconds * 0.000001 + microseconds * 0.001 + milliseconds;
 
         // b. Set milliseconds to ! RoundNumberToIncrement(fractionalMilliseconds, increment, roundingMode).
@@ -1460,7 +1460,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     }
     // 18. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
-        // a. Let fractionalMicroseconds be nanoseconds × 10^−3 + microseconds.
+        // a. Let fractionalMicroseconds be nanoseconds × 10^-3 + microseconds.
         auto fractional_microseconds = nanoseconds * 0.001 + microseconds;
 
         // b. Set microseconds to ! RoundNumberToIncrement(fractionalMicroseconds, increment, roundingMode).
@@ -1483,7 +1483,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // c. Set nanoseconds to ! RoundNumberToIncrement(nanoseconds, increment, roundingMode).
         nanoseconds = (double)round_number_to_increment(nanoseconds, increment, rounding_mode);
 
-        // d. Set remainder to remainder − nanoseconds.
+        // d. Set remainder to remainder - nanoseconds.
         remainder -= nanoseconds;
     }
 
@@ -1515,7 +1515,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     // 3. If timeRemainderNs = 0, let direction be 0.
     if (time_remainder_ns == "0"_bigint)
         direction = 0;
-    // 4. Else if timeRemainderNs < 0, let direction be −1.
+    // 4. Else if timeRemainderNs < 0, let direction be -1.
     else if (time_remainder_ns.is_negative())
         direction = -1;
     // 5. Else, let direction be 1.
@@ -1528,16 +1528,16 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     // 7. Let dayEnd be ? AddZonedDateTime(dayStart, relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, direction, 0, 0, 0, 0, 0, 0).
     auto* day_end = TRY(add_zoned_date_time(global_object, *day_start, &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, direction, 0, 0, 0, 0, 0, 0));
 
-    // 8. Let dayLengthNs be ℝ(dayEnd − dayStart).
+    // 8. Let dayLengthNs be ℝ(dayEnd - dayStart).
     auto day_length_ns = day_end->big_integer().minus(day_start->big_integer());
 
-    // 9. If (timeRemainderNs − dayLengthNs) × direction < 0, then
+    // 9. If (timeRemainderNs - dayLengthNs) × direction < 0, then
     if (time_remainder_ns.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { direction }).is_negative()) {
         // a. Return ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         return create_duration_record(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
     }
 
-    // 10. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs − dayLengthNs), increment, unit, roundingMode).
+    // 10. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs - dayLengthNs), increment, unit, roundingMode).
     time_remainder_ns = round_temporal_instant(global_object, *js_bigint(vm, time_remainder_ns.minus(day_length_ns)), increment, unit, rounding_mode)->big_integer();
 
     // 11. Let adjustedDateDuration be ? AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, relativeTo).

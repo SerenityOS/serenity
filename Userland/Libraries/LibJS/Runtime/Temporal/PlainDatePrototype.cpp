@@ -549,7 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
         result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
     }
 
-    // 17. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
+    // 17. Return ! CreateTemporalDuration(-result.[[Years]], -result.[[Months]], -result.[[Weeks]], -result.[[Days]], 0, 0, 0, 0, 0, 0).
     return TRY(create_temporal_duration(global_object, -result.years, -result.months, -result.weeks, -result.days, 0, 0, 0, 0, 0, 0));
 }
 

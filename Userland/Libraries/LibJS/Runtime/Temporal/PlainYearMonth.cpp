@@ -143,13 +143,13 @@ bool iso_year_month_within_limits(i32 year, u8 month)
 {
     // 1. Assert: year and month are integers.
 
-    // 2. If year < −271821 or year > 275760, then
+    // 2. If year < -271821 or year > 275760, then
     if (year < -271821 || year > 275760) {
         // a. Return false.
         return false;
     }
 
-    // 3. If year is −271821 and month < 4, then
+    // 3. If year is -271821 and month < 4, then
     if (year == -271821 && month < 4) {
         // a. Return false.
         return false;
@@ -174,7 +174,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     // 2. Set year to year + floor((month - 1) / 12).
     year += floor((month - 1) / 12);
 
-    // 3. Set month to (month − 1) modulo 12 + 1.
+    // 3. Set month to (month - 1) modulo 12 + 1.
     month = modulo(month - 1, 12) + 1;
 
     // 4. Return the Record { [[Year]]: year, [[Month]]: month }.

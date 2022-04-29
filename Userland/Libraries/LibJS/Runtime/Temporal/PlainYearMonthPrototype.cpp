@@ -547,14 +547,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
 
     // 23. If smallestUnit is "month" and roundingIncrement = 1, then
     if (smallest_unit == "month"sv && rounding_increment == 1) {
-        // a. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+        // a. Return ! CreateTemporalDuration(-result.[[Years]], -result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
         return MUST(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // 24. Let result be (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
     auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
 
-    // 25. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    // 25. Return ! CreateTemporalDuration(-result.[[Years]], -result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 

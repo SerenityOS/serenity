@@ -39,7 +39,7 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 {
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
-    // 2. If epochNanoseconds < −86400ℤ × 10^17ℤ or epochNanoseconds > 86400ℤ × 10^17ℤ, then
+    // 2. If epochNanoseconds < -86400ℤ × 10^17ℤ or epochNanoseconds > 86400ℤ × 10^17ℤ, then
     if (epoch_nanoseconds.big_integer() < INSTANT_NANOSECONDS_MIN || epoch_nanoseconds.big_integer() > INSTANT_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
@@ -118,7 +118,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 5. Let utc be GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
-    // 6. If ℝ(utc) < −8.64 × 10^21 or ℝ(utc) > 8.64 × 10^21, then
+    // 6. If ℝ(utc) < -8.64 × 10^21 or ℝ(utc) > 8.64 × 10^21, then
     if (utc->big_integer() < INSTANT_NANOSECONDS_MIN || utc->big_integer() > INSTANT_NANOSECONDS_MAX) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
@@ -127,7 +127,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
     auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
 
-    // 8. Let result be utc − ℤ(offsetNanoseconds).
+    // 8. Let result be utc - ℤ(offsetNanoseconds).
     auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
 
     // 9. If ! IsValidEpochNanoseconds(result) is false, then
@@ -189,7 +189,7 @@ BigInt* difference_instant(GlobalObject& global_object, BigInt const& nanosecond
     // 1. Assert: Type(ns1) is BigInt.
     // 2. Assert: Type(ns2) is BigInt.
 
-    // 3. Return ! RoundTemporalInstant(ns2 − ns1, roundingIncrement, smallestUnit, roundingMode).
+    // 3. Return ! RoundTemporalInstant(ns2 - ns1, roundingIncrement, smallestUnit, roundingMode).
     return round_temporal_instant(global_object, *js_bigint(vm, nanoseconds2.big_integer().minus(nanoseconds1.big_integer())), rounding_increment, smallest_unit, rounding_mode);
 }
 

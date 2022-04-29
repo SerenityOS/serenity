@@ -111,7 +111,7 @@ ISODateTime get_iso_parts_from_epoch(GlobalObject& global_object, Crypto::Signed
     auto remainder_ns_bigint = modulo(epoch_nanoseconds, Crypto::UnsignedBigInteger { 1'000'000 });
     auto remainder_ns = remainder_ns_bigint.to_double();
 
-    // 3. Let epochMilliseconds be 𝔽((epochNanoseconds − remainderNs) / 10^6).
+    // 3. Let epochMilliseconds be 𝔽((epochNanoseconds - remainderNs) / 10^6).
     auto epoch_milliseconds_bigint = epoch_nanoseconds.minus(remainder_ns_bigint).divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).quotient;
     auto epoch_milliseconds = epoch_milliseconds_bigint.to_double();
 
@@ -282,7 +282,7 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
     double sign;
     // 6. If sign is the code unit 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
     if (sign_part.is_one_of("-", "\xE2\x88\x92")) {
-        // a. Set sign to −1.
+        // a. Set sign to -1.
         sign = -1;
     }
     // 7. Else,
@@ -565,7 +565,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
 
         // b. If disambiguation is "later", then
         if (disambiguation == "later"sv) {
-            // i. Return possibleInstants[n − 1].
+            // i. Return possibleInstants[n - 1].
             return possible_instants[n - 1];
         }
 
@@ -588,7 +588,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
-    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds − 8.64 × 10^13ℤ).
+    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds - 8.64 × 10^13ℤ).
     auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus("86400000000000"_sbigint))));
 
     // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + 8.64 × 10^13ℤ).
@@ -600,12 +600,12 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 11. Let offsetAfter be ? GetOffsetNanosecondsFor(timeZone, dayAfter).
     auto offset_after = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_after));
 
-    // 12. Let nanoseconds be offsetAfter − offsetBefore.
+    // 12. Let nanoseconds be offsetAfter - offsetBefore.
     auto nanoseconds = offset_after - offset_before;
 
     // 13. If disambiguation is "earlier", then
     if (disambiguation == "earlier"sv) {
-        // a. Let earlier be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, −nanoseconds, undefined).
+        // a. Let earlier be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, undefined).
         auto earlier = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, nullptr));
 
         // b. Let earlierDateTime be ! CreateTemporalDateTime(earlier.[[Year]], earlier.[[Month]], earlier.[[Day]], earlier.[[Hour]], earlier.[[Minute]], earlier.[[Second]], earlier.[[Millisecond]], earlier.[[Microsecond]], earlier.[[Nanosecond]], dateTime.[[Calendar]]).
@@ -641,7 +641,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     if (n == 0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsZero);
 
-    // 20. Return possibleInstants[n − 1].
+    // 20. Return possibleInstants[n - 1].
     return possible_instants_[n - 1];
 }
 

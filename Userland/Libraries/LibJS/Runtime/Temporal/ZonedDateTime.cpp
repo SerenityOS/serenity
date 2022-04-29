@@ -61,7 +61,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
         // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
-        // b. Return epochNanoseconds − ℤ(offsetNanoseconds).
+        // b. Return epochNanoseconds - ℤ(offsetNanoseconds).
         auto offset_nanoseconds_bigint = Crypto::SignedBigInteger::create_from((i64)offset_nanoseconds);
         return js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
     }
@@ -418,7 +418,7 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
     // 7. Let intermediateNs be ? AddZonedDateTime(ns1, timeZone, calendar, dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], 0, 0, 0, 0, 0, 0, 0).
     auto* intermediate_ns = TRY(add_zoned_date_time(global_object, nanoseconds1, &time_zone, calendar, date_difference.years, date_difference.months, date_difference.weeks, 0, 0, 0, 0, 0, 0, 0));
 
-    // 8. Let timeRemainderNs be ns2 − intermediateNs.
+    // 8. Let timeRemainderNs be ns2 - intermediateNs.
     auto time_remainder_ns = nanoseconds2.big_integer().minus(intermediate_ns->big_integer());
 
     // 9. Let intermediate be ! CreateTemporalZonedDateTime(intermediateNs, timeZone, calendar).
@@ -448,7 +448,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         return NanosecondsToDaysResult { .days = 0, .nanoseconds = "0"_sbigint, .day_length = day_length_ns.to_double() };
     }
 
-    // 3. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    // 3. If nanoseconds < 0, let sign be -1; else, let sign be 1.
     auto sign = nanoseconds.is_negative() ? -1 : 1;
 
     // 4. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, then
@@ -494,7 +494,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     if (sign == 1) {
         // a. Repeat, while days > 0 and intermediateNs > endNs,
         while (days > 0 && intermediate_ns > end_ns) {
-            // i. Set days to days − 1.
+            // i. Set days to days - 1.
             days--;
 
             // ii. Set intermediateNs to ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
@@ -502,7 +502,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         }
     }
 
-    // 15. Set nanoseconds to endNs − intermediateNs.
+    // 15. Set nanoseconds to endNs - intermediateNs.
     nanoseconds = end_ns.minus(intermediate_ns);
 
     // 16. Let done be false.
@@ -511,12 +511,12 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         // a. Let oneDayFartherNs be ℝ(? AddZonedDateTime(ℤ(intermediateNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, sign, 0, 0, 0, 0, 0, 0)).
         auto one_day_farther_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
 
-        // b. Set dayLengthNs to oneDayFartherNs − intermediateNs.
+        // b. Set dayLengthNs to oneDayFartherNs - intermediateNs.
         day_length_ns = one_day_farther_ns.minus(intermediate_ns);
 
-        // c. If (nanoseconds − dayLengthNs) × sign ≥ 0, then
+        // c. If (nanoseconds - dayLengthNs) × sign ≥ 0, then
         if (nanoseconds.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { (i32)sign }) >= "0"_sbigint) {
-            // i. Set nanoseconds to nanoseconds − dayLengthNs.
+            // i. Set nanoseconds to nanoseconds - dayLengthNs.
             nanoseconds = nanoseconds.minus(day_length_ns);
 
             // ii. Set intermediateNs to oneDayFartherNs.
