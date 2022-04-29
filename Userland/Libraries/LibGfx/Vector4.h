@@ -17,8 +17,9 @@ namespace Gfx {
 
 template<class T>
 using Vector4 = VectorN<4, T>;
-using FloatVector4 = Vector4<float>;
 using DoubleVector4 = Vector4<double>;
+using FloatVector4 = Vector4<float>;
+using IntVector4 = Vector4<int>;
 
 }
 
@@ -36,4 +37,5 @@ struct Formatter<Gfx::Vector4<T>> : Formatter<StringView> {
 
 using Gfx::DoubleVector4;
 using Gfx::FloatVector4;
+using Gfx::IntVector4;
 using Gfx::Vector4;
