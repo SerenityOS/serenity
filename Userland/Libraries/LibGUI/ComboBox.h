@@ -21,7 +21,7 @@ public:
     virtual ~ComboBox() override;
 
     String text() const;
-    void set_text(String const&);
+    void set_text(String const&, AllowCallback = AllowCallback::Yes);
 
     void open();
     void close();
