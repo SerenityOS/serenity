@@ -13,6 +13,7 @@ TEST_CASE(construct_empty)
 {
     EXPECT(StringView().is_null());
     EXPECT(StringView().is_empty());
+    EXPECT(!StringView().is_not_empty());
     EXPECT(!StringView().characters_without_null_termination());
     EXPECT_EQ(StringView().length(), 0u);
 }
@@ -103,6 +104,9 @@ TEST_CASE(lines)
     EXPECT_EQ(test_string_vector.at(0).is_empty(), true);
     EXPECT_EQ(test_string_vector.at(1).is_empty(), true);
     EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
+    EXPECT_EQ(test_string_vector.at(0).is_not_empty(), false);
+    EXPECT_EQ(test_string_vector.at(1).is_not_empty(), false);
+    EXPECT_EQ(test_string_vector.at(2).is_not_empty(), false);
 }
 
 TEST_CASE(find)
@@ -170,6 +174,7 @@ TEST_CASE(constexpr_stuff)
 #define do_test()                                                       \
     static_assert(test_constexpr.length() == 3);                        \
     static_assert(!test_constexpr.is_empty());                          \
+    static_assert(test_constexpr.is_not_empty());                       \
     static_assert(test_constexpr.is_one_of("foo", "bar", "baz"));       \
     static_assert(test_constexpr.is_one_of("foo"sv, "bar"sv, "baz"sv)); \
     static_assert(test_constexpr != "fob"sv);                           \
