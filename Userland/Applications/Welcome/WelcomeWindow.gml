@@ -53,7 +53,7 @@
             }
         }
 
-        @Web::OutOfProcessWebView {
+        @WebView::OutOfProcessWebView {
             name: "web_view"
             min_width: 340
             min_height: 160

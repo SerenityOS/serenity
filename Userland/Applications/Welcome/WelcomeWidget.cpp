@@ -18,7 +18,7 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <serenity.h>
 
 WelcomeWidget::WelcomeWidget()
@@ -32,7 +32,7 @@ WelcomeWidget::WelcomeWidget()
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
     light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png").release_value_but_fixme_should_propagate_errors());
 
-    m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
+    m_web_view = *find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
 
     m_tip_label = *find_descendant_of_type_named<GUI::Label>("tip_label");
 

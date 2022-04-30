@@ -18,9 +18,9 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
-REGISTER_WIDGET(Web, OutOfProcessWebView)
+REGISTER_WIDGET(WebView, OutOfProcessWebView)
 
-namespace Web {
+namespace WebView {
 
 OutOfProcessWebView::OutOfProcessWebView()
 {
@@ -376,14 +376,14 @@ void OutOfProcessWebView::notify_server_did_change_favicon(Gfx::Bitmap const& fa
         on_favicon_change(favicon);
 }
 
-String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::Source source)
+String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)
         return on_get_cookie(url, source);
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::ParsedCookie const& cookie, Cookie::Source source)
+void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);
@@ -437,7 +437,7 @@ void OutOfProcessWebView::inspect_dom_tree()
     client().async_inspect_dom_tree();
 }
 
-Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement> pseudo_element)
+Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
 {
     auto response = client().inspect_dom_node(node_id, pseudo_element);
     if (!response.has_style())

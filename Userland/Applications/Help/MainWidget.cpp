@@ -90,7 +90,7 @@ MainWidget::MainWidget()
         m_manual_model->update_section_node_on_toggle(index, open);
     };
 
-    m_web_view = find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
+    m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.protocol() == "file") {
             auto path = url.path();

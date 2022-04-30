@@ -15,7 +15,7 @@
                 name: "individual_mailbox_view"
             }
 
-            @Web::OutOfProcessWebView {
+            @WebView::OutOfProcessWebView {
                 name: "web_view"
             }
         }

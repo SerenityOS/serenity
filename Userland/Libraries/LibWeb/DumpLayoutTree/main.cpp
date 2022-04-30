@@ -6,7 +6,7 @@
 
 #include <LibGUI/Application.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     window->set_title("DumpLayoutTree");
     window->resize(800, 600);
     window->show();
-    auto& web_view = window->set_main_widget<Web::OutOfProcessWebView>();
+    auto& web_view = window->set_main_widget<WebView::OutOfProcessWebView>();
     web_view.load(URL::create_with_file_protocol(argv[1]));
     web_view.on_load_finish = [&](auto&) {
         auto dump = web_view.dump_layout_tree();

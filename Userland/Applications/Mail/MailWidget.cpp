@@ -28,7 +28,7 @@ MailWidget::MailWidget()
 
     m_mailbox_list = *find_descendant_of_type_named<GUI::TreeView>("mailbox_list");
     m_individual_mailbox_view = *find_descendant_of_type_named<GUI::TableView>("individual_mailbox_view");
-    m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
+    m_web_view = *find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_mailbox_list->on_selection_change = [this] {

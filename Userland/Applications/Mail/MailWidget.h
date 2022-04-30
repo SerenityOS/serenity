@@ -13,7 +13,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibIMAP/Client.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 class MailWidget final : public GUI::Widget {
     C_OBJECT(MailWidget)
@@ -43,7 +43,7 @@ private:
 
     RefPtr<GUI::TreeView> m_mailbox_list;
     RefPtr<GUI::TableView> m_individual_mailbox_view;
-    RefPtr<Web::OutOfProcessWebView> m_web_view;
+    RefPtr<WebView::OutOfProcessWebView> m_web_view;
     RefPtr<GUI::Statusbar> m_statusbar;
 
     RefPtr<GUI::Menu> m_link_context_menu;
