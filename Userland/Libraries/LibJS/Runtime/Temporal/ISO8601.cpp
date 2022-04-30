@@ -1149,6 +1149,15 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
     //     TimeHour : TimeMinute : TimeSecond TimeFraction[opt] TimeZone[opt]
     //     TimeHour TimeMinute TimeSecondNotValidMonth TimeZone[opt]
     //     TimeHour TimeMinute TimeSecond TimeFraction TimeZone[opt]
+    // NOTE: Reverse order here because `TimeHour TimeZoneNumericUTCOffsetNotAmbiguous[opt] TimeZoneBracketedAnnotation[opt]` can
+    // be a subset of `TimeHourNotValidMonth TimeZone`, so we'd not attempt to parse that but may not exhaust the input string.
+    {
+        StateTransaction transaction { *this };
+        if (parse_time_hour_not_valid_month() && parse_time_zone()) {
+            transaction.commit();
+            return true;
+        }
+    }
     {
         StateTransaction transaction { *this };
         if (parse_time_hour()) {
@@ -1192,13 +1201,6 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
                 transaction.commit();
                 return true;
             }
-        }
-    }
-    {
-        StateTransaction transaction { *this };
-        if (parse_time_hour_not_valid_month() && parse_time_zone()) {
-            transaction.commit();
-            return true;
         }
     }
     {
