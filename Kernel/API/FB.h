@@ -18,32 +18,6 @@ ALWAYS_INLINE int graphics_connector_get_properties(int fd, GraphicsConnectorPro
     return ioctl(fd, GRAPHICS_IOCTL_GET_PROPERTIES, info);
 }
 
-// FIXME: Remove this once framebuffer devices are removed.
-ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
-{
-    return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_PROPERTIES, info);
-}
-
-// FIXME: Remove this once framebuffer devices are removed.
-ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
-{
-    FBHeadProperties head_properties;
-    head_properties.head_index = info->head_index;
-    if (auto rc = ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_PROPERTIES, &head_properties); rc < 0)
-        return rc;
-    info->head_index = head_properties.head_index;
-    info->pitch = head_properties.pitch;
-    info->width = head_properties.width;
-    info->height = head_properties.height;
-    return 0;
-}
-
-// FIXME: Remove this once framebuffer devices are removed.
-ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
-{
-    return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_RESOLUTION, info);
-}
-
 ALWAYS_INLINE int graphics_connector_get_head_edid(int fd, GraphicsHeadEDID* info)
 {
     return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_EDID, info);

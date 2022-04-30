@@ -26,18 +26,6 @@ struct GraphicsConnectorProperties {
     unsigned char refresh_rate_support;
 };
 
-// FIXME: Remove this once framebuffer devices are removed.
-struct FBHeadProperties {
-    int head_index;
-
-    unsigned pitch;
-    unsigned width;
-    unsigned height;
-
-    unsigned offset;
-    unsigned buffer_length;
-};
-
 struct GraphicsHeadModeSetting {
     int horizontal_stride;
     int pixel_clock_in_khz;
@@ -51,14 +39,6 @@ struct GraphicsHeadModeSetting {
     int vertical_blank_lines;
     int horizontal_offset;
     int vertical_offset;
-};
-
-// FIXME: Remove this once framebuffer devices are removed.
-struct FBHeadResolution {
-    int head_index;
-    int pitch;
-    int width;
-    int height;
 };
 
 struct GraphicsHeadEDID {
@@ -114,8 +94,6 @@ enum IOCtlNumber {
     TIOCSWINSZ,
     TIOCGPTN,
     GRAPHICS_IOCTL_GET_PROPERTIES,
-    GRAPHICS_IOCTL_GET_HEAD_PROPERTIES,
-    GRAPHICS_IOCTL_SET_HEAD_RESOLUTION,
     GRAPHICS_IOCTL_GET_HEAD_EDID,
     GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER,
     GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER,
@@ -176,9 +154,7 @@ enum IOCtlNumber {
 #define TIOCSWINSZ TIOCSWINSZ
 #define TIOCGPTN TIOCGPTN
 #define GRAPHICS_IOCTL_GET_PROPERTIES GRAPHICS_IOCTL_GET_PROPERTIES
-#define GRAPHICS_IOCTL_GET_HEAD_PROPERTIES GRAPHICS_IOCTL_GET_HEAD_PROPERTIES
 #define GRAPHICS_IOCTL_GET_HEAD_EDID GRAPHICS_IOCTL_GET_HEAD_EDID
-#define GRAPHICS_IOCTL_SET_HEAD_RESOLUTION GRAPHICS_IOCTL_SET_HEAD_RESOLUTION
 #define GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER
 #define GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER
 #define GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS

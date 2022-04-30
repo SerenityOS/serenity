@@ -33,8 +33,8 @@ public:
 
     virtual ErrorOr<void> flush_framebuffer() = 0;
 
-    virtual ErrorOr<void> set_head_resolution(FBHeadResolution) = 0;
-    virtual ErrorOr<FBHeadProperties> get_head_properties() = 0;
+    virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) = 0;
+    virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() = 0;
 
     virtual ErrorOr<void> write_all_contents(Gfx::IntRect const&) { return {}; }
 

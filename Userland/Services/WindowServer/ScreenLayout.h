@@ -21,7 +21,6 @@ public:
         enum class Mode {
             Invalid,
             Device,
-            DisplayConnectorDevice,
             Virtual,
         } mode;
         Optional<String> device;
@@ -43,7 +42,6 @@ public:
             switch (mode) {
                 __ENUMERATE_MODE_ENUM(Invalid)
                 __ENUMERATE_MODE_ENUM(Device)
-                __ENUMERATE_MODE_ENUM(DisplayConnectorDevice)
                 __ENUMERATE_MODE_ENUM(Virtual)
             }
             VERIFY_NOT_REACHED();
@@ -61,8 +59,6 @@ public:
     bool normalize();
     bool load_config(Core::ConfigFile const& config_file, String* error_msg = nullptr);
     bool save_config(Core::ConfigFile& config_file, bool sync = true) const;
-    // FIXME: Remove this once framebuffer devices are removed.
-    bool try_auto_add_framebuffer(String const&);
     bool try_auto_add_display_connector(String const&);
 
     // TODO: spaceship operator

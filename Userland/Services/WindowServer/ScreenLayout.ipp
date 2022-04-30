@@ -239,8 +239,6 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
         Screen::Mode mode { Screen::Mode::Invalid };
         if (str_mode == "Device") {
             mode = Screen::Mode::Device;
-        } else if (str_mode == "DisplayConnectorDevice") {
-            mode = Screen::Mode::DisplayConnectorDevice;
         } else if (str_mode == "Virtual") {
             mode = Screen::Mode::Virtual;
         }
@@ -250,7 +248,7 @@ bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* erro
             *this = {};
             return false;
         }
-        auto device = (mode == Screen::Mode::Device || mode == Screen::Mode::DisplayConnectorDevice) ? config_file.read_entry(group_name, "Device") : Optional<String> {};
+        auto device = (mode == Screen::Mode::Device) ? config_file.read_entry(group_name, "Device") : Optional<String> {};
         screens.append({ mode, device,
             { config_file.read_num_entry(group_name, "Left"), config_file.read_num_entry(group_name, "Top") },
             { config_file.read_num_entry(group_name, "Width"), config_file.read_num_entry(group_name, "Height") },
@@ -339,7 +337,7 @@ bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
     }
 
     auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
-        screens.append({ .mode = Screen::Mode::DisplayConnectorDevice,
+        screens.append({ .mode = Screen::Mode::Device,
             .device = device_path,
             .location = new_screen_rect.location(),
             .resolution = new_screen_rect.size(),
@@ -389,90 +387,6 @@ bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
     }
 
     dbgln("Failed to add display connector device {} with resolution {}x{} to screen layout", device_path, mode_setting.horizontal_active, mode_setting.vertical_active);
-    return false;
-}
-
-// FIXME: Remove this once framebuffer devices are removed.
-bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
-{
-    int framebuffer_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
-    if (framebuffer_fd < 0) {
-        int err = errno;
-        dbgln("Error ({}) opening framebuffer device {}", err, device_path);
-        return false;
-    }
-    ScopeGuard fd_guard([&] {
-        close(framebuffer_fd);
-    });
-    // FIXME: Add multihead support for one framebuffer
-    FBHeadResolution resolution {};
-    memset(&resolution, 0, sizeof(FBHeadResolution));
-    if (fb_get_resolution(framebuffer_fd, &resolution) < 0) {
-        int err = errno;
-        dbgln("Error ({}) querying resolution from framebuffer device {}", err, device_path);
-        return false;
-    }
-    if (resolution.width == 0 || resolution.height == 0) {
-        // Looks like the display is not turned on. Since we don't know what the desired
-        // resolution should be, use the main display as reference.
-        if (screens.is_empty())
-            return false;
-        auto& main_screen = screens[main_screen_index];
-        resolution.width = main_screen.resolution.width();
-        resolution.height = main_screen.resolution.height();
-    }
-
-    auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
-        screens.append({ .mode = Screen::Mode::Device,
-            .device = device_path,
-            .location = new_screen_rect.location(),
-            .resolution = new_screen_rect.size(),
-            .scale_factor = 1 });
-    };
-
-    if (screens.is_empty()) {
-        append_screen({ 0, 0, (int)resolution.width, (int)resolution.height });
-        return true;
-    }
-
-    auto original_screens = move(screens);
-    screens = original_screens;
-    ArmedScopeGuard screens_guard([&] {
-        screens = move(original_screens);
-    });
-
-    // Now that we know the current resolution, try to find a location that we can add onto
-    // TODO: make this a little more sophisticated in case a more complex layout is already configured
-    for (auto& screen : screens) {
-        auto screen_rect = screen.virtual_rect();
-        Gfx::IntRect new_screen_rect {
-            screen_rect.right() + 1,
-            screen_rect.top(),
-            (int)resolution.width,
-            (int)resolution.height
-        };
-
-        bool collision = false;
-        for (auto& other_screen : screens) {
-            if (&screen == &other_screen)
-                continue;
-            if (other_screen.virtual_rect().intersects(new_screen_rect)) {
-                collision = true;
-                break;
-            }
-        }
-
-        if (!collision) {
-            append_screen(new_screen_rect);
-            if (is_valid()) {
-                // We got lucky!
-                screens_guard.disarm();
-                return true;
-            }
-        }
-    }
-
-    dbgln("Failed to add framebuffer device {} with resolution {}x{} to screen layout", device_path, resolution.width, resolution.height);
     return false;
 }
 
