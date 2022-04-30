@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mc
-version=4.8.27
+version=4.8.28
 useconfigure=true
-files="https://github.com/MidnightCommander/mc/archive/refs/tags/${version}.tar.gz ${port}-${version}.tar.gz 3bab1460d187e1f09409be4bb8550ea7dab125fb9b50036a8dbd2b16e8b1985b"
+files="http://ftp.midnight-commander.org/mc-${version}.tar.xz ${port}-${version}.tar.xz e994d9be9a7172e9ac4a4ad62107921f6aa312e668b056dfe5b8bcebbaf53803"
 auth_type=sha256
 depends=("gettext" "glib" "libtool" "ncurses" "vim")
 configopts=(
@@ -17,7 +17,3 @@ configopts=(
 )
 use_fresh_config_sub=true
 config_sub_path=config/config.sub
-
-pre_patch() {
-    run ./autogen.sh
-}
