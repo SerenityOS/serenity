@@ -10,8 +10,10 @@
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <LibWeb/ImageDecoding.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebView/ImageDecoderClientAdapter.h>
+#include <LibWebView/RequestServerAdapter.h>
 #include <LibWebView/WebSocketClientAdapter.h>
 #include <WebContent/ConnectionFromClient.h>
 
@@ -28,6 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Web::ImageDecoding::Decoder::initialize(WebView::ImageDecoderClientAdapter::create());
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));
+    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ConnectionFromClient>());
     return event_loop.exec();

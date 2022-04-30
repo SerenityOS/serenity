@@ -2,6 +2,7 @@ set(SOURCES
     DOMTreeModel.cpp
     ImageDecoderClientAdapter.cpp
     OutOfProcessWebView.cpp
+    RequestServerAdapter.cpp
     StylePropertiesModel.cpp
     WebContentClient.cpp
     WebSocketClientAdapter.cpp
