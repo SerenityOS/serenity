@@ -102,6 +102,10 @@ endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
+    # FIXME: Re-enable this check when the warning stops triggering, or document why we can't stop it from triggering.
+    # For now, there is a lot of unused private fields in LibWeb that trigger this that could be removed.
+    # See issue #14137 for details
+    add_compile_options(-Wno-unused-private-field)
 
     if (ENABLE_FUZZERS_LIBFUZZER)
         add_compile_options(-fsanitize=fuzzer)
