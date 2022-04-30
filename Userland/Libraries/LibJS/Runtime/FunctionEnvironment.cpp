@@ -32,7 +32,7 @@ ThrowCompletionOr<Value> FunctionEnvironment::get_super_base() const
     // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
     auto home_object = m_function_object->home_object();
 
-    // 2. If home has the value undefined, return undefined.
+    // 2. If home is undefined, return undefined.
     if (!home_object)
         return js_undefined();
 

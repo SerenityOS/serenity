@@ -1381,7 +1381,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
             property_key = static_cast<Identifier const&>(property()).string();
         }
 
-        // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
+        // 6. If the source text matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
         bool strict = interpreter.vm().in_strict_mode();
 
         // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).

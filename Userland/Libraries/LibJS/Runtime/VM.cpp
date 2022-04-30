@@ -582,7 +582,7 @@ ThrowCompletionOr<Reference> VM::resolve_binding(FlyString const& name, Environm
     // 2. Assert: env is an Environment Record.
     VERIFY(environment);
 
-    // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
+    // 3. If the source text matched by the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
     bool strict = in_strict_mode();
 
     // 4. Return ? GetIdentifierReference(env, name, strict).

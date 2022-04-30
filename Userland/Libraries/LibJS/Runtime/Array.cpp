@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -82,7 +82,7 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     // 12. If oldLenDesc.[[Writable]] is false, return false.
     // NOTE: Handled by step 16
 
-    // 13. If newLenDesc.[[Writable]] is absent or has the value true, let newWritable be true.
+    // 13. If newLenDesc.[[Writable]] is absent or is true, let newWritable be true.
     // 14. Else,
     // a. NOTE: Setting the [[Writable]] attribute to false is deferred in case any elements cannot be deleted.
     // b. Let newWritable be false.

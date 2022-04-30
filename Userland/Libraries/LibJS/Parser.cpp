@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
@@ -3343,9 +3343,12 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
     auto rule_start = push_start();
     auto parse_function_declaration_as_block_statement = [&] {
         // https://tc39.es/ecma262/#sec-functiondeclarations-in-ifstatement-statement-clauses
-        // Code matching this production is processed as if each matching occurrence of
+        // This production only applies when parsing non-strict code. Source text matched
+        // by this production is processed as if each matching occurrence of
         // FunctionDeclaration[?Yield, ?Await, ~Default] was the sole StatementListItem
-        // of a BlockStatement occupying that position in the source code.
+        // of a BlockStatement occupying that position in the source text.
+        // The semantics of such a synthetic BlockStatement includes the web legacy
+        // compatibility semantics specified in B.3.2.
         VERIFY(match(TokenType::Function));
         auto block = create_ast_node<BlockStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
         ScopePusher block_scope = ScopePusher::block_scope(*this, *block);
