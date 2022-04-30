@@ -89,7 +89,7 @@ set(KERNEL_SOURCES
     Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VGA/ISAAdapter.cpp
     Graphics/VGA/PCIAdapter.cpp
-    Graphics/VirtIOGPU/FramebufferDevice.cpp
+    Graphics/VirtIOGPU/DisplayConnector.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp

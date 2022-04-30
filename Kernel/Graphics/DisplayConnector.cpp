@@ -306,8 +306,9 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
                 TRY(copy_from_user(&user_dirty_rect, &flush_rects.rects[i]));
                 {
                     SpinlockLocker control_locker(m_control_lock);
-                    if (console_mode())
+                    if (console_mode()) {
                         return {};
+                    }
                     TRY(flush_rectangle(flush_rects.buffer_index, user_dirty_rect));
                 }
             }
@@ -319,10 +320,13 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         MutexLocker locker(m_flushing_lock);
         SpinlockLocker control_locker(m_control_lock);
-        if (console_mode())
+        if (console_mode()) {
             return {};
+        }
+
         if (!flush_support())
             return Error::from_errno(ENOTSUP);
+
         TRY(flush_first_surface());
         return {};
     }
