@@ -15,9 +15,9 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/StylePropertiesModel.h>
 #include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/StylePropertiesModel.h>
 
 namespace Browser {
 
@@ -161,15 +161,15 @@ void InspectorWidget::set_dom_node_properties_json(Selection selection, String s
 void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
 {
     m_selection_specified_values_json = specified_values_json;
-    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
+    m_computed_style_table_view->set_model(WebView::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
     m_computed_style_table_view->set_searchable(true);
 
     m_selection_computed_values_json = computed_values_json;
-    m_resolved_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
+    m_resolved_style_table_view->set_model(WebView::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
     m_resolved_style_table_view->set_searchable(true);
 
     m_selection_custom_properties_json = custom_properties_json;
-    m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
+    m_custom_properties_table_view->set_model(WebView::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
     m_custom_properties_table_view->set_searchable(true);
 }
 

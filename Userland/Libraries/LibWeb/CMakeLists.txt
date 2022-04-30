@@ -334,7 +334,6 @@ set(SOURCES
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
-    StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
     UIEvents/FocusEvent.cpp
     UIEvents/KeyboardEvent.cpp
