@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2021-2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,26 +23,10 @@
     E(onopen, HTML::EventNames::open)         \
     E(onmessage, HTML::EventNames::message)
 
-namespace Protocol {
-class WebSocketClient;
-class WebSocket;
-}
-
 namespace Web::WebSockets {
 
-class WebSocketClientManager : public Core::Object {
-    C_OBJECT_ABSTRACT(WebSocketClientManager)
-public:
-    static WebSocketClientManager& the();
-
-    RefPtr<Protocol::WebSocket> connect(const AK::URL&, String const& origin);
-
-private:
-    static ErrorOr<NonnullRefPtr<WebSocketClientManager>> try_create();
-    WebSocketClientManager(NonnullRefPtr<Protocol::WebSocketClient>);
-
-    RefPtr<Protocol::WebSocketClient> m_websocket_client;
-};
+class WebSocketClientSocket;
+class WebSocketClientManager;
 
 class WebSocket final
     : public RefCounted<WebSocket>
@@ -106,7 +90,55 @@ private:
 
     AK::URL m_url;
     String m_binary_type { "blob" };
-    RefPtr<Protocol::WebSocket> m_websocket;
+    RefPtr<WebSocketClientSocket> m_websocket;
+};
+
+class WebSocketClientSocket : public RefCounted<WebSocketClientSocket> {
+public:
+    virtual ~WebSocketClientSocket();
+
+    struct CertificateAndKey {
+        String certificate;
+        String key;
+    };
+
+    struct Message {
+        ByteBuffer data;
+        bool is_text { false };
+    };
+
+    enum class Error {
+        CouldNotEstablishConnection,
+        ConnectionUpgradeFailed,
+        ServerClosedSocket,
+    };
+
+    virtual Web::WebSockets::WebSocket::ReadyState ready_state() = 0;
+
+    virtual void send(ByteBuffer binary_or_text_message, bool is_text) = 0;
+    virtual void send(StringView text_message) = 0;
+    virtual void close(u16 code = 1005, String reason = {}) = 0;
+
+    Function<void()> on_open;
+    Function<void(Message)> on_message;
+    Function<void(Error)> on_error;
+    Function<void(u16 code, String reason, bool was_clean)> on_close;
+    Function<CertificateAndKey()> on_certificate_requested;
+
+protected:
+    explicit WebSocketClientSocket();
+};
+
+class WebSocketClientManager : public Core::Object {
+    C_OBJECT_ABSTRACT(WebSocketClientManager)
+public:
+    static void initialize(RefPtr<WebSocketClientManager>);
+    static WebSocketClientManager& the();
+
+    virtual RefPtr<WebSocketClientSocket> connect(AK::URL const&, String const& origin) = 0;
+
+protected:
+    explicit WebSocketClientManager();
 };
 
 }
