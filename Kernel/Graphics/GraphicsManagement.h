@@ -14,7 +14,7 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
 
