@@ -800,7 +800,7 @@ ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_obj
     if (number.is_infinity())
         return number.as_double();
     auto integer = floor(fabs(number.as_double()));
-    if (number.as_double() < 0)
+    if (number.as_double() < 0 && integer != 0)
         integer = -integer;
     return integer;
 }
