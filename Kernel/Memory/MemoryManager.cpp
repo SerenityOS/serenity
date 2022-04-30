@@ -1206,8 +1206,11 @@ void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable
 
 CommittedPhysicalPageSet::~CommittedPhysicalPageSet()
 {
-    if (m_page_count)
-        MM.uncommit_user_physical_pages({}, m_page_count);
+  if (m_page_count) {
+      VERIFY(MM.is_initialized());
+
+      MM.uncommit_user_physical_pages({}, m_page_count);
+  }
 }
 
 NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
