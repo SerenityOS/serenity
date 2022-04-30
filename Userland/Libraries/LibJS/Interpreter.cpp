@@ -77,17 +77,17 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // 10. Push scriptContext onto the execution context stack; scriptContext is now the running execution context.
     TRY(vm.push_execution_context(script_context, global_object));
 
-    // 11. Let scriptBody be scriptRecord.[[ECMAScriptCode]].
-    auto& script_body = script_record.parse_node();
+    // 11. Let script be scriptRecord.[[ECMAScriptCode]].
+    auto& script = script_record.parse_node();
 
-    // 12. Let result be GlobalDeclarationInstantiation(scriptBody, globalEnv).
-    auto instantiation_result = script_body.global_declaration_instantiation(*this, global_object, global_environment);
+    // 12. Let result be GlobalDeclarationInstantiation(script, globalEnv).
+    auto instantiation_result = script.global_declaration_instantiation(*this, global_object, global_environment);
     Completion result = instantiation_result.is_throw_completion() ? instantiation_result.throw_completion() : normal_completion({});
 
     // 13. If result.[[Type]] is normal, then
     if (result.type() == Completion::Type::Normal) {
-        // a. Set result to the result of evaluating scriptBody.
-        result = script_body.execute(*this, global_object);
+        // a. Set result to the result of evaluating script.
+        result = script.execute(*this, global_object);
     }
 
     // 14. If result.[[Type]] is normal and result.[[Value]] is empty, then
