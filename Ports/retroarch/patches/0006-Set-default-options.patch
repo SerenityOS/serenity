@@ -1,5 +1,5 @@
 diff --git a/retroarch.cfg b/retroarch.cfg
-index a96332bac8..ec70e33b82 100644
+index a96332bac8..35333139c7 100644
 --- a/retroarch.cfg
 +++ b/retroarch.cfg
 @@ -41,7 +41,7 @@
@@ -53,6 +53,15 @@ index a96332bac8..ec70e33b82 100644
  
  # Audio resampler driver backend. Which audio resampler to use.
  # Default will use "sinc".
+@@ -180,7 +180,7 @@
+ # video_disable_composition = false
+ 
+ # Video vsync.
+-# video_vsync = true
++video_vsync = false
+ 
+ # Interval at which a Vsync swap is performed.
+ # 1 is normal, 2 is doubled frames, 3 is tripled frames, etc.
 @@ -690,11 +690,11 @@
  # menu_show_online_updater = true
  
