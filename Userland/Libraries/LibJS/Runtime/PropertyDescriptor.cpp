@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@ bool PropertyDescriptor::is_accessor_descriptor() const
 {
     // 1. If Desc is undefined, return false.
 
-    // 2. If both Desc.[[Get]] and Desc.[[Set]] are absent, return false.
+    // 2. If Desc does not have a [[Get]] field and Desc does not have a [[Set]] field, return false.
     if (!get.has_value() && !set.has_value())
         return false;
 
@@ -31,7 +31,7 @@ bool PropertyDescriptor::is_data_descriptor() const
 {
     // 1. If Desc is undefined, return false.
 
-    // 2. If both Desc.[[Value]] and Desc.[[Writable]] are absent, return false.
+    // 2. If Desc does not have a [[Value]] field and Desc does not have a [[Writable]] field, return false.
     if (!value.has_value() && !writable.has_value())
         return false;
 
@@ -168,9 +168,9 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
         descriptor.set = setter.is_function() ? &setter.as_function() : nullptr;
     }
 
-    // 15. If desc.[[Get]] is present or desc.[[Set]] is present, then
+    // 15. If desc has a [[Get]] field or desc has a [[Set]] field, then
     if (descriptor.get.has_value() || descriptor.set.has_value()) {
-        //     a. If desc.[[Value]] is present or desc.[[Writable]] is present, throw a TypeError exception.
+        // a. If desc has a [[Value]] field or desc has a [[Writable]] field, throw a TypeError exception.
         if (descriptor.value.has_value() || descriptor.writable.has_value())
             return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorValueOrWritable);
     }
