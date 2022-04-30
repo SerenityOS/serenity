@@ -2,15 +2,15 @@
 
 set -e
 
-# sourcing this file will export SERENITY_QEMU_IMG_BIN and SERENITY_QEMU_BIN
-# in such a way that they will contain the correct paths also under WSL
+# Sourcing this file will export SERENITY_QEMU_IMG_BIN and SERENITY_QEMU_BIN
+# in such a way that they will contain the correct paths also under WSL.
 
 if command -v wslpath >/dev/null; then
-    # existence of wslpath implies we are running inside WSL on Windows
-    # the Windows installation of QEMU adds the install directory of itself
-    # to the registry, we use powershell to get the install directory
+    # The existence of wslpath implies we are running inside WSL on Windows.
+    # The Windows installation of QEMU adds the install directory of itself
+    # to the registry, we use PowerShell to get the install directory.
 
-    # System32 and cohorts must be on the PATH for the build to work anyways so using powershell without full path is fine
+    # System32 and cohorts must be on the PATH for the build to work anyways so using powershell without full path is fine.
     QEMU_INSTALL_DIR=$(PowerShell.exe -Command Get-ItemPropertyValue 'HKLM:\SOFTWARE\QEMU' -Name Install_Dir)
 
     if [ -z "$QEMU_INSTALL_DIR" ]; then

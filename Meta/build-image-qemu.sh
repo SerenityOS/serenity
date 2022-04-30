@@ -99,8 +99,8 @@ if [ -f _disk_image ]; then
     fi
 fi
 
-# source qemy-paths.sh for the SERENITY_QEMU_IMG_BIN variable so qemu-img works
-# correctly on windows
+# Source qemu-paths.sh for the SERENITY_QEMU_IMG_BIN variable so qemu-img works
+# correctly on Windows.
 # shellcheck disable=SC1090,SC1091
 . "$SCRIPT_DIR/qemu-paths.sh"
 
