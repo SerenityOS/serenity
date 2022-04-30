@@ -27,9 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (filepath == nullptr || strcmp(filepath, "-") == 0) {
         buffer = Core::File::standard_input()->read_all();
     } else {
-        auto result = Core::File::open(filepath, Core::OpenMode::ReadOnly);
-        VERIFY(!result.is_error());
-        auto file = result.value();
+        auto file = TRY(Core::File::open(filepath, Core::OpenMode::ReadOnly));
         buffer = file->read_all();
     }
 
