@@ -149,7 +149,7 @@ ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
 
 ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    if (request != FB_IOCTL_GET_HEAD_EDID) {
+    if (request != GRAPHICS_IOCTL_GET_HEAD_EDID) {
         // Allow anyone to query the EDID. Eventually we'll publish the current EDID on /sys
         // so it doesn't really make sense to require the video pledge to query it.
         TRY(Process::current().require_promise(Pledge::video));
@@ -157,7 +157,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
 
     // TODO: We really should have ioctls for destroying resources as well
     switch (request) {
-    case FB_IOCTL_GET_PROPERTIES: {
+    case GRAPHICS_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<FBProperties*>(arg);
         FBProperties properties {};
         properties.flushing_support = flush_support();
@@ -167,7 +167,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
 
         return copy_to_user(user_properties, &properties);
     }
-    case FB_IOCTL_GET_HEAD_MODE_SETTING: {
+    case GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING: {
         auto user_head_mode_setting = static_ptr_cast<FBHeadModeSetting*>(arg);
         FBHeadModeSetting head_mode_setting {};
         TRY(copy_from_user(&head_mode_setting, user_head_mode_setting));
@@ -188,7 +188,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         }
         return copy_to_user(user_head_mode_setting, &head_mode_setting);
     }
-    case FB_IOCTL_GET_HEAD_EDID: {
+    case GRAPHICS_IOCTL_GET_HEAD_EDID: {
         auto user_head_edid = static_ptr_cast<FBHeadEDID*>(arg);
         FBHeadEDID head_edid {};
         TRY(copy_from_user(&head_edid, user_head_edid));
@@ -207,7 +207,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         head_edid.bytes_size = edid_bytes.size();
         return copy_to_user(user_head_edid, &head_edid);
     }
-    case FB_IOCTL_SET_HEAD_MODE_SETTING: {
+    case GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING: {
         auto user_mode_setting = static_ptr_cast<FBHeadModeSetting const*>(arg);
         auto head_mode_setting = TRY(copy_typed_from_user(user_mode_setting));
 
@@ -256,13 +256,13 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return {};
     }
 
-    case FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING: {
+    case GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING: {
         SpinlockLocker control_locker(m_control_lock);
         TRY(set_safe_mode_setting());
         return {};
     }
 
-    case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
+    case GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
         // FIXME: We silently ignore the request if we are in console mode.
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         SpinlockLocker control_locker(m_control_lock);
@@ -284,7 +284,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             m_vertical_offsetted = true;
         return {};
     }
-    case FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
+    case GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
         FBHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
@@ -292,7 +292,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         head_vertical_buffer_offset.offsetted = m_vertical_offsetted;
         return copy_to_user(user_head_vertical_buffer_offset, &head_vertical_buffer_offset);
     }
-    case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
+    case GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS: {
         if (!partial_flush_support())
             return Error::from_errno(ENOTSUP);
         MutexLocker locker(m_flushing_lock);
@@ -315,7 +315,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         }
         return {};
     };
-    case FB_IOCTL_FLUSH_HEAD: {
+    case GRAPHICS_IOCTL_FLUSH_HEAD: {
         // FIXME: We silently ignore the request if we are in console mode.
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         MutexLocker locker(m_flushing_lock);
