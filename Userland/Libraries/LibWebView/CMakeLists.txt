@@ -1,6 +1,7 @@
 set(SOURCES
     DOMTreeModel.cpp
     OutOfProcessWebView.cpp
+    StylePropertiesModel.cpp
     WebContentClient.cpp
 )
 

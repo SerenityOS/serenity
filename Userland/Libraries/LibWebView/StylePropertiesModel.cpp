@@ -8,7 +8,7 @@
 #include "StylePropertiesModel.h"
 #include <AK/QuickSort.h>
 
-namespace Web {
+namespace WebView {
 
 StylePropertiesModel::StylePropertiesModel(JsonObject properties)
     : m_properties(move(properties))
