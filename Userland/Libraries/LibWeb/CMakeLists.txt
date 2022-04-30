@@ -1,3 +1,5 @@
+include(libweb_generators)
+
 set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CrossOriginAbstractOperations.cpp
@@ -34,14 +36,10 @@ set(SOURCES
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
     CSS/CSSSupportsRule.cpp
-    CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
-    CSS/Enums.cpp
     CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
-    CSS/MediaFeatureID.cpp
-    CSS/MediaFeatureID.h
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
@@ -56,9 +54,6 @@ set(SOURCES
     CSS/Parser/Tokenizer.cpp
     CSS/Percentage.cpp
     CSS/PreferredColorScheme.cpp
-    CSS/PropertyID.cpp
-    CSS/PropertyID.h
-    CSS/QuirksModeStyleSheetSource.cpp
     CSS/Ratio.cpp
     CSS/Resolution.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
@@ -74,9 +69,6 @@ set(SOURCES
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
-    CSS/TransformFunctions.cpp
-    CSS/ValueID.cpp
-    CSS/ValueID.h
     Cookie/ParsedCookie.cpp
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
@@ -378,327 +370,25 @@ set(GENERATED_SOURCES
     ../../Services/WebContent/WebContentServerEndpoint.h
 )
 
+generate_css_implementation()
+
+set(GENERATED_SOURCES
+    CSS/DefaultStyleSheetSource.cpp
+    CSS/Enums.cpp
+    CSS/MediaFeatureID.cpp
+    CSS/PropertyID.cpp
+    CSS/QuirksModeStyleSheetSource.cpp
+    CSS/TransformFunctions.cpp
+    CSS/ValueID.cpp
+)
+
 serenity_lib(LibWeb web)
 target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
-function(libweb_js_wrapper class)
-    cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")
-    get_filename_component(basename "${class}" NAME)
-    set(BINDINGS_SOURCES
-        "Bindings/${basename}Wrapper.h"
-        "Bindings/${basename}Wrapper.cpp"
-        "Bindings/${basename}Constructor.h"
-        "Bindings/${basename}Constructor.cpp"
-        "Bindings/${basename}Prototype.h"
-        "Bindings/${basename}Prototype.cpp"
-    )
-    set(BINDINGS_TYPES
-        header
-        implementation
-        constructor-header
-        constructor-implementation
-        prototype-header
-        prototype-implementation
-    )
-    # FIXME: Instead of requiring a manual declaration of iterable wrappers, we should ask WrapperGenerator if it's iterable
-    if(LIBWEB_WRAPPER_ITERABLE)
-        list(APPEND BINDINGS_SOURCES
-            "Bindings/${basename}IteratorWrapper.h"
-            "Bindings/${basename}IteratorWrapper.cpp"
-            "Bindings/${basename}IteratorPrototype.h"
-            "Bindings/${basename}IteratorPrototype.cpp"
-        )
-        list(APPEND BINDINGS_TYPES
-            iterator-header
-            iterator-implementation
-            iterator-prototype-header
-            iterator-prototype-implementation
-        )
-    endif()
-    target_sources(LibWeb PRIVATE ${BINDINGS_SOURCES})
-    # FIXME: cmake_minimum_required(3.17) for ZIP_LISTS
-    list(LENGTH BINDINGS_SOURCES num_bindings)
-    math(EXPR bindings_end "${num_bindings} - 1")
-    foreach(iter RANGE "${bindings_end}")
-        list(GET BINDINGS_SOURCES ${iter} bindings_src)
-        list(GET BINDINGS_TYPES ${iter} bindings_type)
-        get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-        list(TRANSFORM include_paths PREPEND -i)
-        add_custom_command(
-            OUTPUT "${bindings_src}"
-            COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" ${include_paths} "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" "${CMAKE_CURRENT_SOURCE_DIR}/" > "${bindings_src}.tmp"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
-            COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
-            VERBATIM
-            DEPENDS Lagom::WrapperGenerator
-            MAIN_DEPENDENCY ${class}.idl
-        )
-    endforeach()
-    add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${basename}Wrapper.h)
-    add_dependencies(all_generated generate_${basename}Wrapper.h)
-    add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${basename}Wrapper.cpp)
-    add_dependencies(all_generated generate_${basename}Wrapper.cpp)
-    add_custom_target(generate_${basename}Constructor.h DEPENDS Bindings/${basename}Constructor.h)
-    add_dependencies(all_generated generate_${basename}Constructor.h)
-    add_custom_target(generate_${basename}Constructor.cpp DEPENDS Bindings/${basename}Constructor.cpp)
-    add_dependencies(all_generated generate_${basename}Constructor.cpp)
-    add_custom_target(generate_${basename}Prototype.h DEPENDS Bindings/${basename}Prototype.h)
-    add_dependencies(all_generated generate_${basename}Prototype.h)
-    add_custom_target(generate_${basename}Prototype.cpp DEPENDS Bindings/${basename}Prototype.cpp)
-    add_dependencies(all_generated generate_${basename}Prototype.cpp)
-endfunction()
+generate_js_wrappers(LibWeb)
 
-libweb_js_wrapper(Crypto/Crypto)
-libweb_js_wrapper(Crypto/SubtleCrypto)
-libweb_js_wrapper(CSS/CSSConditionRule)
-libweb_js_wrapper(CSS/CSSFontFaceRule)
-libweb_js_wrapper(CSS/CSSGroupingRule)
-libweb_js_wrapper(CSS/CSSImportRule)
-libweb_js_wrapper(CSS/CSSMediaRule)
-libweb_js_wrapper(CSS/CSSRule)
-libweb_js_wrapper(CSS/CSSRuleList)
-libweb_js_wrapper(CSS/CSSStyleDeclaration)
-libweb_js_wrapper(CSS/CSSStyleRule)
-libweb_js_wrapper(CSS/CSSStyleSheet)
-libweb_js_wrapper(CSS/CSSSupportsRule)
-libweb_js_wrapper(CSS/MediaList)
-libweb_js_wrapper(CSS/MediaQueryList)
-libweb_js_wrapper(CSS/MediaQueryListEvent)
-libweb_js_wrapper(CSS/Screen)
-libweb_js_wrapper(CSS/StyleSheet)
-libweb_js_wrapper(CSS/StyleSheetList)
-libweb_js_wrapper(DOM/AbstractRange)
-libweb_js_wrapper(DOM/Attribute)
-libweb_js_wrapper(DOM/AbortController)
-libweb_js_wrapper(DOM/AbortSignal)
-libweb_js_wrapper(DOM/CharacterData)
-libweb_js_wrapper(DOM/Comment)
-libweb_js_wrapper(DOM/CustomEvent)
-libweb_js_wrapper(DOM/Document)
-libweb_js_wrapper(DOM/DocumentFragment)
-libweb_js_wrapper(DOM/DocumentType)
-libweb_js_wrapper(DOM/DOMException)
-libweb_js_wrapper(DOM/DOMImplementation)
-libweb_js_wrapper(DOM/DOMTokenList)
-libweb_js_wrapper(DOM/Element)
-libweb_js_wrapper(DOM/Event)
-libweb_js_wrapper(DOM/EventTarget)
-libweb_js_wrapper(DOM/HTMLCollection)
-libweb_js_wrapper(DOM/NamedNodeMap)
-libweb_js_wrapper(DOM/Node)
-libweb_js_wrapper(DOM/NodeIterator)
-libweb_js_wrapper(DOM/NodeList)
-libweb_js_wrapper(DOM/ProcessingInstruction)
-libweb_js_wrapper(DOM/Range)
-libweb_js_wrapper(DOM/ShadowRoot)
-libweb_js_wrapper(DOM/StaticRange)
-libweb_js_wrapper(DOM/Text)
-libweb_js_wrapper(DOM/TreeWalker)
-libweb_js_wrapper(Encoding/TextDecoder)
-libweb_js_wrapper(Encoding/TextEncoder)
-libweb_js_wrapper(Geometry/DOMRect)
-libweb_js_wrapper(Geometry/DOMRectList)
-libweb_js_wrapper(Geometry/DOMRectReadOnly)
-libweb_js_wrapper(HTML/CanvasGradient)
-libweb_js_wrapper(HTML/CanvasRenderingContext2D)
-libweb_js_wrapper(HTML/CloseEvent)
-libweb_js_wrapper(HTML/DOMParser)
-libweb_js_wrapper(HTML/DOMStringMap)
-libweb_js_wrapper(HTML/ErrorEvent)
-libweb_js_wrapper(HTML/History)
-libweb_js_wrapper(HTML/HTMLAnchorElement)
-libweb_js_wrapper(HTML/HTMLAreaElement)
-libweb_js_wrapper(HTML/HTMLAudioElement)
-libweb_js_wrapper(HTML/HTMLBaseElement)
-libweb_js_wrapper(HTML/HTMLBodyElement)
-libweb_js_wrapper(HTML/HTMLBRElement)
-libweb_js_wrapper(HTML/HTMLButtonElement)
-libweb_js_wrapper(HTML/HTMLCanvasElement)
-libweb_js_wrapper(HTML/HTMLDataElement)
-libweb_js_wrapper(HTML/HTMLDataListElement)
-libweb_js_wrapper(HTML/HTMLDetailsElement)
-libweb_js_wrapper(HTML/HTMLDialogElement)
-libweb_js_wrapper(HTML/HTMLDirectoryElement)
-libweb_js_wrapper(HTML/HTMLDivElement)
-libweb_js_wrapper(HTML/HTMLDListElement)
-libweb_js_wrapper(HTML/HTMLElement)
-libweb_js_wrapper(HTML/HTMLEmbedElement)
-libweb_js_wrapper(HTML/HTMLFieldSetElement)
-libweb_js_wrapper(HTML/HTMLFontElement)
-libweb_js_wrapper(HTML/HTMLFormElement)
-libweb_js_wrapper(HTML/HTMLFrameElement)
-libweb_js_wrapper(HTML/HTMLFrameSetElement)
-libweb_js_wrapper(HTML/HTMLHeadElement)
-libweb_js_wrapper(HTML/HTMLHeadingElement)
-libweb_js_wrapper(HTML/HTMLHRElement)
-libweb_js_wrapper(HTML/HTMLHtmlElement)
-libweb_js_wrapper(HTML/HTMLIFrameElement)
-libweb_js_wrapper(HTML/HTMLImageElement)
-libweb_js_wrapper(HTML/HTMLInputElement)
-libweb_js_wrapper(HTML/HTMLLabelElement)
-libweb_js_wrapper(HTML/HTMLLegendElement)
-libweb_js_wrapper(HTML/HTMLLIElement)
-libweb_js_wrapper(HTML/HTMLLinkElement)
-libweb_js_wrapper(HTML/HTMLMapElement)
-libweb_js_wrapper(HTML/HTMLMarqueeElement)
-libweb_js_wrapper(HTML/HTMLMediaElement)
-libweb_js_wrapper(HTML/HTMLMenuElement)
-libweb_js_wrapper(HTML/HTMLMetaElement)
-libweb_js_wrapper(HTML/HTMLMeterElement)
-libweb_js_wrapper(HTML/HTMLModElement)
-libweb_js_wrapper(HTML/HTMLObjectElement)
-libweb_js_wrapper(HTML/HTMLOListElement)
-libweb_js_wrapper(HTML/HTMLOptGroupElement)
-libweb_js_wrapper(HTML/HTMLOptionElement)
-libweb_js_wrapper(HTML/HTMLOptionsCollection)
-libweb_js_wrapper(HTML/HTMLOutputElement)
-libweb_js_wrapper(HTML/HTMLParagraphElement)
-libweb_js_wrapper(HTML/HTMLParamElement)
-libweb_js_wrapper(HTML/HTMLPictureElement)
-libweb_js_wrapper(HTML/HTMLPreElement)
-libweb_js_wrapper(HTML/HTMLProgressElement)
-libweb_js_wrapper(HTML/HTMLQuoteElement)
-libweb_js_wrapper(HTML/HTMLScriptElement)
-libweb_js_wrapper(HTML/HTMLSelectElement)
-libweb_js_wrapper(HTML/HTMLSlotElement)
-libweb_js_wrapper(HTML/HTMLSourceElement)
-libweb_js_wrapper(HTML/HTMLSpanElement)
-libweb_js_wrapper(HTML/HTMLStyleElement)
-libweb_js_wrapper(HTML/HTMLTableCaptionElement)
-libweb_js_wrapper(HTML/HTMLTableCellElement)
-libweb_js_wrapper(HTML/HTMLTableColElement)
-libweb_js_wrapper(HTML/HTMLTableElement)
-libweb_js_wrapper(HTML/HTMLTableRowElement)
-libweb_js_wrapper(HTML/HTMLTableSectionElement)
-libweb_js_wrapper(HTML/HTMLTemplateElement)
-libweb_js_wrapper(HTML/HTMLTextAreaElement)
-libweb_js_wrapper(HTML/HTMLTimeElement)
-libweb_js_wrapper(HTML/HTMLTitleElement)
-libweb_js_wrapper(HTML/HTMLTrackElement)
-libweb_js_wrapper(HTML/HTMLUListElement)
-libweb_js_wrapper(HTML/HTMLUnknownElement)
-libweb_js_wrapper(HTML/HTMLVideoElement)
-libweb_js_wrapper(HTML/ImageData)
-libweb_js_wrapper(HTML/MessageChannel)
-libweb_js_wrapper(HTML/MessageEvent)
-libweb_js_wrapper(HTML/MessagePort)
-libweb_js_wrapper(HTML/PageTransitionEvent)
-libweb_js_wrapper(HTML/PromiseRejectionEvent)
-libweb_js_wrapper(HTML/Storage)
-libweb_js_wrapper(HTML/SubmitEvent)
-libweb_js_wrapper(HTML/TextMetrics)
-libweb_js_wrapper(HTML/Worker)
-libweb_js_wrapper(HTML/WorkerGlobalScope)
-libweb_js_wrapper(HTML/WorkerLocation)
-libweb_js_wrapper(HTML/WorkerNavigator)
-libweb_js_wrapper(HighResolutionTime/Performance)
-libweb_js_wrapper(IntersectionObserver/IntersectionObserver)
-libweb_js_wrapper(NavigationTiming/PerformanceTiming)
-libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
-libweb_js_wrapper(ResizeObserver/ResizeObserver)
-libweb_js_wrapper(SVG/SVGAnimatedLength)
-libweb_js_wrapper(SVG/SVGClipPathElement)
-libweb_js_wrapper(SVG/SVGDefsElement)
-libweb_js_wrapper(SVG/SVGElement)
-libweb_js_wrapper(SVG/SVGGeometryElement)
-libweb_js_wrapper(SVG/SVGGraphicsElement)
-libweb_js_wrapper(SVG/SVGCircleElement)
-libweb_js_wrapper(SVG/SVGEllipseElement)
-libweb_js_wrapper(SVG/SVGLength)
-libweb_js_wrapper(SVG/SVGLineElement)
-libweb_js_wrapper(SVG/SVGPathElement)
-libweb_js_wrapper(SVG/SVGPolygonElement)
-libweb_js_wrapper(SVG/SVGPolylineElement)
-libweb_js_wrapper(SVG/SVGRectElement)
-libweb_js_wrapper(SVG/SVGSVGElement)
-libweb_js_wrapper(SVG/SVGTextContentElement)
-libweb_js_wrapper(Selection/Selection)
-libweb_js_wrapper(UIEvents/FocusEvent)
-libweb_js_wrapper(UIEvents/KeyboardEvent)
-libweb_js_wrapper(UIEvents/MouseEvent)
-libweb_js_wrapper(UIEvents/UIEvent)
-libweb_js_wrapper(URL/URL)
-libweb_js_wrapper(URL/URLSearchParams ITERABLE)
-libweb_js_wrapper(WebSockets/WebSocket)
-libweb_js_wrapper(XHR/ProgressEvent)
-libweb_js_wrapper(XHR/XMLHttpRequest)
-libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
-
-invoke_generator(
-    "Enums"
-    Lagom::GenerateCSSEnums
-    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
-    ""
-    "CSS/Enums.h"
-    "CSS/Enums.cpp"
-    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Enums.json"
-)
-
-invoke_generator(
-    "MediaFeatureID"
-    Lagom::GenerateCSSMediaFeatureID
-    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json"
-    ""
-    "CSS/MediaFeatureID.h"
-    "CSS/MediaFeatureID.cpp"
-    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json"
-)
-
-invoke_generator(
-    "PropertyID"
-    Lagom::GenerateCSSPropertyID
-    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json"
-    ""
-    "CSS/PropertyID.h"
-    "CSS/PropertyID.cpp"
-    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json"
-)
-
-invoke_generator(
-    "TransformFunctions"
-    Lagom::GenerateCSSTransformFunctions
-    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
-    ""
-    "CSS/TransformFunctions.h"
-    "CSS/TransformFunctions.cpp"
-    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/TransformFunctions.json"
-)
-
-invoke_generator(
-    "ValueID"
-    Lagom::GenerateCSSValueID
-    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json"
-    ""
-    "CSS/ValueID.h"
-    "CSS/ValueID.cpp"
-    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json"
-)
-
-add_custom_command(
-    OUTPUT CSS/DefaultStyleSheetSource.cpp
-    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh" default_stylesheet_source "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css" > CSS/DefaultStyleSheetSource.cpp.tmp
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/DefaultStyleSheetSource.cpp.tmp CSS/DefaultStyleSheetSource.cpp
-    COMMAND "${CMAKE_COMMAND}" -E remove CSS/DefaultStyleSheetSource.cpp.tmp
-    VERBATIM
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh"
-    MAIN_DEPENDENCY CSS/Default.css
-)
-add_custom_target(generate_DefaultStyleSheetSource.cpp DEPENDS CSS/DefaultStyleSheetSource.cpp)
-add_dependencies(all_generated generate_DefaultStyleSheetSource.cpp)
-
-add_custom_command(
-    OUTPUT CSS/QuirksModeStyleSheetSource.cpp
-    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh" quirks_mode_stylesheet_source "${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css" > CSS/QuirksModeStyleSheetSource.cpp.tmp
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/QuirksModeStyleSheetSource.cpp.tmp CSS/QuirksModeStyleSheetSource.cpp
-    COMMAND "${CMAKE_COMMAND}" -E remove CSS/QuirksModeStyleSheetSource.cpp.tmp
-    VERBATIM
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh"
-    MAIN_DEPENDENCY CSS/Default.css
-)
-add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
-add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
+# Note: If you're looking for the calls to "libweb_js_wrapper()",
+# they have been moved to "idl_files.cmake"
 
 add_subdirectory(DumpLayoutTree)
