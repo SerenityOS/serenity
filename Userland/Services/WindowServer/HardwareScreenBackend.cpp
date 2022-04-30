@@ -28,7 +28,7 @@ ErrorOr<void> HardwareScreenBackend::open()
     m_framebuffer_fd = TRY(Core::System::open(m_device.characters(), O_RDWR | O_CLOEXEC));
 
     GraphicsConnectorProperties properties;
-    if (fb_get_properties(m_framebuffer_fd, &properties) < 0)
+    if (graphics_connector_get_properties(m_framebuffer_fd, &properties) < 0)
         return Error::from_syscall(String::formatted("failed to ioctl {}", m_device), errno);
 
     m_can_device_flush_buffers = (properties.partial_flushing_support != 0);
@@ -66,13 +66,13 @@ ErrorOr<void> HardwareScreenBackend::set_head_resolution(FBHeadResolution resolu
         mode_setting.horizontal_active = resolution.width;
         mode_setting.vertical_active = resolution.height;
         mode_setting.horizontal_stride = resolution.pitch;
-        auto rc = fb_set_head_mode_setting(m_framebuffer_fd, &mode_setting);
+        auto rc = graphics_connector_set_head_mode_setting(m_framebuffer_fd, &mode_setting);
         if (rc != 0) {
             dbgln("Failed to set backend mode setting: falling back to safe resolution");
-            rc = fb_set_safe_head_mode_setting(m_framebuffer_fd);
+            rc = graphics_connector_set_safe_head_mode_setting(m_framebuffer_fd);
             if (rc != 0) {
                 dbgln("Failed to set backend safe mode setting: aborting");
-                return Error::from_syscall("fb_set_safe_head_mode_setting", rc);
+                return Error::from_syscall("graphics_connector_set_safe_head_mode_setting", rc);
             }
             dbgln("Failed to set backend mode setting: falling back to safe resolution - success.");
         }
@@ -136,9 +136,9 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
     } else {
         GraphicsHeadModeSetting mode_setting {};
         memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
-        int rc = fb_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
+        int rc = graphics_connector_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
         if (rc != 0) {
-            return Error::from_syscall("fb_get_head_mode_setting", rc);
+            return Error::from_syscall("graphics_connector_get_head_mode_setting", rc);
         }
         m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
         m_framebuffer = (Gfx::ARGB32*)malloc(m_size_in_bytes);
@@ -170,9 +170,9 @@ ErrorOr<FBHeadProperties> HardwareScreenBackend::get_head_properties()
     } else {
         GraphicsHeadModeSetting mode_setting {};
         memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
-        int rc = fb_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
+        int rc = graphics_connector_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
         if (rc != 0) {
-            return Error::from_syscall("fb_get_head_mode_setting", rc);
+            return Error::from_syscall("graphics_connector_get_head_mode_setting", rc);
         }
         m_pitch = mode_setting.horizontal_stride;
         // Note: We translate (for now, until Framebuffer devices are removed) the GraphicsHeadModeSetting
