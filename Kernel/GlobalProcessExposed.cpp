@@ -55,10 +55,6 @@ private:
                 auto ipv4_netmask = TRY(adapter.ipv4_netmask().to_string());
                 TRY(obj.add("ipv4_netmask", ipv4_netmask->view()));
             }
-            if (!adapter.ipv4_gateway().is_zero()) {
-                auto ipv4_gateway = TRY(adapter.ipv4_gateway().to_string());
-                TRY(obj.add("ipv4_gateway", ipv4_gateway->view()));
-            }
             TRY(obj.add("packets_in", adapter.packets_in()));
             TRY(obj.add("bytes_in", adapter.bytes_in()));
             TRY(obj.add("packets_out", adapter.packets_out()));

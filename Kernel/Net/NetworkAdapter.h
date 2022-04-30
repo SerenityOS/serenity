@@ -55,7 +55,6 @@ public:
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
     IPv4Address ipv4_broadcast() const { return IPv4Address { (m_ipv4_address.to_u32() & m_ipv4_netmask.to_u32()) | ~m_ipv4_netmask.to_u32() }; }
-    IPv4Address ipv4_gateway() const { return m_ipv4_gateway; }
     virtual bool link_up() { return false; }
     virtual i32 link_speed()
     {
@@ -66,7 +65,6 @@ public:
 
     void set_ipv4_address(IPv4Address const&);
     void set_ipv4_netmask(IPv4Address const&);
-    void set_ipv4_gateway(IPv4Address const&);
 
     void send(MACAddress const&, ARPPacket const&);
     void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, IPv4Protocol, size_t, u8 type_of_service, u8 ttl);
@@ -103,7 +101,6 @@ private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
     IPv4Address m_ipv4_netmask;
-    IPv4Address m_ipv4_gateway;
 
     // FIXME: Make this configurable
     static constexpr size_t max_packet_buffers = 1024;
