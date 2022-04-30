@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Jack Karamanian <karamanian.jack@gmail.com>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ ThrowCompletionOr<BoundFunction*> BoundFunction::create(GlobalObject& global_obj
     // 1. Let proto be ? targetFunction.[[GetPrototypeOf]]().
     auto* prototype = TRY(target_function.internal_get_prototype_of());
 
-    // 2. Let internalSlotsList be the list-concatenation of « [[Prototype]], [[Extensible]] » and the internal slots listed in Table 33.
+    // 2. Let internalSlotsList be the list-concatenation of « [[Prototype]], [[Extensible]] » and the internal slots listed in Table 34.
     // 3. Let obj be ! MakeBasicObject(internalSlotsList).
     // 4. Set obj.[[Prototype]] to proto.
     // 5. Set obj.[[Call]] as described in 10.4.1.1.
