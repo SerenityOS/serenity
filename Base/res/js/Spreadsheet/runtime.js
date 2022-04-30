@@ -431,6 +431,9 @@ function numericReduce(op, accumulator, cells) {
 }
 
 function numericResolve(cells) {
+    if (typeof cells == "number") {
+        cells = [cells];
+    }
     return resolve(cells).map(val => parseFloat(val));
 }
 
