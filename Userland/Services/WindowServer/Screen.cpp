@@ -231,21 +231,10 @@ bool Screen::open_device()
 
     switch (info.mode) {
     case ScreenLayout::Screen::Mode::Device: {
-        m_backend = make<HardwareScreenBackend>(info.device.value(), false);
+        m_backend = make<HardwareScreenBackend>(info.device.value());
         auto return_value = m_backend->open();
         if (return_value.is_error()) {
             dbgln("Screen #{}: Failed to open backend: {}", index(), return_value.error());
-            return false;
-        }
-
-        set_resolution(true);
-        return true;
-    }
-    case ScreenLayout::Screen::Mode::DisplayConnectorDevice: {
-        m_backend = make<HardwareScreenBackend>(info.device.value(), true);
-        auto return_value = m_backend->open();
-        if (return_value.is_error()) {
-            dbgln("Screen #{}: Failed to open display connector backend: {}", index(), return_value.error());
             return false;
         }
 
@@ -335,9 +324,21 @@ bool Screen::set_resolution(bool initial)
 
     ErrorOr<void> return_value = Error::from_errno(EINVAL);
     {
-        // FIXME: Add multihead support for one framebuffer
-        FBHeadResolution physical_resolution { 0, 0, info.resolution.width(), info.resolution.height() };
-        return_value = m_backend->set_head_resolution(physical_resolution);
+        GraphicsHeadModeSetting requested_mode_setting;
+        memset(&requested_mode_setting, 0, sizeof(GraphicsHeadModeSetting));
+        requested_mode_setting.horizontal_stride = info.resolution.width() * 4;
+        requested_mode_setting.pixel_clock_in_khz = 0;
+        requested_mode_setting.horizontal_active = info.resolution.width();
+        requested_mode_setting.horizontal_front_porch_pixels = 0;
+        requested_mode_setting.horizontal_sync_time_pixels = 0;
+        requested_mode_setting.horizontal_blank_pixels = 0;
+        requested_mode_setting.vertical_active = info.resolution.height();
+        requested_mode_setting.vertical_front_porch_lines = 0;
+        requested_mode_setting.vertical_sync_time_lines = 0;
+        requested_mode_setting.vertical_blank_lines = 0;
+        requested_mode_setting.horizontal_offset = 0;
+        requested_mode_setting.vertical_offset = 0;
+        return_value = m_backend->set_head_mode_setting(requested_mode_setting);
     }
 
     dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - success", index());
@@ -347,8 +348,8 @@ bool Screen::set_resolution(bool initial)
             TRY(m_backend->unmap_framebuffer());
             TRY(m_backend->map_framebuffer());
         }
-        auto properties = TRY(m_backend->get_head_properties());
-        info.resolution = { properties.width, properties.height };
+        auto mode_setting = TRY(m_backend->get_head_mode_setting());
+        info.resolution = { mode_setting.horizontal_active, mode_setting.vertical_active };
 
         update_virtual_rect();
 

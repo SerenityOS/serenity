@@ -31,31 +31,35 @@ void VirtualScreenBackend::set_head_buffer(int index)
     m_first_buffer_active = index == 0;
 }
 
-ErrorOr<void> VirtualScreenBackend::set_head_resolution(FBHeadResolution resolution)
+ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GraphicsHeadModeSetting mode_setting)
 {
-    if (resolution.head_index != 0)
-        return Error::from_string_literal("Only head index 0 is supported."sv);
-    m_height = resolution.height;
+    m_height = mode_setting.vertical_active;
 
-    if (resolution.pitch == 0)
-        resolution.pitch = static_cast<int>(resolution.width * sizeof(Gfx::ARGB32));
-    m_pitch = resolution.pitch;
-    if (static_cast<int>(resolution.width * sizeof(Gfx::ARGB32)) != resolution.pitch)
+    if (mode_setting.horizontal_stride == 0)
+        mode_setting.horizontal_stride = static_cast<int>(mode_setting.horizontal_active * sizeof(Gfx::ARGB32));
+    m_pitch = mode_setting.horizontal_stride;
+    if (static_cast<int>(mode_setting.horizontal_active * sizeof(Gfx::ARGB32)) != mode_setting.horizontal_stride)
         return Error::from_string_literal("Unsupported pitch"sv);
 
-    m_width = resolution.width;
+    m_width = mode_setting.horizontal_active;
     return {};
 }
 
-ErrorOr<FBHeadProperties> VirtualScreenBackend::get_head_properties()
+ErrorOr<GraphicsHeadModeSetting> VirtualScreenBackend::get_head_mode_setting()
 {
-    return FBHeadProperties {
-        .head_index = 0,
-        .pitch = static_cast<unsigned>(m_pitch),
-        .width = static_cast<unsigned>(m_width),
-        .height = static_cast<unsigned>(m_height),
-        .offset = static_cast<unsigned>(m_first_buffer_active ? 0 : m_back_buffer_offset),
-        .buffer_length = static_cast<unsigned>(m_size_in_bytes),
+    return GraphicsHeadModeSetting {
+        .horizontal_stride = m_pitch,
+        .pixel_clock_in_khz = 0,
+        .horizontal_active = m_width,
+        .horizontal_front_porch_pixels = 0,
+        .horizontal_sync_time_pixels = 0,
+        .horizontal_blank_pixels = 0,
+        .vertical_active = m_height,
+        .vertical_front_porch_lines = 0,
+        .vertical_sync_time_lines = 0,
+        .vertical_blank_lines = 0,
+        .horizontal_offset = 0,
+        .vertical_offset = 0,
     };
 }
 

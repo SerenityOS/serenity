@@ -1,6 +1,5 @@
 set(TEST_SOURCES
     bind-local-socket-to-symlink.cpp
-    bxvga-mmap-kernel-into-userspace.cpp
     crash-fcntl-invalid-cmd.cpp
     elf-execve-mmap-race.cpp
     elf-symbolication-kernel-read-exploit.cpp

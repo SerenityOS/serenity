@@ -68,25 +68,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
         WindowServer::ScreenLayout screen_layout;
         String error_msg;
 
-        // FIXME: Remove this once framebuffer devices are removed.
-        auto add_unconfigured_framebuffer_devices = [&]() {
-            // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
-            Core::DirIterator di("/dev", Core::DirIterator::SkipParentAndBaseDir);
-            while (di.has_next()) {
-                auto path = di.next_path();
-                if (!path.starts_with("fb"))
-                    continue;
-                auto full_path = String::formatted("/dev/{}", path);
-                dbgln("{} :", full_path);
-                if (!Core::File::is_device(full_path))
-                    continue;
-                if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
-                    continue;
-                if (!screen_layout.try_auto_add_framebuffer(full_path))
-                    dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
-            }
-        };
-
         auto add_unconfigured_display_connector_devices = [&]() {
             // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
             Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
@@ -108,9 +89,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
             screen_layout = {};
             fb_devices_configured = {};
 
-            // FIXME: Remove this once framebuffer devices are removed.
-            add_unconfigured_framebuffer_devices();
-
             add_unconfigured_display_connector_devices();
             if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
                 dbgln("Failed to apply generated fallback screen layout: {}", error_msg);
@@ -123,11 +101,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         if (screen_layout.load_config(*wm_config, &error_msg)) {
             for (auto& screen_info : screen_layout.screens)
-                if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device || screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::DisplayConnectorDevice)
+                if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device)
                     fb_devices_configured.set(screen_info.device.value());
-
-            // FIXME: Remove this once framebuffer devices are removed.
-            add_unconfigured_framebuffer_devices();
 
             add_unconfigured_display_connector_devices();
 
