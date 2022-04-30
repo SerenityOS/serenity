@@ -23,6 +23,8 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
+#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/RequestServerAdapter.h>
 #include <unistd.h>
 
 namespace Browser {
@@ -86,6 +88,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 

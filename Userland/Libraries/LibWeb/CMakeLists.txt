@@ -359,11 +359,6 @@ set(SOURCES
     XML/XMLDocumentBuilder.cpp
 )
 
-set(GENERATED_SOURCES
-    ../../Services/RequestServer/RequestClientEndpoint.h
-    ../../Services/RequestServer/RequestServerEndpoint.h
-)
-
 generate_css_implementation()
 
 set(GENERATED_SOURCES
@@ -377,7 +372,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibWasm LibXML)
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
 generate_js_wrappers(LibWeb)

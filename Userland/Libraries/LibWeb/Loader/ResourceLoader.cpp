@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,8 +11,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibProtocol/Request.h>
-#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
@@ -24,35 +23,50 @@
 
 namespace Web {
 
+ResourceLoaderConnectorRequest::ResourceLoaderConnectorRequest() = default;
+
+ResourceLoaderConnectorRequest::~ResourceLoaderConnectorRequest() = default;
+
+ResourceLoaderConnector::ResourceLoaderConnector() = default;
+
+ResourceLoaderConnector::~ResourceLoaderConnector() = default;
+
+static RefPtr<ResourceLoader> s_resource_loader;
+
+void ResourceLoader::initialize(RefPtr<ResourceLoaderConnector> connector)
+{
+    if (connector)
+        s_resource_loader = ResourceLoader::try_create(connector.release_nonnull()).release_value_but_fixme_should_propagate_errors();
+}
+
 ResourceLoader& ResourceLoader::the()
 {
-    static RefPtr<ResourceLoader> s_the;
-    if (!s_the)
-        s_the = ResourceLoader::try_create().release_value_but_fixme_should_propagate_errors();
-    return *s_the;
+    if (!s_resource_loader) {
+        dbgln("Web::ResourceLoader was not initialized");
+        VERIFY_NOT_REACHED();
+    }
+    return *s_resource_loader;
 }
 
-ErrorOr<NonnullRefPtr<ResourceLoader>> ResourceLoader::try_create()
+ErrorOr<NonnullRefPtr<ResourceLoader>> ResourceLoader::try_create(NonnullRefPtr<ResourceLoaderConnector> connector)
 {
-
-    auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ResourceLoader(move(protocol_client)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ResourceLoader(move(connector)));
 }
 
-ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client)
-    : m_protocol_client(move(protocol_client))
+ResourceLoader::ResourceLoader(NonnullRefPtr<ResourceLoaderConnector> connector)
+    : m_connector(move(connector))
     , m_user_agent(default_user_agent)
 {
 }
 
 void ResourceLoader::prefetch_dns(AK::URL const& url)
 {
-    m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::ResolveOnly);
+    m_connector->prefetch_dns(url);
 }
 
 void ResourceLoader::preconnect(AK::URL const& url)
 {
-    m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
+    m_connector->preconnect(url);
 }
 
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
@@ -217,7 +231,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             headers.set(it.key, it.value);
         }
 
-        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body(), proxy);
+        auto protocol_request = m_connector->start_request(request.method(), url, headers, request.body(), proxy);
         if (!protocol_request) {
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);
@@ -248,7 +262,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             });
         };
         protocol_request->set_should_buffer_all_input(true);
-        protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
+        protocol_request->on_certificate_requested = []() -> ResourceLoaderConnectorRequest::CertificateAndKey {
             return {};
         };
         ++m_pending_loads;
