@@ -11,7 +11,7 @@
 
 #include "History.h"
 #include <LibGUI/Widget.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
 
@@ -38,7 +38,7 @@ private:
     void end_group();
 
     RefPtr<GUI::TextBox> m_input;
-    RefPtr<Web::OutOfProcessWebView> m_output_view;
+    RefPtr<WebView::OutOfProcessWebView> m_output_view;
 
     i32 m_highest_notified_message_index { -1 };
     i32 m_highest_received_message_index { -1 };

@@ -36,7 +36,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
 
@@ -77,7 +77,7 @@ ErrorOr<void> Editor::initialize_documentation_tooltip()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = TRY(m_documentation_tooltip_window->try_set_main_widget<Web::OutOfProcessWebView>());
+    m_documentation_page_view = TRY(m_documentation_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
     return {};
 }
 
@@ -86,7 +86,7 @@ ErrorOr<void> Editor::initialize_parameters_hint_tooltip()
     m_parameters_hint_tooltip_window = GUI::Window::construct();
     m_parameters_hint_tooltip_window->set_rect(0, 0, 280, 35);
     m_parameters_hint_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_parameter_hint_page_view = TRY(m_parameters_hint_tooltip_window->try_set_main_widget<Web::OutOfProcessWebView>());
+    m_parameter_hint_page_view = TRY(m_parameters_hint_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
     return {};
 }
 

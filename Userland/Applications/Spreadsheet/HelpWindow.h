@@ -10,7 +10,7 @@
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Spreadsheet {
 
@@ -36,7 +36,7 @@ private:
     HelpWindow(GUI::Window* parent = nullptr);
 
     JsonObject m_docs;
-    RefPtr<Web::OutOfProcessWebView> m_webview;
+    RefPtr<WebView::OutOfProcessWebView> m_webview;
     RefPtr<GUI::ListView> m_listview;
 };
 

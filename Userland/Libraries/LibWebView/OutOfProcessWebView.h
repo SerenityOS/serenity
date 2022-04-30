@@ -12,7 +12,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Page/Page.h>
 
-namespace Web {
+namespace WebView {
 
 class WebContentClient;
 
@@ -38,7 +38,7 @@ public:
         String custom_properties_json;
         String node_box_sizing_json;
     };
-    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement>);
+    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement>);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
@@ -69,14 +69,14 @@ public:
     Function<void(const AK::URL&)> on_load_finish;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<void(const AK::URL&)> on_url_drop;
-    Function<void(DOM::Document*)> on_set_document;
+    Function<void(Web::DOM::Document*)> on_set_document;
     Function<void(const AK::URL&, String const&)> on_get_source;
     Function<void(String const&)> on_get_dom_tree;
     Function<void(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)> on_get_dom_node_properties;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
-    Function<String(const AK::URL& url, Cookie::Source source)> on_get_cookie;
-    Function<void(const AK::URL& url, Cookie::ParsedCookie const& cookie, Cookie::Source source)> on_set_cookie;
+    Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
+    Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
 
     void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size);
@@ -108,8 +108,8 @@ public:
     void notify_server_did_output_js_console_message(i32 message_index);
     void notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);
     void notify_server_did_change_favicon(Gfx::Bitmap const& favicon);
-    String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::Source source);
-    void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::ParsedCookie const& cookie, Cookie::Source source);
+    String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source);
+    void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source);
     void notify_server_did_update_resource_count(i32 count_waiting);
 
 private:

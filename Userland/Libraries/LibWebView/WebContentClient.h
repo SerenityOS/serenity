@@ -12,7 +12,7 @@
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
-namespace Web {
+namespace WebView {
 
 class OutOfProcessWebView;
 

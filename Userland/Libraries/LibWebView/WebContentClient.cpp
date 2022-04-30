@@ -9,7 +9,7 @@
 #include <AK/Debug.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
-namespace Web {
+namespace WebView {
 
 WebContentClient::WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, OutOfProcessWebView& view)
     : IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket))
@@ -187,12 +187,12 @@ void WebContentClient::did_change_favicon(Gfx::ShareableBitmap const& favicon)
 
 Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_request_cookie(AK::URL const& url, u8 source)
 {
-    return m_view.notify_server_did_request_cookie({}, url, static_cast<Cookie::Source>(source));
+    return m_view.notify_server_did_request_cookie({}, url, static_cast<Web::Cookie::Source>(source));
 }
 
 void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, u8 source)
 {
-    m_view.notify_server_did_set_cookie({}, url, cookie, static_cast<Cookie::Source>(source));
+    m_view.notify_server_did_set_cookie({}, url, cookie, static_cast<Web::Cookie::Source>(source));
 }
 
 void WebContentClient::did_update_resource_count(i32 count_waiting)

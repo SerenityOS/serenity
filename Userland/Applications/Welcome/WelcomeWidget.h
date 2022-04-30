@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 class WelcomeWidget final : public GUI::Widget {
     C_OBJECT(WelcomeWidget);
@@ -30,7 +30,7 @@ private:
     RefPtr<GUI::Button> m_new_button;
     RefPtr<GUI::Label> m_tip_label;
     RefPtr<GUI::CheckBox> m_startup_checkbox;
-    RefPtr<Web::OutOfProcessWebView> m_web_view;
+    RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
     size_t m_initial_tip_index { 0 };
     Vector<String> m_tips;

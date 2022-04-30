@@ -370,7 +370,6 @@ class EventHandler;
 class FrameLoader;
 class LoadRequest;
 class Origin;
-class OutOfProcessWebView;
 class Page;
 class PageClient;
 class PaintContext;

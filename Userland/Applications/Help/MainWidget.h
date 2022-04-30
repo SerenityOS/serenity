@@ -9,7 +9,7 @@
 #include "History.h"
 #include "ManualModel.h"
 #include <LibGUI/FilteringProxyModel.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Help {
 
@@ -45,7 +45,7 @@ private:
     RefPtr<GUI::TextBox> m_search_box;
     RefPtr<GUI::ListView> m_search_view;
     RefPtr<GUI::TreeView> m_browse_view;
-    RefPtr<Web::OutOfProcessWebView> m_web_view;
+    RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::Statusbar> m_statusbar;

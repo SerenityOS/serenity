@@ -16,8 +16,8 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
-#include <LibWeb/OutOfProcessWebView.h>
 #include <LibWeb/StylePropertiesModel.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
 

@@ -17,5 +17,5 @@ set(SOURCES
 )
 
 serenity_app(Help ICON app-help)
-target_link_libraries(Help LibWeb LibMarkdown LibGUI LibDesktop LibMain)
+target_link_libraries(Help LibWebView LibWeb LibMarkdown LibGUI LibDesktop LibMain)
 link_with_unicode_data(Help)

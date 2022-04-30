@@ -285,7 +285,6 @@ set(SOURCES
     MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
-    OutOfProcessWebView.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp
@@ -355,7 +354,6 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
-    WebContentClient.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
@@ -366,8 +364,6 @@ set(SOURCES
 set(GENERATED_SOURCES
     ../../Services/RequestServer/RequestClientEndpoint.h
     ../../Services/RequestServer/RequestServerEndpoint.h
-    ../../Services/WebContent/WebContentClientEndpoint.h
-    ../../Services/WebContent/WebContentServerEndpoint.h
 )
 
 generate_css_implementation()

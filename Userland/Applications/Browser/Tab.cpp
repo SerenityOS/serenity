@@ -36,7 +36,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
 
@@ -112,7 +112,7 @@ Tab::Tab(BrowserWindow& window)
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
-    m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
+    m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
     if (g_content_filters_enabled)
         m_web_content_view->set_content_filters(g_content_filters);
     else
