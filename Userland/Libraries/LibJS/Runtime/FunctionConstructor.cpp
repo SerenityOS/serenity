@@ -228,14 +228,14 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 28. Let realmF be the current Realm Record.
     auto* realm = vm.current_realm();
 
-    // 29. Let scope be realmF.[[GlobalEnv]].
-    auto* scope = &realm->global_environment();
+    // 29. Let env be realmF.[[GlobalEnv]].
+    auto* environment = &realm->global_environment();
 
-    // 30. Let privateScope be null.
-    PrivateEnvironment* private_scope = nullptr;
+    // 30. Let privateEnv be null.
+    PrivateEnvironment* private_environment = nullptr;
 
-    // 31. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, privateScope).
-    auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), scope, private_scope, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
+    // 31. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, env, privateEnv).
+    auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), environment, private_environment, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
 
     // FIXME: Remove the name argument from create() and do this instead.
     // 32. Perform SetFunctionName(F, "anonymous").
