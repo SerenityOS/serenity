@@ -101,7 +101,8 @@ fi
 
 # source qemy-paths.sh for the SERENITY_QEMU_IMG_BIN variable so qemu-img works
 # correctly on windows
-. "$(dirname "${0}")/qemu-paths.sh"
+# shellcheck disable=SC1090,SC1091
+. "$SCRIPT_DIR/qemu-paths.sh"
 
 if [ $USE_EXISTING -eq 1 ];  then
     OLD_DISK_SIZE_BYTES=$(wc -c < _disk_image)

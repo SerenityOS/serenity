@@ -56,7 +56,10 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
- "$(dirname "${0}")/qemu-paths.sh"
+# shellcheck disable=SC1090,SC1091
+. "$SCRIPT_DIR/qemu-paths.sh"
+
+[ "$KVM_SUPPORT" -eq "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 # For default values, see Kernel/CommandLine.cpp
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"

@@ -36,7 +36,7 @@ if (( ${#files[@]} )); then
         exit 1
     fi
 
-    shellcheck -P "./Meta/" "${files[@]}"
+    shellcheck "${files[@]}"
 
     for file in "${files[@]}"; do
         if (< "$file" grep -qE "grep [^|);]*-[^- ]*P"); then
