@@ -33,10 +33,6 @@ public:
     void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);
     void detach_display_connector(Badge<DisplayConnector>, DisplayConnector&);
 
-    bool framebuffer_devices_console_only() const;
-    bool framebuffer_devices_use_bootloader_framebuffer() const;
-    bool framebuffer_devices_exist() const;
-
     void set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y);
     void disable_vga_text_mode_console_cursor();
     void disable_vga_emulation_access_permanently();
@@ -54,6 +50,9 @@ private:
     bool determine_and_initialize_isa_graphics_device();
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
+
+    // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"
+    RefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
 
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
     RefPtr<VGACompatibleAdapter> m_vga_adapter;
