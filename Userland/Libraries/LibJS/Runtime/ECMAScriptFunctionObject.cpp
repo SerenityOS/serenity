@@ -868,7 +868,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
                 MUST(call(global_object(), promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
             }
 
-            // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+            // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
             return Completion { Completion::Type::Return, promise_capability.promise, {} };
         }
     }

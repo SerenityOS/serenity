@@ -511,7 +511,7 @@ Completion ReturnStatement::execute(Interpreter& interpreter, GlobalObject& glob
 
     // ReturnStatement : return ;
     if (!m_argument) {
-        // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
         return { Completion::Type::Return, js_undefined(), {} };
     }
 
@@ -523,7 +523,7 @@ Completion ReturnStatement::execute(Interpreter& interpreter, GlobalObject& glob
     // NOTE: Generators are not supported in the AST interpreter
     // 3. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
 
-    // 4. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+    // 4. Return Completion Record { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
     return { Completion::Type::Return, value, {} };
 }
 
@@ -1004,7 +1004,7 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, GlobalObjec
 
     // a. If exprValue is undefined or null, then
     if (rhs_result.is_nullish()) {
-        // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Break, {}, {} };
     }
 
@@ -1600,7 +1600,7 @@ public:
         //    b. Let value be ? GetValue(rhs).
         auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(global_object, m_expression, m_class_field_identifier_name));
 
-        // 5. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+        // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
         return { Completion::Type::Return, value, {} };
     }
 
@@ -3971,13 +3971,13 @@ Completion BreakStatement::execute(Interpreter& interpreter, GlobalObject&) cons
 
     // BreakStatement : break ;
     if (m_target_label.is_null()) {
-        // 1. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Break, {}, {} };
     }
 
     // BreakStatement : break LabelIdentifier ;
     // 1. Let label be the StringValue of LabelIdentifier.
-    // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
+    // 2. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
     return { Completion::Type::Break, {}, m_target_label };
 }
 
@@ -3988,13 +3988,13 @@ Completion ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) c
 
     // ContinueStatement : continue ;
     if (m_target_label.is_null()) {
-        // 1. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: continue, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Continue, {}, {} };
     }
 
     // ContinueStatement : continue LabelIdentifier ;
     // 1. Let label be the StringValue of LabelIdentifier.
-    // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
+    // 2. Return Completion Record { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
     return { Completion::Type::Continue, {}, m_target_label };
 }
 
