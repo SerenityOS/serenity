@@ -435,34 +435,41 @@ function numericResolve(cells) {
 }
 
 function resolve(cells) {
+    if (!(cells instanceof Array)) {
+        cells = [cells];
+    }
+    return cells.map(resolveRange).flat();
+}
+
+function resolveRange(cells) {
     const isRange = cells instanceof CommonRange;
     return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
 
 // Statistics
 
-function sum(cells) {
+function sum(...cells) {
     return numericReduce((acc, x) => acc + x, 0, cells);
 }
 
-function sumIf(condition, cells) {
+function sumIf(condition, ...cells) {
     return numericReduce((acc, x) => (condition(x) ? acc + x : acc), 0, cells);
 }
 
-function count(cells) {
+function count(...cells) {
     return reduce((acc, x) => acc + 1, 0, cells);
 }
 
-function countIf(condition, cells) {
+function countIf(condition, ...cells) {
     return reduce((acc, x) => (condition(x) ? acc + 1 : acc), 0, cells);
 }
 
-function average(cells) {
+function average(...cells) {
     const sumAndCount = numericReduce((acc, x) => [acc[0] + x, acc[1] + 1], [0, 0], cells);
     return sumAndCount[0] / sumAndCount[1];
 }
 
-function averageIf(condition, cells) {
+function averageIf(condition, ...cells) {
     const sumAndCount = numericReduce(
         (acc, x) => (condition(x) ? [acc[0] + x, acc[1] + 1] : acc),
         [0, 0],
@@ -471,20 +478,20 @@ function averageIf(condition, cells) {
     return sumAndCount[0] / sumAndCount[1];
 }
 
-function maxIf(condition, cells) {
+function maxIf(condition, ...cells) {
     return Math.max(...numericResolve(cells).filter(condition));
 }
 
-function max(cells) {
-    return maxIf(() => true, cells);
+function max(...cells) {
+    return maxIf(() => true, ...cells);
 }
 
-function minIf(condition, cells) {
+function minIf(condition, ...cells) {
     return Math.min(...numericResolve(cells).filter(condition));
 }
 
-function min(cells) {
-    return minIf(() => true, cells);
+function min(...cells) {
+    return minIf(() => true, ...cells);
 }
 
 function sumProductIf(condition, rangeOne, rangeTwo) {
@@ -501,7 +508,7 @@ function sumProduct(rangeOne, rangeTwo) {
     return sumProductIf(() => true, rangeOne, rangeTwo);
 }
 
-function median(cells) {
+function median(...cells) {
     const values = numericResolve(cells);
 
     if (values.length === 0) return 0;
@@ -526,7 +533,7 @@ function median(cells) {
     return (qselect(values, values.length / 2) + qselect(values, values.length / 2 - 1)) / 2;
 }
 
-function variance(cells) {
+function variance(...cells) {
     const sumsAndSquaresAndCount = numericReduce(
         (acc, x) => [acc[0] + x, acc[1] + x * x, acc[2] + 1],
         [0, 0, 0],
@@ -539,7 +546,7 @@ function variance(cells) {
     return (count * squares - sums * sums) / count;
 }
 
-function mode(cells) {
+function mode(...cells) {
     const counts = numericReduce(
         (map, x) => {
             if (!map.has(x)) map.set(x, 0);
@@ -562,8 +569,8 @@ function mode(cells) {
     return mostCommonValue;
 }
 
-function stddev(cells) {
-    return Math.sqrt(variance(cells));
+function stddev(...cells) {
+    return Math.sqrt(variance(...cells));
 }
 
 // Lookup
@@ -786,19 +793,20 @@ numericReduce.__documentation = JSON.stringify({
 sum.__documentation = JSON.stringify({
     name: "sum",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Calculates the sum of the values in `cells`",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the total of the numbers or cell values in `numbers or cell names`",
     examples: {
         "sum(R`A0:C3`)":
             "Calculate the sum of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
+        "sum(1, 2, 3)": "Calculate the sum of 1, 2, and 3 (Sum = 6)",
     },
 });
 
 sumIf.__documentation = JSON.stringify({
     name: "sumIf",
     argc: 2,
-    argnames: ["condition", "cell names"],
-    doc: "Calculates the sum of cells the value of which evaluates to true when passed to `condition`",
+    argnames: ["condition", "numbers or cell names"],
+    doc: "Calculates the sum of all numbers or cell values which evaluate to true when passed to `condition`",
     examples: {
         "sumIf(x => x instanceof Number, R`A1:C4`)":
             "Calculates the sum of all numbers within A1:C4",
@@ -808,8 +816,8 @@ sumIf.__documentation = JSON.stringify({
 count.__documentation = JSON.stringify({
     name: "count",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Counts the number of cells in the given range",
+    argnames: ["numbers or cell names"],
+    doc: "Counts the number of inputs or cells in a given range",
     examples: {
         "count(R`A0:C3`)":
             "Count the number of cells in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
@@ -819,8 +827,8 @@ count.__documentation = JSON.stringify({
 countIf.__documentation = JSON.stringify({
     name: "countIf",
     argc: 2,
-    argnames: ["condition", "cell names"],
-    doc: "Counts cells the value of which evaluates to true when passed to `condition`",
+    argnames: ["condition", "numbers or cell names"],
+    doc: "Counts inputs or cell values which evaluate to true when passed to `condition`",
     examples: {
         "countIf(x => x instanceof Number, R`A1:C3`)":
             "Count the number of cells which have numbers within A1:C3",
@@ -830,40 +838,42 @@ countIf.__documentation = JSON.stringify({
 average.__documentation = JSON.stringify({
     name: "average",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Calculates the average of the values in `cells`",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the average of the numbers or cell values in `numbers or cell names`",
     examples: {
         "average(R`A0:C3`)":
             "Calculate the average of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
+        "average(4, 6)": "Calculate the average of 4 and 6 (Average = 5)",
     },
 });
 
 averageIf.__documentation = JSON.stringify({
     name: "averageIf",
     argc: 2,
-    argnames: ["condition", "cell names"],
-    doc: "Calculates the average of cells the value of which evaluates to true when passed to `condition`",
+    argnames: ["condition", "numbers or cell names"],
+    doc: "Calculates the average of all numbers or cell values which evaluate to true when passed to `condition`",
     examples: {
         "averageIf(x => x > 4, R`A1:C4`)":
-            "Calculate the sum of all numbers larger then 4 within A1:C4",
+            "Calculate the average of all numbers larger then 4 within A1:C4",
     },
 });
 
 max.__documentation = JSON.stringify({
     name: "max",
     argc: 1,
-    argnames: ["the range"],
-    doc: "Gets the largest cell's value in the range",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the largest number or cell value in `numbers or cell names`",
     examples: {
         "max(R`A1:C4`)": "Finds the largest number within A1:C4",
+        "max(1, 2, 3)": "Returns the largest of 1, 2, and 3 (Max = 3)",
     },
 });
 
 maxIf.__documentation = JSON.stringify({
     name: "max",
     argc: 1,
-    argnames: ["condition", "the range"],
-    doc: "Gets the largest cell's value in the range which evaluates to true when passed to `condition`",
+    argnames: ["condition", "numbers or cell names"],
+    doc: "Calculates the largest of all numbers or cell values which evaluate to true when passed to `condition`",
     examples: {
         "maxIf(x => x > 4, R`A1:C4`)":
             "Finds the largest number within A1:C4 that is greater than 4",
@@ -873,18 +883,19 @@ maxIf.__documentation = JSON.stringify({
 min.__documentation = JSON.stringify({
     name: "min",
     argc: 1,
-    argnames: ["the range"],
-    doc: "Gets the smallest cell's value in the range",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the smallest number or cell value in `numbers or cell names`",
     examples: {
         "min(R`A1:C4`)": "Finds the smallest number within A1:C4",
+        "min(1, 2, 3)": "Returns the smallest of 1, 2, and 3 (Min = 1)",
     },
 });
 
 minIf.__documentation = JSON.stringify({
     name: "min",
     argc: 1,
-    argnames: ["condition", "the range"],
-    doc: "Gets the smallest cell's value in the range which evaluates to true when passed to `condition`",
+    argnames: ["condition", "numbers or cell names"],
+    doc: "Calculates the smallest of all numbers or cell values which evaluate to true when passed to `condition`",
     examples: {
         "minIf(x => x > 4, R`A1:C4`)":
             "Finds the smallest number within A1:C4 that is greater than 4",
@@ -960,19 +971,20 @@ sumProductIf.__documentation = JSON.stringify({
 median.__documentation = JSON.stringify({
     name: "median",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Calculates the median of the numeric values in the given range of cells",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the median number or cell value in `numbers or cell names`",
     examples: {
         "median(R`A0:C3`)":
             "Calculate the median of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
+        "median(1, 2, 5)": "Calculate the median of 1, 2, and 5 (Median = 2)",
     },
 });
 
 variance.__documentation = JSON.stringify({
     name: "variance",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Calculates the variance of the numeric values in the given range of cells",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the variance of the numbers or cell values in `numbers or cell names`",
     examples: {
         "variance(R`A0:C3`)":
             "Calculate the variance of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
@@ -1076,11 +1088,12 @@ variance.__documentation = JSON.stringify({
 mode.__documentation = JSON.stringify({
     name: "mode",
     argc: 1,
-    argnames: ["cell names"],
-    doc: "Calculates the mode of the numeric values in the given range of cells, i.e. the value that appears most often",
+    argnames: ["numbers or cell names"],
+    doc: "Calculates the mode (most common value) of the numbers or cell values in `numbers or cell names`",
     examples: {
         "mode(R`A2:A14`)":
             "Calculate the mode of the values in A2:A14, [Click to view](spreadsheet://example/variance#simple)",
+        "mode(1, 2, 2)": "Calculate the mode of 1, 2, and 2 (Mode = 2)",
     },
 });
 
@@ -1088,7 +1101,7 @@ stddev.__documentation = JSON.stringify({
     name: "stddev",
     argc: 1,
     argnames: ["cell names"],
-    doc: "Calculates the standard deviation of the numeric values in the given range of cells",
+    doc: "Calculates the standard deviation (square root of variance) of the numbers or cell values in `numbers or cell names`",
     examples: {
         "stddev(R`A0:C3`)":
             "Calculate the standard deviation of the values in A0:C3, [Click to view](spreadsheet://example/variance#simple)",
