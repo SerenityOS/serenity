@@ -71,11 +71,4 @@ bool BochsGraphicsAdapter::vga_compatible() const
     return m_is_vga_capable;
 }
 
-ErrorOr<ByteBuffer> BochsGraphicsAdapter::get_edid(size_t output_port_index) const
-{
-    if (output_port_index != 0)
-        return Error::from_errno(ENODEV);
-    return m_display_connector->get_edid();
-}
-
 }

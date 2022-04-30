@@ -24,17 +24,6 @@ protected:
 
     VGACompatibleAdapter() = default;
 
-    // ^GenericGraphicsAdapter
-    virtual bool modesetting_capable() const override { VERIFY_NOT_REACHED(); }
-    virtual bool double_framebuffering_capable() const override { VERIFY_NOT_REACHED(); }
-    virtual bool framebuffer_devices_initialized() const override { return false; }
-    virtual void initialize_framebuffer_devices() override { }
-    virtual void enable_consoles() override { }
-    virtual void disable_consoles() override { }
-    virtual bool try_to_set_resolution(size_t, size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    virtual bool set_y_offset(size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    ErrorOr<ByteBuffer> get_edid(size_t) const override { return Error::from_errno(ENOTSUP); }
-
     RefPtr<GenericDisplayConnector> m_generic_display_connector;
 };
 }

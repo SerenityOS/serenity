@@ -59,17 +59,6 @@ private:
     VirtIOGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<Memory::Region> scratch_space_region);
 
     ErrorOr<void> initialize_adapter();
-    // ^GenericGraphicsAdapter
-    // FIXME: Remove all of these methods when we get rid of the FramebufferDevice class.
-    virtual ErrorOr<ByteBuffer> get_edid(size_t) const override { VERIFY_NOT_REACHED(); }
-    virtual bool try_to_set_resolution(size_t, size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    virtual bool set_y_offset(size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    virtual void initialize_framebuffer_devices() override { }
-    virtual void enable_consoles() override { }
-    virtual void disable_consoles() override { }
-    virtual bool framebuffer_devices_initialized() const override { return false; }
-    virtual bool modesetting_capable() const override { return true; }
-    virtual bool double_framebuffering_capable() const override { return true; }
 
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;

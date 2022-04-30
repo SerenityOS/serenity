@@ -85,22 +85,12 @@ void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x
 
 void GraphicsManagement::deactivate_graphical_mode()
 {
-    // FIXME: Remove this once we don't support Framebuffer devices anymore.
-    for (auto& graphics_device : m_graphics_devices) {
-        graphics_device.enable_consoles();
-    }
-
     for (auto& connector : m_display_connector_nodes) {
         connector.set_display_mode({}, DisplayConnector::DisplayMode::Console);
     }
 }
 void GraphicsManagement::activate_graphical_mode()
 {
-    // FIXME: Remove this once we don't support Framebuffer devices anymore.
-    for (auto& graphics_device : m_graphics_devices) {
-        graphics_device.disable_consoles();
-    }
-
     for (auto& connector : m_display_connector_nodes) {
         connector.set_display_mode({}, DisplayConnector::DisplayMode::Graphical);
     }
@@ -134,7 +124,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_
     dmesgln("Graphics: Using a ISA VGA compatible generic adapter");
     auto adapter = ISAVGAAdapter::initialize();
     m_graphics_devices.append(*adapter);
-    adapter->enable_consoles();
     m_vga_adapter = adapter;
     return true;
 }
@@ -142,11 +131,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
-        m_graphics_devices.append(graphics_device);
-        graphics_device.enable_consoles();
-        graphics_device.initialize_framebuffer_devices();
-    };
     RefPtr<GenericGraphicsAdapter> adapter;
 
     auto create_bootloader_framebuffer_device = [&]() {
@@ -210,7 +194,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 
     if (!adapter)
         return false;
-    add_and_configure_adapter(*adapter);
+    m_graphics_devices.append(*adapter);
 
     // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
