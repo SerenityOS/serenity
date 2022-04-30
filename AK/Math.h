@@ -265,7 +265,7 @@ constexpr T tan(T angle)
     CONSTEXPR_STATE(tan, angle);
 
 #if ARCH(I386) || ARCH(X86_64)
-    double ret, one;
+    T ret, one;
     asm(
         "fptan"
         : "=t"(one), "=u"(ret)
@@ -285,10 +285,10 @@ constexpr T atan(T value)
 #if ARCH(I386) || ARCH(X86_64)
     T ret;
     asm(
-        "fld1\n"
         "fpatan\n"
         : "=t"(ret)
-        : "0"(value));
+        : "0"(1.L), "u"(value)
+        : "st(1)");
     return ret;
 #else
     return __builtin_atan(value);
@@ -370,14 +370,14 @@ constexpr T log(T x)
     CONSTEXPR_STATE(log, x);
 
 #if ARCH(I386) || ARCH(X86_64)
-    T ret;
+    // FIXME: GCC will properly replace the ln2 with a `fldln2` instruction
+    //        Clang does not.
     asm(
-        "fldln2\n"
-        "fxch %%st(1)\n"
         "fyl2x\n"
-        : "=t"(ret)
-        : "0"(x));
-    return ret;
+        : "+t"(x)
+        : "u"(0.693147180559945309417232121458176568L) // ln(2)
+        : "st(1)");
+    return x;
 #else
     return __builtin_log(x);
 #endif
@@ -389,14 +389,12 @@ constexpr T log2(T x)
     CONSTEXPR_STATE(log2, x);
 
 #if ARCH(I386) || ARCH(X86_64)
-    T ret;
     asm(
-        "fld1\n"
-        "fxch %%st(1)\n"
-        "fyl2x\n"
-        : "=t"(ret)
-        : "0"(x));
-    return ret;
+        "fyl2x\n "
+        : "+t"(x)
+        : "u"(1.L)
+        : "st(1)");
+    return x;
 #else
     return __builtin_log2(x);
 #endif
@@ -408,14 +406,14 @@ constexpr T log10(T x)
     CONSTEXPR_STATE(log10, x);
 
 #if ARCH(I386) || ARCH(X86_64)
-    T ret;
+    // FIXME: GCC will properly replace the lg2 with a `fldlg2` instruction
+    //        Clang does not.
     asm(
-        "fldlg2\n"
-        "fxch %%st(1)\n"
         "fyl2x\n"
-        : "=t"(ret)
-        : "0"(x));
-    return ret;
+        : "+t"(x)
+        : "u"(0.301029995663981195213L) // log_10(2)
+        : "st(1)");
+    return x;
 #else
     return __builtin_log10(x);
 #endif
@@ -427,8 +425,8 @@ constexpr T exp(T exponent)
     CONSTEXPR_STATE(exp, exponent);
 
 #if ARCH(I386) || ARCH(X86_64)
-    T res;
-    asm("fldl2e\n"
+    asm(
+        "fldl2e\n"
         "fmulp\n"
         "fld1\n"
         "fld %%st(1)\n"
@@ -437,9 +435,8 @@ constexpr T exp(T exponent)
         "faddp\n"
         "fscale\n"
         "fstp %%st(1)"
-        : "=t"(res)
-        : "0"(exponent));
-    return res;
+        : "+t"(exponent)::"st(1)", "st(2)");
+    return exponent;
 #else
     return __builtin_exp(exponent);
 #endif
@@ -451,17 +448,16 @@ constexpr T exp2(T exponent)
     CONSTEXPR_STATE(exp2, exponent);
 
 #if ARCH(I386) || ARCH(X86_64)
-    T res;
-    asm("fld1\n"
+    asm(
+        "fld1\n"
         "fld %%st(1)\n"
         "fprem\n"
         "f2xm1\n"
         "faddp\n"
         "fscale\n"
         "fstp %%st(1)"
-        : "=t"(res)
-        : "0"(exponent));
-    return res;
+        : "+t"(exponent)::"st(1)", "st(2)");
+    return exponent;
 #else
     return __builtin_exp2(exponent);
 #endif
@@ -540,7 +536,7 @@ template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
     CONSTEXPR_STATE(pow, x, y);
-    // fixme I am naive
+    // FIXME: I am naive
     if (__builtin_isnan(y))
         return y;
     if (y == 0)
@@ -558,7 +554,8 @@ constexpr T pow(T x, T y)
             result = 1.0l / result;
         return result;
     }
-
+    // FIXME: This could/should use inline assembly aswell, to avoid one
+    //        multiplication.
     return exp2<T>(y * log2<T>(x));
 }
 
