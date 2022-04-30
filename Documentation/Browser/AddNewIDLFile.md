@@ -28,7 +28,7 @@ interface CSSRule {
     - `#include <LibWeb/Bindings/HTMLDetailsElementPrototype.h>` to the includes list.
     - `ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)      \` to the macro at the bottom.
 
-4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/CMakeLists.txt`](../../Userland/Libraries/LibWeb/CMakeLists.txt)
+4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
 
 5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
     - `HTMLDetailsElement` in its namespace.
