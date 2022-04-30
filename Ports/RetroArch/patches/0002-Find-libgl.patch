@@ -1,0 +1,13 @@
+diff --git a/qb/config.libs.sh b/qb/config.libs.sh
+index 19cd2a66e2..672fb02f7b 100644
+--- a/qb/config.libs.sh
++++ b/qb/config.libs.sh
+@@ -402,7 +402,7 @@ if [ "$HAVE_OPENGL" != 'no' ] && [ "$HAVE_OPENGLES" != 'yes' ]; then
+       check_lib '' OPENGL -lopengl32
+    else
+       check_header '' OPENGL "GL/gl.h"
+-      check_lib '' OPENGL -lGL
++      check_lib '' OPENGL -lgl
+    fi
+ 
+    if [ "$HAVE_OPENGL" = 'yes' ]; then

@@ -1,0 +1,198 @@
+diff --git a/retroarch.cfg b/retroarch.cfg
+index a96332bac8..088e883d4d 100644
+--- a/retroarch.cfg
++++ b/retroarch.cfg
+@@ -41,22 +41,22 @@
+ # Path to content history file.
+ # RetroArch keeps track of all content loaded in the menu and from CLI directly for convenient quick loading.
+ # A default path will be assigned if not set.
+-# content_history_path =
++content_history_path = "~/.config/retroarch/content_history.lpl"
+ 
+ # Path to music content history file (optional).
+ # RetroArch keeps track of all music content loaded in the menu and from CLI directly for convenient quick loading.
+ # A default path will be assigned if not set.
+-# content_music_history_path =
++content_music_history_path = "~/.config/retroarch/content_music_history.lpl"
+ 
+ # Path to image content history file (optional).
+ # RetroArch keeps track of all image content loaded in the menu and from CLI directly for convenient quick loading.
+ # A default path will be assigned if not set.
+-# content_image_history_path =
++content_image_history_path = "~/.config/retroarch/content_image_history.lpl"
+ 
+ # Path to video content history file (optional).
+ # RetroArch keeps track of all video content loaded in the menu and from CLI directly for convenient quick loading.
+ # A default path will be assigned if not set.
+-# content_video_history_path =
++content_video_history_path = "~/.config/retroarch/content_video_history.lpl"
+ 
+ # Number of entries that will be kept in content history file.
+ # content_history_size = 200
+@@ -66,7 +66,7 @@
+ # content_directory =
+ 
+ # Sets start directory for menu config browser.
+-# rgui_config_directory =
++rgui_config_directory = "~/.config/retroarch/config"
+ 
+ # Show startup screen in menu.
+ # Is automatically set to false when seen for the first time.
+@@ -89,7 +89,7 @@
+ # input_joypad_driver =
+ 
+ # Video driver to use. "gl", "xvideo", "sdl", "d3d"
+-# video_driver = "gl"
++video_driver = "sdl2"
+ 
+ # Which context implementation to use.
+ # Possible ones for desktop are: glx, x-egl, kms-egl, sdl-gl, wgl.
+@@ -97,7 +97,7 @@
+ # video_context_driver =
+ 
+ # Audio driver backend. Depending on configuration possible candidates are: alsa, pulse, oss, jack, rsound, roar, openal, sdl, xaudio.
+-# audio_driver =
++audio_driver = "sdl2"
+ 
+ # Audio resampler driver backend. Which audio resampler to use.
+ # Default will use "sinc".
+@@ -180,7 +180,7 @@
+ # video_disable_composition = false
+ 
+ # Video vsync.
+-# video_vsync = true
++video_vsync = false
+ 
+ # Interval at which a Vsync swap is performed.
+ # 1 is normal, 2 is doubled frames, 3 is tripled frames, etc.
+@@ -694,7 +694,7 @@
+ 
+ # If disabled, the libretro core will keep running in the background when we
+ # are in the menu.
+-# menu_pause_libretro = false
++menu_pause_libretro = true
+ 
+ # If disabled, we use separate controls for menu operation.
+ # menu_unified_controls = false
+@@ -812,60 +812,60 @@
+ 
+ # Sets the System/BIOS directory.
+ # Implementations can query for this directory to load BIOSes, system-specific configs, etc.
+-# system_directory =
++system_directory = "~/.config/retroarch/system"
+ 
+ # Save all downloaded files to this directory.
+-# core_assets_directory =
++core_assets_directory = "~/.config/retroarch/downloads"
+ 
+ # Assets directory. This location is queried by default when menu interfaces try to look for
+ # loadable assets, etc.
+-# assets_directory =
++assets_directory = "~/.config/retroarch/assets"
+ 
+ # Dynamic wallpapers directory. The place to store the wallpapers dynamically
+ # loaded by the menu depending on context.
+ # dynamic_wallpapers_directory =
+ 
+ # Thumbnails directory. To store thumbnail files.
+-# thumbnails_directory =
++thumbnails_directory = "~/.config/retroarch/thumbnails"
+ 
+ # File browser directory. Sets start directory for menu file browser.
+-# rgui_browser_directory =
++rgui_browser_directory = "~/.config/retroarch/downloads"
+ 
+ # Core directory for libretro core implementations.
+-# libretro_directory =
++libretro_directory = "/usr/lib/libretro"
+ 
+ # Core info directory for libretro core information.
+-# libretro_info_path =
++libretro_info_path = "~/.config/retroarch/cores"
+ 
+ # Path to content database directory.
+-# content_database_path =
++content_database_path = "~/.config/retroarch/database/rdb"
+ 
+ # Saved queries are stored to this directory.
+-# cursor_directory =
++cursor_directory = "~/.config/retroarch/database/cursors"
+ 
+ # Path to cheat database directory.
+-# cheat_database_path =
++cheat_database_path = "~/.config/retroarch/cheats"
+ 
+ # Defines a directory where CPU-based video filters are kept.
+-# video_filter_dir =
++video_filter_dir = "~/.config/retroarch/filters/video"
+ 
+ # Directory where DSP plugins are kept.
+-# audio_filter_dir =
++audio_filter_dir = "~/.config/retroarch/filters/audio"
+ 
+ # Defines a directory where shaders (Cg, CGP, GLSL) are kept for easy access.
+-# video_shader_dir =
++video_shader_dir = "~/.config/retroarch/shaders"
+ 
+ # Recording output directory. Where recordings are saved.
+-# recording_output_directory =
++recording_output_directory = "~/.config/retroarch/records"
+ 
+ # Recording config directory. Where recording settings are kept.
+-# recording_config_directory =
++recording_config_directory = "~/.config/retroarch/records_config"
+ 
+ # Overlay directory. Where overlays are kept for easy access.
+-# overlay_directory =
++overlay_directory = "~/.config/retroarch/overlay"
+ 
+ # Directory to dump screenshots to.
+-# screenshot_directory =
++screenshot_directory = "~/.config/retroarch/screenshots"
+ 
+ # Directory for joypad autoconfigs.
+ # If a joypad is plugged in, that joypad will be autoconfigured if a config file
+@@ -873,21 +873,21 @@
+ # Input binds which are made explicit (input_playerN_*_btn/axis) will take priority over autoconfigs.
+ # Autoconfigs can be created with retroarch-joyconfig, manually, or with a frontend.
+ # Requires input_autodetect_enable to be enabled.
+-# joypad_autoconfig_dir =
++joypad_autoconfig_dir = "~/.config/retroarch/autoconfig"
+ 
+ # Save all remapped controls to this directory.
+-# input_remapping_directory =
++input_remapping_directory = "~/.config/retroarch/config/remaps"
+ 
+ # Save all playlists/collections to this directory.
+-# playlist_directory =
++playlist_directory = "~/.config/retroarch/playlists"
+ 
+ # Save all save files (*.srm) to this directory. This includes related files like .bsv, .rtc, .psrm, etc ...
+ # This will be overridden by explicit command line options.
+-# savefile_directory =
++savefile_directory = "~/.config/retroarch/saves"
+ 
+ # Save all save states (*.state) to this directory.
+ # This will be overridden by explicit command line options.
+-# savestate_directory =
++savestate_directory = "~/.config/retroarch/states"
+ 
+ # If set to a directory, content which is temporarily extracted
+ # will be extracted to this directory.
+@@ -953,7 +953,7 @@
+ # rewind_granularity = 1
+ 
+ # Pause gameplay when window focus is lost.
+-# pause_nonactive = true
++pause_nonactive = false
+ 
+ # Autosaves the non-volatile SRAM at a regular interval. This is disabled by default unless set otherwise.
+ # The interval is measured in seconds. A value of 0 disables autosave.
+@@ -1015,3 +1015,7 @@
+ # needs to be installed (https://github.com/FeralInteractive/gamemode).
+ #
+ # gamemode_enable = true
++
++content_favorites_path = "~/.config/retroarch/content_favorites.lpl"
++log_dir = "~/.config/retroarch/logs"
++video_layout_directory = "~/.config/retroarch/layouts"

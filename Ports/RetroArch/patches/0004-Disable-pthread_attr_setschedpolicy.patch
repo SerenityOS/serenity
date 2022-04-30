@@ -1,0 +1,13 @@
+diff --git a/libretro-common/rthreads/rthreads.c b/libretro-common/rthreads/rthreads.c
+index 30ec6ffb56..08c8a96460 100644
+--- a/libretro-common/rthreads/rthreads.c
++++ b/libretro-common/rthreads/rthreads.c
+@@ -161,7 +161,7 @@ sthread_t *sthread_create(void (*thread_func)(void*), void *userdata)
+ }
+ 
+ /* TODO/FIXME - this needs to be implemented for Switch/3DS */
+-#if !defined(SWITCH) && !defined(USE_WIN32_THREADS) && !defined(_3DS) && !defined(GEKKO) && !defined(__HAIKU__) && !defined(EMSCRIPTEN)
++#if !defined(SWITCH) && !defined(USE_WIN32_THREADS) && !defined(_3DS) && !defined(GEKKO) && !defined(__HAIKU__) && !defined(EMSCRIPTEN) && !defined(__serenity__)
+ #define HAVE_THREAD_ATTR
+ #endif
+ 
