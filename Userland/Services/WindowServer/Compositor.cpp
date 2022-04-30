@@ -629,7 +629,9 @@ void Compositor::flush(Screen& screen)
             bounding_flash = bounding_flash.united(rect);
         }
         if (!bounding_flash.is_empty()) {
-            if (device_can_flush_buffers) {
+            if (screen.can_device_flush_entire_buffer()) {
+                screen.flush_display_entire_framebuffer();
+            } else if (device_can_flush_buffers) {
                 // If the device needs a flush we need to let it know that we
                 // modified the front buffer!
                 bounding_flash.translate_by(-screen_rect.location());

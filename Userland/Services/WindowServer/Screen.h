@@ -168,9 +168,11 @@ public:
     Gfx::IntRect rect() const { return m_virtual_rect; }
 
     bool can_device_flush_buffers() const { return m_backend->m_can_device_flush_buffers; }
+    bool can_device_flush_entire_buffer() const { return m_backend->m_can_device_flush_entire_framebuffer; }
     void queue_flush_display_rect(Gfx::IntRect const& rect);
     void flush_display(int buffer_index);
     void flush_display_front_buffer(int front_buffer_index, Gfx::IntRect&);
+    void flush_display_entire_framebuffer();
 
     CompositorScreenData& compositor_screen_data() { return *m_compositor_screen_data; }
 
