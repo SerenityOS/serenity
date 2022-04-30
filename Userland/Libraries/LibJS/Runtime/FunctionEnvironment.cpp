@@ -11,8 +11,8 @@
 
 namespace JS {
 
-FunctionEnvironment::FunctionEnvironment(Environment* parent_scope)
-    : DeclarativeEnvironment(parent_scope)
+FunctionEnvironment::FunctionEnvironment(Environment* parent_environment)
+    : DeclarativeEnvironment(parent_environment)
 {
 }
 

@@ -292,22 +292,22 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     auto has_own_name = !name().is_empty();
 
     auto const& used_name = has_own_name ? name() : given_name;
-    auto* scope = interpreter.lexical_environment();
+    auto* environment = interpreter.lexical_environment();
     if (has_own_name) {
-        VERIFY(scope);
-        scope = new_declarative_environment(*scope);
-        MUST(scope->create_immutable_binding(global_object, name(), false));
+        VERIFY(environment);
+        environment = new_declarative_environment(*environment);
+        MUST(environment->create_immutable_binding(global_object, name(), false));
     }
 
-    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
+    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, source_text(), body(), parameters(), function_length(), scope, private_scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
 
     if (has_own_name)
-        MUST(scope->initialize_binding(global_object, name(), closure));
+        MUST(environment->initialize_binding(global_object, name(), closure));
 
     return closure;
 }
@@ -1667,14 +1667,14 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 1. Let lex be the running execution context's LexicalEnvironment.
     auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
-    // 2. Let privateScope be the running execution context's PrivateEnvironment.
-    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
+    // 2. Let privateEnv be the running execution context's PrivateEnvironment.
+    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
 
     // 3. Let sourceText be the empty sequence of Unicode code points.
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
-    // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateScope).
+    // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto* body_function = ECMAScriptFunctionObject::create(global_object, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_scope, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto* body_function = ECMAScriptFunctionObject::create(global_object, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -1756,7 +1756,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto& vm = interpreter.vm();
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
-    auto* class_scope = new_declarative_environment(*environment);
+    auto* class_environment = new_declarative_environment(*environment);
 
     // We might not set the lexical environment but we always want to restore it eventually.
     ArmedScopeGuard restore_environment = [&] {
@@ -1764,7 +1764,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     };
 
     if (!binding_name.is_null())
-        MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
+        MUST(class_environment->create_immutable_binding(global_object, binding_name, true));
 
     auto* outer_private_environment = vm.running_execution_context().private_environment;
     auto* class_private_environment = new_private_environment(vm, outer_private_environment);
@@ -1780,7 +1780,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto* constructor_parent = vm.current_realm()->global_object().function_prototype();
 
     if (!m_super_class.is_null()) {
-        vm.running_execution_context().lexical_environment = class_scope;
+        vm.running_execution_context().lexical_environment = class_environment;
 
         // Note: Since our execute does evaluation and GetValue in once we must check for a valid reference first
 
@@ -1815,7 +1815,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto* prototype = Object::create(global_object, proto_parent);
     VERIFY(prototype);
 
-    vm.running_execution_context().lexical_environment = class_scope;
+    vm.running_execution_context().lexical_environment = class_environment;
     vm.running_execution_context().private_environment = class_private_environment;
     ScopeGuard restore_private_environment = [&] {
         vm.running_execution_context().private_environment = outer_private_environment;
@@ -1889,7 +1889,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     restore_environment.disarm();
 
     if (!binding_name.is_null())
-        MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
+        MUST(class_environment->initialize_binding(global_object, binding_name, class_constructor));
 
     for (auto& field : instance_fields)
         class_constructor->add_field(field);
