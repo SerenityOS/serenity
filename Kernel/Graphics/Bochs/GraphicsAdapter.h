@@ -28,25 +28,10 @@ public:
     static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
 
-    // FIXME: Remove all of these methods when we get rid of the FramebufferDevice class.
-    virtual bool framebuffer_devices_initialized() const override { return false; }
-    virtual bool modesetting_capable() const override { return true; }
-    virtual bool double_framebuffering_capable() const override { return true; }
-
     virtual bool vga_compatible() const override;
 
 private:
-    ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
-
     ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
-
-    // ^GenericGraphicsAdapter
-    // FIXME: Remove all of these methods when we get rid of the FramebufferDevice class.
-    virtual bool try_to_set_resolution(size_t, size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    virtual bool set_y_offset(size_t, size_t) override { VERIFY_NOT_REACHED(); }
-    virtual void initialize_framebuffer_devices() override { }
-    virtual void enable_consoles() override { }
-    virtual void disable_consoles() override { }
 
     explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
