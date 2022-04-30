@@ -96,25 +96,23 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     // checks performed inside of it that would have mattered to us:
 
     // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
-    // 4. If current.[[Configurable]] is false, then
+    // 5. If current.[[Configurable]] is false, then
     // a. If Desc.[[Configurable]] is present and its value is true, return false.
     if (property_descriptor.configurable.has_value() && *property_descriptor.configurable)
         return false;
     // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
     if (property_descriptor.enumerable.has_value() && *property_descriptor.enumerable)
         return false;
-    // 6. Else if ! SameValue(! IsDataDescriptor(current), ! IsDataDescriptor(Desc)) is false, then
-    if (property_descriptor.is_accessor_descriptor()) {
-        // a. If current.[[Configurable]] is false, return false.
+    // c. If ! IsGenericDescriptor(Desc) is false and ! SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
+    if (!property_descriptor.is_generic_descriptor() && property_descriptor.is_accessor_descriptor())
         return false;
-    }
-    // 7. Else if IsDataDescriptor(current) and IsDataDescriptor(Desc) are both true, then
-    // a. If current.[[Configurable]] is false and current.[[Writable]] is false, then
+    // NOTE: Step d. doesn't apply here.
+    // e. Else if current.[[Writable]] is false, then
     if (!m_length_writable) {
         // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
         if (property_descriptor.writable.has_value() && *property_descriptor.writable)
             return false;
-        // ii. If Desc.[[Value]] is present and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+        // ii. If Desc.[[Value]] is present and ! SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
         if (new_length != indexed_properties().array_like_size())
             return false;
     }
