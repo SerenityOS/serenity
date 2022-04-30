@@ -13,7 +13,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace WebView {
 
 class DOMTreeModel final : public GUI::Model {
 public:

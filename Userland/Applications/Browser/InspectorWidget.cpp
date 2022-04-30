@@ -15,8 +15,8 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/StylePropertiesModel.h>
+#include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
@@ -29,7 +29,7 @@ void InspectorWidget::set_selection(Selection selection)
         return;
     }
 
-    auto* model = verify_cast<Web::DOMTreeModel>(m_dom_tree_view->model());
+    auto* model = verify_cast<WebView::DOMTreeModel>(m_dom_tree_view->model());
     auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
     if (!index.is_valid()) {
         dbgln("InspectorWidget told to inspect non-existent node: {}", selection.to_string());
@@ -131,7 +131,7 @@ void InspectorWidget::set_dom_json(String json)
         return;
 
     m_dom_json = json;
-    m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view(), *m_dom_tree_view));
+    m_dom_tree_view->set_model(WebView::DOMTreeModel::create(m_dom_json->view(), *m_dom_tree_view));
 
     if (m_pending_selection.has_value()) {
         set_selection(m_pending_selection.release_value());
