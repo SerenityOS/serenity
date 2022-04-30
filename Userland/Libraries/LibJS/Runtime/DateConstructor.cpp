@@ -59,6 +59,9 @@ static Value parse_simplified_iso8601(GlobalObject& global_object, String const&
             Optional<int> absolute_year;
             if (!lex_n_digits(6, absolute_year))
                 return false;
+            // The representation of the year 0 as -000000 is invalid.
+            if (absolute_year.value() == 0)
+                return false;
             year = -absolute_year.value();
             return true;
         }
