@@ -284,11 +284,11 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
 
     // 5. If current.[[Configurable]] is false, then
     if (!*current->configurable) {
-        // a. If Desc.[[Configurable]] is present and its value is true, return false.
+        // a. If Desc has a [[Configurable]] field and Desc.[[Configurable]] is true, return false.
         if (descriptor.configurable.has_value() && *descriptor.configurable)
             return false;
 
-        // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+        // b. If Desc has an [[Enumerable]] field and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
         if (descriptor.enumerable.has_value() && *descriptor.enumerable != *current->enumerable)
             return false;
 
@@ -298,22 +298,22 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
 
         // d. If ! IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
-            // i. If Desc.[[Get]] is present and ! SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
+            // i. If Desc has a [[Get]] field and ! SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
             if (descriptor.get.has_value() && *descriptor.get != *current->get)
                 return false;
 
-            // ii. If Desc.[[Set]] is present and ! SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
+            // ii. If Desc has a [[Set]] field and ! SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
             if (descriptor.set.has_value() && *descriptor.set != *current->set)
                 return false;
         }
         // e. Else if current.[[Writable]] is false, then
         // FIXME: `current` is not guaranteed to be a data descriptor at this point and may not have a [[Writable]] field (see https://github.com/tc39/ecma262/issues/2761)
         else if (current->is_data_descriptor() && !*current->writable) {
-            // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
+            // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is true, return false.
             if (descriptor.writable.has_value() && *descriptor.writable)
                 return false;
 
-            // ii. If Desc.[[Value]] is present and ! SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+            // ii. If Desc has a [[Value]] field and ! SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
             if (descriptor.value.has_value() && (*descriptor.value != *current->value))
                 return false;
         }

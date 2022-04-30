@@ -56,7 +56,7 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     auto& global_object = this->global_object();
     auto& vm = this->vm();
 
-    // 1. If Desc.[[Value]] is absent, then
+    // 1. If Desc does not have a [[Value]] field, then
     // a. Return OrdinaryDefineOwnProperty(A, "length", Desc).
     // 2. Let newLenDesc be a copy of Desc.
     // NOTE: Handled by step 16
@@ -82,7 +82,7 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     // 12. If oldLenDesc.[[Writable]] is false, return false.
     // NOTE: Handled by step 16
 
-    // 13. If newLenDesc.[[Writable]] is absent or is true, let newWritable be true.
+    // 13. If newLenDesc does not have a [[Writable]] field or newLenDesc.[[Writable]] true, let newWritable be true.
     // 14. Else,
     // a. NOTE: Setting the [[Writable]] attribute to false is deferred in case any elements cannot be deleted.
     // b. Let newWritable be false.
@@ -97,10 +97,10 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 
     // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
     // 5. If current.[[Configurable]] is false, then
-    // a. If Desc.[[Configurable]] is present and its value is true, return false.
+    // a. If Desc has a [[Configurable]] field and Desc.[[Configurable]] is true, return false.
     if (property_descriptor.configurable.has_value() && *property_descriptor.configurable)
         return false;
-    // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+    // b. If Desc has an [[Enumerable]] field and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
     if (property_descriptor.enumerable.has_value() && *property_descriptor.enumerable)
         return false;
     // c. If ! IsGenericDescriptor(Desc) is false and ! SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
@@ -109,10 +109,10 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     // NOTE: Step d. doesn't apply here.
     // e. Else if current.[[Writable]] is false, then
     if (!m_length_writable) {
-        // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
+        // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is true, return false.
         if (property_descriptor.writable.has_value() && *property_descriptor.writable)
             return false;
-        // ii. If Desc.[[Value]] is present and ! SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+        // ii. If Desc has a [[Value]] field and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
         if (new_length != indexed_properties().array_like_size())
             return false;
     }
