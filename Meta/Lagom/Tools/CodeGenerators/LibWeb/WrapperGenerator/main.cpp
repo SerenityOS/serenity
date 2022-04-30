@@ -83,21 +83,21 @@ int main(int argc, char** argv)
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
 
-    auto interface = IDL::Parser(path, data, import_base_path).parse();
+    auto& interface = IDL::Parser(path, data, import_base_path).parse();
 
     if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebSockets", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
-        builder.append(interface->name);
-        interface->fully_qualified_name = builder.to_string();
+        builder.append(interface.name);
+        interface.fully_qualified_name = builder.to_string();
     } else {
-        interface->fully_qualified_name = interface->name;
+        interface.fully_qualified_name = interface.name;
     }
 
     if constexpr (WRAPPER_GENERATOR_DEBUG) {
         dbgln("Attributes:");
-        for (auto& attribute : interface->attributes) {
+        for (auto& attribute : interface.attributes) {
             dbgln("  {}{}{} {}",
                 attribute.readonly ? "readonly " : "",
                 attribute.type->name,
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
         }
 
         dbgln("Functions:");
-        for (auto& function : interface->functions) {
+        for (auto& function : interface.functions) {
             dbgln("  {}{} {}",
                 function.return_type->name,
                 function.return_type->nullable ? "?" : "",
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
         }
 
         dbgln("Static Functions:");
-        for (auto& function : interface->static_functions) {
+        for (auto& function : interface.static_functions) {
             dbgln("  static {}{} {}",
                 function.return_type->name,
                 function.return_type->nullable ? "?" : "",
@@ -135,34 +135,34 @@ int main(int argc, char** argv)
     }
 
     if (header_mode)
-        IDL::generate_header(*interface);
+        IDL::generate_header(interface);
 
     if (implementation_mode)
-        IDL::generate_implementation(*interface);
+        IDL::generate_implementation(interface);
 
     if (constructor_header_mode)
-        IDL::generate_constructor_header(*interface);
+        IDL::generate_constructor_header(interface);
 
     if (constructor_implementation_mode)
-        IDL::generate_constructor_implementation(*interface);
+        IDL::generate_constructor_implementation(interface);
 
     if (prototype_header_mode)
-        IDL::generate_prototype_header(*interface);
+        IDL::generate_prototype_header(interface);
 
     if (prototype_implementation_mode)
-        IDL::generate_prototype_implementation(*interface);
+        IDL::generate_prototype_implementation(interface);
 
     if (iterator_header_mode)
-        IDL::generate_iterator_header(*interface);
+        IDL::generate_iterator_header(interface);
 
     if (iterator_implementation_mode)
-        IDL::generate_iterator_implementation(*interface);
+        IDL::generate_iterator_implementation(interface);
 
     if (iterator_prototype_header_mode)
-        IDL::generate_iterator_prototype_header(*interface);
+        IDL::generate_iterator_prototype_header(interface);
 
     if (iterator_prototype_implementation_mode)
-        IDL::generate_iterator_prototype_implementation(*interface);
+        IDL::generate_iterator_prototype_implementation(interface);
 
     return 0;
 }
