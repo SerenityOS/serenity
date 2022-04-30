@@ -8,6 +8,11 @@ files="https://gitlab.gnome.org/GNOME/glib/-/archive/${version}/glib-${version}.
 auth_type=sha256
 
 configure() {
+    # TODO: Figure out why GCC doesn't autodetect that libgcc_s is needed.
+    if [ "${SERENITY_TOOLCHAIN}" = "GNU" ]; then
+        export LDFLAGS="-lgcc_s"
+    fi
+
     run meson _build "${configopts[@]}"
 }
 
