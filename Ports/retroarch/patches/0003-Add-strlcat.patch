@@ -1,0 +1,15 @@
+diff --git a/Makefile.common b/Makefile.common
+index 580beba7eb..149d761a28 100644
+--- a/Makefile.common
++++ b/Makefile.common
+@@ -186,6 +186,10 @@ ifneq ($(findstring Linux,$(OS)),)
+    HAVE_UNIX = 1
+ endif
+ 
++ifneq ($(findstring SerenityOS,$(OS)),)
++	OBJ += $(LIBRETRO_COMM_DIR)/compat/compat_strl.o
++endif
++
+ ifeq ($(HAVE_UNIX), 1)
+    OBJ += frontend/drivers/platform_unix.o
+ 
