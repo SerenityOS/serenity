@@ -75,8 +75,7 @@ static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 
 static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
 {
-    NonnullRefPtr decoder = image_decoder_client();
-    auto image = decoder->decode_image(data);
+    auto image = ImageDecoding::Decoder::the().decode_image(data);
     if (!image.has_value() || image->frames.is_empty())
         return false;
     auto const& frame = image->frames[0];
@@ -209,7 +208,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                 if (data.is_empty())
                     return;
                 RefPtr<Gfx::Bitmap> favicon_bitmap;
-                auto decoded_image = image_decoder_client().decode_image(data);
+                auto decoded_image = ImageDecoding::Decoder::the().decode_image(data);
                 if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
                     dbgln("Could not decode favicon {}", favicon_url);
                 } else {

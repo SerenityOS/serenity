@@ -1,5 +1,6 @@
 set(SOURCES
     DOMTreeModel.cpp
+    ImageDecoderClientAdapter.cpp
     OutOfProcessWebView.cpp
     StylePropertiesModel.cpp
     WebContentClient.cpp
@@ -13,6 +14,6 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWebView webview)
-target_link_libraries(LibWebView LibGfx LibGUI LibIPC LibWeb)
+target_link_libraries(LibWebView LibGfx LibGUI LibImageDecoderClient LibIPC LibWeb)
 
 add_subdirectory(DumpLayoutTree)
