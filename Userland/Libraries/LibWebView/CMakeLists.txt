@@ -4,6 +4,7 @@ set(SOURCES
     OutOfProcessWebView.cpp
     StylePropertiesModel.cpp
     WebContentClient.cpp
+    WebSocketClientAdapter.cpp
 )
 
 set(GENERATED_SOURCES
@@ -14,6 +15,6 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWebView webview)
-target_link_libraries(LibWebView LibGfx LibGUI LibImageDecoderClient LibIPC LibWeb)
+target_link_libraries(LibWebView LibGfx LibGUI LibImageDecoderClient LibIPC LibProtocol LibWeb)
 
 add_subdirectory(DumpLayoutTree)
