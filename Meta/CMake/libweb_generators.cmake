@@ -1,8 +1,16 @@
 function (generate_css_implementation)
 
-    set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
-    set(LIBWEB_OUTPUT_FOLDER "")
-    set(LIBWEB_META_PREFIX "")
+    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibWeb")
+        # Serenity build
+        SET(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
+        SET(LIBWEB_OUTPUT_FOLDER "")
+        SET(LIBWEB_META_PREFIX "")
+    else()
+        # Lagom Build
+        SET(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb")
+        SET(LIBWEB_OUTPUT_FOLDER "LibWeb/")
+        SET(LIBWEB_META_PREFIX "Lagom")
+    endif()
 
     invoke_generator(
         "Enums.cpp"
@@ -84,9 +92,17 @@ endfunction()
 
 function (generate_js_wrappers target)
 
-    set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
-    set(LIBWEB_OUTPUT_FOLDER "")
-    set(LIBWEB_META_PREFIX "")
+    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibWeb")
+        # Serenity build
+        SET(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
+        SET(LIBWEB_OUTPUT_FOLDER "")
+        SET(LIBWEB_META_PREFIX "")
+    else()
+        # Lagom Build
+        SET(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb")
+        SET(LIBWEB_OUTPUT_FOLDER "LibWeb/")
+        SET(LIBWEB_META_PREFIX "Lagom")
+    endif()
 
     function(libweb_js_wrapper class)
         cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")

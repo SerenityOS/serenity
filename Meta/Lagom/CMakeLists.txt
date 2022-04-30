@@ -478,6 +478,32 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWASM_SOURCES}
     )
 
+    # Web
+    include(libweb_generators)
+    file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
+    file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
+    file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
+    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
+    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
+
+    generate_css_implementation()
+
+    set(LIBWEB_GENERATED_SOURCES
+        LibWeb/CSS/DefaultStyleSheetSource.cpp
+        LibWeb/CSS/Enums.cpp
+        LibWeb/CSS/MediaFeatureID.cpp
+        LibWeb/CSS/PropertyID.cpp
+        LibWeb/CSS/QuirksModeStyleSheetSource.cpp
+        LibWeb/CSS/TransformFunctions.cpp
+        LibWeb/CSS/ValueID.cpp
+    )
+
+    lagom_lib(Web web
+        SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
+        LIBS LagomMarkdown LagomGemini LagomGfx LagomJS LagomTextCodec LagomWasm LagomXML
+    )
+    generate_js_wrappers(LagomWeb)
+
     # WebSocket
     file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
     file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
