@@ -1,8 +1,8 @@
 diff --git a/sshd.c b/sshd.c
-index 6f8f11a..cdbc003 100644
+index 0ee65b5..e2f84de 100644
 --- a/sshd.c
 +++ b/sshd.c
-@@ -461,12 +461,9 @@ privsep_preauth_child(void)
+@@ -452,12 +452,9 @@ privsep_preauth_child(void)
  
  	/* Demote the child */
  	if (privsep_chroot) {
@@ -18,7 +18,7 @@ index 6f8f11a..cdbc003 100644
  
  		/* Drop our privileges */
  		debug3("privsep user:group %u:%u", (u_int)privsep_pw->pw_uid,
-@@ -1899,25 +1896,6 @@ main(int ac, char **av)
+@@ -1952,25 +1949,6 @@ main(int ac, char **av)
  		    sshkey_type(key));
  	}
  
