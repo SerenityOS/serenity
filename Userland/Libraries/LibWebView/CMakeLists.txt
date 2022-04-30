@@ -1,4 +1,5 @@
 set(SOURCES
+    DOMTreeModel.cpp
     OutOfProcessWebView.cpp
     WebContentClient.cpp
 )

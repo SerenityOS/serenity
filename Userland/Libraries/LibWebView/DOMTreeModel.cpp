@@ -12,7 +12,7 @@
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 
-namespace Web {
+namespace WebView {
 
 DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
     : m_tree_view(tree_view)
@@ -214,7 +214,7 @@ GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id, Optional<Web::CSS::Sel
         }
     }
 
-    dbgln("Didn't find index for node {}, pseudo-element {}!", node_id, pseudo_element.has_value() ? CSS::pseudo_element_name(pseudo_element.value()) : "NONE");
+    dbgln("Didn't find index for node {}, pseudo-element {}!", node_id, pseudo_element.has_value() ? Web::CSS::pseudo_element_name(pseudo_element.value()) : "NONE");
     return {};
 }
 
