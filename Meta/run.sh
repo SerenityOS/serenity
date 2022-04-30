@@ -56,29 +56,7 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
-if [ -z "$SERENITY_QEMU_BIN" ]; then
-    if command -v wslpath >/dev/null; then
-        # Some Windows systems don't have reg.exe's directory on the PATH by default.
-        PATH=$PATH:/mnt/c/Windows/System32
-        QEMU_INSTALL_DIR=$(reg.exe query 'HKLM\Software\QEMU' /v Install_Dir /t REG_SZ | grep '^    Install_Dir' | sed 's/    / /g' | cut -f4- -d' ')
-        if [ -z "$QEMU_INSTALL_DIR" ]; then
-            if [ "$VIRTUALIZATION_SUPPORT" -eq "0" ]; then
-                die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
-            fi
-        else
-            QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
-            QEMU_BINARY_SUFFIX=".exe"
-        fi
-    fi
-    if [ "$SERENITY_ARCH" = "aarch64" ]; then
-        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-aarch64${QEMU_BINARY_SUFFIX}"
-    elif [ "$SERENITY_ARCH" = "x86_64" ]; then
-        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
-    else
-        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
-    fi
-fi
-
+ "$(dirname "${0}")/qemu-paths.sh"
 
 # For default values, see Kernel/CommandLine.cpp
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
@@ -335,7 +313,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device isa-cirrus-vga
 -device isa-ide
 $SERENITY_BOOT_DRIVE
--device i8042 
+-device i8042
 -device ide-hd,drive=disk
 "
 

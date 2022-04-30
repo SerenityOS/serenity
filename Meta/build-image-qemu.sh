@@ -99,11 +99,15 @@ if [ -f _disk_image ]; then
     fi
 fi
 
+# source qemy-paths.sh for the SERENITY_QEMU_IMG_BIN variable so qemu-img works
+# correctly on windows
+. "$(dirname "${0}")/qemu-paths.sh"
+
 if [ $USE_EXISTING -eq 1 ];  then
     OLD_DISK_SIZE_BYTES=$(wc -c < _disk_image)
     if [ $DISK_SIZE_BYTES -gt "$OLD_DISK_SIZE_BYTES" ]; then
         echo "resizing disk image..."
-        qemu-img resize -f raw _disk_image $DISK_SIZE_BYTES || die "could not resize disk image"
+        "$SERENITY_QEMU_IMG_BIN" resize -f raw _disk_image $DISK_SIZE_BYTES || die "could not resize disk image"
         if ! resize2fs _disk_image; then
             rm -f _disk_image
             USE_EXISTING=0
@@ -115,7 +119,7 @@ fi
 
 if [ $USE_EXISTING -ne 1 ]; then
     printf "setting up disk image... "
-    qemu-img create -q -f raw _disk_image $DISK_SIZE_BYTES || die "could not create disk image"
+    "$SERENITY_QEMU_IMG_BIN" create -q -f raw _disk_image $DISK_SIZE_BYTES || die "could not create disk image"
     chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "could not adjust permissions on disk image"
     echo "done"
 
