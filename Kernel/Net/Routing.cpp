@@ -142,13 +142,21 @@ ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address c
         return ENOMEM;
 
     TRY(routing_table().with([&](auto& table) -> ErrorOr<void> {
-        // TODO: Add support for deleting routing entries
         if (update == UpdateTable::Set) {
             for (auto const& route : table) {
                 if (route == *route_entry)
                     return EEXIST;
             }
             table.append(*route_entry);
+        }
+        if (update == UpdateTable::Delete) {
+            for (auto& route : table) {
+                if (route == *route_entry) {
+                    table.remove(route);
+                    return {};
+                }
+            }
+            return ESRCH;
         }
         return {};
     }));
