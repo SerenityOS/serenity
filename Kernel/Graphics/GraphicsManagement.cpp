@@ -41,16 +41,6 @@ UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
 {
 }
 
-bool GraphicsManagement::framebuffer_devices_use_bootloader_framebuffer() const
-{
-    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::BootloaderOnly;
-}
-
-bool GraphicsManagement::framebuffer_devices_console_only() const
-{
-    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::ConsoleOnly;
-}
-
 void GraphicsManagement::disable_vga_emulation_access_permanently()
 {
     SpinlockLocker locker(m_main_vga_lock);
@@ -154,22 +144,18 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
         m_graphics_devices.append(graphics_device);
-        if (framebuffer_devices_console_only()) {
-            graphics_device.enable_consoles();
-            return;
-        }
+        graphics_device.enable_consoles();
         graphics_device.initialize_framebuffer_devices();
     };
-
     RefPtr<GenericGraphicsAdapter> adapter;
 
     auto create_bootloader_framebuffer_device = [&]() {
         if (multiboot_framebuffer_addr.is_null()) {
             // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
             // is not present, as there is likely never a valid framebuffer at this physical address.
-            dmesgln("Graphics: Bootloader did not set up a framebuffer, ignoring fbdev argument");
+            dmesgln("Graphics: Bootloader did not set up a framebuffer");
         } else if (multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB, ignoring fbdev argument");
+            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB");
         } else {
             dmesgln("Graphics: Using a preset resolution from the bootloader");
             adapter = PCIVGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
@@ -179,9 +165,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
                 multiboot_framebuffer_pitch);
         }
     };
-
-    if (framebuffer_devices_use_bootloader_framebuffer())
-        create_bootloader_framebuffer_device();
 
     if (!adapter) {
         switch (device_identifier.hardware_id().vendor_id) {
@@ -282,15 +265,24 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * be created, so SystemServer will not try to initialize WindowServer.
      */
 
+    auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled)
+        return true;
+
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
+        m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
+            multiboot_framebuffer_addr,
+            multiboot_framebuffer_width,
+            multiboot_framebuffer_height,
+            multiboot_framebuffer_pitch);
+        return true;
+    }
+
     if (PCI::Access::is_disabled()) {
         determine_and_initialize_isa_graphics_device();
         return true;
     }
-
-    if (framebuffer_devices_console_only())
-        dbgln("Forcing non-initialization of framebuffer devices (console only)");
-    else if (framebuffer_devices_use_bootloader_framebuffer())
-        dbgln("Forcing use of framebuffer set up by the bootloader");
 
     MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
@@ -315,15 +307,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return false;
     }
     return true;
-}
-
-bool GraphicsManagement::framebuffer_devices_exist() const
-{
-    for (auto& graphics_device : m_graphics_devices) {
-        if (graphics_device.framebuffer_devices_initialized())
-            return true;
-    }
-    return false;
 }
 
 void GraphicsManagement::set_console(Graphics::Console& console)

@@ -282,14 +282,16 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     return PanicMode::Halt;
 }
 
-UNMAP_AFTER_INIT auto CommandLine::are_framebuffer_devices_enabled() const -> FrameBufferDevices
+UNMAP_AFTER_INIT CommandLine::GraphicsSubsystemMode CommandLine::graphics_subsystem_mode() const
 {
-    auto const fbdev_value = lookup("fbdev"sv).value_or("on"sv);
-    if (fbdev_value == "on"sv)
-        return FrameBufferDevices::Enabled;
-    if (fbdev_value == "bootloader"sv)
-        return FrameBufferDevices::BootloaderOnly;
-    return FrameBufferDevices::ConsoleOnly;
+    auto const graphics_subsystem_mode_value = lookup("graphics_subsystem_mode"sv).value_or("on"sv);
+    if (graphics_subsystem_mode_value == "on"sv)
+        return GraphicsSubsystemMode::Enabled;
+    if (graphics_subsystem_mode_value == "limited"sv)
+        return GraphicsSubsystemMode::Limited;
+    if (graphics_subsystem_mode_value == "off"sv)
+        return GraphicsSubsystemMode::Disabled;
+    PANIC("Invalid graphics_subsystem_mode value: {}", graphics_subsystem_mode_value);
 }
 
 StringView CommandLine::userspace_init() const
