@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/ImageResource.h>
@@ -46,8 +47,7 @@ void ImageResource::decode_if_needed() const
     if (!m_decoded_frames.is_empty())
         return;
 
-    NonnullRefPtr decoder = image_decoder_client();
-    auto image = decoder->decode_image(encoded_data());
+    auto image = ImageDecoding::Decoder::the().decode_image(encoded_data());
 
     if (image.has_value()) {
         m_loop_count = image.value().loop_count;

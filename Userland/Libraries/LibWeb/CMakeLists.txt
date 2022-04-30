@@ -377,7 +377,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm LibXML)
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
 generate_js_wrappers(LibWeb)

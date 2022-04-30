@@ -155,7 +155,7 @@ bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
         return false;
 
     RefPtr<Gfx::Bitmap> favicon_bitmap;
-    auto decoded_image = Web::image_decoder_client().decode_image(resource()->encoded_data());
+    auto decoded_image = Web::ImageDecoding::Decoder::the().decode_image(resource()->encoded_data());
     if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
         dbgln("Could not decode favicon {}", resource()->url());
         return false;
