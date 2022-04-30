@@ -438,6 +438,13 @@ function numericResolve(cells) {
 }
 
 function resolve(cells) {
+    if (!(cells instanceof Array)) {
+        cells = [cells];
+    }
+    return cells.map(resolveRange).flat();
+}
+
+function resolveRange(cells) {
     const isRange = cells instanceof CommonRange;
     return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
