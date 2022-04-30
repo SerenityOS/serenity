@@ -15,6 +15,8 @@ configopts=(
     "--with-ncurses-includes=$SERENITY_BUILD_DIR/Root/usr/local/include/ncurses"
     "--with-ncurses-libs=$SERENITY_BUILD_DIR/Root/usr/local/lib"
 )
+use_fresh_config_sub=true
+config_sub_path=config/config.sub
 
 pre_patch() {
     run ./autogen.sh
