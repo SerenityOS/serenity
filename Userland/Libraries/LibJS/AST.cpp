@@ -2573,7 +2573,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter, GlobalObject&
                 // 4. Let rval be ? GetValue(rref).
                 auto rhs_result = TRY(m_rhs->execute(interpreter, global_object)).release_value();
 
-                // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+                // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern with argument rval.
                 TRY(interpreter.vm().destructuring_assignment_evaluation(pattern, rhs_result, global_object));
 
                 // 6. Return rval.
