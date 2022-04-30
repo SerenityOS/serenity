@@ -15,13 +15,13 @@ __BEGIN_DECLS
 
 ALWAYS_INLINE int fb_get_properties(int fd, FBProperties* info)
 {
-    return ioctl(fd, FB_IOCTL_GET_PROPERTIES, info);
+    return ioctl(fd, GRAPHICS_IOCTL_GET_PROPERTIES, info);
 }
 
 // FIXME: Remove this once framebuffer devices are removed.
 ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
 {
-    return ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, info);
+    return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_PROPERTIES, info);
 }
 
 // FIXME: Remove this once framebuffer devices are removed.
@@ -29,7 +29,7 @@ ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
 {
     FBHeadProperties head_properties;
     head_properties.head_index = info->head_index;
-    if (auto rc = ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &head_properties); rc < 0)
+    if (auto rc = ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_PROPERTIES, &head_properties); rc < 0)
         return rc;
     info->head_index = head_properties.head_index;
     info->pitch = head_properties.pitch;
@@ -41,38 +41,38 @@ ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
 // FIXME: Remove this once framebuffer devices are removed.
 ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
 {
-    return ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, info);
+    return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_RESOLUTION, info);
 }
 
 ALWAYS_INLINE int fb_get_head_edid(int fd, FBHeadEDID* info)
 {
-    return ioctl(fd, FB_IOCTL_GET_HEAD_EDID, info);
+    return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_EDID, info);
 }
 
 ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
+    return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
 ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
+    return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
 ALWAYS_INLINE int fb_set_head_mode_setting(int fd, FBHeadModeSetting* mode_setting)
 {
-    return ioctl(fd, FB_IOCTL_SET_HEAD_MODE_SETTING, mode_setting);
+    return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING, mode_setting);
 }
 
 ALWAYS_INLINE int fb_set_safe_head_mode_setting(int fd)
 {
-    return ioctl(fd, FB_IOCTL_SET_SAFE_HEAD_MODE_SETTING, nullptr);
+    return ioctl(fd, GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING, nullptr);
 }
 
 ALWAYS_INLINE int fb_get_head_mode_setting(int fd, FBHeadModeSetting* mode_setting)
 {
     FBHeadModeSetting head_mode_setting;
-    if (auto rc = ioctl(fd, FB_IOCTL_GET_HEAD_MODE_SETTING, &head_mode_setting); rc < 0)
+    if (auto rc = ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING, &head_mode_setting); rc < 0)
         return rc;
     mode_setting->horizontal_stride = head_mode_setting.horizontal_stride;
     mode_setting->pixel_clock_in_khz = head_mode_setting.pixel_clock_in_khz;
@@ -95,12 +95,12 @@ ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsig
     fb_flush_rects.buffer_index = index;
     fb_flush_rects.count = count;
     fb_flush_rects.rects = rects;
-    return ioctl(fd, FB_IOCTL_FLUSH_HEAD_BUFFERS, &fb_flush_rects);
+    return ioctl(fd, GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS, &fb_flush_rects);
 }
 
 ALWAYS_INLINE int fb_flush_head(int fd)
 {
-    return ioctl(fd, FB_IOCTL_FLUSH_HEAD, nullptr);
+    return ioctl(fd, GRAPHICS_IOCTL_FLUSH_HEAD, nullptr);
 }
 
 __END_DECLS

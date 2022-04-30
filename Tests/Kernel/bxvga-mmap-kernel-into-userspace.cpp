@@ -27,7 +27,7 @@ int main()
 
     FBHeadProperties original_properties;
     original_properties.head_index = 0;
-    if (ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &original_properties) < 0) {
+    if (ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_PROPERTIES, &original_properties) < 0) {
         perror("ioctl");
         return 1;
     }
@@ -38,7 +38,7 @@ int main()
     resolution.height = height;
     resolution.pitch = pitch;
 
-    if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &resolution) < 0) {
+    if (ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_RESOLUTION, &resolution) < 0) {
         perror("ioctl");
         return 1;
     }
@@ -94,7 +94,7 @@ int main()
     original_resolution.width = original_properties.width;
     original_resolution.height = original_properties.height;
     original_resolution.pitch = original_properties.pitch;
-    if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &original_resolution) < 0) {
+    if (ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_RESOLUTION, &original_resolution) < 0) {
         perror("ioctl");
         return 1;
     }

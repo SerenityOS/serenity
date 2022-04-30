@@ -33,13 +33,13 @@ ErrorOr<void> GenericFramebufferDevice::verify_head_index(int head_index) const
 
 ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    if (request != FB_IOCTL_GET_HEAD_EDID) {
+    if (request != GRAPHICS_IOCTL_GET_HEAD_EDID) {
         // Allow anyone to query the EDID. Eventually we'll publish the current EDID on /sys
         // so it doesn't really make sense to require the video pledge to query it.
         TRY(Process::current().require_promise(Pledge::video));
     }
     switch (request) {
-    case FB_IOCTL_GET_PROPERTIES: {
+    case GRAPHICS_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<FBProperties*>(arg);
         FBProperties properties {};
         auto adapter = m_graphics_adapter.strong_ref();
@@ -51,7 +51,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         properties.partial_flushing_support = partial_flushing_support();
         return copy_to_user(user_properties, &properties);
     }
-    case FB_IOCTL_GET_HEAD_PROPERTIES: {
+    case GRAPHICS_IOCTL_GET_HEAD_PROPERTIES: {
         auto user_head_properties = static_ptr_cast<FBHeadProperties*>(arg);
         FBHeadProperties head_properties {};
         TRY(copy_from_user(&head_properties, user_head_properties));
@@ -64,7 +64,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         head_properties.offset = TRY(vertical_offset(head_properties.head_index));
         return copy_to_user(user_head_properties, &head_properties);
     }
-    case FB_IOCTL_GET_HEAD_EDID: {
+    case GRAPHICS_IOCTL_GET_HEAD_EDID: {
         auto user_head_edid = static_ptr_cast<FBHeadEDID*>(arg);
         FBHeadEDID head_edid {};
         TRY(copy_from_user(&head_edid, user_head_edid));
@@ -84,7 +84,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         head_edid.bytes_size = edid_bytes.size();
         return copy_to_user(user_head_edid, &head_edid);
     }
-    case FB_IOCTL_SET_HEAD_RESOLUTION: {
+    case GRAPHICS_IOCTL_SET_HEAD_RESOLUTION: {
         auto user_head_resolution = static_ptr_cast<FBHeadResolution const*>(arg);
         auto head_resolution = TRY(copy_typed_from_user(user_head_resolution));
         TRY(verify_head_index(head_resolution.head_index));
@@ -98,7 +98,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         TRY(set_head_resolution(head_resolution.head_index, head_resolution.width, head_resolution.height, head_resolution.pitch));
         return {};
     }
-    case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
+    case GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset const*>(arg);
         auto head_vertical_buffer_offset = TRY(copy_typed_from_user(user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
@@ -108,7 +108,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         TRY(set_head_buffer(head_vertical_buffer_offset.head_index, head_vertical_buffer_offset.offsetted));
         return {};
     }
-    case FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
+    case GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
         FBHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
@@ -117,7 +117,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         head_vertical_buffer_offset.offsetted = TRY(vertical_offsetted(head_vertical_buffer_offset.head_index));
         return copy_to_user(user_head_vertical_buffer_offset, &head_vertical_buffer_offset);
     }
-    case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
+    case GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS: {
         if (!partial_flushing_support())
             return Error::from_errno(ENOTSUP);
         auto user_flush_rects = static_ptr_cast<FBFlushRects const*>(arg);
@@ -134,7 +134,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         }
         return {};
     };
-    case FB_IOCTL_FLUSH_HEAD: {
+    case GRAPHICS_IOCTL_FLUSH_HEAD: {
         if (!flushing_support())
             return Error::from_errno(ENOTSUP);
         // Note: We accept a FBRect, but we only really care about the head_index value.
