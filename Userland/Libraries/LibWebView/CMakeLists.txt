@@ -12,3 +12,5 @@ set(GENERATED_SOURCES
 
 serenity_lib(LibWebView webview)
 target_link_libraries(LibWebView LibGfx LibGUI LibIPC LibWeb)
+
+add_subdirectory(DumpLayoutTree)

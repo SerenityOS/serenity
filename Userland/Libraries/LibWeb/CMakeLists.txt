@@ -386,5 +386,3 @@ generate_js_wrappers(LibWeb)
 
 # Note: If you're looking for the calls to "libweb_js_wrapper()",
 # they have been moved to "idl_files.cmake"
-
-add_subdirectory(DumpLayoutTree)
