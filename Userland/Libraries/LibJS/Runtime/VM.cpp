@@ -282,10 +282,10 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         // 1. Perform ? RequireObjectCoercible(value).
         TRY(require_object_coercible(global_object, value));
 
-        // 2. Return the result of performing BindingInitialization of ObjectBindingPattern using value and environment as arguments.
+        // 2. Return the result of performing BindingInitialization of ObjectBindingPattern with arguments value and environment.
 
         // BindingInitialization of ObjectBindingPattern
-        // 1. Perform ? PropertyBindingInitialization of BindingPropertyList using value and environment as the arguments.
+        // 1. Perform ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
         TRY(property_binding_initialization(*target, value, environment, global_object));
 
         // 2. Return NormalCompletion(empty).
