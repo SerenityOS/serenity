@@ -17,7 +17,10 @@
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <serenity.h>
+
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
 
 namespace Web {
 
@@ -99,8 +102,13 @@ static String sanitized_url_for_logging(AK::URL const& url)
 
 static void emit_signpost(String const& message, int id)
 {
+#ifdef __serenity__
     auto string_id = perf_register_string(message.characters(), message.length());
     perf_event(PERF_EVENT_SIGNPOST, string_id, id);
+#else
+    (void)message;
+    (void)id;
+#endif
 }
 
 static size_t resource_id = 0;
