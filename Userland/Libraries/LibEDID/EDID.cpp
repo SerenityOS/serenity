@@ -208,13 +208,13 @@ ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
     edid_info.head_index = head;
     edid_info.bytes = &edid_bytes[0];
     edid_info.bytes_size = sizeof(edid_bytes);
-    if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+    if (graphics_connector_get_head_edid(framebuffer_fd, &edid_info) < 0) {
         int err = errno;
         if (err == EOVERFLOW) {
             // We need a bigger buffer with at least bytes_size bytes
             auto edid_byte_buffer = TRY(ByteBuffer::create_zeroed(edid_info.bytes_size));
             edid_info.bytes = edid_byte_buffer.data();
-            if (fb_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+            if (graphics_connector_get_head_edid(framebuffer_fd, &edid_info) < 0) {
                 err = errno;
                 return Error::from_errno(err);
             }
