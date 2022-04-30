@@ -8,6 +8,7 @@
 
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 
@@ -87,9 +88,13 @@ union ClearType {
 };
 
 class GPU3DDevice : public CharacterDevice {
+    friend class Kernel::DeviceManagement;
+
 public:
-    GPU3DDevice() = delete;
-    explicit GPU3DDevice(GraphicsAdapter& graphics_adapter);
+    static NonnullRefPtr<GPU3DDevice> must_create(GraphicsAdapter&);
+
+private:
+    GPU3DDevice(GraphicsAdapter& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region);
 
     class PerContextState : public RefCounted<PerContextState> {
     public:
@@ -129,7 +134,7 @@ private:
     ContextID m_kernel_context_id;
     HashMap<OpenFileDescription*, RefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
-    OwnPtr<Memory::Region> m_transfer_buffer_region;
+    NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
 };
 

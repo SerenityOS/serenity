@@ -465,7 +465,7 @@ void GraphicsAdapter::initialize_3d_device()
 {
     if (m_has_virgl_support) {
         MutexLocker locker(m_operation_lock);
-        m_3d_device = MUST(DeviceManagement::try_create_device<VirtIOGPU::GPU3DDevice>(*this));
+        m_3d_device = VirtIOGPU::GPU3DDevice::must_create(*this);
     }
 }
 

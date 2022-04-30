@@ -21,12 +21,8 @@ GPU3DDevice::PerContextState::PerContextState(ContextID context_id, OwnPtr<Memor
 {
 }
 
-GPU3DDevice::GPU3DDevice(GraphicsAdapter& graphics_adapter)
-    : CharacterDevice(28, 0)
-    , m_graphics_adapter(graphics_adapter)
+NonnullRefPtr<GPU3DDevice> GPU3DDevice::must_create(GraphicsAdapter& adapter)
 {
-    m_kernel_context_id = m_graphics_adapter.create_context();
-
     // Setup memory transfer region
     auto region_result = MM.allocate_kernel_region(
         NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
@@ -34,7 +30,16 @@ GPU3DDevice::GPU3DDevice(GraphicsAdapter& graphics_adapter)
         Memory::Region::Access::ReadWrite,
         AllocationStrategy::AllocateNow);
     VERIFY(!region_result.is_error());
-    m_transfer_buffer_region = region_result.release_value();
+    auto device = MUST(DeviceManagement::try_create_device<VirtIOGPU::GPU3DDevice>(adapter, region_result.release_value()));
+    return device;
+}
+
+GPU3DDevice::GPU3DDevice(GraphicsAdapter& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region)
+    : CharacterDevice(28, 0)
+    , m_graphics_adapter(graphics_adapter)
+    , m_transfer_buffer_region(move(transfer_buffer_region))
+{
+    m_kernel_context_id = m_graphics_adapter.create_context();
 }
 
 void GPU3DDevice::detach(OpenFileDescription& description)
