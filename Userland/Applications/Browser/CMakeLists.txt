@@ -6,7 +6,6 @@ serenity_component(
 )
 
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
-compile_gml(CookiesTab.gml CookiesTabGML.h cookies_tab_gml)
 compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
 compile_gml(StorageWidget.gml StorageWidgetGML.h storage_widget_gml)
 compile_gml(Tab.gml TabGML.h tab_gml)
@@ -18,7 +17,6 @@ set(SOURCES
     ConsoleWidget.cpp
     CookieJar.cpp
     CookiesModel.cpp
-    CookiesTabGML.h
     DownloadWidget.cpp
     EditBookmarkGML.h
     ElementSizePreviewWidget.cpp
