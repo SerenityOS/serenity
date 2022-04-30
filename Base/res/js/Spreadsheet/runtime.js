@@ -431,7 +431,7 @@ function numericReduce(op, accumulator, cells) {
 }
 
 function numericResolve(cells) {
-    return resolve(cells).map(val => parseInt(val));
+    return resolve(cells).map(val => parseFloat(val));
 }
 
 function resolve(cells) {
