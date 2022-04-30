@@ -23,28 +23,4 @@ UNMAP_AFTER_INIT ISAVGAAdapter::ISAVGAAdapter()
     GraphicsManagement::the().set_console(*m_framebuffer_console);
 }
 
-void ISAVGAAdapter::enable_consoles()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->enable();
-}
-void ISAVGAAdapter::disable_consoles()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->disable();
-}
-
-void ISAVGAAdapter::initialize_framebuffer_devices()
-{
-}
-
-bool ISAVGAAdapter::try_to_set_resolution(size_t, size_t, size_t)
-{
-    return false;
-}
-bool ISAVGAAdapter::set_y_offset(size_t, size_t)
-{
-    return false;
-}
-
 }
