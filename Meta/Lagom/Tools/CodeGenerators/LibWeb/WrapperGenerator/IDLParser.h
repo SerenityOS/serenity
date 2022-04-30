@@ -18,7 +18,7 @@ namespace IDL {
 class Parser {
 public:
     Parser(String filename, StringView contents, String import_base_path);
-    NonnullRefPtr<Interface> parse();
+    Interface& parse();
 
 private:
     // https://webidl.spec.whatwg.org/#dfn-special-operation
@@ -31,7 +31,7 @@ private:
     void assert_specific(char ch);
     void assert_string(StringView expected);
     void consume_whitespace();
-    Optional<NonnullRefPtr<Interface>> resolve_import(auto path);
+    Optional<Interface&> resolve_import(auto path);
 
     HashMap<String, String> parse_extended_attributes();
     void parse_attribute(HashMap<String, String>& extended_attributes, Interface&);
@@ -53,8 +53,9 @@ private:
     NonnullRefPtr<Type> parse_type();
     void parse_constant(Interface&);
 
-    static HashMap<String, NonnullRefPtr<Interface>> s_resolved_imports;
-    HashTable<String> required_imported_paths;
+    static HashTable<NonnullOwnPtr<Interface>> s_interfaces;
+    static HashMap<String, Interface*> s_resolved_imports;
+
     String import_base_path;
     String filename;
     StringView input;
