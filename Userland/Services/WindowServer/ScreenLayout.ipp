@@ -321,8 +321,8 @@ bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
         close(display_connector_fd);
     });
 
-    FBHeadModeSetting mode_setting {};
-    memset(&mode_setting, 0, sizeof(FBHeadModeSetting));
+    GraphicsHeadModeSetting mode_setting {};
+    memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
     if (fb_get_head_mode_setting(display_connector_fd, &mode_setting) < 0) {
         int err = errno;
         dbgln("Error ({}) querying resolution from display connector device {}", err, device_path);

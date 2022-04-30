@@ -204,7 +204,7 @@ ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
 ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
 {
     RawBytes edid_bytes;
-    FBHeadEDID edid_info {};
+    GraphicsHeadEDID edid_info {};
     edid_info.head_index = head;
     edid_info.bytes = &edid_bytes[0];
     edid_info.bytes_size = sizeof(edid_bytes);

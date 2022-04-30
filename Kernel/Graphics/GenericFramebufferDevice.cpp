@@ -40,8 +40,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
     }
     switch (request) {
     case GRAPHICS_IOCTL_GET_PROPERTIES: {
-        auto user_properties = static_ptr_cast<FBProperties*>(arg);
-        FBProperties properties {};
+        auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
+        GraphicsConnectorProperties properties {};
         auto adapter = m_graphics_adapter.strong_ref();
         if (!adapter)
             return Error::from_errno(EIO);
@@ -65,8 +65,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         return copy_to_user(user_head_properties, &head_properties);
     }
     case GRAPHICS_IOCTL_GET_HEAD_EDID: {
-        auto user_head_edid = static_ptr_cast<FBHeadEDID*>(arg);
-        FBHeadEDID head_edid {};
+        auto user_head_edid = static_ptr_cast<GraphicsHeadEDID*>(arg);
+        GraphicsHeadEDID head_edid {};
         TRY(copy_from_user(&head_edid, user_head_edid));
         TRY(verify_head_index(head_edid.head_index));
 
@@ -99,7 +99,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         return {};
     }
     case GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
-        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset const*>(arg);
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset const*>(arg);
         auto head_vertical_buffer_offset = TRY(copy_typed_from_user(user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
@@ -109,8 +109,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         return {};
     }
     case GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
-        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
-        FBHeadVerticalOffset head_vertical_buffer_offset {};
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset*>(arg);
+        GraphicsHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 

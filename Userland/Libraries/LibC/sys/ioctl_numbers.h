@@ -18,7 +18,7 @@ struct winsize {
     unsigned short ws_ypixel;
 };
 
-struct FBProperties {
+struct GraphicsConnectorProperties {
     unsigned char multihead_support;
     unsigned char doublebuffer_support;
     unsigned char flushing_support;
@@ -38,7 +38,7 @@ struct FBHeadProperties {
     unsigned buffer_length;
 };
 
-struct FBHeadModeSetting {
+struct GraphicsHeadModeSetting {
     int horizontal_stride;
     int pixel_clock_in_khz;
     int horizontal_active;
@@ -61,14 +61,14 @@ struct FBHeadResolution {
     int height;
 };
 
-struct FBHeadEDID {
+struct GraphicsHeadEDID {
     int head_index;
 
     unsigned char* bytes;
     unsigned bytes_size;
 };
 
-struct FBHeadVerticalOffset {
+struct GraphicsHeadVerticalOffset {
     int head_index;
     int offsetted;
 };

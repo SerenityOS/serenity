@@ -27,7 +27,7 @@ ErrorOr<void> HardwareScreenBackend::open()
 {
     m_framebuffer_fd = TRY(Core::System::open(m_device.characters(), O_RDWR | O_CLOEXEC));
 
-    FBProperties properties;
+    GraphicsConnectorProperties properties;
     if (fb_get_properties(m_framebuffer_fd, &properties) < 0)
         return Error::from_syscall(String::formatted("failed to ioctl {}", m_device), errno);
 
@@ -61,8 +61,8 @@ ErrorOr<void> HardwareScreenBackend::set_head_resolution(FBHeadResolution resolu
         if (rc != 0)
             return Error::from_syscall("fb_set_resolution", rc);
     } else {
-        FBHeadModeSetting mode_setting;
-        memset(&mode_setting, 0, sizeof(FBHeadModeSetting));
+        GraphicsHeadModeSetting mode_setting;
+        memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
         mode_setting.horizontal_active = resolution.width;
         mode_setting.vertical_active = resolution.height;
         mode_setting.horizontal_stride = resolution.pitch;
@@ -134,8 +134,8 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
             m_back_buffer_offset = 0;
         }
     } else {
-        FBHeadModeSetting mode_setting {};
-        memset(&mode_setting, 0, sizeof(FBHeadModeSetting));
+        GraphicsHeadModeSetting mode_setting {};
+        memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
         int rc = fb_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
         if (rc != 0) {
             return Error::from_syscall("fb_get_head_mode_setting", rc);
@@ -168,14 +168,14 @@ ErrorOr<FBHeadProperties> HardwareScreenBackend::get_head_properties()
         m_pitch = static_cast<int>(properties.pitch);
         return properties;
     } else {
-        FBHeadModeSetting mode_setting {};
-        memset(&mode_setting, 0, sizeof(FBHeadModeSetting));
+        GraphicsHeadModeSetting mode_setting {};
+        memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
         int rc = fb_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
         if (rc != 0) {
             return Error::from_syscall("fb_get_head_mode_setting", rc);
         }
         m_pitch = mode_setting.horizontal_stride;
-        // Note: We translate (for now, until Framebuffer devices are removed) the FBHeadModeSetting
+        // Note: We translate (for now, until Framebuffer devices are removed) the GraphicsHeadModeSetting
         // structure to FBHeadProperties.
         FBHeadProperties properties;
         properties.head_index = 0;
@@ -193,7 +193,7 @@ void HardwareScreenBackend::set_head_buffer(int head_index)
 {
     VERIFY(m_can_set_head_buffer);
     VERIFY(head_index <= 1 && head_index >= 0);
-    FBHeadVerticalOffset offset { 0, 0 };
+    GraphicsHeadVerticalOffset offset { 0, 0 };
     if (head_index == 1)
         offset.offsetted = 1;
     int rc = fb_set_head_vertical_offset_buffer(m_framebuffer_fd, &offset);

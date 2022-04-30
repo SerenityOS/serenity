@@ -158,8 +158,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
     // TODO: We really should have ioctls for destroying resources as well
     switch (request) {
     case GRAPHICS_IOCTL_GET_PROPERTIES: {
-        auto user_properties = static_ptr_cast<FBProperties*>(arg);
-        FBProperties properties {};
+        auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
+        GraphicsConnectorProperties properties {};
         properties.flushing_support = flush_support();
         properties.doublebuffer_support = double_framebuffering_capable();
         properties.partial_flushing_support = partial_flush_support();
@@ -168,8 +168,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return copy_to_user(user_properties, &properties);
     }
     case GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING: {
-        auto user_head_mode_setting = static_ptr_cast<FBHeadModeSetting*>(arg);
-        FBHeadModeSetting head_mode_setting {};
+        auto user_head_mode_setting = static_ptr_cast<GraphicsHeadModeSetting*>(arg);
+        GraphicsHeadModeSetting head_mode_setting {};
         TRY(copy_from_user(&head_mode_setting, user_head_mode_setting));
         {
             SpinlockLocker control_locker(m_control_lock);
@@ -189,8 +189,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return copy_to_user(user_head_mode_setting, &head_mode_setting);
     }
     case GRAPHICS_IOCTL_GET_HEAD_EDID: {
-        auto user_head_edid = static_ptr_cast<FBHeadEDID*>(arg);
-        FBHeadEDID head_edid {};
+        auto user_head_edid = static_ptr_cast<GraphicsHeadEDID*>(arg);
+        GraphicsHeadEDID head_edid {};
         TRY(copy_from_user(&head_edid, user_head_edid));
 
         auto edid_bytes = TRY(get_edid());
@@ -208,7 +208,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return copy_to_user(user_head_edid, &head_edid);
     }
     case GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING: {
-        auto user_mode_setting = static_ptr_cast<FBHeadModeSetting const*>(arg);
+        auto user_mode_setting = static_ptr_cast<GraphicsHeadModeSetting const*>(arg);
         auto head_mode_setting = TRY(copy_typed_from_user(user_mode_setting));
 
         if (head_mode_setting.horizontal_stride < 0)
@@ -270,7 +270,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             return {};
         }
 
-        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset const*>(arg);
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset const*>(arg);
         auto head_vertical_buffer_offset = TRY(copy_typed_from_user(user_head_vertical_buffer_offset));
 
         SpinlockLocker locker(m_modeset_lock);
@@ -285,8 +285,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return {};
     }
     case GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
-        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
-        FBHeadVerticalOffset head_vertical_buffer_offset {};
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset*>(arg);
+        GraphicsHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
 
         head_vertical_buffer_offset.offsetted = m_vertical_offsetted;
