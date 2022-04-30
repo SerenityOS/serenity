@@ -13,7 +13,7 @@
 
 __BEGIN_DECLS
 
-ALWAYS_INLINE int fb_get_properties(int fd, FBProperties* info)
+ALWAYS_INLINE int fb_get_properties(int fd, GraphicsConnectorProperties* info)
 {
     return ioctl(fd, GRAPHICS_IOCTL_GET_PROPERTIES, info);
 }
@@ -44,22 +44,22 @@ ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
     return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_RESOLUTION, info);
 }
 
-ALWAYS_INLINE int fb_get_head_edid(int fd, FBHeadEDID* info)
+ALWAYS_INLINE int fb_get_head_edid(int fd, GraphicsHeadEDID* info)
 {
     return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_EDID, info);
 }
 
-ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
+ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, GraphicsHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
-ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
+ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, GraphicsHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
-ALWAYS_INLINE int fb_set_head_mode_setting(int fd, FBHeadModeSetting* mode_setting)
+ALWAYS_INLINE int fb_set_head_mode_setting(int fd, GraphicsHeadModeSetting* mode_setting)
 {
     return ioctl(fd, GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING, mode_setting);
 }
@@ -69,9 +69,9 @@ ALWAYS_INLINE int fb_set_safe_head_mode_setting(int fd)
     return ioctl(fd, GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING, nullptr);
 }
 
-ALWAYS_INLINE int fb_get_head_mode_setting(int fd, FBHeadModeSetting* mode_setting)
+ALWAYS_INLINE int fb_get_head_mode_setting(int fd, GraphicsHeadModeSetting* mode_setting)
 {
-    FBHeadModeSetting head_mode_setting;
+    GraphicsHeadModeSetting head_mode_setting;
     if (auto rc = ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING, &head_mode_setting); rc < 0)
         return rc;
     mode_setting->horizontal_stride = head_mode_setting.horizontal_stride;
