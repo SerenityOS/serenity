@@ -23,7 +23,7 @@ struct Route : public RefCounted<Route> {
     {
     }
 
-    bool operator==(Route const& other)
+    bool operator==(Route const& other) const
     {
         return destination == other.destination && gateway == other.gateway && netmask == other.netmask && adapter.ptr() == other.adapter.ptr();
     }
