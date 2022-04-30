@@ -31,12 +31,15 @@ public:
     virtual ErrorOr<void> unmap_framebuffer() = 0;
     virtual ErrorOr<void> map_framebuffer() = 0;
 
+    virtual ErrorOr<void> flush_framebuffer() = 0;
+
     virtual ErrorOr<void> set_head_resolution(FBHeadResolution) = 0;
     virtual ErrorOr<FBHeadProperties> get_head_properties() = 0;
 
     virtual ErrorOr<void> write_all_contents(Gfx::IntRect const&) { return {}; }
 
     bool m_can_device_flush_buffers { true };
+    bool m_can_device_flush_entire_framebuffer { true };
     bool m_can_set_head_buffer { false };
 
     Gfx::ARGB32* m_framebuffer { nullptr };

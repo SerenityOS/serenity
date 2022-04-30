@@ -32,6 +32,7 @@ ErrorOr<void> HardwareScreenBackend::open()
         return Error::from_syscall(String::formatted("failed to ioctl {}", m_device), errno);
 
     m_can_device_flush_buffers = (properties.partial_flushing_support != 0);
+    m_can_device_flush_entire_framebuffer = (properties.flushing_support != 0);
     m_can_set_head_buffer = (properties.doublebuffer_support != 0);
     return {};
 }
@@ -209,4 +210,13 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, S
     return {};
 }
 
+ErrorOr<void> HardwareScreenBackend::flush_framebuffer()
+{
+    int rc = fb_flush_head(m_framebuffer_fd);
+    if (rc == -ENOTSUP)
+        m_can_device_flush_entire_framebuffer = false;
+    else
+        return Error::from_syscall("fb_flush_head", rc);
+    return {};
+}
 }

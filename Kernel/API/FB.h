@@ -98,4 +98,9 @@ ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsig
     return ioctl(fd, FB_IOCTL_FLUSH_HEAD_BUFFERS, &fb_flush_rects);
 }
 
+ALWAYS_INLINE int fb_flush_head(int fd)
+{
+    return ioctl(fd, FB_IOCTL_FLUSH_HEAD, nullptr);
+}
+
 __END_DECLS

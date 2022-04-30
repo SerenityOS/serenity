@@ -26,6 +26,8 @@ public:
 
     virtual ErrorOr<void> flush_framebuffer_rects(int buffer_index, Span<FBRect const> rects) override;
 
+    virtual ErrorOr<void> flush_framebuffer() override;
+
     virtual ErrorOr<void> unmap_framebuffer() override;
     virtual ErrorOr<void> map_framebuffer() override;
 

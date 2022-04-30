@@ -527,7 +527,7 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
 
 void Screen::flush_display(int buffer_index)
 {
-    VERIFY(m_backend->m_can_device_flush_buffers);
+    VERIFY(m_backend->m_can_device_flush_buffers || m_backend->m_can_device_flush_entire_framebuffer);
     auto& flush_rects = *m_flush_rects;
     if (flush_rects.pending_flush_rects.is_empty())
         return;
@@ -542,9 +542,15 @@ void Screen::flush_display(int buffer_index)
         flush_rect.height *= scale_factor;
     }
 
-    auto return_value = m_backend->flush_framebuffer_rects(buffer_index, flush_rects.pending_flush_rects.span());
-    if (return_value.is_error())
-        dbgln("Screen #{}: Error flushing display: {}", index(), return_value.error());
+    if (m_backend->m_can_device_flush_entire_framebuffer) {
+        auto return_value = m_backend->flush_framebuffer();
+        if (return_value.is_error())
+            dbgln("Screen #{}: Error flushing display: {}", index(), return_value.error());
+    } else {
+        auto return_value = m_backend->flush_framebuffer_rects(buffer_index, flush_rects.pending_flush_rects.span());
+        if (return_value.is_error())
+            dbgln("Screen #{}: Error flushing display: {}", index(), return_value.error());
+    }
 
     flush_rects.too_many_pending_flush_rects = false;
     flush_rects.pending_flush_rects.clear_with_capacity();
@@ -553,6 +559,14 @@ void Screen::flush_display(int buffer_index)
 void Screen::write_all_display_contents()
 {
     MUST(m_backend->write_all_contents(m_virtual_rect));
+}
+
+void Screen::flush_display_entire_framebuffer()
+{
+    VERIFY(m_backend->m_can_device_flush_entire_framebuffer);
+    auto return_value = m_backend->flush_framebuffer();
+    if (return_value.is_error())
+        dbgln("Screen #{}: Error flushing display front buffer: {}", index(), return_value.error());
 }
 
 void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& rect)
