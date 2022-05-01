@@ -30,8 +30,8 @@ public:
     static DeclarativeEnvironment* create_for_per_iteration_bindings(Badge<ForStatement>, DeclarativeEnvironment& other, size_t bindings_size);
 
     DeclarativeEnvironment();
-    explicit DeclarativeEnvironment(Environment* parent_scope);
-    explicit DeclarativeEnvironment(Environment* parent_scope, Span<Binding const> bindings);
+    explicit DeclarativeEnvironment(Environment* parent_environment);
+    explicit DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings);
     virtual ~DeclarativeEnvironment() override = default;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;

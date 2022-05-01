@@ -84,7 +84,7 @@ public:
         if (m_value.has_value())
             return *this;
 
-        // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
+        // 3. Return Completion Record { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
         return { m_type, move(value), m_target };
     }
 

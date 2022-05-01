@@ -139,7 +139,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
 
     // 4. If isMapped is true and IsDataDescriptor(Desc) is true, then
     if (is_mapped && descriptor.is_data_descriptor()) {
-        // a. If Desc.[[Value]] is not present and Desc.[[Writable]] is present and its value is false, then
+        // a. If Desc does not have a [[Value]] field and Desc has a [[Writable]] field, and Desc.[[Writable]] is false, then
         if (!descriptor.value.has_value() && descriptor.writable.has_value() && descriptor.writable == false) {
             // i. Set newArgDesc to a copy of Desc.
             new_arg_desc = descriptor;
@@ -162,7 +162,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
             // i. Call map.[[Delete]](P).
             MUST(map.internal_delete(property_key));
         } else {
-            // i. If Desc.[[Value]] is present, then
+            // i. If Desc has a [[Value]] field, then
             if (descriptor.value.has_value()) {
                 // 1. Let setStatus be Set(map, P, Desc.[[Value]], false).
                 bool set_status = MUST(map.set(property_key, descriptor.value.value(), Object::ShouldThrowExceptions::No));
@@ -170,7 +170,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
                 // 2. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
                 VERIFY(set_status);
             }
-            // ii. If Desc.[[Writable]] is present and its value is false, then
+            // ii. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, then
             if (descriptor.writable == false) {
                 // 1. Call map.[[Delete]](P).
                 MUST(map.internal_delete(property_key));
