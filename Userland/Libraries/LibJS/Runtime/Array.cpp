@@ -29,13 +29,11 @@ ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t leng
 // 7.3.18 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
 Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elements)
 {
-    // 1. Assert: elements is a List whose elements are all ECMAScript language values.
-
-    // 2. Let array be ! ArrayCreate(0).
+    // 1. Let array be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));
 
-    // 3. Let n be 0.
-    // 4. For each element e of elements, do
+    // 2. Let n be 0.
+    // 3. For each element e of elements, do
     for (u32 n = 0; n < elements.size(); ++n) {
         // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
         MUST(array->create_data_property_or_throw(n, elements[n]));
@@ -43,7 +41,7 @@ Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elem
         // b. Set n to n + 1.
     }
 
-    // 5. Return array.
+    // 4. Return array.
     return array;
 }
 
@@ -161,16 +159,15 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
 {
     auto& vm = this->vm();
 
-    // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
 
-    // 2. If P is "length", then
+    // 1. If P is "length", then
     if (property_key.is_string() && property_key.as_string() == vm.names.length.as_string()) {
         // a. Return ? ArraySetLength(A, Desc).
         return set_length(property_descriptor);
     }
 
-    // 3. Else if P is an array index, then
+    // 2. Else if P is an array index, then
     if (property_key.is_number()) {
         // a. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
         // b. Assert: ! IsDataDescriptor(oldLenDesc) is true.
@@ -199,7 +196,7 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
         return true;
     }
 
-    // 4. Return OrdinaryDefineOwnProperty(A, P, Desc).
+    // 3. Return OrdinaryDefineOwnProperty(A, P, Desc).
     return Object::internal_define_own_property(property_key, property_descriptor);
 }
 

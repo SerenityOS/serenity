@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -176,16 +176,13 @@ public:
     // 10.4.5.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const& property_key) const override
     {
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
-
-        // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 3. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -209,23 +206,20 @@ public:
             }
         }
 
-        // 4. Return OrdinaryGetOwnProperty(O, P).
+        // 2. Return OrdinaryGetOwnProperty(O, P).
         return Object::internal_get_own_property(property_key);
     }
 
     // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
     virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const& property_key) const override
     {
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
-
-        // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 3. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -235,23 +229,20 @@ public:
                 return is_valid_integer_index(*this, numeric_index);
         }
 
-        // 4. Return ? OrdinaryHasProperty(O, P).
+        // 2. Return ? OrdinaryHasProperty(O, P).
         return Object::internal_has_property(property_key);
     }
 
     // 10.4.5.3 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor) override
     {
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
-
-        // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 3. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -287,7 +278,7 @@ public:
             }
         }
 
-        // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
+        // 2. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
         return Object::internal_define_own_property(property_key, property_descriptor);
     }
 
@@ -296,13 +287,12 @@ public:
     {
         VERIFY(!receiver.is_empty());
 
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 2. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -314,7 +304,7 @@ public:
             }
         }
 
-        // 3. Return ? OrdinaryGet(O, P, Receiver).
+        // 2. Return ? OrdinaryGet(O, P, Receiver).
         return Object::internal_get(property_key, receiver);
     }
 
@@ -324,13 +314,12 @@ public:
         VERIFY(!value.is_empty());
         VERIFY(!receiver.is_empty());
 
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 2. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -345,22 +334,20 @@ public:
             }
         }
 
-        // 3. Return ? OrdinarySet(O, P, V, Receiver).
+        // 2. Return ? OrdinarySet(O, P, V, Receiver).
         return Object::internal_set(property_key, value, receiver);
     }
 
     // 10.4.5.6 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const& property_key) override
     {
-        // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_key.is_valid());
 
-        // 2. Assert: O is an Integer-Indexed exotic object.
         // NOTE: If the property name is a number type (An implementation-defined optimized
         // property key type), it can be treated as a string property that will transparently be
         // converted into a canonical numeric index.
 
-        // 3. If Type(P) is String, then
+        // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
@@ -374,7 +361,7 @@ public:
             }
         }
 
-        // 4. Return ? OrdinaryDelete(O, P).
+        // 2. Return ? OrdinaryDelete(O, P).
         return Object::internal_delete(property_key);
     }
 
@@ -386,9 +373,7 @@ public:
         // 1. Let keys be a new empty List.
         auto keys = MarkedVector<Value> { heap() };
 
-        // 2. Assert: O is an Integer-Indexed exotic object.
-
-        // 3. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false, then
+        // 2. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false, then
         if (!m_viewed_array_buffer->is_detached()) {
             // a. For each integer i starting with 0 such that i < O.[[ArrayLength]], in ascending order, do
             for (size_t i = 0; i < m_array_length; ++i) {
@@ -397,7 +382,7 @@ public:
             }
         }
 
-        // 4. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+        // 3. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table_ordered()) {
             if (it.key.is_string()) {
                 // a. Add P as the last element of keys.
@@ -405,7 +390,7 @@ public:
             }
         }
 
-        // 5. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+        // 4. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table_ordered()) {
             if (it.key.is_symbol()) {
                 // a. Add P as the last element of keys.
@@ -413,7 +398,7 @@ public:
             }
         }
 
-        // 6. Return keys.
+        // 5. Return keys.
         return { move(keys) };
     }
 
