@@ -344,6 +344,8 @@ private:
         VERIFY(m_initialized);
         tcsetattr(0, TCSANOW, &m_default_termios);
         m_initialized = false;
+        if (m_configuration.enable_bracketed_paste)
+            warn("\x1b[?2004l");
         for (auto id : m_signal_handlers)
             Core::EventLoop::unregister_signal(id);
     }
