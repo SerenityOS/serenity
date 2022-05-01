@@ -7,7 +7,7 @@
     @GUI::Frame {
         layout: @GUI::HorizontalBoxLayout {}
         name: "preview_frame"
-        fixed_width: 304
+        fixed_width: 306
         fixed_height: 201
     }
 
