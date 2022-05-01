@@ -1,10 +1,10 @@
 
 
-class A
-{
+class A {
     bool foo();
 };
 
-bool A::foo() {
+bool A::foo()
+{
     return true;
 }

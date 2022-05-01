@@ -408,12 +408,17 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
 
     StringBuilder builder;
     builder.append(text);
+
     if (may_append_tld == MayAppendTLD::Yes) {
-        // FIXME: Expand the list of top level domains.
-        if (!(text.ends_with(".com") || text.ends_with(".net") || text.ends_with(".org"))) {
+        if (!(text.contains(".com") || text.contains(".net") || text.contains(".org"))) {
+            builder.append(".com");
+        }
+    } else {
+        if (!(text.contains(".com") || text.contains(".net") || text.contains(".org"))) {
             builder.append(".com");
         }
     }
+
     String final_text = builder.to_string();
 
     auto url = url_from_user_input(final_text);
