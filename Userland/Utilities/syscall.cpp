@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/Iterator.h>
 #include <AK/Vector.h>
+#include <Kernel/API/SyscallString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 #include <errno_codes.h>
