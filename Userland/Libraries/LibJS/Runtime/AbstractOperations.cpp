@@ -173,15 +173,13 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: ! IsCallable(obj) is true.
-
-    // 2. If obj has a [[Realm]] internal slot, then
+    // 1. If obj has a [[Realm]] internal slot, then
     if (function.realm()) {
         // a. Return obj.[[Realm]].
         return function.realm();
     }
 
-    // 3. If obj is a bound function exotic object, then
+    // 2. If obj is a bound function exotic object, then
     if (is<BoundFunction>(function)) {
         auto& bound_function = static_cast<BoundFunction const&>(function);
 
@@ -192,7 +190,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         return get_function_realm(global_object, target);
     }
 
-    // 4. If obj is a Proxy exotic object, then
+    // 3. If obj is a Proxy exotic object, then
     if (is<ProxyObject>(function)) {
         auto& proxy = static_cast<ProxyObject const&>(function);
 
@@ -208,7 +206,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         return get_function_realm(global_object, static_cast<FunctionObject const&>(proxy_target));
     }
 
-    // 5. Return the current Realm Record.
+    // 4. Return the current Realm Record.
     return vm.current_realm();
 }
 
@@ -1161,7 +1159,6 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     if (mode != CanonicalIndexMode::DetectNumericRoundtrip)
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 1. Assert: Type(argument) is String.
     auto& argument = property_key.as_string();
 
     // Handle trivial cases without a full round trip test
@@ -1194,17 +1191,17 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     if (char first_non_zero = argument.characters()[current_index]; first_non_zero < '0' || first_non_zero > '9')
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 3. Let n be ! ToNumber(argument).
+    // 2. Let n be ! ToNumber(argument).
     char* endptr;
     auto n = Value(strtod(argument.characters(), &endptr));
     if (endptr != argument.characters() + argument.length())
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 4. If SameValue(! ToString(n), argument) is false, return undefined.
+    // 3. If SameValue(! ToString(n), argument) is false, return undefined.
     if (n.to_string_without_side_effects() != argument)
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 5. Return n.
+    // 4. Return n.
     return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 }
 
