@@ -1245,7 +1245,9 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
     if (preferred_type == Value::PreferredType::String) {
         // a. Let methodNames be « "toString", "valueOf" ».
         method_names = { vm.names.toString, vm.names.valueOf };
-    } else {
+    }
+    // 2. Else,
+    else {
         // a. Let methodNames be « "valueOf", "toString" ».
         method_names = { vm.names.valueOf, vm.names.toString };
     }
