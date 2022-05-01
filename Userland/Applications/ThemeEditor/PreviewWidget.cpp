@@ -100,33 +100,20 @@ void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_fil
 
 void PreviewWidget::update_preview_window_locations()
 {
-    auto to_frame_rect = [&](Gfx::IntRect rect) {
-        return Gfx::WindowTheme::current().frame_rect_for_window(
-            Gfx::WindowTheme::WindowType::Normal, rect, preview_palette(), 0);
-    };
-
     constexpr int inactive_offset_x = -20;
     constexpr int inactive_offset_y = -20;
     constexpr int hightlight_offset_x = 140;
-    constexpr int hightlight_offset_y = 60;
+    constexpr int hightlight_offset_y = 80;
 
     m_active_window_rect = Gfx::IntRect(0, 0, 320, 220);
     m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
-    auto active_frame = to_frame_rect(m_active_window_rect);
-    auto x_delta = m_active_window_rect.x() - active_frame.x();
-    auto y_delta = m_active_window_rect.y() - active_frame.y();
+    m_highlight_window_rect = Gfx::IntRect(m_active_window_rect.location(), { 160, 70 }).translated(hightlight_offset_x, hightlight_offset_y);
 
-    // Center preview windows accounting for the window frames,
-    // which can vary in size depending on properties of the theme.
-    auto combind_frame_rect = active_frame.united(to_frame_rect(m_inactive_window_rect)).centered_within(frame_inner_rect());
-    m_inactive_window_rect.set_x(combind_frame_rect.x() + x_delta);
-    m_inactive_window_rect.set_y(combind_frame_rect.y() + y_delta);
-    m_active_window_rect.set_x(m_inactive_window_rect.x() - inactive_offset_x);
-    m_active_window_rect.set_y(m_inactive_window_rect.y() - inactive_offset_y);
-    m_highlight_window_rect = Gfx::IntRect(0, 0, 160, 70)
-                                  .translated(m_active_window_rect.x(), m_active_window_rect.y())
-                                  .translated(hightlight_offset_x, hightlight_offset_y)
-                                  .translated(x_delta, y_delta);
+    Array<Window, 3> window_group {
+        m_active_window_rect, m_inactive_window_rect, m_highlight_window_rect
+    };
+
+    center_window_group_within(window_group, frame_inner_rect());
 
     m_gallery->set_relative_rect(m_active_window_rect);
 }
