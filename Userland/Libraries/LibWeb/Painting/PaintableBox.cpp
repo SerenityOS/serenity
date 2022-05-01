@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -381,9 +382,9 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto text = text_node.text_for_rendering();
         auto text_transform = text_node.computed_values().text_transform();
         if (text_transform == CSS::TextTransform::Uppercase)
-            text = text_node.text_for_rendering().to_uppercase();
+            text = Unicode::to_unicode_uppercase_full(text_node.text_for_rendering());
         if (text_transform == CSS::TextTransform::Lowercase)
-            text = text_node.text_for_rendering().to_lowercase();
+            text = Unicode::to_unicode_lowercase_full(text_node.text_for_rendering());
 
         Gfx::FloatPoint baseline_start { fragment_absolute_rect.x(), fragment_absolute_rect.y() + fragment.baseline() };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };

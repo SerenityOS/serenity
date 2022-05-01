@@ -380,6 +380,7 @@ set(GENERATED_SOURCES
 
 serenity_lib(LibWeb web)
 target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm LibXML)
+link_with_unicode_data(LibWeb)
 
 function(libweb_js_wrapper class)
     cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")
