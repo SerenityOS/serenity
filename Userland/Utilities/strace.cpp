@@ -9,6 +9,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <Kernel/API/SyscallString.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
