@@ -28,19 +28,23 @@ void ThemePreviewWidget::paint_preview(GUI::PaintEvent&)
 {
     GUI::Painter painter(*this);
 
-    auto active_window_rect = rect().shrunken(48, 100).translated(4, 26);
+    auto active_window_rect = frame_inner_rect().shrunken(48, 100);
     auto inactive_window_rect = active_window_rect.translated(-8, -32);
     auto message_box = active_window_rect.shrunken(100, 60);
+
+    Array<Window, 3> window_group {
+        active_window_rect, inactive_window_rect, message_box
+    };
+    center_window_group_within(window_group, frame_inner_rect());
 
     paint_window("Inactive Window", inactive_window_rect, Gfx::WindowTheme::WindowState::Inactive, inactive_window_icon());
     paint_window("Active Window", active_window_rect, Gfx::WindowTheme::WindowState::Active, active_window_icon());
     paint_window("Alert", message_box, Gfx::WindowTheme::WindowState::Highlighted, active_window_icon(), 1);
 
     auto draw_centered_button = [&](auto window_rect, auto text, int button_width, int button_height) {
-        auto box_center = window_rect.center();
-        Gfx::IntRect button_rect { box_center.x() - button_width / 2, box_center.y() - button_height / 2, button_width, button_height };
-        Gfx::StylePainter::paint_button(
-            painter, button_rect, preview_palette(), Gfx::ButtonStyle::Normal, false, false, false, true, false, false);
+        Gfx::IntRect button_rect { 0, 0, button_width, button_height };
+        button_rect.center_within(window_rect);
+        Gfx::StylePainter::paint_button(painter, button_rect, preview_palette(), Gfx::ButtonStyle::Normal, false, false, false, true, false, false);
         painter.draw_text(button_rect, text, Gfx::TextAlignment::Center, preview_palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
     };
 
