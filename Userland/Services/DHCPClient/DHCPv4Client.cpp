@@ -67,7 +67,7 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
     return true;
 }
 
-static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4_addr, IPv4Address const& netmask, IPv4Address const& gateway)
+static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4_addr, IPv4Address const& netmask, Optional<IPv4Address> const& gateway)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (fd < 0) {
@@ -99,13 +99,16 @@ static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4
         dbgln("ERROR: ioctl(SIOCSIFNETMASK) :: {}", strerror(errno));
     }
 
+    if (!gateway.has_value())
+        return;
+
     // set the default gateway
     struct rtentry rt;
     memset(&rt, 0, sizeof(rt));
 
     rt.rt_dev = const_cast<char*>(iface.ifname.characters());
     rt.rt_gateway.sa_family = AF_INET;
-    ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = gateway.to_in_addr_t();
+    ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = gateway.value().to_in_addr_t();
     rt.rt_flags = RTF_UP | RTF_GATEWAY;
 
     if (ioctl(fd, SIOCADDRT, &rt) < 0) {
@@ -251,7 +254,12 @@ void DHCPv4Client::handle_ack(DHCPv4Packet const& packet, ParsedDHCPv4Options co
             dhcp_discover(interface);
         },
         this);
-    set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), options.get_many<IPv4Address>(DHCPOption::Router, 1).first());
+
+    Optional<IPv4Address> gateway;
+    if (auto routers = options.get_many<IPv4Address>(DHCPOption::Router, 1); !routers.is_empty())
+        gateway = routers.first();
+
+    set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), gateway);
 }
 
 void DHCPv4Client::handle_nak(DHCPv4Packet const& packet, ParsedDHCPv4Options const& options)
