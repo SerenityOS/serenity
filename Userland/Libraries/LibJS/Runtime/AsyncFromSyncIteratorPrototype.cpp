@@ -200,7 +200,7 @@ ThrowCompletionOr<Iterator> create_async_from_sync_iterator(GlobalObject& global
     // 3. Let nextMethod be ! Get(asyncIterator, "next").
     auto next_method = MUST(async_iterator->get(vm.names.next));
 
-    // 4. Let iteratorRecord be the Record { [[Iterator]]: asyncIterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+    // 4. Let iteratorRecord be the Iterator Record { [[Iterator]]: asyncIterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
     auto iterator_record = Iterator { .iterator = async_iterator, .next_method = next_method, .done = false };
 
     // 5. Return iteratorRecord.

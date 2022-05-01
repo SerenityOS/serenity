@@ -223,6 +223,34 @@ RecursionDecision Text::MultiNode::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
+void Text::StrikeThroughNode::render_to_html(StringBuilder& builder) const
+{
+    builder.append("<del>");
+    striked_text->render_to_html(builder);
+    builder.append("</del>");
+}
+
+void Text::StrikeThroughNode::render_for_terminal(StringBuilder& builder) const
+{
+    builder.append("\e[9m");
+    striked_text->render_for_terminal(builder);
+    builder.append("\e[29m");
+}
+
+size_t Text::StrikeThroughNode::terminal_length() const
+{
+    return striked_text->terminal_length();
+}
+
+RecursionDecision Text::StrikeThroughNode::walk(Visitor& visitor) const
+{
+    RecursionDecision rd = visitor.visit(*this);
+    if (rd != RecursionDecision::Recurse)
+        return rd;
+
+    return striked_text->walk(visitor);
+}
+
 size_t Text::terminal_length() const
 {
     return m_node->terminal_length();
@@ -330,7 +358,7 @@ Vector<Text::Token> Text::tokenize(StringView str)
         if (ch == '\\' && offset + 1 < str.length() && ispunct(str[offset + 1])) {
             current_token.append(str[offset + 1]);
             ++offset;
-        } else if (ch == '*' || ch == '_' || ch == '`') {
+        } else if (ch == '*' || ch == '_' || ch == '`' || ch == '~') {
             flush_token();
 
             char delim = ch;
@@ -388,6 +416,9 @@ NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator
             case '`':
                 node->children.append(parse_code(tokens));
                 break;
+            case '~':
+                node->children.append(parse_strike_through(tokens));
+                break;
             }
         } else if (*tokens == "[" || *tokens == "![") {
             node->children.append(parse_link(tokens));
@@ -431,7 +462,7 @@ NonnullOwnPtr<Text::Node> Text::parse_newline(Vector<Token>::ConstIterator& toke
 
 bool Text::can_open(Token const& opening)
 {
-    return (opening.run_char() == '*' && opening.left_flanking) || (opening.run_char() == '_' && opening.left_flanking && (!opening.right_flanking || opening.punct_before));
+    return (opening.run_char() == '~' && opening.left_flanking) || (opening.run_char() == '*' && opening.left_flanking) || (opening.run_char() == '_' && opening.left_flanking && (!opening.right_flanking || opening.punct_before));
 }
 
 bool Text::can_close_for(Token const& opening, Text::Token const& closing)
@@ -442,7 +473,7 @@ bool Text::can_close_for(Token const& opening, Text::Token const& closing)
     if (opening.run_length() != closing.run_length())
         return false;
 
-    return (opening.run_char() == '*' && closing.right_flanking) || (opening.run_char() == '_' && closing.right_flanking && (!closing.left_flanking || closing.punct_after));
+    return (opening.run_char() == '~' && closing.right_flanking) || (opening.run_char() == '*' && closing.right_flanking) || (opening.run_char() == '_' && closing.right_flanking && (!closing.left_flanking || closing.punct_after));
 }
 
 NonnullOwnPtr<Text::Node> Text::parse_emph(Vector<Token>::ConstIterator& tokens, bool in_link)
@@ -471,6 +502,9 @@ NonnullOwnPtr<Text::Node> Text::parse_emph(Vector<Token>::ConstIterator& tokens,
                 break;
             case '`':
                 child->children.append(parse_code(tokens));
+                break;
+            case '~':
+                child->children.append(parse_strike_through(tokens));
                 break;
             }
         } else if (*tokens == "[" || *tokens == "![") {
@@ -556,4 +590,38 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
     link_text->children.append(make<TextNode>(separator.data));
     return link_text;
 }
+
+NonnullOwnPtr<Text::Node> Text::parse_strike_through(Vector<Token>::ConstIterator& tokens)
+{
+    auto opening = *tokens;
+
+    auto is_closing = [&](Token const& token) {
+        return token.is_run && token.run_char() == '~' && token.run_length() == opening.run_length();
+    };
+
+    bool is_all_whitespace = true;
+    auto striked_text = make<MultiNode>();
+    for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
+        if (is_closing(*iterator)) {
+            tokens = iterator;
+
+            if (!is_all_whitespace) {
+                auto& first = dynamic_cast<TextNode&>(striked_text->children.first());
+                auto& last = dynamic_cast<TextNode&>(striked_text->children.last());
+                if (first.text.starts_with(" ") && last.text.ends_with(" ")) {
+                    first.text = first.text.substring(1);
+                    last.text = last.text.substring(0, last.text.length() - 1);
+                }
+            }
+
+            return make<StrikeThroughNode>(move(striked_text));
+        }
+
+        is_all_whitespace = is_all_whitespace && iterator->data.is_whitespace();
+        striked_text->children.append(make<TextNode>((*iterator == "\n") ? " " : iterator->data, false));
+    }
+
+    return make<TextNode>(opening.data);
+}
+
 }

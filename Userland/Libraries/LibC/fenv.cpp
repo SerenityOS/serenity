@@ -72,7 +72,7 @@ int fesetenv(fenv_t const* env)
         return 0;
     }
 
-    asm volatile("fldenv %0" ::"m"(env)
+    asm volatile("fldenv %0" ::"m"(env->__x87_fpu_env)
                  : "memory");
 
     set_mxcsr(env->__mxcsr);

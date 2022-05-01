@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
     // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
     auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
-    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
+    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]]).
     auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
 
     // 5. Return ! CreateTemporalInstant(ns).

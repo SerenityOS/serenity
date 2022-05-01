@@ -1389,9 +1389,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
     for (u64 i = 0; i < actual_delete_count; ++i) {
         auto from = actual_start + i;
-        bool from_present = TRY(this_object->has_property(from));
 
-        if (from_present) {
+        if (TRY(this_object->has_property(from))) {
             auto from_value = TRY(this_object->get(from));
 
             TRY(removed_elements->create_data_property_or_throw(i, from_value));
@@ -1405,9 +1404,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             auto to = i + insert_count;
             u64 from = i + actual_delete_count;
 
-            auto from_present = TRY(this_object->has_property(from));
-
-            if (from_present) {
+            if (TRY(this_object->has_property(from))) {
                 auto from_value = TRY(this_object->get(from));
                 TRY(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {
@@ -1420,11 +1417,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     } else if (insert_count > actual_delete_count) {
         for (u64 i = initial_length - actual_delete_count; i > actual_start; --i) {
             u64 from_index = i + actual_delete_count - 1;
-            auto from_present = TRY(this_object->has_property(from_index));
-
             auto to = i + insert_count - 1;
 
-            if (from_present) {
+            if (TRY(this_object->has_property(from_index))) {
                 auto from_value = TRY(this_object->get(from_index));
                 TRY(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
             } else {

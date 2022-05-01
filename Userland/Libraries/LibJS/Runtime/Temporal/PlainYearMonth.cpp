@@ -57,8 +57,8 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
-        // e. Return ? YearMonthFromFields(calendar, fields, options).
-        return year_month_from_fields(global_object, *calendar, *fields, options);
+        // e. Return ? CalendarYearMonthFromFields(calendar, fields, options).
+        return calendar_year_month_from_fields(global_object, *calendar, *fields, options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
@@ -77,8 +77,8 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
 
     // 9. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISODay]] internal slot of the result.
-    // 10. Return ? YearMonthFromFields(calendar, result).
-    return year_month_from_fields(global_object, *calendar, *creation_result);
+    // 10. Return ? CalendarYearMonthFromFields(calendar, result).
+    return calendar_year_month_from_fields(global_object, *calendar, *creation_result);
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
@@ -143,13 +143,13 @@ bool iso_year_month_within_limits(i32 year, u8 month)
 {
     // 1. Assert: year and month are integers.
 
-    // 2. If year < −271821 or year > 275760, then
+    // 2. If year < -271821 or year > 275760, then
     if (year < -271821 || year > 275760) {
         // a. Return false.
         return false;
     }
 
-    // 3. If year is −271821 and month < 4, then
+    // 3. If year is -271821 and month < 4, then
     if (year == -271821 && month < 4) {
         // a. Return false.
         return false;
@@ -174,7 +174,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     // 2. Set year to year + floor((month - 1) / 12).
     year += floor((month - 1) / 12);
 
-    // 3. Set month to (month − 1) modulo 12 + 1.
+    // 3. Set month to (month - 1) modulo 12 + 1.
     month = modulo(month - 1, 12) + 1;
 
     // 4. Return the Record { [[Year]]: year, [[Month]]: month }.
@@ -203,7 +203,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
     // 1. Assert: isoYear, isoMonth, and referenceISODay are integers.
     // 2. Assert: Type(calendar) is Object.
 
-    // 3. If ! IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
+    // 3. If IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, reference_iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 

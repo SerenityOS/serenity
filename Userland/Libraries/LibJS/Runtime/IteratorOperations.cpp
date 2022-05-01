@@ -62,7 +62,7 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
     // 5. Let nextMethod be ? GetV(iterator, "next").
     auto next_method = TRY(iterator.get(global_object, vm.names.next));
 
-    // 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+    // 6. Let iteratorRecord be the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
     auto iterator_record = Iterator { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
 
     // 7. Return iteratorRecord.

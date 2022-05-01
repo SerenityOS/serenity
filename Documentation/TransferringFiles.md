@@ -47,7 +47,7 @@ cd Ports
 cd openssh
 ./package.sh
 cd ../..
-Meta/serenity.run
+Meta/serenity.sh run
 ```
 - From within SerenityOS, check that you have a working sftp app:
 

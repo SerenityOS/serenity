@@ -87,4 +87,19 @@ int openat(int dirfd, char const* path, int options, ...)
     int rc = syscall(SC_open, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_fadvise.html
+int posix_fadvise(int fd, off_t offset, off_t len, int advice)
+{
+    // Per POSIX:
+    // "The posix_fadvise() function shall have no effect on the semantics of other operations on the specified data,
+    // although it may affect the performance of other operations."
+
+    // For now, we simply ignore posix_fadvise() requests. In the future we may use them to optimize performance.
+    (void)fd;
+    (void)offset;
+    (void)len;
+    (void)advice;
+    return 0;
+}
 }

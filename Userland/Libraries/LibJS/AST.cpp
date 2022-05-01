@@ -292,22 +292,22 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     auto has_own_name = !name().is_empty();
 
     auto const& used_name = has_own_name ? name() : given_name;
-    auto* scope = interpreter.lexical_environment();
+    auto* environment = interpreter.lexical_environment();
     if (has_own_name) {
-        VERIFY(scope);
-        scope = new_declarative_environment(*scope);
-        MUST(scope->create_immutable_binding(global_object, name(), false));
+        VERIFY(environment);
+        environment = new_declarative_environment(*environment);
+        MUST(environment->create_immutable_binding(global_object, name(), false));
     }
 
-    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
+    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, source_text(), body(), parameters(), function_length(), scope, private_scope, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
 
     if (has_own_name)
-        MUST(scope->initialize_binding(global_object, name(), closure));
+        MUST(environment->initialize_binding(global_object, name(), closure));
 
     return closure;
 }
@@ -511,7 +511,7 @@ Completion ReturnStatement::execute(Interpreter& interpreter, GlobalObject& glob
 
     // ReturnStatement : return ;
     if (!m_argument) {
-        // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
         return { Completion::Type::Return, js_undefined(), {} };
     }
 
@@ -523,7 +523,7 @@ Completion ReturnStatement::execute(Interpreter& interpreter, GlobalObject& glob
     // NOTE: Generators are not supported in the AST interpreter
     // 3. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
 
-    // 4. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+    // 4. Return Completion Record { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
     return { Completion::Type::Return, value, {} };
 }
 
@@ -1004,7 +1004,7 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, GlobalObjec
 
     // a. If exprValue is undefined or null, then
     if (rhs_result.is_nullish()) {
-        // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Break, {}, {} };
     }
 
@@ -1381,7 +1381,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
             property_key = static_cast<Identifier const&>(property()).string();
         }
 
-        // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
+        // 6. If the source text matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
         bool strict = interpreter.vm().in_strict_mode();
 
         // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
@@ -1600,7 +1600,7 @@ public:
         //    b. Let value be ? GetValue(rhs).
         auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(global_object, m_expression, m_class_field_identifier_name));
 
-        // 5. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+        // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
         return { Completion::Type::Return, value, {} };
     }
 
@@ -1667,14 +1667,14 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 1. Let lex be the running execution context's LexicalEnvironment.
     auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
-    // 2. Let privateScope be the running execution context's PrivateEnvironment.
-    auto* private_scope = interpreter.vm().running_execution_context().private_environment;
+    // 2. Let privateEnv be the running execution context's PrivateEnvironment.
+    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
 
     // 3. Let sourceText be the empty sequence of Unicode code points.
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
-    // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateScope).
+    // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto* body_function = ECMAScriptFunctionObject::create(global_object, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_scope, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto* body_function = ECMAScriptFunctionObject::create(global_object, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -1756,7 +1756,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto& vm = interpreter.vm();
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
-    auto* class_scope = new_declarative_environment(*environment);
+    auto* class_environment = new_declarative_environment(*environment);
 
     // We might not set the lexical environment but we always want to restore it eventually.
     ArmedScopeGuard restore_environment = [&] {
@@ -1764,7 +1764,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     };
 
     if (!binding_name.is_null())
-        MUST(class_scope->create_immutable_binding(global_object, binding_name, true));
+        MUST(class_environment->create_immutable_binding(global_object, binding_name, true));
 
     auto* outer_private_environment = vm.running_execution_context().private_environment;
     auto* class_private_environment = new_private_environment(vm, outer_private_environment);
@@ -1780,7 +1780,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto* constructor_parent = vm.current_realm()->global_object().function_prototype();
 
     if (!m_super_class.is_null()) {
-        vm.running_execution_context().lexical_environment = class_scope;
+        vm.running_execution_context().lexical_environment = class_environment;
 
         // Note: Since our execute does evaluation and GetValue in once we must check for a valid reference first
 
@@ -1815,7 +1815,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     auto* prototype = Object::create(global_object, proto_parent);
     VERIFY(prototype);
 
-    vm.running_execution_context().lexical_environment = class_scope;
+    vm.running_execution_context().lexical_environment = class_environment;
     vm.running_execution_context().private_environment = class_private_environment;
     ScopeGuard restore_private_environment = [&] {
         vm.running_execution_context().private_environment = outer_private_environment;
@@ -1889,7 +1889,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     restore_environment.disarm();
 
     if (!binding_name.is_null())
-        MUST(class_scope->initialize_binding(global_object, binding_name, class_constructor));
+        MUST(class_environment->initialize_binding(global_object, binding_name, class_constructor));
 
     for (auto& field : instance_fields)
         class_constructor->add_field(field);
@@ -2573,7 +2573,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter, GlobalObject&
                 // 4. Let rval be ? GetValue(rref).
                 auto rhs_result = TRY(m_rhs->execute(interpreter, global_object)).release_value();
 
-                // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+                // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern with argument rval.
                 TRY(interpreter.vm().destructuring_assignment_evaluation(pattern, rhs_result, global_object));
 
                 // 6. Return rval.
@@ -3971,13 +3971,13 @@ Completion BreakStatement::execute(Interpreter& interpreter, GlobalObject&) cons
 
     // BreakStatement : break ;
     if (m_target_label.is_null()) {
-        // 1. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Break, {}, {} };
     }
 
     // BreakStatement : break LabelIdentifier ;
     // 1. Let label be the StringValue of LabelIdentifier.
-    // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
+    // 2. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
     return { Completion::Type::Break, {}, m_target_label };
 }
 
@@ -3988,13 +3988,13 @@ Completion ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) c
 
     // ContinueStatement : continue ;
     if (m_target_label.is_null()) {
-        // 1. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: empty }.
+        // 1. Return Completion Record { [[Type]]: continue, [[Value]]: empty, [[Target]]: empty }.
         return { Completion::Type::Continue, {}, {} };
     }
 
     // ContinueStatement : continue LabelIdentifier ;
     // 1. Let label be the StringValue of LabelIdentifier.
-    // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
+    // 2. Return Completion Record { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
     return { Completion::Type::Continue, {}, m_target_label };
 }
 

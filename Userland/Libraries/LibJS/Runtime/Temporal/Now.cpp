@@ -164,8 +164,8 @@ BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
     auto now = Time::now_realtime().to_nanoseconds();
     auto ns = Crypto::SignedBigInteger::create_from(now);
 
-    // 2. Set ns to the result of clamping ns between −8.64 × 10^21 and 8.64 × 10^21.
-    // NOTE: Time::to_nanoseconds() already clamps between −(2^63) and 2^63 − 1, the range of an i64,
+    // 2. Set ns to the result of clamping ns between -8.64 × 10^21 and 8.64 × 10^21.
+    // NOTE: Time::to_nanoseconds() already clamps between -(2^63) and 2^63 - 1, the range of an i64,
     //       if an overflow occurs during seconds -> nanoseconds conversion.
 
     // 3. Return ℤ(ns).

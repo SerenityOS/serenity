@@ -113,8 +113,8 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
             MUST(fields->create_data_property_or_throw(vm.names.year, Value(reference_iso_year)));
         }
 
-        // j. Return ? MonthDayFromFields(calendar, fields, options).
-        return month_day_from_fields(global_object, *calendar, *fields, options);
+        // j. Return ? CalendarMonthDayFromFields(calendar, fields, options).
+        return calendar_month_day_from_fields(global_object, *calendar, *fields, options);
     }
 
     // 5. Perform ? ToTemporalOverflow(options).
@@ -139,8 +139,8 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
     auto* plain_month_day = TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
 
     // 11. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISOYear]] internal slot of the result.
-    // 12. Return ? MonthDayFromFields(calendar, result).
-    return TRY(month_day_from_fields(global_object, *calendar, *plain_month_day));
+    // 12. Return ? CalendarMonthDayFromFields(calendar, result).
+    return TRY(calendar_month_day_from_fields(global_object, *calendar, *plain_month_day));
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday
@@ -151,7 +151,7 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global
     // 1. Assert: isoMonth, isoDay, and referenceISOYear are integers.
     // 2. Assert: Type(calendar) is Object.
 
-    // 3. If ! IsValidISODate(referenceISOYear, isoMonth, isoDay) is false, throw a RangeError exception.
+    // 3. If IsValidISODate(referenceISOYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
 

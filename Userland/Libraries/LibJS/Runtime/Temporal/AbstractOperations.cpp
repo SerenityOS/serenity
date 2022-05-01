@@ -320,7 +320,7 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     }
     // 3. Else if dividend is more than 1, then
     else if (*dividend > 1) {
-        // a. Let maximum be 𝔽(dividend − 1).
+        // a. Let maximum be 𝔽(dividend - 1).
         maximum = *dividend - 1;
     }
     // 4. Else,
@@ -444,20 +444,20 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 
     // 11. If digits is 1, 2, or 3, then
     if (digits == 1 || digits == 2 || digits == 3) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 − digits) }.
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - digits) }.
         return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
     }
 
     // 12. If digits is 4, 5, or 6, then
     if (digits == 4 || digits == 5 || digits == 6) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 − digits) }.
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - digits) }.
         return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
     }
 
     // 13. Assert: digits is 7, 8, or 9.
     VERIFY(digits == 7 || digits == 8 || digits == 9);
 
-    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 − digits) }.
+    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - digits) }.
     return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
 }
 
@@ -680,7 +680,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         if (time_zone_name.has_value()) {
             // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
             if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
-                // 1. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+                // 1. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
                 if (!is_valid_time_zone_name(*time_zone_name))
                     return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
@@ -983,7 +983,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
 // it uses mathematical values which can be arbitrarily (but not infinitely) large.
 // Incidentally V8's Temporal implementation does the same :^)
 
-// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.29 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 {
     // 1. Assert: x and increment are mathematical values.
@@ -997,7 +997,7 @@ i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 
     // 4. If roundingMode is "ceil", then
     if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be −floor(−quotient).
+        // a. Let rounded be -floor(-quotient).
         rounded = -floor(-quotient);
     }
     // 5. Else if roundingMode is "floor", then
@@ -1007,7 +1007,7 @@ i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
     }
     // 6. Else if roundingMode is "trunc", then
     else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        // a. Let rounded be RoundTowardsZero(quotient).
         rounded = trunc(quotient);
     }
     // 7. Else,
@@ -1044,7 +1044,7 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
     Crypto::SignedBigInteger rounded = move(division_result.quotient);
     // 4. If roundingMode is "ceil", then
     if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be −floor(−quotient).
+        // a. Let rounded be -floor(-quotient).
         if (!division_result.remainder.is_negative())
             rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
     }
@@ -1056,7 +1056,7 @@ BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, 
     }
     // 6. Else if roundingMode is "trunc", then
     else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        // a. Let rounded be the RoundTowardsZero(quotient).
         // NOTE: This is a no-op
     }
     // 7. Else,
@@ -1187,11 +1187,11 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         nanosecond = 0;
     }
 
-    // 18. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+    // 18. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
     if (!is_valid_iso_date(year, month, day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidISODate);
 
-    // 19. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    // 19. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
 
@@ -1466,7 +1466,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     // 18. If sign contains the code point 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
     if (sign_part.has_value() && sign_part->is_one_of("-", "\u2212")) {
-        // a. Let factor be −1.
+        // a. Let factor be -1.
         factor = -1;
     }
     // 19. Else,

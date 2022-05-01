@@ -78,8 +78,9 @@ public:
 
     void refresh_after_resolution_change();
 
-    bool is_graphical() { return m_graphical; }
-    void set_graphical(bool graphical);
+    // ^TTY
+    virtual bool is_graphical() const override { return m_graphical; }
+    virtual void set_graphical(bool graphical) override;
 
     void emit_char(char);
 

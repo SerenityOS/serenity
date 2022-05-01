@@ -46,11 +46,11 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
     // 3. Assert: isoDay is an integer.
     // 4. Assert: Type(calendar) is Object.
 
-    // 5. If ! IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
+    // 5. If IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-    // 6. If ! ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
+    // 6. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
@@ -115,8 +115,8 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
 
-        // g. Return ? DateFromFields(calendar, fields, options).
-        return date_from_fields(global_object, *calendar, *fields, options);
+        // g. Return ? CalendarDateFromFields(calendar, fields, options).
+        return calendar_date_from_fields(global_object, *calendar, *fields, options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
@@ -128,7 +128,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
     // 6. Let result be ? ParseTemporalDateString(string).
     auto result = TRY(parse_temporal_date_string(global_object, string));
 
-    // 7. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    // 7. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));
 
     // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
@@ -159,7 +159,7 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
         // d. Let end be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
         auto end = ISODate { .year = year2, .month = month2, .day = day2 };
 
-        // e. Let years be end.[[Year]] − start.[[Year]].
+        // e. Let years be end.[[Year]] - start.[[Year]].
         double years = end.year - start.year;
 
         // f. Let mid be ! AddISODate(y1, m1, d1, years, 0, 0, 0, "constrain").
@@ -178,7 +178,7 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             return create_date_duration_record(0, years * 12, 0, 0);
         }
 
-        // i. Let months be end.[[Month]] − start.[[Month]].
+        // i. Let months be end.[[Month]] - start.[[Month]].
         double months = end.month - start.month;
 
         // j. If midSign is not equal to sign, then
@@ -281,11 +281,11 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             // ii. Let greater be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
             greater = { .year = year1, .month = month1, .day = day1 };
 
-            // iii. Let sign be −1.
+            // iii. Let sign be -1.
             sign = -1;
         }
 
-        // c. Let days be ! ToISODayOfYear(greater.[[Year]], greater.[[Month]], greater.[[Day]]) − ! ToISODayOfYear(smaller.[[Year]], smaller.[[Month]], smaller.[[Day]]).
+        // c. Let days be ! ToISODayOfYear(greater.[[Year]], greater.[[Month]], greater.[[Day]]) - ! ToISODayOfYear(smaller.[[Year]], smaller.[[Month]], smaller.[[Day]]).
         double days = to_iso_day_of_year(greater.year, greater.month, greater.day) - to_iso_day_of_year(smaller.year, smaller.month, smaller.day);
 
         // d. Let year be smaller.[[Year]].
@@ -339,7 +339,7 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
         auto y = static_cast<i32>(year);
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
-        // a. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+        // a. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (!is_valid_iso_date(y, m, d))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
@@ -409,7 +409,7 @@ ISODate balance_iso_date(double year_, double month_, double day)
     // 4. Set year to balancedYearMonth.[[Year]].
     auto year = balanced_year_month.year;
 
-    // 5. NOTE: To deal with negative numbers of days whose absolute value is greater than the number of days in a year, the following section subtracts years and adds days until the number of days is greater than −366 or −365.
+    // 5. NOTE: To deal with negative numbers of days whose absolute value is greater than the number of days in a year, the following section subtracts years and adds days until the number of days is greater than -366 or -365.
 
     i32 test_year;
 
@@ -420,19 +420,19 @@ ISODate balance_iso_date(double year_, double month_, double day)
     }
     // 7. Else,
     else {
-        // a. Let testYear be year − 1.
+        // a. Let testYear be year - 1.
         test_year = year - 1;
     }
 
-    // 8. Repeat, while day < −1 × ! ISODaysInYear(testYear),
+    // 8. Repeat, while day < -1 × ! ISODaysInYear(testYear),
     while (day < -1 * iso_days_in_year(test_year)) {
         // a. Set day to day + !ISODaysInYear(testYear).
         day += iso_days_in_year(test_year);
 
-        // b. Set year to year − 1.
+        // b. Set year to year - 1.
         year--;
 
-        // c. Set testYear to testYear − 1.
+        // c. Set testYear to testYear - 1.
         test_year--;
     }
 
@@ -443,7 +443,7 @@ ISODate balance_iso_date(double year_, double month_, double day)
 
     // 11. Repeat, while day > ! ISODaysInYear(testYear),
     while (day > iso_days_in_year(test_year)) {
-        // a. Set day to day − ! ISODaysInYear(testYear).
+        // a. Set day to day - ! ISODaysInYear(testYear).
         day -= iso_days_in_year(test_year);
 
         // b. Set year to year + 1.
@@ -457,7 +457,7 @@ ISODate balance_iso_date(double year_, double month_, double day)
 
     // 13. Repeat, while day < 1,
     while (day < 1) {
-        // a. Set balancedYearMonth to ! BalanceISOYearMonth(year, month − 1).
+        // a. Set balancedYearMonth to ! BalanceISOYearMonth(year, month - 1).
         balanced_year_month = balance_iso_year_month(year, month - 1);
 
         // b. Set year to balancedYearMonth.[[Year]].
@@ -474,7 +474,7 @@ ISODate balance_iso_date(double year_, double month_, double day)
 
     // 15. Repeat, while day > ! ISODaysInMonth(year, month),
     while (day > iso_days_in_month(year, month)) {
-        // a. Set day to day − ! ISODaysInMonth(year, month).
+        // a. Set day to day - ! ISODaysInMonth(year, month).
         day -= iso_days_in_month(year, month);
 
         // b. Set balancedYearMonth to ! BalanceISOYearMonth(year, month + 1).

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
@@ -41,7 +42,7 @@ public:
 public:
     ~MBRPartitionTable();
 
-    static Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> try_to_initialize(StorageDevice const&);
+    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(StorageDevice const&);
     static OwnPtr<MBRPartitionTable> try_to_initialize(StorageDevice const&, u32 start_lba);
     explicit MBRPartitionTable(StorageDevice const&);
     MBRPartitionTable(StorageDevice const&, u32 start_lba);

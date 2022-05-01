@@ -1,34 +1,10 @@
 I patch both configure.ac and configure itself (though only configure is required for the build)
 Serenity's GCC doesn't support SSP, so this is disabled.
---- a/configure.ac.orig
-+++ b/configure.ac
-@@ -99,22 +99,7 @@
- 			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
- 			)
- 	fi # non-static
--	# stack protector. -strong is good but only in gcc 4.9 or later
--	OLDCFLAGS="$CFLAGS"
--	TESTFLAGS="-fstack-protector-strong"
--	CFLAGS="$CFLAGS $TESTFLAGS"
--	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
--	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
--	    [
--			CFLAGS="$OLDCFLAGS"
--			TESTFLAGS="-fstack-protector --param=ssp-buffer-size=4"
--			CFLAGS="$CFLAGS $TESTFLAGS"
--			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
--			    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
--			    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
--			    )
--	    ]
--	    )
-+
- 	# FORTIFY_SOURCE
- 	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
- 
---- a/configure.orig
+diff --git a/configure b/configure
+index 8374714..8c9eb9a 100755
+--- a/configure
 +++ b/configure
-@@ -3357,53 +3357,7 @@
+@@ -3381,53 +3381,7 @@ fi
  rm -f core conftest.err conftest.$ac_objext \
      conftest$ac_exeext conftest.$ac_ext
  	fi # non-static
@@ -38,11 +14,11 @@ Serenity's GCC doesn't support SSP, so this is disabled.
 -	CFLAGS="$CFLAGS $TESTFLAGS"
 -	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 -/* end confdefs.h.  */
- 
+-
 -int
 -main ()
 -{
--
+ 
 -  ;
 -  return 0;
 -}
@@ -82,3 +58,31 @@ Serenity's GCC doesn't support SSP, so this is disabled.
  	# FORTIFY_SOURCE
  	{
  		OLDFLAGS="$CFLAGS"
+diff --git a/configure.ac b/configure.ac
+index 6a19479..28cd987 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -103,22 +103,7 @@ if test "$hardenbuild" -eq 1; then
+ 			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+ 			)
+ 	fi # non-static
+-	# stack protector. -strong is good but only in gcc 4.9 or later
+-	OLDCFLAGS="$CFLAGS"
+-	TESTFLAGS="-fstack-protector-strong"
+-	CFLAGS="$CFLAGS $TESTFLAGS"
+-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+-	    [
+-			CFLAGS="$OLDCFLAGS"
+-			TESTFLAGS="-fstack-protector --param=ssp-buffer-size=4"
+-			CFLAGS="$CFLAGS $TESTFLAGS"
+-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+-			    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+-			    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
+-			    )
+-	    ]
+-	    )
++
+ 	# FORTIFY_SOURCE
+ 	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
+ 

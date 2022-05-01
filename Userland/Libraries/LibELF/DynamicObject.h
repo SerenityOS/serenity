@@ -255,6 +255,7 @@ public:
     Symbol symbol(unsigned) const;
 
     typedef void (*InitializationFunction)();
+    typedef ElfW(Addr) (*IfuncResolver)();
 
     bool has_init_section() const { return m_init_offset != 0; }
     bool has_init_array_section() const { return m_init_array_offset != 0; }
@@ -322,6 +323,7 @@ public:
         size_t size { 0 };
         VirtualAddress address;
         unsigned bind { STB_LOCAL };
+        unsigned type { STT_FUNC };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
 

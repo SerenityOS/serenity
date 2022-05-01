@@ -21,7 +21,7 @@ public:
     bool has_alpha_channel() const { return m_color_has_alpha_channel; }
     void set_color_has_alpha_channel(bool has_alpha) { m_color_has_alpha_channel = has_alpha; }
 
-    void set_color(Color);
+    void set_color(Color, AllowCallback = AllowCallback::Yes);
     Color color() { return m_color; }
 
     void set_color_picker_title(String title) { m_color_picker_title = move(title); }
@@ -39,7 +39,7 @@ private:
     ColorInput();
 
     Gfx::IntRect color_rect() const;
-    void set_color_without_changing_text(Color);
+    void set_color_internal(Color, AllowCallback, bool change_text);
 
     Color m_color;
     String m_color_picker_title { "Select color" };

@@ -4,7 +4,7 @@ version=git
 workdir=SDL-main-serenity
 useconfigure=true
 files="https://github.com/SerenityPorts/SDL/archive/main-serenity.tar.gz SDL2-git.tar.gz"
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DPULSEAUDIO=OFF" "-DJACK=OFF" "-DEXTRA_LDFLAGS=-liconv;-ldl")
+configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DPULSEAUDIO=OFF" "-DJACK=OFF" "-DEXTRA_LDFLAGS=-laudio;-liconv;-ldl")
 depends=("libiconv")
 
 configure() {

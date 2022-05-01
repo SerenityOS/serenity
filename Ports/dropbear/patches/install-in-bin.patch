@@ -1,7 +1,9 @@
 Serenity doesn't use /sbin.
---- a/Makefile.in.orig
+diff --git a/Makefile.in b/Makefile.in
+index e824491..f30f508 100644
+--- a/Makefile.in
 +++ b/Makefile.in
-@@ -87,7 +87,7 @@
+@@ -97,7 +97,7 @@ prefix=@prefix@
  exec_prefix=@exec_prefix@
  datarootdir = @datarootdir@
  bindir=@bindir@

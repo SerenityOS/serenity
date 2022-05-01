@@ -3,7 +3,7 @@ list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false fgrep
     file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv nproc
-    pgrep pidof ping pmap ps readlink realpath reboot rm rmdir seq shutdown sleep sort stat stty su tail test
+    pgrep pidof ping pmap ps readlink realpath reboot rm rmdir route seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes less
 )
 list(APPEND RECOMMENDED_TARGETS
@@ -177,6 +177,7 @@ target_link_libraries(reboot LibMain)
 target_link_libraries(rev LibMain)
 target_link_libraries(rm LibMain)
 target_link_libraries(rmdir LibMain)
+target_link_libraries(route LibMain)
 target_link_libraries(run-tests LibRegex LibCoredump LibMain)
 target_link_libraries(seq LibMain)
 target_link_libraries(shot LibGUI LibMain)
