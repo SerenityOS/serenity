@@ -1,0 +1,24 @@
+From 1bc4a88e6a34b89538f07916479228758dd13155 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Mon, 2 May 2022 01:22:35 +0200
+Subject: [PATCH] Engine: Keep HTTP from endlessly formatting NaN values
+
+For whatever reason, our progress count for HTTP downloads stays at 0.
+This results in the engine calculating a NaN progress value many times
+each frame, which results in a significant performance hit.
+---
+ xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
+--- a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
++++ b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
+@@ -2280,7 +2280,7 @@
+ 	}
+ 
+ 	// update progress
+-	if( !Host_IsDedicated() )
++	if( !Host_IsDedicated() && iProgressCount != 0 )
+ 		Cvar_SetValue( "scr_download", flProgress/iProgressCount * 100 );
+ 
+ 	HTTP_AutoClean();
