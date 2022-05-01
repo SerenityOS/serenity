@@ -30,6 +30,41 @@
 
 namespace GL {
 
+#define APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(name, ...) \
+    if (should_append_to_listing()) {                       \
+        append_to_listing<&GLContext::name>(__VA_ARGS__);   \
+        if (!should_execute_after_appending_to_listing())   \
+            return;                                         \
+    }
+
+#define APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(name, arg) \
+    if (should_append_to_listing()) {                                \
+        auto ptr = store_in_listing(arg);                            \
+        append_to_listing<&GLContext::name>(*ptr);                   \
+        if (!should_execute_after_appending_to_listing())            \
+            return;                                                  \
+    }
+
+#define RETURN_WITH_ERROR_IF(condition, error)                    \
+    if (condition) {                                              \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
+        if (m_error == GL_NO_ERROR)                               \
+            m_error = error;                                      \
+        return;                                                   \
+    }
+
+#define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
+    if (condition) {                                               \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error);  \
+        if (m_error == GL_NO_ERROR)                                \
+            m_error = error;                                       \
+        return return_value;                                       \
+    }
+
+constexpr size_t MODELVIEW_MATRIX_STACK_LIMIT = 64;
+constexpr size_t PROJECTION_MATRIX_STACK_LIMIT = 8;
+constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
+
 struct ContextParameter {
     GLenum type;
     bool is_capability { false };
