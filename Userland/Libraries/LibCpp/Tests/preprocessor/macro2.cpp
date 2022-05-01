@@ -1,3 +1,4 @@
-#define M(x) String {x + "lo"}
+#define M(x) \
+    String { x + "lo" }
 
 M("he" + "l")

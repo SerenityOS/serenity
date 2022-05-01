@@ -17,9 +17,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> child_argv;
+    Vector<char const*> child_argv;
 
-    const char* output_filename = nullptr;
+    char const* output_filename = nullptr;
     auto trace_file = Core::File::standard_error();
 
     Core::ArgsParser parser;

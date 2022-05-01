@@ -1,4 +1,4 @@
-class A : public SomeNamespace::B, private C
-{
+class A : public SomeNamespace::B
+    , private C {
     int x;
 };
