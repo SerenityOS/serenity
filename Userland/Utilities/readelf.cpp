@@ -325,16 +325,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (interpreter_file_or_error.is_error()) {
             warnln("Unable to map interpreter file {}: {}", interpreter_path, interpreter_file_or_error.error());
-            return -1;
-        }
+        } else {
+            auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
 
-        auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
+            ELF::Image interpreter_image(interpreter_image_data);
 
-        ELF::Image interpreter_image(interpreter_image_data);
-
-        if (!interpreter_image.is_valid()) {
-            warnln("ELF interpreter image is invalid");
-            return -1;
+            if (!interpreter_image.is_valid()) {
+                warnln("ELF interpreter image is invalid");
+            }
         }
 
         int fd = TRY(Core::System::open(path, O_RDONLY));
