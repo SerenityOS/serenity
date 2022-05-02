@@ -1,4 +1,5 @@
 #pragma once
+#include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/Utf8View.h>
 #include <LibJVM/Forward.h>
@@ -7,6 +8,7 @@
 #include <LibJVM/Verification.h>
 
 //FIXME: Remove useless structs and merge structs that are only used in another struct into nameless structs.
+//FIXME: replace all 'short's with 'unsigned short's.
 
 namespace JVM {
 
@@ -102,20 +104,78 @@ struct Deprecated {
 };
 
 struct EnumConstValue {
-    short type_name_index;
-    short const_name_index;
+    unsigned short type_name_index;
+    unsigned short const_name_index;
 };
 
 struct ElementValue {
     char tag;
-    union {
-        short const_value_index;
+    union Val {
+        unsigned short const_value_index;
         EnumConstValue enum_const_value;
-        short class_info_index;
-        JVM::Annotation* annotation_value; //This has to be a pointer to resolve circular dependencies
+        unsigned short class_info_index;
+        AK::NonnullOwnPtr<JVM::Annotation> annotation_value; //This has to be a pointer to resolve circular dependencies
         //Technically, this could be circular, but in reality it will end when an ElementValue doesn't use the annotation_value.
-        AK::NonnullOwnPtr<AK::FixedArray<ElementValue>> array_value;
+        AK::FixedArray<ElementValue>* array_value;
+        Val() {
+            const_value_index = 0;
+        }
+        ~Val() {
+            annotation_value.~NonnullOwnPtr();
+        }
+
     } value;
+    ElementValue()
+        : tag(0)
+    {
+        value.const_value_index = 0;
+    }
+
+    ElementValue(const ElementValue &other) {
+        if ((tag > 65 && tag < 91) || tag == 115) { //Ascii codes.
+            value.const_value_index = other.value.const_value_index;
+        }
+        else if (tag == 'e') {
+           value.enum_const_value = other.value.enum_const_value;
+        }
+        else if (tag == 'c') {
+            value.class_info_index = other.value.class_info_index;
+        }
+        else if (tag == '@') {
+            value.annotation_value = make<Annotation>(other.value.annotation_value);
+            //We should confirm that we still hold on to the value of new_annot after leaving this function.
+        }
+        else if (tag == '[') {
+            auto array = other.value.array_value->must_clone_but_fixme_should_propagate_errors();
+            value.array_value = &(array);
+        }
+        else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    ElementValue& operator= (ElementValue& other) {
+        if ((tag > 65 && tag < 91) || tag == 115) { //Ascii codes.
+            other.value.const_value_index = this->value.const_value_index;
+        }
+        else if (tag == 'e') {
+           other.value.enum_const_value = this->value.enum_const_value;
+        }
+        else if (tag == 'c') {
+            other.value.class_info_index = this->value.class_info_index;
+        }
+        else if (tag == '@') {
+            other.value.annotation_value = make<Annotation>(this->value.annotation_value);
+            //We should confirm that we still hold on to the value of new_annot after leaving this function.
+        }
+        else if (tag == '[') {
+            auto array = value.array_value->must_clone_but_fixme_should_propagate_errors();
+            other.value.array_value = &(array);
+        }
+        else {
+            VERIFY_NOT_REACHED();
+        }
+    }
 };
 
 struct ElementValuePair {
@@ -245,6 +305,10 @@ struct PermittedSubclasses {
     AK::FixedArray<short> classes;
 };
 
+struct Custom {
+    short name_index;
+};
+
 enum class AttributeKind {
     ConstantValue,
     Code,
@@ -283,40 +347,56 @@ enum class AttributeKind {
 class AttributeInfo {
 
 public:
+    AttributeInfo(ConstantValue cv)
+         : m_kind(AttributeKind::ConstantValue)
+    {
+        m_value.constantvalue_index = cv;
+    }
+    AttributeInfo(Signature sig)
+         : m_kind(AttributeKind::Signature)
+    {
+        m_value.signature = sig;
+    }
+    AttributeInfo(AttributeKind kind)
+        : m_kind(kind)
+    {
 
+    }
 private:
     AttributeKind m_kind;
     union {
         //Should these all be structs, or should some of them be primitives (if that's what they are)?
-        //Also, should tables be warpper structs around AK::FixedArray, or should they just directly be that?
+        //Also, should tables be wrapper structs around AK::FixedArray, or should they just directly be that?
         //FIXME: Make more of these pointers to save on struct space. (Or don't do that if it's bad).
+        //FIXME: Another problem here is that a lot of these are unecessarily pointers because the compiler complains about no default constructor otherwise. Fix this! (I don't know how)
         ConstantValue constantvalue_index;
-        AK::NonnullOwnPtr<Code> code;
-        AK::NonnullOwnPtr<AK::FixedArray<StackMapFrame>> sm_table;
-        AK::NonnullOwnPtr<ExceptionTable> exceptions;
-        AK::NonnullOwnPtr<InnerClassTable> inner_classes;
+        Code* code;
+        AK::FixedArray<StackMapFrame>* sm_table;
+        ExceptionTable* exceptions;
+        InnerClassTable* inner_classes;
         EnclosingMethod enclosing_method;
         Synthetic synthetic;
         Signature signature;
         SourceFile source_file;
-        LocalVariableTable local_variable_table;
-        LocalVariableTypeTable local_variable_type_table;
+        LocalVariableTable* local_variable_table;
+        LocalVariableTypeTable* local_variable_type_table;
         Deprecated deprecated;
-        RuntimeVisibleAnnotations runtime_visible_annotations;
-        RuntimeInvisibleAnnotations runtime_invisible_annotations;
-        RuntimeVisibleParameterAnnotations runtime_visible_parameter_annotations;
-        RuntimeInvisibleParameterAnnotations runtime_invisible_parameter_annotations;
-        RuntimeVisibleTypeAnnotations runtime_visible_type_annotations;
-        RuntimeInvisibleTypeAnnotations runtime_invisible_type_annotations;
-        AnnotationDefault annotation_default;
-        BootstrapMethods bootstrap_methods;
-        MethodParameters method_parameters;
-        AK::NonnullOwnPtr<Module> module; //This is a NonnullOwnPtr because the struct is so large.
-        ModulePackages module_packages;
+        RuntimeVisibleAnnotations* runtime_visible_annotations;
+        RuntimeInvisibleAnnotations* runtime_invisible_annotations;
+        RuntimeVisibleParameterAnnotations* runtime_visible_parameter_annotations;
+        RuntimeInvisibleParameterAnnotations* runtime_invisible_parameter_annotations;
+        RuntimeVisibleTypeAnnotations* runtime_visible_type_annotations;
+        RuntimeInvisibleTypeAnnotations* runtime_invisible_type_annotations;
+        AnnotationDefault* annotation_default;
+        BootstrapMethods* bootstrap_methods;
+        MethodParameters* method_parameters;
+        Module* module; //This is a NonnullOwnPtr because the struct is so large.
+        ModulePackages* module_packages;
         ModuleMainClass module_main_class;
         NestHost nest_host;
-        Record record;
-        PermittedSubclasses permitted_subclasses;
+        Record* record;
+        PermittedSubclasses* permitted_subclasses;
+        Custom custom;
     } m_value;
 };
 
