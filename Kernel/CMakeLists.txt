@@ -281,6 +281,7 @@ set(KERNEL_SOURCES
     Syscalls/unlink.cpp
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
+    Syscalls/utimensat.cpp
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
