@@ -179,11 +179,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (action_add)
             TRY(Core::System::ioctl(fd, SIOCADDRT, &rt));
 
-        // FIXME: Add support for route deletion.
-        if (action_del) {
-            warnln("Route deletion currently not implemented.");
-            return 1;
-        }
+        if (action_del)
+            TRY(Core::System::ioctl(fd, SIOCDELRT, &rt));
     }
 
     return 0;

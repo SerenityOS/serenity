@@ -1,7 +1,7 @@
 From fae5030852da34db641d636ad4c599e56b92ccdf Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:17:13 +0200
-Subject: [PATCH 5/8] [libc++] Add support for SerenityOS
+Subject: [PATCH 5/9] [libc++] Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:

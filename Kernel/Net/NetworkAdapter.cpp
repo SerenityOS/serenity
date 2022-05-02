@@ -159,9 +159,4 @@ void NetworkAdapter::set_ipv4_netmask(IPv4Address const& netmask)
     m_ipv4_netmask = netmask;
 }
 
-void NetworkAdapter::set_ipv4_gateway(IPv4Address const& gateway)
-{
-    m_ipv4_gateway = gateway;
-}
-
 }

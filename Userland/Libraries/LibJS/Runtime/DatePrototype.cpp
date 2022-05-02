@@ -94,8 +94,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.valueOf, get_time, 0, attr);
 
     // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
-    // The function object that is the initial value of Date.prototype.toGMTString
-    // is the same function object that is the initial value of Date.prototype.toUTCString.
+    // The initial value of the "toGMTString" property is %Date.prototype.toUTCString%, defined in 21.4.4.43.
     define_direct_property(vm.names.toGMTString, get_without_side_effects(vm.names.toUTCString), attr);
 }
 

@@ -469,10 +469,12 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
         symbol = DynamicLinker::lookup_global_symbol(symbol_name);
     }
 
-    if (symbol.has_value())
-        return symbol.value().address.as_ptr();
+    if (!symbol.has_value())
+        return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
 
-    return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
+    if (symbol.value().type == STT_GNU_IFUNC)
+        return (void*)reinterpret_cast<DynamicObject::IfuncResolver>(symbol.value().address.as_ptr())();
+    return symbol.value().address.as_ptr();
 }
 
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)

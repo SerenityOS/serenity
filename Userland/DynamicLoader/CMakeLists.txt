@@ -15,7 +15,7 @@ elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/i386/*.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../Libraries/LibELF/Arch/i386/entry.S ../Libraries/LibELF/Arch/i386/plt_trampoline.S)
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/x86_64/*.S")
+    file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/x86_64/*.S" "../Libraries/LibC/arch/x86_64/*.cpp")
     set(ELF_SOURCES ${ELF_SOURCES} ../Libraries/LibELF/Arch/x86_64/entry.S ../Libraries/LibELF/Arch/x86_64/plt_trampoline.S)
 endif()
 
@@ -29,8 +29,7 @@ add_definitions(-D_DYNAMIC_LOADER)
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
-# FIXME: remove -nodefaultlibs after the next toolchain update
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nodefaultlibs -nostdlib -pie -fpic -DNO_TLS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
 
 set_source_files_properties (../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS
     "-fno-stack-protector")
@@ -45,6 +44,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     target_link_libraries(Loader.so PRIVATE clang_rt.builtins)
 endif ()
 
-target_link_libraries(Loader.so PRIVATE LibTimeZone)
+# Note: Don't confuse the coverage results by instrumenting Loader
+target_link_libraries(Loader.so PRIVATE LibTimeZone NoCoverage)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)

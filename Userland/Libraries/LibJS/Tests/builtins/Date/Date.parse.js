@@ -30,6 +30,7 @@ test("basic functionality", () => {
     expect(Date.parse("1980-05-30T13:40+1:10")).toBe(NaN);
     expect(Date.parse("1970-06-30T13:30Zoo")).toBe(NaN);
     expect(Date.parse("2020T13:30.40:")).toBe(NaN);
+    expect(Date.parse("-000000")).toBe(NaN);
 });
 
 test("time clip", () => {

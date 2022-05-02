@@ -65,7 +65,7 @@ static ThrowCompletionOr<Optional<size_t>> get_array_buffer_max_byte_length_opti
 // 1.2.1 ArrayBuffer ( length [, options ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybuffer-constructor
 ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
-    auto& global_object = new_target.realm()->global_object();
+    auto& global_object = this->global_object();
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.

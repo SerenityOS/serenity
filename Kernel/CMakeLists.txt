@@ -527,6 +527,10 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         ../Kernel/Syscall.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
+elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
+    # Disable checking open() pledges and the veil for coverage data when building userspace with coverage
+    # so that binaries can write out coverage data even with pledges/veil
+    add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
 endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)

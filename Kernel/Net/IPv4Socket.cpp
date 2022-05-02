@@ -639,8 +639,16 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return update_routing_table(destination, gateway, genmask, adapter, UpdateTable::Set);
         }
         case SIOCDELRT:
-            // FIXME: Support gateway deletion
-            return {};
+            if (!Process::current().is_superuser())
+                return EPERM;
+            if (route.rt_gateway.sa_family != AF_INET)
+                return EAFNOSUPPORT;
+
+            auto destination = IPv4Address(((sockaddr_in&)route.rt_dst).sin_addr.s_addr);
+            auto gateway = IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr);
+            auto genmask = IPv4Address(((sockaddr_in&)route.rt_genmask).sin_addr.s_addr);
+
+            return update_routing_table(destination, gateway, genmask, adapter, UpdateTable::Delete);
         }
 
         return EINVAL;
