@@ -796,6 +796,7 @@ void MainWidget::create_default_image()
     m_layer_list_widget->set_image(image);
 
     auto& editor = create_new_editor(*image);
+    editor.set_title("Untitled");
     editor.set_active_layer(bg_layer);
     editor.undo_stack().set_current_unmodified();
 }
