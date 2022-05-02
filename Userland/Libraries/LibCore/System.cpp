@@ -11,6 +11,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
@@ -1258,6 +1259,14 @@ ErrorOr<void> access(StringView pathname, int mode)
         return Error::from_syscall("access"sv, -errno);
     return {};
 #endif
+}
+
+ErrorOr<void> usleep(useconds_t usec)
+{
+    int rc = ::usleep(usec);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    return {};
 }
 
 }
