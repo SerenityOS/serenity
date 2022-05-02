@@ -18,8 +18,7 @@ ErrorOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov,
     if (iov_count < 0)
         return EINVAL;
 
-    // Arbitrary pain threshold.
-    if (iov_count > (int)MiB)
+    if (iov_count > IOV_MAX)
         return EFAULT;
 
     u64 total_length = 0;
