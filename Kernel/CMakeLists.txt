@@ -420,7 +420,6 @@ else()
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/Utils.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/vector_table.S
 
