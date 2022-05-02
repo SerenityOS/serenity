@@ -447,6 +447,9 @@ else()
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
     add_compile_options(-mno-outline-atomics -latomic)
+
+    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
+    add_compile_options(-Wno-nonnull)
 endif()
 
 add_compile_options(-fsigned-char)
