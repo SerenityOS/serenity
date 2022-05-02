@@ -8,8 +8,8 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
