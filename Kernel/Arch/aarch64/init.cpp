@@ -43,6 +43,8 @@ extern "C" [[noreturn]] void init()
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
     dbgln();
 
+    kmalloc_init();
+
     auto firmware_version = query_firmware_version();
     dbgln("Firmware version: {}", firmware_version);
 
