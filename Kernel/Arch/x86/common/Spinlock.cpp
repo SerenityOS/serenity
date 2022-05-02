@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/Spinlock.h>
+#include <Kernel/Arch/Spinlock.h>
 
 namespace Kernel {
 

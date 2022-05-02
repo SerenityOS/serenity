@@ -421,6 +421,7 @@ else()
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
+        Arch/aarch64/Spinlock.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/vector_table.S
 
