@@ -66,7 +66,6 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        VERIFY_NOT_REACHED();
         return false;
     }
 
