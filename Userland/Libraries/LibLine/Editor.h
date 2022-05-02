@@ -12,6 +12,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/RedBlackTree.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Traits.h>
@@ -159,8 +160,8 @@ public:
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
     void register_key_input_callback(Key key, Function<bool(Editor&)> callback) { register_key_input_callback(Vector<Key> { key }, move(callback)); }
 
-    static StringMetrics actual_rendered_string_metrics(StringView);
-    static StringMetrics actual_rendered_string_metrics(Utf32View const&);
+    static StringMetrics actual_rendered_string_metrics(StringView, RedBlackTree<u32, Optional<Style::Mask>> const& masks = {});
+    static StringMetrics actual_rendered_string_metrics(Utf32View const&, RedBlackTree<u32, Optional<Style::Mask>> const& masks = {});
 
     Function<Vector<CompletionSuggestion>(Editor const&)> on_tab_complete;
     Function<void(Utf32View, Editor&)> on_paste;
@@ -202,7 +203,7 @@ public:
         if (m_cached_prompt_valid)
             m_old_prompt_metrics = m_cached_prompt_metrics;
         m_cached_prompt_valid = false;
-        m_cached_prompt_metrics = actual_rendered_string_metrics(prompt);
+        m_cached_prompt_metrics = actual_rendered_string_metrics(prompt, {});
         m_new_prompt = prompt;
     }
 
@@ -259,16 +260,6 @@ private:
     explicit Editor(Configuration configuration = Configuration::from_config());
 
     void set_default_keybinds();
-
-    enum VTState {
-        Free = 1,
-        Escape = 3,
-        Bracket = 5,
-        BracketArgsSemi = 7,
-        Title = 9,
-    };
-
-    static VTState actual_rendered_string_length_step(StringMetrics&, size_t, StringMetrics::LineMetrics& current_line, u32, u32, VTState);
 
     enum LoopExitCode {
         Exit = 0,
@@ -366,7 +357,7 @@ private:
         if (cursor > m_cursor)
             cursor = m_cursor;
         return current_prompt_metrics().lines_with_addition(
-            actual_rendered_string_metrics(buffer_view().substring_view(0, cursor)),
+            actual_rendered_string_metrics(buffer_view().substring_view(0, cursor), m_current_masks),
             m_num_columns);
     }
 
@@ -375,7 +366,7 @@ private:
         auto cursor = m_drawn_cursor;
         if (cursor > m_cursor)
             cursor = m_cursor;
-        auto buffer_metrics = actual_rendered_string_metrics(buffer_view().substring_view(0, cursor));
+        auto buffer_metrics = actual_rendered_string_metrics(buffer_view().substring_view(0, cursor), m_current_masks);
         return current_prompt_metrics().offset_with_addition(buffer_metrics, m_num_columns);
     }
 
@@ -507,6 +498,8 @@ private:
 
         bool contains_up_to_offset(Spans const& other, size_t offset) const;
     } m_drawn_spans, m_current_spans;
+
+    RedBlackTree<u32, Optional<Style::Mask>> m_current_masks;
 
     RefPtr<Core::Notifier> m_notifier;
 
