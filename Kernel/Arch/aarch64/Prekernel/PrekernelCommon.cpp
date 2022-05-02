@@ -15,9 +15,8 @@ namespace Prekernel {
 {
     auto& uart = Prekernel::UART::the();
 
-    if (msg) {
-        uart.print_str(msg);
-    }
+    while (*msg)
+        uart.send(*msg++);
 
     Prekernel::halt();
 }

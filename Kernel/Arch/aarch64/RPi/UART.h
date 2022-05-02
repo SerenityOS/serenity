@@ -22,9 +22,9 @@ public:
     void send(u32 c);
     u32 receive();
 
-    void print_str(char const* s)
+    void print_str(char const* s, size_t length)
     {
-        while (*s)
+        for (size_t i = 0; i < length; ++i)
             send(*s++);
     }
     void print_num(u64 n)
