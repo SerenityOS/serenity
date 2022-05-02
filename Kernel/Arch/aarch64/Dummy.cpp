@@ -9,7 +9,6 @@
 
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KString.h>
-#include <Kernel/KSyms.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
@@ -124,17 +123,7 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
-// KSyms.cpp
 namespace Kernel {
-bool g_kernel_symbols_available = false;
-}
-
-namespace Kernel {
-
-void dump_backtrace(PrintToScreen)
-{
-    VERIFY_NOT_REACHED();
-}
 
 // KString.cpp
 ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&)
