@@ -21,17 +21,7 @@ struct StringMetrics {
         Vector<MaskedChar> masked_chars;
         size_t length { 0 };
 
-        size_t total_length(ssize_t offset = -1) const
-        {
-            size_t length = this->length;
-            for (auto& mask : masked_chars) {
-                if (offset < 0 || mask.position <= (size_t)offset) {
-                    length -= mask.original_length;
-                    length += mask.masked_length;
-                }
-            }
-            return length;
-        }
+        size_t total_length() const { return length; }
     };
 
     Vector<LineMetrics> line_metrics;

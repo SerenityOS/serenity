@@ -12,6 +12,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/MemoryStream.h>
+#include <AK/RedBlackTree.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
@@ -473,6 +474,27 @@ void Editor::stylize(Span const& span, Style const& style)
 
         start = offsets.start;
         end = offsets.end;
+    }
+
+    if (auto maybe_mask = style.mask(); maybe_mask.has_value()) {
+        auto it = m_current_masks.find_smallest_not_below_iterator(span.beginning());
+        Optional<Style::Mask> last_encountered_entry;
+        if (!it.is_end()) {
+            // Delete all overlapping old masks.
+            while (true) {
+                auto next_it = m_current_masks.find_largest_not_above_iterator(span.end());
+                if (next_it.is_end())
+                    break;
+                if (it->has_value())
+                    last_encountered_entry = *it;
+                m_current_masks.remove(next_it.key());
+            }
+        }
+        m_current_masks.insert(span.beginning(), move(maybe_mask));
+        m_current_masks.insert(span.end(), {});
+        if (last_encountered_entry.has_value())
+            m_current_masks.insert(span.end() + 1, move(last_encountered_entry));
+        style.unset_mask();
     }
 
     auto& spans_starting = style.is_anchored() ? m_current_spans.m_anchored_spans_starting : m_current_spans.m_spans_starting;
@@ -1272,7 +1294,7 @@ void Editor::recalculate_origin()
 }
 void Editor::cleanup()
 {
-    auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+    auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
     auto new_lines = current_prompt_metrics().lines_with_addition(current_buffer_metrics, m_num_columns);
     auto shown_lines = num_lines();
     if (new_lines < shown_lines)
@@ -1335,7 +1357,7 @@ void Editor::refresh_display()
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
         // Probably just moving around.
         reposition_cursor(output_stream);
-        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
         m_drawn_end_of_line_offset = m_buffer.size();
         return;
     }
@@ -1351,7 +1373,7 @@ void Editor::refresh_display()
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
             m_drawn_end_of_line_offset = m_buffer.size();
-            m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+            m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
             m_drawn_spans = m_current_spans;
             return;
         }
@@ -1395,24 +1417,47 @@ void Editor::refresh_display()
     };
 
     auto print_character_at = [&](size_t i) {
-        StringBuilder builder;
-        auto c = m_buffer[i];
-        bool should_print_masked = is_ascii_control(c) && c != '\n';
-        bool should_print_caret = c < 64 && should_print_masked;
-        if (should_print_caret)
-            builder.appendff("^{:c}", c + 64);
-        else if (should_print_masked)
-            builder.appendff("\\x{:0>2x}", c);
-        else
-            builder.append(Utf32View { &c, 1 });
+        Variant<u32, Utf8View> c { Utf8View {} };
+        if (auto it = m_current_masks.find_largest_not_above_iterator(i); !it.is_end() && it->has_value()) {
+            auto offset = i - it.key();
+            if (it->value().mode == Style::Mask::Mode::ReplaceEntireSelection) {
+                auto& mask = it->value().replacement_view;
+                auto replacement = mask.begin().peek(offset);
+                if (!replacement.has_value())
+                    return;
+                c = replacement.value();
+                ++it;
+                u32 next_offset = it.is_end() ? m_drawn_end_of_line_offset : it.key();
+                if (i + 1 == next_offset)
+                    c = mask.unicode_substring_view(offset, mask.length() - offset);
+            } else {
+                c = it->value().replacement_view;
+            }
+        } else {
+            c = m_buffer[i];
+        }
+        auto print_single_character = [&](auto c) {
+            StringBuilder builder;
+            bool should_print_masked = is_ascii_control(c) && c != '\n';
+            bool should_print_caret = c < 64 && should_print_masked;
+            if (should_print_caret)
+                builder.appendff("^{:c}", c + 64);
+            else if (should_print_masked)
+                builder.appendff("\\x{:0>2x}", c);
+            else
+                builder.append(Utf32View { &c, 1 });
 
-        if (should_print_masked)
-            output_stream.write("\033[7m"sv.bytes());
+            if (should_print_masked)
+                output_stream.write("\033[7m"sv.bytes());
 
-        output_stream.write(builder.string_view().bytes());
+            output_stream.write(builder.string_view().bytes());
 
-        if (should_print_masked)
-            output_stream.write("\033[27m"sv.bytes());
+            if (should_print_masked)
+                output_stream.write("\033[27m"sv.bytes());
+        };
+        c.visit(
+            [&](u32 c) { print_single_character(c); },
+            [&](auto& view) { for (auto c : view) print_single_character(c); });
     };
 
     // If there have been no changes to previous sections of the line (style or text)
@@ -1429,7 +1474,7 @@ void Editor::refresh_display()
         VT::apply_style(Style::reset_style(), output_stream);
         m_pending_chars.clear();
         m_refresh_needed = false;
-        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
         m_chars_touched_in_the_middle = 0;
         m_drawn_cursor = m_cursor;
         m_drawn_end_of_line_offset = m_buffer.size();
@@ -1477,7 +1522,7 @@ void Editor::refresh_display()
 
     m_pending_chars.clear();
     m_refresh_needed = false;
-    m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+    m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
     m_chars_touched_in_the_middle = 0;
     m_drawn_spans = m_current_spans;
     m_drawn_end_of_line_offset = m_buffer.size();
@@ -1490,6 +1535,8 @@ void Editor::strip_styles(bool strip_anchored)
 {
     m_current_spans.m_spans_starting.clear();
     m_current_spans.m_spans_ending.clear();
+    m_current_masks.clear();
+    m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view(), {});
 
     if (strip_anchored) {
         m_current_spans.m_anchored_spans_starting.clear();
@@ -1662,6 +1709,14 @@ String Style::to_string() const
     if (!m_hyperlink.is_empty())
         builder.appendff("Hyperlink(\"{}\"), ", m_hyperlink.m_link);
 
+    if (!m_mask.has_value()) {
+        builder.appendff("Mask(\"{}\", {}), ",
+            m_mask->replacement,
+            m_mask->mode == Mask::Mode::ReplaceEntireSelection
+                ? "ReplaceEntireSelection"
+                : "ReplaceEachCodePointInSelection");
+    }
+
     builder.append("}");
 
     return builder.build();
@@ -1715,20 +1770,77 @@ void VT::clear_to_end_of_line(OutputStream& stream)
     stream.write("\033[K"sv.bytes());
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(StringView string)
+enum VTState {
+    Free = 1,
+    Escape = 3,
+    Bracket = 5,
+    BracketArgsSemi = 7,
+    Title = 9,
+};
+static VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask);
+
+enum class MaskedSelectionDecision {
+    Skip,
+    Continue,
+};
+static MaskedSelectionDecision resolve_masked_selection(Optional<Style::Mask>& mask, size_t& i, auto& mask_it, auto& view, auto& state, auto& metrics, auto& current_line)
+{
+    if (mask.has_value() && mask->mode == Style::Mask::Mode::ReplaceEntireSelection) {
+        ++mask_it;
+        auto actual_end_offset = mask_it.is_end() ? view.length() : mask_it.key();
+        auto end_offset = min(actual_end_offset, view.length());
+        size_t j = 0;
+        for (auto it = mask->replacement_view.begin(); it != mask->replacement_view.end(); ++it) {
+            auto it_copy = it;
+            ++it_copy;
+            auto next_c = it_copy == mask->replacement_view.end() ? 0 : *it_copy;
+            state = actual_rendered_string_length_step(metrics, j, current_line, *it, next_c, state, {});
+            ++j;
+            if (j <= actual_end_offset - i && j + i >= view.length())
+                break;
+        }
+        current_line.masked_chars.empend(i, end_offset - i, j);
+        i = end_offset;
+
+        if (mask_it.is_end())
+            mask = {};
+        else
+            mask = *mask_it;
+        return MaskedSelectionDecision::Skip;
+    }
+    return MaskedSelectionDecision::Continue;
+}
+
+StringMetrics Editor::actual_rendered_string_metrics(StringView string, RedBlackTree<u32, Optional<Style::Mask>> const& masks)
 {
     StringMetrics metrics;
     StringMetrics::LineMetrics current_line;
     VTState state { Free };
     Utf8View view { string };
     auto it = view.begin();
+    Optional<Style::Mask> mask;
+    size_t i = 0;
+    auto mask_it = masks.begin();
 
     for (; it != view.end(); ++it) {
+        if (!mask_it.is_end() && mask_it.key() <= i)
+            mask = *mask_it;
         auto c = *it;
         auto it_copy = it;
         ++it_copy;
+
+        if (resolve_masked_selection(mask, i, mask_it, view, state, metrics, current_line) == MaskedSelectionDecision::Skip)
+            continue;
+
         auto next_c = it_copy == view.end() ? 0 : *it_copy;
-        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state);
+        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state, mask);
+        if (!mask_it.is_end() && mask_it.key() <= i) {
+            auto mask_it_peek = mask_it;
+            ++mask_it_peek;
+            if (!mask_it_peek.is_end() && mask_it_peek.key() > i)
+                mask_it = mask_it_peek;
+        }
+        ++i;
     }
 
     metrics.line_metrics.append(current_line);
@@ -1739,16 +1851,33 @@ StringMetrics Editor::actual_rendered_string_metrics(StringView string)
     return metrics;
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view)
+StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedBlackTree<u32, Optional<Style::Mask>> const& masks)
 {
     StringMetrics metrics;
     StringMetrics::LineMetrics current_line;
     VTState state { Free };
+    Optional<Style::Mask> mask;
+
+    auto mask_it = masks.begin();
 
     for (size_t i = 0; i < view.length(); ++i) {
-        auto c = view.code_points()[i];
+        auto c = view[i];
+        if (!mask_it.is_end() && mask_it.key() <= i)
+            mask = *mask_it;
+
+        if (resolve_masked_selection(mask, i, mask_it, view, state, metrics, current_line) == MaskedSelectionDecision::Skip) {
+            --i;
+            continue;
+        }
+
         auto next_c = i + 1 < view.length() ? view.code_points()[i + 1] : 0;
-        state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state);
+        state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state, mask);
+        if (!mask_it.is_end() && mask_it.key() <= i) {
+            auto mask_it_peek = mask_it;
+            ++mask_it_peek;
+            if (!mask_it_peek.is_end() && mask_it_peek.key() > i)
+                mask_it = mask_it_peek;
+        }
     }
 
     metrics.line_metrics.append(current_line);
@@ -1759,10 +1888,10 @@ StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view)
     return metrics;
 }
 
-Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state)
+VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask)
 {
     switch (state) {
-    case Free:
+    case Free: {
         if (c == '\x1b') { // escape
             return Escape;
         }
@@ -1779,12 +1908,26 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             current_line.length = 0;
             return state;
         }
-        if (is_ascii_control(c) && c != '\n')
-            current_line.masked_chars.append({ index, 1, c < 64 ? 2u : 4u }); // if the character cannot be represented as ^c, represent it as \xbb.
+        auto is_control = is_ascii_control(c);
+        if (is_control) {
+            if (mask.has_value())
+                current_line.masked_chars.append({ index, 1, mask->replacement_view.length() });
+            else
+                current_line.masked_chars.append({ index, 1, c < 64 ? 2u : 4u }); // if the character cannot be represented as ^c, represent it as \xbb.
+        }
         // FIXME: This will not support anything sophisticated
-        ++current_line.length;
-        ++metrics.total_length;
+        if (mask.has_value()) {
+            current_line.length += mask->replacement_view.length();
+            metrics.total_length += mask->replacement_view.length();
+        } else if (is_control) {
+            current_line.length += current_line.masked_chars.last().masked_length;
+            metrics.total_length += current_line.masked_chars.last().masked_length;
+        } else {
+            ++current_line.length;
+            ++metrics.total_length;
+        }
         return state;
+    }
     case Escape:
         if (c == ']') {
             if (next_c == '0')
