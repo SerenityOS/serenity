@@ -8,6 +8,7 @@
 #include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 #include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/Panic.h>
 
 extern "C" void enter_el2_from_el3();
 extern "C" void enter_el1_from_el2();
@@ -93,7 +94,7 @@ void drop_to_exception_level_1()
         set_up_el1();
         break;
     default: {
-        Prekernel::panic("FATAL: CPU booted in unsupported exception mode!\r\n");
+        PANIC("CPU booted in unsupported exception mode!");
     }
     }
 }
