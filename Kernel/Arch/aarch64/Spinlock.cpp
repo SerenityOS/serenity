@@ -6,28 +6,27 @@
 
 #include <Kernel/Arch/Spinlock.h>
 
+// FIXME: Actually implement the correct logic once the aarch64 build can
+//        do interrupts and/or has support for multiple processors.
+
 namespace Kernel {
 
 u32 Spinlock::lock()
 {
-    VERIFY_NOT_REACHED();
     return 0;
 }
 
 void Spinlock::unlock(u32)
 {
-    VERIFY_NOT_REACHED();
 }
 
 u32 RecursiveSpinlock::lock()
 {
-    VERIFY_NOT_REACHED();
     return 0;
 }
 
 void RecursiveSpinlock::unlock(u32)
 {
-    VERIFY_NOT_REACHED();
 }
 
 }
