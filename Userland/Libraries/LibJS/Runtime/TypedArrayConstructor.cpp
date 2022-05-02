@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -119,11 +119,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(length));
     auto new_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
-    for (size_t k = 0; k < length; ++k) {
-        auto success = TRY(new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes));
-        if (!success)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayFailedSettingIndex, k);
-    }
+    for (size_t k = 0; k < length; ++k)
+        TRY(new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes));
     return new_object;
 }
 

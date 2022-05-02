@@ -31,8 +31,10 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
             return throw_reference_error(global_object);
 
         // b. Let globalObj be GetGlobalObject().
-        // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
+        // c. Perform ? Set(globalObj, V.[[ReferencedName]], W, false).
         TRY(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
+
+        // Return unused.
         return {};
     }
 
@@ -54,7 +56,7 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
         if (!succeeded && m_strict)
             return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
 
-        // e. Return.
+        // e. Return unused.
         return {};
     }
 
@@ -163,7 +165,7 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
 
     // 5. If IsPropertyReference(ref) is true, then
     if (is_property_reference()) {
-        // a. Assert: ! IsPrivateReference(ref) is false.
+        // a. Assert: IsPrivateReference(ref) is false.
         VERIFY(!is_private_reference());
 
         // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
@@ -239,7 +241,7 @@ Reference make_private_reference(VM& vm, Value base_value, FlyString const& priv
     // 2. Assert: privEnv is not null.
     VERIFY(private_environment);
 
-    // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
+    // 3. Let privateName be ResolvePrivateIdentifier(privEnv, privateIdentifier).
     auto private_name = private_environment->resolve_private_identifier(private_identifier);
 
     // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: privateName, [[Strict]]: true, [[ThisValue]]: empty }.

@@ -58,7 +58,7 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
 
     // 4. Repeat,
     while (true) {
-        // a. Let next be IteratorStep(iteratorRecord).
+        // a. Let next be Completion(IteratorStep(iteratorRecord)).
         auto next_or_error = iterator_step(global_object, iterator_record);
 
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -85,7 +85,7 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
             return result_capability.promise;
         }
 
-        // e. Let nextValue be IteratorValue(next).
+        // e. Let nextValue be Completion(IteratorValue(next)).
         auto next_value_or_error = iterator_value(global_object, *next);
 
         // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -123,7 +123,7 @@ static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object,
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
-            // 1. Let valuesArray be ! CreateArrayFromList(values).
+            // 1. Let valuesArray be CreateArrayFromList(values).
             auto* values_array = Array::create_from(global_object, values.values());
 
             // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
@@ -135,7 +135,7 @@ static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object,
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
             // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
-            // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
+            // l. Let onFulfilled be CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
             // m. Set onFulfilled.[[AlreadyCalled]] to false.
             // n. Set onFulfilled.[[Index]] to index.
             // o. Set onFulfilled.[[Values]] to values.
@@ -166,7 +166,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             // j. Let stepsFulfilled be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
             // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
-            // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
+            // l. Let onFulfilled be CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
             // m. Let alreadyCalled be the Record { [[Value]]: false }.
             // n. Set onFulfilled.[[AlreadyCalled]] to alreadyCalled.
             // o. Set onFulfilled.[[Index]] to index.
@@ -178,7 +178,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
 
             // s. Let stepsRejected be the algorithm steps defined in Promise.allSettled Reject Element Functions.
             // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
-            // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
+            // u. Let onRejected be CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
             // v. Set onRejected.[[AlreadyCalled]] to alreadyCalled.
             // w. Set onRejected.[[Index]] to index.
             // x. Set onRejected.[[Values]] to values.
@@ -203,7 +203,7 @@ static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object,
             // 1. Let error be a newly created AggregateError object.
             auto* error = AggregateError::create(global_object);
 
-            // 2. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errors) }).
+            // 2. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
             auto* errors_array = Array::create_from(global_object, errors.values());
             MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
@@ -213,7 +213,7 @@ static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object,
         [&](PromiseValueList& errors, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             // j. Let stepsRejected be the algorithm steps defined in Promise.any Reject Element Functions.
             // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
-            // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
+            // l. Let onRejected be CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
             // m. Set onRejected.[[AlreadyCalled]] to false.
             // n. Set onRejected.[[Index]] to index.
             // o. Set onRejected.[[Errors]] to errors.
@@ -301,7 +301,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
-    // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    // 9. Let completion be Completion(Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
     auto completion = JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
 
     // 10. If completion is an abrupt completion, then
@@ -323,20 +323,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
-    // 3. Let promiseResolve be GetPromiseResolve(C).
+    // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
     auto promise_resolve = TRY_OR_REJECT(global_object, promise_capability, get_promise_resolve(global_object, constructor));
 
-    // 5. Let iteratorRecord be GetIterator(iterable).
+    // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
     auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
 
-    // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
+    // 7. Let result be Completion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_all(global_object, iterator_record, constructor, promise_capability, promise_resolve);
 
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
-        // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+        // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
             result = iterator_close(global_object, iterator_record, result.release_error());
 
@@ -344,8 +344,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
         TRY_OR_REJECT(global_object, promise_capability, result);
     }
 
-    // 9. Return Completion(result).
-    return result.release_value();
+    // 9. Return ? result.
+    return result;
 }
 
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
@@ -357,20 +357,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
-    // 3. Let promiseResolve be GetPromiseResolve(C).
+    // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
     auto promise_resolve = TRY_OR_REJECT(global_object, promise_capability, get_promise_resolve(global_object, constructor));
 
-    // 5. Let iteratorRecord be GetIterator(iterable).
+    // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
     auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
 
-    // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
+    // 7. Let result be Completion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_all_settled(global_object, iterator_record, constructor, promise_capability, promise_resolve);
 
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
-        // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+        // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
             result = iterator_close(global_object, iterator_record, result.release_error());
 
@@ -378,8 +378,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
         TRY_OR_REJECT(global_object, promise_capability, result);
     }
 
-    // 9. Return Completion(result).
-    return result.release_value();
+    // 9. Return ? result.
+    return result;
 }
 
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
@@ -391,20 +391,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
-    // 3. Let promiseResolve be GetPromiseResolve(C).
+    // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
     auto promise_resolve = TRY_OR_REJECT(global_object, promise_capability, get_promise_resolve(global_object, constructor));
 
-    // 5. Let iteratorRecord be GetIterator(iterable).
+    // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
     auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
 
-    // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve).
+    // 7. Let result be Completion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_any(global_object, iterator_record, constructor, promise_capability, promise_resolve);
 
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
-        // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+        // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
             result = iterator_close(global_object, iterator_record, result.release_error());
 
@@ -412,8 +412,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
         TRY_OR_REJECT(global_object, promise_capability, result);
     }
 
-    // 9. Return Completion(result).
-    return result.release_value();
+    // 9. Return ? result.
+    return result;
 }
 
 // 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
@@ -425,20 +425,20 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
-    // 3. Let promiseResolve be GetPromiseResolve(C).
+    // 3. Let promiseResolve be Completion(GetPromiseResolve(C)).
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
     auto promise_resolve = TRY_OR_REJECT(global_object, promise_capability, get_promise_resolve(global_object, constructor));
 
-    // 5. Let iteratorRecord be GetIterator(iterable).
+    // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
     auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
 
-    // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
+    // 7. Let result be Completion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_race(global_object, iterator_record, constructor, promise_capability, promise_resolve);
 
     // 8. If result is an abrupt completion, then
     if (result.is_error()) {
-        // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+        // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
             result = iterator_close(global_object, iterator_record, result.release_error());
 
@@ -446,8 +446,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
         TRY_OR_REJECT(global_object, promise_capability, result);
     }
 
-    // 9. Return Completion(result).
-    return result.release_value();
+    // 9. Return ? result.
+    return result;
 }
 
 // 27.2.4.6 Promise.reject ( r ), https://tc39.es/ecma262/#sec-promise.reject

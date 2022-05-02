@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
             // i. Let kValue be ? Get(O, Pk).
             auto k_value = TRY(object->get(k));
 
-            // ii. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+            // ii. Let selected be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto selected = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If selected is true, then
@@ -1128,7 +1128,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_key));
 
-        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
@@ -1167,7 +1167,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_key));
 
-        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
@@ -1206,7 +1206,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_key));
 
-        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return kValue.
@@ -1245,7 +1245,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_key));
 
-        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
         auto test_result = TRY(call(global_object, predicate.as_function(), this_arg, k_value, Value((double)k), object)).to_boolean();
 
         // d. If testResult is true, return 𝔽(k).
@@ -1289,7 +1289,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
             // i. Let kValue be ? Get(O, Pk).
             auto k_value = TRY(object->get(property_key));
 
-            // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+            // ii. Let testResult be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto test_result = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is true, return true.
@@ -1334,7 +1334,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
             // i. Let kValue be ? Get(O, Pk).
             auto k_value = TRY(object->get(property_key));
 
-            // ii. Let testResult be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+            // ii. Let testResult be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
             auto test_result = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(k), object)).to_boolean();
 
             // iii. If testResult is false, return false.
@@ -1567,7 +1567,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
     // 2. Let sourceLen be ? LengthOfArrayLike(O).
     auto source_length = TRY(length_of_array_like(global_object, *object));
 
-    // 3. If ! IsCallable(mapperFunction) is false, throw a TypeError exception.
+    // 3. If IsCallable(mapperFunction) is false, throw a TypeError exception.
     if (!mapper_function.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, mapper_function.to_string_without_side_effects());
 
@@ -1672,7 +1672,7 @@ template<typename GroupsType, typename KeyType>
 static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& groups, KeyType key, Value value)
 {
     // 1. For each Record { [[Key]], [[Elements]] } g of groups, do
-    //      a. If ! SameValue(g.[[Key]], key) is true, then
+    //      a. If SameValue(g.[[Key]], key) is true, then
     //      NOTE: This is performed in KeyedGroupTraits::equals for groupByToMap and Traits<JS::PropertyKey>::equals for groupBy.
     auto existing_elements_iterator = groups.find(key);
     if (existing_elements_iterator != groups.end()) {
@@ -1682,7 +1682,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
         // ii. Append value as the last element of g.[[Elements]].
         existing_elements_iterator->value.append(value);
 
-        // iii. Return.
+        // iii. Return unused.
         return;
     }
 
@@ -1727,18 +1727,18 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
         auto property_key_value = TRY(call(global_object, callback_function.as_function(), this_arg, k_value, Value(index), this_object));
         auto property_key = TRY(property_key_value.to_property_key(global_object));
 
-        // d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue).
+        // d. Perform AddValueToKeyedGroup(groups, propertyKey, kValue).
         add_value_to_keyed_group(global_object, groups, property_key, k_value);
 
         // e. Set k to k + 1.
     }
 
-    // 7. Let obj be ! OrdinaryObjectCreate(null).
+    // 7. Let obj be OrdinaryObjectCreate(null).
     auto* object = Object::create(global_object, nullptr);
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
-        // a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
+        // a. Let elements be CreateArrayFromList(g.[[Elements]]).
         auto* elements = Array::create_from(global_object, group.value);
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
@@ -1797,7 +1797,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
         if (key.is_negative_zero())
             key = Value(0);
 
-        // e. Perform ! AddValueToKeyedGroup(groups, key, kValue).
+        // e. Perform AddValueToKeyedGroup(groups, key, kValue).
         add_value_to_keyed_group(global_object, groups, make_handle(key), k_value);
 
         // f. Set k to k + 1.
@@ -1808,7 +1808,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
-        // a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
+        // a. Let elements be CreateArrayFromList(g.[[Elements]]).
         auto* elements = Array::create_from(global_object, group.value);
 
         // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.

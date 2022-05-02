@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     // 3. Assert: If fractionDigits is undefined, then f is 0.
     VERIFY(!fraction_digits_value.is_undefined() || (fraction_digits == 0));
 
-    // 4. If x is not finite, return ! Number::toString(x).
+    // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
         return js_string(vm, MUST(number_value.to_string(global_object)));
 
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     if (fraction_digits < 0 || fraction_digits > 100)
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
-    // 6. If x is not finite, return ! Number::toString(x).
+    // 6. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
         return js_string(vm, TRY(number_value.to_string(global_object)));
 
@@ -350,7 +350,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     // 3. Let p be ? ToIntegerOrInfinity(precision).
     auto precision = TRY(precision_value.to_integer_or_infinity(global_object));
 
-    // 4. If x is not finite, return ! Number::toString(x).
+    // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
         return js_string(vm, MUST(number_value.to_string(global_object)));
 

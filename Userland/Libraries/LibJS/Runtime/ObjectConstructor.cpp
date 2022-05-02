@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -83,7 +83,7 @@ enum class GetOwnPropertyKeysType {
 };
 
 // 20.1.2.11.1 GetOwnPropertyKeys ( O, type ), https://tc39.es/ecma262/#sec-getownpropertykeys
-static ThrowCompletionOr<Array*> get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
+static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
 {
     auto& vm = global_object.vm();
 
@@ -105,22 +105,22 @@ static ThrowCompletionOr<Array*> get_own_property_keys(GlobalObject& global_obje
         }
     }
 
-    // 5. Return CreateArrayFromList(nameList).
-    return Array::create_from(global_object, name_list);
+    // 5. Return nameList.
+    return { move(name_list) };
 }
 
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
-    // 1. Return ? GetOwnPropertyKeys(O, string).
-    return TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String));
+    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
+    return Array::create_from(global_object, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String)));
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
-    // 1. Return ? GetOwnPropertyKeys(O, symbol).
-    return TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol));
+    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
+    return Array::create_from(global_object, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
@@ -268,7 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
     auto own_keys = TRY(object->internal_own_property_keys());
 
-    // 3. Let descriptors be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
     auto* descriptors = Object::create(global_object, global_object.object_prototype());
 
     // 4. For each element key of ownKeys, do
@@ -278,7 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
         auto desc = TRY(object->internal_get_own_property(property_key));
 
-        // b. Let descriptor be ! FromPropertyDescriptor(desc).
+        // b. Let descriptor be FromPropertyDescriptor(desc).
         auto descriptor = from_property_descriptor(global_object, desc);
 
         // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
@@ -355,7 +355,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
     if (!proto.is_object() && !proto.is_null())
         return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
 
-    // 2. Let obj be ! OrdinaryObjectCreate(O).
+    // 2. Let obj be OrdinaryObjectCreate(O).
     auto* object = Object::create(global_object, proto.is_null() ? nullptr : &proto.as_object());
 
     // 3. If Properties is not undefined, then

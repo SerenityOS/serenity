@@ -194,7 +194,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                 //     ii. Let benv be the running execution context's LexicalEnvironment.
                 //     iii. Let fobj be ! benv.GetBindingValue(F, false).
                 //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
-                //     v. Return NormalCompletion(empty).
+                //     v. Return unused.
                 function_declaration.set_should_do_additional_annexB_steps();
             });
         }

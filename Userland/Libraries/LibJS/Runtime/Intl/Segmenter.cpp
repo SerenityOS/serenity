@@ -61,7 +61,7 @@ Object* create_segment_data_object(GlobalObject& global_object, Segmenter const&
     // 4. Assert: startIndex < endIndex.
     VERIFY(start_index < end_index);
 
-    // 5. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
 
     // 6. Let segment be the substring of string from startIndex to endIndex.

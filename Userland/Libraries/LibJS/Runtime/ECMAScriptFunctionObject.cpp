@@ -173,13 +173,13 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
     ordinary_call_bind_this(callee_context, this_argument);
 
-    // 6. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+    // 6. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
 
     // 7. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
     vm.pop_execution_context();
 
-    // 8. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
+    // 8. If result.[[Type]] is return, return result.[[Value]].
     if (result.type() == Completion::Type::Return)
         return result.value();
 
@@ -189,7 +189,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
         return result;
     }
 
-    // 10. Return NormalCompletion(undefined).
+    // 10. Return undefined.
     return js_undefined();
 }
 
@@ -232,7 +232,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
         // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
         ordinary_call_bind_this(callee_context, this_argument);
 
-        // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
+        // b. Let initializeResult be Completion(InitializeInstanceElements(thisArgument, F)).
         auto initialize_result = vm.initialize_instance_elements(*this_argument, *this);
 
         // c. If initializeResult is an abrupt completion, then
@@ -240,7 +240,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
             // i. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
             vm.pop_execution_context();
 
-            // ii. Return Completion(initializeResult).
+            // ii. Return ? initializeResult.
             return initialize_result.throw_completion();
         }
     }
@@ -248,7 +248,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     // 7. Let constructorEnv be the LexicalEnvironment of calleeContext.
     auto* constructor_env = callee_context.lexical_environment;
 
-    // 8. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+    // 8. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
 
     // 9. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
@@ -265,11 +265,11 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
         }
         // EOF (End of FIXME)
 
-        // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
+        // a. If Type(result.[[Value]]) is Object, return result.[[Value]].
         if (result.value()->is_object())
             return &result.value()->as_object();
 
-        // b. If kind is base, return NormalCompletion(thisArgument).
+        // b. If kind is base, return thisArgument.
         if (kind == ConstructorKind::Base)
             return this_argument;
 
@@ -283,8 +283,13 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
         return result;
     }
 
-    // 12. Return ? constructorEnv.GetThisBinding().
+    // 12. Let thisBinding be ? constructorEnv.GetThisBinding().
     auto this_binding = TRY(constructor_env->get_this_binding(global_object));
+
+    // 13. Assert: Type(thisBinding) is Object.
+    VERIFY(this_binding.is_object());
+
+    // 14. Return thisBinding.
     return &this_binding.as_object();
 }
 
@@ -308,7 +313,7 @@ void ECMAScriptFunctionObject::make_method(Object& home_object)
     // 1. Set F.[[HomeObject]] to homeObject.
     m_home_object = &home_object;
 
-    // 2. Return NormalCompletion(undefined).
+    // 2. Return unused.
 }
 
 // 10.2.11 FunctionDeclarationInstantiation ( func, argumentsList ), https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
@@ -638,7 +643,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     // 1. Let thisMode be F.[[ThisMode]].
     auto this_mode = m_this_mode;
 
-    // If thisMode is lexical, return NormalCompletion(undefined).
+    // If thisMode is lexical, return unused.
     if (this_mode == ThisMode::Lexical)
         return;
 
@@ -685,8 +690,10 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
 
     // 7. Assert: localEnv is a function Environment Record.
     // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
-    // 9. Return localEnv.BindThisValue(thisValue).
+    // 9. Perform ! localEnv.BindThisValue(thisValue).
     MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value));
+
+    // 10. Return unused.
 }
 
 // 27.7.5.1 AsyncFunctionStart ( promiseCapability, asyncFunctionBody ), https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
@@ -702,8 +709,10 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
 
     // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
 
-    // 4. Perform ! AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
+    // 4. Perform AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
     async_block_start(vm, m_ecmascript_code, promise_capability, async_context);
+
+    // 5. Return unused.
 }
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
@@ -743,7 +752,8 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
             MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
         }
-        // g. Return.
+        // g. Return unused.
+        // NOTE: We don't support returning an empty/optional/unused value here.
         return js_undefined();
     });
 
@@ -758,10 +768,10 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     // 6. Assert: When we return here, asyncContext has already been removed from the execution context stack and runningContext is the currently running execution context.
     VERIFY(&vm.running_execution_context() == &running_context);
 
-    // 7. Assert: result is a normal completion with a value of undefined. The possible sources of completion values are Await or, if the async function doesn't await anything, step 3.g above.
+    // 7. Assert: result is a normal completion with a value of unused. The possible sources of completion values are Await or, if the async function doesn't await anything, step 3.g above.
     VERIFY(result.has_value() && result.value().is_undefined());
 
-    // 8. Return.
+    // 8. Return unused.
 }
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
@@ -854,18 +864,18 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
             auto promise_capability = MUST(new_promise_capability(global_object(), global_object().promise_constructor()));
 
-            // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
+            // 2. Let declResult be Completion(FunctionDeclarationInstantiation(functionObject, argumentsList)).
             auto declaration_result = function_declaration_instantiation(ast_interpreter);
 
-            // 3. If declResult is not an abrupt completion, then
-            if (!declaration_result.is_throw_completion()) {
-                // a. Perform ! AsyncFunctionStart(promiseCapability, FunctionBody).
-                async_function_start(promise_capability);
+            // 3. If declResult is an abrupt completion, then
+            if (declaration_result.is_throw_completion()) {
+                // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
+                MUST(call(global_object(), promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
             }
             // 4. Else,
             else {
-                // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-                MUST(call(global_object(), promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
+                // a. Perform AsyncFunctionStart(promiseCapability, FunctionBody).
+                async_function_start(promise_capability);
             }
 
             // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
@@ -880,8 +890,7 @@ void ECMAScriptFunctionObject::set_name(FlyString const& name)
     VERIFY(!name.is_null());
     auto& vm = this->vm();
     m_name = name;
-    auto success = MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
-    VERIFY(success);
+    MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
 }
 
 }

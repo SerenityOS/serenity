@@ -58,6 +58,9 @@ ThrowCompletionOr<bool> DeclarativeEnvironment::has_binding(FlyString const& nam
 // 9.1.1.1.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
 ThrowCompletionOr<void> DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
+    // 1. Assert: envRec does not already have a binding for N.
+    // NOTE: We skip this to avoid O(n) traversal of m_bindings.
+
     // 2. Create a mutable binding in envRec for N and record that it is uninitialized. If D is true, record that the newly created binding may be deleted by a subsequent DeleteBinding call.
     m_bindings.append(Binding {
         .name = name,
@@ -68,16 +71,16 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_mutable_binding(GlobalObj
         .initialized = false,
     });
 
-    // 1. Assert: envRec does not already have a binding for N.
-    // NOTE: We skip this to avoid O(n) traversal of m_bindings.
-
-    // 3. Return NormalCompletion(empty).
+    // 3. Return unused.
     return {};
 }
 
 // 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
 ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
 {
+    // 1. Assert: envRec does not already have a binding for N.
+    // NOTE: We skip this to avoid O(n) traversal of m_bindings.
+
     // 2. Create an immutable binding in envRec for N and record that it is uninitialized. If S is true, record that the newly created binding is a strict binding.
     m_bindings.append(Binding {
         .name = name,
@@ -88,10 +91,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(GlobalO
         .initialized = false,
     });
 
-    // 1. Assert: envRec does not already have a binding for N.
-    // NOTE: We skip this to avoid O(n) traversal of m_bindings.
-
-    // 3. Return NormalCompletion(empty).
+    // 3. Return unused.
     return {};
 }
 
@@ -117,7 +117,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(Global
     // 3. Record that the binding for N in envRec has been initialized.
     binding.initialized = true;
 
-    // 4. Return NormalCompletion(empty).
+    // 4. Return unused.
     return {};
 }
 
@@ -131,20 +131,21 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(GlobalObject
         if (strict)
             return vm().throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
 
+        // FIXME: Should be `! envRec.CreateMutableBinding(N, true)` (see https://github.com/tc39/ecma262/pull/2764)
         // b. Perform envRec.CreateMutableBinding(N, true).
         MUST(create_mutable_binding(global_object, name, true));
 
-        // c. Perform envRec.InitializeBinding(N, V).
+        // c. Perform ! envRec.InitializeBinding(N, V).
         MUST(initialize_binding(global_object, name, value));
 
-        // d. Return NormalCompletion(empty).
+        // d. Return unused.
         return {};
     }
 
     // 2-5. (extracted into a non-standard function below)
     TRY(set_mutable_binding_direct(global_object, *index, value, strict));
 
-    // 6. Return NormalCompletion(empty).
+    // 6. Return unused.
     return {};
 }
 

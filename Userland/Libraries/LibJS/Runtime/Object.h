@@ -25,10 +25,13 @@
 
 namespace JS {
 
-#define JS_OBJECT(class_, base_class) \
-public:                               \
-    using Base = base_class;          \
-    virtual StringView class_name() const override { return #class_; }
+#define JS_OBJECT(class_, base_class)              \
+public:                                            \
+    using Base = base_class;                       \
+    virtual StringView class_name() const override \
+    {                                              \
+        return #class_;                            \
+    }
 
 struct PrivateElement {
     enum class Kind {
@@ -91,19 +94,19 @@ public:
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
     ThrowCompletionOr<Value> get(PropertyKey const&) const;
-    ThrowCompletionOr<bool> set(PropertyKey const&, Value, ShouldThrowExceptions);
+    ThrowCompletionOr<void> set(PropertyKey const&, Value, ShouldThrowExceptions);
     ThrowCompletionOr<bool> create_data_property(PropertyKey const&, Value);
-    ThrowCompletionOr<bool> create_method_property(PropertyKey const&, Value);
+    ThrowCompletionOr<void> create_method_property(PropertyKey const&, Value);
     ThrowCompletionOr<bool> create_data_property_or_throw(PropertyKey const&, Value);
-    ThrowCompletionOr<bool> create_non_enumerable_data_property_or_throw(PropertyKey const&, Value);
-    ThrowCompletionOr<bool> define_property_or_throw(PropertyKey const&, PropertyDescriptor const&);
-    ThrowCompletionOr<bool> delete_property_or_throw(PropertyKey const&);
+    void create_non_enumerable_data_property_or_throw(PropertyKey const&, Value);
+    ThrowCompletionOr<void> define_property_or_throw(PropertyKey const&, PropertyDescriptor const&);
+    ThrowCompletionOr<void> delete_property_or_throw(PropertyKey const&);
     ThrowCompletionOr<bool> has_property(PropertyKey const&) const;
     ThrowCompletionOr<bool> has_own_property(PropertyKey const&) const;
     ThrowCompletionOr<bool> set_integrity_level(IntegrityLevel);
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
     ThrowCompletionOr<MarkedVector<Value>> enumerable_own_property_names(PropertyKind kind) const;
-    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object);
+    ThrowCompletionOr<void> copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object);
 
     PrivateElement* private_element_find(PrivateName const& name);
     ThrowCompletionOr<void> private_field_add(PrivateName const& name, Value value);

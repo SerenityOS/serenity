@@ -40,8 +40,8 @@ ThrowCompletionOr<Object*> ModuleNamespaceObject::internal_get_prototype_of() co
 // 10.4.6.2 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-setprototypeof-v
 ThrowCompletionOr<bool> ModuleNamespaceObject::internal_set_prototype_of(Object* prototype)
 {
-    // 1. Return ? SetImmutablePrototype(O, V).
-    return set_immutable_prototype(prototype);
+    // 1. Return ! SetImmutablePrototype(O, V).
+    return MUST(set_immutable_prototype(prototype));
 }
 
 // 10.4.6.3 [[IsExtensible]] ( ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-isextensible
@@ -81,9 +81,9 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ModuleNamespaceObject::internal_
 // 10.4.6.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-defineownproperty-p-desc
 ThrowCompletionOr<bool> ModuleNamespaceObject::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& descriptor)
 {
-    // 1. If Type(P) is Symbol, return OrdinaryDefineOwnProperty(O, P, Desc).
+    // 1. If Type(P) is Symbol, return ! OrdinaryDefineOwnProperty(O, P, Desc).
     if (property_key.is_symbol())
-        return Object::internal_define_own_property(property_key, descriptor);
+        return MUST(Object::internal_define_own_property(property_key, descriptor));
 
     // 2. Let current be ? O.[[GetOwnProperty]](P).
     auto current = TRY(internal_get_own_property(property_key));
@@ -100,7 +100,7 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_define_own_property(Prop
     if (descriptor.enumerable.has_value() && !descriptor.enumerable.value())
         return false;
 
-    // 6. If ! IsAccessorDescriptor(Desc) is true, return false.
+    // 6. If IsAccessorDescriptor(Desc) is true, return false.
     if (descriptor.is_accessor_descriptor())
         return false;
 
@@ -119,9 +119,9 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_define_own_property(Prop
 // 10.4.6.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-hasproperty-p
 ThrowCompletionOr<bool> ModuleNamespaceObject::internal_has_property(PropertyKey const& property_key) const
 {
-    // 1. If Type(P) is Symbol, return OrdinaryHasProperty(O, P).
+    // 1. If Type(P) is Symbol, return ! OrdinaryHasProperty(O, P).
     if (property_key.is_symbol())
-        return Object::internal_has_property(property_key);
+        return MUST(Object::internal_has_property(property_key));
 
     // 2. Let exports be O.[[Exports]].
     // 3. If P is an element of exports, return true.
@@ -138,8 +138,8 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
 {
     // 1. If Type(P) is Symbol, then
     if (property_key.is_symbol()) {
-        // a. Return ? OrdinaryGet(O, P, Receiver).
-        return Object::internal_get(property_key, receiver);
+        // a. Return ! OrdinaryGet(O, P, Receiver).
+        return MUST(Object::internal_get(property_key, receiver));
     }
 
     // 2. Let exports be O.[[Exports]].
@@ -190,8 +190,8 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_delete(PropertyKey const
 {
     // 1. If Type(P) is Symbol, then
     if (property_key.is_symbol()) {
-        // a. Return ? OrdinaryDelete(O, P).
-        return Object::internal_delete(property_key);
+        // a. Return ! OrdinaryDelete(O, P).
+        return MUST(Object::internal_delete(property_key));
     }
 
     // 2. Let exports be O.[[Exports]].
@@ -209,7 +209,7 @@ ThrowCompletionOr<MarkedVector<Value>> ModuleNamespaceObject::internal_own_prope
 {
     // 1. Let exports be O.[[Exports]].
 
-    // 2. Let symbolKeys be ! OrdinaryOwnPropertyKeys(O).
+    // 2. Let symbolKeys be OrdinaryOwnPropertyKeys(O).
     auto symbol_keys = MUST(Object::internal_own_property_keys());
 
     // 3. Return the list-concatenation of exports and symbolKeys.

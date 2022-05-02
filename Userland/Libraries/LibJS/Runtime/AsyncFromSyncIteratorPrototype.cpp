@@ -31,36 +31,35 @@ void AsyncFromSyncIteratorPrototype::initialize(GlobalObject& global_object)
 }
 
 // 27.1.4.4 AsyncFromSyncIteratorContinuation ( result, promiseCapability ), https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation
-static ThrowCompletionOr<Object*> async_from_sync_iterator_continuation(GlobalObject& global_object, Object& result, PromiseCapability& promise_capability)
+static Object* async_from_sync_iterator_continuation(GlobalObject& global_object, Object& result, PromiseCapability& promise_capability)
 {
-    // 1. Let done be IteratorComplete(result).
-    // 2. IfAbruptRejectPromise(done, promiseCapability).
-    auto done = TRY_OR_REJECT(global_object, promise_capability, iterator_complete(global_object, result));
+    // 1. NOTE: Because promiseCapability is derived from the intrinsic %Promise%, the calls to promiseCapability.[[Reject]] entailed by the use IfAbruptRejectPromise below are guaranteed not to throw.
+    // 2. Let done be Completion(IteratorComplete(result)).
+    // 3. IfAbruptRejectPromise(done, promiseCapability).
+    auto done = TRY_OR_MUST_REJECT(global_object, promise_capability, iterator_complete(global_object, result));
 
-    // 3. Let value be IteratorValue(result).
-    // 4. IfAbruptRejectPromise(value, promiseCapability).
-    auto value = TRY_OR_REJECT(global_object, promise_capability, iterator_value(global_object, result));
+    // 4. Let value be Completion(IteratorValue(result)).
+    // 5. IfAbruptRejectPromise(value, promiseCapability).
+    auto value = TRY_OR_MUST_REJECT(global_object, promise_capability, iterator_value(global_object, result));
 
-    // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
-    // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
-    auto value_wrapper = TRY_OR_REJECT(global_object, promise_capability, promise_resolve(global_object, *global_object.promise_constructor(), value));
+    // 6. Let valueWrapper be PromiseResolve(%Promise%, value).
+    // 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
+    auto value_wrapper = TRY_OR_MUST_REJECT(global_object, promise_capability, promise_resolve(global_object, *global_object.promise_constructor(), value));
 
-    // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
+    // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
-        // a. Return ! CreateIterResultObject(value, done).
+        // a. Return CreateIterResultObject(value, done).
         return create_iterator_result_object(global_object, vm.argument(0), done);
     };
 
-    // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
+    // 9. Let onFulfilled be CreateBuiltinFunction(unwrap, 1, "", « »).
+    // 10. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
     auto* on_fulfilled = NativeFunction::create(global_object, move(unwrap), 1, "");
-    // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
-    VERIFY(is<Promise>(value_wrapper));
-    auto* value_wrapper_promise = static_cast<Promise*>(value_wrapper);
 
-    // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
-    value_wrapper_promise->perform_then(move(on_fulfilled), js_undefined(), promise_capability);
+    // 11. Perform PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
+    verify_cast<Promise>(value_wrapper)->perform_then(move(on_fulfilled), js_undefined(), promise_capability);
 
-    // 11. Return promiseCapability.[[Promise]].
+    // 12. Return promiseCapability.[[Promise]].
     return promise_capability.promise;
 }
 
@@ -78,16 +77,16 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
     auto& sync_iterator_record = this_object->sync_iterator_record();
 
     // 5. If value is present, then
-    //     a. Let result be IteratorNext(syncIteratorRecord, value).
+    //     a. Let result be Completion(IteratorNext(syncIteratorRecord, value)).
     // 6. Else,
-    //     a. Let result be IteratorNext(syncIteratorRecord).
+    //     a. Let result be Completion(IteratorNext(syncIteratorRecord)).
     // 7. IfAbruptRejectPromise(result, promiseCapability).
     auto* result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? iterator_next(global_object, sync_iterator_record, vm.argument(0))
                                  : iterator_next(global_object, sync_iterator_record)));
 
-    // 8. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    return MUST(async_from_sync_iterator_continuation(global_object, *result, promise_capability));
+    // 8. Return AsyncFromSyncIteratorContinuation(result, promiseCapability).
+    return async_from_sync_iterator_continuation(global_object, *result, promise_capability);
 }
 
 // 27.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
@@ -103,13 +102,13 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;
 
-    // 5. Let return be GetMethod(syncIterator, "return").
+    // 5. Let return be Completion(GetMethod(syncIterator, "return")).
     // 6. IfAbruptRejectPromise(return, promiseCapability).
     auto* return_method = TRY_OR_REJECT(global_object, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.return_));
 
     // 7. If return is undefined, then
     if (return_method == nullptr) {
-        // a. Let iterResult be ! CreateIterResultObject(value, true).
+        // a. Let iterResult be CreateIterResultObject(value, true).
         auto* iter_result = create_iterator_result_object(global_object, vm.argument(0), true);
 
         // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
@@ -120,9 +119,9 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     }
 
     // 8. If value is present, then
-    //     a. Let result be Call(return, syncIterator, « value »).
+    //     a. Let result be Completion(Call(return, syncIterator, « value »)).
     // 9. Else,
-    //     a. Let result be Call(return, syncIterator).
+    //     a. Let result be Completion(Call(return, syncIterator)).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
     auto result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? call(global_object, return_method, sync_iterator, vm.argument(0))
@@ -137,8 +136,8 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
         return promise_capability.promise;
     }
 
-    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    return MUST(async_from_sync_iterator_continuation(global_object, result.as_object(), promise_capability));
+    // 12. Return AsyncFromSyncIteratorContinuation(result, promiseCapability).
+    return async_from_sync_iterator_continuation(global_object, result.as_object(), promise_capability);
 }
 
 // 27.1.4.2.3 %AsyncFromSyncIteratorPrototype%.throw ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw
@@ -154,7 +153,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;
 
-    // 5. Let throw be GetMethod(syncIterator, "throw").
+    // 5. Let throw be Completion(GetMethod(syncIterator, "throw")).
     // 6. IfAbruptRejectPromise(throw, promiseCapability).
     auto* throw_method = TRY_OR_REJECT(global_object, promise_capability, Value(sync_iterator).get_method(global_object, vm.names.throw_));
 
@@ -166,9 +165,9 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
         return promise_capability.promise;
     }
     // 8. If value is present, then
-    //     a. Let result be Call(throw, syncIterator, « value »).
+    //     a. Let result be Completion(Call(throw, syncIterator, « value »)).
     // 9. Else,
-    //     a. Let result be Call(throw, syncIterator).
+    //     a. Let result be Completion(Call(throw, syncIterator)).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
     auto result = TRY_OR_REJECT(global_object, promise_capability,
         (vm.argument_count() > 0 ? call(global_object, throw_method, sync_iterator, vm.argument(0))
@@ -184,16 +183,16 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
         return promise_capability.promise;
     }
 
-    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    return MUST(async_from_sync_iterator_continuation(global_object, result.as_object(), promise_capability));
+    // 12. Return AsyncFromSyncIteratorContinuation(result, promiseCapability).
+    return async_from_sync_iterator_continuation(global_object, result.as_object(), promise_capability);
 }
 
 // 27.1.4.1 CreateAsyncFromSyncIterator ( syncIteratorRecord ), https://tc39.es/ecma262/#sec-createasyncfromsynciterator
-ThrowCompletionOr<Iterator> create_async_from_sync_iterator(GlobalObject& global_object, Iterator sync_iterator_record)
+Iterator create_async_from_sync_iterator(GlobalObject& global_object, Iterator sync_iterator_record)
 {
     auto& vm = global_object.vm();
 
-    // 1. Let asyncIterator be ! OrdinaryObjectCreate(%AsyncFromSyncIteratorPrototype%, « [[SyncIteratorRecord]] »).
+    // 1. Let asyncIterator be OrdinaryObjectCreate(%AsyncFromSyncIteratorPrototype%, « [[SyncIteratorRecord]] »).
     // 2. Set asyncIterator.[[SyncIteratorRecord]] to syncIteratorRecord.
     auto* async_iterator = AsyncFromSyncIterator::create(global_object, sync_iterator_record);
 

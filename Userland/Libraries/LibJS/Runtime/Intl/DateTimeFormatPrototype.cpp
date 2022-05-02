@@ -146,7 +146,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     // 3. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
     auto* date_time_format = TRY(typed_this_object(global_object));
 
-    // 4. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
 
     // 5. For each row of Table 5, except the header row, in table order, do

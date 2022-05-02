@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -523,7 +523,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
     case Type::Double:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
     case Type::String: {
-        // 1. Let n be ! StringToBigInt(prim).
+        // 1. Let n be StringToBigInt(prim).
         auto bigint = primitive.string_to_bigint(global_object);
 
         // 2. If n is undefined, throw a SyntaxError exception.
@@ -590,7 +590,7 @@ Optional<BigInt*> Value::string_to_bigint(GlobalObject& global_object) const
 {
     VERIFY(is_string());
 
-    // 1. Let text be ! StringToCodePoints(str).
+    // 1. Let text be StringToCodePoints(str).
     auto text = as_string().string().view().trim_whitespace();
 
     // 2. Let literal be ParseText(text, StringIntegerLiteral).
@@ -1429,46 +1429,46 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
 
     // == End of B.3.6.2 ==
 
-    // 5. If Type(x) is Number and Type(y) is String, return IsLooselyEqual(x, ! ToNumber(y)).
+    // 5. If Type(x) is Number and Type(y) is String, return ! IsLooselyEqual(x, ! ToNumber(y)).
     if (lhs.is_number() && rhs.is_string())
         return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
 
-    // 6. If Type(x) is String and Type(y) is Number, return IsLooselyEqual(! ToNumber(x), y).
+    // 6. If Type(x) is String and Type(y) is Number, return ! IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_string() && rhs.is_number())
         return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
 
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
-        // a. Let n be ! StringToBigInt(y).
+        // a. Let n be StringToBigInt(y).
         auto bigint = rhs.string_to_bigint(global_object);
 
         // b. If n is undefined, return false.
         if (!bigint.has_value())
             return false;
 
-        // c. Return IsLooselyEqual(x, n).
+        // c. Return ! IsLooselyEqual(x, n).
         return is_loosely_equal(global_object, lhs, *bigint);
     }
 
-    // 8. If Type(x) is String and Type(y) is BigInt, return IsLooselyEqual(y, x).
+    // 8. If Type(x) is String and Type(y) is BigInt, return ! IsLooselyEqual(y, x).
     if (lhs.is_string() && rhs.is_bigint())
         return is_loosely_equal(global_object, rhs, lhs);
 
-    // 9. If Type(x) is Boolean, return IsLooselyEqual(! ToNumber(x), y).
+    // 9. If Type(x) is Boolean, return ! IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_boolean())
         return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
 
-    // 10. If Type(y) is Boolean, return IsLooselyEqual(x, ! ToNumber(y)).
+    // 10. If Type(y) is Boolean, return ! IsLooselyEqual(x, ! ToNumber(y)).
     if (rhs.is_boolean())
         return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
 
-    // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return IsLooselyEqual(x, ? ToPrimitive(y)).
+    // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return ! IsLooselyEqual(x, ? ToPrimitive(y)).
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
         auto rhs_primitive = TRY(rhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs, rhs_primitive);
     }
 
-    // 12. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return IsLooselyEqual(? ToPrimitive(x), y).
+    // 12. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return ! IsLooselyEqual(? ToPrimitive(x), y).
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_bigint() || rhs.is_symbol())) {
         auto lhs_primitive = TRY(lhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs_primitive, rhs);

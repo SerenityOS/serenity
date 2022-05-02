@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,7 +54,7 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(GlobalObject& global
         return js_undefined();
     };
 
-    // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
+    // 5. Let executor be CreateBuiltinFunction(executorClosure, 2, "", « »).
     auto* executor = NativeFunction::create(global_object, move(executor_closure), 2, "");
 
     // 6. Let promise be ? Construct(C, « executor »).

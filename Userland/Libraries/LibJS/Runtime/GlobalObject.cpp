@@ -521,7 +521,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
         }
         // d. Else,
         else {
-            // i. Let cp be ! CodePointAt(string, k).
+            // i. Let cp be CodePointAt(string, k).
             auto code_point = code_point_at(utf16_string.view(), k);
             // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
             if (code_point.is_unpaired_surrogate)

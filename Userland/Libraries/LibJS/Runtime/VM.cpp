@@ -282,13 +282,13 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         // 1. Perform ? RequireObjectCoercible(value).
         TRY(require_object_coercible(global_object, value));
 
-        // 2. Return the result of performing BindingInitialization of ObjectBindingPattern with arguments value and environment.
+        // 2. Return ? BindingInitialization of ObjectBindingPattern with arguments value and environment.
 
         // BindingInitialization of ObjectBindingPattern
         // 1. Perform ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
         TRY(property_binding_initialization(*target, value, environment, global_object));
 
-        // 2. Return NormalCompletion(empty).
+        // 2. Return unused.
         return {};
     }
     // BindingPattern : ArrayBindingPattern
@@ -296,7 +296,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         // 1. Let iteratorRecord be ? GetIterator(value).
         auto iterator_record = TRY(get_iterator(global_object, value));
 
-        // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
+        // 2. Let result be Completion(IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment).
         auto result = iterator_binding_initialization(*target, iterator_record, environment, global_object);
 
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
@@ -308,7 +308,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
                 return completion.release_error();
         }
 
-        // 4. Return result.
+        // 4. Return ? result.
         return result;
     }
 }
@@ -439,7 +439,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
                 // a. If iteratorRecord.[[Done]] is false, then
                 if (!iterator_record.done) {
-                    // i. Let next be IteratorStep(iteratorRecord).
+                    // i. Let next be Completion(IteratorStep(iteratorRecord)).
                     next = iterator_step(global_object, iterator_record);
 
                     // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -460,7 +460,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                     break;
                 }
 
-                // c. Let nextValue be IteratorValue(next).
+                // c. Let nextValue be Completion(IteratorValue(next)).
                 auto next_value = iterator_value(global_object, *next.value());
 
                 // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -485,7 +485,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
             // 2. If iteratorRecord.[[Done]] is false, then
             if (!iterator_record.done) {
-                // a. Let next be IteratorStep(iteratorRecord).
+                // a. Let next be Completion(IteratorStep(iteratorRecord)).
                 auto next = iterator_step(global_object, iterator_record);
 
                 // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -501,7 +501,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 }
                 // e. Else,
                 else {
-                    // i. Set v to IteratorValue(next).
+                    // i. Set v to Completion(IteratorValue(next)).
                     auto value_or_error = iterator_value(global_object, *next.value());
 
                     // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
@@ -980,7 +980,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         }
     }
 
-    // It must return NormalCompletion(undefined).
+    // It must return unused.
     // Note: Just return void always since the resulting value cannot be accessed by user code.
 }
 
@@ -1000,7 +1000,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
         // Note: If HostResolveImportedModule returns a module evaluate will have been called on it.
 
-        // d. Let namespace be GetModuleNamespace(moduleRecord).
+        // d. Let namespace be Completion(GetModuleNamespace(moduleRecord)).
         auto namespace_ = module_record->get_module_namespace(vm);
 
         // e. If namespace is an abrupt completion, then
@@ -1013,11 +1013,12 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
             MUST(call(global_object, resolve_function.cell(), js_undefined(), namespace_.release_value()));
         }
-        // g. Return undefined.
+        // g. Return unused.
+        // NOTE: We don't support returning an empty/optional/unused value here.
         return js_undefined();
     };
 
-    // 2. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+    // 2. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
     auto* on_fulfilled = NativeFunction::create(current_realm()->global_object(), move(fulfilled_closure), 0, "");
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
@@ -1025,15 +1026,19 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         auto error = vm.argument(0);
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
         MUST(call(global_object, rejected_function.cell(), js_undefined(), error));
-        // b. Return undefined.
+
+        // b. Return unused.
+        // NOTE: We don't support returning an empty/optional/unused value here.
         return js_undefined();
     };
 
-    // 4. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+    // 4. Let onRejected be CreateBuiltinFunction(rejectedClosure, 0, "", « »).
     auto* on_rejected = NativeFunction::create(current_realm()->global_object(), move(rejected_closure), 0, "");
 
-    // 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
+    // 5. Perform PerformPromiseThen(innerPromise, onFulfilled, onRejected).
     inner_promise->perform_then(on_fulfilled, on_rejected, {});
+
+    // 6. Return unused.
 }
 
 }
