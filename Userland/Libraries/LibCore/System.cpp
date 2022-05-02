@@ -1274,4 +1274,16 @@ unsigned sleep(unsigned seconds)
     return ::sleep(seconds);
 }
 
+ErrorOr<void> nanosleep(Time req, Time* rem)
+{
+    auto const required = req.to_timespec();
+    timespec remainder {};
+    int rc = ::nanosleep(&required, &remainder);
+    if (rem)
+        *rem = Time::from_timespec(remainder);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    return {};
+}
+
 }

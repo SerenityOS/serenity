@@ -102,6 +102,7 @@ ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* c
 ErrorOr<off_t> lseek(int fd, off_t, int whence);
 ErrorOr<void> usleep(useconds_t usec);
 unsigned sleep(unsigned seconds);
+ErrorOr<void> nanosleep(Time req, Time* rem);
 
 struct WaitPidResult {
     pid_t pid;
