@@ -36,8 +36,8 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
                 // 2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
                 auto sync_iterator_record = TRY(get_iterator(global_object, value, IteratorHint::Sync, sync_method));
 
-                // 3. Return ! CreateAsyncFromSyncIterator(syncIteratorRecord).
-                return MUST(create_async_from_sync_iterator(global_object, sync_iterator_record));
+                // 3. Return CreateAsyncFromSyncIterator(syncIteratorRecord).
+                return create_async_from_sync_iterator(global_object, sync_iterator_record);
             }
 
             method = Value(async_method);
@@ -98,7 +98,7 @@ ThrowCompletionOr<bool> iterator_complete(GlobalObject& global_object, Object& i
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ! ToBoolean(? Get(iterResult, "done")).
+    // 1. Return ToBoolean(? Get(iterResult, "done")).
     return TRY(iterator_result.get(vm.names.done)).to_boolean();
 }
 
@@ -140,7 +140,7 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
     // 2. Let iterator be iteratorRecord.[[Iterator]].
     auto* iterator = iterator_record.iterator;
 
-    // 3. Let innerResult be GetMethod(iterator, "return").
+    // 3. Let innerResult be Completion(GetMethod(iterator, "return")).
     auto inner_result = ThrowCompletionOr<Value> { js_undefined() };
     auto get_method_result = Value(iterator).get_method(global_object, vm.names.return_);
     if (get_method_result.is_error())
@@ -151,25 +151,25 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
         // a. Let return be innerResult.[[Value]].
         auto* return_method = get_method_result.value();
 
-        // b. If return is undefined, return Completion(completion).
+        // b. If return is undefined, return ? completion.
         if (!return_method)
             return completion;
 
-        // c. Set innerResult to Call(return, iterator).
+        // c. Set innerResult to Completion(Call(return, iterator)).
         inner_result = call(global_object, return_method, iterator);
 
         // Note: If this is AsyncIteratorClose perform one extra step.
         if (iterator_hint == IteratorHint::Async && !inner_result.is_error()) {
-            // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
+            // d. If innerResult.[[Type]] is normal, set innerResult to Completion(Await(innerResult.[[Value]])).
             inner_result = await(global_object, inner_result.value());
         }
     }
 
-    // 5. If completion.[[Type]] is throw, return Completion(completion).
+    // 5. If completion.[[Type]] is throw, return ? completion.
     if (completion.is_error())
         return completion;
 
-    // 6. If innerResult.[[Type]] is throw, return Completion(innerResult).
+    // 6. If innerResult.[[Type]] is throw, return ? innerResult.
     if (inner_result.is_throw_completion())
         return inner_result;
 
@@ -177,7 +177,7 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
     if (!inner_result.value().is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
 
-    // 8. Return Completion(completion).
+    // 8. Return ? completion.
     return completion;
 }
 
@@ -198,7 +198,7 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
 {
     auto& vm = global_object.vm();
 
-    // 1. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
 
     // 2. Perform ! CreateDataPropertyOrThrow(obj, "value", value).

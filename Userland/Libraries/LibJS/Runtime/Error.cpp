@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,11 +44,11 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
         // a. Let cause be ? Get(options, "cause").
         auto cause = TRY(options.as_object().get(vm.names.cause));
 
-        // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
-        MUST(create_non_enumerable_data_property_or_throw(vm.names.cause, cause));
+        // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
+        create_non_enumerable_data_property_or_throw(vm.names.cause, cause);
     }
 
-    // 2. Return NormalCompletion(undefined).
+    // 2. Return unused.
     return {};
 }
 

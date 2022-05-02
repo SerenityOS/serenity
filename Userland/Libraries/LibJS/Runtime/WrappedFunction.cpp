@@ -16,7 +16,7 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(GlobalObject& global
     auto& vm = global_object.vm();
 
     // 1. Let internalSlotsList be the internal slots listed in Table 2, plus [[Prototype]] and [[Extensible]].
-    // 2. Let wrapped be ! MakeBasicObject(internalSlotsList).
+    // 2. Let wrapped be MakeBasicObject(internalSlotsList).
     // 3. Set wrapped.[[Prototype]] to callerRealm.[[Intrinsics]].[[%Function.prototype%]].
     // 4. Set wrapped.[[Call]] as described in 2.1.
     // 5. Set wrapped.[[WrappedTargetFunction]] to Target.

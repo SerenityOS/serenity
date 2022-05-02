@@ -14,7 +14,7 @@ namespace JS::Intl {
 SegmentIterator* SegmentIterator::create(GlobalObject& global_object, Segmenter& segmenter, Utf16View const& string, Segments const& segments)
 {
     // 1. Let internalSlotsList be « [[IteratingSegmenter]], [[IteratedString]], [[IteratedStringNextSegmentCodeUnitIndex]] ».
-    // 2. Let iterator be ! OrdinaryObjectCreate(%SegmentIteratorPrototype%, internalSlotsList).
+    // 2. Let iterator be OrdinaryObjectCreate(%SegmentIteratorPrototype%, internalSlotsList).
     // 3. Set iterator.[[IteratingSegmenter]] to segmenter.
     // 4. Set iterator.[[IteratedString]] to string.
     // 5. Set iterator.[[IteratedStringNextSegmentCodeUnitIndex]] to 0.

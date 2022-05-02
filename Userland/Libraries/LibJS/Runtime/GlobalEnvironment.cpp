@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(GlobalObject&) cons
 ThrowCompletionOr<bool> GlobalEnvironment::has_binding(FlyString const& name, Optional<size_t>*) const
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, return true.
+    // 2. If ! DclRec.HasBinding(N) is true, return true.
     if (MUST(m_declarative_record->has_binding(name)))
         return true;
 
@@ -55,7 +55,7 @@ ThrowCompletionOr<bool> GlobalEnvironment::has_binding(FlyString const& name, Op
 ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
         return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
@@ -67,7 +67,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& 
 ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+    // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
         return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
@@ -79,10 +79,10 @@ ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject
 ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, then
+    // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // a. Return DclRec.InitializeBinding(N, V).
-        return m_declarative_record->initialize_binding(global_object, name, value);
+        // a. Return ! DclRec.InitializeBinding(N, V).
+        return MUST(m_declarative_record->initialize_binding(global_object, name, value));
     }
 
     // 3. Assert: If the binding exists, it must be in the object Environment Record.
@@ -95,9 +95,11 @@ ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(GlobalObject& glob
 ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, then
+    // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // a. Return DclRec.SetMutableBinding(N, V, S).
+        // a. Return ! DclRec.SetMutableBinding(N, V, S).
+        // FIXME: Using MUST here breaks 22 tests in test262 (spec issue).
+        //        Example: `function f() { x = 1; } f(); let x;`
         return m_declarative_record->set_mutable_binding(global_object, name, value, strict);
     }
 
@@ -110,8 +112,9 @@ ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& glo
 ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, then
+    // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
+        // FIXME: Should be `! DclRec.GetBindingValue(N, S)` (see https://github.com/tc39/ecma262/pull/2764)
         // a. Return DclRec.GetBindingValue(N, S).
         return m_declarative_record->get_binding_value(global_object, name, strict);
     }
@@ -125,10 +128,10 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& glob
 ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString const& name)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. If DclRec.HasBinding(N) is true, then
+    // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // a. Return DclRec.DeleteBinding(N).
-        return m_declarative_record->delete_binding(global_object, name);
+        // a. Return ! DclRec.DeleteBinding(N).
+        return MUST(m_declarative_record->delete_binding(global_object, name));
     }
 
     // 3. Let ObjRec be envRec.[[ObjectRecord]].
@@ -170,7 +173,7 @@ bool GlobalEnvironment::has_var_declaration(FlyString const& name) const
 bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
-    // 2. Return DclRec.HasBinding(N).
+    // 2. Return ! DclRec.HasBinding(N).
     return MUST(m_declarative_record->has_binding(name));
 }
 
@@ -269,7 +272,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
         m_var_names.append(name);
     }
 
-    // 8. Return NormalCompletion(empty).
+    // 8. Return unused.
     return {};
 }
 
@@ -309,7 +312,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_function_binding(FlyStr
         m_var_names.append(name);
     }
 
-    // 10. Return NormalCompletion(empty).
+    // 10. Return unused.
     return {};
 }
 

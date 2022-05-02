@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -80,7 +80,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // 11. Let script be scriptRecord.[[ECMAScriptCode]].
     auto& script = script_record.parse_node();
 
-    // 12. Let result be GlobalDeclarationInstantiation(script, globalEnv).
+    // 12. Let result be Completion(GlobalDeclarationInstantiation(script, globalEnv)).
     auto instantiation_result = script.global_declaration_instantiation(*this, global_object, global_environment);
     Completion result = instantiation_result.is_throw_completion() ? instantiation_result.throw_completion() : normal_completion({});
 
@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
 
     vm.finish_execution_generation();
 
-    // 18. Return Completion(result).
+    // 18. Return ? result.
     if (result.is_abrupt()) {
         VERIFY(result.type() == Completion::Type::Throw);
         return result.release_error();

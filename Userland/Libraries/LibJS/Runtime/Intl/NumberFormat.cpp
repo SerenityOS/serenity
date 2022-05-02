@@ -641,7 +641,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
                 // 2. Else use an implementation dependent algorithm to map n to the appropriate representation of n in the given numbering system.
                 formatted_string = Unicode::replace_digits_for_number_system(number_format.numbering_system(), formatted_string);
 
-                // 3. Let decimalSepIndex be ! StringIndexOf(n, ".", 0).
+                // 3. Let decimalSepIndex be StringIndexOf(n, ".", 0).
                 auto decimal_sep_index = formatted_string.find('.');
 
                 StringView integer;
@@ -817,7 +817,7 @@ Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number
 
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).

@@ -91,7 +91,7 @@ Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_na
     VERIFY(m_namespace.is_null());
 
     // 2. Let internalSlotsList be the internal slots listed in Table 34.
-    // 3. Let M be ! MakeBasicObject(internalSlotsList).
+    // 3. Let M be MakeBasicObject(internalSlotsList).
     // 4. Set M's essential internal methods to the definitions specified in 10.4.6.
     // 5. Set M.[[Module]] to module.
     // 6. Let sortedExports be a List whose elements are the elements of exports ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn.

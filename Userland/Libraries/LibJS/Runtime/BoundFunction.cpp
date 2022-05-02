@@ -18,7 +18,7 @@ ThrowCompletionOr<BoundFunction*> BoundFunction::create(GlobalObject& global_obj
     auto* prototype = TRY(target_function.internal_get_prototype_of());
 
     // 2. Let internalSlotsList be the list-concatenation of « [[Prototype]], [[Extensible]] » and the internal slots listed in Table 34.
-    // 3. Let obj be ! MakeBasicObject(internalSlotsList).
+    // 3. Let obj be MakeBasicObject(internalSlotsList).
     // 4. Set obj.[[Prototype]] to proto.
     // 5. Set obj.[[Call]] as described in 10.4.1.1.
     // 6. If IsConstructor(targetFunction) is true, then

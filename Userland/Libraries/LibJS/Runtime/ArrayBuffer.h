@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,7 +57,7 @@ public:
     template<typename type>
     Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
-    Value set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
+    void set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename T>
     Value get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
@@ -81,7 +81,7 @@ private:
 };
 
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length = {});
-ThrowCompletionOr<Value> detach_array_buffer(GlobalObject&, ArrayBuffer& array_buffer, Optional<Value> key = {});
+ThrowCompletionOr<void> detach_array_buffer(GlobalObject&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
@@ -201,14 +201,13 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
 
 // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
 template<typename T>
-Value ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto raw_bytes = numeric_to_raw_bytes<T>(global_object(), value, is_little_endian);
 
     // FIXME: Check for shared buffer
 
     raw_bytes.span().copy_to(buffer_impl().span().slice(byte_index));
-    return js_undefined();
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer

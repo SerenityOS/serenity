@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -1383,7 +1383,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         // b. Let kValue be ! Get(O, Pk).
         auto value = MUST(typed_array->get(i));
 
-        // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let selected be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
         auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then

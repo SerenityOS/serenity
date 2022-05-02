@@ -144,9 +144,9 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 
     auto& function = function_value.as_function();
 
-    // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]] is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
+    // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]] is a sequence of Unicode code points and HostHasSourceTextAvailable(func) is true, then
     if (is<ECMAScriptFunctionObject>(function)) {
-        // a. Return ! CodePointsToString(func.[[SourceText]]).
+        // a. Return CodePointsToString(func.[[SourceText]]).
         return js_string(vm, static_cast<ECMAScriptFunctionObject&>(function).source_text());
     }
 

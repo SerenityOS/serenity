@@ -217,17 +217,16 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
 
     // 1. If environment is not undefined, then
     if (environment) {
-        // a. Perform environment.InitializeBinding(name, value).
+        // a. Perform ! environment.InitializeBinding(name, value).
         MUST(environment->initialize_binding(global_object, name, value));
 
-        // b. Return NormalCompletion(undefined).
+        // b. Return unused.
         return {};
     }
     // 2. Else,
     else {
-        // a. Let lhs be ResolveBinding(name).
-        // NOTE: Although the spec pretends resolve_binding cannot fail it can just not in this case.
-        auto lhs = MUST(vm.resolve_binding(name));
+        // a. Let lhs be ? ResolveBinding(name).
+        auto lhs = TRY(vm.resolve_binding(name));
 
         // b. Return ? PutValue(lhs, value).
         return TRY(lhs.put_value(global_object, value));
@@ -246,7 +245,7 @@ bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const
 // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
 bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& property_key, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {
-    // 1. Assert: ! IsPropertyKey(P) is true.
+    // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
 
     // 2. If current is undefined, then
@@ -288,21 +287,21 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
         if (descriptor.configurable.has_value() && *descriptor.configurable)
             return false;
 
-        // b. If Desc has an [[Enumerable]] field and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+        // b. If Desc has an [[Enumerable]] field and SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
         if (descriptor.enumerable.has_value() && *descriptor.enumerable != *current->enumerable)
             return false;
 
-        // c. If ! IsGenericDescriptor(Desc) is false and ! SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
+        // c. If IsGenericDescriptor(Desc) is false and SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
         if (!descriptor.is_generic_descriptor() && (descriptor.is_accessor_descriptor() != current->is_accessor_descriptor()))
             return false;
 
-        // d. If ! IsAccessorDescriptor(Desc) is true, then
+        // d. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
-            // i. If Desc has a [[Get]] field and ! SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
+            // i. If Desc has a [[Get]] field and SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
             if (descriptor.get.has_value() && *descriptor.get != *current->get)
                 return false;
 
-            // ii. If Desc has a [[Set]] field and ! SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
+            // ii. If Desc has a [[Set]] field and SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
             if (descriptor.set.has_value() && *descriptor.set != *current->set)
                 return false;
         }
@@ -313,7 +312,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             if (descriptor.writable.has_value() && *descriptor.writable)
                 return false;
 
-            // ii. If Desc has a [[Value]] field and ! SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+            // ii. If Desc has a [[Value]] field and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
             if (descriptor.value.has_value() && (*descriptor.value != *current->value))
                 return false;
         }
@@ -321,7 +320,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
 
     // 6. If O is not undefined, then
     if (object != nullptr) {
-        // a. If ! IsDataDescriptor(current) is true and ! IsAccessorDescriptor(Desc) is true, then
+        // a. If IsDataDescriptor(current) is true and IsAccessorDescriptor(Desc) is true, then
         if (current->is_data_descriptor() && descriptor.is_accessor_descriptor()) {
             // i. If Desc has a [[Configurable]] field, let configurable be Desc.[[Configurable]], else let configurable be current.[[Configurable]].
             auto configurable = descriptor.configurable.value_or(*current->configurable);
@@ -336,7 +335,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             attributes.set_configurable(configurable);
             object->storage_set(property_key, { accessor, attributes });
         }
-        // b. Else if ! IsAccessorDescriptor(current) is true and ! IsDataDescriptor(Desc) is true, then
+        // b. Else if IsAccessorDescriptor(current) is true and IsDataDescriptor(Desc) is true, then
         else if (current->is_accessor_descriptor() && descriptor.is_data_descriptor()) {
             // i. If Desc has a [[Configurable]] field, let configurable be Desc.[[Configurable]], else let configurable be current.[[Configurable]].
             auto configurable = descriptor.configurable.value_or(*current->configurable);
@@ -488,7 +487,6 @@ ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
     auto bv = TRY(require_object_coercible(global_object, base_value));
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-    // 6. NOTE: This returns a Super Reference Record.
     return Reference { bv, property_key, actual_this, strict };
 }
 
@@ -730,7 +728,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 // 1. NOTE: The environment of with statements cannot contain any lexical declaration so it doesn't need to be checked for var/let hoisting conflicts.
                 // 2. For each element name of varNames, do
                 TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
-                    // a. If thisEnv.HasBinding(name) is true, then
+                    // a. If ! thisEnv.HasBinding(name) is true, then
                     if (MUST(this_environment->has_binding(name))) {
                         // i. Throw a SyntaxError exception.
                         return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
@@ -821,8 +819,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             while (this_environment != variable_environment) {
                 // a. If thisEnv is not an object Environment Record, then
                 if (!is<ObjectEnvironment>(*this_environment)) {
-                    // i. If thisEnv.HasBinding(F) is true, then
-
+                    // i. If ! thisEnv.HasBinding(F) is true, then
                     if (MUST(this_environment->has_binding(function_name))) {
                         // i. Let bindingExists be true.
                         // Note: When bindingExists is true we skip all the other steps.
@@ -866,7 +863,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 // ii. Else,
                 else {
 
-                    // i. Let bindingExists be varEnv.HasBinding(F).
+                    // i. Let bindingExists be ! varEnv.HasBinding(F).
                     // ii. If bindingExists is false, then
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         // i. Perform ! varEnv.CreateMutableBinding(F, true).
@@ -885,7 +882,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             //     ii. Let benv be the running execution context's LexicalEnvironment.
             //     iii. Let fobj be ! benv.GetBindingValue(F, false).
             //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
-            //     v. Return NormalCompletion(empty).
+            //     v. Return unused.
             function_declaration.set_should_do_additional_annexB_steps();
 
             return {};
@@ -958,13 +955,13 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
         // d. Else,
         else {
-            // i. Let bindingExists be varEnv.HasBinding(fn).
+            // i. Let bindingExists be ! varEnv.HasBinding(fn).
             auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 
             // ii. If bindingExists is false, then
             if (!binding_exists) {
-                // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
-                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
+                // 2. Perform ! varEnv.CreateMutableBinding(fn, true).
                 MUST(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
 
                 // 3. Perform ! varEnv.InitializeBinding(fn, fo).
@@ -988,13 +985,13 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
         // b. Else,
         else {
-            // i. Let bindingExists be varEnv.HasBinding(vn).
+            // i. Let bindingExists be ! varEnv.HasBinding(vn).
             auto binding_exists = MUST(variable_environment->has_binding(var_name));
 
             // ii. If bindingExists is false, then
             if (!binding_exists) {
-                // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
-                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
+                // 2. Perform ! varEnv.CreateMutableBinding(vn, true).
                 MUST(variable_environment->create_mutable_binding(global_object, var_name, true));
 
                 // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
@@ -1003,7 +1000,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
     }
 
-    // 19. Return NormalCompletion(empty).
+    // 19. Return unused.
     return {};
 }
 
@@ -1015,12 +1012,12 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
     // 1. Let len be the number of elements in argumentsList.
     auto length = arguments.size();
 
-    // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
+    // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
     auto* object = Object::create(global_object, global_object.object_prototype());
     object->set_has_parameter_map();
 
-    // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     MUST(object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true }));
 
     // 5. Let index be 0.
@@ -1058,7 +1055,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     VERIFY(arguments.size() <= NumericLimits<i32>::max());
     i32 length = static_cast<i32>(arguments.size());
 
-    // 3. Let obj be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[ParameterMap]] »).
+    // 3. Let obj be MakeBasicObject(« [[Prototype]], [[Extensible]], [[ParameterMap]] »).
     // 4. Set obj.[[GetOwnProperty]] as specified in 10.4.4.1.
     // 5. Set obj.[[DefineOwnProperty]] as specified in 10.4.4.2.
     // 6. Set obj.[[Get]] as specified in 10.4.4.3.
@@ -1103,7 +1100,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
         if (index < length) {
             // 1. Let g be MakeArgGetter(name, env).
             // 2. Let p be MakeArgSetter(name, env).
-            // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
+            // 3. Perform ! map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
                 PropertyKey { index },
                 [&environment, name](VM&, GlobalObject& global_object_getter) -> ThrowCompletionOr<Value> {

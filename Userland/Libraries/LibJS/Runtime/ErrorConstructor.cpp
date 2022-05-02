@@ -51,8 +51,8 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         // a. Let msg be ? ToString(message).
         auto msg = TRY(message.to_string(global_object));
 
-        // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
-        MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg))));
+        // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
+        error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));
     }
 
     // 4. Perform ? InstallErrorCause(O, options).
@@ -79,7 +79,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
         define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                                                       \
     }                                                                                                                                     \
                                                                                                                                           \
-    ConstructorName::~ConstructorName() { }                                                                                               \
+    ConstructorName::~ConstructorName() = default;                                                                                        \
                                                                                                                                           \
     /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                                      \
     ThrowCompletionOr<Value> ConstructorName::call()                                                                                      \
@@ -105,8 +105,8 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
             /* a. Let msg be ? ToString(message). */                                                                                      \
             auto msg = TRY(message.to_string(global_object));                                                                             \
                                                                                                                                           \
-            /* b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                                 \
-            MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg))));                        \
+            /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                                   \
+            error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));                              \
         }                                                                                                                                 \
                                                                                                                                           \
         /* 4. Perform ? InstallErrorCause(O, options). */                                                                                 \

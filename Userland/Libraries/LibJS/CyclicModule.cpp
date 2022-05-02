@@ -26,11 +26,11 @@ ThrowCompletionOr<void> CyclicModule::link(VM& vm)
     // 2. Let stack be a new empty List.
     Vector<Module*> stack;
 
-    // 3. Let result be InnerModuleLinking(module, stack, 0).
-    auto inner_module_linked_or_error = inner_module_linking(vm, stack, 0);
+    // 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
+    auto result = inner_module_linking(vm, stack, 0);
 
     // 4. If result is an abrupt completion, then
-    if (inner_module_linked_or_error.is_error()) {
+    if (result.is_throw_completion()) {
         // a. For each Cyclic Module Record m of stack, do
         for (auto* module : stack) {
             if (is<CyclicModule>(module)) {
@@ -46,7 +46,7 @@ ThrowCompletionOr<void> CyclicModule::link(VM& vm)
         VERIFY(m_status == ModuleStatus::Unlinked);
 
         // c. Return result.
-        return inner_module_linked_or_error.release_error();
+        return result.release_error();
     }
 
     // 5. Assert: module.[[Status]] is linked, evaluating-async, or evaluated.
@@ -54,8 +54,7 @@ ThrowCompletionOr<void> CyclicModule::link(VM& vm)
     // 6. Assert: stack is empty.
     VERIFY(stack.is_empty());
 
-    // 7. Return undefined.
-    // Note: We return void since the result of this is never used.
+    // 7. Return unused.
     return {};
 }
 
@@ -130,7 +129,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_linking(VM& vm, Vector<Module*
     }
 
     // 10. Perform ? module.InitializeEnvironment().
-    (void)TRY(initialize_environment(vm));
+    TRY(initialize_environment(vm));
 
     // 11. Assert: module occurs exactly once in stack.
     size_t count = 0;
@@ -204,7 +203,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
     // 7. Set module.[[TopLevelCapability]] to capability.
     m_top_level_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
-    // 8. Let result be InnerModuleEvaluation(module, stack, 0).
+    // 8. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
     auto result = inner_module_evaluation(vm, stack, 0);
 
     // 9. If result is an abrupt completion, then
@@ -273,7 +272,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
         if (!m_evaluation_error.is_error())
             return index;
 
-        // b. Otherwise, return module.[[EvaluationError]].
+        // b. Otherwise, return ? module.[[EvaluationError]].
         return m_evaluation_error.throw_completion();
     }
 
@@ -336,7 +335,7 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
             // 2. Assert: requiredModule.[[Status]] is evaluating-async or evaluated.
             VERIFY(cyclic_module->m_status == ModuleStatus::EvaluatingAsync || cyclic_module->m_status == ModuleStatus::Evaluated);
 
-            // 3. If requiredModule.[[EvaluationError]] is not empty, return requiredModule.[[EvaluationError]].
+            // 3. If requiredModule.[[EvaluationError]] is not empty, return ? requiredModule.[[EvaluationError]].
             if (cyclic_module->m_evaluation_error.is_error())
                 return cyclic_module->m_evaluation_error.throw_completion();
         }
@@ -361,13 +360,13 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
         m_async_evaluation = true;
         // c. NOTE: The order in which module records have their [[AsyncEvaluation]] fields transition to true is significant. (See 16.2.1.5.2.4.)
 
-        // d. If module.[[PendingAsyncDependencies]] is 0, perform ! ExecuteAsyncModule(module).
+        // d. If module.[[PendingAsyncDependencies]] is 0, perform ExecuteAsyncModule(module).
         if (m_pending_async_dependencies.value() == 0)
-            MUST(execute_async_module(vm));
+            execute_async_module(vm);
     }
     // 13. Otherwise, perform ? module.ExecuteModule().
     else {
-        (void)TRY(execute_module(vm));
+        TRY(execute_module(vm));
     }
 
     // 14. Assert: module occurs exactly once in stack.
@@ -417,24 +416,22 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
     return index;
 }
 
-Completion CyclicModule::initialize_environment(VM&)
+ThrowCompletionOr<void> CyclicModule::initialize_environment(VM&)
 {
     // Note: In ecma262 this is never called on a cyclic module only on SourceTextModules.
     //       So this check is to make sure we don't accidentally call this.
     VERIFY_NOT_REACHED();
-    return normal_completion({});
 }
 
-Completion CyclicModule::execute_module(VM&, Optional<PromiseCapability>)
+ThrowCompletionOr<void> CyclicModule::execute_module(VM&, Optional<PromiseCapability>)
 {
     // Note: In ecma262 this is never called on a cyclic module only on SourceTextModules.
     //       So this check is to make sure we don't accidentally call this.
     VERIFY_NOT_REACHED();
-    return js_undefined();
 }
 
 // 16.2.1.5.2.2 ExecuteAsyncModule ( module ), https://tc39.es/ecma262/#sec-execute-async-module
-ThrowCompletionOr<void> CyclicModule::execute_async_module(VM& vm)
+void CyclicModule::execute_async_module(VM& vm)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] executing async module {}", filename());
     // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
@@ -449,43 +446,43 @@ ThrowCompletionOr<void> CyclicModule::execute_async_module(VM& vm)
 
     // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
     auto fulfilled_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
-        // a. Perform ! AsyncModuleExecutionFulfilled(module).
-        MUST(async_module_execution_fulfilled(vm));
+        // a. Perform AsyncModuleExecutionFulfilled(module).
+        async_module_execution_fulfilled(vm);
 
         // b. Return undefined.
         return js_undefined();
     };
 
-    // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+    // 5. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
     auto* on_fulfilled = NativeFunction::create(global_object, move(fulfilled_closure), 0, "");
 
     // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
     auto rejected_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
 
-        // a. Perform ! AsyncModuleExecutionRejected(module, error).
-        MUST(async_module_execution_rejected(vm, error));
+        // a. Perform AsyncModuleExecutionRejected(module, error).
+        async_module_execution_rejected(vm, error);
 
         // b. Return undefined.
         return js_undefined();
     };
 
-    // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+    // 7. Let onRejected be CreateBuiltinFunction(rejectedClosure, 0, "", « »).
     auto* on_rejected = NativeFunction::create(global_object, move(rejected_closure), 0, "");
 
     VERIFY(is<Promise>(*capability.promise));
 
-    // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+    // 8. Perform PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
     static_cast<Promise*>(capability.promise)->perform_then(on_fulfilled, on_rejected, {});
 
     // 9. Perform ! module.ExecuteModule(capability).
-    (void)MUST(execute_module(vm, capability));
+    MUST(execute_module(vm, capability));
 
-    return {};
+    // 10. Return unused.
 }
 
 // 16.2.1.5.2.3 GatherAvailableAncestors ( module, execList ), https://tc39.es/ecma262/#sec-gather-available-ancestors
-ThrowCompletionOr<void> CyclicModule::gather_available_ancestors(Vector<CyclicModule*>& exec_list)
+void CyclicModule::gather_available_ancestors(Vector<CyclicModule*>& exec_list)
 {
     // 1. For each Cyclic Module Record m of module.[[AsyncParentModules]], do
     for (auto* module : m_async_parent_modules) {
@@ -511,25 +508,26 @@ ThrowCompletionOr<void> CyclicModule::gather_available_ancestors(Vector<CyclicMo
                 // 1. Append m to execList.
                 exec_list.append(module);
 
-                // 2. If m.[[HasTLA]] is false, perform ! GatherAvailableAncestors(m, execList).
+                // 2. If m.[[HasTLA]] is false, perform GatherAvailableAncestors(m, execList).
                 if (!module->m_has_top_level_await)
-                    MUST(module->gather_available_ancestors(exec_list));
+                    module->gather_available_ancestors(exec_list);
             }
         }
     }
 
-    return {};
+    // 2. Return unused.
 }
 
 // 16.2.1.5.2.4 AsyncModuleExecutionFulfilled ( module ), https://tc39.es/ecma262/#sec-async-module-execution-fulfilled
-ThrowCompletionOr<void> CyclicModule::async_module_execution_fulfilled(VM& vm)
+void CyclicModule::async_module_execution_fulfilled(VM& vm)
 {
     // 1. If module.[[Status]] is evaluated, then
     if (m_status == ModuleStatus::Evaluated) {
         // a. Assert: module.[[EvaluationError]] is not empty.
         VERIFY(m_evaluation_error.is_error());
-        // b. Return.
-        return {};
+
+        // b. Return unused.
+        return;
     }
 
     // 2. Assert: module.[[Status]] is evaluating-async.
@@ -560,8 +558,8 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_fulfilled(VM& vm)
     // 8. Let execList be a new empty List.
     Vector<CyclicModule*> exec_list;
 
-    // 9. Perform ! GatherAvailableAncestors(module, execList).
-    MUST(gather_available_ancestors(exec_list));
+    // 9. Perform GatherAvailableAncestors(module, execList).
+    gather_available_ancestors(exec_list);
 
     // 10. Let sortedExecList be a List whose elements are the elements of execList, in the order in which they had their [[AsyncEvaluation]] fields set to true in InnerModuleEvaluation.
     // FIXME: Sort the list. To do this we need to use more than an Optional<bool> to track [[AsyncEvaluation]].
@@ -578,8 +576,8 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_fulfilled(VM& vm)
         }
         // b. Else if m.[[HasTLA]] is true, then
         else if (module->m_has_top_level_await) {
-            // i. Perform ! ExecuteAsyncModule(m).
-            MUST(module->execute_async_module(vm));
+            // i. Perform ExecuteAsyncModule(m).
+            module->execute_async_module(vm);
         }
         // c. Else,
         else {
@@ -587,9 +585,9 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_fulfilled(VM& vm)
             auto result = module->execute_module(vm);
 
             // ii. If result is an abrupt completion, then
-            if (result.is_abrupt()) {
-                // 1. Perform ! AsyncModuleExecutionRejected(m, result.[[Value]]).
-                module->async_module_execution_rejected(vm, *result.value());
+            if (result.is_throw_completion()) {
+                // 1. Perform AsyncModuleExecutionRejected(m, result.[[Value]]).
+                module->async_module_execution_rejected(vm, *result.throw_completion().value());
             }
             // iii. Else,
             else {
@@ -608,18 +606,20 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_fulfilled(VM& vm)
             }
         }
     }
-    return {};
+
+    // 13. Return unused.
 }
 
 // 16.2.1.5.2.5 AsyncModuleExecutionRejected ( module, error ), https://tc39.es/ecma262/#sec-async-module-execution-rejected
-ThrowCompletionOr<void> CyclicModule::async_module_execution_rejected(VM& vm, Value error)
+void CyclicModule::async_module_execution_rejected(VM& vm, Value error)
 {
     // 1. If module.[[Status]] is evaluated, then
     if (m_status == ModuleStatus::Evaluated) {
         // a. Assert: module.[[EvaluationError]] is not empty.
         VERIFY(m_evaluation_error.is_error());
-        // b. Return.
-        return {};
+
+        // b. Return unused.
+        return;
     }
 
     // 2. Assert: module.[[Status]] is evaluating-async.
@@ -640,8 +640,8 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_rejected(VM& vm, Va
     // 7. For each Cyclic Module Record m of module.[[AsyncParentModules]], do
     for (auto* module : m_async_parent_modules) {
 
-        // a. Perform ! AsyncModuleExecutionRejected(m, error).
-        MUST(module->async_module_execution_rejected(vm, error));
+        // a. Perform AsyncModuleExecutionRejected(m, error).
+        module->async_module_execution_rejected(vm, error);
     }
 
     // 8. If module.[[TopLevelCapability]] is not empty, then
@@ -654,7 +654,7 @@ ThrowCompletionOr<void> CyclicModule::async_module_execution_rejected(VM& vm, Va
         MUST(call(vm.current_realm()->global_object(), m_top_level_capability->reject, js_undefined(), error));
     }
 
-    return {};
+    // 9. Return unused.
 }
 
 }

@@ -72,7 +72,7 @@ ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Val
     if (!options_value.is_undefined())
         options = TRY(options_value.to_object(global_object));
 
-    // 2. Let options be ! OrdinaryObjectCreate(options).
+    // 2. Let options be OrdinaryObjectCreate(options).
     options = Object::create(global_object, options);
 
     // 3. Let needDefaults be true.
@@ -524,7 +524,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
         return static_cast<NumberFormat*>(number_format);
     };
 
-    // 4. Let nfOptions be ! OrdinaryObjectCreate(null).
+    // 4. Let nfOptions be OrdinaryObjectCreate(null).
     auto* number_format_options = Object::create(global_object, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(nfOptions, "useGrouping", false).
@@ -533,7 +533,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     // 6. Let nf be ? Construct(%NumberFormat%, « locale, nfOptions »).
     auto* number_format = TRY(construct_number_format(number_format_options));
 
-    // 7. Let nf2Options be ! OrdinaryObjectCreate(null).
+    // 7. Let nf2Options be OrdinaryObjectCreate(null).
     auto* number_format_options2 = Object::create(global_object, nullptr);
 
     // 8. Perform ! CreateDataPropertyOrThrow(nf2Options, "minimumIntegerDigits", 2).
@@ -553,7 +553,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     if (date_time_format.has_fractional_second_digits()) {
         fractional_second_digits = date_time_format.fractional_second_digits();
 
-        // a. Let nf3Options be ! OrdinaryObjectCreate(null).
+        // a. Let nf3Options be OrdinaryObjectCreate(null).
         auto* number_format_options3 = Object::create(global_object, nullptr);
 
         // b. Perform ! CreateDataPropertyOrThrow(nf3Options, "minimumIntegerDigits", fractionalSecondDigits).
@@ -835,7 +835,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object,
 
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
@@ -1155,7 +1155,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_o
 
     // 4. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be ! OrdinaryObjectCreate(%ObjectPrototype%).
+        // a. Let O be OrdinaryObjectCreate(%ObjectPrototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).

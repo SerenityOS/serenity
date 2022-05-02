@@ -72,8 +72,10 @@ void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& 
         }
     }
 
-    // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+    // 6. Perform ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
     MUST(define_property_or_throw(vm.names.name, PropertyDescriptor { .value = js_string(vm, move(name)), .writable = false, .enumerable = false, .configurable = true }));
+
+    // 7. Return unused.
 }
 
 // 10.2.10 SetFunctionLength ( F, length ), https://tc39.es/ecma262/#sec-setfunctionlength
@@ -88,8 +90,10 @@ void FunctionObject::set_function_length(double length)
     VERIFY(m_is_extensible);
     VERIFY(!storage_has(vm.names.length));
 
-    // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+    // 2. Perform ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
     MUST(define_property_or_throw(vm.names.length, PropertyDescriptor { .value = Value { length }, .writable = false, .enumerable = false, .configurable = true }));
+
+    // 3. Return unused.
 }
 
 }

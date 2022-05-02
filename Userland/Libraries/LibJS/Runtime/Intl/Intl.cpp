@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
     for (auto& locale : locale_list)
         marked_locale_list.append(js_string(vm, move(locale)));
 
-    // 2. Return ! CreateArrayFromList(ll).
+    // 2. Return CreateArrayFromList(ll).
     return Array::create_from(global_object, marked_locale_list);
 }
 
@@ -150,7 +150,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidKey, key);
     }
 
-    // 9. Return ! CreateArrayFromList( list ).
+    // 9. Return CreateArrayFromList( list ).
     return Array::create_from<StringView>(global_object, list, [&](auto value) { return js_string(vm, value); });
 }
 

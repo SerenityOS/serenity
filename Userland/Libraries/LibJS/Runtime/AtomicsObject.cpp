@@ -38,7 +38,7 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
     // 5. Else,
     else {
         // a. Let type be TypedArrayElementType(typedArray).
-        // b. If ! IsUnclampedIntegerElementType(type) is false and ! IsBigIntElementType(type) is false, throw a TypeError exception.
+        // b. If IsUnclampedIntegerElementType(type) is false and IsBigIntElementType(type) is false, throw a TypeError exception.
         if (!typed_array.is_unclamped_integer_element_type() && !typed_array.is_bigint_element_type())
             return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
     }

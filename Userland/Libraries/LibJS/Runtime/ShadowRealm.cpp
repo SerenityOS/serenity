@@ -76,7 +76,7 @@ ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, Functi
         }
     }
 
-    // 5. Perform ! SetFunctionLength(F, L).
+    // 5. Perform SetFunctionLength(F, L).
     function.set_function_length(length);
 
     // 6. Let targetName be ? Get(Target, "name").
@@ -86,7 +86,7 @@ ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, Functi
     if (!target_name.is_string())
         target_name = js_string(vm, String::empty());
 
-    // 8. Perform ! SetFunctionName(F, targetName, prefix).
+    // 8. Perform SetFunctionName(F, targetName, prefix).
     function.set_function_name({ target_name.as_string().string() }, move(prefix));
 
     return {};
@@ -102,7 +102,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
 
     // 2. Perform the following substeps in an implementation-defined order, possibly interleaving parsing and error detection:
 
-    // a. Let script be ParseText(! StringToCodePoints(sourceText), Script).
+    // a. Let script be ParseText(StringToCodePoints(sourceText), Script).
     auto parser = Parser(Lexer(source_text));
     auto program = parser.parse_program();
 
@@ -165,7 +165,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     // 15. Push evalContext onto the execution context stack; evalContext is now the running execution context.
     TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
-    // 16. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval).
+    // 16. Let result be Completion(EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval)).
     auto eval_result = eval_declaration_instantiation(vm, eval_realm.global_object(), program, variable_environment, lexical_environment, nullptr, strict_eval);
 
     Completion result;
@@ -217,7 +217,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     // 5. Push evalContext onto the execution context stack; evalContext is now the running execution context.
     TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
-    // 6. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
+    // 6. Perform HostImportModuleDynamically(null, specifierString, innerCapability).
     vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability);
 
     // 7. Suspend evalContext and remove it from the execution context stack.
@@ -258,7 +258,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
         return get_wrapped_value(global_object, *realm, value);
     };
 
-    // 10. Let onFulfilled be ! CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
+    // 10. Let onFulfilled be CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
     // 11. Set onFulfilled.[[ExportNameString]] to exportNameString.
     auto* on_fulfilled = NativeFunction::create(global_object, move(steps), 1, "", &caller_realm);
 
@@ -271,7 +271,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
         return vm.template throw_completion<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
     });
 
-    // 13. Return ! PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).
+    // 13. Return PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).
     return verify_cast<Promise>(inner_capability.promise)->perform_then(on_fulfilled, throw_type_error, promise_capability);
 }
 

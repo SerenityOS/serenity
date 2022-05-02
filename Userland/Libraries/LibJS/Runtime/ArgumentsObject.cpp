@@ -41,14 +41,15 @@ ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyKey const& proper
 
     // 3. If isMapped is false, then
     if (!is_mapped) {
-        // a. Return ? OrdinaryGet(args, P, Receiver).
+        // a. Return ! OrdinaryGet(args, P, Receiver).
+        // FIXME: Using MUST here breaks one test in test262 (spec issue).
         return Object::internal_get(property_key, receiver);
     }
 
     // FIXME: a. Assert: map contains a formal parameter mapping for P.
 
-    // b. Return Get(map, P).
-    return map.get(property_key);
+    // b. Return ! Get(map, P).
+    return MUST(map.get(property_key));
 }
 
 // 10.4.4.4 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-set-p-v-receiver
@@ -68,11 +69,10 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyKey const& propert
 
     // 3. If isMapped is true, then
     if (is_mapped) {
-        // a. Let setStatus be Set(map, P, V, false).
-        auto set_status = MUST(m_parameter_map->set(property_key, value, Object::ShouldThrowExceptions::No));
+        // a. Assert: The following Set will succeed, since formal parameters mapped by arguments objects are always writable.
 
-        // b. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
-        VERIFY(set_status);
+        // b. Perform ! Set(map, P, V, false).
+        MUST(m_parameter_map->set(property_key, value, Object::ShouldThrowExceptions::No));
     }
 
     // 4. Return ? OrdinarySet(args, P, V, Receiver).
@@ -93,7 +93,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyKey const& prop
 
     // 4. If result is true and isMapped is true, then
     if (result && is_mapped) {
-        // a. Call map.[[Delete]](P).
+        // a. Perform ! map.[[Delete]](P).
         MUST(map.internal_delete(property_key));
     }
 
@@ -117,8 +117,8 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
 
     // 5. If isMapped is true, then
     if (is_mapped) {
-        // a. Set desc.[[Value]] to Get(map, P).
-        desc->value = TRY(m_parameter_map->get(property_key));
+        // a. Set desc.[[Value]] to ! Get(map, P).
+        desc->value = MUST(m_parameter_map->get(property_key));
     }
 
     // 6. Return desc.
@@ -131,7 +131,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();
 
-    // 2. Let isMapped be HasOwnProperty(map, P).
+    // 2. Let isMapped be ! HasOwnProperty(map, P).
     bool is_mapped = MUST(map.has_own_property(property_key));
 
     // 3. Let newArgDesc be Desc.
@@ -143,13 +143,13 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
         if (!descriptor.value.has_value() && descriptor.writable.has_value() && descriptor.writable == false) {
             // i. Set newArgDesc to a copy of Desc.
             new_arg_desc = descriptor;
-            // ii. Set newArgDesc.[[Value]] to Get(map, P).
-            new_arg_desc.value = TRY(map.get(property_key));
+            // ii. Set newArgDesc.[[Value]] to ! Get(map, P).
+            new_arg_desc.value = MUST(map.get(property_key));
         }
     }
 
-    // 5. Let allowed be ? OrdinaryDefineOwnProperty(args, P, newArgDesc).
-    bool allowed = TRY(Object::internal_define_own_property(property_key, new_arg_desc));
+    // 5. Let allowed be ! OrdinaryDefineOwnProperty(args, P, newArgDesc).
+    bool allowed = MUST(Object::internal_define_own_property(property_key, new_arg_desc));
 
     // 6. If allowed is false, return false.
     if (!allowed)
@@ -159,20 +159,19 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKe
     if (is_mapped) {
         // a. If IsAccessorDescriptor(Desc) is true, then
         if (descriptor.is_accessor_descriptor()) {
-            // i. Call map.[[Delete]](P).
+            // i. Perform ! map.[[Delete]](P).
             MUST(map.internal_delete(property_key));
         } else {
             // i. If Desc has a [[Value]] field, then
             if (descriptor.value.has_value()) {
-                // 1. Let setStatus be Set(map, P, Desc.[[Value]], false).
-                bool set_status = MUST(map.set(property_key, descriptor.value.value(), Object::ShouldThrowExceptions::No));
+                // 1. Assert: The following Set will succeed, since formal parameters mapped by arguments objects are always writable.
 
-                // 2. Assert: setStatus is true because formal parameters mapped by argument objects are always writable.
-                VERIFY(set_status);
+                // 2. Perform ! Set(map, P, Desc.[[Value]], false).
+                MUST(map.set(property_key, descriptor.value.value(), Object::ShouldThrowExceptions::No));
             }
             // ii. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, then
             if (descriptor.writable == false) {
-                // 1. Call map.[[Delete]](P).
+                // 1. Perform ! map.[[Delete]](P).
                 MUST(map.internal_delete(property_key));
             }
         }

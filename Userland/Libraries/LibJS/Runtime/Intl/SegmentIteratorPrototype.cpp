@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
 
     // 7. If endIndex is not finite, then
     if (!Value(end_index).is_finite_number()) {
-        // a. Return ! CreateIterResultObject(undefined, true).
+        // a. Return CreateIterResultObject(undefined, true).
         return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
     // 9. Let segmentData be ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
     auto* segment_data = create_segment_data_object(global_object, segmenter, string, start_index, end_index);
 
-    // 10. Return ! CreateIterResultObject(segmentData, false).
+    // 10. Return CreateIterResultObject(segmentData, false).
     return create_iterator_result_object(global_object, segment_data, false);
 }
 

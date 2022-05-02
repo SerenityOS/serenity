@@ -154,10 +154,10 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
         return true;
     }
 
-    // 2. Let i be ! StringIndexOf(unitIdentifier, "-per-", 0).
+    // 2. Let i be StringIndexOf(unitIdentifier, "-per-", 0).
     auto indices = unit_identifier.find_all("-per-"sv);
 
-    // 3. If i is -1 or ! StringIndexOf(unitIdentifier, "-per-", i + 1) is not -1, then
+    // 3. If i is -1 or StringIndexOf(unitIdentifier, "-per-", i + 1) is not -1, then
     if (indices.size() != 1) {
         // a. Return false.
         return false;
@@ -199,7 +199,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
     if (locales.is_string() || (locales.is_object() && is<Locale>(locales.as_object()))) {
-        // a. Let O be ! CreateArrayFromList(« locales »).
+        // a. Let O be CreateArrayFromList(« locales »).
         object = Array::create_from(global_object, { locales });
     }
     // 4. Else,
@@ -586,7 +586,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
         supported_locales = lookup_supported_locales(requested_locales);
     }
 
-    // 5. Return ! CreateArrayFromList(supportedLocales).
+    // 5. Return CreateArrayFromList(supportedLocales).
     return Array::create_from<String>(global_object, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 
@@ -595,7 +595,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
 {
     // 1. If options is undefined, then
     if (options.is_undefined()) {
-        // a. Return ! OrdinaryObjectCreate(null).
+        // a. Return OrdinaryObjectCreate(null).
         return Object::create(global_object, nullptr);
     }
 
@@ -626,7 +626,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
     // 5. If type is "boolean", then
     if (type == Value::Type::Boolean) {
-        // a. Set value to ! ToBoolean(value).
+        // a. Set value to ToBoolean(value).
         value = Value(value.to_boolean());
     }
     // 6. If type is "string", then
@@ -685,7 +685,7 @@ Vector<PatternPartition> partition_pattern(StringView pattern)
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
 
-    // 2. Let beginIndex be ! StringIndexOf(pattern, "{", 0).
+    // 2. Let beginIndex be StringIndexOf(pattern, "{", 0).
     auto begin_index = pattern.find('{', 0);
 
     // 3. Let endIndex be 0.
@@ -697,7 +697,7 @@ Vector<PatternPartition> partition_pattern(StringView pattern)
     // 5. Let length be the number of code units in pattern.
     // 6. Repeat, while beginIndex is an integer index into pattern,
     while (begin_index.has_value()) {
-        // a. Set endIndex to ! StringIndexOf(pattern, "}", beginIndex).
+        // a. Set endIndex to StringIndexOf(pattern, "}", beginIndex).
         end_index = pattern.find('}', *begin_index).value();
 
         // b. Assert: endIndex is greater than beginIndex.
@@ -721,7 +721,7 @@ Vector<PatternPartition> partition_pattern(StringView pattern)
         // f. Set nextIndex to endIndex + 1.
         next_index = end_index + 1;
 
-        // g. Set beginIndex to ! StringIndexOf(pattern, "{", nextIndex).
+        // g. Set beginIndex to StringIndexOf(pattern, "{", nextIndex).
         begin_index = pattern.find('{', next_index);
     }
 
