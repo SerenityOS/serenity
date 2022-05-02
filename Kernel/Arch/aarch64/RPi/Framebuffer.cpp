@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
-#include <Kernel/Arch/aarch64/Utils.h>
 
 namespace Prekernel {
 
@@ -46,39 +46,39 @@ Framebuffer::Framebuffer()
     message_queue.allocate_buffer.alignment = 4096;
 
     if (!Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
-        warnln("Framebuffer(): Mailbox send failed.");
+        dbgln("Framebuffer(): Mailbox send failed.");
         return;
     }
 
     // Now message queue contains responses. Process them.
 
     if (message_queue.set_physical_size.width != m_width || message_queue.set_physical_size.height != m_height) {
-        warnln("Framebuffer(): Setting physical dimension failed.");
+        dbgln("Framebuffer(): Setting physical dimension failed.");
         return;
     }
 
     if (message_queue.set_virtual_size.width != m_width || message_queue.set_virtual_size.height != m_height) {
-        warnln("Framebuffer(): Setting virtual dimension failed.");
+        dbgln("Framebuffer(): Setting virtual dimension failed.");
         return;
     }
 
     if (message_queue.set_virtual_offset.x != 0 || message_queue.set_virtual_offset.y != 0) {
-        warnln("Framebuffer(): Setting virtual offset failed.");
+        dbgln("Framebuffer(): Setting virtual offset failed.");
         return;
     }
 
     if (message_queue.set_depth.depth_bits != m_depth) {
-        warnln("Framebuffer(): Setting depth failed.");
+        dbgln("Framebuffer(): Setting depth failed.");
         return;
     }
 
     if (message_queue.allocate_buffer.size == 0 || message_queue.allocate_buffer.address == 0) {
-        warnln("Framebuffer(): Allocating buffer failed.");
+        dbgln("Framebuffer(): Allocating buffer failed.");
         return;
     }
 
     if (message_queue.get_pitch.pitch == 0) {
-        warnln("Framebuffer(): Retrieving pitch failed.");
+        dbgln("Framebuffer(): Retrieving pitch failed.");
         return;
     }
 
@@ -97,12 +97,12 @@ Framebuffer::Framebuffer()
         m_pixel_order = PixelOrder::BGR;
         break;
     default:
-        warnln("Framebuffer(): Unsupported pixel order reported by GPU.");
+        dbgln("Framebuffer(): Unsupported pixel order reported by GPU.");
         m_pixel_order = PixelOrder::RGB;
         break;
     }
 
-    dbgln("Initialized framebuffer: 1280 x 720 @ 32 bits");
+    dbgln("Initialized framebuffer: {} x {} @ {} bits", m_width, m_height, m_depth);
     m_initialized = true;
 }
 

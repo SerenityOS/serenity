@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
-#include <Kernel/Arch/aarch64/Utils.h>
 
 namespace Prekernel {
 
@@ -78,7 +78,7 @@ u32 Timer::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo
     message_queue.set_clock_rate.skip_setting_turbo = skip_setting_turbo ? 1 : 0;
 
     if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
-        warnln("Timer::set_clock_rate() failed!");
+        dbgln("Timer::set_clock_rate() failed!");
         return 0;
     }
 
