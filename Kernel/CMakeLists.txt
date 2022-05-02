@@ -415,6 +415,7 @@ else()
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/ScopedCritical.cpp
