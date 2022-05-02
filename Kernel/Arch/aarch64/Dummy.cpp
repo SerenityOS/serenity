@@ -212,24 +212,5 @@ bool safe_atomic_store_relaxed(u32 volatile*, u32)
 }
 
 extern "C" {
-
 FlatPtr kernel_mapping_base;
-
-void kernelputstr(char const*, size_t);
-void kernelputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void kernelcriticalputstr(char const*, size_t);
-void kernelcriticalputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void kernelearlyputstr(char const*, size_t);
-void kernelearlyputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
 }
