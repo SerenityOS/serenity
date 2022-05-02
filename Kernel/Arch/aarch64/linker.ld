@@ -5,6 +5,7 @@ PHDRS
   text PT_LOAD ;
   data PT_LOAD ;
   bss PT_LOAD ;
+  ksyms PT_LOAD FLAGS(PF_R) ;
 }
 
 SECTIONS
@@ -34,14 +35,19 @@ SECTIONS
 	end_of_bss = .;
     } :bss
 
+    .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
+    {
+        start_of_kernel_ksyms = .;
+        *(.kernel_symbols)
+        end_of_kernel_ksyms = .;
+    } :ksyms
+
     /*
         FIXME: 8MB is enough space for all of the tables required to identity map 
                physical memory. 8M is wasteful, so this should be properly calculated.
     */
     
     /* FIXME: Placeholder to satisfy linker */
-    start_of_kernel_ksyms = .;
-    end_of_kernel_ksyms = .;
     start_of_kernel_text = .;
     end_of_kernel_text = .;
     start_of_kernel_image = .;
