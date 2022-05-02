@@ -168,14 +168,8 @@ void dump_backtrace(PrintToScreen print_to_screen)
         return;
     TemporaryChange change(in_dump_backtrace, true);
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
-    FlatPtr base_pointer;
-#if ARCH(I386)
-    asm volatile("movl %%ebp, %%eax"
-                 : "=a"(base_pointer));
-#else
-    asm volatile("movq %%rbp, %%rax"
-                 : "=a"(base_pointer));
-#endif
+
+    FlatPtr base_pointer = (FlatPtr)__builtin_frame_address(0);
     dump_backtrace_impl(base_pointer, g_kernel_symbols_available, print_to_screen);
 }
 
