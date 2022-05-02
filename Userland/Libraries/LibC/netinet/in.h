@@ -58,4 +58,8 @@ static inline uint32_t ntohl(uint32_t value)
 #define IN6_IS_ADDR_LINKLOCAL(addr) \
     (((addr)->s6_addr[0] == 0xfe) && (((addr)->s6_addr[1] & 0xc0) == 0x80))
 
+// RFC# 2373 - 2.7 Multicast Addresses
+#define IN6_IS_ADDR_MULTICAST(addr) \
+    ((addr)->s6_addr[0] == 0xff)
+
 __END_DECLS
