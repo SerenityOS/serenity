@@ -345,8 +345,8 @@ void Editor::enter_search()
         // Manually cleanup the search line.
         OutputFileStream stderr_stream { stderr };
         reposition_cursor(stderr_stream);
-        auto search_metrics = actual_rendered_string_metrics(search_string);
-        auto metrics = actual_rendered_string_metrics(search_prompt);
+        auto search_metrics = actual_rendered_string_metrics(search_string, {});
+        auto metrics = actual_rendered_string_metrics(search_prompt, {});
         VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, stderr_stream);
 
         reposition_cursor(stderr_stream);
