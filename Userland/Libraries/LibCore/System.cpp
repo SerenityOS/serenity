@@ -1269,4 +1269,9 @@ ErrorOr<void> usleep(useconds_t usec)
     return {};
 }
 
+unsigned sleep(unsigned seconds)
+{
+    return ::sleep(seconds);
+}
+
 }
