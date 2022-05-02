@@ -18,6 +18,7 @@
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
+#include <Kernel/KSyms.h>
 
 static void draw_logo();
 static u32 query_firmware_version();
@@ -44,6 +45,7 @@ extern "C" [[noreturn]] void init()
     dbgln();
 
     kmalloc_init();
+    Kernel::load_kernel_symbol_table();
 
     auto firmware_version = query_firmware_version();
     dbgln("Firmware version: {}", firmware_version);
