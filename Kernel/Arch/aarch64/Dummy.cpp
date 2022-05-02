@@ -24,16 +24,6 @@ READONLY_AFTER_INIT Thread* g_finalizer;
 
 }
 
-// Panic
-namespace Kernel {
-
-void __panic(char const*, unsigned int, char const*)
-{
-    for (;;) { }
-}
-
-}
-
 // Random
 namespace Kernel {
 
