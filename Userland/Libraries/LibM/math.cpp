@@ -1116,6 +1116,22 @@ float fminf(float x, float y) NOEXCEPT
     return x < y ? x : y;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fma.html
+long double fmal(long double x, long double y, long double z) NOEXCEPT
+{
+    return (x * y) + z;
+}
+
+double fma(double x, double y, double z) NOEXCEPT
+{
+    return (x * y) + z;
+}
+
+float fmaf(float x, float y, float z) NOEXCEPT
+{
+    return (x * y) + z;
+}
+
 long double nearbyintl(long double value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
