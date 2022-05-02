@@ -9,29 +9,29 @@
 
 // FIXME: Merge the code in this file with Kernel/kprintf.cpp once the proper abstractions are in place.
 
-void kernelputstr(char const* characters, size_t)
+void kernelputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
 
     auto& uart = Prekernel::UART::the();
-    uart.print_str(characters);
+    uart.print_str(characters, length);
 }
 
-void kernelcriticalputstr(char const* characters, size_t)
+void kernelcriticalputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
 
     auto& uart = Prekernel::UART::the();
-    uart.print_str(characters);
+    uart.print_str(characters, length);
 }
 
-void kernelearlyputstr(char const* characters, size_t)
+void kernelearlyputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
 
     auto& uart = Prekernel::UART::the();
-    uart.print_str(characters);
+    uart.print_str(characters, length);
 }
