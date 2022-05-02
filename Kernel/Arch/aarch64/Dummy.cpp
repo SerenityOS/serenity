@@ -141,63 +141,6 @@ void KString::operator delete(void*)
     VERIFY_NOT_REACHED();
 }
 
-// SafeMem.h
-bool safe_memset(void*, int, size_t, void*&);
-bool safe_memset(void*, int, size_t, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return false;
-}
-
-ssize_t safe_strnlen(char const*, unsigned long, void*&);
-ssize_t safe_strnlen(char const*, unsigned long, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return 0;
-}
-
-bool safe_memcpy(void*, void const*, unsigned long, void*&);
-bool safe_memcpy(void*, void const*, unsigned long, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return false;
-}
-
-Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32);
-Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_load_relaxed(u32 volatile*);
-Optional<u32> safe_atomic_load_relaxed(u32 volatile*)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-bool safe_atomic_store_relaxed(u32 volatile*, u32);
-bool safe_atomic_store_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
 }
 
 extern "C" {
