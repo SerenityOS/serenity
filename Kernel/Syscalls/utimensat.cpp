@@ -20,6 +20,9 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     auto params = TRY(copy_typed_from_user(user_params));
     auto now = kgettimeofday().to_truncated_seconds();
 
+    int dirfd = params.dirfd;
+    int follow_symlink = params.flag & AT_SYMLINK_NOFOLLOW ? O_NOFOLLOW_NOERROR : 0;
+
     timespec times[2];
     if (params.times) {
         TRY(copy_from_user(times, params.times, sizeof(times)));
@@ -36,24 +39,38 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
         times[1].tv_nsec = UTIME_NOW;
     }
 
-    int dirfd = params.dirfd;
-    auto path = TRY(get_syscall_path_argument(params.path));
-
+    OwnPtr<KString> path;
+    RefPtr<OpenFileDescription> description;
     RefPtr<Custody> base;
-    if (dirfd == AT_FDCWD) {
-        base = current_directory();
+
+    auto path_or_error = get_syscall_path_argument(params.path);
+    if (path_or_error.is_error()) {
+        // If the path is empty ("") but not a nullptr, attempt to get a path
+        // from the file descriptor. This allows futimens() to be implemented
+        // in terms of utimensat().
+        if (params.path.characters && params.path.length == 0) {
+            description = TRY(open_file_description(dirfd));
+            path = TRY(description->original_absolute_path());
+            base = description->custody();
+        } else {
+            return path_or_error.release_error();
+        }
     } else {
-        auto base_description = TRY(open_file_description(dirfd));
-        if (!KLexicalPath::is_absolute(path->view()) && !base_description->is_directory())
-            return ENOTDIR;
-        if (!base_description->custody())
-            return EINVAL;
-        base = base_description->custody();
+        path = path_or_error.release_value();
+        if (dirfd == AT_FDCWD) {
+            base = current_directory();
+        } else {
+            description = TRY(open_file_description(dirfd));
+            if (!KLexicalPath::is_absolute(path->view()) && !description->is_directory())
+                return ENOTDIR;
+            if (!description->custody())
+                return EINVAL;
+            base = description->custody();
+        }
     }
 
     auto& atime = times[0];
     auto& mtime = times[1];
-    int follow_symlink = params.flag & AT_SYMLINK_NOFOLLOW ? O_NOFOLLOW_NOERROR : 0;
     TRY(VirtualFileSystem::the().utimensat(path->view(), *base, atime, mtime, follow_symlink));
     return 0;
 }
