@@ -186,8 +186,7 @@ Completion LabelledStatement::execute(Interpreter& interpreter, GlobalObject& gl
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    // 1. Let newLabelSet be a new empty List.
-    // 2. Return ? LabelledEvaluation of this LabelledStatement with argument newLabelSet.
+    // 1. Return ? LabelledEvaluation of this LabelledStatement with argument « ».
     return labelled_evaluation(interpreter, global_object, *this, {});
 }
 
@@ -3825,7 +3824,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter, GlobalObject&
             // 2. If the first CaseClauses is present, then
             //    a. Let A be the List of CaseClause items in the first CaseClauses, in source text order.
             // 3. Else,
-            //    a. Let A be « ».
+            //    a. Let A be a new empty List.
             // NOTE: A is case_clauses_1.
 
             // 4. Let found be false.
@@ -3860,7 +3859,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter, GlobalObject&
             // 7. If the second CaseClauses is present, then
             //    a. Let B be the List of CaseClause items in the second CaseClauses, in source text order.
             // 8. Else,
-            //    a. Let B be « ».
+            //    a. Let B be a new empty List.
             // NOTE: B is case_clauses_2.
 
             // 9. If found is false, then
