@@ -23,5 +23,6 @@ int fstat(int fd, struct stat* statbuf);
 int lstat(char const* path, struct stat* statbuf);
 int stat(char const* path, struct stat* statbuf);
 int fstatat(int fd, char const* path, struct stat* statbuf, int flags);
+int futimens(int fd, struct timespec const times[2]);
 
 __END_DECLS
