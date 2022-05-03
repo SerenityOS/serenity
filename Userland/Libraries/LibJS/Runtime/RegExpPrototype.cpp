@@ -149,6 +149,7 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
         auto match_indices_array = get_match_index_par(global_object, string, entry.value);
 
         // e. If i > 0 and groupNames[i - 1] is not undefined, then
+        //     i. Assert: groups is not undefined.
         //     ii. Perform ! CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray).
         MUST(groups.as_object().create_data_property_or_throw(entry.key, match_indices_array));
     }
