@@ -101,6 +101,11 @@ int posix_openpt(int flags);
 int grantpt(int fd);
 int unlockpt(int fd);
 
+// FIXME: Remove the ifdef once we have a working memalign implementation.
+// This is hidden by default until then because many applications prefer
+// `posix_memalign` over other implementations of aligned memory.
+#ifdef SERENITY_LIBC_SHOW_POSIX_MEMALIGN
 int posix_memalign(void**, size_t alignment, size_t size);
+#endif
 
 __END_DECLS
