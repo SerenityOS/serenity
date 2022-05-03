@@ -1,11 +1,13 @@
 ENTRY(start)
 
+/* TODO: Add FLAGS to the program headers */
 PHDRS
 {
   text PT_LOAD ;
   data PT_LOAD ;
   bss PT_LOAD ;
-  ksyms PT_LOAD FLAGS(PF_R) ;
+  super_pages PT_LOAD ;
+  ksyms PT_LOAD ;
 }
 
 SECTIONS
@@ -20,6 +22,10 @@ SECTIONS
 
     .rodata ALIGN(4K) : AT (ADDR(.rodata))
     {
+        start_ctors = .;
+        *(.init_array)
+        end_ctors = .;
+
         *(.rodata*)
     } :data
 
@@ -33,7 +39,15 @@ SECTIONS
 	start_of_bss = .;
         *(.bss)
 	end_of_bss = .;
+
+        . = ALIGN(4K);
+        *(.heap)
     } :bss
+
+    .super_pages ALIGN(4K) (NOLOAD) : AT (ADDR(.super_pages))
+    {
+        *(.super_pages)
+    } :super_pages
 
     .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
     {
