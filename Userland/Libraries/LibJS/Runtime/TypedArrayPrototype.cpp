@@ -1478,7 +1478,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     // has a fixed length and whose integer-indexed properties are not sparse.
     auto length = typed_array->array_length();
 
-    // 3. Let separator be the String value for the list-separator String appropriate for the host environment's current locale (this is derived in an implementation-defined way).
+    // 3. Let separator be the implementation-defined list-separator String value appropriate for the host environment's current locale (such as ", ").
     constexpr auto separator = ',';
 
     // 4. Let R be the empty String.
