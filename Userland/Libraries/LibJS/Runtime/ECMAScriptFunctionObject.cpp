@@ -768,7 +768,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     // 6. Assert: When we return here, asyncContext has already been removed from the execution context stack and runningContext is the currently running execution context.
     VERIFY(&vm.running_execution_context() == &running_context);
 
-    // 7. Assert: result is a normal completion with a value of unused. The possible sources of completion values are Await or, if the async function doesn't await anything, step 3.g above.
+    // 7. Assert: result is a normal completion with a value of unused. The possible sources of this value are Await or, if the async function doesn't await anything, step 3.g above.
     VERIFY(result.has_value() && result.value().is_undefined());
 
     // 8. Return unused.
