@@ -934,10 +934,9 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
     //  - At some future time, the host environment must perform FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
     //    where promise is a Promise resolved with undefined.
     //  - Any subsequent call to HostResolveImportedModule after FinishDynamicImport has completed,
-    //    given the arguments referencingScriptOrModule and moduleRequest, must complete normally.
-    //  - The completion value of any subsequent call to HostResolveImportedModule after FinishDynamicImport has completed,
-    //    given the arguments referencingScriptOrModule and moduleRequest, must be a module which has already been evaluated,
-    //    i.e. whose Evaluate concrete method has already been called and returned a normal completion.
+    //    given the arguments referencingScriptOrModule and specifier, must return a normal completion
+    //    containing a module which has already been evaluated, i.e. whose Evaluate concrete method has
+    //    already been called and returned a normal completion.
     // Failure path:
     //  - At some future time, the host environment must perform
     //    FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
