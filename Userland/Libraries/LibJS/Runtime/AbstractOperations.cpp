@@ -1178,12 +1178,12 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     if (endptr != argument.characters() + argument.length())
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 3. If SameValue(! ToString(n), argument) is false, return undefined.
-    if (n.to_string_without_side_effects() != argument)
-        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    // 3. If SameValue(! ToString(n), argument) is true, return n.
+    if (n.to_string_without_side_effects() == argument)
+        return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
-    // 4. Return n.
-    return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
+    // 4. Return undefined.
+    return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
