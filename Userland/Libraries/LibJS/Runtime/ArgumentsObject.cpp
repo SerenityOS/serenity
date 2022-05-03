@@ -41,8 +41,7 @@ ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyKey const& proper
 
     // 3. If isMapped is false, then
     if (!is_mapped) {
-        // a. Return ! OrdinaryGet(args, P, Receiver).
-        // FIXME: Using MUST here breaks one test in test262 (spec issue).
+        // a. Return ? OrdinaryGet(args, P, Receiver).
         return Object::internal_get(property_key, receiver);
     }
 
