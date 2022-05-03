@@ -19,6 +19,7 @@
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 
 static void draw_logo();
 static u32 query_firmware_version();
@@ -91,12 +92,15 @@ void __stack_chk_fail()
     Prekernel::halt();
 }
 
+using namespace Kernel;
+
 [[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
 {
     critical_dmesgln("ASSERTION FAILED: {}", msg);
     critical_dmesgln("{}:{} in {}", file, line, func);
 
-    Prekernel::halt();
+    // Used for printing a nice backtrace!
+    PANIC("Aborted");
 }
 
 extern "C" void exception_common(TrapFrame const* const trap_frame)
