@@ -1111,7 +1111,7 @@ String date_string(double time)
     // 4. Let yv be YearFromTime(tv).
     auto year = year_from_time(time);
 
-    // 5. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
+    // 5. If yv is +0𝔽 or yv > +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
     // 6. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
@@ -1127,7 +1127,7 @@ String time_zone_string(double time)
 
     StringView offset_sign;
 
-    // 2. If offset ≥ +0𝔽, then
+    // 2. If offset is +0𝔽 or offset > +0𝔽, then
     if (offset >= 0) {
         // a. Let offsetSign be "+".
         offset_sign = "+"sv;
@@ -1228,7 +1228,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     // 7. Let yv be YearFromTime(tv).
     auto year = year_from_time(time.as_double());
 
-    // 8. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
+    // 8. If yv is +0𝔽 or yv > +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
     // 9. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
