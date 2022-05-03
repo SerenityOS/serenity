@@ -167,7 +167,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
 {
     auto& vm = global_object.vm();
 
-    // 1. Let length be the number of code units in S.
+    // 1. Let length be the length of S.
     // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
@@ -391,7 +391,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     if (!unicode)
         return index + 1;
 
-    // 3. Let length be the number of code units in S.
+    // 3. Let length be the length of S.
     // 4. If index + 1 ≥ length, return index + 1.
     if (index + 1 >= string.length_in_code_units())
         return index + 1;
@@ -681,7 +681,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto matched_value = TRY(result.get(global_object, 0));
         auto matched = TRY(matched_value.to_utf16_string(global_object));
 
-        // d. Let matchLength be the number of code units in matched.
+        // d. Let matchLength be the length of matched.
         auto matched_length = matched.length_in_code_units();
 
         // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
