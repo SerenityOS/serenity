@@ -141,21 +141,21 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
         if (match_indices.has_value())
             match_indices_array = get_match_index_par(global_object, string, *match_indices);
 
-        // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
-        MUST(array->create_data_property(i, match_indices_array));
+        // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), matchIndicesArray).
+        MUST(array->create_data_property_or_throw(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
         auto match_indices_array = get_match_index_par(global_object, string, entry.value);
 
         // e. If i > 0 and groupNames[i - 1] is not undefined, then
-        //     i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
-        MUST(groups.as_object().create_data_property(entry.key, match_indices_array));
+        //     ii. Perform ! CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray).
+        MUST(groups.as_object().create_data_property_or_throw(entry.key, match_indices_array));
     }
 
-    // 8. Perform ! CreateDataProperty(A, "groups", groups).
+    // 8. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     // NOTE: This step must be performed after the above loops in order for groups to be populated.
-    MUST(array->create_data_property(vm.names.groups, groups));
+    MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
     // 10. Return A.
     return array;
