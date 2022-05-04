@@ -57,8 +57,11 @@ public:
     {
         VERIFY(domain == "Terminal");
 
-        if (group == "Terminal" && key == "ShowScrollBar") {
-            m_parent_terminal.set_show_scrollbar(value);
+        if (group == "Terminal") {
+            if (key == "ShowScrollBar")
+                m_parent_terminal.set_show_scrollbar(value);
+            else if (key == "ConfirmClose" && on_confirm_close_changed)
+                on_confirm_close_changed(value);
         }
     }
 
@@ -98,6 +101,8 @@ public:
             m_parent_terminal.set_opacity(value);
         }
     }
+
+    Function<void(bool)> on_confirm_close_changed;
 
 private:
     VT::TerminalWidget& m_parent_terminal;
@@ -297,6 +302,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     Config::monitor_domain("Terminal");
+    auto should_confirm_close = Config::read_bool("Terminal", "Terminal", "ConfirmClose", true);
     TerminalChangeListener listener { terminal };
 
     auto bell = Config::read_string("Terminal", "Window", "Bell", "Visible");
@@ -352,6 +358,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto check_terminal_quit = [&]() -> int {
+        if (!should_confirm_close)
+            return GUI::MessageBox::ExecOK;
         Optional<String> close_message;
         if (tty_has_foreground_process()) {
             close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
@@ -420,8 +428,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_modified(tty_has_foreground_process() || shell_child_process_count() > 0);
     });
 
+    listener.on_confirm_close_changed = [&](bool confirm_close) {
+        if (confirm_close) {
+            modified_state_check_timer->start();
+        } else {
+            modified_state_check_timer->stop();
+            window->set_modified(false);
+        }
+        should_confirm_close = confirm_close;
+    };
+
     window->show();
-    modified_state_check_timer->start();
+    if (should_confirm_close)
+        modified_state_check_timer->start();
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
     utmp_update(ptsname, 0, false);
