@@ -48,9 +48,9 @@ StorageWidget::StorageWidget()
     m_local_storage_table_view->set_alternating_row_colors(true);
 }
 
-void StorageWidget::add_cookie(Web::Cookie::Cookie const& cookie)
+void StorageWidget::set_cookies_entries(Vector<Web::Cookie::Cookie> entries)
 {
-    m_cookies_model->add_item(cookie);
+    m_cookies_model->set_items(entries);
 }
 
 void StorageWidget::clear_cookies()
