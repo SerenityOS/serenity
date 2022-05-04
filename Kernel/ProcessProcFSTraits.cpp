@@ -55,6 +55,7 @@ ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(FileSystemID f
     TRY(callback({ "..", { fsid, ProcFSComponentRegistry::the().root_directory().component_index() }, DT_DIR }));
     TRY(callback({ "fd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions) }, DT_DIR }));
     TRY(callback({ "stacks", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks) }, DT_DIR }));
+    TRY(callback({ "children", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, DT_DIR }));
     TRY(callback({ "unveil", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Unveil) }, DT_REG }));
     TRY(callback({ "pledge", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Pledge) }, DT_REG }));
     TRY(callback({ "fds", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::OpenFileDescriptions) }, DT_DIR }));

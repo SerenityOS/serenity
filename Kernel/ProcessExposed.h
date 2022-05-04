@@ -36,6 +36,7 @@ enum class ProcessSubDirectory {
     Reserved = 0,
     OpenFileDescriptions = 1,
     Stacks = 2,
+    Children = 3
 };
 
 void read_segments(u32& primary, ProcessSubDirectory& sub_directory, MainProcessProperty& property);
@@ -45,6 +46,8 @@ InodeIndex build_segmented_index_for_main_property(ProcessID, ProcessSubDirector
 InodeIndex build_segmented_index_for_main_property_in_pid_directory(ProcessID, MainProcessProperty property);
 InodeIndex build_segmented_index_for_thread_stack(ProcessID, ThreadID);
 InodeIndex build_segmented_index_for_file_description(ProcessID, unsigned);
+InodeIndex build_segmented_index_for_children(ProcessID, ProcessID);
+
 }
 
 class ProcFSComponentRegistry {
