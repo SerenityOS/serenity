@@ -551,7 +551,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         m_cookie_jar.dump_cookies();
     };
 
-    new_tab.on_want_cookies = [this]() {
+    new_tab.on_get_cookies_entries = [this]() {
         return m_cookie_jar.get_all_cookies();
     };
 

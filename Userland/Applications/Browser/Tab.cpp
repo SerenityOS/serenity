@@ -603,8 +603,8 @@ void Tab::show_storage_inspector()
         m_storage_widget = storage_window->set_main_widget<StorageWidget>();
     }
 
-    if (on_want_cookies) {
-        auto cookies = on_want_cookies();
+    if (on_get_cookies_entries) {
+        auto cookies = on_get_cookies_entries();
         m_storage_widget->clear_cookies();
         for (auto cookie : cookies)
             m_storage_widget->add_cookie(cookie);
