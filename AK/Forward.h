@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -58,7 +59,7 @@ class SimpleIterator;
 using ReadonlyBytes = Span<const u8>;
 using Bytes = Span<u8>;
 
-template<typename T, AK::MemoryOrder DefaultMemoryOrder>
+template<IntegralLike T, AK::MemoryOrder DefaultMemoryOrder>
 class Atomic;
 
 template<typename T>
