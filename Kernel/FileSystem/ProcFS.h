@@ -172,11 +172,14 @@ public:
     static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_file_description_link(ProcFS const&, unsigned, ProcessID);
     static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_thread_stack(ProcFS const&, ThreadID, ProcessID);
     static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_pid_property(ProcFS const&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
+    static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_child_process_link(ProcFS const&, ProcessID, ProcessID);
 
 private:
     ProcFSProcessPropertyInode(ProcFS const&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
     ProcFSProcessPropertyInode(ProcFS const&, ThreadID, ProcessID);
     ProcFSProcessPropertyInode(ProcFS const&, unsigned, ProcessID);
+    ProcFSProcessPropertyInode(ProcFS const&, ProcessID, ProcessID);
+
     // ^Inode
     virtual ErrorOr<void> attach(OpenFileDescription& description) override;
     virtual void did_seek(OpenFileDescription&, off_t) override;

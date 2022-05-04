@@ -295,6 +295,8 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView nam
         return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions, associated_pid()));
     if (name == "stacks"sv)
         return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, associated_pid()));
+    if (name == "children"sv)
+        return TRY(ProcFSProcessSubDirectoryInode::try_create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::Children, associated_pid()));
     if (name == "unveil"sv)
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::Unveil, associated_pid()));
     if (name == "pledge"sv)
@@ -367,6 +369,8 @@ ErrorOr<void> ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<Err
         return process->traverse_file_descriptions_directory(procfs().fsid(), move(callback));
     case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
         return process->traverse_stacks_directory(procfs().fsid(), move(callback));
+    case SegmentedProcFSIndex::ProcessSubDirectory::Children:
+        return process->traverse_children_directory(procfs().fsid(), move(callback));
     default:
         VERIFY_NOT_REACHED();
     }
@@ -384,6 +388,8 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSProcessSubDirectoryInode::lookup(StringView 
         return process->lookup_file_descriptions_directory(procfs(), name);
     case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
         return process->lookup_stacks_directory(procfs(), name);
+    case SegmentedProcFSIndex::ProcessSubDirectory::Children:
+        return process->lookup_children_directory(procfs(), name);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -400,6 +406,10 @@ ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> ProcFSProcessPropertyInode::t
 ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> ProcFSProcessPropertyInode::try_create_for_pid_property(ProcFS const& procfs, SegmentedProcFSIndex::MainProcessProperty main_property_type, ProcessID pid)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) ProcFSProcessPropertyInode(procfs, main_property_type, pid));
+}
+ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> ProcFSProcessPropertyInode::try_create_for_child_process_link(ProcFS const& procfs, ProcessID child_pid, ProcessID pid)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ProcFSProcessPropertyInode(procfs, child_pid, pid));
 }
 
 ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(ProcFS const& procfs, SegmentedProcFSIndex::MainProcessProperty main_property_type, ProcessID pid)
@@ -423,6 +433,13 @@ ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(ProcFS const& procfs, Thr
     m_possible_data.property_index = thread_stack_index.value();
 }
 
+ProcFSProcessPropertyInode::ProcFSProcessPropertyInode(ProcFS const& procfs, ProcessID child_pid, ProcessID pid)
+    : ProcFSProcessAssociatedInode(procfs, pid, SegmentedProcFSIndex::build_segmented_index_for_children(pid, child_pid))
+    , m_parent_sub_directory_type(SegmentedProcFSIndex::ProcessSubDirectory::Children)
+{
+    m_possible_data.property_index = child_pid.value();
+}
+
 ErrorOr<void> ProcFSProcessPropertyInode::attach(OpenFileDescription& description)
 {
     return refresh_data(description);
@@ -440,6 +457,8 @@ static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessS
         return S_IFLNK | 0400;
     if (parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Stacks)
         return S_IFREG | 0400;
+    if (parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Children)
+        return S_IFLNK | 0400;
     VERIFY(parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Reserved);
     if (main_property == SegmentedProcFSIndex::MainProcessProperty::BinaryLink)
         return S_IFLNK | 0777;
@@ -529,6 +548,10 @@ ErrorOr<void> ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, 
     }
     if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Stacks) {
         TRY(process.procfs_get_thread_stack(m_possible_data.property_index, builder));
+        return {};
+    }
+    if (m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Children) {
+        TRY(process.procfs_get_child_proccess_link(m_possible_data.property_index, builder));
         return {};
     }
 

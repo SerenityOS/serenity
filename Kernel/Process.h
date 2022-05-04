@@ -591,6 +591,9 @@ public:
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS const&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_children_directory(ProcFS const&, StringView name) const;
+    ErrorOr<void> traverse_children_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
+    ErrorOr<size_t> procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const;
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()
