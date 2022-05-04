@@ -407,7 +407,10 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
     String text = m_location_box->text();
 
     StringBuilder builder;
-    builder.append(text);
+
+    String text_url = g_search_engine.replace("{}", text);
+    builder.append(text_url);
+
     if (may_append_tld == MayAppendTLD::Yes) {
         // FIXME: Expand the list of top level domains.
         if (!(text.ends_with(".com") || text.ends_with(".net") || text.ends_with(".org"))) {
