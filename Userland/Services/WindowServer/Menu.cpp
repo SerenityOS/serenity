@@ -609,14 +609,23 @@ void Menu::do_popup(Gfx::IntPoint const& position, bool make_input, bool as_subm
     Gfx::IntPoint adjusted_pos = position;
 
     if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
+        // Vertically translate the window by its full width, i.e. flip it at its vertical axis.
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     } else {
+        // Even if no adjustment needs to be done, move the menu to the right by 1px so it's not
+        // underneath the cursor and can be closed by another click at the same position.
         adjusted_pos.set_x(adjusted_pos.x() + 1);
     }
     if (adjusted_pos.y() + window.height() > screen.rect().bottom() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
+        // Vertically translate the window by its full height, i.e. flip it at its horizontal axis.
+        auto offset = window.height();
+        // ...but if it's a submenu, go back by one menu item height to keep the menu aligned with
+        // its parent item, if possible.
         if (as_submenu)
-            adjusted_pos = adjusted_pos.translated(0, item_height());
+            offset -= item_height();
+        // Before translating, clamp the calculated offset to the current distance between the
+        // screen and menu top edges to avoid going off-screen.
+        adjusted_pos = adjusted_pos.translated(0, -min(offset, adjusted_pos.y()));
     }
 
     window.move_to(adjusted_pos);
