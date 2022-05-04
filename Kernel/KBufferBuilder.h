@@ -52,6 +52,11 @@ public:
         return m_buffer->bytes();
     }
 
+    size_t length() const
+    {
+        return m_size;
+    }
+
 private:
     explicit KBufferBuilder(NonnullOwnPtr<KBuffer>);
 
