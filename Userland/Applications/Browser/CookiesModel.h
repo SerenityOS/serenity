@@ -25,7 +25,7 @@ public:
         __Count,
     };
 
-    void add_item(Web::Cookie::Cookie const& item);
+    void set_items(AK::Vector<Web::Cookie::Cookie> items);
     void clear_items();
     virtual int row_count(GUI::ModelIndex const&) const override { return m_cookies.size(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }

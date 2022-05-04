@@ -6,12 +6,14 @@
 
 #include "CookiesModel.h"
 
+#include <utility>
+
 namespace Browser {
 
-void CookiesModel::add_item(Web::Cookie::Cookie const& item)
+void CookiesModel::set_items(AK::Vector<Web::Cookie::Cookie> items)
 {
     begin_insert_rows({}, m_cookies.size(), m_cookies.size());
-    m_cookies.append(item);
+    m_cookies = move(items);
     end_insert_rows();
 
     did_update(DontInvalidateIndices);

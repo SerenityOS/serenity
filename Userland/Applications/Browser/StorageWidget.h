@@ -20,7 +20,7 @@ class StorageWidget final : public GUI::Widget {
 
 public:
     virtual ~StorageWidget() override = default;
-    void add_cookie(Web::Cookie::Cookie const& cookie);
+    void set_cookies_entries(Vector<Web::Cookie::Cookie> entries);
     void clear_cookies();
 
     void set_local_storage_entries(OrderedHashMap<String, String> entries);
