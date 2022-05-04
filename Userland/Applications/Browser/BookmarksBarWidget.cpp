@@ -33,6 +33,7 @@ public:
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
         editor->set_title("Edit Bookmark");
+        editor->set_icon(g_icon_bag.bookmark_filled);
 
         if (editor->exec() == Dialog::ExecOK) {
             return Vector<JsonValue> { editor->title(), editor->url() };
