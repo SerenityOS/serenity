@@ -6,9 +6,17 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <AK/IterationDecision.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Types.h>
+
+namespace AK {
+// Some basic forward delcarations
+// We need them so we can #include this file in Forward.h, so we can use concepts in types forward declared there.
+class StringView;
+template<typename T>
+class Span;
+}
 
 namespace AK::Concepts {
 
@@ -50,6 +58,12 @@ concept AnyString = Detail::IsConstructible<StringView, T>;
 
 template<typename T, typename U>
 concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;
+
+template<typename T>
+concept Pointer = IsPointer<T>;
+
+template<typename T>
+concept IntegralLike = Integral<T> || Enum<T> || Pointer<T>;
 
 // FIXME: remove once Clang formats these properly.
 // clang-format off
@@ -120,11 +134,13 @@ using AK::Concepts::Enum;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Fundamental;
 using AK::Concepts::Integral;
+using AK::Concepts::IntegralLike;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
 using AK::Concepts::OneOf;
 using AK::Concepts::OneOfIgnoringCV;
+using AK::Concepts::Pointer;
 using AK::Concepts::SameAs;
 using AK::Concepts::Signed;
 using AK::Concepts::SpecializationOf;

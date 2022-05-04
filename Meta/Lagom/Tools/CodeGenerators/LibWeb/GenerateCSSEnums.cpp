@@ -47,6 +47,7 @@ ErrorOr<void> generate_header_file(JsonObject& enums_data, Core::Stream::File& f
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/StringView.h>
 
 namespace Web::CSS {
 
