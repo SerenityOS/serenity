@@ -26,6 +26,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -334,9 +335,42 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->try_add_action(open_settings_action));
     TRY(file_menu->try_add_separator());
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+
+    auto tty_has_foreground_process = [&] {
+        pid_t fg_pid = tcgetpgrp(ptm_fd);
+        return fg_pid != -1 && fg_pid != shell_pid;
+    };
+
+    auto shell_child_process_count = [&] {
+        Core::DirIterator iterator(String::formatted("/proc/{}/children", shell_pid), Core::DirIterator::Flags::SkipParentAndBaseDir);
+        int background_process_count = 0;
+        while (iterator.has_next()) {
+            ++background_process_count;
+            (void)iterator.next_path();
+        }
+        return background_process_count;
+    };
+
+    auto check_terminal_quit = [&]() -> int {
+        Optional<String> close_message;
+        if (tty_has_foreground_process()) {
+            close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
+        } else {
+            auto child_process_count = shell_child_process_count();
+            if (child_process_count > 1)
+                close_message = String::formatted("There are {} background processes running in this terminal. Closing the terminal may kill them.", child_process_count);
+            else if (child_process_count == 1)
+                close_message = "There is a background process running in this terminal. Closing the terminal may kill it.";
+        }
+        if (close_message.has_value())
+            return GUI::MessageBox::show(window, *close_message, "Close this terminal?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+        return GUI::MessageBox::ExecOK;
+    };
+
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         dbgln("Terminal: Quit menu activated!");
-        GUI::Application::the()->quit();
+        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+            GUI::Application::the()->quit();
     })));
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"));
@@ -365,8 +399,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         find_window->close();
     };
 
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
+
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
+    TRY(Core::System::unveil("/proc", "r"));
     TRY(Core::System::unveil("/bin/Terminal", "x"));
     TRY(Core::System::unveil("/bin/TerminalSettings", "x"));
     TRY(Core::System::unveil("/bin/utmpupdate", "x"));
@@ -375,7 +416,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    auto modified_state_check_timer = Core::Timer::create_repeating(500, [&] {
+        window->set_modified(tty_has_foreground_process() || shell_child_process_count() > 0);
+    });
+
     window->show();
+    modified_state_check_timer->start();
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
     utmp_update(ptsname, 0, false);
