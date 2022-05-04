@@ -7,8 +7,8 @@
 #include <AK/Assertions.h>
 #include <AK/MemMem.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/StdLib.h>
 

@@ -9,7 +9,6 @@
 
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KString.h>
-#include <Kernel/KSyms.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
@@ -22,16 +21,6 @@
 namespace Kernel {
 
 READONLY_AFTER_INIT Thread* g_finalizer;
-
-}
-
-// Panic
-namespace Kernel {
-
-void __panic(char const*, unsigned int, char const*)
-{
-    for (;;) { }
-}
 
 }
 
@@ -124,17 +113,7 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
-// KSyms.cpp
 namespace Kernel {
-bool g_kernel_symbols_available = false;
-}
-
-namespace Kernel {
-
-void dump_backtrace(PrintToScreen)
-{
-    VERIFY_NOT_REACHED();
-}
 
 // KString.cpp
 ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&)
@@ -152,84 +131,8 @@ void KString::operator delete(void*)
     VERIFY_NOT_REACHED();
 }
 
-// SafeMem.h
-bool safe_memset(void*, int, size_t, void*&);
-bool safe_memset(void*, int, size_t, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return false;
-}
-
-ssize_t safe_strnlen(char const*, unsigned long, void*&);
-ssize_t safe_strnlen(char const*, unsigned long, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return 0;
-}
-
-bool safe_memcpy(void*, void const*, unsigned long, void*&);
-bool safe_memcpy(void*, void const*, unsigned long, void*&)
-{
-    VERIFY_NOT_REACHED();
-    return false;
-}
-
-Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32);
-Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_load_relaxed(u32 volatile*);
-Optional<u32> safe_atomic_load_relaxed(u32 volatile*)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-bool safe_atomic_store_relaxed(u32 volatile*, u32);
-bool safe_atomic_store_relaxed(u32 volatile*, u32)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
 }
 
 extern "C" {
-
 FlatPtr kernel_mapping_base;
-
-void kernelputstr(char const*, size_t);
-void kernelputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void kernelcriticalputstr(char const*, size_t);
-void kernelcriticalputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void kernelearlyputstr(char const*, size_t);
-void kernelearlyputstr(char const*, size_t)
-{
-    VERIFY_NOT_REACHED();
-}
 }

@@ -1,8 +1,9 @@
 parameters:
   arch: 'i686'
+  coverage: 'OFF'
 
 jobs:
-  - job: 'Serenity_Clang_${{ parameters.arch }}'
+  - job: 'Serenity_Clang_${{ parameters.arch }}_Coverage_${{ parameters.coverage }}'
     timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
 
     variables:
@@ -24,6 +25,7 @@ jobs:
     - template: Caches.yml
       parameters:
         arch: '${{ parameters.arch }}'
+        coverage: '${{ parameters.coverage }}'
         toolchain: 'clang'
         build_directory: 'Build/${{ parameters.arch }}clang'
         toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
@@ -44,6 +46,7 @@ jobs:
           -DSERENITY_ARCH=${{ parameters.arch }} \
           -DSERENITY_TOOLCHAIN=Clang \
           -DENABLE_UNDEFINED_SANITIZER=ON \
+          -DENABLE_USERSPACE_COVERAGE_COLLECTION=${{ parameters.coverage }} \
           -DENABLE_PCI_IDS_DOWNLOAD=OFF \
           -DENABLE_USB_IDS_DOWNLOAD=OFF \
           -DCMAKE_C_COMPILER=gcc-11 \
@@ -81,6 +84,7 @@ jobs:
           echo "##[error]:^( Tests failed, failing job"
           exit 1
         fi
+        sudo umount fsmount
       displayName: 'Test'
       workingDirectory: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang
       timeoutInMinutes: 60
@@ -94,6 +98,27 @@ jobs:
       displayName: 'Print Target Logs'
       workingDirectory: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang
       condition: failed()
+
+    - ${{ if eq(parameters.coverage, 'ON') }}:
+      - script: |
+          ./Meta/analyze-qemu-coverage.sh
+        displayName: 'Aggregate Coverage Results'
+        workingDirectory: $(Build.SourcesDirectory)
+        env:
+          SERENITY_TOOLCHAIN: Clang
+          SERENITY_ARCH: ${{ parameters.arch }}
+
+      # FIXME: Deploy the static html pages somewhere
+      # FIXME: Alter script to also (instead?) produce a raw coverage.txt file for ingestion into sonar cloud
+      # Note: tmp_profile_data/Coverage.profdata has the entire combined profile data, but creating the raw txt requires
+      #       all of the instrumented binaries and the profdata file.
+    - ${{ if eq(parameters.coverage, 'ON') }}:
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang/reports
+          artifactType: 'pipeline'
+          artifactName: 'Coverage'
+
 
     - script: |
         echo "##[section]Toolchain Cache"

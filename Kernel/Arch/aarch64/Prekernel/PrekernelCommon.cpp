@@ -11,17 +11,6 @@
 
 namespace Prekernel {
 
-[[noreturn]] void panic(char const* msg)
-{
-    auto& uart = Prekernel::UART::the();
-
-    if (msg) {
-        uart.print_str(msg);
-    }
-
-    Prekernel::halt();
-}
-
 [[noreturn]] void halt()
 {
     for (;;) {

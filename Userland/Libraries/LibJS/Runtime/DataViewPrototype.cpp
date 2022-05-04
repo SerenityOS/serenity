@@ -114,7 +114,9 @@ static ThrowCompletionOr<Value> set_view_value(GlobalObject& global_object, Valu
     if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
         return vm.throw_completion<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
-    return buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian);
+    buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian);
+
+    return js_undefined();
 }
 
 // 25.3.4.5 DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64

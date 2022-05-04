@@ -7,7 +7,7 @@
 #include "ConnectionFromClient.h"
 #include "Mixer.h"
 #include <AudioServer/AudioClientEndpoint.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Queue.h>
 
 namespace AudioServer {
 

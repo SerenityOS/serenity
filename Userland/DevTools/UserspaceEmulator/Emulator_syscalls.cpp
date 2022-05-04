@@ -12,6 +12,7 @@
 #include <AK/Debug.h>
 #include <AK/FileStream.h>
 #include <AK/Format.h>
+#include <Kernel/API/SyscallString.h>
 #include <alloca.h>
 #include <fcntl.h>
 #include <sched.h>

@@ -495,7 +495,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
     auto& vm = global_object.vm();
     auto utf16_string = Utf16String(string);
 
-    // 1. Let strLen be the number of code units in string.
+    // 1. Let strLen be the length of string.
     auto string_length = utf16_string.length_in_code_units();
 
     // 2. Let R be the empty String.
@@ -521,7 +521,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
         }
         // d. Else,
         else {
-            // i. Let cp be ! CodePointAt(string, k).
+            // i. Let cp be CodePointAt(string, k).
             auto code_point = code_point_at(utf16_string.view(), k);
             // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
             if (code_point.is_unpaired_surrogate)

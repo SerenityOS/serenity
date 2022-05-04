@@ -303,7 +303,7 @@ ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm
 }
 
 // 16.2.1.6.4 InitializeEnvironment ( ), https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
-Completion SourceTextModule::initialize_environment(VM& vm)
+ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
 {
     // 1. For each ExportEntry Record e of module.[[IndirectExportEntries]], do
     for (auto& entry : m_indirect_export_entries) {
@@ -347,8 +347,8 @@ Completion SourceTextModule::initialize_environment(VM& vm)
             // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
             MUST(environment->create_immutable_binding(global_object, import_entry.local_name, true));
 
-            // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
-            environment->initialize_binding(global_object, import_entry.local_name, namespace_);
+            // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
+            MUST(environment->initialize_binding(global_object, import_entry.local_name, namespace_));
         }
         // d. Else,
         else {
@@ -367,12 +367,12 @@ Completion SourceTextModule::initialize_environment(VM& vm)
                 // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
                 MUST(environment->create_immutable_binding(global_object, import_entry.local_name, true));
 
-                // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
+                // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
                 MUST(environment->initialize_binding(global_object, import_entry.local_name, namespace_));
             }
             // iv. Else,
             else {
-                // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
+                // 1. Perform env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
                 MUST(environment->create_import_binding(import_entry.local_name, resolution.module, resolution.export_name));
             }
         }
@@ -422,7 +422,7 @@ Completion SourceTextModule::initialize_environment(VM& vm)
             // 1. Perform ! env.CreateMutableBinding(dn, false).
             MUST(environment->create_mutable_binding(global_object, name, false));
 
-            // 2. Call env.InitializeBinding(dn, undefined).
+            // 2. Perform ! env.InitializeBinding(dn, undefined).
             MUST(environment->initialize_binding(global_object, name, js_undefined()));
 
             // 3. Append dn to declaredVarNames.
@@ -459,8 +459,8 @@ Completion SourceTextModule::initialize_environment(VM& vm)
                 // 1. Let fo be InstantiateFunctionObject of d with arguments env and privateEnv.
                 auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
 
-                // 2. Call env.InitializeBinding(dn, fo).
-                environment->initialize_binding(global_object, name, function);
+                // 2. Perform ! env.InitializeBinding(dn, fo).
+                MUST(environment->initialize_binding(global_object, name, function));
             }
         });
     });
@@ -488,8 +488,8 @@ Completion SourceTextModule::initialize_environment(VM& vm)
     // 25. Remove moduleContext from the execution context stack.
     vm.pop_execution_context();
 
-    // 26. Return NormalCompletion(empty).
-    return normal_completion({});
+    // 26. Return unused.
+    return {};
 }
 
 // 16.2.1.6.3 ResolveExport ( exportName [ , resolveSet ] ), https://tc39.es/ecma262/#sec-resolveexport
@@ -555,7 +555,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
             // 1. Assert: module imports a specific binding for this export.
             // FIXME: What does this mean? / How do we check this
 
-            // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
+            // 2. Return ? importedModule.ResolveExport(e.[[ImportName]], resolveSet).
             return imported_module->resolve_export(vm, entry.local_or_import_name, resolve_set);
         }
     }
@@ -622,7 +622,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
 }
 
 // 16.2.1.6.5 ExecuteModule ( [ capability ] ), https://tc39.es/ecma262/#sec-source-text-module-record-execute-module
-Completion SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> capability)
+ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> capability)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, capability has value: {})", filename(), capability.has_value());
 
@@ -668,26 +668,23 @@ Completion SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> 
         // e. Resume the context that is now on the top of the execution context stack as the running execution context.
         // FIXME: We don't have resume yet.
 
-        // f. Return Completion(result).
-        if (result.is_error())
+        // f. If result is an abrupt completion, then
+        if (result.is_error()) {
+            // i. Return ? result.
             return result;
-
-        // 16.2.1.11 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation
-        // -> Replace any empty value with undefined.
-
-        result = result.update_empty(js_undefined());
-        return *result.value();
+        }
     }
     // 10. Else,
+    else {
+        // a. Assert: capability is a PromiseCapability Record.
+        VERIFY(capability.has_value());
 
-    // a. Assert: capability is a PromiseCapability Record.
-    VERIFY(capability.has_value());
+        // b. Perform AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
+        async_block_start(vm, m_ecmascript_code, capability.value(), module_context);
+    }
 
-    // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
-    async_block_start(vm, m_ecmascript_code, capability.value(), module_context);
-
-    // c. Return NormalCompletion(empty).
-    return normal_completion({});
+    // 11. Return unused.
+    return {};
 }
 
 }

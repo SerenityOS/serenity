@@ -173,15 +173,13 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: ! IsCallable(obj) is true.
-
-    // 2. If obj has a [[Realm]] internal slot, then
+    // 1. If obj has a [[Realm]] internal slot, then
     if (function.realm()) {
         // a. Return obj.[[Realm]].
         return function.realm();
     }
 
-    // 3. If obj is a bound function exotic object, then
+    // 2. If obj is a bound function exotic object, then
     if (is<BoundFunction>(function)) {
         auto& bound_function = static_cast<BoundFunction const&>(function);
 
@@ -192,7 +190,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         return get_function_realm(global_object, target);
     }
 
-    // 4. If obj is a Proxy exotic object, then
+    // 3. If obj is a Proxy exotic object, then
     if (is<ProxyObject>(function)) {
         auto& proxy = static_cast<ProxyObject const&>(function);
 
@@ -208,7 +206,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         return get_function_realm(global_object, static_cast<FunctionObject const&>(proxy_target));
     }
 
-    // 5. Return the current Realm Record.
+    // 4. Return the current Realm Record.
     return vm.current_realm();
 }
 
@@ -219,17 +217,16 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
 
     // 1. If environment is not undefined, then
     if (environment) {
-        // a. Perform environment.InitializeBinding(name, value).
+        // a. Perform ! environment.InitializeBinding(name, value).
         MUST(environment->initialize_binding(global_object, name, value));
 
-        // b. Return NormalCompletion(undefined).
+        // b. Return unused.
         return {};
     }
     // 2. Else,
     else {
-        // a. Let lhs be ResolveBinding(name).
-        // NOTE: Although the spec pretends resolve_binding cannot fail it can just not in this case.
-        auto lhs = MUST(vm.resolve_binding(name));
+        // a. Let lhs be ? ResolveBinding(name).
+        auto lhs = TRY(vm.resolve_binding(name));
 
         // b. Return ? PutValue(lhs, value).
         return TRY(lhs.put_value(global_object, value));
@@ -241,16 +238,15 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
 // 10.1.6.2 IsCompatiblePropertyDescriptor ( Extensible, Desc, Current ), https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {
-    // 1. Return ValidateAndApplyPropertyDescriptor(undefined, undefined, Extensible, Desc, Current).
-    return validate_and_apply_property_descriptor(nullptr, {}, extensible, descriptor, current);
+    // 1. Return ValidateAndApplyPropertyDescriptor(undefined, "", Extensible, Desc, Current).
+    return validate_and_apply_property_descriptor(nullptr, "", extensible, descriptor, current);
 }
 
 // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
 bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& property_key, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {
-    // 1. Assert: If O is not undefined, then IsPropertyKey(P) is true.
-    if (object)
-        VERIFY(property_key.is_valid());
+    // 1. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_key.is_valid());
 
     // 2. If current is undefined, then
     if (!current.has_value()) {
@@ -258,138 +254,123 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
         if (!extensible)
             return false;
 
-        // b. Assert: extensible is true.
-        // c. If IsGenericDescriptor(Desc) is true or IsDataDescriptor(Desc) is true, then
-        if (descriptor.is_generic_descriptor() || descriptor.is_data_descriptor()) {
-            // i. If O is not undefined, create an own data property named P of object O whose [[Value]], [[Writable]],
-            // [[Enumerable]], and [[Configurable]] attribute values are described by Desc.
-            // If the value of an attribute field of Desc is absent, the attribute of the newly created property is set
-            // to its default value.
-            if (object) {
-                auto value = descriptor.value.value_or(js_undefined());
-                object->storage_set(property_key, { value, descriptor.attributes() });
-            }
+        // b. If O is undefined, return true.
+        if (object == nullptr)
+            return true;
+
+        // c. If IsAccessorDescriptor(Desc) is true, then
+        if (descriptor.is_accessor_descriptor()) {
+            // i. Create an own accessor property named P of object O whose [[Get]], [[Set]], [[Enumerable]], and [[Configurable]] attributes are set to the value of the corresponding field in Desc if Desc has that field, or to the attribute's default value otherwise.
+            auto* accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
+            object->storage_set(property_key, { accessor, descriptor.attributes() });
         }
         // d. Else,
         else {
-            // i. Assert: ! IsAccessorDescriptor(Desc) is true.
-            VERIFY(descriptor.is_accessor_descriptor());
-
-            // ii. If O is not undefined, create an own accessor property named P of object O whose [[Get]], [[Set]],
-            // [[Enumerable]], and [[Configurable]] attribute values are described by Desc.
-            // If the value of an attribute field of Desc is absent, the attribute of the newly created property is set
-            // to its default value.
-            if (object) {
-                auto accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
-                object->storage_set(property_key, { accessor, descriptor.attributes() });
-            }
+            // i. Create an own data property named P of object O whose [[Value]], [[Writable]], [[Enumerable]], and [[Configurable]] attributes are set to the value of the corresponding field in Desc if Desc has that field, or to the attribute's default value otherwise.
+            auto value = descriptor.value.value_or(js_undefined());
+            object->storage_set(property_key, { value, descriptor.attributes() });
         }
+
         // e. Return true.
         return true;
     }
 
-    // 3. If every field in Desc is absent, return true.
+    // 3. Assert: current is a fully populated Property Descriptor.
+
+    // 4. If Desc does not have any fields, return true.
     if (descriptor.is_empty())
         return true;
 
-    // 4. If current.[[Configurable]] is false, then
+    // 5. If current.[[Configurable]] is false, then
     if (!*current->configurable) {
-        // a. If Desc.[[Configurable]] is present and its value is true, return false.
+        // a. If Desc has a [[Configurable]] field and Desc.[[Configurable]] is true, return false.
         if (descriptor.configurable.has_value() && *descriptor.configurable)
             return false;
 
-        // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+        // b. If Desc has an [[Enumerable]] field and SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
         if (descriptor.enumerable.has_value() && *descriptor.enumerable != *current->enumerable)
             return false;
-    }
 
-    // 5. If ! IsGenericDescriptor(Desc) is true, then
-    if (descriptor.is_generic_descriptor()) {
-        // a. NOTE: No further validation is required.
-    }
-    // 6. Else if ! SameValue(! IsDataDescriptor(current), ! IsDataDescriptor(Desc)) is false, then
-    else if (current->is_data_descriptor() != descriptor.is_data_descriptor()) {
-        // a. If current.[[Configurable]] is false, return false.
-        if (!*current->configurable)
+        // c. If IsGenericDescriptor(Desc) is false and SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
+        if (!descriptor.is_generic_descriptor() && (descriptor.is_accessor_descriptor() != current->is_accessor_descriptor()))
             return false;
 
-        // b. If IsDataDescriptor(current) is true, then
-        if (current->is_data_descriptor()) {
-            // If O is not undefined, convert the property named P of object O from a data property to an accessor property.
-            // Preserve the existing values of the converted property's [[Configurable]] and [[Enumerable]] attributes and
-            // set the rest of the property's attributes to their default values.
-            if (object) {
-                auto accessor = Accessor::create(object->vm(), nullptr, nullptr);
-                object->storage_set(property_key, { accessor, current->attributes() });
-            }
-        }
-        // c. Else,
-        else {
-            // If O is not undefined, convert the property named P of object O from an accessor property to a data property.
-            // Preserve the existing values of the converted property's [[Configurable]] and [[Enumerable]] attributes and
-            // set the rest of the property's attributes to their default values.
-            if (object) {
-                auto value = js_undefined();
-                object->storage_set(property_key, { value, current->attributes() });
-            }
-        }
-    }
-    // 7. Else if IsDataDescriptor(current) and IsDataDescriptor(Desc) are both true, then
-    else if (current->is_data_descriptor() && descriptor.is_data_descriptor()) {
-        // a. If current.[[Configurable]] is false and current.[[Writable]] is false, then
-        if (!*current->configurable && !*current->writable) {
-            // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
-            if (descriptor.writable.has_value() && *descriptor.writable)
-                return false;
-
-            // ii. If Desc.[[Value]] is present and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
-            if (descriptor.value.has_value() && !same_value(*descriptor.value, *current->value))
-                return false;
-
-            // iii. Return true.
-            return true;
-        }
-    }
-    // 8. Else,
-    else {
-        // a. Assert: ! IsAccessorDescriptor(current) and ! IsAccessorDescriptor(Desc) are both true.
-        VERIFY(current->is_accessor_descriptor());
-        VERIFY(descriptor.is_accessor_descriptor());
-
-        // b. If current.[[Configurable]] is false, then
-        if (!*current->configurable) {
-            // i. If Desc.[[Set]] is present and SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
-            if (descriptor.set.has_value() && *descriptor.set != *current->set)
-                return false;
-
-            // ii. If Desc.[[Get]] is present and SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
+        // d. If IsAccessorDescriptor(Desc) is true, then
+        if (descriptor.is_accessor_descriptor()) {
+            // i. If Desc has a [[Get]] field and SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
             if (descriptor.get.has_value() && *descriptor.get != *current->get)
                 return false;
 
-            // iii. Return true.
-            return true;
+            // ii. If Desc has a [[Set]] field and SameValue(Desc.[[Set]], current.[[Set]]) is false, return false.
+            if (descriptor.set.has_value() && *descriptor.set != *current->set)
+                return false;
+        }
+        // e. Else if current.[[Writable]] is false, then
+        // FIXME: `current` is not guaranteed to be a data descriptor at this point and may not have a [[Writable]] field (see https://github.com/tc39/ecma262/issues/2761)
+        else if (current->is_data_descriptor() && !*current->writable) {
+            // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is true, return false.
+            if (descriptor.writable.has_value() && *descriptor.writable)
+                return false;
+
+            // ii. If Desc has a [[Value]] field and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+            if (descriptor.value.has_value() && (*descriptor.value != *current->value))
+                return false;
         }
     }
 
-    // 9. If O is not undefined, then
-    if (object) {
-        // a. For each field of Desc that is present, set the corresponding attribute of the property named P of object O to the value of the field.
-        Value value;
-        if (descriptor.is_accessor_descriptor() || (current->is_accessor_descriptor() && !descriptor.is_data_descriptor())) {
-            auto* getter = descriptor.get.value_or(current->get.value_or(nullptr));
-            auto* setter = descriptor.set.value_or(current->set.value_or(nullptr));
-            value = Accessor::create(object->vm(), getter, setter);
-        } else {
-            value = descriptor.value.value_or(current->value.value_or({}));
+    // 6. If O is not undefined, then
+    if (object != nullptr) {
+        // a. If IsDataDescriptor(current) is true and IsAccessorDescriptor(Desc) is true, then
+        if (current->is_data_descriptor() && descriptor.is_accessor_descriptor()) {
+            // i. If Desc has a [[Configurable]] field, let configurable be Desc.[[Configurable]], else let configurable be current.[[Configurable]].
+            auto configurable = descriptor.configurable.value_or(*current->configurable);
+
+            // ii. If Desc has a [[Enumerable]] field, let enumerable be Desc.[[Enumerable]], else let enumerable be current.[[Enumerable]].
+            auto enumerable = descriptor.enumerable.value_or(*current->enumerable);
+
+            // iii. Replace the property named P of object O with an accessor property having [[Configurable]] and [[Enumerable]] attributes set to configurable and enumerable, respectively, and each other attribute set to its corresponding value in Desc if present, otherwise to its default value.
+            auto* accessor = Accessor::create(object->vm(), descriptor.get.value_or(nullptr), descriptor.set.value_or(nullptr));
+            PropertyAttributes attributes;
+            attributes.set_enumerable(enumerable);
+            attributes.set_configurable(configurable);
+            object->storage_set(property_key, { accessor, attributes });
         }
-        PropertyAttributes attributes;
-        attributes.set_writable(descriptor.writable.value_or(current->writable.value_or(false)));
-        attributes.set_enumerable(descriptor.enumerable.value_or(current->enumerable.value_or(false)));
-        attributes.set_configurable(descriptor.configurable.value_or(current->configurable.value_or(false)));
-        object->storage_set(property_key, { value, attributes });
+        // b. Else if IsAccessorDescriptor(current) is true and IsDataDescriptor(Desc) is true, then
+        else if (current->is_accessor_descriptor() && descriptor.is_data_descriptor()) {
+            // i. If Desc has a [[Configurable]] field, let configurable be Desc.[[Configurable]], else let configurable be current.[[Configurable]].
+            auto configurable = descriptor.configurable.value_or(*current->configurable);
+
+            // ii. If Desc has a [[Enumerable]] field, let enumerable be Desc.[[Enumerable]], else let enumerable be current.[[Enumerable]].
+            auto enumerable = descriptor.enumerable.value_or(*current->enumerable);
+
+            // iii. Replace the property named P of object O with a data property having [[Configurable]] and [[Enumerable]] attributes set to configurable and enumerable, respectively, and each other attribute set to its corresponding value in Desc if present, otherwise to its default value.
+            auto value = descriptor.value.value_or(js_undefined());
+            PropertyAttributes attributes;
+            attributes.set_writable(descriptor.writable.value_or(false));
+            attributes.set_enumerable(enumerable);
+            attributes.set_configurable(configurable);
+            object->storage_set(property_key, { value, attributes });
+        }
+        // c. Else,
+        else {
+            // i. For each field of Desc, set the corresponding attribute of the property named P of object O to the value of the field.
+            Value value;
+            if (descriptor.is_accessor_descriptor() || (current->is_accessor_descriptor() && !descriptor.is_data_descriptor())) {
+                auto* getter = descriptor.get.value_or(current->get.value_or(nullptr));
+                auto* setter = descriptor.set.value_or(current->set.value_or(nullptr));
+                value = Accessor::create(object->vm(), getter, setter);
+            } else {
+                value = descriptor.value.value_or(current->value.value_or({}));
+            }
+            PropertyAttributes attributes;
+            attributes.set_writable(descriptor.writable.value_or(current->writable.value_or(false)));
+            attributes.set_enumerable(descriptor.enumerable.value_or(current->enumerable.value_or(false)));
+            attributes.set_configurable(descriptor.configurable.value_or(current->configurable.value_or(false)));
+            object->storage_set(property_key, { value, attributes });
+        }
     }
 
-    // 10. Return true.
+    // 7. Return true.
     return true;
 }
 
@@ -506,7 +487,6 @@ ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
     auto bv = TRY(require_object_coercible(global_object, base_value));
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-    // 6. NOTE: This returns a Super Reference Record.
     return Reference { bv, property_key, actual_this, strict };
 }
 
@@ -748,7 +728,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 // 1. NOTE: The environment of with statements cannot contain any lexical declaration so it doesn't need to be checked for var/let hoisting conflicts.
                 // 2. For each element name of varNames, do
                 TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
-                    // a. If thisEnv.HasBinding(name) is true, then
+                    // a. If ! thisEnv.HasBinding(name) is true, then
                     if (MUST(this_environment->has_binding(name))) {
                         // i. Throw a SyntaxError exception.
                         return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
@@ -839,8 +819,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             while (this_environment != variable_environment) {
                 // a. If thisEnv is not an object Environment Record, then
                 if (!is<ObjectEnvironment>(*this_environment)) {
-                    // i. If thisEnv.HasBinding(F) is true, then
-
+                    // i. If ! thisEnv.HasBinding(F) is true, then
                     if (MUST(this_environment->has_binding(function_name))) {
                         // i. Let bindingExists be true.
                         // Note: When bindingExists is true we skip all the other steps.
@@ -884,7 +863,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                 // ii. Else,
                 else {
 
-                    // i. Let bindingExists be varEnv.HasBinding(F).
+                    // i. Let bindingExists be ! varEnv.HasBinding(F).
                     // ii. If bindingExists is false, then
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         // i. Perform ! varEnv.CreateMutableBinding(F, true).
@@ -903,7 +882,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             //     ii. Let benv be the running execution context's LexicalEnvironment.
             //     iii. Let fobj be ! benv.GetBindingValue(F, false).
             //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
-            //     v. Return NormalCompletion(empty).
+            //     v. Return unused.
             function_declaration.set_should_do_additional_annexB_steps();
 
             return {};
@@ -976,13 +955,13 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
         // d. Else,
         else {
-            // i. Let bindingExists be varEnv.HasBinding(fn).
+            // i. Let bindingExists be ! varEnv.HasBinding(fn).
             auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 
             // ii. If bindingExists is false, then
             if (!binding_exists) {
-                // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
-                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
+                // 2. Perform ! varEnv.CreateMutableBinding(fn, true).
                 MUST(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
 
                 // 3. Perform ! varEnv.InitializeBinding(fn, fo).
@@ -1006,13 +985,13 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
         // b. Else,
         else {
-            // i. Let bindingExists be varEnv.HasBinding(vn).
+            // i. Let bindingExists be ! varEnv.HasBinding(vn).
             auto binding_exists = MUST(variable_environment->has_binding(var_name));
 
             // ii. If bindingExists is false, then
             if (!binding_exists) {
-                // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
-                // 2. Assert: status is not an abrupt completion because of validation preceding step 14.
+                // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
+                // 2. Perform ! varEnv.CreateMutableBinding(vn, true).
                 MUST(variable_environment->create_mutable_binding(global_object, var_name, true));
 
                 // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
@@ -1021,7 +1000,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         }
     }
 
-    // 19. Return NormalCompletion(empty).
+    // 19. Return unused.
     return {};
 }
 
@@ -1033,12 +1012,12 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
     // 1. Let len be the number of elements in argumentsList.
     auto length = arguments.size();
 
-    // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
+    // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
     auto* object = Object::create(global_object, global_object.object_prototype());
     object->set_has_parameter_map();
 
-    // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     MUST(object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true }));
 
     // 5. Let index be 0.
@@ -1076,7 +1055,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     VERIFY(arguments.size() <= NumericLimits<i32>::max());
     i32 length = static_cast<i32>(arguments.size());
 
-    // 3. Let obj be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[ParameterMap]] »).
+    // 3. Let obj be MakeBasicObject(« [[Prototype]], [[Extensible]], [[ParameterMap]] »).
     // 4. Set obj.[[GetOwnProperty]] as specified in 10.4.4.1.
     // 5. Set obj.[[DefineOwnProperty]] as specified in 10.4.4.2.
     // 6. Set obj.[[Get]] as specified in 10.4.4.3.
@@ -1121,7 +1100,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
         if (index < length) {
             // 1. Let g be MakeArgGetter(name, env).
             // 2. Let p be MakeArgSetter(name, env).
-            // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
+            // 3. Perform ! map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
                 PropertyKey { index },
                 [&environment, name](VM&, GlobalObject& global_object_getter) -> ThrowCompletionOr<Value> {
@@ -1161,7 +1140,6 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     if (mode != CanonicalIndexMode::DetectNumericRoundtrip)
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 1. Assert: Type(argument) is String.
     auto& argument = property_key.as_string();
 
     // Handle trivial cases without a full round trip test
@@ -1194,18 +1172,18 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     if (char first_non_zero = argument.characters()[current_index]; first_non_zero < '0' || first_non_zero > '9')
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 3. Let n be ! ToNumber(argument).
+    // 2. Let n be ! ToNumber(argument).
     char* endptr;
     auto n = Value(strtod(argument.characters(), &endptr));
     if (endptr != argument.characters() + argument.length())
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
-    // 4. If SameValue(! ToString(n), argument) is false, return undefined.
-    if (n.to_string_without_side_effects() != argument)
-        return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    // 3. If SameValue(! ToString(n), argument) is true, return n.
+    if (n.to_string_without_side_effects() == argument)
+        return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
-    // 5. Return n.
-    return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
+    // 4. Return undefined.
+    return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution

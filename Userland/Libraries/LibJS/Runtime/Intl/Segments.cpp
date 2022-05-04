@@ -14,7 +14,7 @@ namespace JS::Intl {
 Segments* Segments::create(GlobalObject& global_object, Segmenter& segmenter, Utf16String string)
 {
     // 1. Let internalSlotsList be « [[SegmentsSegmenter]], [[SegmentsString]] ».
-    // 2. Let segments be ! OrdinaryObjectCreate(%SegmentsPrototype%, internalSlotsList).
+    // 2. Let segments be OrdinaryObjectCreate(%SegmentsPrototype%, internalSlotsList).
     // 3. Set segments.[[SegmentsSegmenter]] to segmenter.
     // 4. Set segments.[[SegmentsString]] to string.
     // 5. Return segments.

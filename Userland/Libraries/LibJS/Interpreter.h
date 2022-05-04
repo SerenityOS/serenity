@@ -90,7 +90,7 @@ public:
         // 11. Create any host-defined global object properties on globalObj.
         static_cast<GlobalObjectType*>(global_object)->initialize_global_object();
 
-        // 12. Return NormalCompletion(empty).
+        // 12. Return unused.
         return interpreter;
     }
 

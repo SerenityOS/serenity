@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,13 +29,11 @@ ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t leng
 // 7.3.18 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
 Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elements)
 {
-    // 1. Assert: elements is a List whose elements are all ECMAScript language values.
-
-    // 2. Let array be ! ArrayCreate(0).
+    // 1. Let array be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));
 
-    // 3. Let n be 0.
-    // 4. For each element e of elements, do
+    // 2. Let n be 0.
+    // 3. For each element e of elements, do
     for (u32 n = 0; n < elements.size(); ++n) {
         // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
         MUST(array->create_data_property_or_throw(n, elements[n]));
@@ -43,7 +41,7 @@ Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elem
         // b. Set n to n + 1.
     }
 
-    // 5. Return array.
+    // 4. Return array.
     return array;
 }
 
@@ -58,8 +56,8 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     auto& global_object = this->global_object();
     auto& vm = this->vm();
 
-    // 1. If Desc.[[Value]] is absent, then
-    // a. Return OrdinaryDefineOwnProperty(A, "length", Desc).
+    // 1. If Desc does not have a [[Value]] field, then
+    // a. Return ! OrdinaryDefineOwnProperty(A, "length", Desc).
     // 2. Let newLenDesc be a copy of Desc.
     // NOTE: Handled by step 16
 
@@ -76,15 +74,15 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 
     // 6. Set newLenDesc.[[Value]] to newLen.
     // 7. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
-    // 8. Assert: ! IsDataDescriptor(oldLenDesc) is true.
+    // 8. Assert: IsDataDescriptor(oldLenDesc) is true.
     // 9. Assert: oldLenDesc.[[Configurable]] is false.
     // 10. Let oldLen be oldLenDesc.[[Value]].
     // 11. If newLen ≥ oldLen, then
-    // a. Return OrdinaryDefineOwnProperty(A, "length", newLenDesc).
+    // a. Return ! OrdinaryDefineOwnProperty(A, "length", newLenDesc).
     // 12. If oldLenDesc.[[Writable]] is false, return false.
     // NOTE: Handled by step 16
 
-    // 13. If newLenDesc.[[Writable]] is absent or has the value true, let newWritable be true.
+    // 13. If newLenDesc does not have a [[Writable]] field or newLenDesc.[[Writable]] true, let newWritable be true.
     // 14. Else,
     // a. NOTE: Setting the [[Writable]] attribute to false is deferred in case any elements cannot be deleted.
     // b. Let newWritable be false.
@@ -98,25 +96,23 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     // checks performed inside of it that would have mattered to us:
 
     // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
-    // 4. If current.[[Configurable]] is false, then
-    // a. If Desc.[[Configurable]] is present and its value is true, return false.
+    // 5. If current.[[Configurable]] is false, then
+    // a. If Desc has a [[Configurable]] field and Desc.[[Configurable]] is true, return false.
     if (property_descriptor.configurable.has_value() && *property_descriptor.configurable)
         return false;
-    // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+    // b. If Desc has an [[Enumerable]] field and SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
     if (property_descriptor.enumerable.has_value() && *property_descriptor.enumerable)
         return false;
-    // 6. Else if ! SameValue(! IsDataDescriptor(current), ! IsDataDescriptor(Desc)) is false, then
-    if (property_descriptor.is_accessor_descriptor()) {
-        // a. If current.[[Configurable]] is false, return false.
+    // c. If IsGenericDescriptor(Desc) is false and SameValue(IsAccessorDescriptor(Desc), IsAccessorDescriptor(current)) is false, return false.
+    if (!property_descriptor.is_generic_descriptor() && property_descriptor.is_accessor_descriptor())
         return false;
-    }
-    // 7. Else if IsDataDescriptor(current) and IsDataDescriptor(Desc) are both true, then
-    // a. If current.[[Configurable]] is false and current.[[Writable]] is false, then
+    // NOTE: Step d. doesn't apply here.
+    // e. Else if current.[[Writable]] is false, then
     if (!m_length_writable) {
-        // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
+        // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is true, return false.
         if (property_descriptor.writable.has_value() && *property_descriptor.writable)
             return false;
-        // ii. If Desc.[[Value]] is present and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+        // ii. If Desc has a [[Value]] field and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
         if (new_length != indexed_properties().array_like_size())
             return false;
     }
@@ -161,19 +157,18 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
 {
     auto& vm = this->vm();
 
-    // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
 
-    // 2. If P is "length", then
+    // 1. If P is "length", then
     if (property_key.is_string() && property_key.as_string() == vm.names.length.as_string()) {
         // a. Return ? ArraySetLength(A, Desc).
         return set_length(property_descriptor);
     }
 
-    // 3. Else if P is an array index, then
+    // 2. Else if P is an array index, then
     if (property_key.is_number()) {
         // a. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
-        // b. Assert: ! IsDataDescriptor(oldLenDesc) is true.
+        // b. Assert: IsDataDescriptor(oldLenDesc) is true.
         // c. Assert: oldLenDesc.[[Configurable]] is false.
         // d. Let oldLen be oldLenDesc.[[Value]].
         // e. Assert: oldLen is a non-negative integral Number.
@@ -192,14 +187,14 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& p
 
         // j. If index ≥ oldLen, then
         // i. Set oldLenDesc.[[Value]] to index + 1𝔽.
-        // ii. Set succeeded to OrdinaryDefineOwnProperty(A, "length", oldLenDesc).
+        // ii. Set succeeded to ! OrdinaryDefineOwnProperty(A, "length", oldLenDesc).
         // iii. Assert: succeeded is true.
 
         // k. Return true.
         return true;
     }
 
-    // 4. Return OrdinaryDefineOwnProperty(A, P, Desc).
+    // 3. Return ? OrdinaryDefineOwnProperty(A, P, Desc).
     return Object::internal_define_own_property(property_key, property_descriptor);
 }
 

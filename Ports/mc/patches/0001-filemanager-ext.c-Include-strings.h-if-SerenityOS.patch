@@ -1,7 +1,7 @@
 From 749c81e5006dea41daf16e99c8a60926236d2373 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Sat, 25 Dec 2021 19:15:35 +0100
-Subject: [PATCH 2/3] filemanager/ext.c: Include strings.h if SerenityOS
+Subject: [PATCH 1/2] filemanager/ext.c: Include strings.h if SerenityOS
 
 - [ ] Local?
 - [X] Should be merged to upstream?

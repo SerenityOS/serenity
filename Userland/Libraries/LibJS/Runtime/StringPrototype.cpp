@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -354,7 +354,7 @@ static ThrowCompletionOr<String> transform_case(GlobalObject& global_object, Str
     if (!locale.has_value())
         locale = "und"sv;
 
-    // 8. Let codePoints be ! StringToCodePoints(S).
+    // 8. Let codePoints be StringToCodePoints(S).
 
     String new_code_points;
 
@@ -374,7 +374,7 @@ static ThrowCompletionOr<String> transform_case(GlobalObject& global_object, Str
         VERIFY_NOT_REACHED();
     }
 
-    // 11. Return ! CodePointsToString(newCodePoints).
+    // 11. Return CodePointsToString(newCodePoints).
     return new_code_points;
 }
 

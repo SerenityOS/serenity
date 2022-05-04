@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,7 +65,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 
     // 2. Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
     // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
-    // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
+    // 4. Let resolve be CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
     // 5. Set resolve.[[Promise]] to promise.
     // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
 
@@ -96,25 +96,34 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
             // a. Let selfResolutionError be a newly created TypeError object.
             auto* self_resolution_error = TypeError::create(global_object, "Cannot resolve promise with itself");
 
-            // b. Return RejectPromise(promise, selfResolutionError).
-            return promise.reject(self_resolution_error);
+            // b. Perform RejectPromise(promise, selfResolutionError).
+            promise.reject(self_resolution_error);
+
+            // c. Return undefined.
+            return js_undefined();
         }
 
         // 8. If Type(resolution) is not Object, then
         if (!resolution.is_object()) {
-            // a. Return FulfillPromise(promise, resolution).
+            // a. Perform FulfillPromise(promise, resolution).
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Resolution is not an object, fulfilling with {}", &promise, resolution);
-            return promise.fulfill(resolution);
+            promise.fulfill(resolution);
+
+            // b. Return undefined.
+            return js_undefined();
         }
 
-        // 9. Let then be Get(resolution, "then").
+        // 9. Let then be Completion(Get(resolution, "then")).
         auto then = resolution.as_object().get(vm.names.then);
 
         // 10. If then is an abrupt completion, then
         if (then.is_throw_completion()) {
-            // a. Return RejectPromise(promise, then.[[Value]]).
+            // a. Perform RejectPromise(promise, then.[[Value]]).
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Exception while getting 'then' property, rejecting with error", &promise);
-            return promise.reject(*then.throw_completion().value());
+            promise.reject(*then.throw_completion().value());
+
+            // b. Return undefined.
+            return js_undefined();
         }
 
         // 11. Let thenAction be then.[[Value]].
@@ -122,9 +131,12 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 
         // 12. If IsCallable(thenAction) is false, then
         if (!then_action.is_function()) {
-            // a. Return FulfillPromise(promise, resolution).
+            // a. Perform FulfillPromise(promise, resolution).
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Then action is not a function, fulfilling with {}", &promise, resolution);
-            return promise.fulfill(resolution);
+            promise.fulfill(resolution);
+
+            // b. Return undefined.
+            return js_undefined();
         }
 
         // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
@@ -146,7 +158,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 
     // 7. Let stepsReject be the algorithm steps defined in Promise Reject Functions.
     // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
-    // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
+    // 9. Let reject be CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
     // 10. Set reject.[[Promise]] to promise.
     // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
 
@@ -168,8 +180,11 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         // 6. Set alreadyResolved.[[Value]] to true.
         already_resolved.value = true;
 
-        // 7. Return RejectPromise(promise, reason).
-        return promise.reject(reason);
+        // 7. Perform RejectPromise(promise, reason).
+        promise.reject(reason);
+
+        // 8. Return undefined.
+        return js_undefined();
     });
     reject_function->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
@@ -178,7 +193,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 }
 
 // 27.2.1.4 FulfillPromise ( promise, value ), https://tc39.es/ecma262/#sec-fulfillpromise
-Value Promise::fulfill(Value value)
+void Promise::fulfill(Value value)
 {
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / fulfill()]: Fulfilling promise with value {}", this, value);
 
@@ -198,15 +213,16 @@ Value Promise::fulfill(Value value)
     // 6. Set promise.[[PromiseState]] to fulfilled.
     m_state = State::Fulfilled;
 
-    // 7. Return TriggerPromiseReactions(reactions, value).
+    // 7. Perform TriggerPromiseReactions(reactions, value).
     trigger_reactions();
     m_fulfill_reactions.clear();
     m_reject_reactions.clear();
-    return js_undefined();
+
+    // 8. Return unused.
 }
 
 // 27.2.1.7 RejectPromise ( promise, reason ), https://tc39.es/ecma262/#sec-rejectpromise
-Value Promise::reject(Value reason)
+void Promise::reject(Value reason)
 {
 
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / reject()]: Rejecting promise with reason {}", this, reason);
@@ -232,11 +248,12 @@ Value Promise::reject(Value reason)
     if (!m_is_handled)
         vm.host_promise_rejection_tracker(*this, RejectionOperation::Reject);
 
-    // 8. Return TriggerPromiseReactions(reactions, reason).
+    // 8. Perform TriggerPromiseReactions(reactions, reason).
     trigger_reactions();
     m_fulfill_reactions.clear();
     m_reject_reactions.clear();
-    return js_undefined();
+
+    // 9. Return unused.
 }
 
 // 27.2.1.8 TriggerPromiseReactions ( reactions, argument ), https://tc39.es/ecma262/#sec-triggerpromisereactions
@@ -264,7 +281,7 @@ void Promise::trigger_reactions() const
             dbgln("[Promise @ {} / trigger_reactions()]: No reactions!", this);
     }
 
-    // 2. Return undefined.
+    // 2. Return unused.
 }
 
 // 27.2.5.4.1 PerformPromiseThen ( promise, onFulfilled, onRejected [ , resultCapability ] ), https://tc39.es/ecma262/#sec-performpromisethen

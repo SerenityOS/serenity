@@ -1,7 +1,7 @@
 From 0a5b0b9c2bf5befae8e2e831e75a95f2f0bb26a3 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Tue, 11 Jan 2022 19:56:13 +0100
-Subject: [PATCH 3/3] filemanager/ext.c: Use str_ncasecmp instead of
+Subject: [PATCH 2/2] filemanager/ext.c: Use str_ncasecmp instead of
  strncasecmp if SerenityOS
 
 - [ ] Local?

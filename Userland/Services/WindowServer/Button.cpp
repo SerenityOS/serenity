@@ -31,13 +31,18 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
     if (m_style == Style::Normal)
         Gfx::StylePainter::paint_button(painter, rect(), palette, Gfx::ButtonStyle::Normal, m_pressed, m_hovered);
 
-    if (m_icon) {
-        auto& bitmap = m_icon->bitmap(screen.scale_factor());
+    auto paint_icon = [&](auto& multiscale_bitmap) {
+        auto& bitmap = multiscale_bitmap->bitmap(screen.scale_factor());
         auto icon_location = rect().center().translated(-(bitmap.width() / 2), -(bitmap.height() / 2));
         if (m_pressed)
             painter.translate(1, 1);
         painter.blit(icon_location, bitmap, bitmap.rect());
-    }
+    };
+
+    if (m_icon.hover_bitmap && m_hovered)
+        paint_icon(m_icon.hover_bitmap);
+    else if (m_icon.bitmap)
+        paint_icon(m_icon.bitmap);
 }
 
 void Button::on_mouse_event(MouseEvent const& event)

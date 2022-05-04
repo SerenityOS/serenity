@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,12 +18,16 @@ bool PropertyDescriptor::is_accessor_descriptor() const
 {
     // 1. If Desc is undefined, return false.
 
-    // 2. If both Desc.[[Get]] and Desc.[[Set]] are absent, return false.
-    if (!get.has_value() && !set.has_value())
-        return false;
+    // 2. If Desc has a [[Get]] field, return true.
+    if (get.has_value())
+        return true;
 
-    // 3. Return true.
-    return true;
+    // 3. If Desc has a [[Set]] field, return true.
+    if (set.has_value())
+        return true;
+
+    // 4. Return false.
+    return false;
 }
 
 // 6.2.5.2 IsDataDescriptor ( Desc ), https://tc39.es/ecma262/#sec-isdatadescriptor
@@ -31,12 +35,16 @@ bool PropertyDescriptor::is_data_descriptor() const
 {
     // 1. If Desc is undefined, return false.
 
-    // 2. If both Desc.[[Value]] and Desc.[[Writable]] are absent, return false.
-    if (!value.has_value() && !writable.has_value())
-        return false;
+    // 2. If Desc has a [[Value]] field, return true.
+    if (value.has_value())
+        return true;
 
-    // 3. Return true.
-    return true;
+    // 3. If Desc has a [[Writable]] field, return true.
+    if (writable.has_value())
+        return true;
+
+    // 4. Return false.
+    return false;
 }
 
 // 6.2.5.3 IsGenericDescriptor ( Desc ), https://tc39.es/ecma262/#sec-isgenericdescriptor
@@ -44,12 +52,16 @@ bool PropertyDescriptor::is_generic_descriptor() const
 {
     // 1. If Desc is undefined, return false.
 
-    // 2. If IsAccessorDescriptor(Desc) and IsDataDescriptor(Desc) are both false, return true.
-    if (!is_accessor_descriptor() && !is_data_descriptor())
-        return true;
+    // 2. If IsAccessorDescriptor(Desc) is true, return false.
+    if (is_accessor_descriptor())
+        return false;
 
-    // 3. Return false.
-    return false;
+    // 3. If IsDataDescriptor(Desc) is true, return false.
+    if (is_data_descriptor())
+        return false;
+
+    // 4. Return true.
+    return true;
 }
 
 // 6.2.5.4 FromPropertyDescriptor ( Desc ), https://tc39.es/ecma262/#sec-frompropertydescriptor
@@ -93,7 +105,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 4. If hasEnumerable is true, then
     if (has_enumerable) {
-        // a. Let enumerable be ! ToBoolean(? Get(Obj, "enumerable")).
+        // a. Let enumerable be ToBoolean(? Get(Obj, "enumerable")).
         auto enumerable = TRY(object.get(vm.names.enumerable)).to_boolean();
 
         // b. Set desc.[[Enumerable]] to enumerable.
@@ -105,7 +117,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 6. If hasConfigurable is true, then
     if (has_configurable) {
-        // a. Let configurable be ! ToBoolean(? Get(Obj, "configurable")).
+        // a. Let configurable be ToBoolean(? Get(Obj, "configurable")).
         auto configurable = TRY(object.get(vm.names.configurable)).to_boolean();
 
         // b. Set desc.[[Configurable]] to configurable.
@@ -129,7 +141,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 10. If hasWritable is true, then
     if (has_writable) {
-        // a. Let writable be ! ToBoolean(? Get(Obj, "writable")).
+        // a. Let writable be ToBoolean(? Get(Obj, "writable")).
         auto writable = TRY(object.get(vm.names.writable)).to_boolean();
 
         // b. Set desc.[[Writable]] to writable.
@@ -168,9 +180,9 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
         descriptor.set = setter.is_function() ? &setter.as_function() : nullptr;
     }
 
-    // 15. If desc.[[Get]] is present or desc.[[Set]] is present, then
+    // 15. If desc has a [[Get]] field or desc has a [[Set]] field, then
     if (descriptor.get.has_value() || descriptor.set.has_value()) {
-        //     a. If desc.[[Value]] is present or desc.[[Writable]] is present, throw a TypeError exception.
+        // a. If desc has a [[Value]] field or desc has a [[Writable]] field, throw a TypeError exception.
         if (descriptor.value.has_value() || descriptor.writable.has_value())
             return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorValueOrWritable);
     }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,7 +47,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(FlyString const& name, Op
 
     // 6. If Type(unscopables) is Object, then
     if (unscopables.is_object()) {
-        // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
+        // a. Let blocked be ToBoolean(? Get(unscopables, N)).
         auto blocked = TRY(unscopables.as_object().get(name)).to_boolean();
 
         // b. If blocked is true, return false.
@@ -63,8 +63,10 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(FlyString const& name, Op
 ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
     // 1. Let bindingObject be envRec.[[BindingObject]].
-    // 2. Return ? DefinePropertyOrThrow(bindingObject, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
+    // 2. Perform ? DefinePropertyOrThrow(bindingObject, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
     TRY(m_binding_object.define_property_or_throw(name, { .value = js_undefined(), .writable = true, .enumerable = true, .configurable = can_be_deleted }));
+
+    // 3. Return unused.
     return {};
 }
 
@@ -78,8 +80,11 @@ ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(GlobalObject
 // 9.1.1.2.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
 ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
-    // 1. Return ? envRec.SetMutableBinding(N, V, false).
-    return set_mutable_binding(global_object, name, value, false);
+    // 1. Perform ? envRec.SetMutableBinding(N, V, false).
+    TRY(set_mutable_binding(global_object, name, value, false));
+
+    // 2. Return unused.
+    return {};
 }
 
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s
@@ -95,7 +100,7 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
     if (!still_exists && strict)
         return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
 
-    // 4. Return ? Set(bindingObject, N, V, S).
+    // 4. Perform ? Set(bindingObject, N, V, S).
     auto result_or_error = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
 
     // Note: Nothing like this in the spec, this is here to produce nicer errors instead of the generic one thrown by Object::set().
@@ -112,6 +117,8 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
 
     if (result_or_error.is_error())
         return result_or_error.release_error();
+
+    // 5. Return unused.
     return {};
 }
 
@@ -126,7 +133,7 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject& glob
 
     // 3. If value is false, then
     if (!value) {
-        // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
+        // a. If S is false, return undefined; otherwise throw a ReferenceError exception.
         if (!strict)
             return js_undefined();
         return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);

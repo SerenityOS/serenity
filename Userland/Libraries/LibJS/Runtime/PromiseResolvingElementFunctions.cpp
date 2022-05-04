@@ -76,7 +76,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
     // 9. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
     // 10. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        // a. Let valuesArray be ! CreateArrayFromList(values).
+        // a. Let valuesArray be CreateArrayFromList(values).
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
@@ -102,7 +102,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 9. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
@@ -117,7 +117,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
     // 13. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
     // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        // a. Let valuesArray be ! CreateArrayFromList(values).
+        // a. Let valuesArray be CreateArrayFromList(values).
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
@@ -143,7 +143,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 9. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
@@ -158,7 +158,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     // 13. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
     // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        // a. Let valuesArray be ! CreateArrayFromList(values).
+        // a. Let valuesArray be CreateArrayFromList(values).
         auto* values_array = Array::create_from(global_object, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
@@ -193,7 +193,7 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
         // a. Let error be a newly created AggregateError object.
         auto* error = AggregateError::create(global_object);
 
-        // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errors) }).
+        // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
         auto* errors_array = Array::create_from(global_object, m_values.values());
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 

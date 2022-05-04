@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -98,7 +98,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
 }
 
 // 25.1.2.3 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
-ThrowCompletionOr<Value> detach_array_buffer(GlobalObject& global_object, ArrayBuffer& array_buffer, Optional<Value> key)
+ThrowCompletionOr<void> detach_array_buffer(GlobalObject& global_object, ArrayBuffer& array_buffer, Optional<Value> key)
 {
     auto& vm = global_object.vm();
 
@@ -118,7 +118,7 @@ ThrowCompletionOr<Value> detach_array_buffer(GlobalObject& global_object, ArrayB
     array_buffer.detach_buffer();
 
     // 6. Return unused.
-    return js_null();
+    return {};
 }
 
 // 25.1.2.4 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer

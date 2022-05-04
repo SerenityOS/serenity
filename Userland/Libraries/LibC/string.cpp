@@ -137,7 +137,10 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
     return original_dest;
 }
 
+#if ARCH(I386)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
+//
+// For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
 void* memset(void* dest_ptr, int c, size_t n)
 {
     size_t dest = (size_t)dest_ptr;
@@ -145,19 +148,11 @@ void* memset(void* dest_ptr, int c, size_t n)
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
         size_t expanded_c = explode_byte((u8)c);
-#if ARCH(I386)
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
             : "D"(dest), "c"(size_ts), "a"(expanded_c)
             : "memory");
-#else
-        asm volatile(
-            "rep stosq\n"
-            : "=D"(dest)
-            : "D"(dest), "c"(size_ts), "a"(expanded_c)
-            : "memory");
-#endif
         n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
@@ -169,6 +164,7 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "memory");
     return dest_ptr;
 }
+#endif
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memmove.html
 void* memmove(void* dest, void const* src, size_t n)

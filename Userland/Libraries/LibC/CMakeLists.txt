@@ -84,7 +84,8 @@ elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set(CRTI_SOURCE "arch/i386/crti.S")
     set(CRTN_SOURCE "arch/i386/crtn.S")
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(ASM_SOURCES "arch/x86_64/setjmp.S")
+    set(LIBC_SOURCES ${LIBC_SOURCES} "arch/x86_64/memset.cpp")
+    set(ASM_SOURCES "arch/x86_64/setjmp.S" "arch/x86_64/memset.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/entry.S ../LibELF/Arch/x86_64/plt_trampoline.S)
     set(CRTI_SOURCE "arch/x86_64/crti.S")
     set(CRTN_SOURCE "arch/x86_64/crtn.S")
@@ -92,24 +93,32 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 
+# Note: We link all these against NoCoverage so that we don't break ports by requiring coverage symbols
+# in runtime/startup objects.
+# Since all native serenity applications use dynamic libraries, prevent coverage on libc.a as well
+
 add_library(crt0 STATIC crt0.cpp)
+target_link_libraries(crt0 PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 add_library(crt0_shared STATIC crt0_shared.cpp)
+target_link_libraries(crt0_shared PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0_shared
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
 )
 
 add_library(crti STATIC ${CRTI_SOURCE})
+target_link_libraries(crti PRIVATE NoCoverage)
 add_custom_command(
     TARGET crti
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
 )
 
 add_library(crtn STATIC ${CRTN_SOURCE})
+target_link_libraries(crtn PRIVATE NoCoverage)
 add_custom_command(
     TARGET crtn
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
@@ -118,6 +127,7 @@ add_custom_command(
 set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
     "-fno-stack-protector")
 add_library(ssp STATIC ssp.cpp)
+target_link_libraries(ssp PRIVATE NoCoverage)
 add_custom_command(
     TARGET ssp
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
@@ -129,8 +139,11 @@ set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
 
+# Add in the `posix_memalign` symbol to avoid breaking existing binaries.
+set_source_files_properties(stdlib.cpp PROPERTIES COMPILE_FLAGS "-DSERENITY_LIBC_SHOW_POSIX_MEMALIGN")
+
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
-target_link_libraries(LibCStaticWithoutDeps ssp LibTimeZone)
+target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
 add_dependencies(LibCStaticWithoutDeps LibM LibSystem LibUBSanitizer)
 
 add_custom_target(LibCStatic

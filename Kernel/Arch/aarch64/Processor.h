@@ -66,7 +66,6 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        VERIFY_NOT_REACHED();
         return false;
     }
 
@@ -86,10 +85,10 @@ public:
         return 0;
     }
 
+    // FIXME: Actually return the current thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* current_thread()
     {
-        VERIFY_NOT_REACHED();
-        return 0;
+        return nullptr;
     }
 
     ALWAYS_INLINE bool has_nx() const
@@ -122,9 +121,9 @@ public:
         return 0;
     }
 
+    // FIXME: Actually return the idle thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* idle_thread()
     {
-        VERIFY_NOT_REACHED();
         return nullptr;
     }
 

@@ -381,6 +381,7 @@ typedef struct {
 #define STT_SECTION 3 /* section */
 #define STT_FILE 4    /* file */
 #define STT_TLS 6     /* thread local storage */
+#define STT_GNU_IFUNC 10
 #define STT_LOPROC 13 /* reserved range for processor */
 #define STT_HIPROC 15 /*  specific symbol types */
 
@@ -812,6 +813,7 @@ struct elf_args {
 #define R_386_RELATIVE 8   /* Base address + Addned */
 #define R_386_TLS_TPOFF 14 /* Negative offset into the static TLS storage */
 #define R_386_TLS_TPOFF32 37
+#define R_386_IRELATIVE 42 /* PLT entry resolved indirectly at runtime */
 
 #define R_X86_64_NONE 0
 #define R_X86_64_64 1
@@ -819,3 +821,4 @@ struct elf_args {
 #define R_X86_64_JUMP_SLOT 7
 #define R_X86_64_RELATIVE 8
 #define R_X86_64_TPOFF64 18
+#define R_X86_64_IRELATIVE 37

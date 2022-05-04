@@ -257,7 +257,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(GlobalObject& global_obj
 
     // 4. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).

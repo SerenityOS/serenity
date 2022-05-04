@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::resolved_options)
     // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
     auto* collator = TRY(typed_this_object(global_object));
 
-    // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
 
     // 4. For each row of Table 3, except the header row, in table order, do

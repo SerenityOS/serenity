@@ -89,7 +89,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
 
     // 24. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv) && result.kn.has_value()) {
-        // a. Set collator.[[Numeric]] to ! SameValue(r.[[kn]], "true").
+        // a. Set collator.[[Numeric]] to SameValue(r.[[kn]], "true").
         collator.set_numeric(same_value(js_string(vm, result.kn.release_value()), js_string(vm, "true"sv)));
     }
 

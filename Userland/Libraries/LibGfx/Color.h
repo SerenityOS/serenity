@@ -399,8 +399,8 @@ public:
     }
 
 private:
-    constexpr explicit Color(ARGB32 rgba)
-        : m_value(rgba)
+    constexpr explicit Color(ARGB32 argb)
+        : m_value(argb)
     {
     }
 

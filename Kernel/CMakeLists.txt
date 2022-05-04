@@ -415,17 +415,21 @@ else()
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
+        Arch/aarch64/Panic.cpp
+        Arch/aarch64/SafeMem.cpp
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/Utils.cpp
+        Arch/aarch64/Spinlock.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
         Heap/kmalloc.cpp
         MiniStdLib.cpp
+        KSyms.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
@@ -447,6 +451,9 @@ else()
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
     add_compile_options(-mno-outline-atomics -latomic)
+
+    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
+    add_compile_options(-Wno-nonnull)
 endif()
 
 add_compile_options(-fsigned-char)
@@ -527,6 +534,10 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         ../Kernel/Syscall.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
+elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
+    # Disable checking open() pledges and the veil for coverage data when building userspace with coverage
+    # so that binaries can write out coverage data even with pledges/veil
+    add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
 endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)

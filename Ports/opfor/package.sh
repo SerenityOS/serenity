@@ -1,10 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port="opfor"
-version="1.0.0"
+version="2022.05.01"  # Bogus version, this was the last time the commit hashes were updated.
+_hlsdk_commit=2ffa0261e30a4b90082965bb2539b767c5686a5f
 useconfigure="true"
 depends=("SDL2" "halflife")
-workdir="hlsdk-xash3d-opfor"
-files="https://github.com/SerenityPorts/hlsdk-xash3d/archive/opfor.tar.gz xash3d_gearbox.tar.gz"
+workdir="hlsdk-xash3d-${_hlsdk_commit}"
+files="https://github.com/FWGS/hlsdk-xash3d/archive/${_hlsdk_commit}.tar.gz hlsdk-xash3d-${_hlsdk_commit}.tar.gz 3537f0ba3baead72beecfdc011cc17cce2fd2227d9c9797767c32a869c764f66"
+auth_type="sha256"
 launcher_name="Half-Life: Opposing Force"
 launcher_category="Games"
 

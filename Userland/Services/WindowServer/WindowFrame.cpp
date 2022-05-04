@@ -35,11 +35,11 @@ static Gfx::WindowTheme::WindowType to_theme_window_type(WindowType type)
     }
 }
 
-static RefPtr<MultiScaleBitmaps> s_minimize_icon;
-static RefPtr<MultiScaleBitmaps> s_maximize_icon;
-static RefPtr<MultiScaleBitmaps> s_restore_icon;
-static RefPtr<MultiScaleBitmaps> s_close_icon;
-static RefPtr<MultiScaleBitmaps> s_close_modified_icon;
+static Button::Icon s_minimize_icon;
+static Button::Icon s_maximize_icon;
+static Button::Icon s_restore_icon;
+static Button::Icon s_close_icon;
+static Button::Icon s_close_modified_icon;
 
 static RefPtr<MultiScaleBitmaps> s_active_window_shadow;
 static RefPtr<MultiScaleBitmaps> s_inactive_window_shadow;
@@ -125,7 +125,7 @@ void WindowFrame::set_button_icons()
         : Button::Style::Normal;
 
     if (m_window.is_closeable()) {
-        m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
+        m_close_button->set_icon(m_window.is_modified() ? s_close_modified_icon : s_close_icon);
         m_close_button->set_style(button_style);
     }
     if (m_window.is_minimizable()) {
@@ -133,7 +133,7 @@ void WindowFrame::set_button_icons()
         m_minimize_button->set_style(button_style);
     }
     if (m_window.is_resizable()) {
-        m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
+        m_maximize_button->set_icon(m_window.is_maximized() ? s_restore_icon : s_maximize_icon);
         m_maximize_button->set_style(button_style);
     }
 }
@@ -142,21 +142,32 @@ void WindowFrame::reload_config()
 {
     String icons_path = WindowManager::the().palette().title_button_icons_path();
 
-    auto reload_icon = [&](RefPtr<MultiScaleBitmaps>& icon, StringView path, StringView default_path) {
+    auto reload_bitmap = [&](RefPtr<MultiScaleBitmaps>& multiscale_bitmap, StringView path, StringView default_path = "") {
         StringBuilder full_path;
         full_path.append(icons_path);
         full_path.append(path);
-        if (icon)
-            icon->load(full_path.to_string(), default_path);
+        if (multiscale_bitmap)
+            multiscale_bitmap->load(full_path.string_view(), default_path);
         else
-            icon = MultiScaleBitmaps::create(full_path.to_string(), default_path);
+            multiscale_bitmap = MultiScaleBitmaps::create(full_path.string_view(), default_path);
     };
 
-    reload_icon(s_minimize_icon, "window-minimize.png", "/res/icons/16x16/downward-triangle.png");
-    reload_icon(s_maximize_icon, "window-maximize.png", "/res/icons/16x16/upward-triangle.png");
-    reload_icon(s_restore_icon, "window-restore.png", "/res/icons/16x16/window-restore.png");
-    reload_icon(s_close_icon, "window-close.png", "/res/icons/16x16/window-close.png");
-    reload_icon(s_close_modified_icon, "window-close-modified.png", "/res/icons/16x16/window-close-modified.png");
+    auto reload_icon = [&](Button::Icon& icon, StringView name, StringView default_path) {
+        StringBuilder full_name;
+        full_name.append(name);
+        full_name.append(".png");
+        reload_bitmap(icon.bitmap, full_name.string_view(), default_path);
+        // Note: No default for hover bitmaps
+        full_name.clear();
+        full_name.append(name);
+        full_name.append("-hover.png");
+        reload_bitmap(icon.hover_bitmap, full_name.string_view());
+    };
+    reload_icon(s_minimize_icon, "window-minimize", "/res/icons/16x16/downward-triangle.png");
+    reload_icon(s_maximize_icon, "window-maximize", "/res/icons/16x16/upward-triangle.png");
+    reload_icon(s_restore_icon, "window-restore", "/res/icons/16x16/window-restore.png");
+    reload_icon(s_close_icon, "window-close", "/res/icons/16x16/window-close.png");
+    reload_icon(s_close_modified_icon, "window-close-modified", "/res/icons/16x16/window-close-modified.png");
 
     auto load_shadow = [](String const& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {
@@ -217,7 +228,7 @@ bool WindowFrame::has_shadow() const
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 {
     VERIFY(m_maximize_button);
-    m_maximize_button->set_icon(maximized ? *s_restore_icon : *s_maximize_icon);
+    m_maximize_button->set_icon(maximized ? s_restore_icon : s_maximize_icon);
 }
 
 Gfx::IntRect WindowFrame::menubar_rect() const

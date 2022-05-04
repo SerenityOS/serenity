@@ -67,8 +67,7 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
         environment->initialize_binding(global_object, export_name, js_undefined());
     }
 
-    // 6. Return undefined.
-    // Note: This return value is never visible to the outside so we use void.
+    // 6. Return unused.
     return {};
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,7 +37,7 @@ void Realm::set_global_object(GlobalObject& global_object, Object* this_value)
     // 6. Set realmRec.[[GlobalEnv]] to newGlobalEnv.
     m_global_environment = global_object.heap().allocate_without_global_object<GlobalEnvironment>(global_object, *this_value);
 
-    // 7. Return realmRec.
+    // 7. Return unused.
 }
 
 void Realm::visit_edges(Visitor& visitor)

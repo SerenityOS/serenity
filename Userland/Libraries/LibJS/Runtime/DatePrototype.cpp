@@ -94,8 +94,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.valueOf, get_time, 0, attr);
 
     // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
-    // The function object that is the initial value of Date.prototype.toGMTString
-    // is the same function object that is the initial value of Date.prototype.toUTCString.
+    // The initial value of the "toGMTString" property is %Date.prototype.toUTCString%, defined in 21.4.4.43.
     define_direct_property(vm.names.toGMTString, get_without_side_effects(vm.names.toUTCString), attr);
 }
 
@@ -1112,7 +1111,7 @@ String date_string(double time)
     // 4. Let yv be YearFromTime(tv).
     auto year = year_from_time(time);
 
-    // 5. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
+    // 5. If yv is +0𝔽 or yv > +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
     // 6. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
@@ -1128,7 +1127,7 @@ String time_zone_string(double time)
 
     StringView offset_sign;
 
-    // 2. If offset ≥ +0𝔽, then
+    // 2. If offset is +0𝔽 or offset > +0𝔽, then
     if (offset >= 0) {
         // a. Let offsetSign be "+".
         offset_sign = "+"sv;
@@ -1229,7 +1228,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     // 7. Let yv be YearFromTime(tv).
     auto year = year_from_time(time.as_double());
 
-    // 8. If yv ≥ +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
+    // 8. If yv is +0𝔽 or yv > +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
     // 9. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).

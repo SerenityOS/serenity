@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,7 +84,8 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ArrayBuffer");
 
     auto& array_buffer_object = static_cast<JS::ArrayBuffer&>(array_buffer.as_object());
-    return JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1));
+    TRY(JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1)));
+    return JS::js_null();
 }
 
 TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)

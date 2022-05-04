@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,7 +46,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
 
     if (!vm.argument(1).is_undefined()) {
         auto message = TRY(vm.argument(1).to_string(global_object));
-        MUST(aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
+        aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message));
     }
 
     TRY(aggregate_error->install_error_cause(vm.argument(2)));

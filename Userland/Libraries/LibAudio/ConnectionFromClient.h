@@ -11,7 +11,7 @@
 #include <AK/FixedArray.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Queue.h>
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>

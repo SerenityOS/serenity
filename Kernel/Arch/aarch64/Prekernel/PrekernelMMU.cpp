@@ -12,6 +12,7 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/Panic.h>
 
 // Documentation here for Aarch64 Address Translations
 // https://documentation-service.arm.com/static/5efa1d23dbdee951c1ccdec5?token=
@@ -62,17 +63,17 @@ public:
         , m_current(start)
     {
         if (m_start >= m_end) {
-            Prekernel::panic("Invalid memory range passed to PageBumpAllocator");
+            PANIC("Invalid memory range passed to PageBumpAllocator");
         }
         if ((FlatPtr)m_start % PAGE_TABLE_SIZE != 0 || (FlatPtr)m_end % PAGE_TABLE_SIZE != 0) {
-            Prekernel::panic("Memory range passed into PageBumpAllocator not aligned to PAGE_TABLE_SIZE");
+            PANIC("Memory range passed into PageBumpAllocator not aligned to PAGE_TABLE_SIZE");
         }
     }
 
     u64* take_page()
     {
         if (m_current == m_end) {
-            Prekernel::panic("Prekernel pagetable memory exhausted");
+            PANIC("Prekernel pagetable memory exhausted");
         }
 
         u64* page = m_current;
