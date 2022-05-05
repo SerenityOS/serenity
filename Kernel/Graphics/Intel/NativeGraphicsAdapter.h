@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
+#include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
 #include <Kernel/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
@@ -32,6 +33,6 @@ private:
 
     explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
 
-    LockRefPtr<IntelNativeDisplayConnector> m_display_connector;
+    LockRefPtr<IntelDisplayConnectorGroup> m_connector_group;
 };
 }

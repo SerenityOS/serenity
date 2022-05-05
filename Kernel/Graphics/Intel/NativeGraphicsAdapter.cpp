@@ -42,14 +42,26 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 {
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", device_identifier().address());
     auto bar0_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR0);
-    VERIFY(bar0_space_size == 0x80000);
     auto bar2_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR2);
     dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", PhysicalAddress(PCI::get_BAR0(device_identifier())), bar0_space_size);
     dmesgln_pci(*this, "framebuffer @ {}", PhysicalAddress(PCI::get_BAR2(device_identifier())));
-    PCI::enable_bus_mastering(device_identifier());
 
-    m_display_connector = TRY(IntelNativeDisplayConnector::try_create(PhysicalAddress(PCI::get_BAR2(device_identifier()) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(device_identifier()) & 0xfffffff0), bar0_space_size));
-    return {};
+    using MMIORegion = IntelDisplayConnectorGroup::MMIORegion;
+    MMIORegion first_region { MMIORegion::BARAssigned::BAR0, PhysicalAddress(PCI::get_BAR0(device_identifier()) & 0xfffffff0), bar0_space_size };
+    MMIORegion second_region { MMIORegion::BARAssigned::BAR2, PhysicalAddress(PCI::get_BAR2(device_identifier()) & 0xfffffff0), bar2_space_size };
+
+    PCI::enable_bus_mastering(device_identifier());
+    PCI::enable_io_space(device_identifier());
+    PCI::enable_memory_space(device_identifier());
+
+    using Generation = IntelDisplayConnectorGroup::Generation;
+    switch (device_identifier().hardware_id().device_id) {
+    case 0x29c2:
+        m_connector_group = TRY(IntelDisplayConnectorGroup::try_create({}, Generation::Gen4, first_region, second_region));
+        return {};
+    default:
+        return Error::from_errno(ENODEV);
+    }
 }
 
 IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)

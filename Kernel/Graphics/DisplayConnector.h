@@ -103,7 +103,7 @@ public:
     Memory::Region const& framebuffer_region() const { return *m_framebuffer_region; }
 
 protected:
-    void set_edid_bytes(Array<u8, 128> const& edid_bytes);
+    void set_edid_bytes(Array<u8, 128> const& edid_bytes, bool might_be_invalid = false);
 
     DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization);
     DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization);
