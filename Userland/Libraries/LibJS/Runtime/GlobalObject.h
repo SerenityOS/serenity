@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,11 +36,11 @@ public:
     ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
-    GeneratorPrototype* generator_prototype() { return m_generator_prototype; }
-    AsyncFromSyncIteratorPrototype* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
+    Object* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
+    Object* generator_prototype() { return m_generator_prototype; }
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
-    Intl::SegmentsPrototype* intl_segments_prototype() { return m_intl_segments_prototype; }
+    Object* intl_segments_prototype() { return m_intl_segments_prototype; }
 
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
@@ -107,11 +108,11 @@ private:
     ProxyConstructor* m_proxy_constructor { nullptr };
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
-    GeneratorPrototype* m_generator_prototype { nullptr };
-    AsyncFromSyncIteratorPrototype* m_async_from_sync_iterator_prototype { nullptr };
+    Object* m_async_from_sync_iterator_prototype { nullptr };
+    Object* m_generator_prototype { nullptr };
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
-    Intl::SegmentsPrototype* m_intl_segments_prototype { nullptr };
+    Object* m_intl_segments_prototype { nullptr };
 
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_date_constructor_now_function { nullptr };
