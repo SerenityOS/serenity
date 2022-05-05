@@ -120,7 +120,7 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = global_object.generator_prototype();
+            prototype = Object::create(global_object, global_object.generator_function_prototype_prototype());
             break;
         case FunctionKind::Async:
             break;
