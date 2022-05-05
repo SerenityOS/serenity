@@ -131,6 +131,45 @@ TEST_CASE(fetch_add)
     EXPECT(a_pu8.load() == &v_u8[1] && static_cast<u8*>(a_pu8) == &v_u8[1]);
 }
 
+TEST_CASE(add_fetch)
+{
+    Atomic<u32> a_u32(5);
+    EXPECT(a_u32.add_fetch(2) == 7);
+    EXPECT(a_u32.load() == 7 && static_cast<u32>(a_u32) == 7);
+
+    Atomic<u16> a_u16(5);
+    EXPECT(a_u16.add_fetch(2) == 7);
+    EXPECT(a_u16.load() == 7 && static_cast<u16>(a_u16) == 7);
+
+    Atomic<u8> a_u8(5);
+    EXPECT(a_u8.add_fetch(2) == 7);
+    EXPECT(a_u8.load() == 7 && static_cast<u8>(a_u8) == 7);
+
+    u32 v_u32[6];
+    Atomic<u32*> a_pu32(&v_u32[2]);
+    EXPECT(a_pu32.load() == &v_u32[2] && static_cast<u32*>(a_pu32) == &v_u32[2]);
+    EXPECT(a_pu32.add_fetch(2) == &v_u32[4]);
+    EXPECT(a_pu32.load() == &v_u32[4] && static_cast<u32*>(a_pu32) == &v_u32[4]);
+    EXPECT(a_pu32.add_fetch(-3) == &v_u32[1]);
+    EXPECT(a_pu32.load() == &v_u32[1] && static_cast<u32*>(a_pu32) == &v_u32[1]);
+
+    u16 v_u16[6];
+    Atomic<u16*> a_pu16(&v_u16[2]);
+    EXPECT(a_pu16.load() == &v_u16[2] && static_cast<u16*>(a_pu16) == &v_u16[2]);
+    EXPECT(a_pu16.add_fetch(2) == &v_u16[4]);
+    EXPECT(a_pu16.load() == &v_u16[4] && static_cast<u16*>(a_pu16) == &v_u16[4]);
+    EXPECT(a_pu16.add_fetch(-3) == &v_u16[1]);
+    EXPECT(a_pu16.load() == &v_u16[1] && static_cast<u16*>(a_pu16) == &v_u16[1]);
+
+    u8 v_u8[6];
+    Atomic<u8*> a_pu8(&v_u8[2]);
+    EXPECT(a_pu8.load() == &v_u8[2] && static_cast<u8*>(a_pu8) == &v_u8[2]);
+    EXPECT(a_pu8.add_fetch(2) == &v_u8[4]);
+    EXPECT(a_pu8.load() == &v_u8[4] && static_cast<u8*>(a_pu8) == &v_u8[4]);
+    EXPECT(a_pu8.add_fetch(-3) == &v_u8[1]);
+    EXPECT(a_pu8.load() == &v_u8[1] && static_cast<u8*>(a_pu8) == &v_u8[1]);
+}
+
 TEST_CASE(fetch_sub)
 {
     Atomic<u32> a_u32(5);
@@ -167,6 +206,45 @@ TEST_CASE(fetch_sub)
     EXPECT(a_pu8.fetch_sub(2) == &v_u8[2]);
     EXPECT(a_pu8.load() == &v_u8[0] && static_cast<u8*>(a_pu8) == &v_u8[0]);
     EXPECT(a_pu8.fetch_sub(-3) == &v_u8[0]);
+    EXPECT(a_pu8.load() == &v_u8[3] && static_cast<u8*>(a_pu8) == &v_u8[3]);
+}
+
+TEST_CASE(sub_fetch)
+{
+    Atomic<u32> a_u32(5);
+    EXPECT(a_u32.sub_fetch(2) == 3);
+    EXPECT(a_u32.load() == 3 && static_cast<u32>(a_u32) == 3);
+
+    Atomic<u16> a_u16(5);
+    EXPECT(a_u16.sub_fetch(2) == 3);
+    EXPECT(a_u16.load() == 3 && static_cast<u16>(a_u16) == 3);
+
+    Atomic<u8> a_u8(5);
+    EXPECT(a_u8.sub_fetch(2) == 3);
+    EXPECT(a_u8.load() == 3 && static_cast<u8>(a_u8) == 3);
+
+    u32 v_u32[6];
+    Atomic<u32*> a_pu32(&v_u32[2]);
+    EXPECT(a_pu32.load() == &v_u32[2] && static_cast<u32*>(a_pu32) == &v_u32[2]);
+    EXPECT(a_pu32.sub_fetch(2) == &v_u32[0]);
+    EXPECT(a_pu32.load() == &v_u32[0] && static_cast<u32*>(a_pu32) == &v_u32[0]);
+    EXPECT(a_pu32.sub_fetch(-3) == &v_u32[3]);
+    EXPECT(a_pu32.load() == &v_u32[3] && static_cast<u32*>(a_pu32) == &v_u32[3]);
+
+    u16 v_u16[6];
+    Atomic<u16*> a_pu16(&v_u16[2]);
+    EXPECT(a_pu16.load() == &v_u16[2] && static_cast<u16*>(a_pu16) == &v_u16[2]);
+    EXPECT(a_pu16.sub_fetch(2) == &v_u16[0]);
+    EXPECT(a_pu16.load() == &v_u16[0] && static_cast<u16*>(a_pu16) == &v_u16[0]);
+    EXPECT(a_pu16.sub_fetch(-3) == &v_u16[3]);
+    EXPECT(a_pu16.load() == &v_u16[3] && static_cast<u16*>(a_pu16) == &v_u16[3]);
+
+    u8 v_u8[6];
+    Atomic<u8*> a_pu8(&v_u8[2]);
+    EXPECT(a_pu8.load() == &v_u8[2] && static_cast<u8*>(a_pu8) == &v_u8[2]);
+    EXPECT(a_pu8.sub_fetch(2) == &v_u8[0]);
+    EXPECT(a_pu8.load() == &v_u8[0] && static_cast<u8*>(a_pu8) == &v_u8[0]);
+    EXPECT(a_pu8.sub_fetch(-3) == &v_u8[3]);
     EXPECT(a_pu8.load() == &v_u8[3] && static_cast<u8*>(a_pu8) == &v_u8[3]);
 }
 
@@ -299,6 +377,27 @@ TEST_CASE(fetch_and)
     EXPECT((a_u8 &= 0x0d) == 0x0d);
 }
 
+TEST_CASE(and_fetch)
+{
+    Atomic<u32> a_u32(0xdeadbeef);
+    EXPECT(a_u32.and_fetch(0x8badf00d) == 0x8aadb00d);
+    EXPECT(a_u32.load() == 0x8aadb00d && static_cast<u32>(a_u32) == 0x8aadb00d);
+    a_u32 = 0xdeadbeef;
+    EXPECT((a_u32 &= 0x8badf00d) == 0x8aadb00d);
+
+    Atomic<u16> a_u16(0xbeef);
+    EXPECT(a_u16.and_fetch(0xf00d) == 0xb00d);
+    EXPECT(a_u16.load() == 0xb00d && static_cast<u16>(a_u16) == 0xb00d);
+    a_u16 = 0xbeef;
+    EXPECT((a_u16 &= 0xf00d) == 0xb00d);
+
+    Atomic<u8> a_u8(0xef);
+    EXPECT(a_u8.and_fetch(0x0d) == 0x0d);
+    EXPECT(a_u8.load() == 0x0d && static_cast<u8>(a_u8) == 0x0d);
+    a_u8 = 0xef;
+    EXPECT((a_u8 &= 0x0d) == 0x0d);
+}
+
 TEST_CASE(fetch_or)
 {
     Atomic<u32> a_u32(0xaadb00d);
@@ -320,6 +419,27 @@ TEST_CASE(fetch_or)
     EXPECT((a_u8 |= 0xef) == 0xef);
 }
 
+TEST_CASE(or_fetch)
+{
+    Atomic<u32> a_u32(0xaadb00d);
+    EXPECT(a_u32.or_fetch(0xdeadbeef) == 0xdeadbeef);
+    EXPECT(a_u32.load() == 0xdeadbeef && static_cast<u32>(a_u32) == 0xdeadbeef);
+    a_u32 = 0xaadb00d;
+    EXPECT((a_u32 |= 0xdeadbeef) == 0xdeadbeef);
+
+    Atomic<u16> a_u16(0xb00d);
+    EXPECT(a_u16.or_fetch(0xbeef) == 0xbeef);
+    EXPECT(a_u16.load() == 0xbeef && static_cast<u16>(a_u16) == 0xbeef);
+    a_u16 = 0xb00d;
+    EXPECT((a_u16 |= 0xbeef) == 0xbeef);
+
+    Atomic<u8> a_u8(0x0d);
+    EXPECT(a_u8.or_fetch(0xef) == 0xef);
+    EXPECT(a_u8.load() == 0xef && static_cast<u8>(a_u8) == 0xef);
+    a_u8 = 0x0d;
+    EXPECT((a_u8 |= 0xef) == 0xef);
+}
+
 TEST_CASE(fetch_xor)
 {
     Atomic<u32> a_u32(0x55004ee2);
@@ -336,6 +456,27 @@ TEST_CASE(fetch_xor)
 
     Atomic<u8> a_u8(0xe2);
     EXPECT(a_u8.fetch_xor(0xef) == 0xe2);
+    EXPECT(a_u8.load() == 0x0d && static_cast<u8>(a_u8) == 0x0d);
+    a_u8 = 0xe2;
+    EXPECT((a_u8 ^= 0xef) == 0x0d);
+}
+
+TEST_CASE(xor_fetch)
+{
+    Atomic<u32> a_u32(0x55004ee2);
+    EXPECT(a_u32.xor_fetch(0xdeadbeef) == 0x8badf00d);
+    EXPECT(a_u32.load() == 0x8badf00d && static_cast<u32>(a_u32) == 0x8badf00d);
+    a_u32 = 0x55004ee2;
+    EXPECT((a_u32 ^= 0xdeadbeef) == 0x8badf00d);
+
+    Atomic<u16> a_u16(0x4ee2);
+    EXPECT(a_u16.xor_fetch(0xbeef) == 0xf00d);
+    EXPECT(a_u16.load() == 0xf00d && static_cast<u16>(a_u16) == 0xf00d);
+    a_u16 = 0x4ee2;
+    EXPECT((a_u16 ^= 0xbeef) == 0xf00d);
+
+    Atomic<u8> a_u8(0xe2);
+    EXPECT(a_u8.xor_fetch(0xef) == 0x0d);
     EXPECT(a_u8.load() == 0x0d && static_cast<u8>(a_u8) == 0x0d);
     a_u8 = 0xe2;
     EXPECT((a_u8 ^= 0xef) == 0x0d);
