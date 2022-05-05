@@ -316,7 +316,27 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 
 static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 {
-    print_type(object.class_name());
+    if (is<JS::ECMAScriptFunctionObject>(object)) {
+        auto const& function = static_cast<JS::ECMAScriptFunctionObject const&>(object);
+        switch (function.kind()) {
+        case JS::FunctionKind::Normal:
+            print_type("Function");
+            break;
+        case JS::FunctionKind::Generator:
+            print_type("GeneratorFunction");
+            break;
+        case JS::FunctionKind::Async:
+            print_type("AsyncFunction");
+            break;
+        case JS::FunctionKind::AsyncGenerator:
+            print_type("AsyncGeneratorFunction");
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    } else {
+        print_type(object.class_name());
+    }
     if (is<JS::ECMAScriptFunctionObject>(object))
         js_out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(object).name());
     else if (is<JS::NativeFunction>(object))
