@@ -31,9 +31,6 @@ namespace Gfx {
 
 template<size_t N, typename T>
 requires(N >= 2 && N <= 4) class VectorN final {
-    template<size_t U, typename V>
-    friend class VectorN;
-
     static_assert(LOOP_UNROLL_N >= N, "Unroll the entire loop for performance.");
 
 public:
@@ -71,7 +68,7 @@ public:
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            m_data[i] += other.m_data[i];
+            m_data[i] += other.data()[i];
         return *this;
     }
 
@@ -79,7 +76,7 @@ public:
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            m_data[i] -= other.m_data[i];
+            m_data[i] -= other.data()[i];
         return *this;
     }
 
@@ -96,7 +93,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] + other.m_data[i];
+            result.m_data[i] = m_data[i] + other.data()[i];
         return result;
     }
 
@@ -105,7 +102,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] - other.m_data[i];
+            result.m_data[i] = m_data[i] - other.data()[i];
         return result;
     }
 
@@ -114,7 +111,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] * other.m_data[i];
+            result.m_data[i] = m_data[i] * other.data()[i];
         return result;
     }
 
@@ -132,7 +129,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] / other.m_data[i];
+            result.m_data[i] = m_data[i] / other.data()[i];
         return result;
     }
 
@@ -161,7 +158,7 @@ public:
         T result {};
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result += m_data[i] * other.m_data[i];
+            result += m_data[i] * other.data()[i];
         return result;
     }
 
@@ -238,12 +235,15 @@ public:
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i) {
             if constexpr (IsSame<T, float>)
-                result.m_data[i] = static_cast<U>(lrintf(m_data[i]));
+                result.data()[i] = static_cast<U>(lrintf(m_data[i]));
             else
-                result.m_data[i] = static_cast<U>(lrint(m_data[i]));
+                result.data()[i] = static_cast<U>(lrint(m_data[i]));
         }
         return result;
     }
+
+    auto& data() { return m_data; }
+    auto const& data() const { return m_data; }
 
 private:
     AK::Array<T, N> m_data;
