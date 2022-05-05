@@ -250,8 +250,16 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      */
 
     auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled)
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
+        VERIFY(!m_console);
+        // If no graphics driver was instantiated and we had a bootloader provided
+        // framebuffer console we can simply re-use it.
+        if (auto* boot_console = g_boot_console.load()) {
+            m_console = *boot_console;
+            boot_console->unref(); // Drop the leaked reference from Kernel::init()
+        }
         return true;
+    }
 
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
