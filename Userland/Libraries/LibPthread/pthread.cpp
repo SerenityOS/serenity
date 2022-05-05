@@ -8,6 +8,7 @@
 #include <AK/Atomic.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
+#include <AK/SinglyLinkedList.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
@@ -40,7 +41,26 @@ __thread size_t s_stack_size;
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
 
+struct CleanupHandler {
+    void (*routine)(void*);
+    void* argument;
+};
+
+static thread_local SinglyLinkedList<CleanupHandler> cleanup_handlers;
+
 extern "C" {
+
+[[noreturn]] static void exit_thread(void* code, void* stack_location, size_t stack_size)
+{
+    __pthread_key_destroy_for_current_thread();
+    syscall(SC_exit_thread, code, stack_location, stack_size);
+    VERIFY_NOT_REACHED();
+}
+
+[[noreturn]] static void pthread_exit_without_cleanup_handlers(void* value_ptr)
+{
+    exit_thread(value_ptr, s_stack_location, s_stack_size);
+}
 
 static void* pthread_create_helper(void* (*routine)(void*), void* argument, void* stack_location, size_t stack_size)
 {
@@ -50,7 +70,7 @@ static void* pthread_create_helper(void* (*routine)(void*), void* argument, void
     s_stack_location = stack_location;
     s_stack_size = stack_size;
     void* ret_val = routine(argument);
-    pthread_exit(ret_val);
+    pthread_exit_without_cleanup_handlers(ret_val);
 }
 
 static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
@@ -89,13 +109,6 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     if (rc >= 0)
         *thread = rc;
     __RETURN_PTHREAD_ERROR(rc);
-}
-
-[[noreturn]] static void exit_thread(void* code, void* stack_location, size_t stack_size)
-{
-    __pthread_key_destroy_for_current_thread();
-    syscall(SC_exit_thread, code, stack_location, stack_size);
-    VERIFY_NOT_REACHED();
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_self.html
@@ -139,19 +152,29 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_exit.html
 void pthread_exit(void* value_ptr)
 {
-    exit_thread(value_ptr, s_stack_location, s_stack_size);
+    while (!cleanup_handlers.is_empty()) {
+        auto handler = cleanup_handlers.take_first();
+        handler.routine(handler.argument);
+    }
+
+    pthread_exit_without_cleanup_handlers(value_ptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
-void pthread_cleanup_push([[maybe_unused]] void (*routine)(void*), [[maybe_unused]] void* arg)
+void pthread_cleanup_push(void (*routine)(void*), void* arg)
 {
-    TODO();
+    cleanup_handlers.prepend({ routine, arg });
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_pop.html
-void pthread_cleanup_pop([[maybe_unused]] int execute)
+void pthread_cleanup_pop(int execute)
 {
-    TODO();
+    VERIFY(!cleanup_handlers.is_empty());
+
+    auto handler = cleanup_handlers.take_first();
+
+    if (execute)
+        handler.routine(handler.argument);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_join.html
