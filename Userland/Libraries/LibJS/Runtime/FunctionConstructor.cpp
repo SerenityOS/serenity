@@ -243,7 +243,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 33. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-        prototype = Object::create(global_object, global_object.generator_prototype());
+        prototype = Object::create(global_object, global_object.generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);

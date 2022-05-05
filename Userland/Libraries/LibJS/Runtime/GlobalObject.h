@@ -40,6 +40,11 @@ public:
     Object* async_generator_prototype() { return m_async_generator_prototype; }
     Object* generator_prototype() { return m_generator_prototype; }
 
+    // Alias for the AsyncGenerator Prototype Object used by the spec (%AsyncGeneratorFunction.prototype.prototype%)
+    Object* async_generator_function_prototype_prototype() { return m_async_generator_prototype; }
+    // Alias for the Generator Prototype Object used by the spec (%GeneratorFunction.prototype.prototype%)
+    Object* generator_function_prototype_prototype() { return m_generator_prototype; }
+
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
     Object* intl_segments_prototype() { return m_intl_segments_prototype; }
 
