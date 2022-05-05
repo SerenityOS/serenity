@@ -18,12 +18,12 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web::HTML {
 
-class RequestAnimationFrameCallback;
 class IdleCallback;
 
 class Window final
@@ -59,7 +59,7 @@ public:
     String prompt(String const&, String const&);
     i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
     void cancel_animation_frame(i32);
-    bool has_animation_frame_callbacks() const { return !m_request_animation_frame_callbacks.is_empty(); }
+    bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
     i32 set_timeout(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     i32 set_interval(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
@@ -122,6 +122,8 @@ public:
     u32 request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback);
     void cancel_idle_callback(u32);
 
+    AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
+
 private:
     explicit Window(DOM::Document&);
 
@@ -149,7 +151,7 @@ private:
     NonnullOwnPtr<CSS::Screen> m_screen;
     RefPtr<DOM::Event> m_current_event;
 
-    HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
+    AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 
     // https://w3c.github.io/requestidlecallback/#dfn-list-of-idle-request-callbacks
     NonnullRefPtrVector<IdleCallback> m_idle_request_callbacks;
