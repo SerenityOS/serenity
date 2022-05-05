@@ -6,5 +6,6 @@
 
     @GUI::TabWidget {
         name: "tab_widget"
+        reorder_allowed: true
     }
 }
