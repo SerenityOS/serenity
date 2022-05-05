@@ -37,6 +37,7 @@ public:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     Object* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
+    Object* async_generator_prototype() { return m_async_generator_prototype; }
     Object* generator_prototype() { return m_generator_prototype; }
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
@@ -109,6 +110,7 @@ private:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     Object* m_async_from_sync_iterator_prototype { nullptr };
+    Object* m_async_generator_prototype { nullptr };
     Object* m_generator_prototype { nullptr };
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor

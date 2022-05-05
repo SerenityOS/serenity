@@ -49,8 +49,10 @@ set(SOURCES
     Runtime/AsyncFunctionConstructor.cpp
     Runtime/AsyncFunctionDriverWrapper.cpp
     Runtime/AsyncFunctionPrototype.cpp
+    Runtime/AsyncGenerator.cpp
     Runtime/AsyncGeneratorFunctionConstructor.cpp
     Runtime/AsyncGeneratorFunctionPrototype.cpp
+    Runtime/AsyncGeneratorPrototype.cpp
     Runtime/AsyncIteratorPrototype.cpp
     Runtime/AtomicsObject.cpp
     Runtime/BigInt.cpp
