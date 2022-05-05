@@ -32,80 +32,11 @@
 
 namespace Web::HTML {
 
-class RequestAnimationFrameCallback : public RefCounted<RequestAnimationFrameCallback> {
-public:
-    explicit RequestAnimationFrameCallback(i32 id, Function<void(i32)> handler)
-        : m_id(id)
-        , m_handler(move(handler))
-    {
-    }
-    ~RequestAnimationFrameCallback() = default;
-
-    i32 id() const { return m_id; }
-    bool is_cancelled() const { return !m_handler; }
-
-    void cancel() { m_handler = nullptr; }
-    void invoke() { m_handler(m_id); }
-
-private:
-    i32 m_id { 0 };
-    Function<void(i32)> m_handler;
-};
-
-struct RequestAnimationFrameDriver {
-    RequestAnimationFrameDriver()
-    {
-        m_timer = Core::Timer::create_single_shot(16, [] {
-            HTML::main_thread_event_loop().schedule();
-        });
-    }
-
-    NonnullRefPtr<RequestAnimationFrameCallback> add(Function<void(i32)> handler)
-    {
-        auto id = m_id_allocator.allocate();
-        auto callback = adopt_ref(*new RequestAnimationFrameCallback { id, move(handler) });
-        m_callbacks.set(id, callback);
-        if (!m_timer->is_active())
-            m_timer->start();
-        return callback;
-    }
-
-    bool remove(i32 id)
-    {
-        auto it = m_callbacks.find(id);
-        if (it == m_callbacks.end())
-            return false;
-        m_callbacks.remove(it);
-        m_id_allocator.deallocate(id);
-        return true;
-    }
-
-    void run()
-    {
-        auto taken_callbacks = move(m_callbacks);
-        for (auto& it : taken_callbacks) {
-            if (!it.value->is_cancelled())
-                it.value->invoke();
-        }
-    }
-
-private:
-    HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_callbacks;
-    IDAllocator m_id_allocator;
-    RefPtr<Core::Timer> m_timer;
-};
-
-static RequestAnimationFrameDriver& request_animation_frame_driver()
-{
-    static RequestAnimationFrameDriver driver;
-    return driver;
-}
-
 // https://html.spec.whatwg.org/#run-the-animation-frame-callbacks
-void run_animation_frame_callbacks(DOM::Document&, double)
+void run_animation_frame_callbacks(DOM::Document& document, double)
 {
     // FIXME: Bring this closer to the spec.
-    request_animation_frame_driver().run();
+    document.window().animation_frame_callback_driver().run();
 }
 
 class IdleCallback : public RefCounted<IdleCallback> {
@@ -295,26 +226,19 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
 i32 Window::request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback)
 {
-    auto callback = request_animation_frame_driver().add([this, js_callback = move(js_callback)](i32 id) mutable {
+    return m_animation_frame_callback_driver.add([this, js_callback = move(js_callback)](auto) mutable {
         // 3. Invoke callback, passing now as the only argument,
         auto result = Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
 
         // and if an exception is thrown, report the exception.
         if (result.is_error())
             HTML::report_exception(result);
-        m_request_animation_frame_callbacks.remove(id);
     });
-    m_request_animation_frame_callbacks.set(callback->id(), callback);
-    return callback->id();
 }
 
 void Window::cancel_animation_frame(i32 id)
 {
-    auto it = m_request_animation_frame_callbacks.find(id);
-    if (it == m_request_animation_frame_callbacks.end())
-        return;
-    it->value->cancel();
-    m_request_animation_frame_callbacks.remove(it);
+    m_animation_frame_callback_driver.remove(id);
 }
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
