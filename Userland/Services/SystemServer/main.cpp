@@ -72,6 +72,14 @@ static ErrorOr<void> determine_system_mode()
 
     g_system_mode = system_mode;
     dbgln("Read system_mode: {}", g_system_mode);
+
+    struct stat file_state;
+    int rc = lstat("/dev/gpu/connector0", &file_state);
+    if (rc != 0 && g_system_mode == "graphical") {
+        dbgln("WARNING: No device nodes at /dev/gpu/ directory. This is probably a sign of disabled graphics functionality.");
+        dbgln("To cope with this, I'll turn off graphical mode.");
+        g_system_mode = "text";
+    }
     return {};
 }
 
