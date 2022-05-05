@@ -392,6 +392,11 @@ void MainWidget::set_path(String path)
 void MainWidget::save_to_file(Core::File& file)
 {
     auto theme = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();
+
+    for (auto role : m_alignment_roles) {
+        theme->write_entry("Alignments", to_string(role), to_string(m_preview_widget->preview_palette().alignment(role)));
+    }
+
     for (auto role : m_color_roles) {
         theme->write_entry("Colors", to_string(role), m_preview_widget->preview_palette().color(role).to_string());
     }
