@@ -20,7 +20,6 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
@@ -125,7 +124,7 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
         case FunctionKind::Async:
             break;
         case FunctionKind::AsyncGenerator:
-            // FIXME: Add the AsyncGeneratorObject and set it as prototype.
+            prototype = Object::create(global_object, global_object.async_generator_function_prototype_prototype());
             break;
         }
         // 27.7.4 AsyncFunction Instances, https://tc39.es/ecma262/#sec-async-function-instances
