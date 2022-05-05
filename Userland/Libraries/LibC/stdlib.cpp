@@ -1335,14 +1335,3 @@ void _Exit(int status)
 {
     _exit(status);
 }
-
-#ifdef SERENITY_LIBC_SHOW_POSIX_MEMALIGN
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_memalign.html
-int posix_memalign(void** memptr, size_t alignment, size_t size)
-{
-    (void)memptr;
-    (void)alignment;
-    (void)size;
-    TODO();
-}
-#endif
