@@ -287,6 +287,7 @@ public:
                 check(MS_BIND, "bind");
                 check(MS_RDONLY, "ro");
                 check(MS_WXALLOWED, "wxallowed");
+                check(MS_AXALLOWED, "axallowed");
                 if (builder.string_view().is_empty())
                     return String("defaults");
                 return builder.to_string();
