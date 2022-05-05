@@ -75,7 +75,7 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
 
-    if (map_anonymous && make_executable)
+    if (map_anonymous && make_executable && !(executable()->mount_flags() & MS_AXALLOWED))
         return EINVAL;
 
     if (map_stack && make_executable)
