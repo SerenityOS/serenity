@@ -160,6 +160,19 @@ public:
         m_tail = node;
     }
 
+    template<typename U = T>
+    void prepend(U&& value)
+    {
+        auto* node = new Node(forward<U>(value));
+        if (!m_head) {
+            m_head = node;
+            m_tail = node;
+            return;
+        }
+        node->next = m_head;
+        m_head = node;
+    }
+
     bool contains_slow(const T& value) const
     {
         return find(value) != end();
