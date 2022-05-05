@@ -72,15 +72,15 @@ ErrorOr<void> IntelNativeDisplayConnector::set_safe_mode_setting()
 void IntelNativeDisplayConnector::enable_console()
 {
     VERIFY(m_control_lock.is_locked());
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->enable();
+    if (m_framebuffer_console)
+        m_framebuffer_console->enable();
 }
 
 void IntelNativeDisplayConnector::disable_console()
 {
     VERIFY(m_control_lock.is_locked());
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->disable();
+    if (m_framebuffer_console)
+        m_framebuffer_console->disable();
 }
 
 ErrorOr<void> IntelNativeDisplayConnector::flush_first_surface()
