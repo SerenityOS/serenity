@@ -551,10 +551,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         write_cr4(read_cr4() | 0x800);
     }
 
-    if (has_feature(CPUFeature::TSC)) {
-        write_cr4(read_cr4() | 0x4);
-    }
-
     if (has_feature(CPUFeature::XSAVE)) {
         // Turn on CR4.OSXSAVE
         write_cr4(read_cr4() | 0x40000);
