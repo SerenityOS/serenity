@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
@@ -26,6 +25,9 @@ TabWidget::TabWidget()
     set_focus_policy(FocusPolicy::NoFocus);
 
     REGISTER_MARGINS_PROPERTY("container_margins", container_margins, set_container_margins);
+    REGISTER_BOOL_PROPERTY("show_close_buttons", close_button_enabled, set_close_button_enabled);
+    REGISTER_BOOL_PROPERTY("show_tab_bar", is_bar_visible, set_bar_visible);
+    REGISTER_BOOL_PROPERTY("reorder_allowed", reorder_allowed, set_reorder_allowed);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
 
     register_property(
