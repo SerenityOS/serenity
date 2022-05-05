@@ -81,6 +81,7 @@ public:
     bool is_bar_visible() const { return m_bar_visible; };
 
     void set_close_button_enabled(bool close_button_enabled) { m_close_button_enabled = close_button_enabled; };
+    bool close_button_enabled() const { return m_close_button_enabled; }
 
     void set_reorder_allowed(bool reorder_allowed) { m_reorder_allowed = reorder_allowed; }
     bool reorder_allowed() const { return m_reorder_allowed; }
