@@ -97,9 +97,7 @@ ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& glo
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // a. Return ! DclRec.SetMutableBinding(N, V, S).
-        // FIXME: Using MUST here breaks 22 tests in test262 (spec issue).
-        //        Example: `function f() { x = 1; } f(); let x;`
+        // a. Return ? DclRec.SetMutableBinding(N, V, S).
         return m_declarative_record->set_mutable_binding(global_object, name, value, strict);
     }
 
