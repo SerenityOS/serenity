@@ -33,6 +33,9 @@
 
             @GUI::TabWidget {
                 name: "tab_widget"
+                container_margins: [4, 5, 5, 4]
+                reorder_allowed: true
+                show_close_buttons: true
             }
 
             @PixelPaint::PaletteWidget {

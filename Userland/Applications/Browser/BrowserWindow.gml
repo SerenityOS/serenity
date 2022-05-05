@@ -13,6 +13,8 @@
         name: "tab_widget"
         container_margins: [0]
         uniform_tabs: true
+        reorder_allowed: true
+        show_close_buttons: true
         text_alignment: "CenterLeft"
     }
 }
