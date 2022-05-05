@@ -233,22 +233,24 @@ ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor(Optional<Arr
     return {};
 }
 
-void DisplayConnector::set_edid_bytes(Array<u8, 128> const& edid_bytes)
+void DisplayConnector::set_edid_bytes(Array<u8, 128> const& edid_bytes, bool might_be_invalid)
 {
     memcpy((u8*)m_edid_bytes, edid_bytes.data(), sizeof(m_edid_bytes));
     if (auto parsed_edid = EDID::Parser::from_bytes({ m_edid_bytes, sizeof(m_edid_bytes) }); !parsed_edid.is_error()) {
         m_edid_parser = parsed_edid.release_value();
         m_edid_valid = true;
     } else {
-        dmesgln("DisplayConnector: Print offending EDID");
-        for (size_t x = 0; x < 128; x = x + 16) {
-            dmesgln("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
-                m_edid_bytes[x], m_edid_bytes[x + 1], m_edid_bytes[x + 2], m_edid_bytes[x + 3],
-                m_edid_bytes[x + 4], m_edid_bytes[x + 5], m_edid_bytes[x + 6], m_edid_bytes[x + 7],
-                m_edid_bytes[x + 8], m_edid_bytes[x + 9], m_edid_bytes[x + 10], m_edid_bytes[x + 11],
-                m_edid_bytes[x + 12], m_edid_bytes[x + 13], m_edid_bytes[x + 14], m_edid_bytes[x + 15]);
+        if (!might_be_invalid) {
+            dmesgln("DisplayConnector: Print offending EDID");
+            for (size_t x = 0; x < 128; x = x + 16) {
+                dmesgln("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+                    m_edid_bytes[x], m_edid_bytes[x + 1], m_edid_bytes[x + 2], m_edid_bytes[x + 3],
+                    m_edid_bytes[x + 4], m_edid_bytes[x + 5], m_edid_bytes[x + 6], m_edid_bytes[x + 7],
+                    m_edid_bytes[x + 8], m_edid_bytes[x + 9], m_edid_bytes[x + 10], m_edid_bytes[x + 11],
+                    m_edid_bytes[x + 12], m_edid_bytes[x + 13], m_edid_bytes[x + 14], m_edid_bytes[x + 15]);
+            }
+            dmesgln("DisplayConnector: Parsing EDID failed: {}", parsed_edid.error());
         }
-        dmesgln("DisplayConnector: Parsing EDID failed: {}", parsed_edid.error());
     }
 }
 
