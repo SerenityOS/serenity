@@ -250,12 +250,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     }
     // 34. Else if kind is asyncGenerator, then
     else if (kind == FunctionKind::AsyncGenerator) {
-        // FIXME: We only have %AsyncGeneratorFunction.prototype%, not %AsyncGeneratorFunction.prototype.prototype%!
         // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-        // prototype = Object::create(global_object, global_object.async_generator_prototype());
+        prototype = Object::create(global_object, global_object.async_generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-        // function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
+        function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
     // 35. Else if kind is normal, perform MakeConstructor(F).
     else if (kind == FunctionKind::Normal) {
