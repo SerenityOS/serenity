@@ -39,8 +39,8 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 {
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
-    // 2. If epochNanoseconds < -86400ℤ × 10^17ℤ or epochNanoseconds > 86400ℤ × 10^17ℤ, then
-    if (epoch_nanoseconds.big_integer() < INSTANT_NANOSECONDS_MIN || epoch_nanoseconds.big_integer() > INSTANT_NANOSECONDS_MAX) {
+    // 2. If ℝ(epochNanoseconds) < nsMinInstant or ℝ(epochNanoseconds) > nsMaxInstant, then
+    if (epoch_nanoseconds.big_integer() < ns_min_instant || epoch_nanoseconds.big_integer() > ns_max_instant) {
         // a. Return false.
         return false;
     }
@@ -119,7 +119,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
     // 6. If ℝ(utc) < -8.64 × 10^21 or ℝ(utc) > 8.64 × 10^21, then
-    if (utc->big_integer() < INSTANT_NANOSECONDS_MIN || utc->big_integer() > INSTANT_NANOSECONDS_MAX) {
+    if (utc->big_integer() < ns_min_instant || utc->big_integer() > ns_max_instant) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
     }

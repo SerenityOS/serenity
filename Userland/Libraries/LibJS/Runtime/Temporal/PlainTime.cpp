@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -531,9 +532,9 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
 
     // 3. If unit is "day", then
     if (unit == "day"sv) {
-        // a. If dayLengthNs is not present, set dayLengthNs to 8.64 × 10^13.
+        // a. If dayLengthNs is not present, set dayLengthNs to nsPerDay.
         if (!day_length_ns.has_value())
-            day_length_ns = 86400000000000;
+            day_length_ns = ns_per_day;
 
         // b. Let quantity be (((((hour × 60 + minute) × 60 + second) × 1000 + millisecond) × 1000 + microsecond) × 1000 + nanosecond) / dayLengthNs.
         quantity = (((((hour * 60 + minute) * 60 + second) * 1000 + millisecond) * 1000 + microsecond) * 1000 + nanosecond) / *day_length_ns;

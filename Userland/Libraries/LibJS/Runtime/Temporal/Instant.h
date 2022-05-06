@@ -32,10 +32,13 @@ private:
     BigInt const& m_nanoseconds; // [[Nanoseconds]]
 };
 
-// -86400 * 10^17
-auto const INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
-// +86400 * 10^17
-auto const INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
+// https://tc39.es/proposal-temporal/#eqn-nsMaxInstant
+// nsMaxInstant = 10^8 × nsPerDay = 8.64 × 10^21
+static auto const ns_max_instant = "8640000000000000000000"_sbigint;
+
+// https://tc39.es/proposal-temporal/#eqn-nsMinInstant
+// nsMinInstant = -nsMaxInstant = -8.64 × 10^21
+static auto const ns_min_instant = "-8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
 ThrowCompletionOr<Instant*> create_temporal_instant(GlobalObject&, BigInt const& nanoseconds, FunctionObject const* new_target = nullptr);

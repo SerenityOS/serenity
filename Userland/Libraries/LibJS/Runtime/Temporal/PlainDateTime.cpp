@@ -68,9 +68,9 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms)).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
-// -864 * 10^19 - 864 * 10^11
+// nsMinInstant - nsPerDay
 auto const DATETIME_NANOSECONDS_MIN = "-8640000086400000000000"_sbigint;
-// +864 * 10^19 + 864 * 10^11
+// nsMaxInstant + nsPerDay
 auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
@@ -79,13 +79,13 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
     // 1. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
     auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)->big_integer();
 
-    // 2. If ns ≤ -8.64 × 10^21 - 8.64 × 10^13, then
+    // 2. If ns ≤ nsMinInstant - nsPerDay, then
     if (ns <= DATETIME_NANOSECONDS_MIN) {
         // a. Return false.
         return false;
     }
 
-    // 3. If ns ≥ 8.64 × 10^21 + 8.64 × 10^13, then
+    // 3. If ns ≥ nsMaxInstant + nsPerDay, then
     if (ns >= DATETIME_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
@@ -328,9 +328,9 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
 {
     // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
-    // 2. If dayLength is not present, set dayLength to 8.64 × 10^13.
+    // 2. If dayLength is not present, set dayLength to nsPerDay.
     if (!day_length.has_value())
-        day_length = 86400000000000;
+        day_length = ns_per_day;
 
     // 3. Let roundedTime be ! RoundTime(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode, dayLength).
     auto rounded_time = round_time(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, rounding_mode, day_length);

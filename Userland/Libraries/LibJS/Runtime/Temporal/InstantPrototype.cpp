@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -278,35 +279,35 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     double maximum;
     // 8. If smallestUnit is "hour", then
     if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
+        // a. Let maximum be HoursPerDay.
+        maximum = hours_per_day;
     }
     // 9. Else if smallestUnit is "minute", then
     else if (smallest_unit == "minute"sv) {
-        // a. Let maximum be 1440.
-        maximum = 1440;
+        // a. Let maximum be MinutesPerHour × HoursPerDay.
+        maximum = minutes_per_hour * hours_per_day;
     }
     // 10. Else if smallestUnit is "second", then
     else if (smallest_unit == "second"sv) {
-        // a. Let maximum be 86400.
-        maximum = 86400;
+        // a. Let maximum be SecondsPerMinute × MinutesPerHour × HoursPerDay.
+        maximum = seconds_per_minute * minutes_per_hour * hours_per_day;
     }
     // 11. Else if smallestUnit is "millisecond", then
     else if (smallest_unit == "millisecond"sv) {
-        // a. Let maximum be 8.64 × 10^7.
-        maximum = 86400000;
+        // a. Let maximum be ℝ(msPerDay).
+        maximum = ms_per_day;
     }
     // 12. Else if smallestUnit is "microsecond", then
     else if (smallest_unit == "microsecond"sv) {
-        // a. Let maximum be 8.64 × 10^10.
-        maximum = 86400000000;
+        // a. Let maximum be 10^3 × ℝ(msPerDay).
+        maximum = 1000 * ms_per_day;
     }
     // 13. Else,
     else {
         // a. Assert: smallestUnit is "nanosecond".
         VERIFY(smallest_unit == "nanosecond"sv);
-        // b. Let maximum be 8.64 × 10^13.
-        maximum = 86400000000000;
+        // b. Let maximum be nsPerDay.
+        maximum = ns_per_day;
     }
 
     // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, true).

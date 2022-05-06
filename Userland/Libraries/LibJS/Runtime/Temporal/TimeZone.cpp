@@ -491,8 +491,8 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
     // 5. Set offsetNanoseconds to ℝ(offsetNanoseconds).
     auto offset_nanoseconds = offset_nanoseconds_value.as_double();
 
-    // 6. If abs(offsetNanoseconds) > 86400 × 10^9, throw a RangeError exception.
-    if (fabs(offset_nanoseconds) > 86400000000000.0)
+    // 6. If abs(offsetNanoseconds) > nsPerDay, throw a RangeError exception.
+    if (fabs(offset_nanoseconds) > ns_per_day)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidOffsetNanosecondsValue);
 
     // 7. Return offsetNanoseconds.
@@ -588,11 +588,11 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
-    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds - 8.64 × 10^13ℤ).
-    auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus("86400000000000"_sbigint))));
+    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds - ℤ(nsPerDay)).
+    auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(ns_per_day_bigint))));
 
-    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + 8.64 × 10^13ℤ).
-    auto* day_after = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().plus("86400000000000"_sbigint))));
+    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + ℤ(nsPerDay)).
+    auto* day_after = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().plus(ns_per_day_bigint))));
 
     // 10. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
     auto offset_before = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_before));
