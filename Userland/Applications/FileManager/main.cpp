@@ -1076,12 +1076,6 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
             }
         }
 
-        struct stat st;
-        if (lstat(new_path.characters(), &st)) {
-            perror("stat");
-            return;
-        }
-
         mkdir_action->set_enabled(can_write_in_path);
         touch_action->set_enabled(can_write_in_path);
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().fetch_mime_type() == "text/uri-list");
