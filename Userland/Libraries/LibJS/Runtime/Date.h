@@ -63,9 +63,9 @@ double local_time(double time);
 double utc_time(double time);
 double day(double);
 double time_within_day(double);
-Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms);
-Value make_day(GlobalObject& global_object, Value year, Value month, Value date);
-Value make_date(Value day, Value time);
-Value time_clip(GlobalObject& global_object, Value time);
+double make_time(double hour, double min, double sec, double ms);
+double make_day(double year, double month, double date);
+double make_date(double day, double time);
+double time_clip(double time);
 
 }

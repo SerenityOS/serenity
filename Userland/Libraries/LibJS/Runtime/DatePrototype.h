@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,7 +71,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(symbol_to_primitive);
 };
 
-ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value);
+ThrowCompletionOr<double> this_time_value(GlobalObject& global_object, Value value);
 String time_string(double time);
 String date_string(double time);
 String time_zone_string(double time);
