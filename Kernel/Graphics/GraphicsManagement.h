@@ -58,7 +58,7 @@ private:
     RefPtr<VGACompatibleAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
 
-    IntrusiveList<&DisplayConnector::m_list_node> m_display_connector_nodes;
+    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes;
 
     RecursiveSpinlock m_main_vga_lock;
     bool m_vga_access_is_disabled { false };
