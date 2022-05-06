@@ -9,7 +9,8 @@
 #include "CookiesModel.h"
 #include "LocalStorageModel.h"
 #include "Tab.h"
-#include <LibGUI/SortingProxyModel.h>
+#include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Cookie/Cookie.h>
 
@@ -30,11 +31,14 @@ private:
     StorageWidget();
 
     RefPtr<GUI::TableView> m_cookies_table_view;
+    RefPtr<GUI::TextBox> m_cookies_textbox;
     RefPtr<CookiesModel> m_cookies_model;
-    RefPtr<GUI::SortingProxyModel> m_cookie_sorting_model;
+    RefPtr<GUI::FilteringProxyModel> m_cookies_filtering_model;
+
     RefPtr<GUI::TableView> m_local_storage_table_view;
+    RefPtr<GUI::TextBox> m_local_storage_textbox;
     RefPtr<LocalStorageModel> m_local_storage_model;
-    RefPtr<GUI::SortingProxyModel> m_local_storage_sorting_model;
+    RefPtr<GUI::FilteringProxyModel> m_local_storage_filtering_model;
 };
 
 }

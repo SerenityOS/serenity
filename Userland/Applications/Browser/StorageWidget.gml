@@ -13,6 +13,11 @@
                 margins: [4]
             }
 
+            @GUI::TextBox {
+                name: "cookies_filter_textbox"
+                placeholder: "Filter"
+            }
+
             @GUI::GroupBox {
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6]
@@ -28,6 +33,11 @@
             title: "Local Storage"
             layout: @GUI::VerticalBoxLayout {
                 margins: [4]
+            }
+
+            @GUI::TextBox {
+                name: "local_storage_filter_textbox"
+                placeholder: "Filter"
             }
 
             @GUI::GroupBox {
