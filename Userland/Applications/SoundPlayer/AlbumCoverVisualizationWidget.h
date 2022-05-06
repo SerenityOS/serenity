@@ -18,7 +18,7 @@ public:
     void start_new_file(StringView) override;
 
 private:
-    void render(GUI::PaintEvent&, FixedArray<double> const&) override { }
+    void render(GUI::PaintEvent&, FixedArray<float> const&) override { }
     void paint_event(GUI::PaintEvent&) override;
     AlbumCoverVisualizationWidget() = default;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_album_cover(StringView const filename);

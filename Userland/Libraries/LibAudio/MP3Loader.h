@@ -47,17 +47,17 @@ private:
     MaybeLoaderError read_side_information(MP3::MP3Frame&);
     ErrorOr<size_t, LoaderError> read_scale_factors(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index);
     MaybeLoaderError read_huffman_data(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read);
-    static AK::Array<double, 576> calculate_frame_exponents(MP3::MP3Frame const&, size_t granule_index, size_t channel_index);
+    static AK::Array<float, 576> calculate_frame_exponents(MP3::MP3Frame const&, size_t granule_index, size_t channel_index);
     static void reorder_samples(MP3::Granule&, u32 sample_rate);
     static void reduce_alias(MP3::Granule&, size_t max_subband_index = 576);
     static void process_stereo(MP3::MP3Frame&, size_t granule_index);
-    static void transform_samples_to_time(Array<double, 576> const& input, size_t input_offset, Array<double, 36>& output, MP3::BlockType block_type);
-    static void synthesis(Array<double, 1024>& V, Array<double, 32>& samples, Array<double, 32>& result);
+    static void transform_samples_to_time(Array<float, 576> const& input, size_t input_offset, Array<float, 36>& output, MP3::BlockType block_type);
+    static void synthesis(Array<float, 1024>& V, Array<float, 32>& samples, Array<float, 32>& result);
     static Span<MP3::Tables::ScaleFactorBand const> get_scalefactor_bands(MP3::Granule const&, int samplerate);
 
     AK::Vector<AK::Tuple<size_t, int>> m_seek_table;
-    AK::Array<AK::Array<AK::Array<double, 18>, 32>, 2> m_last_values {};
-    AK::Array<AK::Array<double, 1024>, 2> m_synthesis_buffer {};
+    AK::Array<AK::Array<AK::Array<float, 18>, 32>, 2> m_last_values {};
+    AK::Array<AK::Array<float, 1024>, 2> m_synthesis_buffer {};
     static LibDSP::MDCT<36> s_mdct_36;
     static LibDSP::MDCT<12> s_mdct_12;
 

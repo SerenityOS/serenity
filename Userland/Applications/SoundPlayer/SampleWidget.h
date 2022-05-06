@@ -17,5 +17,5 @@ public:
 
 private:
     SampleWidget();
-    virtual void render(GUI::PaintEvent&, FixedArray<double> const& samples) override;
+    virtual void render(GUI::PaintEvent&, FixedArray<float> const& samples) override;
 };

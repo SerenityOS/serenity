@@ -12,7 +12,7 @@
 
 namespace LibDSP {
 
-constexpr void fft(Span<Complex<double>> sample_data, bool invert = false)
+constexpr void fft(Span<Complex<float>> sample_data, bool invert = false)
 {
     int n = sample_data.size();
 
@@ -27,13 +27,13 @@ constexpr void fft(Span<Complex<double>> sample_data, bool invert = false)
     }
 
     for (int len = 2; len <= n; len <<= 1) {
-        double ang = 2 * AK::Pi<double> / len * (invert ? -1 : 1);
-        Complex<double> wlen = Complex<double>::from_polar(1., ang);
+        float ang = 2 * AK::Pi<float> / static_cast<float>(len * (invert ? -1 : 1));
+        Complex<float> wlen = Complex<float>::from_polar(1.f, ang);
         for (int i = 0; i < n; i += len) {
-            Complex<double> w = { 1., 0. };
+            Complex<float> w = { 1., 0. };
             for (int j = 0; j < len / 2; j++) {
-                Complex<double> u = sample_data[i + j];
-                Complex<double> v = sample_data[i + j + len / 2] * w;
+                Complex<float> u = sample_data[i + j];
+                Complex<float> v = sample_data[i + j + len / 2] * w;
                 sample_data[i + j] = u + v;
                 sample_data[i + j + len / 2] = u - v;
                 w *= wlen;
