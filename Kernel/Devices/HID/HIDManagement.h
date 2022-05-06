@@ -50,7 +50,7 @@ public:
 
     u32 get_char_from_character_map(KeyEvent) const;
 
-    void set_client(KeyboardClient* client) { m_client = client; }
+    void set_client(KeyboardClient* client);
     void set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map);
 
 private:
@@ -63,6 +63,7 @@ private:
     KeyboardClient* m_client { nullptr };
     RefPtr<I8042Controller> m_i8042_controller;
     NonnullRefPtrVector<HIDDevice> m_hid_devices;
+    Spinlock m_client_lock;
 };
 
 class KeyboardClient {
