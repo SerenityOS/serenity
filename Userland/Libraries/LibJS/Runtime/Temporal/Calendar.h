@@ -63,7 +63,6 @@ String format_calendar_annotation(StringView id, StringView show_calendar);
 ThrowCompletionOr<bool> calendar_equals(GlobalObject&, Object& one, Object& two);
 ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject&, Object& one, Object& two);
 bool is_iso_leap_year(i32 year);
-u16 iso_days_in_year(i32 year);
 u8 iso_days_in_month(i32 year, u8 month);
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day);
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day);

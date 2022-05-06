@@ -422,8 +422,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
-    // 5. Return 𝔽(! ISODaysInYear(temporalDateLike.[[ISOYear]])).
-    return Value(iso_days_in_year(iso_year(temporal_date_like.as_object())));
+    // 5. Return DaysInYear(𝔽(temporalDateLike.[[ISOYear]])).
+    return Value(JS::days_in_year(iso_year(temporal_date_like.as_object())));
 }
 
 // 12.4.19 Temporal.Calendar.prototype.monthsInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthsinyear
