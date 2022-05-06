@@ -5,6 +5,7 @@
  */
 
 #include "CookiesModel.h"
+#include <AK/FuzzyMatch.h>
 
 namespace Browser {
 
@@ -24,6 +25,13 @@ void CookiesModel::clear_items()
     end_insert_rows();
 
     did_update(DontInvalidateIndices);
+}
+
+int CookiesModel::row_count(GUI::ModelIndex const& index) const
+{
+    if (!index.is_valid())
+        return m_cookies.size();
+    return 0;
 }
 
 String CookiesModel::column_name(int column) const
@@ -74,6 +82,19 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     }
 
     VERIFY_NOT_REACHED();
+}
+
+TriState CookiesModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+{
+    auto needle = term.as_string();
+    if (needle.is_empty())
+        return TriState::True;
+
+    auto const& cookie = m_cookies[index.row()];
+    auto haystack = String::formatted("{} {} {} {}", cookie.domain, cookie.path, cookie.name, cookie.value);
+    if (fuzzy_match(needle, haystack).score > 0)
+        return TriState::True;
+    return TriState::False;
 }
 
 }

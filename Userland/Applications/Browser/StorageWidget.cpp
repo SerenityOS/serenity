@@ -21,22 +21,36 @@ StorageWidget::StorageWidget()
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     m_cookies_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("cookies_tableview");
+    m_cookies_textbox = tab_widget.find_descendant_of_type_named<GUI::TextBox>("cookies_filter_textbox");
     m_cookies_model = adopt_ref(*new CookiesModel());
 
-    m_cookie_sorting_model = MUST(GUI::SortingProxyModel::create(*m_cookies_model));
-    m_cookie_sorting_model->set_sort_role(GUI::ModelRole::Display);
+    m_cookies_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_cookies_model));
+    m_cookies_filtering_model->set_filter_term("");
 
-    m_cookies_table_view->set_model(m_cookie_sorting_model);
+    m_cookies_textbox->on_change = [this] {
+        m_cookies_filtering_model->set_filter_term(m_cookies_textbox->text());
+        if (m_cookies_filtering_model->row_count() != 0)
+            m_cookies_table_view->set_cursor(m_cookies_filtering_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_cookies_table_view->set_model(m_cookies_filtering_model);
     m_cookies_table_view->set_column_headers_visible(true);
     m_cookies_table_view->set_alternating_row_colors(true);
 
     m_local_storage_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("local_storage_tableview");
+    m_local_storage_textbox = tab_widget.find_descendant_of_type_named<GUI::TextBox>("local_storage_filter_textbox");
     m_local_storage_model = adopt_ref(*new LocalStorageModel());
 
-    m_local_storage_sorting_model = MUST(GUI::SortingProxyModel::create(*m_local_storage_model));
-    m_local_storage_sorting_model->set_sort_role(GUI::ModelRole::Display);
+    m_local_storage_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_local_storage_model));
+    m_local_storage_filtering_model->set_filter_term("");
 
-    m_local_storage_table_view->set_model(m_local_storage_sorting_model);
+    m_local_storage_textbox->on_change = [this] {
+        m_local_storage_filtering_model->set_filter_term(m_local_storage_textbox->text());
+        if (m_local_storage_filtering_model->row_count() != 0)
+            m_local_storage_table_view->set_cursor(m_local_storage_filtering_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_local_storage_table_view->set_model(m_local_storage_filtering_model);
     m_local_storage_table_view->set_column_headers_visible(true);
     m_local_storage_table_view->set_alternating_row_colors(true);
 }
