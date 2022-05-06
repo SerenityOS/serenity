@@ -72,7 +72,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_obje
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
     auto* object = TRY(ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype));
 
-    // 3. Let offsetNanosecondsResult be ParseTimeZoneOffsetString(identifier).
+    // 3. Let offsetNanosecondsResult be Completion(ParseTimeZoneOffsetString(identifier)).
     auto offset_nanoseconds_result = parse_time_zone_offset_string(global_object, identifier);
 
     // 4. If offsetNanosecondsResult is an abrupt completion, then
