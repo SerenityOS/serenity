@@ -56,6 +56,10 @@ bool DisplayConnector::console_mode() const
 void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode mode)
 {
     SpinlockLocker locker(m_control_lock);
+    {
+        SpinlockLocker locker(m_modeset_lock);
+        [[maybe_unused]] auto result = set_y_offset(0);
+    }
     m_console_mode = mode == DisplayMode::Console ? true : false;
     if (m_console_mode)
         enable_console();
