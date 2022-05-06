@@ -8,7 +8,6 @@
 #include <AK/NumericLimits.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
