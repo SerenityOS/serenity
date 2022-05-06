@@ -466,8 +466,12 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
-    // 5. Return ! IsISOLeapYear(temporalDateLike.[[ISOYear]]).
-    return Value(is_iso_leap_year(iso_year(temporal_date_like.as_object())));
+    // 5. If InLeapYear(TimeFromYear(𝔽(temporalDateLike.[[ISOYear]]))) is 1𝔽, return true.
+    if (JS::in_leap_year(time_from_year(iso_year(temporal_date_like.as_object()))))
+        return Value(true);
+
+    // 6. Return false.
+    return Value(false);
 }
 
 // 12.4.21 Temporal.Calendar.prototype.fields ( fields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.fields
