@@ -254,8 +254,12 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
 
     if (pressed)
         event.flags |= Is_Press;
-    if (HIDManagement::the().m_client)
-        HIDManagement::the().m_client->on_key_pressed(event);
+
+    {
+        SpinlockLocker locker(HIDManagement::the().m_client_lock);
+        if (HIDManagement::the().m_client)
+            HIDManagement::the().m_client->on_key_pressed(event);
+    }
 
     {
         SpinlockLocker lock(m_queue_lock);
