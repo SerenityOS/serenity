@@ -374,24 +374,22 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
 // 3.5.5 IsValidISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate
 bool is_valid_iso_date(i32 year, u8 month, u8 day)
 {
-    // 1. Assert: year, month, and day are integers.
-
-    // 2. If month < 1 or month > 12, then
+    // 1. If month < 1 or month > 12, then
     if (month < 1 || month > 12) {
         // a. Return false.
         return false;
     }
 
-    // 3. Let daysInMonth be ! ISODaysInMonth(year, month).
+    // 2. Let daysInMonth be ! ISODaysInMonth(year, month).
     auto days_in_month = iso_days_in_month(year, month);
 
-    // 4. If day < 1 or day > daysInMonth, then
+    // 3. If day < 1 or day > daysInMonth, then
     if (day < 1 || day > days_in_month) {
         // a. Return false.
         return false;
     }
 
-    // 5. Return true.
+    // 4. Return true.
     return true;
 }
 
