@@ -6,8 +6,6 @@
 
 #include "CookiesModel.h"
 
-#include <utility>
-
 namespace Browser {
 
 void CookiesModel::set_items(AK::Vector<Web::Cookie::Cookie> items)
