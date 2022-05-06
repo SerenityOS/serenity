@@ -61,7 +61,7 @@ public:
     GlobalObject const& global_object() const { return m_global_object; }
 
     VM& vm();
-    Vector<Value> vm_arguments();
+    MarkedVector<Value> vm_arguments();
 
     HashMap<String, unsigned>& counters() { return m_counters; }
     HashMap<String, unsigned> const& counters() const { return m_counters; }
@@ -86,7 +86,7 @@ public:
     void output_debug_message(LogLevel log_level, String output) const;
 
 private:
-    ThrowCompletionOr<String> value_vector_to_string(Vector<Value>&);
+    ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
     ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
 
     GlobalObject& m_global_object;
@@ -104,10 +104,10 @@ public:
     {
     }
 
-    using PrinterArguments = Variant<Console::Group, Console::Trace, Vector<Value>>;
+    using PrinterArguments = Variant<Console::Group, Console::Trace, MarkedVector<Value>>;
 
-    ThrowCompletionOr<Value> logger(Console::LogLevel log_level, Vector<Value>& args);
-    ThrowCompletionOr<Vector<Value>> formatter(Vector<Value>& args);
+    ThrowCompletionOr<Value> logger(Console::LogLevel log_level, MarkedVector<Value> const& args);
+    ThrowCompletionOr<MarkedVector<Value>> formatter(MarkedVector<Value> const& args);
     virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, PrinterArguments) = 0;
 
     virtual void clear() = 0;
