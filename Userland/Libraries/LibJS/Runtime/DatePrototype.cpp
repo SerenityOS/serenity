@@ -1179,7 +1179,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
     // 1. Let t be ? thisTimeValue(this value).
     auto t = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
-    // 2. Let ns be ? NumberToBigInt(t) × 10^6.
+    // 2. Let ns be ? NumberToBigInt(t) × ℤ(10^6).
     auto* ns = TRY(number_to_bigint(global_object, Value(t)));
     ns = js_bigint(vm, ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
