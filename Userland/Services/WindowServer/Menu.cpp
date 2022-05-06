@@ -178,7 +178,11 @@ void Menu::draw()
     m_theme_index_at_last_paint = MenuManager::the().theme_index();
 
     VERIFY(menu_window());
-    VERIFY(menu_window()->backing_store());
+
+    // When an application has an empty menu, we don't want to draw it
+    if (menu_window()->backing_store() == nullptr)
+        return;
+
     Gfx::Painter painter(*menu_window()->backing_store());
 
     Gfx::IntRect rect { {}, menu_window()->size() };
