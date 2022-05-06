@@ -43,6 +43,7 @@ protected:
         : Console(width, height)
         , m_pitch(pitch)
     {
+        m_cursor_overriden_pixels.fill(0);
     }
     virtual u8* framebuffer_data() = 0;
     size_t framebuffer_pitch() const { return m_pitch; }
@@ -50,6 +51,8 @@ protected:
 
     size_t const m_pixels_per_column { 8 };
     size_t const m_pixels_per_row { 16 };
+
+    Array<u32, 8> m_cursor_overriden_pixels;
 
     size_t m_pitch;
 };
