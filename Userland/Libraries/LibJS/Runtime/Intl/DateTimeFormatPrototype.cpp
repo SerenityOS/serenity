@@ -69,19 +69,21 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
     auto* date_time_format = TRY(typed_this_object(global_object));
 
+    double date_value;
+
     // 3. If date is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date = MUST(call(global_object, global_object.date_constructor_now_function(), js_undefined()));
+        date_value = MUST(call(global_object, global_object.date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {
         // a. Let x be ? ToNumber(date).
-        date = TRY(date.to_number(global_object));
+        date_value = TRY(date.to_number(global_object)).as_double();
     }
 
     // 5. Return ? FormatDateTimeToParts(dtf, x).
-    return TRY(format_date_time_to_parts(global_object, *date_time_format, date));
+    return TRY(format_date_time_to_parts(global_object, *date_time_format, date_value));
 }
 
 // 11.3.5 Intl.DateTimeFormat.prototype.formatRange ( startDate, endDate ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.formatRange
@@ -101,13 +103,13 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
         return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
-    start_date = TRY(start_date.to_number(global_object));
+    auto start_date_number = TRY(start_date.to_number(global_object)).as_double();
 
     // 5. Let y be ? ToNumber(endDate).
-    end_date = TRY(end_date.to_number(global_object));
+    auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
 
     // 6. Return ? FormatDateTimeRange(dtf, x, y).
-    auto formatted = TRY(format_date_time_range(global_object, *date_time_format, start_date, end_date));
+    auto formatted = TRY(format_date_time_range(global_object, *date_time_format, start_date_number, end_date_number));
     return js_string(vm, move(formatted));
 }
 
@@ -128,13 +130,13 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
         return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
-    start_date = TRY(start_date.to_number(global_object));
+    auto start_date_number = TRY(start_date.to_number(global_object)).as_double();
 
     // 5. Let y be ? ToNumber(endDate).
-    end_date = TRY(end_date.to_number(global_object));
+    auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
 
     // 6. Return ? FormatDateTimeRangeToParts(dtf, x, y).
-    return TRY(format_date_time_range_to_parts(global_object, *date_time_format, start_date, end_date));
+    return TRY(format_date_time_range_to_parts(global_object, *date_time_format, start_date_number, end_date_number));
 }
 
 // 11.3.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions

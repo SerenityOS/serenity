@@ -53,19 +53,19 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     VERIFY(is_valid_iso_date(year, month, day));
 
     // 2. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
-    auto date = make_day(global_object, Value(year), Value(month - 1), Value(day));
+    auto date = make_day(year, month - 1, day);
 
     // 3. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
-    auto time = make_time(global_object, Value(hour), Value(minute), Value(second), Value(millisecond));
+    auto time = make_time(hour, minute, second, millisecond);
 
     // 4. Let ms be MakeDate(date, time).
     auto ms = make_date(date, time);
 
     // 5. Assert: ms is finite.
-    VERIFY(ms.is_finite_number());
+    VERIFY(isfinite(ms));
 
     // 6. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
-    return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms.as_double())).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
+    return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms)).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
 // -864 * 10^19 - 864 * 10^11

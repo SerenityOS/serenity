@@ -99,12 +99,12 @@ void DatePrototype::initialize(GlobalObject& global_object)
 }
 
 // thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue
-ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value)
+ThrowCompletionOr<double> this_time_value(GlobalObject& global_object, Value value)
 {
     // 1. If Type(value) is Object and value has a [[DateValue]] internal slot, then
     if (value.is_object() && is<Date>(value.as_object())) {
         // a. Return value.[[DateValue]].
-        return Value(static_cast<Date&>(value.as_object()).date_value());
+        return static_cast<Date&>(value.as_object()).date_value();
     }
 
     // 2. Throw a TypeError exception.
@@ -119,11 +119,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return DateFromTime(LocalTime(t)).
-    return Value(date_from_time(local_time(time.as_double())));
+    return Value(date_from_time(local_time(time)));
 }
 
 // 21.4.4.3 Date.prototype.getDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getday
@@ -133,11 +133,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return WeekDay(LocalTime(t)).
-    return Value(week_day(local_time(time.as_double())));
+    return Value(week_day(local_time(time)));
 }
 
 // 21.4.4.4 Date.prototype.getFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getfullyear
@@ -147,11 +147,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return YearFromTime(LocalTime(t)).
-    return Value(year_from_time(local_time(time.as_double())));
+    return Value(year_from_time(local_time(time)));
 }
 
 // 21.4.4.5 Date.prototype.getHours ( ), https://tc39.es/ecma262/#sec-date.prototype.gethours
@@ -161,11 +161,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return HourFromTime(LocalTime(t)).
-    return Value(hour_from_time(local_time(time.as_double())));
+    return Value(hour_from_time(local_time(time)));
 }
 
 // 21.4.4.6 Date.prototype.getMilliseconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getmilliseconds
@@ -175,11 +175,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return msFromTime(LocalTime(t)).
-    return Value(ms_from_time(local_time(time.as_double())));
+    return Value(ms_from_time(local_time(time)));
 }
 
 // 21.4.4.7 Date.prototype.getMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getminutes
@@ -189,11 +189,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return MinFromTime(LocalTime(t)).
-    return Value(min_from_time(local_time(time.as_double())));
+    return Value(min_from_time(local_time(time)));
 }
 
 // 21.4.4.8 Date.prototype.getMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getmonth
@@ -203,11 +203,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return MonthFromTime(LocalTime(t)).
-    return Value(month_from_time(local_time(time.as_double())));
+    return Value(month_from_time(local_time(time)));
 }
 
 // 21.4.4.9 Date.prototype.getSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getseconds
@@ -217,18 +217,18 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return SecFromTime(LocalTime(t)).
-    return Value(sec_from_time(local_time(time.as_double())));
+    return Value(sec_from_time(local_time(time)));
 }
 
 // 21.4.4.10 Date.prototype.getTime ( ), https://tc39.es/ecma262/#sec-date.prototype.gettime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 {
     // 1. Return ? thisTimeValue(this value).
-    return this_time_value(global_object, vm.this_value(global_object));
+    return Value(TRY(this_time_value(global_object, vm.this_value(global_object))));
 }
 
 // 21.4.4.11 Date.prototype.getTimezoneOffset ( ), https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset
@@ -238,11 +238,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 3. Return (t - LocalTime(t)) / msPerMinute.
-    return Value((time.as_double() - local_time(time.as_double())) / ms_per_minute);
+    return Value((time - local_time(time)) / ms_per_minute);
 }
 
 // 21.4.4.12 Date.prototype.getUTCDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcdate
@@ -252,11 +252,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return DateFromTime(t).
-    return Value(date_from_time(time.as_double()));
+    return Value(date_from_time(time));
 }
 
 // 21.4.4.13 Date.prototype.getUTCDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcday
@@ -266,11 +266,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return WeekDay(t).
-    return Value(week_day(time.as_double()));
+    return Value(week_day(time));
 }
 
 // 21.4.4.14 Date.prototype.getUTCFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear
@@ -280,11 +280,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return YearFromTime(t).
-    return Value(year_from_time(time.as_double()));
+    return Value(year_from_time(time));
 }
 
 // 21.4.4.15 Date.prototype.getUTCHours ( ), https://tc39.es/ecma262/#sec-date.prototype.getutchours
@@ -294,11 +294,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return HourFromTime(t).
-    return Value(hour_from_time(time.as_double()));
+    return Value(hour_from_time(time));
 }
 
 // 21.4.4.16 Date.prototype.getUTCMilliseconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds
@@ -308,11 +308,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return msFromTime(t).
-    return Value(ms_from_time(time.as_double()));
+    return Value(ms_from_time(time));
 }
 
 // 21.4.4.17 Date.prototype.getUTCMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcminutes
@@ -322,11 +322,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return MinFromTime(t).
-    return Value(min_from_time(time.as_double()));
+    return Value(min_from_time(time));
 }
 
 // 21.4.4.18 Date.prototype.getUTCMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmonth
@@ -336,11 +336,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return MonthFromTime(t).
-    return Value(month_from_time(time.as_double()));
+    return month_from_time(time);
 }
 
 // 21.4.4.19 Date.prototype.getUTCSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcseconds
@@ -350,32 +350,31 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
     // 3. Return SecFromTime(t).
-    return Value(sec_from_time(time.as_double()));
+    return Value(sec_from_time(time));
 }
 
-template<typename T>
-static ThrowCompletionOr<Value> argument_or_value(GlobalObject& global_object, size_t index, T fallback)
+static ThrowCompletionOr<double> argument_or_number(GlobalObject& global_object, size_t index, double fallback)
 {
     auto& vm = global_object.vm();
 
     if (vm.argument_count() > index)
-        return vm.argument(index).to_number(global_object);
+        return TRY(vm.argument(index).to_number(global_object)).as_double();
 
-    return Value(fallback);
+    return fallback;
 }
 
-static ThrowCompletionOr<Optional<Value>> argument_or_empty(GlobalObject& global_object, size_t index)
+static ThrowCompletionOr<Optional<double>> argument_or_empty(GlobalObject& global_object, size_t index)
 {
     auto& vm = global_object.vm();
 
     if (vm.argument_count() > index)
-        return TRY(vm.argument(index).to_number(global_object));
+        return TRY(vm.argument(index).to_number(global_object)).as_double();
 
-    return Optional<Value> {};
+    return Optional<double> {};
 }
 
 // 21.4.4.20 Date.prototype.setDate ( date ), https://tc39.es/ecma262/#sec-date.prototype.setdate
@@ -385,31 +384,31 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let dt be ? ToNumber(date).
-    auto date = TRY(vm.argument(0).to_number(global_object));
+    auto date = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 4. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 5. Let newDate be MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t)).
-    auto year = Value(year_from_time(time));
-    auto month = Value(month_from_time(time));
+    auto year = year_from_time(time);
+    auto month = month_from_time(time);
 
-    auto day = make_day(global_object, year, month, date);
-    auto new_date = make_date(day, Value(time_within_day(time)));
+    auto day = make_day(year, month, date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 6. Let u be TimeClip(UTC(newDate)).
-    new_date = time_clip(global_object, Value(utc_time(new_date.as_double())));
+    new_date = time_clip(utc_time(new_date));
 
     // 7. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 8. Return u.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.21 Date.prototype.setFullYear ( year [ , month [ , date ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setfullyear
@@ -419,32 +418,32 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object));
+    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If t is NaN, set t to +0𝔽; otherwise, set t to LocalTime(t).
     double time = 0;
-    if (!this_time.is_nan())
-        time = local_time(this_time.as_double());
+    if (!isnan(this_time))
+        time = local_time(this_time);
 
     // 4. If month is not present, let m be MonthFromTime(t); otherwise, let m be ? ToNumber(month).
-    auto month = TRY(argument_or_value(global_object, 1, month_from_time(time)));
+    auto month = TRY(argument_or_number(global_object, 1, month_from_time(time)));
 
     // 5. If date is not present, let dt be DateFromTime(t); otherwise, let dt be ? ToNumber(date).
-    auto date = TRY(argument_or_value(global_object, 2, date_from_time(time)));
+    auto date = TRY(argument_or_number(global_object, 2, date_from_time(time)));
 
     // 6. Let newDate be MakeDate(MakeDay(y, m, dt), TimeWithinDay(t)).
-    auto day = make_day(global_object, year, month, date);
-    auto new_date = make_date(day, Value(time_within_day(time)));
+    auto day = make_day(year, month, date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 7. Let u be TimeClip(UTC(newDate)).
-    new_date = time_clip(global_object, Value(utc_time(new_date.as_double())));
+    new_date = time_clip(utc_time(new_date));
 
     // 8. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 9. Return u.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.22 Date.prototype.setHours ( hour [ , min [ , sec [ , ms ] ] ] ), https://tc39.es/ecma262/#sec-date.prototype.sethours
@@ -454,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let h be ? ToNumber(hour).
-    auto hour = TRY(vm.argument(0).to_number(global_object));
+    auto hour = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If min is present, let m be ? ToNumber(min).
     auto minute = TRY(argument_or_empty(global_object, 1));
@@ -466,37 +465,37 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     auto millisecond = TRY(argument_or_empty(global_object, 3));
 
     // 6. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 7. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 8. If min is not present, let m be MinFromTime(t).
     if (!minute.has_value())
-        minute = Value(min_from_time(time));
+        minute = min_from_time(time);
 
     // 9. If sec is not present, let s be SecFromTime(t).
     if (!second.has_value())
-        second = Value(sec_from_time(time));
+        second = sec_from_time(time);
 
     // 10. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time));
+        millisecond = ms_from_time(time);
 
     // 11. Let date be MakeDate(Day(t), MakeTime(h, m, s, milli)).
-    auto new_time = make_time(global_object, hour, *minute, *second, *millisecond);
-    auto date = make_date(Value(day(time)), new_time);
+    auto new_time = make_time(hour, *minute, *second, *millisecond);
+    auto date = make_date(day(time), new_time);
 
     // 12. Let u be TimeClip(UTC(date)).
-    date = time_clip(global_object, Value(utc_time(date.as_double())));
+    date = time_clip(utc_time(date));
 
     // 13. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 14. Return u.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.23 Date.prototype.setMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds
@@ -506,32 +505,32 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Set ms to ? ToNumber(ms).
-    auto millisecond = TRY(vm.argument(0).to_number(global_object));
+    auto millisecond = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 4. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 5. Let time be MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms).
-    auto hour = Value(hour_from_time(time));
-    auto minute = Value(min_from_time(time));
-    auto second = Value(sec_from_time(time));
+    auto hour = hour_from_time(time);
+    auto minute = min_from_time(time);
+    auto second = sec_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, second, millisecond);
+    auto new_time = make_time(hour, minute, second, millisecond);
 
     // 6. Let u be TimeClip(UTC(MakeDate(Day(t), time))).
-    auto date = make_date(Value(day(time)), new_time);
-    date = time_clip(global_object, Value(utc_time(date.as_double())));
+    auto date = make_date(day(time), new_time);
+    date = time_clip(utc_time(date));
 
     // 7. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 8. Return u.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.24 Date.prototype.setMinutes ( min [ , sec [ , ms ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setminutes
@@ -541,7 +540,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let m be ? ToNumber(min).
-    auto minute = TRY(vm.argument(0).to_number(global_object));
+    auto minute = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If sec is present, let s be ? ToNumber(sec).
     auto second = TRY(argument_or_empty(global_object, 1));
@@ -550,35 +549,35 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     auto millisecond = TRY(argument_or_empty(global_object, 2));
 
     // 5. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 6. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 7. If sec is not present, let s be SecFromTime(t).
     if (!second.has_value())
-        second = Value(sec_from_time(time));
+        second = sec_from_time(time);
 
     // 8. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time));
+        millisecond = ms_from_time(time);
 
     // 9. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
-    auto hour = Value(hour_from_time(time));
+    auto hour = hour_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, *second, *millisecond);
-    auto date = make_date(Value(day(time)), new_time);
+    auto new_time = make_time(hour, minute, *second, *millisecond);
+    auto date = make_date(day(time), new_time);
 
     // 10. Let u be TimeClip(UTC(date)).
-    date = time_clip(global_object, Value(utc_time(date.as_double())));
+    date = time_clip(utc_time(date));
 
     // 11. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 12. Return u.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.25 Date.prototype.setMonth ( month [ , date ] ), https://tc39.es/ecma262/#sec-date.prototype.setmonth
@@ -588,37 +587,37 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let m be ? ToNumber(month).
-    auto month = TRY(vm.argument(0).to_number(global_object));
+    auto month = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If date is present, let dt be ? ToNumber(date).
     auto date = TRY(argument_or_empty(global_object, 1));
 
     // 4. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 5. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 6. If date is not present, let dt be DateFromTime(t).
     if (!date.has_value())
-        date = Value(date_from_time(time));
+        date = date_from_time(time);
 
     // 7. Let newDate be MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t)).
-    auto year = Value(year_from_time(time));
+    auto year = year_from_time(time);
 
-    auto day = make_day(global_object, year, month, *date);
-    auto new_date = make_date(day, Value(time_within_day(time)));
+    auto day = make_day(year, month, *date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 8. Let u be TimeClip(UTC(newDate)).
-    new_date = time_clip(global_object, Value(utc_time(new_date.as_double())));
+    new_date = time_clip(utc_time(new_date));
 
     // 9. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 10. Return u.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.26 Date.prototype.setSeconds ( sec [ , ms ] ), https://tc39.es/ecma262/#sec-date.prototype.setseconds
@@ -628,58 +627,58 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     auto this_time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let s be ? ToNumber(sec).
-    auto second = TRY(vm.argument(0).to_number(global_object));
+    auto second = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If ms is present, let milli be ? ToNumber(ms).
     auto millisecond = TRY(argument_or_empty(global_object, 1));
 
     // 4. If t is NaN, return NaN.
-    if (this_time.is_nan())
+    if (isnan(this_time))
         return js_nan();
 
     // 5. Set t to LocalTime(t).
-    auto time = local_time(this_time.as_double());
+    auto time = local_time(this_time);
 
     // 6. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time));
+        millisecond = ms_from_time(time);
 
     // 7. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli)).
-    auto hour = Value(hour_from_time(time));
-    auto minute = Value(min_from_time(time));
+    auto hour = hour_from_time(time);
+    auto minute = min_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, second, *millisecond);
-    auto new_date = make_date(Value(day(time)), new_time);
+    auto new_time = make_time(hour, minute, second, *millisecond);
+    auto new_date = make_date(day(time), new_time);
 
     // 8. Let u be TimeClip(UTC(date)).
-    new_date = time_clip(global_object, Value(utc_time(new_date.as_double())));
+    new_date = time_clip(utc_time(new_date));
 
     // 9. Set the [[DateValue]] internal slot of this Date object to u.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 10. Return u.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.27 Date.prototype.setTime ( time ), https://tc39.es/ecma262/#sec-date.prototype.settime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 {
     // 1. Perform ? thisTimeValue(this value).
-    auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
+    TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let t be ? ToNumber(time).
-    time = TRY(vm.argument(0).to_number(global_object));
+    auto time = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. Let v be TimeClip(t).
-    time = time_clip(global_object, time);
+    time = time_clip(time);
 
     // 4. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(time.as_double());
+    this_object->set_date_value(time);
 
     // 5. Return v.
-    return time;
+    return Value(time);
 }
 
 // 21.4.4.28 Date.prototype.setUTCDate ( date ), https://tc39.es/ecma262/#sec-date.prototype.setutcdate
@@ -689,28 +688,28 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_date)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let dt be ? ToNumber(date).
-    auto date = TRY(vm.argument(0).to_number(global_object));
+    auto date = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 4. Let newDate be MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t)).
-    auto year = Value(year_from_time(time.as_double()));
-    auto month = Value(month_from_time(time.as_double()));
+    auto year = year_from_time(time);
+    auto month = month_from_time(time);
 
-    auto day = make_day(global_object, year, month, date);
-    auto new_date = make_date(day, Value(time_within_day(time.as_double())));
+    auto day = make_day(year, month, date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 5. Let v be TimeClip(newDate).
-    new_date = time_clip(global_object, new_date);
+    new_date = time_clip(new_date);
 
     // 6. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 7. Return v.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.29 Date.prototype.setUTCFullYear ( year [ , month [ , date ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear
@@ -721,31 +720,31 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_full_year)
 
     // 2. If t is NaN, set t to +0𝔽.
     double time = 0;
-    if (!this_time.is_nan())
-        time = this_time.as_double();
+    if (!isnan(this_time))
+        time = this_time;
 
     // 3. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object));
+    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 4. If month is not present, let m be MonthFromTime(t); otherwise, let m be ? ToNumber(month).
-    auto month = TRY(argument_or_value(global_object, 1, month_from_time(time)));
+    auto month = TRY(argument_or_number(global_object, 1, month_from_time(time)));
 
     // 5. If date is not present, let dt be DateFromTime(t); otherwise, let dt be ? ToNumber(date).
-    auto date = TRY(argument_or_value(global_object, 2, date_from_time(time)));
+    auto date = TRY(argument_or_number(global_object, 2, date_from_time(time)));
 
     // 6. Let newDate be MakeDate(MakeDay(y, m, dt), TimeWithinDay(t)).
-    auto day = make_day(global_object, year, month, date);
-    auto new_date = make_date(day, Value(time_within_day(time)));
+    auto day = make_day(year, month, date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 7. Let v be TimeClip(newDate).
-    new_date = time_clip(global_object, new_date);
+    new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 9. Return v.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.30 Date.prototype.setUTCHours ( hour [ , min [ , sec [ , ms ] ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setutchours
@@ -755,7 +754,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_hours)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let h be ? ToNumber(hour).
-    auto hour = TRY(vm.argument(0).to_number(global_object));
+    auto hour = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If min is present, let m be ? ToNumber(min).
     auto minute = TRY(argument_or_empty(global_object, 1));
@@ -767,34 +766,34 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_hours)
     auto millisecond = TRY(argument_or_empty(global_object, 3));
 
     // 6. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 7. If min is not present, let m be MinFromTime(t).
     if (!minute.has_value())
-        minute = Value(min_from_time(time.as_double()));
+        minute = min_from_time(time);
 
     // 8. If sec is not present, let s be SecFromTime(t).
     if (!second.has_value())
-        second = Value(sec_from_time(time.as_double()));
+        second = sec_from_time(time);
 
     // 9. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time.as_double()));
+        millisecond = ms_from_time(time);
 
     // 10. Let date be MakeDate(Day(t), MakeTime(h, m, s, milli)).
-    auto new_time = make_time(global_object, hour, *minute, *second, *millisecond);
-    auto date = make_date(Value(day(time.as_double())), new_time);
+    auto new_time = make_time(hour, *minute, *second, *millisecond);
+    auto date = make_date(day(time), new_time);
 
     // 11. Let v be TimeClip(date).
-    date = time_clip(global_object, date);
+    date = time_clip(date);
 
     // 12. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 13. Return v.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.31 Date.prototype.setUTCMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds
@@ -804,29 +803,29 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_milliseconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Set ms to ? ToNumber(ms).
-    auto millisecond = TRY(vm.argument(0).to_number(global_object));
+    auto millisecond = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 4. Let time be MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms).
-    auto hour = Value(hour_from_time(time.as_double()));
-    auto minute = Value(min_from_time(time.as_double()));
-    auto second = Value(sec_from_time(time.as_double()));
+    auto hour = hour_from_time(time);
+    auto minute = min_from_time(time);
+    auto second = sec_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, second, millisecond);
+    auto new_time = make_time(hour, minute, second, millisecond);
 
     // 5. Let v be TimeClip(MakeDate(Day(t), time)).
-    auto date = make_date(Value(day(time.as_double())), new_time);
-    date = time_clip(global_object, date);
+    auto date = make_date(day(time), new_time);
+    date = time_clip(date);
 
     // 6. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 7. Return v.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.32 Date.prototype.setUTCMinutes ( min [ , sec [ , ms ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcminutes
@@ -836,7 +835,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_minutes)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let m be ? ToNumber(min).
-    auto minute = TRY(vm.argument(0).to_number(global_object));
+    auto minute = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If sec is present, let s be ? ToNumber(sec).
     auto second = TRY(argument_or_empty(global_object, 1));
@@ -845,32 +844,32 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_minutes)
     auto millisecond = TRY(argument_or_empty(global_object, 2));
 
     // 5. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 6. If sec is not present, let s be SecFromTime(t).
     if (!second.has_value())
-        second = Value(sec_from_time(time.as_double()));
+        second = sec_from_time(time);
 
     // 7. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time.as_double()));
+        millisecond = ms_from_time(time);
 
     // 8. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
-    auto hour = Value(hour_from_time(time.as_double()));
+    auto hour = hour_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, *second, *millisecond);
-    auto date = make_date(Value(day(time.as_double())), new_time);
+    auto new_time = make_time(hour, minute, *second, *millisecond);
+    auto date = make_date(day(time), new_time);
 
     // 9. Let v be TimeClip(date).
-    date = time_clip(global_object, date);
+    date = time_clip(date);
 
     // 10. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(date.as_double());
+    this_object->set_date_value(date);
 
     // 11. Return v.
-    return date;
+    return Value(date);
 }
 
 // 21.4.4.33 Date.prototype.setUTCMonth ( month [ , date ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcmonth
@@ -880,34 +879,34 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_month)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let m be ? ToNumber(month).
-    auto month = TRY(vm.argument(0).to_number(global_object));
+    auto month = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If date is present, let dt be ? ToNumber(date).
     auto date = TRY(argument_or_empty(global_object, 1));
 
     // 4. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 5. If date is not present, let dt be DateFromTime(t).
     if (!date.has_value())
-        date = Value(date_from_time(time.as_double()));
+        date = date_from_time(time);
 
     // 6. Let newDate be MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t)).
-    auto year = Value(year_from_time(time.as_double()));
+    auto year = year_from_time(time);
 
-    auto day = make_day(global_object, year, month, *date);
-    auto new_date = make_date(day, Value(time_within_day(time.as_double())));
+    auto day = make_day(year, month, *date);
+    auto new_date = make_date(day, time_within_day(time));
 
     // 7. Let v be TimeClip(newDate).
-    new_date = time_clip(global_object, new_date);
+    new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 9. Return v.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.34 Date.prototype.setUTCSeconds ( sec [ , ms ] ), https://tc39.es/ecma262/#sec-date.prototype.setutcseconds
@@ -917,35 +916,35 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_seconds)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let s be ? ToNumber(sec).
-    auto second = TRY(vm.argument(0).to_number(global_object));
+    auto second = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     // 3. If ms is present, let milli be ? ToNumber(ms).
     auto millisecond = TRY(argument_or_empty(global_object, 1));
 
     // 4. If t is NaN, return NaN.
-    if (time.is_nan())
+    if (isnan(time))
         return js_nan();
 
     // 5. If ms is not present, let milli be msFromTime(t).
     if (!millisecond.has_value())
-        millisecond = Value(ms_from_time(time.as_double()));
+        millisecond = ms_from_time(time);
 
     // 6. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli)).
-    auto hour = Value(hour_from_time(time.as_double()));
-    auto minute = Value(min_from_time(time.as_double()));
+    auto hour = hour_from_time(time);
+    auto minute = min_from_time(time);
 
-    auto new_time = make_time(global_object, hour, minute, second, *millisecond);
-    auto new_date = make_date(Value(day(time.as_double())), new_time);
+    auto new_time = make_time(hour, minute, second, *millisecond);
+    auto new_date = make_date(day(time), new_time);
 
     // 7. Let v be TimeClip(date).
-    new_date = time_clip(global_object, new_date);
+    new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
     auto* this_object = MUST(typed_this_object(global_object));
-    this_object->set_date_value(new_date.as_double());
+    this_object->set_date_value(new_date);
 
     // 9. Return v.
-    return new_date;
+    return Value(new_date);
 }
 
 // 21.4.4.35 Date.prototype.toDateString ( ), https://tc39.es/ecma262/#sec-date.prototype.todatestring
@@ -956,12 +955,12 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 3. If tv is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 4. Let t be LocalTime(tv).
     // 5. Return DateString(t).
-    return js_string(vm, date_string(local_time(time.as_double())));
+    return js_string(vm, date_string(local_time(time)));
 }
 
 // 21.4.4.36 Date.prototype.toISOString ( ), https://tc39.es/ecma262/#sec-date.prototype.toisostring
@@ -1006,7 +1005,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "date", "date").
@@ -1031,7 +1030,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "any", "all").
@@ -1056,7 +1055,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "time", "time").
@@ -1077,7 +1076,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Return ToDateString(tv).
-    return js_string(vm, JS::to_date_string(time.as_double()));
+    return js_string(vm, JS::to_date_string(time));
 }
 
 // 21.4.4.41.1 TimeString ( tv ), https://tc39.es/ecma262/#sec-timestring
@@ -1181,7 +1180,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
     auto t = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let ns be ? NumberToBigInt(t) × 10^6.
-    auto* ns = TRY(number_to_bigint(global_object, t));
+    auto* ns = TRY(number_to_bigint(global_object, Value(t)));
     ns = js_bigint(vm, ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
     // 3. Return ! CreateTemporalInstant(ns).
@@ -1196,12 +1195,12 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 3. If tv is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 4. Let t be LocalTime(tv).
     // 5. Return the string-concatenation of TimeString(t) and TimeZoneString(tv).
-    auto string = String::formatted("{}{}", time_string(local_time(time.as_double())), time_zone_string(time.as_double()));
+    auto string = String::formatted("{}{}", time_string(local_time(time)), time_zone_string(time));
     return js_string(vm, move(string));
 }
 
@@ -1213,27 +1212,27 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 3. If tv is NaN, return "Invalid Date".
-    if (time.is_nan())
+    if (isnan(time))
         return js_string(vm, "Invalid Date"sv);
 
     // 4. Let weekday be the Name of the entry in Table 62 with the Number WeekDay(tv).
-    auto weekday = short_day_names[week_day(time.as_double())];
+    auto weekday = short_day_names[week_day(time)];
 
     // 5. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
-    auto month = short_month_names[month_from_time(time.as_double())];
+    auto month = short_month_names[month_from_time(time)];
 
     // 6. Let day be ToZeroPaddedDecimalString(ℝ(DateFromTime(tv)), 2).
-    auto day = date_from_time(time.as_double());
+    auto day = date_from_time(time);
 
     // 7. Let yv be YearFromTime(tv).
-    auto year = year_from_time(time.as_double());
+    auto year = year_from_time(time);
 
     // 8. If yv is +0𝔽 or yv > +0𝔽, let yearSign be the empty String; otherwise, let yearSign be "-".
     auto year_sign = year >= 0 ? ""sv : "-"sv;
 
     // 9. Let paddedYear be ToZeroPaddedDecimalString(abs(ℝ(yv)), 4).
     // 10. Return the string-concatenation of weekday, ",", the code unit 0x0020 (SPACE), day, the code unit 0x0020 (SPACE), month, the code unit 0x0020 (SPACE), yearSign, paddedYear, the code unit 0x0020 (SPACE), and TimeString(tv).
-    auto string = String::formatted("{}, {:02} {} {}{:04} {}", weekday, day, month, year_sign, abs(year), time_string(time.as_double()));
+    auto string = String::formatted("{}, {:02} {} {}{:04} {}", weekday, day, month, year_sign, abs(year), time_string(time));
     return js_string(vm, move(string));
 }
 
@@ -1264,11 +1263,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
     auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If t is NaN, return NaN.
-    if (time.is_nan())
-        return time;
+    if (isnan(time))
+        return js_nan();
 
-    // 3. Return Return YearFromTime(LocalTime(t)) - 1900𝔽.
-    return Value(year_from_time(local_time(time.as_double())) - 1900);
+    // 3. Return YearFromTime(LocalTime(t)) - 1900𝔽.
+    return Value(year_from_time(local_time(time)) - 1900);
 }
 
 // B.2.4.2 Date.prototype.setYear ( year ), https://tc39.es/ecma262/#sec-date.prototype.setyear
@@ -1279,43 +1278,43 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 
     // 2. If t is NaN, set t to +0𝔽; otherwise, set t to LocalTime(t).
     double time = 0;
-    if (!this_time.is_nan())
-        time = local_time(this_time.as_double());
+    if (!isnan(this_time))
+        time = local_time(this_time);
 
     // 3. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object));
+    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
 
     auto* this_object = MUST(typed_this_object(global_object));
 
     // 4. If y is NaN, then
-    if (year.is_nan()) {
+    if (isnan(year)) {
         // a. Set the [[DateValue]] internal slot of this Date object to NaN.
-        this_object->set_date_value(js_nan().as_double());
+        this_object->set_date_value(NAN);
 
         // b. Return NaN.
-        return year;
+        return js_nan();
     }
 
     // 5. Let yi be ! ToIntegerOrInfinity(y).
-    auto year_double = MUST(year.to_integer_or_infinity(global_object));
+    auto year_integer = to_integer_or_infinity(year);
 
     // 6. If 0 ≤ yi ≤ 99, let yyyy be 1900𝔽 + 𝔽(yi).
-    if (0 <= year_double && year_double <= 99)
-        year = Value(1900 + year_double);
+    if (0 <= year_integer && year_integer <= 99)
+        year = 1900 + year_integer;
     // 7. Else, let yyyy be y.
 
     // 8. Let d be MakeDay(yyyy, MonthFromTime(t), DateFromTime(t)).
-    auto day = make_day(global_object, year, Value(month_from_time(time)), Value(date_from_time(time)));
+    auto day = make_day(year, month_from_time(time), date_from_time(time));
 
     // 9. Let date be UTC(MakeDate(d, TimeWithinDay(t))).
-    auto date = utc_time(make_date(day, Value(time_within_day(time))).as_double());
+    auto date = utc_time(make_date(day, time_within_day(time)));
 
     // 10. Set the [[DateValue]] internal slot of this Date object to TimeClip(date).
-    auto new_date = time_clip(global_object, Value(date));
-    this_object->set_date_value(new_date.as_double());
+    auto new_date = time_clip(date);
+    this_object->set_date_value(new_date);
 
     // 11. Return the value of the [[DateValue]] internal slot of this Date object.
-    return new_date;
+    return Value(new_date);
 }
 
 // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring

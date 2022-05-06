@@ -44,19 +44,21 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
     // 1. Let dtf be F.[[DateTimeFormat]].
     // 2. Assert: Type(dtf) is Object and dtf has an [[InitializedDateTimeFormat]] internal slot.
 
+    double date_value;
+
     // 3. If date is not provided or is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date = MUST(JS::call(global_object, global_object.date_constructor_now_function(), js_undefined()));
+        date_value = MUST(JS::call(global_object, global_object.date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {
         // a. Let x be ? ToNumber(date).
-        date = TRY(date.to_number(global_object));
+        date_value = TRY(date.to_number(global_object)).as_double();
     }
 
     // 5. Return ? FormatDateTime(dtf, x).
-    auto formatted = TRY(format_date_time(global_object, m_date_time_format, date));
+    auto formatted = TRY(format_date_time(global_object, m_date_time_format, date_value));
     return js_string(vm, move(formatted));
 }
 
