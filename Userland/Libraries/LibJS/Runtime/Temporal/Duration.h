@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -163,13 +164,22 @@ ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(
 
 // 7.5.22 DaysUntil ( earlier, later ), https://tc39.es/proposal-temporal/#sec-temporal-daysuntil
 template<typename EarlierObjectType, typename LaterObjectType>
-double days_until(GlobalObject& global_object, EarlierObjectType& earlier, LaterObjectType& later)
+double days_until(EarlierObjectType& earlier, LaterObjectType& later)
 {
-    // 1. Let difference be ! DifferenceISODate(earlier.[[ISOYear]], earlier.[[ISOMonth]], earlier.[[ISODay]], later.[[ISOYear]], later.[[ISOMonth]], later.[[ISODay]], "day").
-    auto difference = difference_iso_date(global_object, earlier.iso_year(), earlier.iso_month(), earlier.iso_day(), later.iso_year(), later.iso_month(), later.iso_day(), "day"sv);
+    // 1. Let epochDays1 be MakeDay(𝔽(earlier.[[ISOYear]]), 𝔽(earlier.[[ISOMonth]] - 1), 𝔽(earlier.[[ISODay]])).
+    auto epoch_days_1 = make_day(earlier.iso_year(), earlier.iso_month() - 1, earlier.iso_day());
 
-    // 2. Return difference.[[Days]].
-    return difference.days;
+    // 2. Assert: epochDays1 is finite.
+    VERIFY(isfinite(epoch_days_1));
+
+    // 3. Let epochDays2 be MakeDay(𝔽(later.[[ISOYear]]), 𝔽(later.[[ISOMonth]] - 1), 𝔽(later.[[ISODay]])).
+    auto epoch_days_2 = make_day(later.iso_year(), later.iso_month() - 1, later.iso_day());
+
+    // 4. Assert: epochDays2 is finite.
+    VERIFY(isfinite(epoch_days_2));
+
+    // 5. Return ℝ(epochDays2) - ℝ(epochDays1).
+    return epoch_days_2 - epoch_days_1;
 }
 
 }
