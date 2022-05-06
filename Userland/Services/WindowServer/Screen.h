@@ -152,8 +152,8 @@ public:
     void set_buffer(int index);
     size_t buffer_offset(int index) const;
 
-    int physical_width() const { return width() * scale_factor(); }
-    int physical_height() const { return height() * scale_factor(); }
+    int physical_width() const { return m_physical_rect.width(); }
+    int physical_height() const { return m_physical_rect.height(); }
     size_t pitch() const { return m_backend->m_pitch; }
 
     int width() const { return m_virtual_rect.width(); }
@@ -197,7 +197,7 @@ private:
     bool is_opened() const { return m_backend != nullptr; }
 
     void set_index(size_t index) { m_index = index; }
-    void update_virtual_rect();
+    void update_virtual_and_physical_rects();
     ScreenLayout::Screen& screen_layout_info() { return s_layout.screens[m_index]; }
     ScreenLayout::Screen const& screen_layout_info() const { return s_layout.screens[m_index]; }
 
@@ -211,6 +211,8 @@ private:
     OwnPtr<ScreenBackend> m_backend;
 
     Gfx::IntRect m_virtual_rect;
+    Gfx::IntRect m_physical_rect;
+
     NonnullOwnPtr<FlushRectData> m_flush_rects;
     NonnullOwnPtr<CompositorScreenData> m_compositor_screen_data;
 };
