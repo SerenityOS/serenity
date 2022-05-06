@@ -1063,8 +1063,8 @@ ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& globa
     // 1. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, options).
     auto* new_date = TRY(calendar_date_add(global_object, calendar, &relative_to, duration));
 
-    // 2. Let days be ! DaysUntil(relativeTo, newDate).
-    auto days = days_until(global_object, relative_to, *new_date);
+    // 2. Let days be DaysUntil(relativeTo, newDate).
+    auto days = days_until(relative_to, *new_date);
 
     // 3. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
     return MoveRelativeDateResult { .relative_to = make_handle(new_date), .days = days };
@@ -1190,8 +1190,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // e. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, undefined, dateAdd).
         auto* years_months_weeks_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_months_weeks, nullptr, date_add));
 
-        // f. Let monthsWeeksInDays be ? DaysUntil(yearsLater, yearsMonthsWeeksLater).
-        auto months_weeks_in_days = days_until(global_object, *years_later, *years_months_weeks_later);
+        // f. Let monthsWeeksInDays be DaysUntil(yearsLater, yearsMonthsWeeksLater).
+        auto months_weeks_in_days = days_until(*years_later, *years_months_weeks_later);
 
         // g. Set relativeTo to yearsLater.
         relative_to = years_later;
@@ -1229,8 +1229,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // r. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, undefined, dateAdd).
         relative_to = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_duration, nullptr, date_add));
 
-        // s. Let daysPassed be ? DaysUntil(oldRelativeTo, relativeTo).
-        auto days_passed = days_until(global_object, *old_relative_to, *relative_to);
+        // s. Let daysPassed be DaysUntil(oldRelativeTo, relativeTo).
+        auto days_passed = days_until(*old_relative_to, *relative_to);
 
         // t. Set days to days - daysPassed.
         days -= days_passed;
@@ -1280,8 +1280,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // e. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, undefined, dateAdd).
         auto* years_months_weeks_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_months_weeks, nullptr, date_add));
 
-        // f. Let weeksInDays be ? DaysUntil(yearsMonthsLater, yearsMonthsWeeksLater).
-        auto weeks_in_days = days_until(global_object, *years_months_later, *years_months_weeks_later);
+        // f. Let weeksInDays be DaysUntil(yearsMonthsLater, yearsMonthsWeeksLater).
+        auto weeks_in_days = days_until(*years_months_later, *years_months_weeks_later);
 
         // g. Set relativeTo to yearsMonthsLater.
         relative_to = years_months_later;
