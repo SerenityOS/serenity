@@ -281,4 +281,20 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
     return String::formatted("{}{}", date_time_string, time_zone_string);
 }
 
+// 8.5.10 AddDurationToOrSubtractDurationFromInstant ( operation, instant, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfrominstant
+ThrowCompletionOr<Instant*> add_duration_to_or_subtract_duration_from_instant(GlobalObject& global_object, ArithmeticOperation operation, Instant const& instant, Value temporal_duration_like)
+{
+    // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
+
+    // 2. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
+    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
+
+    // 3. Let ns be ? AddInstant(instant.[[Nanoseconds]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]]).
+    auto* ns = TRY(add_instant(global_object, instant.nanoseconds(), sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds));
+
+    // 4. Return ! CreateTemporalInstant(ns).
+    return MUST(create_temporal_instant(global_object, *ns));
+}
+
 }

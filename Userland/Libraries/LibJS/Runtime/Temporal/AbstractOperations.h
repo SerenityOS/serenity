@@ -17,6 +17,11 @@
 
 namespace JS::Temporal {
 
+enum class ArithmeticOperation {
+    Add,
+    Subtract,
+};
+
 enum class OptionType {
     Boolean,
     String,

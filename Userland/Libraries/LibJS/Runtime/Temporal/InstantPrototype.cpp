@@ -126,14 +126,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
-
-    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
-    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
-
-    // 5. Return ! CreateTemporalInstant(ns).
-    return MUST(create_temporal_instant(global_object, *ns));
+    // 3. Return ? AddDurationToOrSubtractDurationFromInstant(add, instant, temporalDurationLike).
+    return TRY(add_duration_to_or_subtract_duration_from_instant(global_object, ArithmeticOperation::Add, *instant, temporal_duration_like));
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
@@ -145,14 +139,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
-
-    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]]).
-    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
-
-    // 5. Return ! CreateTemporalInstant(ns).
-    return MUST(create_temporal_instant(global_object, *ns));
+    // 3. Return ? AddDurationToOrSubtractDurationFromInstant(subtract, instant, temporalDurationLike).
+    return TRY(add_duration_to_or_subtract_duration_from_instant(global_object, ArithmeticOperation::Subtract, *instant, temporal_duration_like));
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until

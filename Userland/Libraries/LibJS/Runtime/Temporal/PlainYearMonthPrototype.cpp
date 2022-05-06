@@ -239,164 +239,29 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::with)
 // 9.3.12 Temporal.PlainYearMonth.prototype.add ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
 {
+    auto temporal_duration_like = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-    auto duration = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
-
-    // 4. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = TRY(balance_duration(global_object, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, Crypto::SignedBigInteger::create_from((i64)duration.nanoseconds), "day"sv));
-
-    // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 6. Let calendar be yearMonth.[[Calendar]].
-    auto& calendar = year_month->calendar();
-
-    // 7. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
-
-    // 8. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
-
-    // 9. Let sign be ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto sign = duration_sign(duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0);
-
-    double day;
-
-    // 10. If sign < 0, then
-    if (sign < 0) {
-        // a. Let dayFromCalendar be ? CalendarDaysInMonth(calendar, yearMonth).
-        auto day_from_calendar = TRY(calendar_days_in_month(global_object, calendar, *year_month));
-
-        // b. Let day be ? ToPositiveInteger(dayFromCalendar).
-        day = TRY(to_positive_integer(global_object, day_from_calendar));
-    }
-    // 11. Else,
-    else {
-        // a. Let day be 1.
-        day = 1;
-    }
-
-    // 12. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
-    MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
-
-    // 13. Let date be ? CalendarDateFromFields(calendar, fields, undefined).
-    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields, nullptr));
-
-    // 14. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
-
-    // 15. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options_copy = Object::create(global_object, global_object.object_prototype());
-
-    // 16. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
-    auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
-
-    // 17. For each element nextEntry of entries, do
-    for (auto& next_entry : entries) {
-        auto key = MUST(next_entry.as_array().get_without_side_effects(0).to_property_key(global_object));
-        auto value = next_entry.as_array().get_without_side_effects(1);
-
-        // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, nextEntry[0], nextEntry[1]).
-        MUST(options_copy->create_data_property_or_throw(key, value));
-    }
-
-    // 18. Let addedDate be ? CalendarDateAdd(calendar, date, durationToAdd, options).
-    auto* added_date = TRY(calendar_date_add(global_object, calendar, date, *duration_to_add, options));
-
-    // 19. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
-    auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, {}));
-
-    // 20. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
-    return TRY(calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
+    // 3. Return ? AddDurationToOrSubtractDurationFromPlainYearMonth(add, yearMonth, temporalDurationLike, options).
+    return TRY(add_duration_to_or_subtract_duration_from_plain_year_month(global_object, ArithmeticOperation::Add, *year_month, temporal_duration_like, options));
 }
 
 // 9.3.13 Temporal.PlainYearMonth.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.subtract
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
 {
+    auto temporal_duration_like = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-    auto duration_record = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
-
-    // 4. Set duration to ! CreateNegatedTemporalDuration(duration).
-    // FIXME: According to the spec CreateNegatedTemporalDuration takes a Temporal.Duration object,
-    //        not a record, so we have to do some trickery. If they want to accept anything that has
-    //        the required internal slots, this should be updated in the AO's description.
-    auto* duration = MUST(create_temporal_duration(global_object, duration_record.years, duration_record.months, duration_record.weeks, duration_record.days, duration_record.hours, duration_record.minutes, duration_record.seconds, duration_record.milliseconds, duration_record.microseconds, duration_record.nanoseconds));
-    duration = create_negated_temporal_duration(global_object, *duration);
-
-    // 5. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = TRY(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from((i64)duration->nanoseconds()), "day"sv));
-
-    // 6. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 7. Let calendar be yearMonth.[[Calendar]].
-    auto& calendar = year_month->calendar();
-
-    // 8. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
-
-    // 9. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
-
-    // 10. Let sign be ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto sign = duration_sign(duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0);
-
-    double day;
-
-    // 11. If sign < 0, then
-    if (sign < 0) {
-        // a. Let dayFromCalendar be ? CalendarDaysInMonth(calendar, yearMonth).
-        auto day_from_calendar = TRY(calendar_days_in_month(global_object, calendar, *year_month));
-
-        // b. Let day be ? ToPositiveInteger(dayFromCalendar).
-        day = TRY(to_positive_integer(global_object, day_from_calendar));
-    }
-    // 12. Else,
-    else {
-        // a. Let day be 1.
-        day = 1;
-    }
-
-    // 13. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
-    MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
-
-    // 14. Let date be ? CalendarDateFromFields(calendar, fields, undefined).
-    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields, nullptr));
-
-    // 15. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
-
-    // 16. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options_copy = Object::create(global_object, global_object.object_prototype());
-
-    // 17. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
-    auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
-
-    // 18. For each element nextEntry of entries, do
-    for (auto& next_entry : entries) {
-        auto key = MUST(next_entry.as_array().get_without_side_effects(0).to_property_key(global_object));
-        auto value = next_entry.as_array().get_without_side_effects(1);
-
-        // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, nextEntry[0], nextEntry[1]).
-        MUST(options_copy->create_data_property_or_throw(key, value));
-    }
-
-    // 19. Let addedDate be ? CalendarDateAdd(calendar, date, durationToAdd, options).
-    auto* added_date = TRY(calendar_date_add(global_object, calendar, date, *duration_to_add, options));
-
-    // 20. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
-    auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, {}));
-
-    // 21. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
-    return TRY(calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy));
+    // 3. Return ? AddDurationToOrSubtractDurationFromPlainYearMonth(add, yearMonth, temporalDurationLike, options).
+    return TRY(add_duration_to_or_subtract_duration_from_plain_year_month(global_object, ArithmeticOperation::Subtract, *year_month, temporal_duration_like, options));
 }
 
 // 9.3.14 Temporal.PlainYearMonth.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.until
