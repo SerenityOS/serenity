@@ -140,7 +140,7 @@ double day_from_year(i32 y)
 double time_from_year(i32 y)
 {
     // msPerDay × DayFromYear(y)
-    return Date::ms_per_day * day_from_year(y);
+    return ms_per_day * day_from_year(y);
 }
 
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
@@ -151,12 +151,12 @@ i32 year_from_time(double t)
         return NumericLimits<i32>::max();
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
-    auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
+    auto year = static_cast<i32>(t / (365.2425 * ms_per_day) + 1970);
 
     auto year_t = time_from_year(year);
     if (year_t > t)
         year--;
-    else if (year_t + days_in_year(year) * Date::ms_per_day <= t)
+    else if (year_t + days_in_year(year) * ms_per_day <= t)
         year++;
 
     return year;
@@ -222,7 +222,7 @@ u8 hour_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
+    return static_cast<u8>(modulo(floor(t / ms_per_hour), hours_per_day));
 }
 
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
@@ -232,7 +232,7 @@ u8 min_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
+    return static_cast<u8>(modulo(floor(t / ms_per_minute), minutes_per_hour));
 }
 
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
@@ -242,7 +242,7 @@ u8 sec_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
+    return static_cast<u8>(modulo(floor(t / ms_per_second), seconds_per_minute));
 }
 
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
@@ -252,7 +252,7 @@ u16 ms_from_time(double t)
         return 0;
 
     // 𝔽(ℝ(t) modulo ℝ(msPerSecond))
-    return static_cast<u16>(modulo(t, Date::ms_per_second));
+    return static_cast<u16>(modulo(t, ms_per_second));
 }
 
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
@@ -317,7 +317,7 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
     auto milli = MUST(ms.to_integer_or_infinity(global_object));
     // 6. Let t be ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli, performing the arithmetic according to IEEE 754-2019 rules (that is, as if using the ECMAScript operators * and +).
     // NOTE: C++ arithmetic abides by IEEE 754 rules
-    auto t = ((h * Date::ms_per_hour + m * Date::ms_per_minute) + s * Date::ms_per_second) + milli;
+    auto t = ((h * ms_per_hour + m * ms_per_minute) + s * ms_per_second) + milli;
     // 7. Return t.
     return Value(t);
 }
@@ -325,14 +325,14 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
 // Day(t), https://tc39.es/ecma262/#eqn-Day
 double day(double time_value)
 {
-    return floor(time_value / Date::ms_per_day);
+    return floor(time_value / ms_per_day);
 }
 
 // TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
 double time_within_day(double time)
 {
     // 𝔽(ℝ(t) modulo ℝ(msPerDay))
-    return modulo(time, Date::ms_per_day);
+    return modulo(time, ms_per_day);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
@@ -362,7 +362,7 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
 
     // FIXME: We are avoiding AK::years_to_days_since_epoch here because it is implemented by looping over
     //        the range [1970, ym), which will spin for any time value with an extremely large year.
-    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * Date::ms_per_day);
+    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * ms_per_day);
 
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
@@ -376,7 +376,7 @@ Value make_date(Value day, Value time)
         return js_nan();
 
     // 2. Let tv be day × msPerDay + time.
-    auto tv = Value(day.as_double() * Date::ms_per_day + time.as_double());
+    auto tv = Value(day.as_double() * ms_per_day + time.as_double());
 
     // 3. If tv is not finite, return NaN.
     if (!tv.is_finite_number())

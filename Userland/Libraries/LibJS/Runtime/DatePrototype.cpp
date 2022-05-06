@@ -242,7 +242,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
         return js_nan();
 
     // 3. Return (t - LocalTime(t)) / msPerMinute.
-    return Value((time.as_double() - local_time(time.as_double())) / Date::ms_per_minute);
+    return Value((time.as_double() - local_time(time.as_double())) / ms_per_minute);
 }
 
 // 21.4.4.12 Date.prototype.getUTCDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcdate

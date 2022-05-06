@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -26,24 +26,24 @@ public:
 
     String iso_date_string() const;
 
-    // https://tc39.es/ecma262/#eqn-HoursPerDay
-    static constexpr double hours_per_day = 24;
-    // https://tc39.es/ecma262/#eqn-MinutesPerHour
-    static constexpr double minutes_per_hour = 60;
-    // https://tc39.es/ecma262/#eqn-SecondsPerMinute
-    static constexpr double seconds_per_minute = 60;
-    // https://tc39.es/ecma262/#eqn-msPerSecond
-    static constexpr double ms_per_second = 1'000;
-    // https://tc39.es/ecma262/#eqn-msPerMinute
-    static constexpr double ms_per_minute = 60'000;
-    // https://tc39.es/ecma262/#eqn-msPerHour
-    static constexpr double ms_per_hour = 3'600'000;
-    // https://tc39.es/ecma262/#eqn-msPerDay
-    static constexpr double ms_per_day = 86'400'000;
-
 private:
     double m_date_value { 0 }; // [[DateValue]]
 };
+
+// https://tc39.es/ecma262/#eqn-HoursPerDay
+constexpr double hours_per_day = 24;
+// https://tc39.es/ecma262/#eqn-MinutesPerHour
+constexpr double minutes_per_hour = 60;
+// https://tc39.es/ecma262/#eqn-SecondsPerMinute
+constexpr double seconds_per_minute = 60;
+// https://tc39.es/ecma262/#eqn-msPerSecond
+constexpr double ms_per_second = 1'000;
+// https://tc39.es/ecma262/#eqn-msPerMinute
+constexpr double ms_per_minute = 60'000;
+// https://tc39.es/ecma262/#eqn-msPerHour
+constexpr double ms_per_hour = 3'600'000;
+// https://tc39.es/ecma262/#eqn-msPerDay
+constexpr double ms_per_day = 86'400'000;
 
 u16 day_within_year(double);
 u8 date_from_time(double);
