@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
@@ -439,8 +440,8 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
 {
     auto& vm = global_object.vm();
 
-    // 1. Let dayLengthNs be 8.64 × 10^13.
-    auto day_length_ns = "86400000000000"_sbigint;
+    // 1. Let dayLengthNs be nsPerDay.
+    auto day_length_ns = ns_per_day_bigint;
 
     // 2. If nanoseconds = 0, then
     if (nanoseconds == "0"_bigint) {

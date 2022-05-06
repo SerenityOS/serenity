@@ -44,6 +44,9 @@ constexpr double ms_per_minute = 60'000;
 constexpr double ms_per_hour = 3'600'000;
 // https://tc39.es/ecma262/#eqn-msPerDay
 constexpr double ms_per_day = 86'400'000;
+// https://tc39.es/proposal-temporal/#eqn-nsPerDay
+constexpr double ns_per_day = 86'400'000'000'000;
+static auto const ns_per_day_bigint = "86400000000000"_sbigint;
 
 u16 day_within_year(double);
 u8 date_from_time(double);
