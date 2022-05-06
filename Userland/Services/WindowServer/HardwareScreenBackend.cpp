@@ -143,7 +143,7 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, S
     int rc = fb_flush_buffers(m_framebuffer_fd, buffer_index, flush_rects.data(), (unsigned)flush_rects.size());
     if (rc == -ENOTSUP)
         m_can_device_flush_buffers = false;
-    else
+    else if (rc != 0)
         return Error::from_syscall("fb_flush_buffers", rc);
     return {};
 }
@@ -153,7 +153,7 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer()
     int rc = fb_flush_head(m_framebuffer_fd);
     if (rc == -ENOTSUP)
         m_can_device_flush_entire_framebuffer = false;
-    else
+    else if (rc != 0)
         return Error::from_syscall("fb_flush_head", rc);
     return {};
 }
