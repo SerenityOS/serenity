@@ -536,4 +536,29 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     return NanosecondsToDaysResult { .days = days, .nanoseconds = move(nanoseconds), .day_length = fabs(day_length_ns.to_double()) };
 }
 
+// 6.5.8 AddDurationToOrSubtractDurationFromZonedDateTime ( operation, zonedDateTime, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoOrsubtractdurationfromzoneddatetime
+ThrowCompletionOr<ZonedDateTime*> add_duration_to_or_subtract_duration_from_zoned_date_time(GlobalObject& global_object, ArithmeticOperation operation, ZonedDateTime& zoned_date_time, Value temporal_duration_like, Value options_value)
+{
+    // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
+
+    // 2. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, options_value));
+
+    // 4. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time.time_zone();
+
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time.calendar();
+
+    // 6. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, sign × duration.[[Years]], sign × duration.[[Months]], sign × duration.[[Weeks]], sign × duration.[[Days]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]], options).
+    auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time.nanoseconds(), &time_zone, calendar, sign * duration.years, sign * duration.months, sign * duration.weeks, sign * duration.days, sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds, options));
+
+    // 7. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
+}
+
 }

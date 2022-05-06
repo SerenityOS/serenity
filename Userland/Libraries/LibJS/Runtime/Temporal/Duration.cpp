@@ -1719,4 +1719,26 @@ String temporal_duration_to_string(double years, double months, double weeks, do
     return result.to_string();
 }
 
+// 7.5.29 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration
+ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(GlobalObject& global_object, ArithmeticOperation operation, Duration const& duration, Value other_value, Value options_value)
+{
+    // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
+
+    // 2. Set other to ? ToTemporalDurationRecord(other).
+    auto other = TRY(to_temporal_duration_record(global_object, other_value));
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto const* options = TRY(get_options_object(global_object, options_value));
+
+    // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
+    auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
+
+    // 5. Let result be ? AddDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], sign × other.[[Years]], sign × other.[[Months]], sign × other.[[Weeks]], sign × other.[[Days]], sign × other.[[Hours]], sign × other.[[Minutes]], sign × other.[[Seconds]], sign × other.[[Milliseconds]], sign × other.[[Microseconds]], sign × other.[[Nanoseconds]], relativeTo).
+    auto result = TRY(add_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds(), sign * other.years, sign * other.months, sign * other.weeks, sign * other.days, sign * other.hours, sign * other.minutes, sign * other.seconds, sign * other.milliseconds, sign * other.microseconds, sign * other.nanoseconds, relative_to));
+
+    // 6. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return MUST(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+}
+
 }

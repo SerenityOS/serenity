@@ -159,6 +159,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject&, double years, d
 ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
 ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
 String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
+ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(GlobalObject&, ArithmeticOperation, Duration const&, Value other_value, Value options_value);
 
 // 7.5.22 DaysUntil ( earlier, later ), https://tc39.es/proposal-temporal/#sec-temporal-daysuntil
 template<typename EarlierObjectType, typename LaterObjectType>
