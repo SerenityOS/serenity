@@ -805,6 +805,34 @@ ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_obj
     return integer;
 }
 
+// Standalone variant using plain doubles for cases where we already got numbers and know the AO won't throw.
+double to_integer_or_infinity(double number)
+{
+    // 1. Let number be ? ToNumber(argument).
+
+    // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
+    if (isnan(number) || number == 0)
+        return 0;
+
+    // 3. If number is +∞𝔽, return +∞.
+    if (__builtin_isinf_sign(number) > 0)
+        return static_cast<double>(INFINITY);
+
+    // 4. If number is -∞𝔽, return -∞.
+    if (__builtin_isinf_sign(number) < 0)
+        return static_cast<double>(-INFINITY);
+
+    // 5. Let integer be floor(abs(ℝ(number))).
+    auto integer = floor(fabs(number));
+
+    // 6. If number < -0𝔽, set integer to -integer.
+    if (number < 0 && integer != 0)
+        integer = -integer;
+
+    // 7. Return integer.
+    return integer;
+}
+
 // 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
 ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey const& property_key) const
 {

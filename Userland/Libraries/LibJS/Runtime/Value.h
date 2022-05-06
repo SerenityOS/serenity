@@ -431,6 +431,8 @@ bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
 ThrowCompletionOr<TriState> is_less_than(GlobalObject&, bool left_first, Value lhs, Value rhs);
 
+double to_integer_or_infinity(double);
+
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }
 
 }
