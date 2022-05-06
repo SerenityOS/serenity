@@ -197,6 +197,7 @@ public:
     void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type);
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
     void gl_clip_plane(GLenum plane, GLdouble const* equation);
+    void gl_get_clip_plane(GLenum plane, GLdouble* equation);
     void gl_array_element(GLint i);
     void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
     void gl_point_size(GLfloat size);
@@ -207,6 +208,7 @@ private:
     void sync_device_texcoord_config();
     void sync_light_state();
     void sync_stencil_configuration();
+    void sync_clip_planes();
 
     void build_extension_string();
 
@@ -306,6 +308,13 @@ private:
 
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
+
+    // User-defined clip planes
+    struct ClipPlaneAttributes {
+        Array<FloatVector4, 6> eye_clip_plane; // TODO: Change to use device-defined constant
+        GLuint enabled { 0 };
+    } m_clip_plane_attributes;
+    bool m_clip_planes_dirty { true };
 
     // Client side arrays
     bool m_client_side_vertex_array_enabled { false };

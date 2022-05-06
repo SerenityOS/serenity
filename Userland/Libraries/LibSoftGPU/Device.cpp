@@ -826,6 +826,7 @@ GPU::DeviceInfo Device::info() const
         .device_name = "SoftGPU",
         .num_texture_units = GPU::NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
+        .max_clip_planes = MAX_CLIP_PLANES,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
     };
@@ -1175,6 +1176,9 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         m_clipped_vertices.append(triangle.vertices[2]);
         m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
 
+        if (m_clip_planes.size() > 0)
+            m_clipper.clip_triangle_against_user_defined(m_clipped_vertices, m_clip_planes);
+
         if (m_clipped_vertices.size() < 3)
             continue;
 
@@ -1495,6 +1499,11 @@ void Device::set_stencil_configuration(GPU::Face face, GPU::StencilConfiguration
 void Device::set_raster_position(GPU::RasterPosition const& raster_position)
 {
     m_raster_position = raster_position;
+}
+
+void Device::set_clip_planes(Vector<FloatVector4> const& clip_planes)
+{
+    m_clip_planes = clip_planes;
 }
 
 void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform)

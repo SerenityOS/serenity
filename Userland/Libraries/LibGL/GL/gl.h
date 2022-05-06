@@ -481,6 +481,7 @@ extern "C" {
 #define GL_ADD 0x0104
 
 // User clipping planes
+#define GL_MAX_CLIP_PLANES 0x0D32
 #define GL_CLIP_PLANE0 0x3000
 #define GL_CLIP_PLANE1 0x3001
 #define GL_CLIP_PLANE2 0x3002
@@ -682,6 +683,7 @@ GLAPI void glRecti(GLint x1, GLint y1, GLint x2, GLint y2);
 GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params);
 GLAPI void glPointSize(GLfloat size);
 GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
+GLAPI void glGetClipPlane(GLenum plane, GLdouble* equation);
 GLAPI void glArrayElement(GLint i);
 GLAPI void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
