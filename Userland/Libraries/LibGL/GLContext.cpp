@@ -794,16 +794,6 @@ void GLContext::gl_depth_mask(GLboolean flag)
     m_rasterizer->set_options(options);
 }
 
-void GLContext::gl_clip_plane(GLenum plane, [[maybe_unused]] GLdouble const* equation)
-{
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clip_plane, plane, equation);
-
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF((plane < GL_CLIP_PLANE0) || (plane > GL_CLIP_PLANE5), GL_INVALID_ENUM);
-
-    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_clip_plane() (equation = [{} {} {} {}])", equation[0], equation[1], equation[2], equation[3]);
-}
-
 void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, void const* data)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_pixels, width, height, format, type, data);
@@ -1215,6 +1205,7 @@ void GLContext::sync_device_config()
     sync_device_texcoord_config();
     sync_light_state();
     sync_stencil_configuration();
+    sync_clip_planes();
 }
 
 void GLContext::build_extension_string()

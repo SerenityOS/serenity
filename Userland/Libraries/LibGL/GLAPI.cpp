@@ -399,6 +399,11 @@ void glGetBooleanv(GLenum pname, GLboolean* data)
     g_gl_context->gl_get_booleanv(pname, data);
 }
 
+void glGetClipPlane(GLenum plane, GLdouble* equation)
+{
+    g_gl_context->gl_get_clip_plane(plane, equation);
+}
+
 void glGetDoublev(GLenum pname, GLdouble* params)
 {
     g_gl_context->gl_get_doublev(pname, params);

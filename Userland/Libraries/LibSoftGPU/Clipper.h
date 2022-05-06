@@ -16,12 +16,13 @@ namespace SoftGPU {
 class Clipper final {
 public:
     enum class ClipPlane : u8 {
-        LEFT = 0,
-        RIGHT,
-        TOP,
-        BOTTOM,
-        NEAR,
-        FAR
+        Left = 0,
+        Right,
+        Top,
+        Bottom,
+        Near,
+        Far,
+        User, // Within view space
     };
 
     Clipper() = default;
@@ -29,6 +30,7 @@ public:
     void clip_points_against_frustum(Vector<GPU::Vertex>& vertices);
     bool clip_line_against_frustum(GPU::Vertex& from, GPU::Vertex& to);
     void clip_triangle_against_frustum(Vector<GPU::Vertex>& input_vecs);
+    void clip_triangle_against_user_defined(Vector<GPU::Vertex>& input_verts, Vector<FloatVector4>& user_planes);
 
 private:
     Vector<GPU::Vertex> m_vertex_buffer;

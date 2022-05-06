@@ -68,6 +68,7 @@ public:
     virtual void set_light_state(unsigned, GPU::Light const&) override;
     virtual void set_material_state(GPU::Face, GPU::Material const&) override;
     virtual void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&) override;
+    virtual void set_clip_planes(Vector<FloatVector4> const&) override;
 
     virtual GPU::RasterPosition raster_position() const override { return m_raster_position; }
     virtual void set_raster_position(GPU::RasterPosition const& raster_position) override;
@@ -107,6 +108,7 @@ private:
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
     GPU::RasterPosition m_raster_position;
+    Vector<FloatVector4> m_clip_planes;
     Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
 };
 
