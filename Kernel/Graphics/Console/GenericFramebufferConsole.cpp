@@ -213,16 +213,31 @@ size_t GenericFramebufferConsoleImpl::chars_per_line() const
     return width() / bytes_per_base_glyph();
 }
 
-void GenericFramebufferConsoleImpl::set_cursor(size_t, size_t)
+void GenericFramebufferConsoleImpl::set_cursor(size_t x, size_t y)
 {
+    hide_cursor();
+    m_x = x;
+    m_y = y;
+    show_cursor();
 }
 
 void GenericFramebufferConsoleImpl::hide_cursor()
 {
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[m_x * sizeof(u32) * m_pixels_per_column + m_y * m_pixels_per_row * framebuffer_pitch()];
+    offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch() * 15);
+    for (size_t current_x = 0; current_x < m_pixels_per_column; current_x++) {
+        offset_in_framebuffer[current_x] = m_cursor_overriden_pixels[current_x];
+    }
 }
 
 void GenericFramebufferConsoleImpl::show_cursor()
 {
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[m_x * sizeof(u32) * m_pixels_per_column + m_y * m_pixels_per_row * framebuffer_pitch()];
+    offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch() * 15);
+    for (size_t current_x = 0; current_x < m_pixels_per_column; current_x++) {
+        m_cursor_overriden_pixels[current_x] = offset_in_framebuffer[current_x];
+        memset(offset_in_framebuffer + current_x, 0xff, 4);
+    }
 }
 
 void GenericFramebufferConsoleImpl::clear(size_t x, size_t y, size_t length)
