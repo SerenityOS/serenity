@@ -125,7 +125,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
                 }
             }
 
-            old_screen.update_virtual_rect();
+            old_screen.update_virtual_and_physical_rects();
             if (changed_scale)
                 old_screen.scale_factor_changed();
         }
@@ -157,7 +157,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
             return false;
         }
 
-        screen->update_virtual_rect();
+        screen->update_virtual_and_physical_rects();
         if (!need_to_open_device && screens_with_scale_change.contains(screen))
             screen->scale_factor_changed();
 
@@ -215,7 +215,7 @@ Screen::Screen(size_t screen_index)
     , m_flush_rects(adopt_own(*new FlushRectData()))
     , m_compositor_screen_data(Compositor::create_screen_data({}))
 {
-    update_virtual_rect();
+    update_virtual_and_physical_rects();
     open_device();
 }
 
@@ -260,11 +260,12 @@ void Screen::close_device()
     m_backend = nullptr;
 }
 
-void Screen::update_virtual_rect()
+void Screen::update_virtual_and_physical_rects()
 {
     auto& screen_info = screen_layout_info();
     m_virtual_rect = { screen_info.location, { screen_info.resolution.width() / screen_info.scale_factor, screen_info.resolution.height() / screen_info.scale_factor } };
-    dbgln("update_virtual_rect for screen #{}: {}", index(), m_virtual_rect);
+    m_physical_rect = { Gfx::IntPoint { 0, 0 }, { screen_info.resolution.width(), screen_info.resolution.height() } };
+    dbgln("update_virtual_and_physical_rects for screen #{}: {}", index(), m_virtual_rect);
 }
 
 void Screen::scale_factor_changed()
@@ -351,7 +352,7 @@ bool Screen::set_resolution(bool initial)
         auto mode_setting = TRY(m_backend->get_head_mode_setting());
         info.resolution = { mode_setting.horizontal_active, mode_setting.vertical_active };
 
-        update_virtual_rect();
+        update_virtual_and_physical_rects();
 
         // Since pending flush rects are affected by the scale factor
         // update even if only the scale factor changed
@@ -559,7 +560,7 @@ void Screen::flush_display(int buffer_index)
 
 void Screen::write_all_display_contents()
 {
-    MUST(m_backend->write_all_contents(m_virtual_rect));
+    MUST(m_backend->write_all_contents(m_physical_rect));
 }
 
 void Screen::flush_display_entire_framebuffer()
