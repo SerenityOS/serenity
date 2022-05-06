@@ -61,9 +61,9 @@ struct Header {
 };
 
 struct Granule {
-    Array<double, 576> samples;
-    Array<Array<double, 18>, 32> filter_bank_input;
-    Array<Array<double, 32>, 18> pcm;
+    Array<float, 576> samples;
+    Array<Array<float, 18>, 32> filter_bank_input;
+    Array<Array<float, 32>, 18> pcm;
     u32 part_2_3_length;
     u32 big_values;
     u32 global_gain;

@@ -17,7 +17,7 @@ class VisualizationWidget : public GUI::Frame {
     C_OBJECT_ABSTRACT(VisualizationWidget)
 
 public:
-    virtual void render(GUI::PaintEvent&, FixedArray<double> const& samples) = 0;
+    virtual void render(GUI::PaintEvent&, FixedArray<float> const& samples) = 0;
 
     void set_buffer(FixedArray<Audio::Sample> const& buffer)
     {
@@ -28,7 +28,7 @@ public:
             m_sample_buffer.resize(buffer.size());
 
         for (size_t i = 0; i < buffer.size(); i++)
-            m_sample_buffer.data()[i] = (buffer[i].left + buffer[i].right) / 2.;
+            m_sample_buffer.data()[i] = (buffer[i].left + buffer[i].right) / 2.f;
 
         m_frame_count = 0;
     }
@@ -55,7 +55,7 @@ public:
         if (buffer_position + m_render_buffer.size() >= m_sample_buffer.size())
             buffer_position = m_sample_buffer.size() - m_render_buffer.size();
 
-        AK::TypedTransfer<double>::copy(m_render_buffer.data(), m_sample_buffer.span().slice(buffer_position).data(), m_render_buffer.size());
+        AK::TypedTransfer<float>::copy(m_render_buffer.data(), m_sample_buffer.span().slice(buffer_position).data(), m_render_buffer.size());
 
         render(event, m_render_buffer);
     }
@@ -70,7 +70,7 @@ public:
 
     ErrorOr<void> set_render_sample_count(size_t count)
     {
-        auto new_buffer = TRY(FixedArray<double>::try_create(count));
+        auto new_buffer = TRY(FixedArray<float>::try_create(count));
         m_render_buffer.swap(new_buffer);
         return {};
     }
@@ -79,8 +79,8 @@ public:
 protected:
     int m_samplerate;
     size_t m_frame_count;
-    Vector<double> m_sample_buffer;
-    FixedArray<double> m_render_buffer;
+    Vector<float> m_sample_buffer;
+    FixedArray<float> m_render_buffer;
 
     static constexpr size_t REFRESH_TIME_MILLISECONDS = 30;
 

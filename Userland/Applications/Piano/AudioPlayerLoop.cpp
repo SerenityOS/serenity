@@ -19,7 +19,7 @@ static FixedArray<Audio::Sample> music_samples_to_buffer(Vector<Music::Sample>& 
 {
     FixedArray<Audio::Sample> samples = MUST(FixedArray<Audio::Sample>::try_create(music_samples.size()));
     for (size_t i = 0; i < music_samples.size(); ++i)
-        samples[i] = { static_cast<double>(music_samples[i].left) / AK::NumericLimits<i16>::max(), static_cast<double>(music_samples[i].right) / AK::NumericLimits<i16>::max() };
+        samples[i] = { static_cast<float>(music_samples[i].left) / AK::NumericLimits<i16>::max(), static_cast<float>(music_samples[i].right) / AK::NumericLimits<i16>::max() };
 
     return samples;
 }

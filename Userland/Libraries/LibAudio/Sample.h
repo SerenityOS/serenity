@@ -15,9 +15,9 @@ using AK::Exponentials::exp;
 using AK::Exponentials::log;
 // Constants for logarithmic volume. See Sample::linear_to_log
 // Corresponds to 60dB
-constexpr double DYNAMIC_RANGE = 1000;
-constexpr double VOLUME_A = 1 / DYNAMIC_RANGE;
-double const VOLUME_B = log(DYNAMIC_RANGE);
+constexpr float DYNAMIC_RANGE = 1000;
+constexpr float VOLUME_A = 1 / DYNAMIC_RANGE;
+float const VOLUME_B = log(DYNAMIC_RANGE);
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
@@ -25,14 +25,14 @@ struct Sample {
     constexpr Sample() = default;
 
     // For mono
-    constexpr explicit Sample(double left)
+    constexpr explicit Sample(float left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    constexpr Sample(double left, double right)
+    constexpr Sample(float left, float right)
         : left(left)
         , right(right)
     {
@@ -65,27 +65,27 @@ struct Sample {
     // - Linear:        0.0 to 1.0
     // - Logarithmic:   0.0 to 1.0
 
-    ALWAYS_INLINE double linear_to_log(double const change) const
+    ALWAYS_INLINE float linear_to_log(float const change) const
     {
         // TODO: Add linear slope around 0
         return VOLUME_A * exp(VOLUME_B * change);
     }
 
-    ALWAYS_INLINE double log_to_linear(double const val) const
+    ALWAYS_INLINE float log_to_linear(float const val) const
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
     }
 
-    ALWAYS_INLINE Sample& log_multiply(double const change)
+    ALWAYS_INLINE Sample& log_multiply(float const change)
     {
-        double factor = linear_to_log(change);
+        float factor = linear_to_log(change);
         left *= factor;
         right *= factor;
         return *this;
     }
 
-    ALWAYS_INLINE Sample log_multiplied(double const volume_change) const
+    ALWAYS_INLINE Sample log_multiplied(float const volume_change) const
     {
         Sample new_frame { left, right };
         new_frame.log_multiply(volume_change);
@@ -93,33 +93,33 @@ struct Sample {
     }
 
     // Constant power panning
-    ALWAYS_INLINE Sample& pan(double const position)
+    ALWAYS_INLINE Sample& pan(float const position)
     {
-        double const pi_over_2 = AK::Pi<double> * 0.5;
-        double const root_over_2 = AK::sqrt(2.0) * 0.5;
-        double const angle = position * pi_over_2 * 0.5;
-        double s, c;
-        AK::sincos(angle, s, c);
+        float const pi_over_2 = AK::Pi<float> * 0.5f;
+        float const root_over_2 = AK::sqrt<float>(2.0) * 0.5f;
+        float const angle = position * pi_over_2 * 0.5f;
+        float s, c;
+        AK::sincos<float>(angle, s, c);
         left *= root_over_2 * (c - s);
         right *= root_over_2 * (c + s);
         return *this;
     }
 
-    ALWAYS_INLINE Sample panned(double const position) const
+    ALWAYS_INLINE Sample panned(float const position) const
     {
         Sample new_sample { left, right };
         new_sample.pan(position);
         return new_sample;
     }
 
-    constexpr Sample& operator*=(double const mult)
+    constexpr Sample& operator*=(float const mult)
     {
         left *= mult;
         right *= mult;
         return *this;
     }
 
-    constexpr Sample operator*(double const mult) const
+    constexpr Sample operator*(float const mult) const
     {
         return { left * mult, right * mult };
     }
@@ -130,7 +130,7 @@ struct Sample {
         right += other.right;
         return *this;
     }
-    constexpr Sample& operator+=(double other)
+    constexpr Sample& operator+=(float other)
     {
         left += other;
         right += other;
@@ -142,8 +142,8 @@ struct Sample {
         return { left + other.left, right + other.right };
     }
 
-    double left { 0 };
-    double right { 0 };
+    float left { 0 };
+    float right { 0 };
 };
 
 }

@@ -316,7 +316,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
                     block_type = MP3::BlockType::Normal;
                 }
 
-                Array<double, 36> output;
+                Array<float, 36> output;
                 transform_samples_to_time(granule.samples, i, output, block_type);
 
                 int const subband_index = i / 18;
@@ -333,7 +333,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
         }
     }
 
-    Array<double, 32> in_samples;
+    Array<float, 32> in_samples;
     for (size_t channel_index = 0; channel_index < frame.header.channel_count(); channel_index++) {
         for (size_t granule_index = 0; granule_index < 2; granule_index++) {
             auto& granule = frame.channels[channel_index].granules[granule_index];
@@ -399,11 +399,11 @@ MaybeLoaderError MP3LoaderPlugin::read_side_information(MP3::MP3Frame& frame)
 }
 
 // From ISO/IEC 11172-3 (2.4.3.4.7.1)
-Array<double, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const& frame, size_t granule_index, size_t channel_index)
+Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const& frame, size_t granule_index, size_t channel_index)
 {
-    Array<double, 576> exponents;
+    Array<float, 576> exponents;
 
-    auto fill_band = [&exponents](double exponent, size_t start, size_t end) {
+    auto fill_band = [&exponents](float exponent, size_t start, size_t end) {
         for (size_t j = start; j <= end; j++) {
             exponents[j] = exponent;
         }
@@ -413,13 +413,13 @@ Array<double, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame cons
     auto const& granule = frame.channels[channel_index].granules[granule_index];
 
     auto const scale_factor_bands = get_scalefactor_bands(granule, frame.header.samplerate);
-    double const scale_factor_multiplier = granule.scalefac_scale ? 1 : 0.5;
+    float const scale_factor_multiplier = granule.scalefac_scale ? 1 : 0.5;
     int const gain = granule.global_gain - 210;
 
     if (granule.block_type != MP3::BlockType::Short) {
         for (size_t band_index = 0; band_index < 22; band_index++) {
-            double const exponent = gain / 4.0 - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
-            fill_band(AK::pow(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
+            float const exponent = gain / 4.0f - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
+            fill_band(AK::pow<float>(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
         }
     } else {
         size_t band_index = 0;
@@ -427,27 +427,27 @@ Array<double, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame cons
 
         if (granule.mixed_block_flag) {
             while (sample_count < 36) {
-                double const exponent = gain / 4.0 - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
-                fill_band(AK::pow(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
+                float const exponent = gain / 4.0f - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
+                fill_band(AK::pow<float>(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
                 sample_count += scale_factor_bands[band_index].width;
                 band_index++;
             }
         }
 
-        double const gain0 = (gain - 8 * granule.sub_block_gain[0]) / 4.0;
-        double const gain1 = (gain - 8 * granule.sub_block_gain[1]) / 4.0;
-        double const gain2 = (gain - 8 * granule.sub_block_gain[2]) / 4.0;
+        float const gain0 = (gain - 8 * granule.sub_block_gain[0]) / 4.0;
+        float const gain1 = (gain - 8 * granule.sub_block_gain[1]) / 4.0;
+        float const gain2 = (gain - 8 * granule.sub_block_gain[2]) / 4.0;
 
         while (sample_count < 576 && band_index < scale_factor_bands.size()) {
-            double const exponent0 = gain0 - (scale_factor_multiplier * channel.scale_factors[band_index + 0]);
-            double const exponent1 = gain1 - (scale_factor_multiplier * channel.scale_factors[band_index + 1]);
-            double const exponent2 = gain2 - (scale_factor_multiplier * channel.scale_factors[band_index + 2]);
+            float const exponent0 = gain0 - (scale_factor_multiplier * channel.scale_factors[band_index + 0]);
+            float const exponent1 = gain1 - (scale_factor_multiplier * channel.scale_factors[band_index + 1]);
+            float const exponent2 = gain2 - (scale_factor_multiplier * channel.scale_factors[band_index + 2]);
 
-            fill_band(AK::pow(2.0, exponent0), scale_factor_bands[band_index + 0].start, scale_factor_bands[band_index + 0].end);
+            fill_band(AK::pow<float>(2.0, exponent0), scale_factor_bands[band_index + 0].start, scale_factor_bands[band_index + 0].end);
             sample_count += scale_factor_bands[band_index + 0].width;
-            fill_band(AK::pow(2.0, exponent1), scale_factor_bands[band_index + 1].start, scale_factor_bands[band_index + 1].end);
+            fill_band(AK::pow<float>(2.0, exponent1), scale_factor_bands[band_index + 1].start, scale_factor_bands[band_index + 1].end);
             sample_count += scale_factor_bands[band_index + 1].width;
-            fill_band(AK::pow(2.0, exponent2), scale_factor_bands[band_index + 2].start, scale_factor_bands[band_index + 2].end);
+            fill_band(AK::pow<float>(2.0, exponent2), scale_factor_bands[band_index + 2].start, scale_factor_bands[band_index + 2].end);
             sample_count += scale_factor_bands[band_index + 2].width;
 
             band_index += 3;
@@ -542,10 +542,10 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, InputB
     size_t const region1_start = is_short_granule ? 36 : scale_factor_bands[scale_factor_band_index1].start;
     size_t const region2_start = is_short_granule ? 576 : scale_factor_bands[scale_factor_band_index2].start;
 
-    auto requantize = [](int const sample, double const exponent) -> double {
+    auto requantize = [](int const sample, float const exponent) -> float {
         int const sign = sample < 0 ? -1 : 1;
         int const magnitude = AK::abs(sample);
-        return sign * AK::pow(static_cast<double>(magnitude), 4 / 3.0) * exponent;
+        return sign * AK::pow<float>(static_cast<float>(magnitude), 4 / 3.0) * exponent;
     };
 
     size_t count = 0;
@@ -663,7 +663,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, InputB
 
 void MP3LoaderPlugin::reorder_samples(MP3::Granule& granule, u32 sample_rate)
 {
-    double tmp[576] = {};
+    float tmp[576] = {};
     size_t band_index = 0;
     size_t subband_index = 0;
 
@@ -715,7 +715,7 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
     auto& granule_left = frame.channels[0].granules[granule_index];
     auto& granule_right = frame.channels[1].granules[granule_index];
 
-    auto get_last_nonempty_band = [](Span<double> samples, Span<MP3::Tables::ScaleFactorBand const> bands) -> size_t {
+    auto get_last_nonempty_band = [](Span<float> samples, Span<MP3::Tables::ScaleFactorBand const> bands) -> size_t {
         size_t last_nonempty_band = 0;
 
         for (size_t i = 0; i < bands.size(); i++) {
@@ -734,20 +734,20 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
     };
 
     auto process_ms_stereo = [&](MP3::Tables::ScaleFactorBand const& band) {
-        double const SQRT_2 = AK::sqrt(2.0);
+        float const SQRT_2 = AK::sqrt(2.0);
         for (size_t i = band.start; i <= band.end; i++) {
-            double const m = granule_left.samples[i];
-            double const s = granule_right.samples[i];
+            float const m = granule_left.samples[i];
+            float const s = granule_right.samples[i];
             granule_left.samples[i] = (m + s) / SQRT_2;
             granule_right.samples[i] = (m - s) / SQRT_2;
         }
     };
 
-    auto process_intensity_stereo = [&](MP3::Tables::ScaleFactorBand const& band, double intensity_stereo_ratio) {
+    auto process_intensity_stereo = [&](MP3::Tables::ScaleFactorBand const& band, float intensity_stereo_ratio) {
         for (size_t i = band.start; i <= band.end; i++) {
-            double const sample_left = granule_left.samples[i];
-            double const coeff_l = intensity_stereo_ratio / (1 + intensity_stereo_ratio);
-            double const coeff_r = 1 / (1 + intensity_stereo_ratio);
+            float const sample_left = granule_left.samples[i];
+            float const coeff_l = intensity_stereo_ratio / (1 + intensity_stereo_ratio);
+            float const coeff_r = 1 / (1 + intensity_stereo_ratio);
             granule_left.samples[i] = sample_left * coeff_l;
             granule_right.samples[i] = sample_left * coeff_r;
         }
@@ -777,39 +777,39 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
                 process_ms_stereo(scale_factor_bands[band_index]);
             continue;
         }
-        double const intensity_stereo_ratio = AK::tan(intensity_stereo_position * AK::Pi<double> / 12);
+        float const intensity_stereo_ratio = AK::tan(intensity_stereo_position * AK::Pi<float> / 12);
         process_intensity_stereo(scale_factor_bands[band_index], intensity_stereo_ratio);
     }
 }
 
-void MP3LoaderPlugin::transform_samples_to_time(Array<double, 576> const& input, size_t input_offset, Array<double, 36>& output, MP3::BlockType block_type)
+void MP3LoaderPlugin::transform_samples_to_time(Array<float, 576> const& input, size_t input_offset, Array<float, 36>& output, MP3::BlockType block_type)
 {
     if (block_type == MP3::BlockType::Short) {
         size_t const N = 12;
-        Array<double, N * 3> temp_out;
-        Array<double, N / 2> temp_in;
+        Array<float, N * 3> temp_out;
+        Array<float, N / 2> temp_in;
 
         for (size_t k = 0; k < N / 2; k++)
             temp_in[k] = input[input_offset + 3 * k + 0];
-        s_mdct_12.transform(temp_in, Span<double>(temp_out).slice(0, N));
+        s_mdct_12.transform(temp_in, Span<float>(temp_out).slice(0, N));
         for (size_t i = 0; i < N; i++)
             temp_out[i + 0] *= MP3::Tables::WindowBlockTypeShort[i];
 
         for (size_t k = 0; k < N / 2; k++)
             temp_in[k] = input[input_offset + 3 * k + 1];
-        s_mdct_12.transform(temp_in, Span<double>(temp_out).slice(12, N));
+        s_mdct_12.transform(temp_in, Span<float>(temp_out).slice(12, N));
         for (size_t i = 0; i < N; i++)
             temp_out[i + 12] *= MP3::Tables::WindowBlockTypeShort[i];
 
         for (size_t k = 0; k < N / 2; k++)
             temp_in[k] = input[input_offset + 3 * k + 2];
-        s_mdct_12.transform(temp_in, Span<double>(temp_out).slice(24, N));
+        s_mdct_12.transform(temp_in, Span<float>(temp_out).slice(24, N));
         for (size_t i = 0; i < N; i++)
             temp_out[i + 24] *= MP3::Tables::WindowBlockTypeShort[i];
 
-        Span<double> idmct1 = Span<double>(temp_out).slice(0, 12);
-        Span<double> idmct2 = Span<double>(temp_out).slice(12, 12);
-        Span<double> idmct3 = Span<double>(temp_out).slice(24, 12);
+        Span<float> idmct1 = Span<float>(temp_out).slice(0, 12);
+        Span<float> idmct2 = Span<float>(temp_out).slice(12, 12);
+        Span<float> idmct3 = Span<float>(temp_out).slice(24, 12);
         for (size_t i = 0; i < 6; i++)
             output[i] = 0;
         for (size_t i = 6; i < 12; i++)
@@ -824,7 +824,7 @@ void MP3LoaderPlugin::transform_samples_to_time(Array<double, 576> const& input,
             output[i] = 0;
 
     } else {
-        s_mdct_36.transform(Span<double const>(input).slice(input_offset, 18), output);
+        s_mdct_36.transform(Span<float const>(input).slice(input_offset, 18), output);
         for (size_t i = 0; i < 36; i++) {
             switch (block_type) {
             case MP3::BlockType::Normal:
@@ -845,7 +845,7 @@ void MP3LoaderPlugin::transform_samples_to_time(Array<double, 576> const& input,
 }
 
 // ISO/IEC 11172-3 (Figure A.2)
-void MP3LoaderPlugin::synthesis(Array<double, 1024>& V, Array<double, 32>& samples, Array<double, 32>& result)
+void MP3LoaderPlugin::synthesis(Array<float, 1024>& V, Array<float, 32>& samples, Array<float, 32>& result)
 {
     for (size_t i = 1023; i >= 64; i--) {
         V[i] = V[i - 64];
@@ -854,12 +854,12 @@ void MP3LoaderPlugin::synthesis(Array<double, 1024>& V, Array<double, 32>& sampl
     for (size_t i = 0; i < 64; i++) {
         V[i] = 0;
         for (size_t k = 0; k < 32; k++) {
-            double const N = MP3::Tables::SynthesisSubbandFilterCoefficients[i][k];
+            float const N = MP3::Tables::SynthesisSubbandFilterCoefficients[i][k];
             V[i] += N * samples[k];
         }
     }
 
-    Array<double, 512> U;
+    Array<float, 512> U;
     for (size_t i = 0; i < 8; i++) {
         for (size_t j = 0; j < 32; j++) {
             U[i * 64 + j] = V[i * 128 + j];
@@ -867,7 +867,7 @@ void MP3LoaderPlugin::synthesis(Array<double, 1024>& V, Array<double, 32>& sampl
         }
     }
 
-    Array<double, 512> W;
+    Array<float, 512> W;
     for (size_t i = 0; i < 512; i++) {
         W[i] = U[i] * MP3::Tables::WindowSynthesis[i];
     }
