@@ -212,7 +212,7 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
     // 2. Let balancedTime be ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
     auto balanced_time = balance_time(hour, minute, second, millisecond, microsecond, nanosecond);
 
-    // 3. Let balancedDate be ! BalanceISODate(year, month, day + balancedTime.[[Days]]).
+    // 3. Let balancedDate be BalanceISODate(year, month, day + balancedTime.[[Days]]).
     auto balanced_date = balance_iso_date(year, month, day + balanced_time.days);
 
     // 4. Return the Record { [[Year]]: balancedDate.[[Year]], [[Month]]: balancedDate.[[Month]], [[Day]]: balancedDate.[[Day]], [[Hour]]: balancedTime.[[Hour]], [[Minute]]: balancedTime.[[Minute]], [[Second]]: balancedTime.[[Second]], [[Millisecond]]: balancedTime.[[Millisecond]], [[Microsecond]]: balancedTime.[[Microsecond]], [[Nanosecond]]: balancedTime.[[Nanosecond]] }.
@@ -335,7 +335,7 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
     // 3. Let roundedTime be ! RoundTime(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode, dayLength).
     auto rounded_time = round_time(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, rounding_mode, day_length);
 
-    // 4. Let balanceResult be ! BalanceISODate(year, month, day + roundedTime.[[Days]]).
+    // 4. Let balanceResult be BalanceISODate(year, month, day + roundedTime.[[Days]]).
     auto balance_result = balance_iso_date(year, month, day + rounded_time.days);
 
     // 5. Return the Record { [[Year]]: balanceResult.[[Year]], [[Month]]: balanceResult.[[Month]], [[Day]]: balanceResult.[[Day]], [[Hour]]: roundedTime.[[Hour]], [[Minute]]: roundedTime.[[Minute]], [[Second]]: roundedTime.[[Second]], [[Millisecond]]: roundedTime.[[Millisecond]], [[Microsecond]]: roundedTime.[[Microsecond]], [[Nanosecond]]: roundedTime.[[Nanosecond]] }.
@@ -357,12 +357,12 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 5. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 6. Let adjustedDate be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
+    // 6. Let adjustedDate be BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
     auto adjusted_date = balance_iso_date(year1, month1, day1 + time_difference.days);
 
     // 7. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
-        // a. Set adjustedDate to ! BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
+        // a. Set adjustedDate to BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
         adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
 
         // b. Set timeDifference to ? BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
