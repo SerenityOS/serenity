@@ -142,10 +142,9 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
 // 3.5.3 DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodate
 DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit)
 {
-    // 1. Assert: largestUnit is one of "year", "month", "week", or "day".
     VERIFY(largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv));
 
-    // 2. If largestUnit is "year" or "month", then
+    // 1. If largestUnit is "year" or "month", then
     if (largest_unit.is_one_of("year"sv, "month"sv)) {
         // a. Let sign be -(! CompareISODate(y1, m1, d1, y2, m2, d2)).
         auto sign = -compare_iso_date(year1, month1, day1, year2, month2, day2);
@@ -257,65 +256,37 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
         // t. Return ! CreateDateDurationRecord(years, months, 0, days).
         return create_date_duration_record(years, months, 0, days);
     }
-    // 3. If largestUnit is "day" or "week", then
+    // 2. If largestUnit is "day" or "week", then
     else {
-        ISODate smaller;
-        ISODate greater;
-        i8 sign;
+        // a. Let epochDays1 be MakeDay(𝔽(y1), 𝔽(m1 - 1), 𝔽(d1)).
+        auto epoch_days_1 = make_day(year1, month1 - 1, day1);
 
-        // a. If ! CompareISODate(y1, m1, d1, y2, m2, d2) < 0, then
-        if (compare_iso_date(year1, month1, day1, year2, month2, day2) < 0) {
-            // i. Let smaller be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
-            smaller = { .year = year1, .month = month1, .day = day1 };
+        // b. Assert: epochDays1 is finite.
+        VERIFY(isfinite(epoch_days_1));
 
-            // ii. Let greater be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
-            greater = { .year = year2, .month = month2, .day = day2 };
+        // c. Let epochDays2 be MakeDay(𝔽(y2), 𝔽(m2 - 1), 𝔽(d2)).
+        auto epoch_days_2 = make_day(year2, month2 - 1, day2);
 
-            // iii. Let sign be 1.
-            sign = 1;
-        }
-        // b. Else,
-        else {
-            // i. Let smaller be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
-            smaller = { .year = year2, .month = month2, .day = day2 };
+        // d. Assert: epochDays2 is finite.
+        VERIFY(isfinite(epoch_days_2));
 
-            // ii. Let greater be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
-            greater = { .year = year1, .month = month1, .day = day1 };
-
-            // iii. Let sign be -1.
-            sign = -1;
-        }
-
-        // c. Let days be ! ToISODayOfYear(greater.[[Year]], greater.[[Month]], greater.[[Day]]) - ! ToISODayOfYear(smaller.[[Year]], smaller.[[Month]], smaller.[[Day]]).
-        double days = to_iso_day_of_year(greater.year, greater.month, greater.day) - to_iso_day_of_year(smaller.year, smaller.month, smaller.day);
-
-        // d. Let year be smaller.[[Year]].
-        auto year = smaller.year;
-
-        // e. Repeat, while year < greater.[[Year]],
-        while (year < greater.year) {
-            // i. Set days to days + ! ISODaysInYear(year).
-            days += iso_days_in_year(year);
-
-            // ii. Set year to year + 1.
-            year++;
-        }
+        // e. Let days be ℝ(epochDays2) - ℝ(epochDays1).
+        auto days = epoch_days_2 - epoch_days_1;
 
         // f. Let weeks be 0.
         double weeks = 0;
 
         // g. If largestUnit is "week", then
         if (largest_unit == "week"sv) {
-            // i. Set weeks to floor(days / 7).
-            weeks = floor(days / 7);
+            // i. Set weeks to RoundTowardsZero(days / 7).
+            weeks = trunc(days / 7);
 
-            // ii. Set days to days modulo 7.
+            // ii. Set days to remainder(days, 7).
             days = fmod(days, 7);
         }
 
-        // h. Return ! CreateDateDurationRecord(0, 0, weeks × sign, days × sign).
-        // NOTE: We set weeks and days conditionally to avoid negative zero for 0 * -1.
-        return create_date_duration_record(0, 0, (weeks != 0) ? weeks * sign : 0, (days != 0) ? days * sign : 0);
+        // h. Return ! CreateDateDurationRecord(0, 0, weeks, days).
+        return create_date_duration_record(0, 0, weeks, days);
     }
     VERIFY_NOT_REACHED();
 }
