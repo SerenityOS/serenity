@@ -95,7 +95,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
                     scissor_box.height(),
                 } }
         };
-    } break;
+    }
     case GL_SCISSOR_TEST: {
         auto scissor_enabled = m_rasterizer->options().scissor_enabled;
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = scissor_enabled } };
