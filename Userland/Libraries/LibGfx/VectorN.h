@@ -225,6 +225,16 @@ public:
     }
 
     template<typename U>
+    [[nodiscard]] VectorN<N, U> to_type() const
+    {
+        VectorN<N, U> result;
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i)
+            result.data()[i] = static_cast<U>(m_data[i]);
+        return result;
+    }
+
+    template<typename U>
     [[nodiscard]] VectorN<N, U> to_rounded() const
     {
         VectorN<N, U> result;
