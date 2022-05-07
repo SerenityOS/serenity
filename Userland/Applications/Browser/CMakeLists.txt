@@ -23,7 +23,7 @@ set(SOURCES
     History.cpp
     IconBag.cpp
     InspectorWidget.cpp
-    LocalStorageModel.cpp
+    StorageModel.cpp
     StorageWidget.cpp
     StorageWidgetGML.h
     Tab.cpp

@@ -495,6 +495,11 @@ OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
     return client().get_local_storage_entries();
 }
 
+OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries()
+{
+    return client().get_session_storage_entries();
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

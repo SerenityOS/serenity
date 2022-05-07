@@ -566,6 +566,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_local_storage_entries();
     };
 
+    new_tab.on_get_session_storage_entries = [this]() {
+        return active_tab().view().get_session_storage_entries();
+    };
+
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
