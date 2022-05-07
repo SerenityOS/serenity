@@ -30,11 +30,11 @@ class WeakLink : public RefCounted<WeakLink> {
     friend class WeakPtr;
 
 public:
-    template<typename T, typename PtrTraits = RefPtrTraits<T>>
-    RefPtr<T, PtrTraits> strong_ref() const
+    template<typename T>
+    RefPtr<T> strong_ref() const
         requires(IsBaseOf<RefCountedBase, T>)
     {
-        RefPtr<T, PtrTraits> ref;
+        RefPtr<T> ref;
 
         {
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
