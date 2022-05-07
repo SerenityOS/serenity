@@ -44,13 +44,14 @@ void ScrollableContainerWidget::update_widget_size()
             new_size.set_width(preferred_size.width());
         if (preferred_size.height() != -1)
             new_size.set_height(preferred_size.height());
-    } else {
-        auto min_size = m_widget->min_size();
-        new_size = Gfx::Size {
-            max(new_size.width(), min_size.width()),
-            max(new_size.height(), min_size.height())
-        };
     }
+
+    auto min_size = m_widget->min_size();
+    new_size = Gfx::Size {
+        max(new_size.width(), min_size.width()),
+        max(new_size.height(), min_size.height()),
+    };
+
     m_widget->resize(new_size);
     set_content_size(new_size);
 }
