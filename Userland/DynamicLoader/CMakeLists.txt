@@ -36,6 +36,12 @@ set_source_files_properties (../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(../Libraries/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
 
+# Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(../Libraries/LibC/string.cpp ../Libraries/LibC/wchar.cpp
+        PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+endif()
+
 add_executable(Loader.so ${SOURCES})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
