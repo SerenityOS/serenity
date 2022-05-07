@@ -106,7 +106,7 @@ String Token::to_debug_string() const
     case Type::Delim:
         return String::formatted("Delim: {}", m_value);
     case Type::Number:
-        return String::formatted("Number: {} (number_type: {})", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
+        return String::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Percentage:
         return String::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Dimension:
