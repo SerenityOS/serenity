@@ -5425,6 +5425,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         // '+'?† n <signed-integer>
         if (is_signed_integer(values.peek_token())) {
             int b = values.next_token().token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 
