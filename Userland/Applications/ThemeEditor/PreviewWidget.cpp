@@ -109,8 +109,10 @@ void PreviewWidget::update_preview_window_locations()
     m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
     m_highlight_window_rect = Gfx::IntRect(m_active_window_rect.location(), { 160, 70 }).translated(hightlight_offset_x, hightlight_offset_y);
 
-    Array<Window, 3> window_group {
-        m_active_window_rect, m_inactive_window_rect, m_highlight_window_rect
+    auto window_group = Array {
+        Window { m_active_window_rect },
+        Window { m_inactive_window_rect },
+        Window { m_highlight_window_rect },
     };
 
     center_window_group_within(window_group, frame_inner_rect());
