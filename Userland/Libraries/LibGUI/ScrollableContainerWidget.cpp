@@ -96,7 +96,7 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
     });
 
     auto content_widget_value = object->get_property("content_widget"sv);
-    if (!content_widget_value.is_null() && !is<Object>(content_widget_value.ptr())) {
+    if (!content_widget_value.is_null() && !is<GUI::GML::Object>(content_widget_value.ptr())) {
         dbgln("content widget is not an object");
         return false;
     }
@@ -108,7 +108,7 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
         return false;
     }
 
-    if (!content_widget_value.is_null() && is<Object>(content_widget_value.ptr())) {
+    if (!content_widget_value.is_null() && is<GUI::GML::Object>(content_widget_value.ptr())) {
         auto content_widget = static_ptr_cast<GUI::GML::Object>(content_widget_value);
         auto class_name = content_widget->name();
 
