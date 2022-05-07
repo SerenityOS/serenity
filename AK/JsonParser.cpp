@@ -258,7 +258,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         auto fraction = static_cast<double>(fraction_string_uint.value());
         double sign = (whole < 0) ? -1 : 1;
 
-        auto divider = pow(10.0, static_cast<double>(fraction_buffer.size()));
+        auto divider = exp10(static_cast<double>(fraction_buffer.size()));
         value = JsonValue((double)whole + sign * (fraction / divider));
     } else {
 #endif
