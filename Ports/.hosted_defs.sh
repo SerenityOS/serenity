@@ -13,6 +13,7 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_PATH="${PATH:=}"
     export HOST_READELF="${READELF:=readelf}"
     export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
+    export HOST_STRIP="${STRIP:=strip}"
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
@@ -28,6 +29,7 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export RANLIB="llvm-ranlib"
     export READELF="llvm-readelf"
     export OBJCOPY="llvm-objcopy"
+    export STRIP="llvm-strip"
     export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin:${HOST_PATH}"
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
@@ -37,6 +39,7 @@ else
     export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
     export READELF="${SERENITY_ARCH}-pc-serenity-readelf"
     export OBJCOPY="${SERENITY_ARCH}-pc-serenity-objcopy"
+    export STRIP="${SERENITY_ARCH}-pc-serenity-strip"
     export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin:${HOST_PATH}"
 fi
 
