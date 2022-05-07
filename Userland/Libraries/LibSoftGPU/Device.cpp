@@ -40,7 +40,6 @@ using AK::SIMD::i32x4;
 using AK::SIMD::load4_masked;
 using AK::SIMD::maskbits;
 using AK::SIMD::maskcount;
-using AK::SIMD::none;
 using AK::SIMD::store4_masked;
 using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
@@ -329,14 +328,12 @@ void Device::rasterize_triangle(Triangle const& triangle)
                 && quad.screen_coordinates.x() <= render_bounds_right
                 && quad.screen_coordinates.y() >= render_bounds_top
                 && quad.screen_coordinates.y() <= render_bounds_bottom;
-
-            if (none(quad.mask))
+            auto coverage_bits = maskbits(quad.mask);
+            if (coverage_bits == 0)
                 continue;
 
             INCREASE_STATISTICS_COUNTER(g_num_quads, 1);
             INCREASE_STATISTICS_COUNTER(g_num_pixels, maskcount(quad.mask));
-
-            int coverage_bits = maskbits(quad.mask);
 
             // Stencil testing
             GPU::StencilType* stencil_ptrs[4];
@@ -391,7 +388,8 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
                 // Update coverage mask + early quad rejection
                 quad.mask &= stencil_test_passed;
-                if (none(quad.mask))
+                coverage_bits = maskbits(quad.mask);
+                if (coverage_bits == 0)
                     continue;
             }
 
@@ -489,7 +487,8 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
                 // Update coverage mask + early quad rejection
                 quad.mask &= depth_test_passed;
-                if (none(quad.mask))
+                coverage_bits = maskbits(quad.mask);
+                if (coverage_bits == 0)
                     continue;
             }
 
