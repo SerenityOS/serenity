@@ -78,6 +78,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
     case GL_PACK_SWAP_BYTES:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_POINT_SMOOTH:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_point_smooth } };
     case GL_POINT_SIZE:
         return ContextParameter { .type = GL_DOUBLE, .value = { .double_value = static_cast<GLdouble>(m_point_size) } };
     case GL_POLYGON_OFFSET_FILL:
@@ -216,6 +218,11 @@ void GLContext::gl_disable(GLenum capability)
         rasterizer_options.normalization_enabled = false;
         update_rasterizer_options = true;
         break;
+    case GL_POINT_SMOOTH:
+        m_point_smooth = false;
+        rasterizer_options.point_smooth = false;
+        update_rasterizer_options = true;
+        break;
     case GL_POLYGON_OFFSET_FILL:
         m_depth_offset_enabled = false;
         rasterizer_options.depth_offset_enabled = false;
@@ -343,6 +350,11 @@ void GLContext::gl_enable(GLenum capability)
     case GL_NORMALIZE:
         m_normalize = true;
         rasterizer_options.normalization_enabled = true;
+        update_rasterizer_options = true;
+        break;
+    case GL_POINT_SMOOTH:
+        m_point_smooth = true;
+        rasterizer_options.point_smooth = true;
         update_rasterizer_options = true;
         break;
     case GL_POLYGON_OFFSET_FILL:

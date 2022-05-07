@@ -484,6 +484,7 @@ private:
     u8 m_unpack_alignment { 4 };
 
     // Point drawing configuration
+    bool m_point_smooth { false };
     float m_point_size { 1.f };
 
     // Line drawing configuration
