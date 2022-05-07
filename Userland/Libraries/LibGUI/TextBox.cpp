@@ -5,7 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, TextBox)
 REGISTER_WIDGET(GUI, PasswordBox)
@@ -71,11 +73,59 @@ void TextBox::add_input_to_history(String input)
     m_history_index++;
 }
 
+constexpr u32 password_box_substitution_code_point = '*';
+
 PasswordBox::PasswordBox()
     : TextBox()
 {
-    set_substitution_code_point('*');
+    set_substitution_code_point(password_box_substitution_code_point);
     set_text_is_secret(true);
+    REGISTER_BOOL_PROPERTY("show_reveal_button", is_showing_reveal_button, set_show_reveal_button);
+}
+
+Gfx::IntRect PasswordBox::reveal_password_button_rect() const
+{
+    constexpr i32 button_box_margin = 3;
+    auto button_box_size = height() - button_box_margin - button_box_margin;
+    return { width() - button_box_size - button_box_margin, button_box_margin, button_box_size, button_box_size };
+}
+
+void PasswordBox::paint_event(PaintEvent& event)
+{
+    TextBox::paint_event(event);
+
+    if (is_showing_reveal_button()) {
+        auto button_rect = reveal_password_button_rect();
+
+        Painter painter(*this);
+        painter.add_clip_rect(event.rect());
+
+        auto icon_color = palette().button_text();
+        if (substitution_code_point().has_value())
+            icon_color = palette().disabled_text_front();
+
+        i32 dot_indicator_padding = height() / 5;
+
+        Gfx::IntRect dot_indicator_rect = { button_rect.x() + dot_indicator_padding, button_rect.y() + dot_indicator_padding, button_rect.width() - dot_indicator_padding * 2, button_rect.height() - dot_indicator_padding * 2 };
+        painter.fill_ellipse(dot_indicator_rect, icon_color);
+
+        Gfx::IntPoint arc_start_point { dot_indicator_rect.x() - dot_indicator_padding / 2, dot_indicator_rect.y() + dot_indicator_padding / 2 };
+        Gfx::IntPoint arc_end_point = { dot_indicator_rect.top_right().x() + dot_indicator_padding / 2, dot_indicator_rect.top_right().y() + dot_indicator_padding / 2 };
+        Gfx::IntPoint arc_center_point = { dot_indicator_rect.center().x(), dot_indicator_rect.top() - dot_indicator_padding };
+        painter.draw_quadratic_bezier_curve(arc_center_point, arc_start_point, arc_end_point, icon_color, 1);
+    }
+}
+
+void PasswordBox::mousedown_event(GUI::MouseEvent& event)
+{
+    if (is_showing_reveal_button() && reveal_password_button_rect().contains(event.position())) {
+        Optional<u32> next_substitution_code_point;
+        if (!substitution_code_point().has_value())
+            next_substitution_code_point = password_box_substitution_code_point;
+        set_substitution_code_point(next_substitution_code_point);
+    } else {
+        TextBox::mousedown_event(event);
+    }
 }
 
 UrlBox::UrlBox()

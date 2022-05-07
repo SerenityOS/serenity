@@ -42,8 +42,23 @@ private:
 
 class PasswordBox : public TextBox {
     C_OBJECT(PasswordBox)
+public:
+    bool is_showing_reveal_button() const { return m_show_reveal_button; }
+    void set_show_reveal_button(bool show)
+    {
+        m_show_reveal_button = show;
+        update();
+    }
+
 private:
     PasswordBox();
+
+    virtual void paint_event(PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+
+    Gfx::IntRect reveal_password_button_rect() const;
+
+    bool m_show_reveal_button { false };
 };
 
 class UrlBox : public TextBox {
