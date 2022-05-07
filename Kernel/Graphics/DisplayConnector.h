@@ -119,7 +119,7 @@ protected:
     DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization);
     virtual void enable_console() = 0;
     virtual void disable_console() = 0;
-    virtual ErrorOr<void> flush_first_surface() = 0;
+    virtual ErrorOr<void> flush_surface(size_t buffer_index) = 0;
     virtual ErrorOr<void> flush_rectangle(size_t buffer_index, FBRect const& rect);
 
     ErrorOr<void> initialize_edid_for_generic_monitor();

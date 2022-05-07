@@ -30,7 +30,7 @@ private:
 
     virtual ErrorOr<void> flush_framebuffer_rects(int, Span<FBRect const>) override { return {}; }
 
-    virtual ErrorOr<void> flush_framebuffer() override { return {}; }
+    virtual ErrorOr<void> flush_framebuffer(int) override { return {}; }
 
     virtual ErrorOr<void> unmap_framebuffer() override;
     virtual ErrorOr<void> map_framebuffer() override;

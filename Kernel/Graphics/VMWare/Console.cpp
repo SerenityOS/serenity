@@ -43,7 +43,7 @@ void VMWareFramebufferConsole::enqueue_refresh_timer()
     refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {
-                MUST(m_parent_display_connector->flush_first_surface());
+                MUST(m_parent_display_connector->flush_surface(0));
                 m_dirty = false;
             }));
         }

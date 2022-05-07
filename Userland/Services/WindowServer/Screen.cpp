@@ -545,7 +545,7 @@ void Screen::flush_display(int buffer_index)
     }
 
     if (m_backend->m_can_device_flush_entire_framebuffer) {
-        auto return_value = m_backend->flush_framebuffer();
+        auto return_value = m_backend->flush_framebuffer(buffer_index);
         if (return_value.is_error())
             dbgln("Screen #{}: Error flushing display: {}", index(), return_value.error());
     } else {
@@ -558,10 +558,10 @@ void Screen::flush_display(int buffer_index)
     flush_rects.pending_flush_rects.clear_with_capacity();
 }
 
-void Screen::flush_display_entire_framebuffer()
+void Screen::flush_display_entire_framebuffer(int buffer_index)
 {
     VERIFY(m_backend->m_can_device_flush_entire_framebuffer);
-    auto return_value = m_backend->flush_framebuffer();
+    auto return_value = m_backend->flush_framebuffer(buffer_index);
     if (return_value.is_error())
         dbgln("Screen #{}: Error flushing display front buffer: {}", index(), return_value.error());
 }

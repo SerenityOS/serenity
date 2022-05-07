@@ -52,8 +52,10 @@ public:
 
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
     void set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    Graphics::VirtIOGPU::Protocol::Rect const& dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, bool main_buffer);
     void flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     void transfer_framebuffer_data_to_host(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& rect, bool main_buffer);
+    void set_scanout_buffer(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, bool main_buffer);
 
 private:
     ErrorOr<void> attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size);

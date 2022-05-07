@@ -54,7 +54,7 @@ private:
     // Note: Paravirtualized hardware doesn't require a defined refresh rate for modesetting.
     virtual bool refresh_rate_support() const override { return false; }
 
-    virtual ErrorOr<void> flush_first_surface() override;
+    virtual ErrorOr<void> flush_surface(size_t buffer_index) override;
     virtual ErrorOr<void> flush_rectangle(size_t buffer_index, FBRect const& rect) override;
 
     virtual void enable_console() override;
@@ -70,6 +70,7 @@ private:
 
     void flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     void set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    Graphics::VirtIOGPU::Protocol::Rect const& dirty_displayed_rect(bool main_buffer);
 
     void query_display_information();
     ErrorOr<void> query_edid_from_virtio_adapter();
@@ -87,7 +88,7 @@ private:
     Graphics::VirtIOGPU::ScanoutID m_scanout_id;
 
     // 2D framebuffer Member data
-    Atomic<size_t, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
+    size_t m_last_set_buffer_index { 0 };
 
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
 };

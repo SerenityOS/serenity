@@ -56,7 +56,7 @@ void GenericDisplayConnector::disable_console()
     m_framebuffer_console->disable();
 }
 
-ErrorOr<void> GenericDisplayConnector::flush_first_surface()
+ErrorOr<void> GenericDisplayConnector::flush_surface(size_t)
 {
     return Error::from_errno(ENOTSUP);
 }

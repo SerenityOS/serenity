@@ -65,14 +65,24 @@ void VirtIOGraphicsAdapter::set_dirty_displayed_rect(Badge<VirtIODisplayConnecto
     Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
     if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
         buffer.dirty_rect = dirty_rect;
-    } else {
+    } else if (dirty_rect.width > 0 || dirty_rect.height > 0) {
         auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
         auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
         buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
         buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
         buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
         buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
+    } else {
+        buffer.dirty_rect = {};
     }
+}
+
+Graphics::VirtIOGPU::Protocol::Rect const& VirtIOGraphicsAdapter::dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, bool main_buffer)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    return buffer.dirty_rect;
 }
 
 void VirtIOGraphicsAdapter::flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
@@ -90,6 +100,15 @@ void VirtIOGraphicsAdapter::transfer_framebuffer_data_to_host(Badge<VirtIODispla
     VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
     Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
     transfer_framebuffer_data_to_host(connector.scanout_id(), buffer.resource_id, rect);
+}
+
+void VirtIOGraphicsAdapter::set_scanout_buffer(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, bool main_buffer)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    auto display_info = connector.display_information({});
+    set_scanout_resource(connector.scanout_id().value(), buffer.resource_id, display_info.rect);
 }
 
 ErrorOr<void> VirtIOGraphicsAdapter::attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size)

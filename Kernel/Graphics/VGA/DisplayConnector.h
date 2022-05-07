@@ -39,7 +39,7 @@ protected:
     // Note: This is possibly a paravirtualized hardware, but since we don't know, we assume there's no refresh rate...
     virtual bool refresh_rate_support() const override final { return false; }
 
-    virtual ErrorOr<void> flush_first_surface() override final;
+    virtual ErrorOr<void> flush_surface(size_t buffer_index) override final;
 
     virtual void enable_console() override final;
     virtual void disable_console() override final;

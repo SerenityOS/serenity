@@ -93,7 +93,7 @@ private:
     virtual ErrorOr<void> set_safe_mode_setting() override;
     virtual ErrorOr<void> set_y_offset(size_t y) override;
     virtual ErrorOr<void> unblank() override;
-    virtual ErrorOr<void> flush_first_surface() override final;
+    virtual ErrorOr<void> flush_surface(size_t buffer_index) override final;
     virtual void enable_console() override;
     virtual void disable_console() override;
     virtual bool partial_flush_support() const override { return false; }

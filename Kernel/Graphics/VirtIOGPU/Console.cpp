@@ -42,7 +42,7 @@ void Console::enqueue_refresh_timer()
             MUST(g_io_work->try_queue([this]() {
                 {
                     MutexLocker locker(m_parent_display_connector->m_flushing_lock);
-                    MUST(m_parent_display_connector->flush_first_surface());
+                    MUST(m_parent_display_connector->flush_surface(0));
                 }
                 m_dirty = false;
             }));

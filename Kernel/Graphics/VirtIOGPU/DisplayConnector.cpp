@@ -99,12 +99,21 @@ ErrorOr<void> VirtIODisplayConnector::set_safe_mode_setting()
 ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t y)
 {
     VERIFY(m_control_lock.is_locked());
+    SpinlockLocker locker(m_graphics_adapter->operation_lock());
+    size_t new_buffer_index;
     if (y == 0)
-        m_last_set_buffer_index.store(0);
+        new_buffer_index = 0;
     else if (y == m_display_info.rect.height)
-        m_last_set_buffer_index.store(1);
+        new_buffer_index = 1;
     else
         return Error::from_errno(EINVAL);
+    if (m_last_set_buffer_index == new_buffer_index)
+        return {};
+    m_last_set_buffer_index = new_buffer_index;
+    bool main_buffer = (y == 0);
+    m_graphics_adapter->set_scanout_buffer({}, *this, main_buffer);
+    flush_displayed_image(dirty_displayed_rect(main_buffer), main_buffer);
+    set_dirty_displayed_rect({}, main_buffer);
     return {};
 }
 ErrorOr<void> VirtIODisplayConnector::unblank()
@@ -127,16 +136,18 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
 
     bool main_buffer = (buffer_index == 0);
     m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
-    if (m_last_set_buffer_index.load() == buffer_index) {
+    if (m_last_set_buffer_index == buffer_index) {
         // Flushing directly to screen
         flush_displayed_image(dirty_rect, main_buffer);
+        // Clear the dirty rect
+        set_dirty_displayed_rect({}, main_buffer);
     } else {
         set_dirty_displayed_rect(dirty_rect, main_buffer);
     }
     return {};
 }
 
-ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
+ErrorOr<void> VirtIODisplayConnector::flush_surface(size_t buffer_index)
 {
     VERIFY(m_flushing_lock.is_locked());
     SpinlockLocker locker(m_graphics_adapter->operation_lock());
@@ -147,13 +158,16 @@ ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
         .height = m_display_info.rect.height
     };
 
-    auto current_buffer_index = m_last_set_buffer_index.load();
-    VERIFY(is_valid_buffer_index(current_buffer_index));
-
-    bool main_buffer = (current_buffer_index == 0);
+    bool main_buffer = (m_last_set_buffer_index == 0);
     m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
-    // Flushing directly to screen
-    flush_displayed_image(dirty_rect, main_buffer);
+    if (buffer_index == m_last_set_buffer_index) {
+        // Flushing directly to screen
+        flush_displayed_image(dirty_rect, main_buffer);
+        // Clear the dirty rect
+        set_dirty_displayed_rect({}, main_buffer);
+    } else {
+        set_dirty_displayed_rect(dirty_rect, main_buffer);
+    }
     return {};
 }
 
@@ -263,6 +277,12 @@ void VirtIODisplayConnector::set_dirty_displayed_rect(Graphics::VirtIOGPU::Proto
 {
     VERIFY(m_graphics_adapter->operation_lock().is_locked());
     m_graphics_adapter->set_dirty_displayed_rect({}, *this, dirty_rect, main_buffer);
+}
+
+Graphics::VirtIOGPU::Protocol::Rect const& VirtIODisplayConnector::dirty_displayed_rect(bool main_buffer)
+{
+    VERIFY(m_graphics_adapter->operation_lock().is_locked());
+    return m_graphics_adapter->dirty_displayed_rect({}, *this, main_buffer);
 }
 
 }

@@ -45,7 +45,7 @@ protected:
     // Note: Paravirtualized hardware doesn't require a defined refresh rate for modesetting.
     virtual bool refresh_rate_support() const override final { return false; }
 
-    virtual ErrorOr<void> flush_first_surface() override final;
+    virtual ErrorOr<void> flush_surface(size_t buffer_index) override final;
 
     virtual void enable_console() override final;
     virtual void disable_console() override final;

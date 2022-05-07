@@ -72,9 +72,11 @@ ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsig
     return ioctl(fd, GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS, &fb_flush_rects);
 }
 
-ALWAYS_INLINE int fb_flush_head(int fd)
+ALWAYS_INLINE int fb_flush_head(int fd, int index)
 {
-    return ioctl(fd, GRAPHICS_IOCTL_FLUSH_HEAD, nullptr);
+    FBFlush fb_flush;
+    fb_flush.buffer_index = index;
+    return ioctl(fd, GRAPHICS_IOCTL_FLUSH_HEAD, &fb_flush);
 }
 
 __END_DECLS

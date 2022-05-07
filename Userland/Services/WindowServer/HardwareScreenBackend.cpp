@@ -135,9 +135,9 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, S
     return {};
 }
 
-ErrorOr<void> HardwareScreenBackend::flush_framebuffer()
+ErrorOr<void> HardwareScreenBackend::flush_framebuffer(int buffer_index)
 {
-    int rc = fb_flush_head(m_framebuffer_fd);
+    int rc = fb_flush_head(m_framebuffer_fd, buffer_index);
     if (rc == -ENOTSUP)
         m_can_device_flush_entire_framebuffer = false;
     else

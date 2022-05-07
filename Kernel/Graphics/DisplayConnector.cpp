@@ -370,6 +370,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         // FIXME: We silently ignore the request if we are in console mode.
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         MutexLocker locker(m_flushing_lock);
+        auto user_flush = static_ptr_cast<FBFlush const*>(arg);
+        auto flush = TRY(copy_typed_from_user(user_flush));
         SpinlockLocker control_locker(m_control_lock);
         if (console_mode()) {
             return {};
@@ -378,7 +380,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         if (!flush_support())
             return Error::from_errno(ENOTSUP);
 
-        TRY(flush_first_surface());
+        TRY(flush_surface(flush.buffer_index));
         return {};
     }
     }

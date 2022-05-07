@@ -72,6 +72,10 @@ struct FBFlushRects {
     struct FBRect const* rects;
 };
 
+struct FBFlush {
+    int buffer_index;
+};
+
 enum ConsoleModes {
     KD_TEXT = 0x00,
     KD_GRAPHICS = 0x01,

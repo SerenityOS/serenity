@@ -68,7 +68,7 @@ void BochsDisplayConnector::disable_console()
     m_framebuffer_console->disable();
 }
 
-ErrorOr<void> BochsDisplayConnector::flush_first_surface()
+ErrorOr<void> BochsDisplayConnector::flush_surface(size_t)
 {
     return Error::from_errno(ENOTSUP);
 }

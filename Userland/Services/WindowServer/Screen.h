@@ -172,7 +172,7 @@ public:
     void queue_flush_display_rect(Gfx::IntRect const& rect);
     void flush_display(int buffer_index);
     void flush_display_front_buffer(int front_buffer_index, Gfx::IntRect&);
-    void flush_display_entire_framebuffer();
+    void flush_display_entire_framebuffer(int buffer_index);
 
     CompositorScreenData& compositor_screen_data() { return *m_compositor_screen_data; }
 

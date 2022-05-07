@@ -222,7 +222,7 @@ void IntelNativeDisplayConnector::disable_console()
     m_framebuffer_console->disable();
 }
 
-ErrorOr<void> IntelNativeDisplayConnector::flush_first_surface()
+ErrorOr<void> IntelNativeDisplayConnector::flush_surface(size_t)
 {
     return Error::from_errno(ENOTSUP);
 }

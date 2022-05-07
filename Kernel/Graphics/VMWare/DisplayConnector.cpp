@@ -72,7 +72,7 @@ void VMWareDisplayConnector::disable_console()
     m_framebuffer_console->disable();
 }
 
-ErrorOr<void> VMWareDisplayConnector::flush_first_surface()
+ErrorOr<void> VMWareDisplayConnector::flush_surface(size_t)
 {
     // FIXME: Cache these values but keep them in sync with the parent adapter.
     auto width = m_parent_adapter->primary_screen_width({});

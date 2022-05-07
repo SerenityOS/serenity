@@ -31,7 +31,7 @@ public:
     virtual ErrorOr<void> unmap_framebuffer() = 0;
     virtual ErrorOr<void> map_framebuffer() = 0;
 
-    virtual ErrorOr<void> flush_framebuffer() = 0;
+    virtual ErrorOr<void> flush_framebuffer(int buffer_index) = 0;
 
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) = 0;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() = 0;
