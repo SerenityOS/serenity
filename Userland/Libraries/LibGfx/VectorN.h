@@ -201,11 +201,7 @@ public:
 
     [[nodiscard]] constexpr T length() const
     {
-        T squared_sum {};
-        UNROLL_LOOP
-        for (auto i = 0u; i < N; ++i)
-            squared_sum += m_data[i] * m_data[i];
-        return AK::sqrt(squared_sum);
+        return AK::sqrt(dot(*this));
     }
 
     [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
