@@ -71,7 +71,12 @@ void BackgroundSettingsWidget::create_frame()
     m_context_menu->add_action(*m_show_in_file_manager_action);
 
     m_context_menu->add_separator();
-    m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) { GUI::Clipboard::the().set_plain_text(m_monitor_widget->wallpaper()); }, this);
+    m_copy_action = GUI::CommonActions::make_copy_action(
+        [this](auto&) {
+            auto url = URL::create_with_file_protocol(m_monitor_widget->wallpaper()).to_string();
+            GUI::Clipboard::the().set_data(url.bytes(), "text/uri-list");
+        },
+        this);
     m_context_menu->add_action(*m_copy_action);
 
     m_wallpaper_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
