@@ -16,7 +16,7 @@ namespace PixelPaint {
 class FilterModel final : public GUI::Model {
 
 public:
-    class FilterInfo : public RefCounted {
+    class FilterInfo : public RefCounted<FilterInfo> {
     public:
         enum class Type {
             Category,
