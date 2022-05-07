@@ -488,6 +488,7 @@ private:
     float m_point_size { 1.f };
 
     // Line drawing configuration
+    bool m_line_smooth { false };
     float m_line_width { 1.f };
 
     // Lighting configuration

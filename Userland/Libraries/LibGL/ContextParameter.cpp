@@ -50,6 +50,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_LIGHTING:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_lighting_enabled } };
+    case GL_LINE_SMOOTH:
+        return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_line_smooth } };
     case GL_MAX_LIGHTS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_device_info.num_lights) } };
     case GL_MAX_MODELVIEW_STACK_DEPTH:
@@ -213,6 +215,11 @@ void GLContext::gl_disable(GLenum capability)
         m_light_states.at(capability - GL_LIGHT0).is_enabled = false;
         m_light_state_is_dirty = true;
         break;
+    case GL_LINE_SMOOTH:
+        m_line_smooth = false;
+        rasterizer_options.line_smooth = false;
+        update_rasterizer_options = true;
+        break;
     case GL_NORMALIZE:
         m_normalize = false;
         rasterizer_options.normalization_enabled = false;
@@ -346,6 +353,11 @@ void GLContext::gl_enable(GLenum capability)
     case GL_LIGHT7:
         m_light_states.at(capability - GL_LIGHT0).is_enabled = true;
         m_light_state_is_dirty = true;
+        break;
+    case GL_LINE_SMOOTH:
+        m_line_smooth = true;
+        rasterizer_options.line_smooth = true;
+        update_rasterizer_options = true;
         break;
     case GL_NORMALIZE:
         m_normalize = true;

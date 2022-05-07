@@ -60,6 +60,7 @@ extern "C" {
 #define GL_COLOR_BUFFER_BIT 0x04000
 
 // Enable capabilities
+#define GL_LINE_SMOOTH 0x0B20
 #define GL_POLYGON_MODE 0x0B40
 #define GL_POLYGON_SMOOTH 0x0B41
 #define GL_POLYGON_STIPPLE 0x0B42
