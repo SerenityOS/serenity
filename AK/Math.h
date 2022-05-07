@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>.
+ * Copyright (c) 2022, Leon Albrecht <leon2002.la@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -482,9 +482,34 @@ constexpr T exp2(T exponent)
 #endif
 }
 
+template<FloatingPoint T>
+constexpr T exp10(T exponent)
+{
+    CONSTEXPR_STATE(pow, (T)10., exponent);
+
+#if ARCH(I386) || ARCH(X86_64)
+    T res;
+    asm("fldl2t\n"
+        "fmulp\n"
+        "fld1\n"
+        "fld %%st(1)\n"
+        "fprem\n"
+        "f2xm1\n"
+        "faddp\n"
+        "fscale\n"
+        "fstp %%st(1)"
+        : "=t"(res)
+        : "0"(exponent));
+    return res;
+#else
+    return __builtin_exp10(exponent);
+#endif
+}
+
 }
 
 using Exponentials::exp;
+using Exponentials::exp10;
 using Exponentials::exp2;
 using Exponentials::log;
 using Exponentials::log10;
