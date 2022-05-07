@@ -327,6 +327,17 @@ void GLContext::gl_enable(GLenum capability)
         rasterizer_options.lighting_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_LIGHT0:
+    case GL_LIGHT1:
+    case GL_LIGHT2:
+    case GL_LIGHT3:
+    case GL_LIGHT4:
+    case GL_LIGHT5:
+    case GL_LIGHT6:
+    case GL_LIGHT7:
+        m_light_states.at(capability - GL_LIGHT0).is_enabled = true;
+        m_light_state_is_dirty = true;
+        break;
     case GL_NORMALIZE:
         m_normalize = true;
         rasterizer_options.normalization_enabled = true;
@@ -361,17 +372,6 @@ void GLContext::gl_enable(GLenum capability)
     case GL_TEXTURE_CUBE_MAP:
         m_active_texture_unit->set_texture_cube_map_enabled(true);
         m_sampler_config_is_dirty = true;
-        break;
-    case GL_LIGHT0:
-    case GL_LIGHT1:
-    case GL_LIGHT2:
-    case GL_LIGHT3:
-    case GL_LIGHT4:
-    case GL_LIGHT5:
-    case GL_LIGHT6:
-    case GL_LIGHT7:
-        m_light_states.at(capability - GL_LIGHT0).is_enabled = true;
-        m_light_state_is_dirty = true;
         break;
     case GL_TEXTURE_GEN_Q:
     case GL_TEXTURE_GEN_R:
