@@ -191,8 +191,8 @@ public:
     bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
     void set_should_autocomplete_automatically(bool);
 
-    u32 substitution_code_point() const { return m_substitution_code_point; }
-    void set_substitution_code_point(u32 code_point);
+    Optional<u32> const& substitution_code_point() const { return m_substitution_code_point; }
+    void set_substitution_code_point(Optional<u32> code_point);
 
     bool is_in_drag_select() const { return m_in_drag_select; }
 
@@ -371,8 +371,7 @@ private:
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
 
-    // NOTE: If non-zero, all glyphs will be substituted with this one.
-    u32 m_substitution_code_point { 0 };
+    Optional<u32> m_substitution_code_point;
     mutable OwnPtr<Vector<u32>> m_substitution_string_data; // Used to avoid repeated String construction.
 
     RefPtr<Menu> m_context_menu;
