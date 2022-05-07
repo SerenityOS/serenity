@@ -1144,6 +1144,9 @@ void GLContext::gl_line_width(GLfloat width)
     RETURN_WITH_ERROR_IF(width <= 0, GL_INVALID_VALUE);
 
     m_line_width = width;
+    auto options = m_rasterizer->options();
+    options.line_width = width;
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_push_attrib(GLbitfield mask)
