@@ -85,8 +85,8 @@ GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
-GCC_VERSION="11.2.0"
-GCC_MD5SUM="dc6886bd44bb49e2d3d662aed9729278"
+GCC_VERSION="12.1.0"
+GCC_MD5SUM="7854cdccc3a7988aa37fb0d0038b8096"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
@@ -271,13 +271,11 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
-            git am "$DIR"/Patches/gcc-support-mold-linker.patch > /dev/null
             git apply "$DIR"/Patches/gcc.patch > /dev/null
         else
-            patch -p1 < "$DIR/Patches/gcc-support-mold-linker.patch" > /dev/null
             patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
         fi
-        $MD5SUM "$DIR/Patches/gcc.patch" "$DIR/Patches/gcc-support-mold-linker.patch" > .patch.applied
+        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then
@@ -323,7 +321,7 @@ pushd "$DIR/Build/$ARCH"
                                                         --with-mpfr="$(brew --prefix mpfr)" \
                                                         --disable-nls \
                                                         ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-            else 
+            else
                 buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
                                                         --target="$TARGET" \
                                                         --with-sysroot="$SYSROOT" \
@@ -332,7 +330,6 @@ pushd "$DIR/Build/$ARCH"
                                                         ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
             fi
 
-            
             echo "XXX build gdb"
             buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
             buildstep "gdb/install" "$MAKE" install || exit 1
@@ -364,7 +361,7 @@ pushd "$DIR/Build/$ARCH"
         buildstep "binutils/install" "$MAKE" install || exit 1
     popd
 
-    echo "XXX serenity libc, libm and libpthread headers"
+    echo "XXX serenity libc, libdl, libm and libpthread headers"
     mkdir -p "$BUILD"
     pushd "$BUILD"
         mkdir -p Root/usr/include/
@@ -374,6 +371,7 @@ pushd "$DIR/Build/$ARCH"
             "$SRC_ROOT"/Kernel/API \
             "$SRC_ROOT"/Kernel/Arch \
             "$SRC_ROOT"/Userland/Libraries/LibC \
+            "$SRC_ROOT"/Userland/Libraries/LibDl \
             "$SRC_ROOT"/Userland/Libraries/LibM \
             "$SRC_ROOT"/Userland/Libraries/LibPthread \
             -name '*.h' -print)
@@ -381,6 +379,7 @@ pushd "$DIR/Build/$ARCH"
             target=$(echo "$header" | sed \
                 -e "s@$SRC_ROOT/AK/@AK/@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" \
+                -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibPthread@@" \
                 -e "s@$SRC_ROOT/Kernel/@Kernel/@")
@@ -406,7 +405,6 @@ pushd "$DIR/Build/$ARCH"
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
-                                            --with-newlib \
                                             --enable-shared \
                                             --enable-languages=c,c++ \
                                             --enable-default-pie \
