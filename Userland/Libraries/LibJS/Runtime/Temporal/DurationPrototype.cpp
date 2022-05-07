@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::years_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Years]].
+    // 3. Return 𝔽(duration.[[Years]]).
     return Value(duration->years());
 }
 
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::months_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Months]].
+    // 3. Return 𝔽(duration.[[Months]]).
     return Value(duration->months());
 }
 
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::weeks_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Weeks]].
+    // 3. Return 𝔽(duration.[[Weeks]]).
     return Value(duration->weeks());
 }
 
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::days_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Days]].
+    // 3. Return 𝔽(duration.[[Days]]).
     return Value(duration->days());
 }
 
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::hours_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Hours]].
+    // 3. Return 𝔽(duration.[[Hours]]).
     return Value(duration->hours());
 }
 
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::minutes_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Minutes]].
+    // 3. Return 𝔽(duration.[[Minutes]]).
     return Value(duration->minutes());
 }
 
@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::seconds_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Seconds]].
+    // 3. Return 𝔽(duration.[[Seconds]]).
     return Value(duration->seconds());
 }
 
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::milliseconds_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Milliseconds]].
+    // 3. Return 𝔽(duration.[[Milliseconds]]).
     return Value(duration->milliseconds());
 }
 
@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::microseconds_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Microseconds]].
+    // 3. Return 𝔽(duration.[[Microseconds]]).
     return Value(duration->microseconds());
 }
 
@@ -162,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return duration.[[Nanoseconds]].
+    // 3. Return 𝔽(duration.[[Nanoseconds]]).
     return Value(duration->nanoseconds());
 }
 
