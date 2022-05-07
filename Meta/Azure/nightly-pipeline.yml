@@ -10,12 +10,12 @@ stages:
   - stage: Toolchain
     dependsOn: []
     jobs:
-      - template: Meta/Azure/Toolchain.yml
+      - template: Toolchain.yml
 
-  - stage: SerenityOS (Coverage)
+  - stage: SerenityOS_Coverage
     dependsOn: Toolchain
     jobs:
-      - template: Meta/Azure/Serenity.yml
+      - template: Serenity.yml
         parameters:
           arch: 'x86_64'
           coverage: 'ON'
