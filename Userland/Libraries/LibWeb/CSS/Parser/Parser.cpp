@@ -5249,6 +5249,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto ident = value.token().ident();
         if (!ident.starts_with("-n-"sv, CaseSensitivity::CaseInsensitive))
             return false;
+        if (ident.length() == 3)
+            return false;
         for (size_t i = 3; i < ident.length(); ++i) {
             if (!is_ascii_digit(ident[i]))
                 return false;
