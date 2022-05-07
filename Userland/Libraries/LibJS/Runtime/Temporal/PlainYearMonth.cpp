@@ -257,7 +257,91 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
     return String::formatted("{}{}", result, calendar_string);
 }
 
-// 9.5.9 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
+// 9.5.9 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
+ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& global_object, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
+
+    // 2. Set other to ? ToTemporalYearMonth(other).
+    auto* other = TRY(to_temporal_year_month(global_object, other_value));
+
+    // 3. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month.calendar();
+
+    // 4. If ? CalendarEquals(calendar, other.[[Calendar]]) is false, throw a RangeError exception.
+    if (!TRY(calendar_equals(global_object, calendar, other->calendar())))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+
+    // 5. Set options to ? GetOptionsObject(options).
+    auto const* options = TRY(get_options_object(global_object, options_value));
+
+    // 6. Let disallowedUnits be « "week", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
+    auto disallowed_units = Vector<StringView> { "week"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
+
+    // 7. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "month").
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "month"sv));
+
+    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", "year").
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "year"sv));
+
+    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 11. If operation is since, then
+    if (operation == DifferenceOperation::Since) {
+        // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+    }
+
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
+
+    // 13. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
+
+    // 14. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
+    auto* other_fields = TRY(prepare_temporal_fields(global_object, *other, field_names, {}));
+
+    // 15. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
+    MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 16. Let otherDate be ? CalendarDateFromFields(calendar, otherFields).
+    auto* other_date = TRY(calendar_date_from_fields(global_object, calendar, *other_fields));
+
+    // 17. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
+    auto* this_fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, {}));
+
+    // 18. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
+    MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 19. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
+    auto* this_date = TRY(calendar_date_from_fields(global_object, calendar, *this_fields));
+
+    // 20. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
+
+    // 21. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
+    auto* duration = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));
+
+    auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // 22. If smallestUnit is not "month" or roundingIncrement ≠ 1, then
+    if (smallest_unit != "month"sv || rounding_increment != 1) {
+        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
+        result = TRY(round_duration(global_object, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
+    }
+
+    // 23. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    return MUST(create_temporal_duration(global_object, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+}
+
+// 9.5.10 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(GlobalObject& global_object, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& vm = global_object.vm();

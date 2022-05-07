@@ -49,6 +49,7 @@ ThrowCompletionOr<BigInt*> add_instant(GlobalObject&, BigInt const& epoch_nanose
 BigInt* difference_instant(GlobalObject&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView rounding_mode);
 BigInt* round_temporal_instant(GlobalObject&, BigInt const& nanoseconds, u64 increment, StringView unit, StringView rounding_mode);
 ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject&, Instant&, Value time_zone, Variant<StringView, u8> const& precision);
+ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject&, DifferenceOperation, Instant const&, Value other, Value options);
 ThrowCompletionOr<Instant*> add_duration_to_or_subtract_duration_from_instant(GlobalObject&, ArithmeticOperation, Instant const&, Value temporal_duration_like);
 
 }

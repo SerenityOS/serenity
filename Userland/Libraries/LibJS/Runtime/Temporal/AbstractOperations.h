@@ -22,6 +22,11 @@ enum class ArithmeticOperation {
     Subtract,
 };
 
+enum class DifferenceOperation {
+    Since,
+    Until,
+};
+
 enum class OptionType {
     Boolean,
     String,

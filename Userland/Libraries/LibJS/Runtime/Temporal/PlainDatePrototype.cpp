@@ -441,116 +441,29 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with_calendar)
 // 3.3.23 Temporal.PlainDate.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
     auto* temporal_date = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalDate(other).
-    auto* other = TRY(to_temporal_date(global_object, vm.argument(0)));
-
-    // 4. If ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
-    if (!TRY(calendar_equals(global_object, temporal_date->calendar(), other->calendar())))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
-
-    // 5. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 6. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
-    Vector<StringView> disallowed_units { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
-
-    // 7. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
-
-    // 8. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
-    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
-
-    // 9. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
-
-    // 10. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 11. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
-
-    // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, move(*largest_unit)));
-
-    // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
-    auto* duration = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
-
-    DurationRecord result { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
-
-    // 15. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
-    if (*smallest_unit != "day"sv || rounding_increment != 1) {
-        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
-        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
-    }
-
-    // 16. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
-    return MUST(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
+    // 3. Return ? DifferenceTemporalPlainDate(until, temporalDate, other, options).
+    return TRY(difference_temporal_plain_date(global_object, DifferenceOperation::Until, *temporal_date, other, options));
 }
 
 // 3.3.24 Temporal.PlainDate.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.since
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
     auto* temporal_date = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalDate(other).
-    auto* other = TRY(to_temporal_date(global_object, vm.argument(0)));
-
-    // 4. If ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
-    if (!TRY(calendar_equals(global_object, temporal_date->calendar(), other->calendar())))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
-
-    // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 6. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
-    Vector<StringView> disallowed_units { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
-
-    // 7. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
-
-    // 8. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
-    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
-
-    // 9. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
-
-    // 10. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 11. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 12. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
-    rounding_mode = negate_temporal_rounding_mode(rounding_mode);
-
-    // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
-
-    // 14. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, move(*largest_unit)));
-
-    // 15. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
-    auto* duration = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
-
-    DurationRecord result { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
-
-    // 16. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
-    if (*smallest_unit != "day"sv || rounding_increment != 1) {
-        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
-        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
-    }
-
-    // 17. Return ! CreateTemporalDuration(-result.[[Years]], -result.[[Months]], -result.[[Weeks]], -result.[[Days]], 0, 0, 0, 0, 0, 0).
-    return TRY(create_temporal_duration(global_object, -result.years, -result.months, -result.weeks, -result.days, 0, 0, 0, 0, 0, 0));
+    // 3. Return ? DifferenceTemporalPlainDate(since, temporalDate, other, options).
+    return TRY(difference_temporal_plain_date(global_object, DifferenceOperation::Since, *temporal_date, other, options));
 }
 
 // 3.3.25 Temporal.PlainDate.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals

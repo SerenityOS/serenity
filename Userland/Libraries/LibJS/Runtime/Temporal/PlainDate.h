@@ -10,6 +10,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
 namespace JS::Temporal {
 
@@ -52,5 +53,6 @@ String pad_iso_year(i32 y);
 ThrowCompletionOr<String> temporal_date_to_string(GlobalObject&, PlainDate&, StringView show_calendar);
 ThrowCompletionOr<ISODate> add_iso_date(GlobalObject&, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow);
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
+ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject&, DifferenceOperation, PlainDate&, Value other, Value options);
 
 }
