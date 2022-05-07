@@ -589,7 +589,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             auto value = local_time.millisecond;
 
             // ii. Let v be floor(v × 10^(fractionalSecondDigits - 3)).
-            value = floor(value * pow(10, static_cast<int>(*fractional_second_digits) - 3));
+            value = floor(value * exp10(static_cast<int>(*fractional_second_digits) - 3));
 
             // iii. Let fv be FormatNumeric(nf3, v).
             auto formatted_value = format_numeric(global_object, *number_format3, Value(value));

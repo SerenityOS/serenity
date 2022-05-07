@@ -137,15 +137,15 @@ KeypadValue::KeypadValue(double d)
         d = -d;
     }
     i8 current_pow = 0;
-    while (AK::pow(10.0, (double)current_pow) <= d)
+    while (AK::exp10((double)current_pow) <= d)
         current_pow += 1;
     current_pow -= 1;
     double epsilon = 1e-6;
     while (d >= epsilon || current_pow >= 0) {
         m_value *= 10;
-        i8 digit = (u64)(d * AK::pow(0.1, (double)current_pow)) % 10;
+        i8 digit = (u64)(d * AK::exp10(-(double)current_pow)) % 10;
         m_value += digit;
-        d -= digit * AK::pow(10.0, (double)current_pow);
+        d -= digit * AK::exp10((double)current_pow);
         if (current_pow < 0)
             m_decimal_places += 1;
         current_pow -= 1;
@@ -157,6 +157,6 @@ KeypadValue::KeypadValue(double d)
 
 KeypadValue::operator double() const
 {
-    double res = (double)m_value / AK::pow(10.0, (double)m_decimal_places);
+    double res = (double)m_value / AK::exp10((double)m_decimal_places);
     return res;
 }

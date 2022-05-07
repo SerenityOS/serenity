@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
         if (fraction_digits_value.is_undefined())
             fraction_digits = compute_fraction_digits(number, exponent);
 
-        number = round(number / pow(10, exponent - fraction_digits));
+        number = round(number / exp10(exponent - fraction_digits));
 
         // c. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
         number_string = decimal_digits_to_string(number);
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     // 11. Else,
     // a. Let n be an integer for which n / (10^f) - x is as close to zero as possible. If there are two such n, pick the larger n.
     // FIXME: This breaks down with values of `fraction_digits` > 23
-    auto n = round(pow(10.0f, fraction_digits) * number);
+    auto n = round(exp10(fraction_digits) * number);
 
     // b. If n = 0, let m be the String "0". Otherwise, let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     auto m = (n == 0 ? "0" : String::formatted("{}", n));
@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
         // a. Let e and n be integers such that 10^(p-1) ≤ n < 10^p and for which n × 10^(e-p+1) - x is as close to zero as possible.
         //    If there are two such sets of e and n, pick the e and n for which n × 10^(e-p+1) is larger.
         exponent = static_cast<int>(floor(log10(number)));
-        number = round(number / pow(10, exponent - precision + 1));
+        number = round(number / exp10(exponent - precision + 1));
 
         // b. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
         number_string = decimal_digits_to_string(number);

@@ -419,7 +419,7 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
     if (granule.block_type != MP3::BlockType::Short) {
         for (size_t band_index = 0; band_index < 22; band_index++) {
             float const exponent = gain / 4.0f - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
-            fill_band(AK::pow<float>(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
+            fill_band(AK::exp2(exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
         }
     } else {
         size_t band_index = 0;
@@ -428,7 +428,7 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
         if (granule.mixed_block_flag) {
             while (sample_count < 36) {
                 float const exponent = gain / 4.0f - (scale_factor_multiplier * (channel.scale_factors[band_index] + granule.preflag * MP3::Tables::Pretab[band_index]));
-                fill_band(AK::pow<float>(2.0, exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
+                fill_band(AK::exp2(exponent), scale_factor_bands[band_index].start, scale_factor_bands[band_index].end);
                 sample_count += scale_factor_bands[band_index].width;
                 band_index++;
             }
@@ -443,11 +443,11 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
             float const exponent1 = gain1 - (scale_factor_multiplier * channel.scale_factors[band_index + 1]);
             float const exponent2 = gain2 - (scale_factor_multiplier * channel.scale_factors[band_index + 2]);
 
-            fill_band(AK::pow<float>(2.0, exponent0), scale_factor_bands[band_index + 0].start, scale_factor_bands[band_index + 0].end);
+            fill_band(AK::exp2(exponent0), scale_factor_bands[band_index + 0].start, scale_factor_bands[band_index + 0].end);
             sample_count += scale_factor_bands[band_index + 0].width;
-            fill_band(AK::pow<float>(2.0, exponent1), scale_factor_bands[band_index + 1].start, scale_factor_bands[band_index + 1].end);
+            fill_band(AK::exp2(exponent1), scale_factor_bands[band_index + 1].start, scale_factor_bands[band_index + 1].end);
             sample_count += scale_factor_bands[band_index + 1].width;
-            fill_band(AK::pow<float>(2.0, exponent2), scale_factor_bands[band_index + 2].start, scale_factor_bands[band_index + 2].end);
+            fill_band(AK::exp2(exponent2), scale_factor_bands[band_index + 2].start, scale_factor_bands[band_index + 2].end);
             sample_count += scale_factor_bands[band_index + 2].width;
 
             band_index += 3;

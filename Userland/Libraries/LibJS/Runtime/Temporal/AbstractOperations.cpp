@@ -1396,7 +1396,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         auto f_hours_scale = (double)f_hours_digits.length();
 
         // d. Let minutesMV be ! ToIntegerOrInfinity(fHoursDigits) / 10^fHoursScale × 60.
-        minutes = strtod(String { f_hours_digits }.characters(), nullptr) / pow(10, f_hours_scale) * 60;
+        minutes = strtod(String { f_hours_digits }.characters(), nullptr) / exp10(f_hours_scale) * 60;
     }
     // 10. Else,
     else {
@@ -1419,7 +1419,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         auto f_minutes_scale = (double)f_minutes_digits.length();
 
         // d. Let secondsMV be ! ToIntegerOrInfinity(fMinutesDigits) / 10^fMinutesScale × 60.
-        seconds = strtod(String { f_minutes_digits }.characters(), nullptr) / pow(10, f_minutes_scale) * 60;
+        seconds = strtod(String { f_minutes_digits }.characters(), nullptr) / exp10(f_minutes_scale) * 60;
     }
     // 12. Else if seconds is not empty, then
     else if (seconds_part.has_value()) {
@@ -1443,7 +1443,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         auto f_seconds_scale = (double)f_seconds_digits.length();
 
         // c. Let millisecondsMV be ! ToIntegerOrInfinity(fSecondsDigits) / 10^fSecondsScale × 1000.
-        milliseconds = strtod(String { f_seconds_digits }.characters(), nullptr) / pow(10, f_seconds_scale) * 1000;
+        milliseconds = strtod(String { f_seconds_digits }.characters(), nullptr) / exp10(f_seconds_scale) * 1000;
     }
     // 15. Else,
     else {
