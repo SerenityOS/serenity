@@ -445,20 +445,20 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     // 11. If digits is 1, 2, or 3, then
     if (digits == 1 || digits == 2 || digits == 3) {
         // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
+        return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)AK::pow(10, 3 - digits) };
     }
 
     // 12. If digits is 4, 5, or 6, then
     if (digits == 4 || digits == 5 || digits == 6) {
         // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
+        return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)AK::pow(10, 6 - digits) };
     }
 
     // 13. Assert: digits is 7, 8, or 9.
     VERIFY(digits == 7 || digits == 8 || digits == 9);
 
     // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - digits) }.
-    return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
+    return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)AK::pow(10, 9 - digits) };
 }
 
 // https://tc39.es/proposal-temporal/#table-temporal-singular-and-plural-units

@@ -280,15 +280,15 @@ static Value divide(GlobalObject& global_object, Value lhs, i64 rhs)
 static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
 {
     if (exponent < 0)
-        return divide(global_object, number, pow(10, -exponent));
-    return multiply(global_object, number, pow(10, exponent));
+        return divide(global_object, number, AK::pow(10LL, -exponent));
+    return multiply(global_object, number, AK::pow(10LL, exponent));
 }
 
 static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i64 exponent)
 {
     if (exponent < 0)
-        return multiply(global_object, number, pow(10, -exponent));
-    return divide(global_object, number, pow(10, exponent));
+        return multiply(global_object, number, AK::pow(10LL, -exponent));
+    return divide(global_object, number, AK::pow(10LL, exponent));
 }
 
 static ALWAYS_INLINE Value rounded(Value number)
