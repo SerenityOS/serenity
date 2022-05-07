@@ -13,9 +13,9 @@ describe("correct behavior", () => {
         const dateTwo = new Temporal.PlainDate(2022, 12, 25);
         const sinceDuration = dateTwo.since(dateOne);
 
-        expect(sinceDuration.years).toBe(-0);
-        expect(sinceDuration.months).toBe(-0);
-        expect(sinceDuration.weeks).toBe(-0);
+        expect(sinceDuration.years).toBe(0);
+        expect(sinceDuration.months).toBe(0);
+        expect(sinceDuration.weeks).toBe(0);
         expect(sinceDuration.days).toBe(406);
         expect(sinceDuration.hours).toBe(0);
         expect(sinceDuration.minutes).toBe(0);
@@ -30,10 +30,10 @@ describe("correct behavior", () => {
         const equalDateTwo = new Temporal.PlainDate(1, 1, 1);
 
         const checkResults = result => {
-            expect(result.years).toBe(-0);
-            expect(result.months).toBe(-0);
-            expect(result.weeks).toBe(-0);
-            expect(result.days).toBe(-0);
+            expect(result.years).toBe(0);
+            expect(result.months).toBe(0);
+            expect(result.weeks).toBe(0);
+            expect(result.days).toBe(0);
             expect(result.hours).toBe(0);
             expect(result.minutes).toBe(0);
             expect(result.seconds).toBe(0);
@@ -53,9 +53,9 @@ describe("correct behavior", () => {
         const dateTwo = new Temporal.PlainDate(2022, 12, 25);
         const sinceDuration = dateOne.since(dateTwo);
 
-        expect(sinceDuration.years).toBe(-0);
-        expect(sinceDuration.months).toBe(-0);
-        expect(sinceDuration.weeks).toBe(-0);
+        expect(sinceDuration.years).toBe(0);
+        expect(sinceDuration.months).toBe(0);
+        expect(sinceDuration.weeks).toBe(0);
         expect(sinceDuration.days).toBe(-406);
         expect(sinceDuration.hours).toBe(0);
         expect(sinceDuration.minutes).toBe(0);
@@ -106,9 +106,9 @@ describe("correct behavior", () => {
         const dateTwo = new Temporal.PlainDate(2022, 12, 25);
         const sinceDuration = dateTwo.since("2021-11-14");
 
-        expect(sinceDuration.years).toBe(-0);
-        expect(sinceDuration.months).toBe(-0);
-        expect(sinceDuration.weeks).toBe(-0);
+        expect(sinceDuration.years).toBe(0);
+        expect(sinceDuration.months).toBe(0);
+        expect(sinceDuration.weeks).toBe(0);
         expect(sinceDuration.days).toBe(406);
         expect(sinceDuration.hours).toBe(0);
         expect(sinceDuration.minutes).toBe(0);

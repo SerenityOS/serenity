@@ -35,6 +35,32 @@ Duration::Duration(double years, double months, double weeks, double days, doubl
     , m_microseconds(microseconds)
     , m_nanoseconds(nanoseconds)
 {
+    auto fields = AK::Array {
+        &Duration::m_years,
+        &Duration::m_months,
+        &Duration::m_weeks,
+        &Duration::m_days,
+        &Duration::m_hours,
+        &Duration::m_minutes,
+        &Duration::m_seconds,
+        &Duration::m_milliseconds,
+        &Duration::m_microseconds,
+        &Duration::m_nanoseconds,
+    };
+
+    // NOTE: The spec stores these fields as mathematical values. VERIFY() that we have finite,
+    // integral values in them, and normalize any negative zeros caused by floating point math.
+    // This is usually done using ℝ(𝔽(value)) at the call site.
+    for (auto const& field : fields) {
+        auto& value = this->*field;
+        VERIFY(isfinite(value));
+        // FIXME: test-js contains a small number of cases where a Temporal.Duration is constructed
+        //        with a non-integral double. Eliminate these and VERIFY(trunc(value) == value) instead.
+        if (trunc(value) != value)
+            value = trunc(value);
+        else if (bit_cast<u64>(value) == NEGATIVE_ZERO_BITS)
+            value = 0;
+    }
 }
 
 // NOTE: All of these have two overloads: one that can throw, and one that can't.
@@ -47,7 +73,7 @@ DurationRecord create_duration_record(double years, double months, double weeks,
     // 1. If ! IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     VERIFY(is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
-    // 2. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+    // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return DurationRecord { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
 }
 
@@ -60,7 +86,7 @@ ThrowCompletionOr<DurationRecord> create_duration_record(GlobalObject& global_ob
     if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
-    // 2. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+    // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return DurationRecord { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
 }
 
@@ -70,7 +96,7 @@ DateDurationRecord create_date_duration_record(double years, double months, doub
     // 1. If ! IsValidDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     VERIFY(is_valid_duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
-    // 2. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, }.
+    // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)) }.
     return DateDurationRecord { .years = years, .months = months, .weeks = weeks, .days = days };
 }
 
@@ -83,7 +109,7 @@ ThrowCompletionOr<DateDurationRecord> create_date_duration_record(GlobalObject& 
     if (!is_valid_duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
-    // 2. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, }.
+    // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)) }.
     return DateDurationRecord { .years = years, .months = months, .weeks = weeks, .days = days };
 }
 
@@ -93,7 +119,7 @@ TimeDurationRecord create_time_duration_record(double days, double hours, double
     // 1. If ! IsValidDuration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     VERIFY(is_valid_duration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
-    // 2. Return the Record { [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+    // 2. Return the Record { [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return TimeDurationRecord { .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
 }
 
@@ -106,7 +132,7 @@ ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject& 
     if (!is_valid_duration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
-    // 2. Return the Record { [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+    // 2. Return the Record { [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return TimeDurationRecord { .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
 }
 
@@ -171,11 +197,11 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
             // i. Set any to true.
             any = true;
 
-            // ii. Let val be 𝔽(? ToIntegerWithoutRounding(val)).
-            value = Value(TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects())));
+            // ii. Let val be ? ToIntegerWithoutRounding(val).
+            auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
 
             // iii. Set result's field whose name is the Field Name value of the current row to val.
-            result.*field = value.as_double();
+            result.*field = value_integer;
         }
     }
 
@@ -221,7 +247,7 @@ bool is_valid_duration(double years, double months, double weeks, double days, d
 
     // 2. For each value v of « years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds », do
     for (auto& v : { years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds }) {
-        // a. If v is not finite, return false.
+        // a. If 𝔽(v) is not finite, return false.
         if (!isfinite(v))
             return false;
 
@@ -310,11 +336,11 @@ ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& globa
             // i. Set any to true.
             any = true;
 
-            // ii. Set value to 𝔽(? ToIntegerWithoutRounding(value)).
-            value = Value(TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects())));
+            // ii. Set value to ? ToIntegerWithoutRounding(value).
+            auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
 
             // iii. Set result's field whose name is the Field Name value of the current row to value.
-            result.*field = value.as_double();
+            result.*field = value_integer;
         }
     }
 
@@ -342,16 +368,16 @@ ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject& global_objec
         new_target = global_object.temporal_duration_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Duration.prototype%", « [[InitializedTemporalDuration]], [[Years]], [[Months]], [[Weeks]], [[Days]], [[Hours]], [[Minutes]], [[Seconds]], [[Milliseconds]], [[Microseconds]], [[Nanoseconds]] »).
-    // 4. Set object.[[Years]] to years.
-    // 5. Set object.[[Months]] to months.
-    // 6. Set object.[[Weeks]] to weeks.
-    // 7. Set object.[[Days]] to days.
-    // 8. Set object.[[Hours]] to hours.
-    // 9. Set object.[[Minutes]] to minutes.
-    // 10. Set object.[[Seconds]] to seconds.
-    // 11. Set object.[[Milliseconds]] to milliseconds.
-    // 12. Set object.[[Microseconds]] to microseconds.
-    // 13. Set object.[[Nanoseconds]] to nanoseconds.
+    // 4. Set object.[[Years]] to ℝ(𝔽(years)).
+    // 5. Set object.[[Months]] to ℝ(𝔽(months)).
+    // 6. Set object.[[Weeks]] to ℝ(𝔽(weeks)).
+    // 7. Set object.[[Days]] to ℝ(𝔽(days)).
+    // 8. Set object.[[Hours]] to ℝ(𝔽(hours)).
+    // 9. Set object.[[Minutes]] to ℝ(𝔽(minutes)).
+    // 10. Set object.[[Seconds]] to ℝ(𝔽(seconds)).
+    // 11. Set object.[[Milliseconds]] to ℝ(𝔽(milliseconds)).
+    // 12. Set object.[[Microseconds]] to ℝ(𝔽(microseconds)).
+    // 13. Set object.[[Nanoseconds]] to ℝ(𝔽(nanoseconds)).
     auto* object = TRY(ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
@@ -398,28 +424,27 @@ Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, d
 {
     VERIFY(offset_shift == trunc(offset_shift));
 
-    // 1. Set nanoseconds to ℝ(nanoseconds).
     auto result_nanoseconds = nanoseconds;
 
     // TODO: Add a way to create SignedBigIntegers from doubles with full precision and remove this restriction
     VERIFY(AK::is_within_range<i64>(days) && AK::is_within_range<i64>(hours) && AK::is_within_range<i64>(minutes) && AK::is_within_range<i64>(seconds) && AK::is_within_range<i64>(milliseconds) && AK::is_within_range<i64>(microseconds));
 
-    // 2. If days ≠ 0, then
+    // 1. If days ≠ 0, then
     if (days != 0) {
         // a. Set nanoseconds to nanoseconds - offsetShift.
         result_nanoseconds = result_nanoseconds.minus(Crypto::SignedBigInteger::create_from(offset_shift));
     }
-    // 3. Set hours to ℝ(hours) + ℝ(days) × 24.
+    // 2. Set hours to hours + days × 24.
     auto total_hours = Crypto::SignedBigInteger::create_from(hours).plus(Crypto::SignedBigInteger::create_from(days).multiplied_by(Crypto::UnsignedBigInteger(24)));
-    // 4. Set minutes to ℝ(minutes) + hours × 60.
+    // 3. Set minutes to minutes + hours × 60.
     auto total_minutes = Crypto::SignedBigInteger::create_from(minutes).plus(total_hours.multiplied_by(Crypto::UnsignedBigInteger(60)));
-    // 5. Set seconds to ℝ(seconds) + minutes × 60.
+    // 4. Set seconds to seconds + minutes × 60.
     auto total_seconds = Crypto::SignedBigInteger::create_from(seconds).plus(total_minutes.multiplied_by(Crypto::UnsignedBigInteger(60)));
-    // 6. Set milliseconds to ℝ(milliseconds) + seconds × 1000.
+    // 5. Set milliseconds to milliseconds + seconds × 1000.
     auto total_milliseconds = Crypto::SignedBigInteger::create_from(milliseconds).plus(total_seconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
-    // 7. Set microseconds to ℝ(microseconds) + milliseconds × 1000.
+    // 6. Set microseconds to microseconds + milliseconds × 1000.
     auto total_microseconds = Crypto::SignedBigInteger::create_from(microseconds).plus(total_milliseconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
-    // 8. Return nanoseconds + microseconds × 1000.
+    // 7. Return nanoseconds + microseconds × 1000.
     return result_nanoseconds.plus(total_microseconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
 }
 
@@ -560,7 +585,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // a. Assert: largestUnit is "nanosecond".
         VERIFY(largest_unit == "nanosecond"sv);
     }
-    // 15. Return ! CreateTimeDurationRecord(days, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
+    // 15. Return ? CreateTimeDurationRecord(days, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
     return create_time_duration_record(days, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign);
 }
 
@@ -976,12 +1001,12 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "year, month or week");
         }
 
-        // b. Let result be ! BalanceDuration(d1 + d2, h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
+        // b. Let result be ? BalanceDuration(d1 + d2, h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
         // FIXME: Narrowing conversion from 'double' to 'i64'
-        auto result = MUST(balance_duration(global_object, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
+        auto result = TRY(balance_duration(global_object, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
 
-        // c. Return ? CreateDurationRecord(0, 0, 0, result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-        return create_duration_record(global_object, 0, 0, 0, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
+        // c. Return ! CreateDurationRecord(0, 0, 0, result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+        return MUST(create_duration_record(global_object, 0, 0, 0, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
     }
 
     // 5. If relativeTo has an [[InitializedTemporalDate]] internal slot, then
@@ -1018,12 +1043,12 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // j. Let dateDifference be ? CalendarDateUntil(calendar, relativeTo, end, differenceOptions).
         auto* date_difference = TRY(calendar_date_until(global_object, calendar, &relative_to, end, *difference_options));
 
-        // k. Let result be ! BalanceDuration(dateDifference.[[Days]], h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
+        // k. Let result be ? BalanceDuration(dateDifference.[[Days]], h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
         // FIXME: Narrowing conversion from 'double' to 'i64'
-        auto result = MUST(balance_duration(global_object, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
+        auto result = TRY(balance_duration(global_object, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
 
         // l. Return ? CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-        return create_duration_record(global_object, date_difference->years(), date_difference->months(), date_difference->weeks(), result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
+        return MUST(create_duration_record(global_object, date_difference->years(), date_difference->months(), date_difference->weeks(), result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
     }
 
     // 6. Assert: relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot.
@@ -1093,21 +1118,19 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     // spec is concerned, but the latter is more strictly typed for convenience.
     PlainDate* relative_to = nullptr;
 
-    // 2. Let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, and increment each be the mathematical values of themselves.
-
     // FIXME: assuming "smallestUnit" as the option name here leads to confusing error messages in some cases:
     //        > new Temporal.Duration().total({ unit: "month" })
     //        Uncaught exception: [RangeError] month is not a valid value for option smallestUnit
-    // 3. If unit is "year", "month", or "week", and relativeTo is undefined, then
+    // 2. If unit is "year", "month", or "week", and relativeTo is undefined, then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv) && !relative_to_object) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, unit, "smallestUnit"sv);
     }
 
-    // 4. Let zonedRelativeTo be undefined.
+    // 3. Let zonedRelativeTo be undefined.
     ZonedDateTime* zoned_relative_to = nullptr;
 
-    // 5. If relativeTo is not undefined, then
+    // 4. If relativeTo is not undefined, then
     if (relative_to_object) {
         // a. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
         if (is<ZonedDateTime>(relative_to_object)) {
@@ -1130,10 +1153,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // c. Let calendar be relativeTo.[[Calendar]].
         calendar = &relative_to->calendar();
     }
-    // 6. Else,
+    // 5. Else,
     //    a. NOTE: calendar will not be used below.
 
-    // 7. If unit is one of "year", "month", "week", or "day", then
+    // 6. If unit is one of "year", "month", "week", or "day", then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let nanoseconds be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
         auto nanoseconds_bigint = total_duration_nanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, Crypto::SignedBigInteger::create_from((i64)nanoseconds), 0);
@@ -1162,16 +1185,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 8. Else,
+    // 7. Else,
     else {
         // a. Let fractionalSeconds be nanoseconds × 10^-9 + microseconds × 10^-6 + milliseconds × 10^-3 + seconds.
         fractional_seconds = nanoseconds * 0.000000001 + microseconds * 0.000001 + milliseconds * 0.001 + seconds;
     }
 
-    // 9. Let remainder be undefined.
+    // 8. Let remainder be undefined.
     double remainder = 0;
 
-    // 10. If unit is "year", then
+    // 9. If unit is "year", then
     if (unit == "year"sv) {
         VERIFY(relative_to);
 
@@ -1261,7 +1284,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         weeks = 0;
         days = 0;
     }
-    // 11. Else if unit is "month", then
+    // 10. Else if unit is "month", then
     else if (unit == "month"sv) {
         VERIFY(relative_to);
 
@@ -1335,7 +1358,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         weeks = 0;
         days = 0;
     }
-    // 12. Else if unit is "week", then
+    // 11. Else if unit is "week", then
     else if (unit == "week"sv) {
         VERIFY(relative_to);
 
@@ -1384,7 +1407,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // j. Set days to 0.
         days = 0;
     }
-    // 13. Else if unit is "day", then
+    // 12. Else if unit is "day", then
     else if (unit == "day"sv) {
         // a. Let fractionalDays be days.
         auto fractional_days = days;
@@ -1395,7 +1418,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // c. Set remainder to fractionalDays - days.
         remainder = fractional_days - days;
     }
-    // 14. Else if unit is "hour", then
+    // 13. Else if unit is "hour", then
     else if (unit == "hour"sv) {
         // a. Let fractionalHours be (fractionalSeconds / 60 + minutes) / 60 + hours.
         auto fractional_hours = (fractional_seconds / 60 + minutes) / 60 + hours;
@@ -1413,7 +1436,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 15. Else if unit is "minute", then
+    // 14. Else if unit is "minute", then
     else if (unit == "minute"sv) {
         // a. Let fractionalMinutes be fractionalSeconds / 60 + minutes.
         auto fractional_minutes = fractional_seconds / 60 + minutes;
@@ -1430,7 +1453,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 16. Else if unit is "second", then
+    // 15. Else if unit is "second", then
     else if (unit == "second"sv) {
         // a. Set seconds to ! RoundNumberToIncrement(fractionalSeconds, increment, roundingMode).
         seconds = (double)round_number_to_increment(fractional_seconds, increment, rounding_mode);
@@ -1443,7 +1466,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 17. Else if unit is "millisecond", then
+    // 16. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
         // a. Let fractionalMilliseconds be nanoseconds × 10^-6 + microseconds × 10^-3 + milliseconds.
         auto fractional_milliseconds = nanoseconds * 0.000001 + microseconds * 0.001 + milliseconds;
@@ -1458,7 +1481,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 18. Else if unit is "microsecond", then
+    // 17. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
         // a. Let fractionalMicroseconds be nanoseconds × 10^-3 + microseconds.
         auto fractional_microseconds = nanoseconds * 0.001 + microseconds;
@@ -1472,7 +1495,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // d. Set nanoseconds to 0.
         nanoseconds = 0;
     }
-    // 19. Else,
+    // 18. Else,
     else {
         // a. Assert: unit is "nanosecond".
         VERIFY(unit == "nanosecond"sv);
@@ -1487,10 +1510,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         remainder -= nanoseconds;
     }
 
-    // 20. Let duration be ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // 19. Let duration be ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto duration = create_duration_record(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 
-    // 21. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
+    // 20. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
     return RoundedDuration { .duration_record = duration, .remainder = remainder };
 }
 
@@ -1582,81 +1605,76 @@ String temporal_duration_to_string(double years, double months, double weeks, do
     if (precision.has<StringView>())
         VERIFY(precision.get<StringView>() == "auto"sv);
 
-    // 1. Set seconds to the mathematical value of seconds.
-    // 2. Set milliseconds to the mathematical value of milliseconds.
-    // 3. Set microseconds to the mathematical value of microseconds.
-    // 4. Set nanoseconds to the mathematical value of nanoseconds.
-
-    // 5. Let sign be ! DurationSign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // 1. Let sign be ! DurationSign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto sign = duration_sign(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 
-    // 6. Set microseconds to microseconds + RoundTowardsZero(nanoseconds / 1000).
+    // 2. Set microseconds to microseconds + RoundTowardsZero(nanoseconds / 1000).
     microseconds += trunc(nanoseconds / 1000);
 
-    // 7. Set nanoseconds to remainder(nanoseconds, 1000).
+    // 3. Set nanoseconds to remainder(nanoseconds, 1000).
     nanoseconds = fmod(nanoseconds, 1000);
 
-    // 8. Set milliseconds to milliseconds + RoundTowardsZero(microseconds / 1000).
+    // 4. Set milliseconds to milliseconds + RoundTowardsZero(microseconds / 1000).
     milliseconds += trunc(microseconds / 1000);
 
-    // 9. Set microseconds to remainder(microseconds, 1000).
+    // 5. Set microseconds to remainder(microseconds, 1000).
     microseconds = fmod(microseconds, 1000);
 
-    // 10. Set seconds to seconds + RoundTowardsZero(milliseconds / 1000).
+    // 6. Set seconds to seconds + RoundTowardsZero(milliseconds / 1000).
     seconds += trunc(milliseconds / 1000);
 
-    // 11. Set milliseconds to remainder(milliseconds, 1000).
+    // 7. Set milliseconds to remainder(milliseconds, 1000).
     milliseconds = fmod(milliseconds, 1000);
 
-    // 12. Let datePart be "".
+    // 8. Let datePart be "".
     StringBuilder date_part;
 
-    // 13. If years is not 0, then
+    // 9. If years is not 0, then
     if (years != 0) {
         // a. Set datePart to the string concatenation of abs(years) formatted as a decimal number and the code unit 0x0059 (LATIN CAPITAL LETTER Y).
         date_part.appendff("{}", fabs(years));
         date_part.append('Y');
     }
 
-    // 14. If months is not 0, then
+    // 10. If months is not 0, then
     if (months != 0) {
         // a. Set datePart to the string concatenation of datePart, abs(months) formatted as a decimal number, and the code unit 0x004D (LATIN CAPITAL LETTER M).
         date_part.appendff("{}", fabs(months));
         date_part.append('M');
     }
 
-    // 15. If weeks is not 0, then
+    // 11. If weeks is not 0, then
     if (weeks != 0) {
         // a. Set datePart to the string concatenation of datePart, abs(weeks) formatted as a decimal number, and the code unit 0x0057 (LATIN CAPITAL LETTER W).
         date_part.appendff("{}", fabs(weeks));
         date_part.append('W');
     }
 
-    // 16. If days is not 0, then
+    // 12. If days is not 0, then
     if (days != 0) {
         // a. Set datePart to the string concatenation of datePart, abs(days) formatted as a decimal number, and the code unit 0x0044 (LATIN CAPITAL LETTER D).
         date_part.appendff("{}", fabs(days));
         date_part.append('D');
     }
 
-    // 17. Let timePart be "".
+    // 13. Let timePart be "".
     StringBuilder time_part;
 
-    // 18. If hours is not 0, then
+    // 14. If hours is not 0, then
     if (hours != 0) {
         // a. Set timePart to the string concatenation of abs(hours) formatted as a decimal number and the code unit 0x0048 (LATIN CAPITAL LETTER H).
         time_part.appendff("{}", fabs(hours));
         time_part.append('H');
     }
 
-    // 19. If minutes is not 0, then
+    // 15. If minutes is not 0, then
     if (minutes != 0) {
         // a. Set timePart to the string concatenation of timePart, abs(minutes) formatted as a decimal number, and the code unit 0x004D (LATIN CAPITAL LETTER M).
         time_part.appendff("{}", fabs(minutes));
         time_part.append('M');
     }
 
-    // 20. If any of seconds, milliseconds, microseconds, and nanoseconds are not 0; or years, months, weeks, days, hours, and minutes are all 0; or precision is not "auto"; then
+    // 16. If any of seconds, milliseconds, microseconds, and nanoseconds are not 0; or years, months, weeks, days, hours, and minutes are all 0; or precision is not "auto"; then
     if ((seconds != 0 || milliseconds != 0 || microseconds != 0 || nanoseconds != 0) || (years == 0 && months == 0 && weeks == 0 && days == 0 && hours == 0 && minutes == 0) || (!precision.has<StringView>() || precision.get<StringView>() != "auto"sv)) {
         // a. Let fraction be abs(milliseconds) × 10^6 + abs(microseconds) × 10^3 + abs(nanoseconds).
         auto fraction = fabs(milliseconds) * 1'000'000 + fabs(microseconds) * 1'000 + fabs(nanoseconds);
@@ -1699,23 +1717,23 @@ String temporal_duration_to_string(double years, double months, double weeks, do
         time_part.append('S');
     }
 
-    // 21. Let signPart be the code unit 0x002D (HYPHEN-MINUS) if sign < 0, and otherwise the empty String.
+    // 17. Let signPart be the code unit 0x002D (HYPHEN-MINUS) if sign < 0, and otherwise the empty String.
     auto sign_part = sign < 0 ? "-"sv : ""sv;
 
-    // 22. Let result be the string concatenation of signPart, the code unit 0x0050 (LATIN CAPITAL LETTER P) and datePart.
+    // 18. Let result be the string concatenation of signPart, the code unit 0x0050 (LATIN CAPITAL LETTER P) and datePart.
     StringBuilder result;
     result.append(sign_part);
     result.append('P');
     result.append(date_part.string_view());
 
-    // 23. If timePart is not "", then
+    // 19. If timePart is not "", then
     if (!time_part.is_empty()) {
         // a. Set result to the string concatenation of result, the code unit 0x0054 (LATIN CAPITAL LETTER T), and timePart.
         result.append('T');
         result.append(time_part.string_view());
     }
 
-    // 24. Return result.
+    // 20. Return result.
     return result.to_string();
 }
 
