@@ -663,26 +663,18 @@ template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
     CONSTEXPR_STATE(pow, x, y);
-    // fixme I am naive
-    if (__builtin_isnan(y))
-        return y;
-    if (y == 0)
-        return 1;
-    if (x == 0)
-        return 0;
-    if (y == 1)
-        return x;
-    int y_as_int = (int)y;
-    if (y == (T)y_as_int) {
-        T result = x;
-        for (int i = 0; i < fabs<T>(y) - 1; ++i)
-            result *= x;
-        if (y < 0)
-            result = 1.0l / result;
-        return result;
-    }
-
-    return exp2<T>(y * log2<T>(x));
+    asm(
+        "fyl2x\n"
+        "fld1\n"
+        "fprem\n"
+        "f2xm1\n"
+        "faddp\n"
+        "fscale\n"
+        "fstp %%st(1)"
+        : "+t"(x)
+        : "u"(y)
+        : "st(1)");
+    return x;
 }
 
 #undef CONSTEXPR_STATE
