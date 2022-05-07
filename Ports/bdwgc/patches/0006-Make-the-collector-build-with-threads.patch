@@ -1,7 +1,7 @@
-From 825f33e226dbe842fb6588ba73c31b9fbb079f11 Mon Sep 17 00:00:00 2001
+From a9832f6c77e837637544926717061d00951a6321 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 25 Feb 2022 04:53:53 +0330
-Subject: [PATCH 6/6] Make the collector build with threads
+Subject: [PATCH 6/7] Make the collector build with threads
 
 In an extremely limited way for now:
 - No extra threads
@@ -48,5 +48,5 @@ index 8e2e3a6..f38fb22 100644
  #endif
  
 -- 
-2.35.1
+2.36.1
 

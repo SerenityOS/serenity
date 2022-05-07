@@ -8,18 +8,8 @@ depends=(libatomic_ops)
 workdir=gc-$version
 auth_type=sha256
 
-build() {
-    cd $workdir
-    mkdir build || true
-    cd build
-    cmake .. \
-        -Denable_threads=ON \
-        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="$DESTDIR/usr/local/bin" \
-        -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$DESTDIR/usr/local/lib"
-    cmake --build .
-}
-
-install() {
-    cd ..
-    cp -r include "$DESTDIR/usr/local/include/gc"
+useconfigure=true
+configopts=("--enable-threads=posix")
+pre_configure() {
+    run ./autogen.sh
 }
