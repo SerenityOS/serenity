@@ -1,5 +1,14 @@
+From 53eae76554d4e4629fc1568cec785b644bde1f86 Mon Sep 17 00:00:00 2001
+From: gouchi <gouchi@free.fr>
+Date: Sat, 7 May 2022 18:19:42 +0200
+Subject: [PATCH 1/6] Add SerenityOS platform
+
+---
+ qb/qb.system.sh | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
 diff --git a/qb/qb.system.sh b/qb/qb.system.sh
-index c7ac14110b..f7f198dc9c 100644
+index c7ac141..f7f198d 100644
 --- a/qb/qb.system.sh
 +++ b/qb/qb.system.sh
 @@ -1,5 +1,5 @@
@@ -18,3 +27,6 @@ index c7ac14110b..f7f198dc9c 100644
  		*) OS="Win32";;
  	esac
  fi
+-- 
+2.36.0
+
