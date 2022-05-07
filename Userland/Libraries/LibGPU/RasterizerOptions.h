@@ -38,6 +38,7 @@ struct RasterizerOptions {
     bool fog_enabled { false };
     float fog_start { 0.0f };
     float fog_end { 1.0f };
+    bool point_smooth { false };
     float point_size { 1.f };
     bool scissor_enabled { false };
     bool normalization_enabled { false };
