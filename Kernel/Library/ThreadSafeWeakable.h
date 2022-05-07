@@ -6,15 +6,13 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeWeakable.h>
-#else
-#    include <AK/Assertions.h>
-#    include <AK/Atomic.h>
-#    include <AK/RefCounted.h>
-#    include <AK/RefPtr.h>
-#    include <AK/StdLibExtras.h>
-#    include <sched.h>
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
+#include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/ScopedCritical.h>
 
 namespace AK {
 
@@ -37,6 +35,9 @@ public:
         RefPtr<T, PtrTraits> ref;
 
         {
+            // We don't want to be preempted while we are trying to obtain
+            // a strong reference
+            Kernel::ScopedCritical critical;
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
                 T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
                 if (ptr && ptr->try_ref())
@@ -72,7 +73,7 @@ public:
         // We flagged revocation, now wait until everyone trying to obtain
         // a strong reference is done
         while (current_consumers > 0) {
-            sched_yield();
+            Kernel::Processor::wait_check();
             current_consumers = m_consumers.load(AK::MemoryOrder::memory_order_acquire) & ~1u;
         }
         // No one is trying to use it (anymore)
@@ -96,12 +97,6 @@ private:
 
 public:
     template<typename U = T>
-    WeakPtr<U> make_weak_ptr() const
-    {
-        return MUST(try_make_weak_ptr<U>());
-    }
-
-    template<typename U = T>
     ErrorOr<WeakPtr<U>> try_make_weak_ptr() const;
 
 protected:
@@ -109,6 +104,7 @@ protected:
 
     ~Weakable()
     {
+        m_being_destroyed.store(true, AK::MemoryOrder::memory_order_release);
         revoke_weak_ptrs();
     }
 
@@ -120,10 +116,9 @@ protected:
 
 private:
     mutable RefPtr<WeakLink> m_link;
+    Atomic<bool> m_being_destroyed { false };
 };
 
 }
 
 using AK::Weakable;
-
-#endif
