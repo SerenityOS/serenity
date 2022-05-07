@@ -199,6 +199,7 @@ public:
     void gl_clip_plane(GLenum plane, GLdouble const* equation);
     void gl_array_element(GLint i);
     void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+    void gl_point_size(GLfloat size);
 
 private:
     void sync_device_config();
@@ -442,7 +443,8 @@ private:
             decltype(&GLContext::gl_get_light),
             decltype(&GLContext::gl_clip_plane),
             decltype(&GLContext::gl_array_element),
-            decltype(&GLContext::gl_copy_tex_sub_image_2d)>;
+            decltype(&GLContext::gl_copy_tex_sub_image_2d),
+            decltype(&GLContext::gl_point_size)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -481,7 +483,11 @@ private:
     GLsizei m_unpack_row_length { 0 };
     u8 m_unpack_alignment { 4 };
 
-    float m_line_width { 1.0f };
+    // Point drawing configuration
+    float m_point_size { 1.f };
+
+    // Line drawing configuration
+    float m_line_width { 1.f };
 
     // Lighting configuration
     bool m_lighting_enabled { false };

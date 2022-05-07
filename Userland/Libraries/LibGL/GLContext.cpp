@@ -1192,6 +1192,18 @@ void GLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
     gl_end();
 }
 
+void GLContext::gl_point_size(GLfloat size)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_point_size, size);
+    RETURN_WITH_ERROR_IF(size <= 0.f, GL_INVALID_VALUE);
+
+    m_point_size = size;
+
+    auto rasterizer_options = m_rasterizer->options();
+    rasterizer_options.point_size = size;
+    m_rasterizer->set_options(rasterizer_options);
+}
+
 void GLContext::present()
 {
     m_rasterizer->blit_color_buffer_to(*m_frontbuffer);

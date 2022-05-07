@@ -78,6 +78,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
     case GL_PACK_SWAP_BYTES:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_POINT_SIZE:
+        return ContextParameter { .type = GL_DOUBLE, .value = { .double_value = static_cast<GLdouble>(m_point_size) } };
     case GL_POLYGON_OFFSET_FILL:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_offset_enabled } };
     case GL_RED_BITS:
