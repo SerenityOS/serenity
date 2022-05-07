@@ -21,8 +21,7 @@ bool volatile signal_was_delivered = false;
 
 static void signal_handler(int sig, siginfo_t* sig_info, void* u_context)
 {
-    int x;
-    stack_ptr = &x;
+    stack_ptr = __builtin_frame_address(0);
     signal_was_delivered = true;
 
     saved_signal = sig;
