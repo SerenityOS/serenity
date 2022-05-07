@@ -1,7 +1,7 @@
-From d37f9022e78b9df4959f9be265f91e611e84e03a Mon Sep 17 00:00:00 2001
+From de33591aec7243f14206913f8188519744714389 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 03:30:02 +0330
-Subject: [PATCH 4/6] Teach bdwgc about serenity signals
+Subject: [PATCH 4/7] Teach bdwgc about serenity signals
 
 Serenity doesn't have the realtime POSIX signals, so use SIGXCPU and
 SIGXFSZ instead.
@@ -62,5 +62,5 @@ index 4b2c429..25eb2a5 100644
  #   if defined(_SIGRTMIN) && !defined(CPPCHECK)
  #     define SIG_THR_RESTART _SIGRTMIN + 5
 -- 
-2.35.1
+2.36.1
 
