@@ -44,9 +44,38 @@ public:
             int step_size { 0 }; // "A"
             int offset = { 0 };  // "B"
 
+            // https://www.w3.org/TR/css-syntax-3/#serializing-anb
             String serialize() const
             {
-                return String::formatted("{}n{:+}", step_size, offset);
+                // 1. If A is zero, return the serialization of B.
+                if (step_size == 0) {
+                    return String::formatted("{}", offset);
+                }
+
+                // 2. Otherwise, let result initially be an empty string.
+                StringBuilder result;
+
+                // 3.
+                // - A is 1: Append "n" to result.
+                if (step_size == 1)
+                    result.append("n");
+                // - A is -1: Append "-n" to result.
+                else if (step_size == -1)
+                    result.append("-n");
+                // - A is non-zero: Serialize A and append it to result, then append "n" to result.
+                else if (step_size != 0)
+                    result.appendff("{}n", step_size);
+
+                // 4.
+                // - B is greater than zero: Append "+" to result, then append the serialization of B to result.
+                if (offset > 0)
+                    result.appendff("+{}", offset);
+                // - B is less than zero: Append the serialization of B to result.
+                if (offset < 0)
+                    result.appendff("{}", offset);
+
+                // 5. Return result.
+                return result.to_string();
             }
         };
 
