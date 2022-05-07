@@ -54,10 +54,11 @@ public:
     static ErrorOr<Interfaces> get_discoverable_interfaces();
 
 private:
-    explicit DHCPv4Client();
+    explicit DHCPv4Client(Vector<String> interfaces_with_dhcp_enabled);
 
     void try_discover_ifs();
 
+    Vector<String> m_interfaces_with_dhcp_enabled;
     HashMap<u32, OwnPtr<DHCPv4Transaction>> m_ongoing_transactions;
     RefPtr<Core::UDPServer> m_server;
     RefPtr<Core::Timer> m_check_timer;

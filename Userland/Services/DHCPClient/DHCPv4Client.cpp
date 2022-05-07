@@ -7,6 +7,7 @@
 #include "DHCPv4Client.h"
 #include <AK/Array.h>
 #include <AK/Debug.h>
+#include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -116,7 +117,8 @@ static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4
     }
 }
 
-DHCPv4Client::DHCPv4Client()
+DHCPv4Client::DHCPv4Client(Vector<String> interfaces_with_dhcp_enabled)
+    : m_interfaces_with_dhcp_enabled(move(interfaces_with_dhcp_enabled))
 {
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
@@ -149,11 +151,18 @@ void DHCPv4Client::try_discover_ifs()
     if (ifs_result.is_error())
         return;
 
+    dbgln("Interfaces with DHCP enabled: {}", m_interfaces_with_dhcp_enabled);
     bool sent_discover_request = false;
     Interfaces& ifs = ifs_result.value();
     for (auto& iface : ifs.ready) {
-        if (iface.current_ip_address != IPv4Address { 0, 0, 0, 0 })
+        dbgln("Checking interface {} / {}", iface.ifname, iface.current_ip_address);
+        if (!m_interfaces_with_dhcp_enabled.contains_slow(iface.ifname))
             continue;
+        if (iface.current_ip_address != IPv4Address { 0, 0, 0, 0 }) {
+            dbgln_if(DHCPV4CLIENT_DEBUG, "Resetting params for {}", iface.ifname);
+            set_params(iface, IPv4Address { 0, 0, 0, 0 }, IPv4Address { 0, 0, 0, 0 }, {});
+            iface.current_ip_address = IPv4Address { 0, 0, 0, 0 };
+        }
 
         dhcp_discover(iface);
         sent_discover_request = true;
