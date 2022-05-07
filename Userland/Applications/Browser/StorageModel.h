@@ -10,7 +10,7 @@
 
 namespace Browser {
 
-class LocalStorageModel final : public GUI::Model {
+class StorageModel final : public GUI::Model {
 public:
     enum Column {
         Key,

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LocalStorageModel.h"
+#include "StorageModel.h"
 
 #include <AK/FuzzyMatch.h>
 
 namespace Browser {
 
-void LocalStorageModel::set_items(OrderedHashMap<String, String> map)
+void StorageModel::set_items(OrderedHashMap<String, String> map)
 {
     begin_insert_rows({}, m_local_storage_entries.size(), m_local_storage_entries.size());
     m_local_storage_entries = map;
@@ -19,7 +19,7 @@ void LocalStorageModel::set_items(OrderedHashMap<String, String> map)
     did_update(DontInvalidateIndices);
 }
 
-void LocalStorageModel::clear_items()
+void StorageModel::clear_items()
 {
     begin_insert_rows({}, m_local_storage_entries.size(), m_local_storage_entries.size());
     m_local_storage_entries.clear();
@@ -28,14 +28,14 @@ void LocalStorageModel::clear_items()
     did_update(DontInvalidateIndices);
 }
 
-int LocalStorageModel::row_count(GUI::ModelIndex const& index) const
+int StorageModel::row_count(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return m_local_storage_entries.size();
     return 0;
 }
 
-String LocalStorageModel::column_name(int column) const
+String StorageModel::column_name(int column) const
 {
     switch (column) {
     case Column::Key:
@@ -49,14 +49,14 @@ String LocalStorageModel::column_name(int column) const
     return {};
 }
 
-GUI::ModelIndex LocalStorageModel::index(int row, int column, GUI::ModelIndex const&) const
+GUI::ModelIndex StorageModel::index(int row, int column, GUI::ModelIndex const&) const
 {
     if (static_cast<size_t>(row) < m_local_storage_entries.size())
         return create_index(row, column, NULL);
     return {};
 }
 
-GUI::Variant LocalStorageModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
+GUI::Variant StorageModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     if (role != GUI::ModelRole::Display)
         return {};
@@ -75,7 +75,7 @@ GUI::Variant LocalStorageModel::data(GUI::ModelIndex const& index, GUI::ModelRol
     VERIFY_NOT_REACHED();
 }
 
-TriState LocalStorageModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+TriState StorageModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
 {
     auto needle = term.as_string();
     if (needle.is_empty())

@@ -66,6 +66,7 @@ public:
     Function<void()> on_dump_cookies;
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
+    Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
 
     enum class InspectorTarget {
         Document,

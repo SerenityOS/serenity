@@ -493,4 +493,11 @@ Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient:
     auto local_storage = document->window().local_storage();
     return local_storage->map();
 }
+
+Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClient::get_session_storage_entries()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    auto session_storage = document->window().session_storage();
+    return session_storage->map();
+}
 }

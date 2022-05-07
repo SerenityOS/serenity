@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CookiesModel.h"
-#include "LocalStorageModel.h"
+#include "StorageModel.h"
 #include "Tab.h"
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/TextBox.h>
@@ -27,6 +27,9 @@ public:
     void set_local_storage_entries(OrderedHashMap<String, String> entries);
     void clear_local_storage_entries();
 
+    void set_session_storage_entries(OrderedHashMap<String, String> entries);
+    void clear_session_storage_entries();
+
 private:
     StorageWidget();
 
@@ -37,8 +40,13 @@ private:
 
     RefPtr<GUI::TableView> m_local_storage_table_view;
     RefPtr<GUI::TextBox> m_local_storage_textbox;
-    RefPtr<LocalStorageModel> m_local_storage_model;
+    RefPtr<StorageModel> m_local_storage_model;
     RefPtr<GUI::FilteringProxyModel> m_local_storage_filtering_model;
+
+    RefPtr<GUI::TableView> m_session_storage_table_view;
+    RefPtr<GUI::TextBox> m_session_storage_textbox;
+    RefPtr<StorageModel> m_session_storage_model;
+    RefPtr<GUI::FilteringProxyModel> m_session_storage_filtering_model;
 };
 
 }

@@ -69,6 +69,7 @@ private:
     virtual void js_console_request_messages(i32) override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
+    virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;
 
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
     virtual void select_all() override;

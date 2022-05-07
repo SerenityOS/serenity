@@ -49,5 +49,5 @@ endpoint WebContentServer
     set_is_scripting_enabled(bool is_scripting_enabled) =|
 
     get_local_storage_entries() => (OrderedHashMap<String,String> entries)
-
+    get_session_storage_entries() => (OrderedHashMap<String,String> entries)
 }
