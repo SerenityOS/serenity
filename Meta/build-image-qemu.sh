@@ -73,14 +73,21 @@ INODE_SIZE=128
 INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
 DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + INODE_COUNT) * 1024))
 
-# Try to use heuristics to guess a good disk size and inode count.
-# The disk must notably fit:
-#   * Data blocks (for both files and directories),
-#   * Indirect/doubly indirect/triply indirect blocks,
-#   * Inodes and block bitmaps for each block group,
-#   * Plenty of extra free space and free inodes.
-DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
-INODE_COUNT=$((INODE_COUNT * 7))
+if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
+    # Try to use heuristics to guess a good disk size and inode count.
+    # The disk must notably fit:
+    #   * Data blocks (for both files and directories),
+    #   * Indirect/doubly indirect/triply indirect blocks,
+    #   * Inodes and block bitmaps for each block group,
+    #   * Plenty of extra free space and free inodes.
+    DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
+    INODE_COUNT=$((INODE_COUNT * 7))
+else
+    if [ "$DISK_SIZE_BYTES" -gt "$SERENITY_DISK_SIZE_BYTES" ]; then
+        die "SERENITY_DISK_SIZE_BYTES is set to $SERENITY_DISK_SIZE_BYTES but required disk size is $DISK_SIZE_BYTES bytes"
+    fi
+    DISK_SIZE_BYTES="$SERENITY_DISK_SIZE_BYTES"
+fi
 
 USE_EXISTING=0
 
