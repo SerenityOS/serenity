@@ -5327,7 +5327,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
             int a = first_value.token().dimension_value_int();
-            int b = -values.next_token().token().to_integer();
+            int b = -second_value.token().to_integer();
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
