@@ -32,8 +32,10 @@ void ThemePreviewWidget::paint_preview(GUI::PaintEvent&)
     auto inactive_window_rect = active_window_rect.translated(-8, -32);
     auto message_box = active_window_rect.shrunken(100, 60);
 
-    Array<Window, 3> window_group {
-        active_window_rect, inactive_window_rect, message_box
+    Array window_group {
+        Window { active_window_rect },
+        Window { inactive_window_rect },
+        Window { message_box }
     };
     center_window_group_within(window_group, frame_inner_rect());
 
