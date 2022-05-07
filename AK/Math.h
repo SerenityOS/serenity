@@ -577,11 +577,11 @@ ALWAYS_INLINE I round_to(P value)
     return static_cast<I>(ret);
 #else
     if constexpr (IsSame<P, long double>)
-        return static_cast<I>(llrintl(value));
+        return static_cast<I>(__builtin_llrintl(value));
     if constexpr (IsSame<P, double>)
-        return static_cast<I>(llrint(value));
+        return static_cast<I>(__builtin_llrint(value));
     if constexpr (IsSame<P, float>)
-        return static_cast<I>(llrintf(value));
+        return static_cast<I>(__builtin_llrintf(value));
 #endif
 }
 
