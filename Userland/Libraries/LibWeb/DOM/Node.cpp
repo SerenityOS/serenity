@@ -21,6 +21,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/LiveNodeList.h>
+#include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -1267,6 +1268,40 @@ size_t Node::length() const
 
     // 3. Return the number of node’s children.
     return child_count();
+}
+
+void Node::register_mutation_observer(MutationObserverData data)
+{
+    if (data.options.subtree) {
+        for_each_child([data](Node& node) { node.register_mutation_observer(data); });
+    }
+
+    m_mutation_observers.append(std::move(data));
+}
+
+void Node::remove_mutation_observer(NonnullRefPtr<MutationObserver> observer)
+{
+    m_mutation_observers.remove_first_matching([&observer](auto const& element) {
+        return element.observer.ptr() == observer.ptr();
+    });
+}
+
+void Node::notify_mutation_observers(NonnullRefPtr<MutationRecord> data)
+{
+    if (m_mutation_observers.is_empty()) {
+        return;
+    }
+
+    for (auto& observer : m_mutation_observers) {
+        if (observer.options.character_data) {
+            observer.observer->notify(data);
+        }
+    }
+}
+
+bool Node::has_mutation_observers()
+{
+    return not m_mutation_observers.is_empty();
 }
 
 Painting::Paintable const* Node::paintable() const

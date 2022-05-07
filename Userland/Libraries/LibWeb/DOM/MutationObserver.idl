@@ -1,0 +1,24 @@
+#import <DOM/Node.idl>
+#import <DOM/MutationRecord.idl>
+
+callback MutationCallback = undefined (sequence<MutationRecord> mutations , MutationObserver observer);
+
+[Exposed=Window]
+interface MutationObserver {
+  constructor(MutationCallback callback);
+
+  undefined observe(Node target , optional MutationObserverInit options = {});
+  undefined disconnect();
+  sequence<MutationRecord> takeRecords();
+};
+
+
+dictionary MutationObserverInit {
+  boolean childList = false;
+  boolean attributes;
+  boolean characterData;
+  boolean subtree = false;
+  boolean attributeOldValue;
+  boolean characterDataOldValue;
+  sequence<DOMString> attributeFilter = [];
+};

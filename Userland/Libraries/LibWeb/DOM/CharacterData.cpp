@@ -6,6 +6,8 @@
 
 #include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/MutationRecord.h>
+#include <LibWeb/DOM/NodeList.h>
 #include <LibWeb/DOM/Range.h>
 
 namespace Web::DOM {
@@ -20,9 +22,20 @@ void CharacterData::set_data(String data)
 {
     if (m_data == data)
         return;
+
+    if (has_mutation_observers()) {
+        notify_mutation_observers(
+            make_ref_counted<Web::DOM::MutationRecord>(
+                Web::DOM::MutationRecordType::CHARACTER_DATA,
+                *this,
+                move(m_data)));
+    }
+
     m_data = move(data);
+
     if (parent())
         parent()->children_changed();
+
     set_needs_style_update(true);
     document().set_needs_layout();
 }

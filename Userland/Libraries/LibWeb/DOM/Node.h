@@ -15,9 +15,11 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/MutationRecord.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web::DOM {
+class MutationObserver;
 
 enum class NodeType : u16 {
     INVALID = 0,
@@ -222,6 +224,25 @@ public:
 
     size_t length() const;
 
+    struct MutationObserverParameters {
+        bool child_list;
+        bool attributes;
+        bool character_data;
+        bool subtree;
+        Vector<String> attribute_filter;
+    };
+
+    struct MutationObserverData {
+        NonnullRefPtr<MutationObserver> observer;
+        MutationObserverParameters options;
+    };
+
+    void register_mutation_observer(MutationObserverData data);
+    void remove_mutation_observer(NonnullRefPtr<MutationObserver> observer);
+
+    void notify_mutation_observers(NonnullRefPtr<MutationRecord> data);
+    bool has_mutation_observers();
+
 protected:
     Node(Document&, NodeType);
 
@@ -232,6 +253,8 @@ protected:
     bool m_child_needs_style_update { false };
 
     i32 m_id;
+
+    Vector<MutationObserverData> m_mutation_observers;
 };
 
 }

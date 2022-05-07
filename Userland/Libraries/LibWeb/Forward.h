@@ -522,6 +522,8 @@ class MessageChannelWrapper;
 class MessageEventWrapper;
 class MessagePortWrapper;
 class MouseEventWrapper;
+class MutationObserverWrapper;
+class MutationRecordWrapper;
 class NamedNodeMapWrapper;
 class NodeFilterWrapper;
 class NodeIteratorWrapper;
