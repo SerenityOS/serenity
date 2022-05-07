@@ -6,6 +6,11 @@ schedules:
     include:
     - master
 
+# Github YAML pipelines have CI and PR triggers on by default.
+# We only want this pipeline to run nightly
+pr: none
+trigger: none
+
 stages:
   - stage: Toolchain
     dependsOn: []
