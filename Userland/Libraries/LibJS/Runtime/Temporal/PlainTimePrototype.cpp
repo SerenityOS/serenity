@@ -237,92 +237,31 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
 // 4.3.13 Temporal.PlainTime.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until
 JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalTime(other).
-    auto* other = TRY(to_temporal_time(global_object, vm.argument(0)));
-
-    // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
-
-    // 6. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", "hour").
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, "hour"sv));
-
-    // 7. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 9. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
-    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
-
-    // 10. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
-
-    // 11. Let result be ! DifferenceTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]]).
-    auto result = difference_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond());
-
-    // 12. Set result to (? RoundDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode)).[[DurationRecord]].
-    auto rounded_result = TRY(round_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode)).duration_record;
-
-    // 13. Set result to ! BalanceDuration(0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], largestUnit).
-    result = MUST(balance_duration(global_object, 0, rounded_result.hours, rounded_result.minutes, rounded_result.seconds, rounded_result.milliseconds, rounded_result.microseconds, Crypto::SignedBigInteger { (i32)rounded_result.nanoseconds }, *largest_unit));
-
-    // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
+    // FIXME: until, not since (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Until, *temporal_time, other, options));
 }
 
 // 4.3.14 Temporal.PlainTime.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.since
 JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalTime(other).
-    auto* other = TRY(to_temporal_time(global_object, vm.argument(0)));
-
-    // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
-
-    // 6. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", "hour").
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, "hour"sv));
-
-    // 7. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 9. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
-    rounding_mode = negate_temporal_rounding_mode(rounding_mode);
-
-    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
-    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
-
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
-
-    // 12. Let result be ! DifferenceTime(other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]]).
-    auto result = difference_time(other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond());
-
-    // 13. Set result to (? RoundDuration(0, 0, 0, 0, -result.[[Hours]], -result.[[Minutes]], -result.[[Seconds]], -result.[[Milliseconds]], -result.[[Microseconds]], -result.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode)).[[DurationRecord]].
-    auto rounded_result = TRY(round_duration(global_object, 0, 0, 0, 0, -result.hours, -result.minutes, -result.seconds, -result.milliseconds, -result.microseconds, -result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode)).duration_record;
-
-    // 14. Set result to ! BalanceDuration(0, -result.[[Hours]], -result.[[Minutes]], -result.[[Seconds]], -result.[[Milliseconds]], -result.[[Microseconds]], -result.[[Nanoseconds]], largestUnit).
-    result = MUST(balance_duration(global_object, 0, -rounded_result.hours, -rounded_result.minutes, -rounded_result.seconds, -rounded_result.milliseconds, -rounded_result.microseconds, Crypto::SignedBigInteger { (i32)-rounded_result.nanoseconds }, *largest_unit));
-
-    // 15. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
+    // FIXME: since, not until (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Since, *temporal_time, other, options));
 }
 
 // 4.3.15 Temporal.PlainTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round

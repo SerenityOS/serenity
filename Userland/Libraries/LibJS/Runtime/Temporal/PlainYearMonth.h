@@ -48,6 +48,7 @@ ISOYearMonth balance_iso_year_month(double year, double month);
 ISOYearMonth constrain_iso_year_month(double year, double month);
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject&, PlainYearMonth&, StringView show_calendar);
+ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject&, DifferenceOperation, PlainYearMonth&, Value other, Value options);
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(GlobalObject&, ArithmeticOperation, PlainYearMonth&, Value temporal_duration_like, Value options_value);
 
 }

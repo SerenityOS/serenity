@@ -281,7 +281,69 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
     return String::formatted("{}{}", date_time_string, time_zone_string);
 }
 
-// 8.5.10 AddDurationToOrSubtractDurationFromInstant ( operation, instant, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfrominstant
+// 8.5.10 DifferenceTemporalInstant ( operation, instant, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant
+ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject& global_object, DifferenceOperation operation, Instant const& instant, Value other_value, Value options_value)
+{
+    // 1. Set other to ? ToTemporalInstant(other).
+    auto* other = TRY(to_temporal_instant(global_object, other_value));
+
+    Instant const* first;
+    Instant const* second;
+
+    // 2. If operation is until, then
+    if (operation == DifferenceOperation::Until) {
+        // a. Let first be instant.
+        first = &instant;
+
+        // b. Let second be other.
+        second = other;
+    }
+    // 3. Else,
+    else {
+        // a. Let first be other.
+        first = other;
+
+        // b. Let second be instant.
+        second = &instant;
+    }
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto const* options = TRY(get_options_object(global_object, options_value));
+
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
+
+    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
+
+    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, default_largest_unit));
+
+    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
+
+    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
+
+    // 12. Let roundedNs be ! DifferenceInstant(first.[[Nanoseconds]], second.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
+    auto* rounded_ns = difference_instant(global_object, first->nanoseconds(), second->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
+
+    // 13. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 1.728 × 10^22.
+
+    // 14. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
+    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), *largest_unit));
+
+    // 15. Return ! CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+}
+
+// 8.5.11 AddDurationToOrSubtractDurationFromInstant ( operation, instant, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfrominstant
 ThrowCompletionOr<Instant*> add_duration_to_or_subtract_duration_from_instant(GlobalObject& global_object, ArithmeticOperation operation, Instant const& instant, Value temporal_duration_like)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.

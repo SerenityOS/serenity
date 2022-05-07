@@ -486,4 +486,67 @@ i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2
     return 0;
 }
 
+// 3.5.11 DifferenceTemporalPlainDate ( operation, temporalDate, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindate
+ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global_object, DifferenceOperation operation, PlainDate& temporal_date, Value other_value, Value options_value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
+
+    // 2. Set other to ? ToTemporalDate(other).
+    auto* other = TRY(to_temporal_date(global_object, other_value));
+
+    // 3. If ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
+    if (!TRY(calendar_equals(global_object, temporal_date.calendar(), other->calendar())))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto const* options = TRY(get_options_object(global_object, options_value));
+
+    // 5. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
+    auto disallowed_units = Vector<StringView> { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
+
+    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
+
+    // 7. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
+
+    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
+
+    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 11. If operation is since, then
+    if (operation == DifferenceOperation::Since) {
+        // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+    }
+
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
+
+    // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, largest_unit.release_value()));
+
+    // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
+    auto* duration = TRY(calendar_date_until(global_object, temporal_date.calendar(), &temporal_date, other, *until_options));
+
+    auto result = DurationRecord { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
+
+    // 15. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
+    if (*smallest_unit != "day"sv || rounding_increment != 1) {
+        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
+        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, &temporal_date)).duration_record;
+    }
+
+    // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], 0, 0, 0, 0, 0, 0).
+    return TRY(create_temporal_duration(global_object, sign * result.years, sign * result.months, sign * result.weeks, sign * result.days, 0, 0, 0, 0, 0, 0));
+}
+
 }
