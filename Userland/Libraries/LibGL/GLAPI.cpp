@@ -673,8 +673,7 @@ void glPixelStorei(GLenum pname, GLint param)
 
 void glPointSize(GLfloat size)
 {
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "glPointSize({}): unimplemented", size);
+    g_gl_context->gl_point_size(size);
 }
 
 void glPolygonMode(GLenum face, GLenum mode)
