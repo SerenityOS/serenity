@@ -447,7 +447,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
 #else
                     //
                     // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
-                    // compiled for the i386 target. When we calculate our depth value to be stored in the buffer,
+                    // compiled for the i686 target. When we calculate our depth value to be stored in the buffer,
                     // it is an 80-bit x87 floating point number, however, when stored into the depth buffer, this is
                     // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
                     // used here the comparison fails.
