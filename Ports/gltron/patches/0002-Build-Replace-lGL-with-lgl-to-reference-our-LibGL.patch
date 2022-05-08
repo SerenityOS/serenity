@@ -1,0 +1,34 @@
+From dd42cfe84e75619676a06b05f8ebe1c1c2e658c9 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Mon, 9 May 2022 00:30:04 +0200
+Subject: [PATCH 2/6] Build: Replace `-lGL` with `-lgl` to reference our LibGL
+
+---
+ configure | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index 05ebf5d..10f771f 100755
+--- a/configure
++++ b/configure
+@@ -3130,7 +3130,7 @@ if test "${ac_cv_lib_GL_main+set}" = set; then
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lGL  $LIBS"
++LIBS="-lgl  $LIBS"
+ cat >conftest.$ac_ext <<_ACEOF
+ #line 3135 "configure"
+ #include "confdefs.h"
+@@ -3171,7 +3171,7 @@ if test $ac_cv_lib_GL_main = yes; then
+ #define HAVE_LIBGL 1
+ EOF
+ 
+-  LIBS="-lGL $LIBS"
++  LIBS="-lgl $LIBS"
+ 
+ else
+   { { echo "$as_me:3177: error: OpenGL is not installed" >&5
+-- 
+2.34.1
+

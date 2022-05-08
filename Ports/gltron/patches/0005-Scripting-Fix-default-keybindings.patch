@@ -1,6 +1,18 @@
---- gltron-0.70/scripts/config.lua	2003-12-12 09:01:14.000000000 +0000
-+++ gltron-0.70-patched/scripts/config.lua	2022-01-11 01:05:39.007703324 +0000
-@@ -90,18 +90,18 @@
+From d2a56ba682814f2d2451fc0729ada79290de2939 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Mon, 9 May 2022 00:36:08 +0200
+Subject: [PATCH 5/6] Scripting: Fix default keybindings
+
+These constants referred to the wrong keys.
+---
+ scripts/config.lua | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/scripts/config.lua b/scripts/config.lua
+index 3c9e6d2..4755678 100644
+--- a/scripts/config.lua
++++ b/scripts/config.lua
+@@ -90,18 +90,18 @@ settings.musicVolume = 0.5
  
  settings.keys = { 
     { -- player 1
@@ -29,3 +41,6 @@
     },
     { -- player 3
        left = 276, -- cursor left
+-- 
+2.34.1
+
