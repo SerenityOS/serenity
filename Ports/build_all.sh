@@ -28,6 +28,26 @@ esac
 some_failed=false
 built_ports=""
 
+if [ "$clean" == true ]; then
+    for file in *; do
+        if [ -d "$file" ]; then
+            pushd ${file} > /dev/null
+            port=$(basename "$file")
+            if ! [ -f package.sh ]; then
+                echo "ERROR: Skipping cleaning of $port because its package.sh script is missing."
+                popd > /dev/null
+                continue
+            fi
+            if [ "$verbose" == true ]; then
+                ./package.sh clean_all
+            else
+                ./package.sh clean_all > /dev/null 2>&1
+            fi
+            popd > /dev/null
+        fi
+    done
+fi
+
 for file in *; do
     if [ -d $file ]; then
         pushd $file > /dev/null
@@ -50,13 +70,6 @@ for file in *; do
                 continue
             fi
 
-            if [ "$clean" == true ]; then
-                if [ "$verbose" == true ]; then
-                    ./package.sh clean_all
-                else
-                    ./package.sh clean_all > /dev/null 2>&1
-                fi
-            fi
             if [ "$verbose" == true ]; then
                 if ./package.sh; then
                     echo "Built ${port}."
