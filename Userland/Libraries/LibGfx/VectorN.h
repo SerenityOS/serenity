@@ -239,12 +239,8 @@ public:
     {
         VectorN<N, U> result;
         UNROLL_LOOP
-        for (auto i = 0u; i < N; ++i) {
-            if constexpr (IsSame<T, float>)
-                result.data()[i] = static_cast<U>(lrintf(m_data[i]));
-            else
-                result.data()[i] = static_cast<U>(lrint(m_data[i]));
-        }
+        for (auto i = 0u; i < N; ++i)
+            result.data()[i] = round_to<U>(m_data[i]);
         return result;
     }
 
