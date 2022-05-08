@@ -74,6 +74,7 @@ private:
     void set_open_state_of_all_in_subtree(ModelIndex const& root, bool open);
 
     mutable HashMap<ModelIndex, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
+    mutable HashMap<ModelIndex, NonnullOwnPtr<MetadataForIndex>> m_view_metadata_old;
 
     RefPtr<Gfx::Bitmap> m_expand_bitmap;
     RefPtr<Gfx::Bitmap> m_collapse_bitmap;

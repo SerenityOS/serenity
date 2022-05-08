@@ -28,7 +28,10 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(ModelIndex const
     auto it = m_view_metadata.find(index);
     if (it != m_view_metadata.end())
         return *it->value;
+    auto it_old = m_view_metadata_old.find(index);
     auto new_metadata = make<MetadataForIndex>();
+    if (it_old != m_view_metadata_old.end())
+        swap(new_metadata, it_old->value);
     auto& new_metadata_ref = *new_metadata;
     m_view_metadata.set(index, move(new_metadata));
     return new_metadata_ref;
@@ -413,6 +416,9 @@ void TreeView::scroll_into_view(ModelIndex const& a_index, bool, bool scroll_ver
 
 void TreeView::model_did_update(unsigned flags)
 {
+    // Clear metadata but keep the old values and indices
+    // for when they are needed again
+    swap(m_view_metadata_old, m_view_metadata);
     m_view_metadata.clear();
     AbstractTableView::model_did_update(flags);
 }
