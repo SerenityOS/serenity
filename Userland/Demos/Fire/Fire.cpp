@@ -42,9 +42,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define FIRE_WIDTH 320
-#define FIRE_HEIGHT 200
-#define FIRE_MAX 29
+static constexpr int FIRE_WIDTH = 320;
+static constexpr int FIRE_HEIGHT = 200;
+static constexpr int FIRE_MAX = 29;
 
 static constexpr Array<Color, 30> s_palette = {
     Color(0x07, 0x07, 0x07), Color(0x1F, 0x07, 0x07), Color(0x2F, 0x0F, 0x07),
