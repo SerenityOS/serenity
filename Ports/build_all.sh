@@ -1,29 +1,25 @@
 #!/usr/bin/env bash
 
+build=true
 clean=false
 verbose=false
 
-case "$1" in
-    clean)
-        clean=true
-        ;;
-    verbose)
-        verbose=true
-        ;;
-    *)
-        ;;
-esac
-
-case "$2" in
-    clean)
-        clean=true
-        ;;
-    verbose)
-        verbose=true
-        ;;
-    *)
-        ;;
-esac
+for argument in "$@"; do
+    case "$argument" in
+        clean)
+            clean=true
+            ;;
+        clean_only)
+            build=false
+            clean=true
+            ;;
+        verbose)
+            verbose=true
+            ;;
+        *)
+            ;;
+    esac
+done
 
 some_failed=false
 built_ports=""
@@ -48,18 +44,19 @@ if [ "$clean" == true ]; then
     done
 fi
 
-for file in *; do
-    if [ -d $file ]; then
-        pushd $file > /dev/null
-            port=$(basename $file)
+if [ "$build" == true ]; then
+    for file in *; do
+        if [ -d "$file" ]; then
+            pushd ${file} > /dev/null
+            port=$(basename "$file")
             port_built=0
-            for built_port in $built_ports; do
+            for built_port in ${built_ports}; do
                 if [ "$built_port" = "$port" ]; then
                     port_built=1
                     break
                 fi
             done
-            if [ $port_built -eq 1 ]; then
+            if (( port_built )); then
                 echo "Built $port."
                 popd > /dev/null
                 continue
@@ -69,31 +66,30 @@ for file in *; do
                 popd > /dev/null
                 continue
             fi
-
             if [ "$verbose" == true ]; then
                 if ./package.sh; then
-                    echo "Built ${port}."
+                    echo "Built $port."
                 else
-                    echo "ERROR: Build of ${port} was not successful!"
+                    echo "ERROR: Build of $port was not successful!"
                     some_failed=true
                     popd > /dev/null
                     continue
                 fi
             else
                 if ./package.sh > /dev/null 2>&1; then
-                    echo "Built ${port}."
+                    echo "Built $port."
                 else
-                    echo "ERROR: Build of ${port} was not successful!"
+                    echo "ERROR: Build of $port was not successful!"
                     some_failed=true
                     popd > /dev/null
                     continue
                 fi
             fi
-
             built_ports="$built_ports $port $(./package.sh showproperty depends) "
-        popd > /dev/null
-    fi
-done
+            popd > /dev/null
+        fi
+    done
+fi
 
 if [ "$some_failed" == false ]; then
     exit 0
