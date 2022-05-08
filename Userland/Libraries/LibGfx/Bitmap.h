@@ -121,6 +121,8 @@ public:
 
     [[nodiscard]] ShareableBitmap to_shareable_bitmap() const;
 
+    void invert();
+
     ~Bitmap();
 
     [[nodiscard]] u8* scanline_u8(int physical_y);
