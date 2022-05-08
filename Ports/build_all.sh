@@ -89,6 +89,9 @@ if [ "$build" == true ]; then
             popd > /dev/null
         fi
     done
+    if [ "$verbose" == true ]; then
+        echo "Built these ports: $built_ports"
+    fi
 fi
 
 if [ "$some_failed" == false ]; then
