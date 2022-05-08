@@ -511,14 +511,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto xml_parser = parse(contents);
     auto result = xml_parser.parse();
     if (result.is_error()) {
-        // Technically this is a UAF, but the referenced string data won't be overwritten by anything at this point.
-        if (xml_parser.parse_error_causes().is_empty())
-            return Error::from_string_literal(String::formatted("{}", result.error()));
-
-        StringBuilder builder;
-        builder.join("\n", xml_parser.parse_error_causes(), "    {}");
-        return Error::from_string_literal(
-            String::formatted("{}; caused by:\n{}", result.error(), builder.string_view()));
+        if (xml_parser.parse_error_causes().is_empty()) {
+            warnln("{}", result.error());
+        } else {
+            warnln("{}; caused by:", result.error());
+            for (auto const& cause : xml_parser.parse_error_causes())
+                warnln("    {}", cause);
+        }
+        return 1;
     }
 
     auto doc = result.release_value();
