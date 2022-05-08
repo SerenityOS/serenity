@@ -713,7 +713,7 @@ do_dev() {
                 fi
 
                 echo "Importing patch $patch..."
-                git am "$patch" >/dev/null 2>&1 || {
+                git am --keep-cr "$patch" >/dev/null 2>&1 || {
                     git am --abort >/dev/null 2>&1 || true
                     if git apply < $patch; then
                         git add -A
