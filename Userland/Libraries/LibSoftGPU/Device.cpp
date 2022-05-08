@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AnyOf.h>
 #include <AK/Error.h>
 #include <AK/Math.h>
 #include <AK/NumericLimits.h>
@@ -180,95 +181,17 @@ void Device::setup_blend_factors()
     }
 }
 
-void Device::rasterize_triangle(Triangle const& triangle)
+template<typename CB1, typename CB2, typename CB3>
+ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_coverage_mask, CB2 set_quad_depth, CB3 set_quad_attributes)
 {
-    INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
-
     // Return if alpha testing is a no-op
     if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
 
-    auto const& vertex0 = triangle.vertices[0];
-    auto const& vertex1 = triangle.vertices[1];
-    auto const& vertex2 = triangle.vertices[2];
-
-    auto const& v0 = triangle.subpixel_coordinates[0];
-    auto const& v1 = triangle.subpixel_coordinates[1];
-    auto const& v2 = triangle.subpixel_coordinates[2];
-
-    auto const one_over_area = 1.0f / triangle.area;
-
-    auto render_bounds = m_frame_buffer->rect();
-    if (m_options.scissor_enabled)
-        render_bounds.intersect(m_options.scissor_box);
-
-    // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values4 = [v0, v1, v2](Vector2<i32x4> const& p) -> Vector3<i32x4> {
-        return {
-            edge_function4(v1, v2, p),
-            edge_function4(v2, v0, p),
-            edge_function4(v0, v1, p),
-        };
-    };
-
-    // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
-    // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
-    // question is a "top" or "left" edge. By setting either a 1 or 0, we effectively change the
-    // comparisons against the edge values below from "> 0" into ">= 0".
-    IntVector3 const zero {
-        (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x())) ? 0 : 1,
-        (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x())) ? 0 : 1,
-        (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x())) ? 0 : 1,
-    };
-
-    // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point4 = [zero](Vector3<i32x4> const& edges) -> i32x4 {
-        return edges.x() >= zero.x()
-            && edges.y() >= zero.y()
-            && edges.z() >= zero.z();
-    };
-
-    // Calculate block-based bounds
-    // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1) + 2;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1) + 2;
-    // clang-format on
-
-    // Calculate depth of fragment for fog;
-    // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
-    // eye-coordinate distance from the eye to each fragment center by |Ze|."
-    Vector3<f32x4> fog_depth;
-    if (m_options.fog_enabled) {
-        fog_depth = {
-            expand4(abs(vertex0.eye_coordinates.z())),
-            expand4(abs(vertex1.eye_coordinates.z())),
-            expand4(abs(vertex2.eye_coordinates.z())),
-        };
-    }
-
-    auto const render_bounds_left = render_bounds.left();
-    auto const render_bounds_right = render_bounds.right();
-    auto const render_bounds_top = render_bounds.top();
-    auto const render_bounds_bottom = render_bounds.bottom();
-
-    auto const half_pixel_offset = Vector2<i32x4> { expand4(subpixel_factor / 2), expand4(subpixel_factor / 2) };
-
+    // Buffers
     auto color_buffer = m_frame_buffer->color_buffer();
     auto depth_buffer = m_frame_buffer->depth_buffer();
     auto stencil_buffer = m_frame_buffer->stencil_buffer();
-
-    auto const window_z_coordinates = Vector3<f32x4> {
-        expand4(vertex0.window_coordinates.z()),
-        expand4(vertex1.window_coordinates.z()),
-        expand4(vertex2.window_coordinates.z()),
-    };
-    auto const window_w_coordinates = Vector3<f32x4> {
-        expand4(vertex0.window_coordinates.w()),
-        expand4(vertex1.window_coordinates.w()),
-        expand4(vertex2.window_coordinates.w()),
-    };
 
     // Stencil configuration and writing
     auto const& stencil_configuration = m_stencil_configuration[GPU::Face::Front];
@@ -308,22 +231,33 @@ void Device::rasterize_triangle(Triangle const& triangle)
         store4_masked(stencil_value, stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], pixel_mask);
     };
 
-    // Iterate over all blocks within the bounds of the triangle
-    for (int by = by0; by < by1; by += 2) {
-        for (int bx = bx0; bx < bx1; bx += 2) {
-            PixelQuad quad;
+    // Limit rendering to framebuffer and scissor rects
+    render_bounds.intersect(m_frame_buffer->rect());
+    if (m_options.scissor_enabled)
+        render_bounds.intersect(m_options.scissor_box);
 
+    // Quad bounds
+    auto const render_bounds_left = render_bounds.left();
+    auto const render_bounds_right = render_bounds.right();
+    auto const render_bounds_top = render_bounds.top();
+    auto const render_bounds_bottom = render_bounds.bottom();
+    auto const qx0 = render_bounds_left & ~1;
+    auto const qx1 = render_bounds_right & ~1;
+    auto const qy0 = render_bounds_top & ~1;
+    auto const qy1 = render_bounds_bottom & ~1;
+
+    // Rasterize all quads
+    // FIXME: this could be embarrasingly parallel
+    for (int qy = qy0; qy <= qy1; qy += 2) {
+        for (int qx = qx0; qx <= qx1; qx += 2) {
+            PixelQuad quad;
             quad.screen_coordinates = {
-                i32x4 { bx, bx + 1, bx, bx + 1 },
-                i32x4 { by, by, by + 1, by + 1 },
+                i32x4 { qx, qx + 1, qx, qx + 1 },
+                i32x4 { qy, qy, qy + 1, qy + 1 },
             };
 
-            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor + half_pixel_offset);
-
-            // Generate triangle coverage mask
-            quad.mask = test_point4(edge_values);
-
-            // Test quad against intersection of render target size and scissor rect
+            // Set coverage mask and test against render bounds
+            set_coverage_mask(quad);
             quad.mask &= quad.screen_coordinates.x() >= render_bounds_left
                 && quad.screen_coordinates.x() <= render_bounds_right
                 && quad.screen_coordinates.y() >= render_bounds_top
@@ -339,10 +273,10 @@ void Device::rasterize_triangle(Triangle const& triangle)
             GPU::StencilType* stencil_ptrs[4];
             i32x4 stencil_value;
             if (m_options.enable_stencil_test) {
-                stencil_ptrs[0] = coverage_bits & 1 ? &stencil_buffer->scanline(by)[bx] : nullptr;
-                stencil_ptrs[1] = coverage_bits & 2 ? &stencil_buffer->scanline(by)[bx + 1] : nullptr;
-                stencil_ptrs[2] = coverage_bits & 4 ? &stencil_buffer->scanline(by + 1)[bx] : nullptr;
-                stencil_ptrs[3] = coverage_bits & 8 ? &stencil_buffer->scanline(by + 1)[bx + 1] : nullptr;
+                stencil_ptrs[0] = coverage_bits & 1 ? &stencil_buffer->scanline(qy)[qx] : nullptr;
+                stencil_ptrs[1] = coverage_bits & 2 ? &stencil_buffer->scanline(qy)[qx + 1] : nullptr;
+                stencil_ptrs[2] = coverage_bits & 4 ? &stencil_buffer->scanline(qy + 1)[qx] : nullptr;
+                stencil_ptrs[3] = coverage_bits & 8 ? &stencil_buffer->scanline(qy + 1)[qx + 1] : nullptr;
 
                 stencil_value = load4_masked(stencil_ptrs[0], stencil_ptrs[1], stencil_ptrs[2], stencil_ptrs[3], quad.mask);
                 stencil_value &= stencil_configuration.test_mask;
@@ -393,28 +327,20 @@ void Device::rasterize_triangle(Triangle const& triangle)
                     continue;
             }
 
-            // Calculate barycentric coordinates from previously calculated edge values
-            quad.barycentrics = Vector3<f32x4> {
-                to_f32x4(edge_values.x()),
-                to_f32x4(edge_values.y()),
-                to_f32x4(edge_values.z()),
-            } * one_over_area;
-
             // Depth testing
             GPU::DepthType* depth_ptrs[4] = {
-                coverage_bits & 1 ? &depth_buffer->scanline(by)[bx] : nullptr,
-                coverage_bits & 2 ? &depth_buffer->scanline(by)[bx + 1] : nullptr,
-                coverage_bits & 4 ? &depth_buffer->scanline(by + 1)[bx] : nullptr,
-                coverage_bits & 8 ? &depth_buffer->scanline(by + 1)[bx + 1] : nullptr,
+                coverage_bits & 1 ? &depth_buffer->scanline(qy)[qx] : nullptr,
+                coverage_bits & 2 ? &depth_buffer->scanline(qy)[qx + 1] : nullptr,
+                coverage_bits & 4 ? &depth_buffer->scanline(qy + 1)[qx] : nullptr,
+                coverage_bits & 8 ? &depth_buffer->scanline(qy + 1)[qx + 1] : nullptr,
             };
             if (m_options.enable_depth_test) {
-                auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
-
-                quad.depth = window_z_coordinates.dot(quad.barycentrics);
+                set_quad_depth(quad);
                 // FIXME: Also apply depth_offset_factor which depends on the depth gradient
                 if (m_options.depth_offset_enabled)
                     quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
 
+                auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
                 i32x4 depth_test_passed;
                 switch (m_options.depth_func) {
                 case GPU::DepthTestFunction::Always:
@@ -505,22 +431,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
             INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, maskcount(quad.mask));
 
-            // Draw the pixels according to the previously generated mask
-            auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
-            quad.barycentrics = quad.barycentrics * window_w_coordinates / interpolated_reciprocal_w;
-
-            // FIXME: make this more generic. We want to interpolate more than just color and uv
-            if (m_options.shade_smooth)
-                quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
-            else
-                quad.vertex_color = expand4(vertex0.color);
-
-            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
-                quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
-
-            if (m_options.fog_enabled)
-                quad.fog_depth = fog_depth.dot(quad.barycentrics);
-
+            set_quad_attributes(quad);
             shade_fragments(quad);
 
             if (m_options.enable_alpha_test && m_options.alpha_test_func != GPU::AlphaTestFunction::Always && !test_alpha(quad))
@@ -535,10 +446,10 @@ void Device::rasterize_triangle(Triangle const& triangle)
                 continue;
 
             GPU::ColorType* color_ptrs[4] = {
-                coverage_bits & 1 ? &color_buffer->scanline(by)[bx] : nullptr,
-                coverage_bits & 2 ? &color_buffer->scanline(by)[bx + 1] : nullptr,
-                coverage_bits & 4 ? &color_buffer->scanline(by + 1)[bx] : nullptr,
-                coverage_bits & 8 ? &color_buffer->scanline(by + 1)[bx + 1] : nullptr,
+                coverage_bits & 1 ? &color_buffer->scanline(qy)[qx] : nullptr,
+                coverage_bits & 2 ? &color_buffer->scanline(qy)[qx + 1] : nullptr,
+                coverage_bits & 4 ? &color_buffer->scanline(qy + 1)[qx] : nullptr,
+                coverage_bits & 8 ? &color_buffer->scanline(qy + 1)[qx + 1] : nullptr,
             };
 
             u32x4 dst_u32;
@@ -549,7 +460,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
                 INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
 
                 // Blend color values from pixel_staging into color_buffer
-                Vector4<f32x4> const& src = quad.out_color;
+                auto const& src = quad.out_color;
                 auto dst = to_vec4(dst_u32);
 
                 auto src_factor = expand4(m_alpha_blend_factors.src_constant)
@@ -573,6 +484,299 @@ void Device::rasterize_triangle(Triangle const& triangle)
                 store4_masked((to_bgra32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
         }
     }
+}
+
+void Device::rasterize_line_aliased(GPU::Vertex& from, GPU::Vertex& to)
+{
+    // FIXME: implement aliased lines; for now we fall back to anti-aliased logic
+    rasterize_line_antialiased(from, to);
+}
+
+void Device::rasterize_line_antialiased(GPU::Vertex& from, GPU::Vertex& to)
+{
+    auto const from_coords = from.window_coordinates.xy();
+    auto const to_coords = to.window_coordinates.xy();
+    auto const line_width = ceilf(m_options.line_width);
+    auto const line_radius = line_width / 2;
+
+    auto render_bounds = Gfx::IntRect {
+        min(from_coords.x(), to_coords.x()),
+        min(from_coords.y(), to_coords.y()),
+        abs(from_coords.x() - to_coords.x()) + 1,
+        abs(from_coords.y() - to_coords.y()) + 1,
+    };
+    render_bounds.inflate(line_width, line_width);
+
+    auto const from_coords4 = expand4(from_coords);
+    auto const line_vector = to_coords - from_coords;
+    auto const line_vector4 = expand4(line_vector);
+    auto const line_dot4 = expand4(line_vector.dot(line_vector));
+
+    auto const from_depth4 = expand4(from.window_coordinates.z());
+    auto const to_depth4 = expand4(to.window_coordinates.z());
+
+    auto const from_color4 = expand4(from.color);
+    auto const from_fog_depth4 = expand4(abs(from.eye_coordinates.z()));
+
+    // Rasterize using a 2D signed distance field for a line segment
+    // FIXME: performance-wise, this might be the absolute worst way to draw an anti-aliased line
+    f32x4 distance_along_line;
+    rasterize(
+        render_bounds,
+        [&from_coords4, &distance_along_line, &line_vector4, &line_dot4, &line_radius](auto& quad) {
+            auto const screen_coordinates4 = to_vec2_f32x4(quad.screen_coordinates);
+            auto const pixel_vector = screen_coordinates4 - from_coords4;
+            distance_along_line = AK::SIMD::clamp(pixel_vector.dot(line_vector4) / line_dot4, 0.f, 1.f);
+            auto distance_to_line = length(pixel_vector - line_vector4 * distance_along_line) - line_radius;
+
+            // Add .5f to the distance so coverage transitions half a pixel before the actual border
+            quad.coverage = 1.f - AK::SIMD::clamp(distance_to_line + 0.5f, 0.f, 1.f);
+            quad.mask = quad.coverage > 0.f;
+        },
+        [&from_depth4, &to_depth4, &distance_along_line](auto& quad) {
+            quad.depth = mix(from_depth4, to_depth4, distance_along_line);
+        },
+        [&from_color4, &from, &from_fog_depth4](auto& quad) {
+            // FIXME: interpolate color, tex coords and fog depth along the distance of the line
+            //        in clip space (i.e. NOT distance_from_line)
+            quad.vertex_color = from_color4;
+            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = expand4(from.tex_coords[i]);
+            quad.fog_depth = from_fog_depth4;
+        });
+}
+
+void Device::rasterize_line(GPU::Vertex& from, GPU::Vertex& to)
+{
+    if (m_options.line_smooth)
+        rasterize_line_antialiased(from, to);
+    else
+        rasterize_line_aliased(from, to);
+}
+
+void Device::rasterize_point_aliased(GPU::Vertex& point)
+{
+    // Determine aliased point width
+    constexpr size_t maximum_aliased_point_size = 64;
+    auto point_width = clamp(round_to<int>(m_options.point_size), 1, maximum_aliased_point_size);
+
+    // Determine aliased center coordinates
+    IntVector2 point_center;
+    if (point_width % 2 == 1)
+        point_center = point.window_coordinates.xy().to_type<int>();
+    else
+        point_center = (point.window_coordinates.xy() + FloatVector2 { .5f, .5f }).to_type<int>();
+
+    // Aliased points are rects; calculate boundaries around center
+    auto point_rect = Gfx::IntRect {
+        point_center.x() - point_width / 2,
+        point_center.y() - point_width / 2,
+        point_width,
+        point_width,
+    };
+
+    // Rasterize the point as a rect
+    rasterize(
+        point_rect,
+        [](auto& quad) {
+            // We already passed in point_rect, so this doesn't matter
+            quad.mask = expand4(~0);
+        },
+        [&point](auto& quad) {
+            quad.depth = expand4(point.window_coordinates.z());
+        },
+        [&point](auto& quad) {
+            quad.vertex_color = expand4(point.color);
+            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = expand4(point.tex_coords[i]);
+            quad.fog_depth = expand4(abs(point.eye_coordinates.z()));
+        });
+}
+
+void Device::rasterize_point_antialiased(GPU::Vertex& point)
+{
+    auto const center = point.window_coordinates.xy();
+    auto const center4 = expand4(center);
+    auto const radius = m_options.point_size / 2;
+
+    auto render_bounds = Gfx::IntRect {
+        center.x() - radius,
+        center.y() - radius,
+        radius * 2 + 1,
+        radius * 2 + 1,
+    };
+
+    // Rasterize using a 2D signed distance field for a circle
+    rasterize(
+        render_bounds,
+        [&center4, &radius](auto& quad) {
+            auto screen_coords = to_vec2_f32x4(quad.screen_coordinates);
+            auto distance_to_point = length(center4 - screen_coords) - radius;
+
+            // Add .5f to the distance so coverage transitions half a pixel before the actual border
+            quad.coverage = 1.f - AK::SIMD::clamp(distance_to_point + .5f, 0.f, 1.f);
+            quad.mask = quad.coverage > 0.f;
+        },
+        [&point](auto& quad) {
+            quad.depth = expand4(point.window_coordinates.z());
+        },
+        [&point](auto& quad) {
+            quad.vertex_color = expand4(point.color);
+            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = expand4(point.tex_coords[i]);
+            quad.fog_depth = expand4(abs(point.eye_coordinates.z()));
+        });
+}
+
+void Device::rasterize_point(GPU::Vertex& point)
+{
+    // Divide texture coordinates R, S and T by Q
+    for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i) {
+        auto& tex_coord = point.tex_coords[i];
+        auto one_over_w = 1 / tex_coord.w();
+        tex_coord = {
+            tex_coord.x() * one_over_w,
+            tex_coord.y() * one_over_w,
+            tex_coord.z() * one_over_w,
+            tex_coord.w(),
+        };
+    }
+
+    if (m_options.point_smooth)
+        rasterize_point_antialiased(point);
+    else
+        rasterize_point_aliased(point);
+}
+
+void Device::rasterize_triangle(Triangle& triangle)
+{
+    INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
+
+    auto v0 = (triangle.vertices[0].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+    auto v1 = (triangle.vertices[1].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+    auto v2 = (triangle.vertices[2].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
+
+    auto triangle_area = edge_function(v0, v1, v2);
+    if (triangle_area == 0)
+        return;
+
+    // Perform face culling
+    if (m_options.enable_culling) {
+        bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? triangle_area > 0 : triangle_area < 0);
+
+        if (!is_front && m_options.cull_back)
+            return;
+
+        if (is_front && m_options.cull_front)
+            return;
+    }
+
+    // Force counter-clockwise ordering of vertices
+    if (triangle_area < 0) {
+        swap(triangle.vertices[0], triangle.vertices[1]);
+        swap(v0, v1);
+        triangle_area *= -1;
+    }
+
+    auto const& vertex0 = triangle.vertices[0];
+    auto const& vertex1 = triangle.vertices[1];
+    auto const& vertex2 = triangle.vertices[2];
+
+    auto const one_over_area = 1.0f / triangle_area;
+
+    // This function calculates the 3 edge values for the pixel relative to the triangle.
+    auto calculate_edge_values4 = [v0, v1, v2](Vector2<i32x4> const& p) -> Vector3<i32x4> {
+        return {
+            edge_function4(v1, v2, p),
+            edge_function4(v2, v0, p),
+            edge_function4(v0, v1, p),
+        };
+    };
+
+    // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
+    // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
+    // question is a "top" or "left" edge. By setting either a 1 or 0, we effectively change the
+    // comparisons against the edge values below from "> 0" into ">= 0".
+    IntVector3 const zero {
+        (v2.y() < v1.y() || (v2.y() == v1.y() && v2.x() < v1.x())) ? 0 : 1,
+        (v0.y() < v2.y() || (v0.y() == v2.y() && v0.x() < v2.x())) ? 0 : 1,
+        (v1.y() < v0.y() || (v1.y() == v0.y() && v1.x() < v0.x())) ? 0 : 1,
+    };
+
+    // This function tests whether a point as identified by its 3 edge values lies within the triangle
+    auto test_point4 = [zero](Vector3<i32x4> const& edges) -> i32x4 {
+        return edges.x() >= zero.x()
+            && edges.y() >= zero.y()
+            && edges.z() >= zero.z();
+    };
+
+    // Calculate render bounds based on the triangle's vertices
+    Gfx::IntRect render_bounds;
+    render_bounds.set_left(min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor);
+    render_bounds.set_right(max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor);
+    render_bounds.set_top(min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor);
+    render_bounds.set_bottom(max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor);
+
+    // Calculate depth of fragment for fog;
+    // OpenGL 1.5 chapter 3.10: "An implementation may choose to approximate the
+    // eye-coordinate distance from the eye to each fragment center by |Ze|."
+    Vector3<f32x4> fog_depth;
+    if (m_options.fog_enabled) {
+        fog_depth = {
+            expand4(abs(vertex0.eye_coordinates.z())),
+            expand4(abs(vertex1.eye_coordinates.z())),
+            expand4(abs(vertex2.eye_coordinates.z())),
+        };
+    }
+
+    auto const half_pixel_offset = Vector2<i32x4> { expand4(subpixel_factor / 2), expand4(subpixel_factor / 2) };
+
+    auto const window_z_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.z()),
+        expand4(vertex1.window_coordinates.z()),
+        expand4(vertex2.window_coordinates.z()),
+    };
+    auto const window_w_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.w()),
+        expand4(vertex1.window_coordinates.w()),
+        expand4(vertex2.window_coordinates.w()),
+    };
+
+    rasterize(
+        render_bounds,
+        [&](auto& quad) {
+            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor + half_pixel_offset);
+            quad.mask = test_point4(edge_values);
+
+            quad.barycentrics = {
+                to_f32x4(edge_values.x()),
+                to_f32x4(edge_values.y()),
+                to_f32x4(edge_values.z()),
+            };
+        },
+        [&one_over_area, &window_z_coordinates](auto& quad) {
+            // Determine each edge's ratio to the total area
+            quad.barycentrics = quad.barycentrics * one_over_area;
+
+            // Because the Z coordinates were divided by W, we can interpolate between them
+            quad.depth = window_z_coordinates.dot(quad.barycentrics);
+        },
+        [&](auto& quad) {
+            auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
+            quad.barycentrics = quad.barycentrics * window_w_coordinates / interpolated_reciprocal_w;
+
+            // FIXME: make this more generic. We want to interpolate more than just color and uv
+            if (m_options.shade_smooth)
+                quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
+            else
+                quad.vertex_color = expand4(vertex0.color);
+
+            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
+                quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
+
+            if (m_options.fog_enabled)
+                quad.fog_depth = fog_depth.dot(quad.barycentrics);
+        });
 }
 
 Device::Device(Gfx::IntSize const& size)
@@ -644,8 +848,127 @@ static void generate_texture_coordinates(GPU::Vertex& vertex, GPU::RasterizerOpt
     }
 }
 
+void Device::calculate_vertex_lighting(GPU::Vertex& vertex) const
+{
+    if (!m_options.lighting_enabled)
+        return;
+
+    auto const& material = m_materials.at(0);
+    auto ambient = material.ambient;
+    auto diffuse = material.diffuse;
+    auto emissive = material.emissive;
+    auto specular = material.specular;
+
+    if (m_options.color_material_enabled
+        && (m_options.color_material_face == GPU::ColorMaterialFace::Front || m_options.color_material_face == GPU::ColorMaterialFace::FrontAndBack)) {
+        switch (m_options.color_material_mode) {
+        case GPU::ColorMaterialMode::Ambient:
+            ambient = vertex.color;
+            break;
+        case GPU::ColorMaterialMode::AmbientAndDiffuse:
+            ambient = vertex.color;
+            diffuse = vertex.color;
+            break;
+        case GPU::ColorMaterialMode::Diffuse:
+            diffuse = vertex.color;
+            break;
+        case GPU::ColorMaterialMode::Emissive:
+            emissive = vertex.color;
+            break;
+        case GPU::ColorMaterialMode::Specular:
+            specular = vertex.color;
+            break;
+        }
+    }
+
+    FloatVector4 result_color = emissive + ambient * m_lighting_model.scene_ambient_color;
+
+    for (auto const& light : m_lights) {
+        if (!light.is_enabled)
+            continue;
+
+        // We need to save the length here because the attenuation factor requires a non-normalized vector!
+        auto sgi_arrow_operator = [](FloatVector4 const& p1, FloatVector4 const& p2, float& output_length) {
+            FloatVector3 light_vector;
+            if ((p1.w() != 0.f) && (p2.w() == 0.f))
+                light_vector = p2.xyz();
+            else if ((p1.w() == 0.f) && (p2.w() != 0.f))
+                light_vector = -p1.xyz();
+            else
+                light_vector = p2.xyz() - p1.xyz();
+
+            output_length = light_vector.length();
+            if (output_length == 0.f)
+                return light_vector;
+            return light_vector / output_length;
+        };
+
+        auto sgi_dot_operator = [](FloatVector3 const& d1, FloatVector3 const& d2) {
+            return AK::max(d1.dot(d2), 0.0f);
+        };
+
+        float vertex_to_light_length = 0.f;
+        FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vertex_to_light_length);
+
+        // Light attenuation value.
+        float light_attenuation_factor = 1.0f;
+        if (light.position.w() != 0.0f)
+            light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length * vertex_to_light_length));
+
+        // Spotlight factor
+        float spotlight_factor = 1.0f;
+        if (light.spotlight_cutoff_angle != 180.0f) {
+            auto const vertex_to_light_dot_spotlight_direction = sgi_dot_operator(vertex_to_light, light.spotlight_direction.normalized());
+            auto const cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
+
+            if (vertex_to_light_dot_spotlight_direction >= cos_spotlight_cutoff)
+                spotlight_factor = AK::pow<float>(vertex_to_light_dot_spotlight_direction, light.spotlight_exponent);
+            else
+                spotlight_factor = 0.0f;
+        }
+
+        // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
+        (void)m_lighting_model.color_control;
+
+        // FIXME: Two sided lighting should be implemented eventually (I believe this is where the normals are -ve and then lighting is calculated with the BACK material)
+        (void)m_lighting_model.two_sided_lighting;
+
+        // Ambient
+        auto const ambient_component = ambient * light.ambient_intensity;
+
+        // Diffuse
+        auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
+        auto const diffuse_component = diffuse * light.diffuse_intensity * normal_dot_vertex_to_light;
+
+        // Specular
+        FloatVector4 specular_component = { 0.0f, 0.0f, 0.0f, 0.0f };
+        if (normal_dot_vertex_to_light > 0.0f) {
+            FloatVector3 half_vector_normalized;
+            if (!m_lighting_model.viewer_at_infinity) {
+                half_vector_normalized = vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f);
+            } else {
+                auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates, { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
+                half_vector_normalized = vertex_to_light + vertex_to_eye_point;
+            }
+            half_vector_normalized.normalize();
+
+            auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal, half_vector_normalized);
+            auto const specular_coefficient = AK::pow(normal_dot_half_vector, material.shininess);
+            specular_component = specular * light.specular_intensity * specular_coefficient;
+        }
+
+        auto color = ambient_component + diffuse_component + specular_component;
+        color = color * light_attenuation_factor * spotlight_factor;
+        result_color += color;
+    }
+
+    vertex.color = result_color;
+    vertex.color.set_w(diffuse.w()); // OpenGL 1.5 spec, page 59: "The A produced by lighting is the alpha value associated with diffuse color material"
+    vertex.color.clamp(0.0f, 1.0f);
+}
+
 void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
-    FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+    FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex>& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -654,15 +977,106 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     // 2.   Transform all of the vertices from eye space into clip space by multiplying by the projection matrix
     // 3.   If culling is enabled, we cull the desired faces (https://learnopengl.com/Advanced-OpenGL/Face-culling)
     // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
-    // 5.   The vertices are sorted (for the rasterizer, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
-    // 6.   The vertices are then sent off to the rasterizer and drawn to the screen
+    // 5.   The triangle's vertices are sorted in a counter-clockwise orientation
+    // 6.   The triangles are then sent off to the rasterizer and drawn to the screen
+
+    if (vertices.is_empty())
+        return;
 
     m_enabled_texture_units = enabled_texture_units;
 
-    m_triangle_list.clear_with_capacity();
-    m_processed_triangles.clear_with_capacity();
+    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
+    // See section 2.11.3 of the OpenGL 1.5 spec
+    auto const normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
+
+    // Generate texture coordinates if at least one coordinate is enabled
+    bool texture_coordinate_generation_enabled = any_of(
+        m_options.texcoord_generation_enabled_coordinates,
+        [](auto coordinates_enabled) { return coordinates_enabled != GPU::TexCoordGenerationCoordinate::None; });
+
+    // First, transform all vertices
+    for (auto& vertex : vertices) {
+        vertex.eye_coordinates = model_view_transform * vertex.position;
+
+        vertex.normal = normal_transform * vertex.normal;
+        if (m_options.normalization_enabled)
+            vertex.normal.normalize();
+
+        calculate_vertex_lighting(vertex);
+
+        vertex.clip_coordinates = projection_transform * vertex.eye_coordinates;
+
+        if (texture_coordinate_generation_enabled)
+            generate_texture_coordinates(vertex, m_options);
+
+        for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
+            vertex.tex_coords[i] = texture_transform * vertex.tex_coords[i];
+    }
+
+    // Window coordinate calculation
+    auto const viewport = m_options.viewport;
+    auto const viewport_half_width = viewport.width() / 2.f;
+    auto const viewport_half_height = viewport.height() / 2.f;
+    auto const viewport_center_x = viewport.x() + viewport_half_width;
+    auto const viewport_center_y = viewport.y() + viewport_half_height;
+    auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
+    auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
+
+    auto calculate_vertex_window_coordinates = [&](GPU::Vertex& vertex) {
+        auto const one_over_w = 1 / vertex.clip_coordinates.w();
+        auto const ndc_coordinates = vertex.clip_coordinates.xyz() * one_over_w;
+
+        vertex.window_coordinates = {
+            viewport_center_x + ndc_coordinates.x() * viewport_half_width,
+            viewport_center_y + ndc_coordinates.y() * viewport_half_height,
+            depth_halfway + ndc_coordinates.z() * depth_half_range,
+            one_over_w,
+        };
+    };
+
+    // Process points
+    if (primitive_type == GPU::PrimitiveType::Points) {
+        m_clipper.clip_points_against_frustum(vertices);
+        for (auto& vertex : vertices) {
+            calculate_vertex_window_coordinates(vertex);
+            rasterize_point(vertex);
+        }
+        return;
+    }
+
+    // Process lines, line loop and line strips
+    auto rasterize_line_segment = [&](GPU::Vertex& from, GPU::Vertex& to) {
+        if (!m_clipper.clip_line_against_frustum(from, to))
+            return;
+
+        calculate_vertex_window_coordinates(from);
+        calculate_vertex_window_coordinates(to);
+
+        rasterize_line(from, to);
+    };
+    if (primitive_type == GPU::PrimitiveType::Lines) {
+        if (vertices.size() < 2)
+            return;
+        for (size_t i = 0; i < vertices.size() - 1; i += 2)
+            rasterize_line_segment(vertices[i], vertices[i + 1]);
+        return;
+    } else if (primitive_type == GPU::PrimitiveType::LineLoop) {
+        if (vertices.size() < 2)
+            return;
+        for (size_t i = 0; i < vertices.size(); ++i)
+            rasterize_line_segment(vertices[i], vertices[(i + 1) % vertices.size()]);
+        return;
+    } else if (primitive_type == GPU::PrimitiveType::LineStrip) {
+        if (vertices.size() < 2)
+            return;
+        for (size_t i = 0; i < vertices.size() - 1; ++i)
+            rasterize_line_segment(vertices[i], vertices[i + 1]);
+        return;
+    }
 
     // Let's construct some triangles
+    m_triangle_list.clear_with_capacity();
+    m_processed_triangles.clear_with_capacity();
     if (primitive_type == GPU::PrimitiveType::Triangles) {
         Triangle triangle;
         if (vertices.size() < 3)
@@ -720,163 +1134,8 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         }
     }
 
-    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
-    // See section 2.11.3 of the OpenGL 1.5 spec
-    auto normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
-
-    // Now let's transform each triangle and send that to the GPU
-    auto const viewport = m_options.viewport;
-    auto const viewport_half_width = viewport.width() / 2.0f;
-    auto const viewport_half_height = viewport.height() / 2.0f;
-    auto const viewport_center_x = viewport.x() + viewport_half_width;
-    auto const viewport_center_y = viewport.y() + viewport_half_height;
-    auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
-    auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
+    // Clip triangles
     for (auto& triangle : m_triangle_list) {
-        // Transform vertices into eye coordinates using the model-view transform
-        triangle.vertices[0].eye_coordinates = model_view_transform * triangle.vertices[0].position;
-        triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
-        triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
-
-        // Transform normals before use in lighting
-        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
-        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
-        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
-        if (m_options.normalization_enabled) {
-            triangle.vertices[0].normal.normalize();
-            triangle.vertices[1].normal.normalize();
-            triangle.vertices[2].normal.normalize();
-        }
-
-        // Calculate per-vertex lighting
-        if (m_options.lighting_enabled) {
-            auto const& material = m_materials.at(0);
-            for (auto& vertex : triangle.vertices) {
-                auto ambient = material.ambient;
-                auto diffuse = material.diffuse;
-                auto emissive = material.emissive;
-                auto specular = material.specular;
-
-                if (m_options.color_material_enabled
-                    && (m_options.color_material_face == GPU::ColorMaterialFace::Front || m_options.color_material_face == GPU::ColorMaterialFace::FrontAndBack)) {
-                    switch (m_options.color_material_mode) {
-                    case GPU::ColorMaterialMode::Ambient:
-                        ambient = vertex.color;
-                        break;
-                    case GPU::ColorMaterialMode::AmbientAndDiffuse:
-                        ambient = vertex.color;
-                        diffuse = vertex.color;
-                        break;
-                    case GPU::ColorMaterialMode::Diffuse:
-                        diffuse = vertex.color;
-                        break;
-                    case GPU::ColorMaterialMode::Emissive:
-                        emissive = vertex.color;
-                        break;
-                    case GPU::ColorMaterialMode::Specular:
-                        specular = vertex.color;
-                        break;
-                    }
-                }
-
-                FloatVector4 result_color = emissive + (ambient * m_lighting_model.scene_ambient_color);
-
-                for (auto const& light : m_lights) {
-                    if (!light.is_enabled)
-                        continue;
-
-                    // We need to save the length here because the attenuation factor requires a non-normalized vector!
-                    auto sgi_arrow_operator = [](FloatVector4 const& p1, FloatVector4 const& p2, float& output_length) {
-                        FloatVector3 light_vector;
-                        if ((p1.w() != 0.f) && (p2.w() == 0.f))
-                            light_vector = p2.xyz();
-                        else if ((p1.w() == 0.f) && (p2.w() != 0.f))
-                            light_vector = -p1.xyz();
-                        else
-                            light_vector = p2.xyz() - p1.xyz();
-
-                        output_length = light_vector.length();
-                        if (output_length == 0.f)
-                            return light_vector;
-                        return light_vector / output_length;
-                    };
-
-                    auto sgi_dot_operator = [](FloatVector3 const& d1, FloatVector3 const& d2) {
-                        return AK::max(d1.dot(d2), 0.0f);
-                    };
-
-                    float vertex_to_light_length = 0.f;
-                    FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vertex_to_light_length);
-
-                    // Light attenuation value.
-                    float light_attenuation_factor = 1.0f;
-                    if (light.position.w() != 0.0f)
-                        light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length * vertex_to_light_length));
-
-                    // Spotlight factor
-                    float spotlight_factor = 1.0f;
-                    if (light.spotlight_cutoff_angle != 180.0f) {
-                        auto const vertex_to_light_dot_spotlight_direction = sgi_dot_operator(vertex_to_light, light.spotlight_direction.normalized());
-                        auto const cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
-
-                        if (vertex_to_light_dot_spotlight_direction >= cos_spotlight_cutoff)
-                            spotlight_factor = AK::pow<float>(vertex_to_light_dot_spotlight_direction, light.spotlight_exponent);
-                        else
-                            spotlight_factor = 0.0f;
-                    }
-
-                    // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
-                    (void)m_lighting_model.color_control;
-
-                    // FIXME: Two sided lighting should be implemented eventually (I believe this is where the normals are -ve and then lighting is calculated with the BACK material)
-                    (void)m_lighting_model.two_sided_lighting;
-
-                    // Ambient
-                    auto const ambient_component = ambient * light.ambient_intensity;
-
-                    // Diffuse
-                    auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
-                    auto const diffuse_component = diffuse * light.diffuse_intensity * normal_dot_vertex_to_light;
-
-                    // Specular
-                    FloatVector4 specular_component = { 0.0f, 0.0f, 0.0f, 0.0f };
-                    if (normal_dot_vertex_to_light > 0.0f) {
-                        FloatVector3 half_vector_normalized;
-                        if (!m_lighting_model.viewer_at_infinity) {
-                            half_vector_normalized = vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f);
-                        } else {
-                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates, { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
-                            half_vector_normalized = vertex_to_light + vertex_to_eye_point;
-                        }
-                        half_vector_normalized.normalize();
-
-                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal, half_vector_normalized);
-                        auto const specular_coefficient = AK::pow(normal_dot_half_vector, material.shininess);
-                        specular_component = specular * light.specular_intensity * specular_coefficient;
-                    }
-
-                    auto color = ambient_component + diffuse_component + specular_component;
-                    color = color * light_attenuation_factor * spotlight_factor;
-                    result_color += color;
-                }
-
-                vertex.color = result_color;
-                vertex.color.set_w(diffuse.w()); // OpenGL 1.5 spec, page 59: "The A produced by lighting is the alpha value associated with diffuse color material"
-                vertex.color.clamp(0.0f, 1.0f);
-            }
-        }
-
-        // Transform eye coordinates into clip coordinates using the projection transform
-        triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
-        triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
-        triangle.vertices[2].clip_coordinates = projection_transform * triangle.vertices[2].eye_coordinates;
-
-        // At this point, we're in clip space
-        // Here's where we do the clipping. This is a really crude implementation of the
-        // https://learnopengl.com/Getting-started/Coordinate-Systems
-        // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
-        // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
-
         m_clipped_vertices.clear_with_capacity();
         m_clipped_vertices.append(triangle.vertices[0]);
         m_clipped_vertices.append(triangle.vertices[1]);
@@ -886,24 +1145,8 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         if (m_clipped_vertices.size() < 3)
             continue;
 
-        for (auto& vec : m_clipped_vertices) {
-            // To normalized device coordinates (NDC)
-            auto const one_over_w = 1 / vec.clip_coordinates.w();
-            auto const ndc_coordinates = FloatVector4 {
-                vec.clip_coordinates.x() * one_over_w,
-                vec.clip_coordinates.y() * one_over_w,
-                vec.clip_coordinates.z() * one_over_w,
-                one_over_w,
-            };
-
-            // To window coordinates
-            vec.window_coordinates = {
-                viewport_center_x + ndc_coordinates.x() * viewport_half_width,
-                viewport_center_y + ndc_coordinates.y() * viewport_half_height,
-                depth_halfway + ndc_coordinates.z() * depth_half_range,
-                ndc_coordinates.w(),
-            };
-        }
+        for (auto& vertex : m_clipped_vertices)
+            calculate_vertex_window_coordinates(vertex);
 
         Triangle tri;
         tri.vertices[0] = m_clipped_vertices[0];
@@ -914,57 +1157,8 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         }
     }
 
-    // Generate texture coordinates if at least one coordinate is enabled
-    bool texture_coordinate_generation_enabled = false;
-    for (auto const coordinates_enabled : m_options.texcoord_generation_enabled_coordinates) {
-        if (coordinates_enabled != GPU::TexCoordGenerationCoordinate::None) {
-            texture_coordinate_generation_enabled = true;
-            break;
-        }
-    }
-
-    for (auto& triangle : m_processed_triangles) {
-        triangle.subpixel_coordinates[0] = (triangle.vertices[0].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
-        triangle.subpixel_coordinates[1] = (triangle.vertices[1].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
-        triangle.subpixel_coordinates[2] = (triangle.vertices[2].window_coordinates.xy() * subpixel_factor).to_rounded<int>();
-
-        auto triangle_area = edge_function(triangle.subpixel_coordinates[0], triangle.subpixel_coordinates[1], triangle.subpixel_coordinates[2]);
-        if (triangle_area == 0)
-            continue;
-
-        if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? triangle_area > 0 : triangle_area < 0);
-
-            if (!is_front && m_options.cull_back)
-                continue;
-
-            if (is_front && m_options.cull_front)
-                continue;
-        }
-
-        // Force counter-clockwise ordering of vertices
-        if (triangle_area < 0) {
-            swap(triangle.vertices[0], triangle.vertices[1]);
-            swap(triangle.subpixel_coordinates[0], triangle.subpixel_coordinates[1]);
-            triangle_area *= -1;
-        }
-        triangle.area = triangle_area;
-
-        if (texture_coordinate_generation_enabled) {
-            generate_texture_coordinates(triangle.vertices[0], m_options);
-            generate_texture_coordinates(triangle.vertices[1], m_options);
-            generate_texture_coordinates(triangle.vertices[2], m_options);
-        }
-
-        // Apply texture transformation
-        for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i) {
-            triangle.vertices[0].tex_coords[i] = texture_transform * triangle.vertices[0].tex_coords[i];
-            triangle.vertices[1].tex_coords[i] = texture_transform * triangle.vertices[1].tex_coords[i];
-            triangle.vertices[2].tex_coords[i] = texture_transform * triangle.vertices[2].tex_coords[i];
-        }
-
+    for (auto& triangle : m_processed_triangles)
         rasterize_triangle(triangle);
-    }
 }
 
 ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
@@ -1033,6 +1227,9 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
         quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
     }
+
+    // Multiply coverage with the fragment's alpha to obtain the final alpha value
+    quad.out_color.set_w(quad.out_color.w() * quad.coverage);
 }
 
 ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)

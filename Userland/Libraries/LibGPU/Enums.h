@@ -88,9 +88,13 @@ enum class WindingOrder {
 };
 
 enum class PrimitiveType {
+    Lines,
+    LineLoop,
+    LineStrip,
+    Points,
+    TriangleFan,
     Triangles,
     TriangleStrip,
-    TriangleFan,
     Quads,
 };
 

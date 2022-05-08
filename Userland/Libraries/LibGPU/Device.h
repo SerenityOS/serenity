@@ -40,7 +40,7 @@ public:
 
     virtual DeviceInfo info() const = 0;
 
-    virtual void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units) = 0;
+    virtual void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex>& vertices, Vector<size_t> const& enabled_texture_units) = 0;
     virtual void resize(Gfx::IntSize const& min_size) = 0;
     virtual void clear_color(FloatVector4 const&) = 0;
     virtual void clear_depth(DepthType) = 0;

@@ -133,21 +133,7 @@ void GLContext::gl_end()
 
     // Make sure we had a `glBegin` before this call...
     RETURN_WITH_ERROR_IF(!m_in_draw_state, GL_INVALID_OPERATION);
-
     m_in_draw_state = false;
-
-    // FIXME: Add support for the remaining primitive types.
-    if (m_current_draw_mode != GL_TRIANGLES
-        && m_current_draw_mode != GL_TRIANGLE_FAN
-        && m_current_draw_mode != GL_TRIANGLE_STRIP
-        && m_current_draw_mode != GL_QUADS
-        && m_current_draw_mode != GL_QUAD_STRIP
-        && m_current_draw_mode != GL_POLYGON) {
-
-        m_vertex_list.clear_with_capacity();
-        dbgln_if(GL_DEBUG, "gl_end(): draw mode {:#x} unsupported", m_current_draw_mode);
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
-    }
 
     Vector<size_t, 32> enabled_texture_units;
     for (size_t i = 0; i < m_texture_units.size(); ++i) {
@@ -159,6 +145,18 @@ void GLContext::gl_end()
 
     GPU::PrimitiveType primitive_type;
     switch (m_current_draw_mode) {
+    case GL_LINE_LOOP:
+        primitive_type = GPU::PrimitiveType::LineLoop;
+        break;
+    case GL_LINE_STRIP:
+        primitive_type = GPU::PrimitiveType::LineStrip;
+        break;
+    case GL_LINES:
+        primitive_type = GPU::PrimitiveType::Lines;
+        break;
+    case GL_POINTS:
+        primitive_type = GPU::PrimitiveType::Points;
+        break;
     case GL_TRIANGLES:
         primitive_type = GPU::PrimitiveType::Triangles;
         break;
@@ -178,7 +176,6 @@ void GLContext::gl_end()
     }
 
     m_rasterizer->draw_primitives(primitive_type, m_model_view_matrix, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
-
     m_vertex_list.clear_with_capacity();
 }
 

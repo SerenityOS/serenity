@@ -103,6 +103,11 @@ ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const
     };
 }
 
+ALWAYS_INLINE static AK::SIMD::f32x4 length(Vector2<AK::SIMD::f32x4> const& v)
+{
+    return AK::SIMD::sqrt(v.dot(v));
+}
+
 // Calculates a quadratic approximation of log2, exploiting the fact that IEEE754 floats are represented as mantissa * 2^exponent.
 // See https://stackoverflow.com/questions/9411823/fast-log2float-x-implementation-c
 ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
@@ -122,6 +127,14 @@ ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
     // Approximate log2 by adding a quadratic function of u to the integral part.
     log += (-0.34484843f * u.float_val + 2.02466578f) * u.float_val - 0.67487759f;
     return log;
+}
+
+ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> to_vec2_f32x4(Vector2<AK::SIMD::i32x4> const& v)
+{
+    return {
+        AK::SIMD::to_f32x4(v.x()),
+        AK::SIMD::to_f32x4(v.y()),
+    };
 }
 
 }
