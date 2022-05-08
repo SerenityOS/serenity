@@ -15,8 +15,6 @@ namespace SoftGPU {
 
 struct Triangle {
     GPU::Vertex vertices[3];
-    IntVector2 subpixel_coordinates[3];
-    i32 area;
 };
 
 }

@@ -47,7 +47,7 @@ public:
 
     virtual GPU::DeviceInfo info() const override;
 
-    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units) override;
+    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex>& vertices, Vector<size_t> const& enabled_texture_units) override;
     virtual void resize(Gfx::IntSize const& min_size) override;
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
@@ -74,10 +74,22 @@ public:
     virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
 
 private:
+    void calculate_vertex_lighting(GPU::Vertex& vertex) const;
     void draw_statistics_overlay(Gfx::Bitmap&);
     Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size) const;
 
-    void rasterize_triangle(Triangle const&);
+    template<typename CB1, typename CB2, typename CB3>
+    void rasterize(Gfx::IntRect& render_bounds, CB1 set_coverage_mask, CB2 set_quad_depth, CB3 set_quad_attributes);
+
+    void rasterize_line_aliased(GPU::Vertex&, GPU::Vertex&);
+    void rasterize_line_antialiased(GPU::Vertex&, GPU::Vertex&);
+    void rasterize_line(GPU::Vertex&, GPU::Vertex&);
+
+    void rasterize_point_aliased(GPU::Vertex&);
+    void rasterize_point_antialiased(GPU::Vertex&);
+    void rasterize_point(GPU::Vertex&);
+
+    void rasterize_triangle(Triangle&);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);

@@ -91,6 +91,46 @@ FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& input_list, Vector
     }
 }
 
+void Clipper::clip_points_against_frustum(Vector<GPU::Vertex>& vertices)
+{
+    m_vertex_buffer.clear_with_capacity();
+
+    for (auto& vertex : vertices) {
+        auto const coords = vertex.clip_coordinates;
+        if (point_within_clip_plane<ClipPlane::LEFT>(coords) && point_within_clip_plane<ClipPlane::RIGHT>(coords)
+            && point_within_clip_plane<ClipPlane::TOP>(coords) && point_within_clip_plane<ClipPlane::BOTTOM>(coords)
+            && point_within_clip_plane<ClipPlane::NEAR>(coords) && point_within_clip_plane<ClipPlane::FAR>(coords))
+            m_vertex_buffer.append(vertex);
+    }
+
+    vertices.clear_with_capacity();
+    vertices.extend(m_vertex_buffer);
+}
+
+template<Clipper::ClipPlane plane>
+static constexpr bool constrain_line_within_plane(GPU::Vertex& from, GPU::Vertex& to)
+{
+    auto from_within_plane = point_within_clip_plane<plane>(from.clip_coordinates);
+    auto to_within_plane = point_within_clip_plane<plane>(to.clip_coordinates);
+    if (!from_within_plane && !to_within_plane)
+        return false;
+    if (!from_within_plane)
+        from = clip_intersection_point<plane>(from, to);
+    else if (!to_within_plane)
+        to = clip_intersection_point<plane>(from, to);
+    return true;
+}
+
+bool Clipper::clip_line_against_frustum(GPU::Vertex& from, GPU::Vertex& to)
+{
+    return constrain_line_within_plane<ClipPlane::LEFT>(from, to)
+        && constrain_line_within_plane<ClipPlane::RIGHT>(from, to)
+        && constrain_line_within_plane<ClipPlane::TOP>(from, to)
+        && constrain_line_within_plane<ClipPlane::BOTTOM>(from, to)
+        && constrain_line_within_plane<ClipPlane::NEAR>(from, to)
+        && constrain_line_within_plane<ClipPlane::FAR>(from, to);
+}
+
 void Clipper::clip_triangle_against_frustum(Vector<GPU::Vertex>& input_verts)
 {
     // FIXME C++23. Static reflection will provide looping over all enum values.

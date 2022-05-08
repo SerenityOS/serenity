@@ -117,3 +117,55 @@ TEST_CASE(0003_rect_w_coordinate_regression)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0003_rect_w_coordinate_regression");
 }
+
+TEST_CASE(0004_points)
+{
+    auto context = create_testing_context(64, 64);
+
+    // Aliased points
+    for (size_t i = 0; i < 3; ++i) {
+        glPointSize(1.f + i);
+        glBegin(GL_POINTS);
+        glVertex2f(-.5f + i * .5f, .5f);
+        glEnd();
+    }
+
+    // Anti-aliased points
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (size_t i = 0; i < 3; ++i) {
+        glPointSize(3.f - i);
+        glBegin(GL_POINTS);
+        glVertex2f(-.5f + i * .5f, -.5f);
+        glEnd();
+    }
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0004_points");
+}
+
+TEST_CASE(0005_lines_antialiased)
+{
+    auto context = create_testing_context(64, 64);
+
+    // Draw anti-aliased lines
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glBegin(GL_LINES);
+    for (size_t i = 0; i < 6; ++i) {
+        glVertex2f(-.9f, .25f - i * .1f);
+        glVertex2f(.9f, .9f - i * .36f);
+    }
+    glEnd();
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0005_lines");
+}

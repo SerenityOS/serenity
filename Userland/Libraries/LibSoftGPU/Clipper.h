@@ -26,6 +26,8 @@ public:
 
     Clipper() = default;
 
+    void clip_points_against_frustum(Vector<GPU::Vertex>& vertices);
+    bool clip_line_against_frustum(GPU::Vertex& from, GPU::Vertex& to);
     void clip_triangle_against_frustum(Vector<GPU::Vertex>& input_vecs);
 
 private:
