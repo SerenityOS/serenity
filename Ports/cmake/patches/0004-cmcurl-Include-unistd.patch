@@ -1,9 +1,9 @@
-From ac1f5e51b8069e98a593a0f5ad25fdcd0328eca8 Mon Sep 17 00:00:00 2001
+From a65e8be0dbde0e23fed88f8ebdcdf8668b238b9c Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Wed, 12 Jan 2022 22:18:02 +0330
-Subject: [PATCH 5/7] cmcurl: Include unistd
+Subject: [PATCH 4/6] cmcurl: Include unistd
 
-Everyone gets this wrong. most platforms are very lax with these includes, but we're not one of them.
+Everyone gets this wrong. Most platforms are very lax with these includes, but we're not one of them.
 
 - [X] Local?
 - [ ] Should be merged to upstream?
@@ -14,7 +14,7 @@ Everyone gets this wrong. most platforms are very lax with these includes, but w
  1 file changed, 1 insertion(+)
 
 diff --git a/Utilities/cmcurl/include/curl/multi.h b/Utilities/cmcurl/include/curl/multi.h
-index 37f9829b..4a2b94fa 100644
+index 91cd95d3..9940748f 100644
 --- a/Utilities/cmcurl/include/curl/multi.h
 +++ b/Utilities/cmcurl/include/curl/multi.h
 @@ -47,6 +47,7 @@
@@ -26,5 +26,5 @@ index 37f9829b..4a2b94fa 100644
  #ifdef  __cplusplus
  extern "C" {
 -- 
-2.34.1
+2.36.1
 
