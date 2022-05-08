@@ -2327,7 +2327,7 @@ void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& st
     for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
         auto code_point = *code_point_iterator;
         if (code_point == ' ') {
-            x += space_width;
+            x += space_width + font.glyph_spacing();
             last_code_point = code_point;
             continue;
         }
