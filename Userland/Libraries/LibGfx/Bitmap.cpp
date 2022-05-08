@@ -469,6 +469,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() co
     return bitmap;
 }
 
+void Bitmap::invert()
+{
+    for (auto y = 0; y < height(); y++) {
+        for (auto x = 0; x < width(); x++)
+            set_pixel(x, y, get_pixel(x, y).inverted());
+    }
+}
+
 Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
