@@ -1,7 +1,7 @@
 From d2a56ba682814f2d2451fc0729ada79290de2939 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:36:08 +0200
-Subject: [PATCH 5/6] Scripting: Fix default keybindings
+Subject: [PATCH 5/7] Scripting: Fix default keybindings
 
 These constants referred to the wrong keys.
 ---

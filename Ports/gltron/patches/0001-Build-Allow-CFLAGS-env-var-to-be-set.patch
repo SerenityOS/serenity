@@ -1,7 +1,7 @@
 From 94e90c97566a73cb03c4837d53a4cddf452e42bf Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:29:43 +0200
-Subject: [PATCH 1/6] Build: Allow `CFLAGS` env var to be set
+Subject: [PATCH 1/7] Build: Allow `CFLAGS` env var to be set
 
 ---
  configure | 2 +-
