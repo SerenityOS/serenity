@@ -52,7 +52,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'genemu',
     'gettext',
     'git',
-    'gltron',
     'gmp',
     'gnucobol',
     'gnupg',

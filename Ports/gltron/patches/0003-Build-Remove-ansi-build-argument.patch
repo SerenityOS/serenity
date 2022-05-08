@@ -1,0 +1,39 @@
+From b01d5c00dd0dbe9512857e32ffd0822bdfb8a9e3 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Mon, 9 May 2022 00:30:54 +0200
+Subject: [PATCH 3/6] Build: Remove `-ansi` build argument
+
+---
+ lua/src/Makefile.in     | 2 +-
+ lua/src/lib/Makefile.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lua/src/Makefile.in b/lua/src/Makefile.in
+index 22ee463..fa110ef 100644
+--- a/lua/src/Makefile.in
++++ b/lua/src/Makefile.in
+@@ -84,7 +84,7 @@ noinst_LIBRARIES = liblua.a
+ 
+ DEFS = 
+ AM_CPPFLAGS = 
+-AM_CFLAGS = -ansi -pedantic -Wall -I$(srcdir) -I$(top_srcdir)/lua/include
++AM_CFLAGS = -pedantic -Wall -I$(srcdir) -I$(top_srcdir)/lua/include
+ LDFLAGS = 
+ LIBS = -lm
+ 
+diff --git a/lua/src/lib/Makefile.in b/lua/src/lib/Makefile.in
+index e2f256f..d2f4040 100644
+--- a/lua/src/lib/Makefile.in
++++ b/lua/src/lib/Makefile.in
+@@ -82,7 +82,7 @@ noinst_LIBRARIES = liblualib.a
+ 
+ DEFS = 
+ CPPFLAGS = 
+-CFLAGS = -ansi -pedantic -Wall -I$(srcdir)/.. -I$(top_srcdir)/lua/include
++CFLAGS = -pedantic -Wall -I$(srcdir)/.. -I$(top_srcdir)/lua/include
+ LDFLAGS = 
+ LIBS = -lm
+ 
+-- 
+2.34.1
+
