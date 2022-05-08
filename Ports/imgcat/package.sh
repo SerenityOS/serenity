@@ -1,11 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=imgcat
-version=2.5.0
-depends=("ncurses" "libpng" "libjpeg")
-files="https://github.com/eddieantonio/imgcat/releases/download/v${version}/imgcat-${version}.tar.gz imgcat-v${version}.tar.gz 8f18e10464ed1426b29a5b11aee766a43db92be17ba0a17fd127dd9cf9fb544b"
+version=2.5.1
+useconfigure=true
+installopts=("PREFIX=${SERENITY_INSTALL_ROOT}/usr/local")
+depends=("ncurses" "libpng" "libjpeg" "termcap")
+files="https://github.com/eddieantonio/imgcat/releases/download/v${version}/imgcat-${version}.tar.gz imgcat-v${version}.tar.gz 8faaac392df315b4973bb6927c0eec659e879df6c15ad6f8461073e05b70c537"
 auth_type=sha256
-
-build() {
-    run make \
-        production=true
-}
