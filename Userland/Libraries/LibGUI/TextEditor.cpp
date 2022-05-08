@@ -452,7 +452,10 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
     }
 
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    auto horizontal_scrollbar_value = horizontal_scrollbar().value();
+    painter.translate(-horizontal_scrollbar_value, -vertical_scrollbar().value());
+    if (m_icon && horizontal_scrollbar_value > 0)
+        painter.translate(min(icon_size() + icon_padding(), horizontal_scrollbar_value), 0);
     painter.translate(gutter_width(), 0);
     painter.translate(ruler_width(), 0);
 
