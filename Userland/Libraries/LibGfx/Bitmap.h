@@ -240,6 +240,8 @@ public:
 
     [[nodiscard]] bool visually_equals(Bitmap const&) const;
 
+    [[nodiscard]] Optional<Color> solid_color(u8 alpha_threshold = 0) const;
+
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
     Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);
