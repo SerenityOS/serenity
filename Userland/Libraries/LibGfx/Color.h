@@ -221,6 +221,15 @@ public:
         return (red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);
     }
 
+    constexpr float contrast_ratio(Color const& other)
+    {
+        auto l1 = luminosity();
+        auto l2 = other.luminosity();
+        auto darkest = min(l1, l2) / 255.;
+        auto brightest = max(l1, l2) / 255.;
+        return (brightest + 0.05) / (darkest + 0.05);
+    }
+
     constexpr Color to_grayscale() const
     {
         auto gray = luminosity();
