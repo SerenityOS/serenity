@@ -1,7 +1,7 @@
 From 0ec20dfd57ae517d18f06c4c580d346fddd2f926 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:32:04 +0200
-Subject: [PATCH 4/6] Build: Fix `char*` vs. `const char*` arguments
+Subject: [PATCH 4/7] Build: Fix `char*` vs. `const char*` arguments
 
 These arguments are of the wrong constness, which will trip our
 compiler.

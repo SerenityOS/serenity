@@ -33,3 +33,12 @@ These constants referred to the wrong keys.
 SDL: Convert SDL1 to SDL2
 
 
+## `0007-SDL-Fix-2x-audio-rate-issue.patch`
+
+SDL: Fix 2x audio rate issue
+
+By not passing in an `obtained` struct into `SDL_OpenAudio`, we ask SDL
+to perform any sample rate and/or format conversion for us. Previously
+GLTron would simply ignore the result in `obtained`, causing the audio
+to be played back at 2x speed.
+

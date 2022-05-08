@@ -1,7 +1,7 @@
 From dd42cfe84e75619676a06b05f8ebe1c1c2e658c9 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:30:04 +0200
-Subject: [PATCH 2/6] Build: Replace `-lGL` with `-lgl` to reference our LibGL
+Subject: [PATCH 2/7] Build: Replace `-lGL` with `-lgl` to reference our LibGL
 
 ---
  configure | 4 ++--
