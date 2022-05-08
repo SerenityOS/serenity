@@ -1071,7 +1071,10 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
 // https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
 String ColorStyleValue::to_string() const
 {
-    if (m_color.alpha() == 1)
+    // The serialized form is derived from the computed value and thus, uses either the rgb() or rgba() form
+    // (depending on whether the alpha is exactly 1, or not), with lowercase letters for the function name.
+    // NOTE: Since we use Gfx::Color, having an "alpha of 1" means its value is 255.
+    if (m_color.alpha() == 255)
         return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
     return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
 }
