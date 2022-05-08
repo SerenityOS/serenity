@@ -9,5 +9,3 @@ build() {
     run make \
         production=true
 }
-
-export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
