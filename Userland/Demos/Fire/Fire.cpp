@@ -174,9 +174,9 @@ void Fire::mousedown_event(GUI::MouseEvent& event)
 void Fire::mousemove_event(GUI::MouseEvent& event)
 {
     if (dragging) {
-        if (event.y() >= 2 && event.y() < 398 && event.x() <= 638) {
-            int ypos = event.y() / 2;
-            int xpos = event.x() / 2;
+        int ypos = event.y() / 2;
+        int xpos = event.x() / 2;
+        if (bitmap->rect().shrunken(1, 1, 0, 0).contains(xpos, ypos)) {
             bitmap->scanline_u8(ypos - 1)[xpos] = FIRE_MAX + 5;
             bitmap->scanline_u8(ypos - 1)[xpos + 1] = FIRE_MAX + 5;
             bitmap->scanline_u8(ypos)[xpos] = FIRE_MAX + 5;
