@@ -135,9 +135,9 @@ SpinlockProtected<Route::RouteList>& routing_table()
     return *s_routing_table;
 }
 
-ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, RefPtr<NetworkAdapter> adapter, UpdateTable update)
+ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, RefPtr<NetworkAdapter> adapter, UpdateTable update)
 {
-    auto route_entry = adopt_ref_if_nonnull(new (nothrow) Route { destination, gateway, netmask, adapter.release_nonnull() });
+    auto route_entry = adopt_ref_if_nonnull(new (nothrow) Route { destination, gateway, netmask, flags, adapter.release_nonnull() });
     if (!route_entry)
         return ENOMEM;
 

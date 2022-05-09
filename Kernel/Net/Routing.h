@@ -15,22 +15,24 @@
 namespace Kernel {
 
 struct Route : public RefCounted<Route> {
-    Route(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, NonnullRefPtr<NetworkAdapter> adapter)
+    Route(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, NonnullRefPtr<NetworkAdapter> adapter)
         : destination(destination)
         , gateway(gateway)
         , netmask(netmask)
+        , flags(flags)
         , adapter(adapter)
     {
     }
 
     bool operator==(Route const& other) const
     {
-        return destination == other.destination && gateway == other.gateway && netmask == other.netmask && adapter.ptr() == other.adapter.ptr();
+        return destination == other.destination && gateway == other.gateway && netmask == other.netmask && flags == other.flags && adapter.ptr() == other.adapter.ptr();
     }
 
     const IPv4Address destination;
     const IPv4Address gateway;
     const IPv4Address netmask;
+    const u16 flags;
     NonnullRefPtr<NetworkAdapter> adapter;
 
     IntrusiveListNode<Route, RefPtr<Route>> route_list_node {};
@@ -50,7 +52,7 @@ enum class UpdateTable {
 };
 
 void update_arp_table(IPv4Address const&, MACAddress const&, UpdateTable update);
-ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, RefPtr<NetworkAdapter> const adapter, UpdateTable update);
+ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, RefPtr<NetworkAdapter> const adapter, UpdateTable update);
 
 enum class AllowUsingGateway {
     Yes,
