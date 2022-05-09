@@ -181,6 +181,13 @@ NonnullRefPtr<Type> Parser::parse_type()
         consume_whitespace();
 
     auto name = lexer.consume_until([](auto ch) { return !is_ascii_alphanumeric(ch) && ch != '_'; });
+
+    if (name.equals_ignoring_case("long"sv)) {
+        consume_whitespace();
+        if (lexer.consume_specific("long"sv))
+            name = "long long";
+    }
+
     NonnullRefPtrVector<Type> parameters;
     bool is_parameterized_type = false;
     if (lexer.consume_specific('<')) {
