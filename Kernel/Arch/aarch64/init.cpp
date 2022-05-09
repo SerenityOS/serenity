@@ -12,7 +12,6 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>

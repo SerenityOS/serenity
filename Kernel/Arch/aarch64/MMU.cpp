@@ -6,7 +6,7 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/CPU.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>

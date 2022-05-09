@@ -8,7 +8,6 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 
 extern "C" uintptr_t vector_table_el1;
 

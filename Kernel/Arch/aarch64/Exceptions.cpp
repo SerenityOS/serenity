@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Panic.h>
 
