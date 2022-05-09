@@ -122,6 +122,7 @@ public:
     bool apply_move(Move const&, Color color = Color::None);
     Optional<Move> const& last_move() const { return m_last_move; }
 
+    ErrorOr<void> load_fen(StringView fen);
     String to_fen() const;
 
     enum class Result {
@@ -164,6 +165,7 @@ private:
     Optional<Move> m_last_move;
     short m_moves_since_capture { 0 };
     short m_moves_since_pawn_advance { 0 };
+    short m_fullmove_clock { 0 };
 
     Color m_turn : 2 { Color::White };
     Color m_resigned : 2 { Color::None };
@@ -172,6 +174,8 @@ private:
     bool m_white_can_castle_queenside : 1 { true };
     bool m_black_can_castle_kingside : 1 { true };
     bool m_black_can_castle_queenside : 1 { true };
+
+    Square m_enpassant_square { -1, -1 };
 
     // We trust that hash collisions will not happen to save lots of memory and time.
     HashMap<unsigned, int> m_previous_states;

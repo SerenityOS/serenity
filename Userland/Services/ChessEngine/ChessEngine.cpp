@@ -20,11 +20,20 @@ void ChessEngine::handle_uci()
 
 void ChessEngine::handle_position(PositionCommand const& command)
 {
-    // FIXME: Implement fen board position.
-    VERIFY(!command.fen().has_value());
-    m_board = Chess::Board();
-    for (auto& move : command.moves()) {
-        VERIFY(m_board.apply_move(move));
+    if (command.fen().has_value()) {
+        Chess::Board board;
+        auto fen_value = command.fen().value();
+        auto result = board.load_fen(fen_value);
+        if (result.is_error()) {
+            dbgln("Error while loading fen: {}", result.error().string_literal());
+            return;
+        }
+        m_board = move(board);
+    } else {
+        m_board = Chess::Board();
+        for (auto& move : command.moves()) {
+            VERIFY(m_board.apply_move(move));
+        }
     }
 }
 

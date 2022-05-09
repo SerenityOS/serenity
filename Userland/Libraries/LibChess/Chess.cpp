@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
@@ -221,42 +222,116 @@ String Move::to_algebraic() const
 
 Board::Board()
 {
-    // Fill empty spaces.
-    for (int rank = 2; rank < 6; ++rank) {
-        for (int file = 0; file < 8; ++file) {
+    MUST(load_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+}
+
+ErrorOr<void> Board::load_fen(StringView fen)
+{
+    for (auto rank = 0; rank < 8; rank++) {
+        for (auto file = 0; file < 8; file++) {
             set_piece({ rank, file }, EmptyPiece);
         }
     }
-
-    // Fill white pawns.
-    for (int file = 0; file < 8; ++file) {
-        set_piece({ 1, file }, { Color::White, Type::Pawn });
+    auto fen_split = fen.split_view(' ');
+    if (fen_split.size() != 6) {
+        return Error::from_string_literal("Invalid FEN split size");
+    }
+    auto fen_string = fen_split[0];
+    auto fen_color = fen_split[1];
+    auto fen_castling = fen_split[2];
+    auto fen_enpassant_square = fen_split[3];
+    auto fen_halfmove = fen_split[4];
+    auto fen_fullmove = fen_split[5];
+    int rank = 7, file = 0;
+    for (auto c : fen_string) {
+        if (is_ascii_digit(c)) {
+            file += c - '0';
+            if (file > 8) {
+                return Error::from_string_literal("File exceeded range");
+            }
+            continue;
+        }
+        Color cur_color = is_ascii_upper_alpha(c) ? Color::White : Color::Black;
+        Type cur_type = Type::None;
+        c = to_ascii_lowercase(c);
+        switch (c) {
+        case 'p':
+            cur_type = Type::Pawn;
+            break;
+        case 'n':
+            cur_type = Type::Knight;
+            break;
+        case 'b':
+            cur_type = Type::Bishop;
+            break;
+        case 'r':
+            cur_type = Type::Rook;
+            break;
+        case 'q':
+            cur_type = Type::Queen;
+            break;
+        case 'k':
+            cur_type = Type::King;
+            break;
+        case '/':
+            file = 0;
+            rank -= 1;
+            continue;
+        default:
+            return Error::from_string_literal("Invalid character in position string");
+        }
+        set_piece({ rank, file }, { cur_color, cur_type });
+        file += 1;
     }
 
-    // Fill black pawns.
-    for (int file = 0; file < 8; ++file) {
-        set_piece({ 6, file }, { Color::Black, Type::Pawn });
+    if (fen_color == "w") {
+        m_turn = Color::White;
+    } else if (fen_color == "b") {
+        m_turn = Color::Black;
+    } else {
+        return Error::from_string_literal("Bad character at color position");
     }
-
-    // Fill while pieces.
-    set_piece(Square("a1"), { Color::White, Type::Rook });
-    set_piece(Square("b1"), { Color::White, Type::Knight });
-    set_piece(Square("c1"), { Color::White, Type::Bishop });
-    set_piece(Square("d1"), { Color::White, Type::Queen });
-    set_piece(Square("e1"), { Color::White, Type::King });
-    set_piece(Square("f1"), { Color::White, Type::Bishop });
-    set_piece(Square("g1"), { Color::White, Type::Knight });
-    set_piece(Square("h1"), { Color::White, Type::Rook });
-
-    // Fill black pieces.
-    set_piece(Square("a8"), { Color::Black, Type::Rook });
-    set_piece(Square("b8"), { Color::Black, Type::Knight });
-    set_piece(Square("c8"), { Color::Black, Type::Bishop });
-    set_piece(Square("d8"), { Color::Black, Type::Queen });
-    set_piece(Square("e8"), { Color::Black, Type::King });
-    set_piece(Square("f8"), { Color::Black, Type::Bishop });
-    set_piece(Square("g8"), { Color::Black, Type::Knight });
-    set_piece(Square("h8"), { Color::Black, Type::Rook });
+    bool white_king = false, white_queen = false,
+         black_king = false, black_queen = false;
+    for (auto c : fen_castling) {
+        switch (c) {
+        case 'K':
+            white_king = true;
+            break;
+        case 'Q':
+            white_queen = true;
+            break;
+        case 'k':
+            black_king = true;
+            break;
+        case 'q':
+            black_queen = true;
+            break;
+        case '-':
+            break;
+        default:
+            return Error::from_string_literal("Bad character at castling position");
+        }
+    }
+    m_white_can_castle_kingside = white_king;
+    m_white_can_castle_queenside = white_queen;
+    m_black_can_castle_kingside = black_king;
+    m_black_can_castle_queenside = black_queen;
+    if (fen_enpassant_square.length() == 2)
+        m_enpassant_square = Chess::Square(fen_enpassant_square);
+    else if (fen_enpassant_square != "-")
+        return Error::from_string_literal("Bad character at en passant square position");
+    auto halfmove_opt = fen_halfmove.to_int();
+    if (!halfmove_opt.has_value()) {
+        return Error::from_string_literal("Could not parse halfmove clock");
+    }
+    m_moves_since_capture = halfmove_opt.value();
+    auto fullmove_opt = fen_fullmove.to_int();
+    if (!fullmove_opt.has_value()) {
+        return Error::from_string_literal("Could not parse fullmove clock");
+    }
+    m_fullmove_clock = fullmove_opt.value();
+    return {};
 }
 
 String Board::to_fen() const
@@ -302,6 +377,7 @@ String Board::to_fen() const
     builder.append(" ");
 
     // 4. En passant target square
+    // FIXME: return m_enpassant_square when implemented
     if (!m_last_move.has_value())
         builder.append("-");
     else if (m_last_move.value().piece.type == Type::Pawn) {
@@ -321,6 +397,7 @@ String Board::to_fen() const
     builder.append(" ");
 
     // 6. Fullmove number
+    // FIXME: return m_fullmove_number when implemented
     builder.append(String::number(1 + m_moves.size() / 2));
 
     return builder.to_string();

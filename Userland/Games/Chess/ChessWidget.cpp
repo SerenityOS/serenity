@@ -511,6 +511,13 @@ void ChessWidget::playback_move(PlaybackDirection direction)
     update();
 }
 
+ErrorOr<void> ChessWidget::load_fen(StringView fen)
+{
+    if (!m_playback)
+        return m_board.load_fen(fen);
+    return Error::from_string_literal("Tried to load FEN during playback mode");
+}
+
 String ChessWidget::get_fen() const
 {
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();

@@ -47,6 +47,7 @@ public:
     bool show_available_moves() const { return m_show_available_moves; }
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
 
+    ErrorOr<void> load_fen(StringView fen);
     String get_fen() const;
     bool import_pgn(StringView import_path);
     bool export_pgn(StringView export_path) const;

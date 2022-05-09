@@ -12,8 +12,10 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -93,6 +95,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         dbgln("Exported PGN file to {}", export_path.value());
+    })));
+    TRY(game_menu->try_add_action(GUI::Action::create("&Load FEN...", { Mod_Ctrl, Key_L }, [&](auto&) {
+        String fen_value = "";
+        if (GUI::InputBox::show(window, fen_value, "FEN string:", "Load FEN") == GUI::Dialog::ExecResult::OK) {
+            auto result = widget->load_fen(fen_value);
+            if (result.is_error()) {
+                GUI::MessageBox::show(window, String::formatted("Loading FEN \"{}\" failed: {}", fen_value, result.error().string_literal()), "Error", GUI::MessageBox::Type::Error);
+            }
+        }
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
         GUI::Clipboard::the().set_data(widget->get_fen().bytes());
