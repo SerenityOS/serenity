@@ -28,8 +28,9 @@ private:
 
     RefPtr<GUI::ComboBox> m_themes_combo;
     RefPtr<ThemePreviewWidget> m_theme_preview;
-
     Gfx::SystemThemeMetaData const* m_selected_theme { nullptr };
+
+    RefPtr<GUI::Button> m_cursor_themes_button;
 
     bool& m_background_settings_changed;
 
