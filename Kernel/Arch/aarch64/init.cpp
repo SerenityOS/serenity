@@ -23,8 +23,6 @@
 static void draw_logo();
 static u32 query_firmware_version();
 
-extern "C" void wait_cycles(int n);
-
 struct TrapFrame {
     u64 x[31];     // Saved general purpose registers
     u64 spsr_el1;  // Save Processor Status Register, EL1
