@@ -48,7 +48,7 @@ for details.
 ### Arch Linux / Manjaro
 
 ```console
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync unzip
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu-desktop qemu-emulators-full ccache rsync unzip
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
