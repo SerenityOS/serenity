@@ -398,8 +398,6 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(PREKERNEL_SOURCES
-        Arch/aarch64/Prekernel/boot.S
-
         Prekernel/UBSanitizer.cpp
     )
     set(RPI_SOURCES
@@ -415,6 +413,7 @@ else()
         ${PREKERNEL_SOURCES}
         ${RPI_SOURCES}
 
+        Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
