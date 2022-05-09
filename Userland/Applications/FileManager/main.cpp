@@ -1107,10 +1107,10 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     directory_view->on_selection_change = [&](GUI::AbstractView& view) {
         auto& selection = view.selection();
-        cut_action->set_enabled(!selection.is_empty());
+        cut_action->set_enabled(!selection.is_empty() && access(directory_view->path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
-            || !directory_view->current_view().selection().is_empty());
+            || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
 
     auto directory_open_action = GUI::Action::create("Open", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
