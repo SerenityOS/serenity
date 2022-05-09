@@ -397,7 +397,6 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${CRYPTO_SOURCES}
     )
 else()
-    set(PREKERNEL_SOURCES)
     set(RPI_SOURCES
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
@@ -408,7 +407,6 @@ else()
     )
     set(SOURCES
         ${AK_SOURCES}
-        ${PREKERNEL_SOURCES}
         ${RPI_SOURCES}
 
         Arch/aarch64/boot.S
