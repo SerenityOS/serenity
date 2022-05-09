@@ -22,6 +22,13 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool);
 
+    enum class CheckBoxPosition {
+        Left,
+        Right,
+    };
+    CheckBoxPosition checkbox_position() const { return m_checkbox_position; }
+    void set_checkbox_position(CheckBoxPosition value) { m_checkbox_position = value; }
+
 private:
     explicit CheckBox(String = {});
 
@@ -34,6 +41,7 @@ private:
     virtual void paint_event(PaintEvent&) override;
 
     bool m_autosize { false };
+    CheckBoxPosition m_checkbox_position { CheckBoxPosition::Left };
 };
 
 }
