@@ -10,9 +10,8 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
-#include <Kernel/Arch/aarch64/ASM_wrapper.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -44,12 +43,21 @@ extern ctor_func_t end_heap_ctors[];
 extern ctor_func_t start_ctors[];
 extern ctor_func_t end_ctors[];
 
+ALWAYS_INLINE static Kernel::Processor& bootstrap_processor()
+{
+    alignas(Kernel::Processor) static u8 bootstrap_processor_storage[sizeof(Kernel::Processor)];
+    return (Kernel::Processor&)bootstrap_processor_storage;
+}
+
 extern "C" [[noreturn]] void init()
 {
     dbgln("Welcome to Serenity OS!");
     dbgln("Imagine this being your ideal operating system.");
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
     dbgln();
+
+    new (&bootstrap_processor()) Kernel::Processor();
+    bootstrap_processor().initialize(0);
 
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
     // might rely on being able to call new/kmalloc in the constructor. We do have to run the
@@ -65,16 +73,6 @@ extern "C" [[noreturn]] void init()
 
     auto firmware_version = query_firmware_version();
     dbgln("Firmware version: {}", firmware_version);
-
-    auto current_exception_level = static_cast<u64>(Kernel::Aarch64::Asm::get_current_exception_level());
-    dbgln("CPU started in: EL{}", current_exception_level);
-
-    dbgln("Drop CPU to EL1");
-    Prekernel::drop_to_exception_level_1();
-
-    // Load EL1 vector table
-    extern uintptr_t vector_table_el1;
-    el1_vector_table_install(&vector_table_el1);
 
     dbgln("Initialize MMU");
     Prekernel::init_prekernel_page_tables();
