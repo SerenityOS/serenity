@@ -397,9 +397,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${CRYPTO_SOURCES}
     )
 else()
-    set(PREKERNEL_SOURCES
-        Prekernel/UBSanitizer.cpp
-    )
+    set(PREKERNEL_SOURCES)
     set(RPI_SOURCES
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
@@ -434,6 +432,7 @@ else()
         # Files from base Kernel
         KSyms.cpp
         MiniStdLib.cpp
+        UBSanitizer.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
