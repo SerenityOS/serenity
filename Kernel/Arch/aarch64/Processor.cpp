@@ -32,4 +32,11 @@ void Processor::initialize(u32 cpu)
 
     g_current_processor = this;
 }
+
+[[noreturn]] void Processor::halt()
+{
+    for (;;)
+        asm volatile("wfi");
+}
+
 }

@@ -143,10 +143,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    [[noreturn]] static void halt()
-    {
-        for (;;) { }
-    }
+    [[noreturn]] static void halt();
 };
 
 }
