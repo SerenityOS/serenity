@@ -5,13 +5,9 @@
  */
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Panic.h>
-
-extern "C" void enter_el2_from_el3();
-extern "C" void enter_el1_from_el2();
 
 using namespace Kernel;
 
@@ -43,8 +39,9 @@ static void drop_to_el2()
     Aarch64::SPSR_EL3::write(saved_program_status_register_el3);
 
     // This will jump into os_start() below
-    enter_el2_from_el3();
+    Aarch64::Asm::enter_el2_from_el3();
 }
+
 static void drop_to_el1()
 {
     Aarch64::HCR_EL2 hypervisor_configuration_register_el2 = {};
@@ -62,7 +59,7 @@ static void drop_to_el1()
     saved_program_status_register_el2.M = Aarch64::SPSR_EL2::Mode::EL1t;
 
     Aarch64::SPSR_EL2::write(saved_program_status_register_el2);
-    enter_el1_from_el2();
+    Aarch64::Asm::enter_el1_from_el2();
 }
 
 static void set_up_el1()

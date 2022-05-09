@@ -8,7 +8,6 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 
 extern "C" uintptr_t vector_table_el1;
@@ -28,7 +27,7 @@ void Processor::initialize(u32 cpu)
     Prekernel::drop_to_exception_level_1();
 
     // Load EL1 vector table
-    el1_vector_table_install(&vector_table_el1);
+    Kernel::Aarch64::Asm::el1_vector_table_install(&vector_table_el1);
 
     g_current_processor = this;
 }
