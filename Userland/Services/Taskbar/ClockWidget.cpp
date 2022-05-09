@@ -154,7 +154,7 @@ ClockWidget::ClockWidget()
     m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png").release_value_but_fixme_should_propagate_errors());
     m_calendar_launcher->set_tooltip("Calendar");
     m_calendar_launcher->on_click = [](auto) {
-        Core::Process::spawn("/bin/Calendar"sv);
+        MUST(Core::Process::spawn("/bin/Calendar"));
     };
 }
 

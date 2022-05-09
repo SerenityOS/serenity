@@ -54,7 +54,7 @@ WelcomeWidget::WelcomeWidget()
     m_help_button = *find_descendant_of_type_named<GUI::Button>("help_button");
     m_help_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png").release_value_but_fixme_should_propagate_errors());
     m_help_button->on_click = [](auto) {
-        Core::Process::spawn("/bin/Help"sv);
+        MUST(Core::Process::spawn("/bin/Help"sv));
     };
 
     m_new_button = *find_descendant_of_type_named<GUI::Button>("new_button");

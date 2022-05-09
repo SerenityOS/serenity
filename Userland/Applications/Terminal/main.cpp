@@ -328,7 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            Core::Process::spawn("/bin/TerminalSettings");
+            MUST(Core::Process::spawn("/bin/TerminalSettings"));
         });
 
     TRY(terminal->context_menu().try_add_separator());
@@ -336,7 +336,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        Core::Process::spawn("/bin/Terminal");
+        MUST(Core::Process::spawn("/bin/Terminal"));
     })));
 
     TRY(file_menu->try_add_action(open_settings_action));
