@@ -434,7 +434,6 @@ else()
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
-        Heap/kmalloc.cpp
         MiniStdLib.cpp
         KSyms.cpp
 
@@ -565,9 +564,8 @@ endif()
 add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-endif()
+add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
@@ -598,12 +596,10 @@ if (ENABLE_KERNEL_LTO)
     endif()
 endif()
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_link_libraries(Kernel PRIVATE kernel_heap gcc)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-        target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
-    endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(Kernel PRIVATE kernel_heap gcc)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
 endif()
 
 add_custom_command(
