@@ -17,13 +17,11 @@
 // Documentation here for Aarch64 Address Translations
 // https://documentation-service.arm.com/static/5efa1d23dbdee951c1ccdec5?token=
 
-using namespace Kernel;
-
 // These come from the linker script
 extern u8 page_tables_phys_start[];
 extern u8 page_tables_phys_end[];
 
-namespace Prekernel {
+namespace Kernel {
 
 // physical memory
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;

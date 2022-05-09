@@ -9,7 +9,7 @@
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 // "13.4 Register View" / "11.5 Register View"
 struct UARTRegisters {
@@ -104,10 +104,10 @@ UART::UART()
     u32 rate_in_hz = Timer::the().set_clock_rate(Timer::ClockID::UART, 16 * baud_rate);
 
     // The BCM's PL011 UART is alternate function 0 on pins 14 and 15.
-    auto& gpio = Prekernel::GPIO::the();
-    gpio.set_pin_function(14, Prekernel::GPIO::PinFunction::Alternate0);
-    gpio.set_pin_function(15, Prekernel::GPIO::PinFunction::Alternate0);
-    gpio.set_pin_pull_up_down_state(Array { 14, 15 }, Prekernel::GPIO::PullUpDownState::Disable);
+    auto& gpio = GPIO::the();
+    gpio.set_pin_function(14, GPIO::PinFunction::Alternate0);
+    gpio.set_pin_function(15, GPIO::PinFunction::Alternate0);
+    gpio.set_pin_pull_up_down_state(Array { 14, 15 }, GPIO::PullUpDownState::Disable);
 
     // Clock and pins are configured. Turn UART on.
     set_baud_rate(baud_rate, rate_in_hz);

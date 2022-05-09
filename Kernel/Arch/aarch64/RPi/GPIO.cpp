@@ -8,7 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 // See BCM2835-ARM-Peripherals.pdf section "6 General Purpose I/O" or bcm2711-peripherals.pdf "Chapter 5. General Purpose I/O".
 
@@ -72,7 +72,7 @@ void GPIO::internal_enable_pins(u32 enable[2], PullUpDownState state)
     m_registers->pull_up_down_enable = static_cast<u32>(state);
 
     // 2. Wait 150 cycles – this provides the required set-up time for the control signal
-    Kernel::Aarch64::Asm::wait_cycles(150);
+    Aarch64::Asm::wait_cycles(150);
 
     // 3. Write to GPPUDCLK0/1 to clock the control signal into the GPIO pads you wish to
     //    modify – NOTE only the pads which receive a clock will be modified, all others will
@@ -81,7 +81,7 @@ void GPIO::internal_enable_pins(u32 enable[2], PullUpDownState state)
     m_registers->pull_up_down_enable_clock.bits[1] = enable[1];
 
     // 4. Wait 150 cycles – this provides the required hold time for the control signal
-    Kernel::Aarch64::Asm::wait_cycles(150);
+    Aarch64::Asm::wait_cycles(150);
 
     // 5. Write to GPPUD to remove the control signal
     m_registers->pull_up_down_enable = 0;
