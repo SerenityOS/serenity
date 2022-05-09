@@ -398,21 +398,21 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(PREKERNEL_SOURCES
-        Arch/aarch64/Prekernel/PrekernelMMU.cpp
-        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
-        Arch/aarch64/Prekernel/PrekernelCommon.cpp
-        Arch/aarch64/Prekernel/boot.S
         Arch/aarch64/Prekernel/Aarch64_asm_utils.S
+        Arch/aarch64/Prekernel/boot.S
+        Arch/aarch64/Prekernel/PrekernelCommon.cpp
+        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
+        Arch/aarch64/Prekernel/PrekernelMMU.cpp
 
         Prekernel/UBSanitizer.cpp
     )
     set(RPI_SOURCES
-        Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
+        Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/Mailbox.cpp
+        Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
-        Arch/aarch64/RPi/MMIO.cpp
     )
     set(SOURCES
         ${AK_SOURCES}
@@ -422,6 +422,7 @@ else()
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/init.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
@@ -431,27 +432,26 @@ else()
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/Spinlock.cpp
-        Arch/aarch64/init.cpp
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
-        MiniStdLib.cpp
         KSyms.cpp
+        MiniStdLib.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
         Memory/InodeVMObject.cpp
-        Memory/PhysicalRegion.cpp
-        Memory/PhysicalPage.cpp
-        Memory/PhysicalZone.cpp
-        Memory/PageDirectory.cpp
         Memory/MemoryManager.cpp
+        Memory/PageDirectory.cpp
+        Memory/PhysicalPage.cpp
+        Memory/PhysicalRegion.cpp
+        Memory/PhysicalZone.cpp
         Memory/PrivateInodeVMObject.cpp
         Memory/Region.cpp
         Memory/RegionTree.cpp
         Memory/RingBuffer.cpp
-        Memory/SharedInodeVMObject.cpp
         Memory/ScatterGatherList.cpp
+        Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
     )
