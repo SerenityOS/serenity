@@ -11,6 +11,4 @@ namespace Prekernel {
 void drop_to_exception_level_1();
 void init_prekernel_page_tables();
 
-[[noreturn]] void halt();
-
 }

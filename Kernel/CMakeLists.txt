@@ -400,7 +400,6 @@ else()
     set(PREKERNEL_SOURCES
         Arch/aarch64/Prekernel/Aarch64_asm_utils.S
         Arch/aarch64/Prekernel/boot.S
-        Arch/aarch64/Prekernel/PrekernelCommon.cpp
         Arch/aarch64/Prekernel/PrekernelExceptions.cpp
         Arch/aarch64/Prekernel/PrekernelMMU.cpp
 

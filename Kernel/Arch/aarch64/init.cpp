@@ -102,7 +102,7 @@ extern "C" [[noreturn]] void __stack_chk_fail();
 
 void __stack_chk_fail()
 {
-    Prekernel::halt();
+    Kernel::Processor::halt();
 }
 
 using namespace Kernel;
