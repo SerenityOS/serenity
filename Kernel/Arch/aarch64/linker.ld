@@ -5,9 +5,9 @@ PHDRS
 {
   text PT_LOAD ;
   data PT_LOAD ;
+  ksyms PT_LOAD ;
   bss PT_LOAD ;
   super_pages PT_LOAD ;
-  ksyms PT_LOAD ;
 }
 
 SECTIONS
@@ -34,6 +34,13 @@ SECTIONS
         *(.data*)
     } :data
 
+    .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
+    {
+        start_of_kernel_ksyms = .;
+        *(.kernel_symbols)
+        end_of_kernel_ksyms = .;
+    } :ksyms
+
     .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss))
     {
 	start_of_bss = .;
@@ -48,13 +55,6 @@ SECTIONS
     {
         *(.super_pages)
     } :super_pages
-
-    .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
-    {
-        start_of_kernel_ksyms = .;
-        *(.kernel_symbols)
-        end_of_kernel_ksyms = .;
-    } :ksyms
 
     /*
         FIXME: 8MB is enough space for all of the tables required to identity map 
