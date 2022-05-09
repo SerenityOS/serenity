@@ -589,7 +589,7 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
         // a. Let differenceNs be ! DifferenceInstant(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
         auto* difference_ns = difference_instant(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
-        // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(differenceNs) ≤ 1.728 × 10^22.
+        // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(differenceNs) ≤ 2 × nsMaxInstant.
 
         // c. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, largestUnit).
         auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), *largest_unit));

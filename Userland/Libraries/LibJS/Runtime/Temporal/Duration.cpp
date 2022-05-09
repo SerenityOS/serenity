@@ -1071,10 +1071,12 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // a. Let diffNs be ! DifferenceInstant(relativeTo.[[Nanoseconds]], endNs, 1, "nanosecond", "halfExpand").
         auto* diff_ns = difference_instant(global_object, relative_to.nanoseconds(), *end_ns, 1, "nanosecond"sv, "halfExpand"sv);
 
-        // b. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, diffNs, largestUnit).
+        // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(diffNs) ≤ 2 × nsMaxInstant.
+
+        // c. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, diffNs, largestUnit).
         auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, diff_ns->big_integer(), largest_unit));
 
-        // c. Return ? CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+        // d. Return ? CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return create_duration_record(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
     }
 

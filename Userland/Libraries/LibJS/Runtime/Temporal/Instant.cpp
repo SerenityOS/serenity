@@ -334,7 +334,7 @@ ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject& global_ob
     // 12. Let roundedNs be ! DifferenceInstant(first.[[Nanoseconds]], second.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto* rounded_ns = difference_instant(global_object, first->nanoseconds(), second->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
-    // 13. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 1.728 × 10^22.
+    // 13. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 2 × nsMaxInstant.
 
     // 14. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
     auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), *largest_unit));
