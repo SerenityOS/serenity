@@ -629,14 +629,14 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
                 return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
                 return EAFNOSUPPORT;
-            if ((route.rt_flags & (RTF_UP | RTF_GATEWAY)) != (RTF_UP | RTF_GATEWAY))
+            if (!(route.rt_flags & RTF_UP))
                 return EINVAL; // FIXME: Find the correct value to return
 
             auto destination = IPv4Address(((sockaddr_in&)route.rt_dst).sin_addr.s_addr);
             auto gateway = IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr);
             auto genmask = IPv4Address(((sockaddr_in&)route.rt_genmask).sin_addr.s_addr);
 
-            return update_routing_table(destination, gateway, genmask, adapter, UpdateTable::Set);
+            return update_routing_table(destination, gateway, genmask, route.rt_flags, adapter, UpdateTable::Set);
         }
         case SIOCDELRT:
             if (!Process::current().is_superuser())
@@ -648,7 +648,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             auto gateway = IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr);
             auto genmask = IPv4Address(((sockaddr_in&)route.rt_genmask).sin_addr.s_addr);
 
-            return update_routing_table(destination, gateway, genmask, adapter, UpdateTable::Delete);
+            return update_routing_table(destination, gateway, genmask, route.rt_flags, adapter, UpdateTable::Delete);
         }
 
         return EINVAL;

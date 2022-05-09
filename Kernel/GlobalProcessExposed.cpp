@@ -114,6 +114,7 @@ private:
                 TRY(obj.add("gateway", gateway->view()));
                 auto netmask = TRY(it.netmask.to_string());
                 TRY(obj.add("genmask", netmask->view()));
+                TRY(obj.add("flags", it.flags));
                 TRY(obj.add("interface", it.adapter->name()));
                 TRY(obj.finish());
             }
