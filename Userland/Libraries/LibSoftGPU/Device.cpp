@@ -336,9 +336,6 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
             };
             if (m_options.enable_depth_test) {
                 set_quad_depth(quad);
-                // FIXME: Also apply depth_offset_factor which depends on the depth gradient
-                if (m_options.depth_offset_enabled)
-                    quad.depth += m_options.depth_offset_constant * NumericLimits<float>::epsilon();
 
                 auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
                 i32x4 depth_test_passed;
@@ -742,6 +739,41 @@ void Device::rasterize_triangle(Triangle& triangle)
         expand4(vertex2.window_coordinates.w()),
     };
 
+    // Calculate depth offset to apply
+    float depth_offset = 0.f;
+    if (m_options.depth_offset_enabled) {
+        // Edge value deltas
+        auto edge_value_step_x = FloatVector3 {
+            static_cast<float>(v1.y() - v2.y()),
+            static_cast<float>(v2.y() - v0.y()),
+            static_cast<float>(v0.y() - v1.y()),
+        };
+        auto edge_value_step_y = FloatVector3 {
+            static_cast<float>(v2.x() - v1.x()),
+            static_cast<float>(v0.x() - v2.x()),
+            static_cast<float>(v1.x() - v0.x()),
+        };
+
+        // Barycentric deltas
+        auto barycentric_step_x = edge_value_step_x * one_over_area;
+        auto barycentric_step_y = edge_value_step_y * one_over_area;
+
+        // Depth delta vector and slope (magnitude)
+        auto depth_coordinates = FloatVector3 {
+            vertex0.window_coordinates.z(),
+            vertex1.window_coordinates.z(),
+            vertex2.window_coordinates.z(),
+        };
+        auto depth_step = FloatVector2 {
+            depth_coordinates.dot(barycentric_step_x),
+            depth_coordinates.dot(barycentric_step_y),
+        };
+        auto depth_max_slope = depth_step.length();
+
+        // Calculate total depth offset
+        depth_offset = depth_max_slope * m_options.depth_offset_factor + NumericLimits<float>::epsilon() * m_options.depth_offset_constant;
+    }
+
     rasterize(
         render_bounds,
         [&](auto& quad) {
@@ -754,12 +786,12 @@ void Device::rasterize_triangle(Triangle& triangle)
                 to_f32x4(edge_values.z()),
             };
         },
-        [&one_over_area, &window_z_coordinates](auto& quad) {
+        [&](auto& quad) {
             // Determine each edge's ratio to the total area
             quad.barycentrics = quad.barycentrics * one_over_area;
 
             // Because the Z coordinates were divided by W, we can interpolate between them
-            quad.depth = window_z_coordinates.dot(quad.barycentrics);
+            quad.depth = window_z_coordinates.dot(quad.barycentrics) + depth_offset;
         },
         [&](auto& quad) {
             auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
