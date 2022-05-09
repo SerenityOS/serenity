@@ -399,8 +399,6 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 else()
     set(PREKERNEL_SOURCES
         Arch/aarch64/Prekernel/boot.S
-        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
-        Arch/aarch64/Prekernel/PrekernelMMU.cpp
 
         Prekernel/UBSanitizer.cpp
     )
@@ -420,9 +418,11 @@ else()
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
