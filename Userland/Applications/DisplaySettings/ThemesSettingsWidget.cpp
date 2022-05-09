@@ -11,6 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/Process.h>
 
 namespace DisplaySettings {
 
@@ -36,7 +37,6 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
         }
     }
     VERIFY(m_selected_theme);
-
     m_theme_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<ThemePreviewWidget>(palette());
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
@@ -47,6 +47,13 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
         set_modified(true);
     };
     m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
+
+    auto mouse_settings_icon = Gfx::Bitmap::try_load_from_file("res/icons/16x16/app-mouse.png").release_value_but_fixme_should_propagate_errors();
+    m_cursor_themes_button = *find_descendant_of_type_named<GUI::Button>("cursor_themes_button");
+    m_cursor_themes_button->set_icon(mouse_settings_icon);
+    m_cursor_themes_button->on_click = [&](auto) {
+        GUI::Process::spawn_or_show_error(window(), "/bin/MouseSettings", Array { "-t", "cursor-theme" });
+    };
 }
 
 void ThemesSettingsWidget::apply_settings()
