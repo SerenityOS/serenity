@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace Prekernel {
+namespace Kernel {
 
 class MainIdRegister {
 public:

@@ -9,9 +9,7 @@
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Panic.h>
 
-using namespace Kernel;
-
-namespace Prekernel {
+namespace Kernel {
 
 static void drop_to_el2()
 {
@@ -80,14 +78,14 @@ static void set_up_el1()
 
 void drop_to_exception_level_1()
 {
-    switch (Kernel::Aarch64::Asm::get_current_exception_level()) {
-    case Kernel::Aarch64::Asm::ExceptionLevel::EL3:
+    switch (Aarch64::Asm::get_current_exception_level()) {
+    case Aarch64::Asm::ExceptionLevel::EL3:
         drop_to_el2();
         [[fallthrough]];
-    case Kernel::Aarch64::Asm::ExceptionLevel::EL2:
+    case Aarch64::Asm::ExceptionLevel::EL2:
         drop_to_el1();
         [[fallthrough]];
-    case Kernel::Aarch64::Asm::ExceptionLevel::EL1:
+    case Aarch64::Asm::ExceptionLevel::EL1:
         set_up_el1();
         break;
     default: {

@@ -7,7 +7,7 @@
 #include <Kernel/Arch/aarch64/MainIdRegister.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 MMIO::MMIO()
     : m_base_address(0xFE00'0000)

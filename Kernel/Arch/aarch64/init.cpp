@@ -12,6 +12,7 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
+#include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
@@ -72,16 +73,16 @@ extern "C" [[noreturn]] void init()
     dbgln("Firmware version: {}", firmware_version);
 
     dbgln("Initialize MMU");
-    Prekernel::init_prekernel_page_tables();
+    Kernel::init_prekernel_page_tables();
 
-    auto& framebuffer = Prekernel::Framebuffer::the();
+    auto& framebuffer = Kernel::Framebuffer::the();
     if (framebuffer.initialized()) {
         draw_logo();
     }
 
     dbgln("Enter loop");
 
-    auto& timer = Prekernel::Timer::the();
+    auto& timer = Kernel::Timer::the();
     u64 start_musec = 0;
     for (;;) {
         u64 now_musec;
@@ -132,12 +133,12 @@ extern "C" void exception_common(TrapFrame const* const trap_frame)
     }
 }
 
-class QueryFirmwareVersionMboxMessage : Prekernel::Mailbox::Message {
+class QueryFirmwareVersionMboxMessage : Kernel::Mailbox::Message {
 public:
     u32 version;
 
     QueryFirmwareVersionMboxMessage()
-        : Prekernel::Mailbox::Message(0x0000'0001, 4)
+        : Kernel::Mailbox::Message(0x0000'0001, 4)
     {
         version = 0;
     }
@@ -146,12 +147,12 @@ public:
 static u32 query_firmware_version()
 {
     struct __attribute__((aligned(16))) {
-        Prekernel::Mailbox::MessageHeader header;
+        Kernel::Mailbox::MessageHeader header;
         QueryFirmwareVersionMboxMessage query_firmware_version;
-        Prekernel::Mailbox::MessageTail tail;
+        Kernel::Mailbox::MessageTail tail;
     } message_queue;
 
-    if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+    if (!Kernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
         return 0xffff'ffff;
     }
 
@@ -163,7 +164,7 @@ extern "C" const u32 serenity_boot_logo_size;
 
 static void draw_logo()
 {
-    Prekernel::BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
+    Kernel::BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
     if (!logo_parser.parse()) {
         dbgln("Failed to parse boot logo.");
         return;
@@ -171,7 +172,7 @@ static void draw_logo()
 
     dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
 
-    auto& framebuffer = Prekernel::Framebuffer::the();
+    auto& framebuffer = Kernel::Framebuffer::the();
     auto fb_ptr = framebuffer.gpu_buffer();
     auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
     auto image_right = image_left + logo_parser.image.width;
@@ -183,12 +184,12 @@ static void draw_logo()
         for (u32 x = 0; x < framebuffer.width(); x++) {
             if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
                 switch (framebuffer.pixel_order()) {
-                case Prekernel::Framebuffer::PixelOrder::RGB:
+                case Kernel::Framebuffer::PixelOrder::RGB:
                     fb_ptr[0] = logo_pixels[0];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[2];
                     break;
-                case Prekernel::Framebuffer::PixelOrder::BGR:
+                case Kernel::Framebuffer::PixelOrder::BGR:
                     fb_ptr[0] = logo_pixels[2];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[0];

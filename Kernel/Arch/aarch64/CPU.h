@@ -8,7 +8,7 @@
 
 #define PAGE_MASK (~(FlatPtr)0xfffu)
 
-namespace Prekernel {
+namespace Kernel {
 
 void drop_to_exception_level_1();
 void init_prekernel_page_tables();

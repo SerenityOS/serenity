@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 class Framebuffer {
 public:

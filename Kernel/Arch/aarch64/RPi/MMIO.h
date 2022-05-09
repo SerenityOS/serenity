@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 // Knows about memory-mapped IO addresses on the Broadcom family of SOCs used in Raspberry Pis.
 // RPi3 is the first Raspberry Pi that supports aarch64.
