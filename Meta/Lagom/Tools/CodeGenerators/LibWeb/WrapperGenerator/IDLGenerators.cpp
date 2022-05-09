@@ -90,6 +90,12 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name == "unsigned short" && !type.nullable)
         return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
 
+    if (type.name == "long long" && !type.nullable)
+        return { .name = "i64", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned long long" && !type.nullable)
+        return { .name = "u64", .sequence_storage_type = SequenceStorageType::Vector };
+
     if (type.name == "long" && !type.nullable)
         return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
 
@@ -1345,6 +1351,14 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     } else if (type.name == "unsigned long") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((u32)@value@);
+)~~~");
+    } else if (type.name == "long long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((double)@value@);
+)~~~");
+    } else if (type.name == "unsigned long long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((double)@value@);
 )~~~");
     } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
