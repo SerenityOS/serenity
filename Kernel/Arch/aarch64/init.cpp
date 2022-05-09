@@ -38,6 +38,12 @@ extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
 extern "C" void exception_common(TrapFrame const* const trap_frame);
 
+typedef void (*ctor_func_t)();
+extern ctor_func_t start_heap_ctors[];
+extern ctor_func_t end_heap_ctors[];
+extern ctor_func_t start_ctors[];
+extern ctor_func_t end_ctors[];
+
 extern "C" [[noreturn]] void init()
 {
     dbgln("Welcome to Serenity OS!");
@@ -45,7 +51,16 @@ extern "C" [[noreturn]] void init()
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
     dbgln();
 
+    // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
+    // might rely on being able to call new/kmalloc in the constructor. We do have to run the
+    // kmalloc constructors, because kmalloc_init relies on that.
+    for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
+        (*ctor)();
     kmalloc_init();
+
+    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
+        (*ctor)();
+
     Kernel::load_kernel_symbol_table();
 
     auto firmware_version = query_firmware_version();

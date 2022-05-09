@@ -22,6 +22,10 @@ SECTIONS
 
     .rodata ALIGN(4K) : AT (ADDR(.rodata))
     {
+        start_heap_ctors = .;
+        *libkernel_heap.a:*(.init_array)
+        end_heap_ctors = .;
+
         start_ctors = .;
         *(.init_array)
         end_ctors = .;
