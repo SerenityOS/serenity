@@ -19,7 +19,11 @@
 
 extern "C" {
 
+#ifdef NO_TLS
 int h_errno;
+#else
+__thread int h_errno;
+#endif
 
 static hostent __gethostbyname_buffer;
 static in_addr_t __gethostbyname_address;
