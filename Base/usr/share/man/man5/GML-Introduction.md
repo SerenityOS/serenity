@@ -69,6 +69,7 @@ Or right clicking on a folder in the TreeView and using
         -   [ToolbarContainer](help://man/5/GML-Widget-ToolbarContainer)
         -   [Tray](help://man/5/GML-Widget-Tray)
         -   [TreeView](help://man/5/GML-Widget-TreeView)
+        -   [UI Dimensions](help://man/5/GML-UI-Dimensions)
         -   [UrlBox](help://man/5/GML-Widget-UrlBox)
         -   [ValueSlider](help://man/5/GML-Widget-ValueSlider)
         -   [VerticalProgressbar](help://man/5/GML-Widget-VerticalProgressbar)
@@ -76,3 +77,4 @@ Or right clicking on a folder in the TreeView and using
         -   [VerticalSlider](help://man/5/GML-Widget-VerticalSlider)
         -   [VerticalSplitter](help://man/5/GML-Widget-VerticalSplitter)
         -   [Widget](help://man/5/GML-Widget)
+
