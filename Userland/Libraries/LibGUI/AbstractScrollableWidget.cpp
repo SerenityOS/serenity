@@ -106,6 +106,7 @@ void AbstractScrollableWidget::custom_layout()
 void AbstractScrollableWidget::resize_event(ResizeEvent& event)
 {
     Frame::resize_event(event);
+    update_scrollbar_visibility();
     update_scrollbar_ranges();
 }
 
@@ -125,26 +126,22 @@ Gfx::IntSize AbstractScrollableWidget::excess_size() const
     return { excess_width, excess_height };
 }
 
+void AbstractScrollableWidget::set_should_hide_unnecessary_scrollbars(bool should_hide_unnecessary_scrollbars)
+{
+    if (m_should_hide_unnecessary_scrollbars == should_hide_unnecessary_scrollbars)
+        return;
+
+    m_should_hide_unnecessary_scrollbars = should_hide_unnecessary_scrollbars;
+    if (should_hide_unnecessary_scrollbars)
+        update_scrollbar_ranges();
+    else {
+        m_horizontal_scrollbar->set_visible(true);
+        m_vertical_scrollbar->set_visible(true);
+    }
+}
+
 void AbstractScrollableWidget::update_scrollbar_ranges()
 {
-    if (should_hide_unnecessary_scrollbars()) {
-        if (excess_size().height() - height_occupied_by_horizontal_scrollbar() <= 0 && excess_size().width() - width_occupied_by_vertical_scrollbar() <= 0) {
-            m_horizontal_scrollbar->set_visible(false);
-            m_vertical_scrollbar->set_visible(false);
-        } else {
-            auto vertical_initial_visibility = m_vertical_scrollbar->is_visible();
-            auto horizontal_initial_visibility = m_horizontal_scrollbar->is_visible();
-
-            m_vertical_scrollbar->set_visible(excess_size().height() > 0);
-            m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
-
-            if (m_vertical_scrollbar->is_visible() != vertical_initial_visibility)
-                m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
-            if (m_horizontal_scrollbar->is_visible() != horizontal_initial_visibility)
-                m_vertical_scrollbar->set_visible(excess_size().height() > 0);
-        }
-    }
-
     m_horizontal_scrollbar->set_range(0, excess_size().width());
     m_horizontal_scrollbar->set_page_step(visible_content_rect().width() - m_horizontal_scrollbar->step());
 
@@ -152,11 +149,38 @@ void AbstractScrollableWidget::update_scrollbar_ranges()
     m_vertical_scrollbar->set_page_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }
 
+void AbstractScrollableWidget::update_scrollbar_visibility()
+{
+    if (should_hide_unnecessary_scrollbars()) {
+        int horizontal_buffer = rect().width() - 2 * frame_thickness() - m_min_content_size.width();
+        int vertical_buffer = rect().height() - 2 * frame_thickness() - m_min_content_size.height();
+        bool horizontal_scrollbar_should_be_visible = false, vertical_scrollbar_should_be_visible = false;
+        vertical_scrollbar_should_be_visible = vertical_buffer < 0;
+        if (vertical_scrollbar_should_be_visible)
+            horizontal_buffer -= m_vertical_scrollbar->width();
+        horizontal_scrollbar_should_be_visible = horizontal_buffer < 0;
+        if (horizontal_scrollbar_should_be_visible)
+            vertical_buffer -= m_horizontal_scrollbar->height();
+        vertical_scrollbar_should_be_visible = vertical_buffer < 0;
+
+        m_horizontal_scrollbar->set_visible(horizontal_scrollbar_should_be_visible);
+        m_vertical_scrollbar->set_visible(vertical_scrollbar_should_be_visible);
+    }
+}
+
 void AbstractScrollableWidget::set_content_size(Gfx::IntSize const& size)
 {
     if (m_content_size == size)
         return;
     m_content_size = size;
+    update_scrollbar_ranges();
+}
+
+void AbstractScrollableWidget::set_min_content_size(Gfx::IntSize const& min_size)
+{
+    if (m_min_content_size == min_size)
+        return;
+    m_min_content_size = min_size;
     update_scrollbar_ranges();
 }
 
@@ -300,5 +324,15 @@ Gfx::IntPoint AbstractScrollableWidget::to_widget_position(Gfx::IntPoint const& 
     widget_position.translate_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
     widget_position.translate_by(frame_thickness(), frame_thickness());
     return widget_position;
+}
+
+Optional<UISize> AbstractScrollableWidget::calculated_min_size() const
+{
+    auto vertical_scrollbar_min_size = m_vertical_scrollbar->effective_min_size(),
+         horizontal_scrollbar_min_size = m_horizontal_scrollbar->effective_min_size();
+
+    return { UISize {
+        horizontal_scrollbar_min_size.width().regular_sum_with_verify(vertical_scrollbar_min_size.width()).regular_sum_with_verify(2 * frame_thickness()),
+        vertical_scrollbar_min_size.height().regular_sum_with_verify(horizontal_scrollbar_min_size.height()).regular_sum_with_verify(2 * frame_thickness()) } };
 }
 }

@@ -199,6 +199,14 @@ Widget::Widget()
 
 Widget::~Widget() = default;
 
+void Widget::layout_relevant_change_occured()
+{
+    if (auto* parent = parent_widget())
+        parent->layout_relevant_change_occured();
+    else
+        invalidate_layout();
+}
+
 void Widget::child_event(Core::ChildEvent& event)
 {
     if (event.type() == Event::ChildAdded) {
@@ -207,6 +215,7 @@ void Widget::child_event(Core::ChildEvent& event)
                 layout()->insert_widget_before(verify_cast<Widget>(*event.child()), verify_cast<Widget>(*event.insertion_before_child()));
             else
                 layout()->add_widget(verify_cast<Widget>(*event.child()));
+            layout_relevant_change_occured();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_add_widget({}, verify_cast<Widget>(*event.child()));
@@ -217,6 +226,7 @@ void Widget::child_event(Core::ChildEvent& event)
                 layout()->remove_widget(verify_cast<Widget>(*event.child()));
             else
                 invalidate_layout();
+            layout_relevant_change_occured();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_remove_widget({}, verify_cast<Widget>(*event.child()));
