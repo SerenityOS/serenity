@@ -427,7 +427,9 @@ ConditionView::~ConditionView()
 
 ConditionsView::ConditionsView()
 {
-    set_layout<GUI::VerticalBoxLayout>().set_spacing(2);
+    auto& layout = set_layout<GUI::VerticalBoxLayout>();
+    layout.set_spacing(4);
+    layout.set_margins({ 6 });
 }
 
 void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
