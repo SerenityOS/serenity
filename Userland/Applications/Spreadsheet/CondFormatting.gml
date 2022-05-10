@@ -6,8 +6,11 @@
         spacing: 4
     }
 
-    @Spreadsheet::ConditionsView {
-        name: "conditions_view"
+    @GUI::ScrollableContainerWidget {
+        should_hide_unnecessary_scrollbars: true
+        content_widget: @Spreadsheet::ConditionsView {
+            name: "conditions_view"
+        }
     }
 
     @GUI::Widget {
