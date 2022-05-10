@@ -10,19 +10,13 @@
 #include "PreviewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringView.h>
+#include <Applications/ThemeEditor/WindowPreviewGML.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/RadioButton.h>
-#include <LibGUI/Statusbar.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
-#include <WindowServer/Compositor.h>
 
 namespace ThemeEditor {
 
@@ -46,37 +40,13 @@ public:
 private:
     MiniWidgetGallery()
     {
-        m_button = add<GUI::Button>();
-        m_button->set_text("Button");
-        m_checkbox = add<GUI::CheckBox>();
-        m_checkbox->set_text("Check box");
-        m_radio = add<GUI::RadioButton>();
-        m_radio->set_text("Radio button");
-        m_statusbar = add<GUI::Statusbar>();
-        m_statusbar->set_text("Status bar");
-        m_editor = add<GUI::TextEditor>();
-        m_editor->set_text("Text editor\nwith multiple\nlines.");
+        load_from_gml(window_preview_gml);
 
         for_each_child_widget([](auto& child) {
             child.set_focus_policy(GUI::FocusPolicy::NoFocus);
             return IterationDecision::Continue;
         });
     }
-
-    virtual void resize_event(GUI::ResizeEvent&) override
-    {
-        m_editor->set_relative_rect(10, 70, 200, 125);
-        m_button->set_relative_rect(10, 10, 200, 20);
-        m_checkbox->set_relative_rect(10, 30, 200, 20);
-        m_radio->set_relative_rect(10, 50, 200, 20);
-        m_statusbar->set_relative_rect(0, height() - 16, width(), 16);
-    }
-
-    RefPtr<GUI::TextEditor> m_editor;
-    RefPtr<GUI::Button> m_button;
-    RefPtr<GUI::CheckBox> m_checkbox;
-    RefPtr<GUI::RadioButton> m_radio;
-    RefPtr<GUI::Statusbar> m_statusbar;
 };
 
 PreviewWidget::PreviewWidget(Gfx::Palette const& initial_preview_palette)
