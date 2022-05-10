@@ -728,11 +728,6 @@ void Device::rasterize_triangle(Triangle& triangle)
 
     auto const half_pixel_offset = Vector2<i32x4> { expand4(subpixel_factor / 2), expand4(subpixel_factor / 2) };
 
-    auto const window_z_coordinates = Vector3<f32x4> {
-        expand4(vertex0.window_coordinates.z()),
-        expand4(vertex1.window_coordinates.z()),
-        expand4(vertex2.window_coordinates.z()),
-    };
     auto const window_w_coordinates = Vector3<f32x4> {
         expand4(vertex0.window_coordinates.w()),
         expand4(vertex1.window_coordinates.w()),
@@ -774,6 +769,12 @@ void Device::rasterize_triangle(Triangle& triangle)
         depth_offset = depth_max_slope * m_options.depth_offset_factor + NumericLimits<float>::epsilon() * m_options.depth_offset_constant;
     }
 
+    auto const window_z_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.z() + depth_offset),
+        expand4(vertex1.window_coordinates.z() + depth_offset),
+        expand4(vertex2.window_coordinates.z() + depth_offset),
+    };
+
     rasterize(
         render_bounds,
         [&](auto& quad) {
@@ -791,7 +792,7 @@ void Device::rasterize_triangle(Triangle& triangle)
             quad.barycentrics = quad.barycentrics * one_over_area;
 
             // Because the Z coordinates were divided by W, we can interpolate between them
-            quad.depth = window_z_coordinates.dot(quad.barycentrics) + depth_offset;
+            quad.depth = AK::SIMD::clamp(window_z_coordinates.dot(quad.barycentrics), 0.f, 1.f);
         },
         [&](auto& quad) {
             auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
