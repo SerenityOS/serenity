@@ -14,7 +14,7 @@ namespace Kernel::Aarch64 {
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // Memory Model Feature Register 0
-struct ID_AA64MMFR0_EL1 {
+struct alignas(u64) ID_AA64MMFR0_EL1 {
     int PARange : 4;
     int ASIDBits : 4;
     int BigEnd : 4;
@@ -41,10 +41,11 @@ struct ID_AA64MMFR0_EL1 {
         return feature_register;
     }
 };
+static_assert(sizeof(ID_AA64MMFR0_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
 // Translation Control Register
-struct TCR_EL1 {
+struct alignas(u64) TCR_EL1 {
 
     enum Shareability {
         NonSharable = 0b00,
@@ -155,7 +156,7 @@ static_assert(sizeof(TCR_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
 // System Control Register
-struct SCTLR_EL1 {
+struct alignas(u64) SCTLR_EL1 {
     int M : 1;
     int A : 1;
     int C : 1;
@@ -235,7 +236,7 @@ static_assert(sizeof(SCTLR_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register
-struct HCR_EL2 {
+struct alignas(u64) HCR_EL2 {
     int VM : 1;
     int SWIO : 1;
     int PTW : 1;
@@ -300,7 +301,7 @@ static_assert(sizeof(HCR_EL2) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
 // Secure Configuration Register
-struct SCR_EL3 {
+struct alignas(u64) SCR_EL3 {
     int NS : 1;
     int IRQ : 1;
     int FIQ : 1;
@@ -354,7 +355,7 @@ struct SCR_EL3 {
 };
 static_assert(sizeof(SCR_EL3) == 8);
 
-struct SPSR_EL2 {
+struct alignas(u64) SPSR_EL2 {
     enum Mode : u16 {
         EL0t = 0b0000,
         EL1t = 0b0100,
@@ -405,7 +406,7 @@ static_assert(sizeof(SPSR_EL2) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-
 // Saved Program Status Register
-struct SPSR_EL3 {
+struct alignas(u64) SPSR_EL3 {
     enum Mode : uint16_t {
         EL0t = 0b0000,
         EL1t = 0b0100,
@@ -454,7 +455,7 @@ static_assert(sizeof(SPSR_EL3) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/MAIR-EL1--Memory-Attribute-Indirection-Register--EL1-?lang=en#fieldset_0-63_0
 // Memory Attribute Indirection Register
-struct MAIR_EL1 {
+struct alignas(u64) MAIR_EL1 {
     using AttributeEncoding = uint8_t;
     AttributeEncoding Attr[8];
 
