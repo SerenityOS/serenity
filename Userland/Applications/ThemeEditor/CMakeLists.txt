@@ -6,8 +6,9 @@ serenity_component(
 compile_gml(ThemeEditor.gml ThemeEditorGML.h theme_editor_gml)
 
 set(SOURCES
-    PreviewWidget.cpp
     main.cpp
+    MainWidget.cpp
+    PreviewWidget.cpp
     ThemeEditorGML.h
 )
 
