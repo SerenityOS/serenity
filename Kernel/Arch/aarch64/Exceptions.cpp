@@ -46,6 +46,10 @@ static void drop_to_el1()
     hypervisor_configuration_register_el2.RW = 1; // EL1 to use 64-bit mode
     Aarch64::HCR_EL2::write(hypervisor_configuration_register_el2);
 
+    // Set up initial exception stack
+    // FIXME: Define in linker script
+    Aarch64::Asm::set_sp_el1(0x40000);
+
     Aarch64::SPSR_EL2 saved_program_status_register_el2 = {};
 
     // Mask (disable) all interrupts
