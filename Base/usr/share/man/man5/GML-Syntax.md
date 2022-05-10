@@ -90,6 +90,7 @@ A property's `value` is required to be either a JSON value or another object. Ob
 Among the supported JSON values, these types can be further distinguished:
 
 -   `int`: Regular JSON integer, note that JSON floats are not currently used.
+-   `ui_dimension`: either positive integers, that work just like `int`, or special meaning values as JSON strings; see [UI Dimensions](help://man/5/GML-UI-Dimensions)
 -   `bool`: Regular JSON boolean, may be enclosed in quotes but this is discouraged.
 -   `string`: JSON string, also used as a basis for other types.
 -   `readonly_string`: String-valued property that cannot be changed from C++ later.
@@ -99,6 +100,7 @@ Among the supported JSON values, these types can be further distinguished:
     -   `text_wrapping`: Special case of `enum` for `Gfx::TextWrapping`. One of `Wrap` or `DontWrap`.
 -   `rect`: A JSON object of four `int`s specifying a rectangle. The keys are `x`, `y`, `width`, `height`.
 -   `size`: A JSON array of two `int`s specifying two sizes in the format `[width, height]`.
+-   `ui_size`: A JSON array of two `ui_dimension`s specifying two sizes in the format `[width, height]`
 -   `margins`: A JSON array or object specifying four-directional margins as `int`s. If this is a JSON object, the four keys `top`, `right`, `bottom`, `left` are used. If this is a JSON array, there can be one to four integers. These have the following meaning (see also `GUI::Margins`):
     -   `[ all_four_margins ]`
     -   `[ top_and_bottom, right_and_left ]`
@@ -232,3 +234,4 @@ GML files can be found in the SerenityOS source tree with the `*.gml` extension.
     }
 }
 ```
+
