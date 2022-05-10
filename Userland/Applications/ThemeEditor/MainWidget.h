@@ -85,11 +85,11 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
     GUI::Window::CloseRequestDecision request_close();
     void update_title();
+    void load_from_file(Core::File&);
 
 private:
-    explicit MainWidget(Optional<String> path, Gfx::Palette startup_preview_palette);
+    MainWidget();
 
-    void load_from_file(String const& path);
     void save_to_file(Core::File&);
     void set_path(String);
 
@@ -99,6 +99,8 @@ private:
     void set_flag(Gfx::FlagRole, bool);
     void set_metric(Gfx::MetricRole, int);
     void set_path(Gfx::PathRole, String);
+
+    void set_palette(Gfx::Palette);
 
     enum class PathPickerTarget {
         File,
@@ -111,6 +113,7 @@ private:
     RefPtr<GUI::Action> m_save_action;
 
     Optional<String> m_path;
+    Gfx::Palette m_current_palette;
     Time m_last_modified_time { Time::now_monotonic() };
 
     RefPtr<AlignmentModel> m_alignment_model;

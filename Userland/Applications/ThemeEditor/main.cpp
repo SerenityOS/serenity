@@ -52,12 +52,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-theme-editor");
-
-    Gfx::Palette startup_preview_palette = file_to_edit ? Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(Gfx::load_system_theme(*path))) : app->palette();
-
     auto window = GUI::Window::construct();
 
-    auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>(path, startup_preview_palette));
+    auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>());
+    if (path.has_value())
+        main_widget->load_from_file(TRY(Core::File::open(*path, Core::OpenMode::ReadOnly)));
     TRY(main_widget->initialize_menubar(window));
     main_widget->update_title();
 
