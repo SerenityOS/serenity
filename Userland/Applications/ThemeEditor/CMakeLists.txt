@@ -9,6 +9,7 @@ compile_gml(ColorProperty.gml ColorPropertyGML.h color_property_gml)
 compile_gml(FlagProperty.gml FlagPropertyGML.h flag_property_gml)
 compile_gml(MetricProperty.gml MetricPropertyGML.h metric_property_gml)
 compile_gml(PathProperty.gml PathPropertyGML.h path_property_gml)
+compile_gml(Previews/WindowPreview.gml WindowPreviewGML.h window_preview_gml)
 
 set(SOURCES
     main.cpp
@@ -20,6 +21,7 @@ set(SOURCES
     MetricPropertyGML.h
     PathPropertyGML.h
     ThemeEditorGML.h
+    WindowPreviewGML.h
 )
 
 serenity_app(ThemeEditor ICON app-theme-editor)
