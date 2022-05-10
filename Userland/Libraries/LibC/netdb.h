@@ -56,6 +56,7 @@ extern __thread int h_errno;
 
 #define HOST_NOT_FOUND 101
 #define NO_DATA 102
+#define NO_ADDRESS NO_DATA
 #define NO_RECOVERY 103
 #define TRY_AGAIN 104
 
@@ -104,5 +105,8 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
 void freeaddrinfo(struct addrinfo* res);
 char const* gai_strerror(int errcode);
 int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char* __restrict host, socklen_t hostlen, char* __restrict serv, socklen_t servlen, int flags);
+
+void herror(char const* s);
+char const* hstrerror(int err);
 
 __END_DECLS
