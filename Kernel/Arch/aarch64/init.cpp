@@ -17,6 +17,7 @@
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 
@@ -45,7 +46,12 @@ extern "C" void exception_common(TrapFrame const* const trap_frame)
         dbgln("elr_el1: {:x}", trap_frame->elr_el1);
         dbgln("tpidr_el1: {:x}", trap_frame->tpidr_el1);
         dbgln("sp_el0: {:x}", trap_frame->sp_el0);
+
+        auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
+        dbgln("esr_el1: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
     }
+
+    Kernel::Processor::halt();
 }
 
 typedef void (*ctor_func_t)();
