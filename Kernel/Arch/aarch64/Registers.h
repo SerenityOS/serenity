@@ -466,4 +466,25 @@ struct alignas(u64) MAIR_EL1 {
 };
 static_assert(sizeof(MAIR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ESR-EL1--Exception-Syndrome-Register--EL1-
+// Exception Syndrome Register (EL1)
+struct ESR_EL1 {
+    u64 ISS : 25;
+    u64 IL : 1;
+    u64 EC : 6;
+    u64 ISS2 : 5;
+    u64 : 27;
+
+    static inline ESR_EL1 read()
+    {
+        ESR_EL1 esr_el1;
+
+        asm("mrs %[value], esr_el1"
+            : [value] "=r"(esr_el1));
+
+        return esr_el1;
+    }
+};
+static_assert(sizeof(ESR_EL1) == 8);
+
 }
