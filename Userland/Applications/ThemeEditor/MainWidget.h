@@ -66,9 +66,14 @@ struct Property {
     Variant<Gfx::AlignmentRole, Gfx::ColorRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole> role;
 };
 
-struct PropertyTab {
+struct PropertyGroup {
     String title;
     Vector<Property> properties;
+};
+
+struct PropertyTab {
+    String title;
+    Vector<PropertyGroup> property_groups;
 };
 
 class MainWidget final : public GUI::Widget {
