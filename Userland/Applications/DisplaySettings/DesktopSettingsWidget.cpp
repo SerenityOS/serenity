@@ -26,14 +26,20 @@ void DesktopSettingsWidget::create_frame()
     load_from_gml(desktop_settings_gml);
 
     m_workspace_rows_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("workspace_rows_spinbox");
+    m_workspace_rows_spinbox->on_change = [&](auto) {
+        set_modified(true);
+    };
     m_workspace_columns_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("workspace_columns_spinbox");
+    m_workspace_columns_spinbox->on_change = [&](auto) {
+        set_modified(true);
+    };
 }
 
 void DesktopSettingsWidget::load_current_settings()
 {
     auto& desktop = GUI::Desktop::the();
-    m_workspace_rows_spinbox->set_value(desktop.workspace_rows());
-    m_workspace_columns_spinbox->set_value(desktop.workspace_columns());
+    m_workspace_rows_spinbox->set_value(desktop.workspace_rows(), GUI::AllowCallback::No);
+    m_workspace_columns_spinbox->set_value(desktop.workspace_columns(), GUI::AllowCallback::No);
 }
 
 void DesktopSettingsWidget::apply_settings()

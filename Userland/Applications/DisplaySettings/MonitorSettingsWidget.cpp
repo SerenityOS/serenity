@@ -92,6 +92,7 @@ void MonitorSettingsWidget::create_frame()
         // Try to auto re-arrange things if there are overlaps or disconnected screens
         m_screen_layout.normalize();
         selected_screen_index_or_resolution_changed();
+        set_modified(true);
     };
 
     m_display_scale_radio_1x = *find_descendant_of_type_named<GUI::RadioButton>("scale_1x");
@@ -103,6 +104,7 @@ void MonitorSettingsWidget::create_frame()
             m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(1);
             m_monitor_widget->update();
+            set_modified(true);
         }
     };
     m_display_scale_radio_2x = *find_descendant_of_type_named<GUI::RadioButton>("scale_2x");
@@ -114,6 +116,7 @@ void MonitorSettingsWidget::create_frame()
             m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(2);
             m_monitor_widget->update();
+            set_modified(true);
         }
     };
 
@@ -209,12 +212,12 @@ void MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
         dbgln("unexpected ScaleFactor {}, setting to 1", screen.scale_factor);
         screen.scale_factor = 1;
     }
-    (screen.scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true);
+    (screen.scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true, GUI::AllowCallback::No);
     m_monitor_widget->set_desktop_scale_factor(screen.scale_factor);
 
     // Select the current selected resolution as it may differ
     m_monitor_widget->set_desktop_resolution(current_resolution);
-    m_resolution_combo->set_selected_index(index);
+    m_resolution_combo->set_selected_index(index, GUI::AllowCallback::No);
 
     m_monitor_widget->update();
 }

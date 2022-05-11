@@ -30,6 +30,7 @@ FontSettingsWidget::FontSettingsWidget()
         auto font_picker = GUI::FontPicker::construct(window(), &m_default_font_label->font(), false);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             update_label_with_font(*m_default_font_label, *font_picker->font());
+            set_modified(true);
         }
     };
 
@@ -42,6 +43,7 @@ FontSettingsWidget::FontSettingsWidget()
         auto font_picker = GUI::FontPicker::construct(window(), &m_fixed_width_font_label->font(), true);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             update_label_with_font(*m_fixed_width_font_label, *font_picker->font());
+            set_modified(true);
         }
     };
 }

@@ -44,8 +44,9 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_theme = &m_themes.at(index.row());
         m_theme_preview->set_theme(m_selected_theme->path);
+        set_modified(true);
     };
-    m_themes_combo->set_selected_index(current_theme_index);
+    m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
 }
 
 void ThemesSettingsWidget::apply_settings()
