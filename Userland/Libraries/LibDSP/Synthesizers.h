@@ -47,7 +47,7 @@ public:
     Waveform wave() const { return m_waveform.value(); }
 
 private:
-    virtual Signal process_impl(Signal const&) override;
+    virtual void process_impl(Signal const&, Signal&) override;
 
     double volume_from_envelope(Envelope const&) const;
     double wave_position(u8 note);

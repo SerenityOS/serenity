@@ -24,12 +24,11 @@ class Processor : public RefCounted<Processor> {
 
 public:
     virtual ~Processor() = default;
-    Signal process(Signal const& input_signal)
+    void process(Signal const& input_signal, Signal& output_signal)
     {
         VERIFY(input_signal.type() == m_input_type);
-        auto processed = process_impl(input_signal);
-        VERIFY(processed.type() == m_output_type);
-        return processed;
+        process_impl(input_signal, output_signal);
+        VERIFY(output_signal.type() == m_output_type);
     }
     SignalType input_type() const { return m_input_type; }
     SignalType output_type() const { return m_output_type; }
@@ -47,7 +46,7 @@ protected:
         , m_transport(move(transport))
     {
     }
-    virtual Signal process_impl(Signal const& input_signal) = 0;
+    virtual void process_impl(Signal const& input_signal, Signal& output_signal) = 0;
 
     NonnullRefPtr<Transport> m_transport;
     Vector<ProcessorParameter&> m_parameters;

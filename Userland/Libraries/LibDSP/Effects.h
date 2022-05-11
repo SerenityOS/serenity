@@ -20,7 +20,7 @@ public:
     Delay(NonnullRefPtr<Transport>);
 
 private:
-    virtual Signal process_impl(Signal const&) override;
+    virtual void process_impl(Signal const&, Signal&) override;
     void handle_delay_time_change();
 
     ProcessorRangeParameter m_delay_decay;
@@ -38,7 +38,7 @@ public:
     Mastering(NonnullRefPtr<Transport>);
 
 private:
-    virtual Signal process_impl(Signal const&) override;
+    virtual void process_impl(Signal const&, Signal&) override;
 };
 
 }

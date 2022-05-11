@@ -23,8 +23,11 @@ public:
     virtual bool check_processor_chain_valid() const = 0;
     bool add_processor(NonnullRefPtr<Processor> new_processor);
 
-    // Creates the current signal of the track by processing current note or audio data through the processing chain
-    Sample current_signal();
+    // Creates the current signal of the track by processing current note or audio data through the processing chain.
+    void current_signal(FixedArray<Sample>& output_signal);
+
+    // We are informed of an audio buffer size change. This happens off-audio-thread so we can allocate.
+    ErrorOr<void> resize_internal_buffers_to(size_t buffer_size);
 
     NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
     NonnullRefPtr<Transport const> transport() const { return m_transport; }
@@ -42,7 +45,13 @@ protected:
     NonnullRefPtrVector<Processor> m_processor_chain;
     NonnullRefPtr<Transport> m_transport;
     // The current signal is stored here, to prevent unnecessary reallocation.
-    Signal m_current_signal { Audio::Sample {} };
+    Signal m_current_signal { FixedArray<Sample> {} };
+
+    // These are so that we don't have to allocate a secondary buffer in current_signal().
+    // A sample buffer possibly used by the processor chain.
+    Signal m_secondary_sample_buffer { FixedArray<Sample> {} };
+    // A note buffer possibly used by the processor chain.
+    Signal m_secondary_note_buffer { RollNotes {} };
 };
 
 class NoteTrack final : public Track {

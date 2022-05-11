@@ -45,8 +45,11 @@ void Track::fill_sample(Sample& sample)
             m_keyboard_notes[i] = {};
     }
 
-    auto synthesized_sample = m_synth->process(playing_notes).get<LibDSP::Sample>();
-    auto delayed_sample = m_delay->process(synthesized_sample).get<LibDSP::Sample>();
+    auto synthesized_sample = LibDSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
+    m_synth->process(playing_notes, synthesized_sample);
+    auto delayed_signal = LibDSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
+    m_delay->process(synthesized_sample, delayed_signal);
+    auto delayed_sample = delayed_signal.get<FixedArray<Audio::Sample>>()[0];
 
     // HACK: Convert to old Piano range: 16-bit int
     delayed_sample *= NumericLimits<i16>::max();
