@@ -79,8 +79,8 @@ void NoteTrack::compute_current_clips_signal()
         return;
 
     // FIXME: performance?
-    for (auto& note_list : playing_clip->notes()) {
-        for (auto& note : note_list) {
+    for (auto const& note_list : playing_clip->notes()) {
+        for (auto const& note : note_list) {
             if (note.on_sample >= time && note.off_sample >= time)
                 break;
             if (note.on_sample <= time && note.off_sample >= time)

@@ -27,7 +27,7 @@ public:
     Sample current_signal();
 
     NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
-    NonnullRefPtr<Transport> const transport() const { return m_transport; }
+    NonnullRefPtr<Transport const> transport() const { return m_transport; }
 
 protected:
     Track(NonnullRefPtr<Transport> transport)
