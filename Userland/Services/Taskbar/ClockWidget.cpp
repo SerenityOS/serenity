@@ -6,8 +6,8 @@
 
 #include "ClockWidget.h"
 #include <LibConfig/Client.h>
-#include <LibCore/Process.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -153,8 +153,8 @@ ClockWidget::ClockWidget()
     m_calendar_launcher->set_fixed_size(24, 24);
     m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png").release_value_but_fixme_should_propagate_errors());
     m_calendar_launcher->set_tooltip("Calendar");
-    m_calendar_launcher->on_click = [](auto) {
-        MUST(Core::Process::spawn("/bin/Calendar"));
+    m_calendar_launcher->on_click = [this](auto) {
+        GUI::Process::spawn_or_show_error(window(), "/bin/Calendar");
     };
 }
 
