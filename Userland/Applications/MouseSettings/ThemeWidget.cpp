@@ -121,10 +121,11 @@ ThemeWidget::ThemeWidget()
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
     m_theme_name_box->on_change = [this](String const& value, GUI::ModelIndex const&) mutable {
         m_mouse_cursor_model->change_theme(value);
+        set_modified(true);
     };
     m_theme_name_box->set_model(ThemeModel::create());
     m_theme_name_box->model()->invalidate();
-    m_theme_name_box->set_text(theme_name);
+    m_theme_name_box->set_text(theme_name, GUI::AllowCallback::No);
 }
 
 void ThemeWidget::apply_settings()
