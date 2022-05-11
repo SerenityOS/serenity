@@ -547,8 +547,10 @@ elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
 endif()
 
-# Kernel Undefined Behavior Sanitizer (KUBSAN)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
+    # Kernel Undefined Behavior Sanitizer (KUBSAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
 
 # Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
 # is not currently meant to be used, besides when developing Kernel ASAN support.
