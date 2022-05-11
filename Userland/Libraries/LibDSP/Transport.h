@@ -15,7 +15,6 @@ namespace LibDSP {
 // The DAW-wide timekeeper and synchronizer
 class Transport final : public RefCounted<Transport> {
 public:
-    constexpr u32& time() { return m_time; }
     constexpr u32 time() const { return m_time; }
     constexpr u16 beats_per_minute() const { return m_beats_per_minute; }
     constexpr double current_second() const { return static_cast<double>(m_time) / m_sample_rate; }
@@ -23,6 +22,8 @@ public:
     constexpr double sample_rate() const { return m_sample_rate; }
     constexpr double ms_sample_rate() const { return m_sample_rate / 1000.; }
     constexpr double current_measure() const { return m_time / samples_per_measure(); }
+
+    void set_time(u32 time) { m_time = time; }
 
     Transport(u16 beats_per_minute, u8 beats_per_measure, u32 sample_rate)
         : m_beats_per_minute(beats_per_minute)
