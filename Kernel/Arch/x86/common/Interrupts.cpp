@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
