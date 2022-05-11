@@ -27,7 +27,7 @@ Track::Track(u32 const& time)
 
 void Track::fill_sample(Sample& sample)
 {
-    m_temporary_transport->time() = m_time;
+    m_temporary_transport->set_time(m_time);
 
     auto playing_notes = LibDSP::RollNotes {};
 
