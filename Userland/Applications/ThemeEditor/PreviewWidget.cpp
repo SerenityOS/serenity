@@ -70,10 +70,14 @@ void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_fil
 
 void PreviewWidget::update_preview_window_locations()
 {
+    auto& palette = preview_palette();
+    int window_title_height = palette.metric(Gfx::MetricRole::TitleHeight)
+        + palette.metric(Gfx::MetricRole::BorderThickness);
+
     constexpr int inactive_offset_x = -20;
-    constexpr int inactive_offset_y = -20;
+    int inactive_offset_y = -(window_title_height + 4);
     constexpr int hightlight_offset_x = 140;
-    constexpr int hightlight_offset_y = 80;
+    int hightlight_offset_y = window_title_height + 40;
 
     m_active_window_rect = Gfx::IntRect(0, 0, 320, 220);
     m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
