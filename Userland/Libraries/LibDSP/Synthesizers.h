@@ -66,7 +66,7 @@ private:
     ProcessorRangeParameter m_release;
 
     RollNotes m_playing_notes;
-    Array<double, note_count> last_random;
+    Array<double, note_frequencies.size()> last_random;
 };
 
 }

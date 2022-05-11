@@ -84,7 +84,7 @@ struct Signal : public Variant<Sample, RollNotes> {
 // We calculate note frequencies relative to A4:
 // 440.0 * pow(pow(2.0, 1.0 / 12.0), N)
 // Where N is the note distance from A.
-constexpr double note_frequencies[] = {
+constexpr Array<double, 84> note_frequencies = {
     // Octave 1
     32.703195662574764,
     34.647828872108946,
@@ -177,7 +177,6 @@ constexpr double note_frequencies[] = {
     3729.3100921447249,
     3951.0664100489994,
 };
-constexpr size_t const note_count = array_size(note_frequencies);
 
 constexpr double const middle_c = note_frequencies[36];
 

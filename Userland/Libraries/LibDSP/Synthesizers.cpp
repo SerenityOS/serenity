@@ -41,7 +41,7 @@ Signal Classic::process_impl(Signal const& input_signal)
 
     // "Press" the necessary notes in the internal representation,
     // and "release" all of the others
-    for (u8 i = 0; i < note_count; ++i) {
+    for (u8 i = 0; i < note_frequencies.size(); ++i) {
         if (auto maybe_note = in.get(i); maybe_note.has_value())
             m_playing_notes.set(i, maybe_note.value());
 
