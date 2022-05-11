@@ -9,87 +9,157 @@
  */
 
 #include "MainWidget.h"
+#include <Applications/ThemeEditor/AlignmentPropertyGML.h>
+#include <Applications/ThemeEditor/ColorPropertyGML.h>
+#include <Applications/ThemeEditor/FlagPropertyGML.h>
+#include <Applications/ThemeEditor/MetricPropertyGML.h>
+#include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
-#include <LibGUI/ColorInput.h>
-#include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/SpinBox.h>
-#include <LibGUI/TextBox.h>
+#include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
 
 namespace ThemeEditor {
 
-template<typename T>
-class RoleModel final : public GUI::ItemListModel<T> {
-public:
-    static ErrorOr<NonnullRefPtr<RoleModel>> try_create(Vector<T> const& data)
+static const PropertyTab window_tab {
+    "Windows",
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) RoleModel<T>(data));
-    }
+        { Gfx::FlagRole::IsDark },
+        { Gfx::AlignmentRole::TitleAlignment },
+        { Gfx::MetricRole::TitleHeight },
+        { Gfx::MetricRole::TitleButtonWidth },
+        { Gfx::MetricRole::TitleButtonHeight },
+        { Gfx::PathRole::TitleButtonIcons },
+        { Gfx::FlagRole::TitleButtonsIconOnly },
 
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
-    {
-        if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(this->m_data[index.row()]);
-        if (role == GUI::ModelRole::Custom)
-            return this->m_data[index.row()];
+        { Gfx::MetricRole::BorderThickness },
+        { Gfx::MetricRole::BorderRadius },
 
-        return GUI::ItemListModel<T>::data(index, role);
-    }
+        { Gfx::ColorRole::ActiveWindowBorder1 },
+        { Gfx::ColorRole::ActiveWindowBorder2 },
+        { Gfx::ColorRole::ActiveWindowTitle },
+        { Gfx::ColorRole::ActiveWindowTitleShadow },
+        { Gfx::ColorRole::ActiveWindowTitleStripes },
+        { Gfx::PathRole::ActiveWindowShadow },
 
-private:
-    explicit RoleModel(Vector<T> const& data)
-        : GUI::ItemListModel<T>(data)
-    {
+        { Gfx::ColorRole::InactiveWindowBorder1 },
+        { Gfx::ColorRole::InactiveWindowBorder2 },
+        { Gfx::ColorRole::InactiveWindowTitle },
+        { Gfx::ColorRole::InactiveWindowTitleShadow },
+        { Gfx::ColorRole::InactiveWindowTitleStripes },
+        { Gfx::PathRole::InactiveWindowShadow },
+
+        { Gfx::ColorRole::HighlightWindowBorder1 },
+        { Gfx::ColorRole::HighlightWindowBorder2 },
+        { Gfx::ColorRole::HighlightWindowTitle },
+        { Gfx::ColorRole::HighlightWindowTitleShadow },
+        { Gfx::ColorRole::HighlightWindowTitleStripes },
+
+        { Gfx::ColorRole::MovingWindowBorder1 },
+        { Gfx::ColorRole::MovingWindowBorder2 },
+        { Gfx::ColorRole::MovingWindowTitle },
+        { Gfx::ColorRole::MovingWindowTitleShadow },
+        { Gfx::ColorRole::MovingWindowTitleStripes },
+
+        { Gfx::ColorRole::Window },
+        { Gfx::ColorRole::WindowText },
+
+        { Gfx::ColorRole::DesktopBackground },
+        { Gfx::PathRole::TaskbarShadow },
     }
 };
 
-class AlignmentModel final : public GUI::Model {
-public:
-    static ErrorOr<NonnullRefPtr<AlignmentModel>> try_create()
+static const PropertyTab widgets_tab {
+    "Widgets",
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) AlignmentModel());
+        { Gfx::ColorRole::Accent },
+        { Gfx::ColorRole::Base },
+        { Gfx::ColorRole::ThreedHighlight },
+        { Gfx::ColorRole::ThreedShadow1 },
+        { Gfx::ColorRole::ThreedShadow2 },
+        { Gfx::ColorRole::HoverHighlight },
+
+        { Gfx::ColorRole::BaseText },
+        { Gfx::ColorRole::DisabledTextFront },
+        { Gfx::ColorRole::DisabledTextBack },
+        { Gfx::ColorRole::PlaceholderText },
+
+        { Gfx::ColorRole::Link },
+        { Gfx::ColorRole::ActiveLink },
+        { Gfx::ColorRole::VisitedLink },
+
+        { Gfx::ColorRole::Button },
+        { Gfx::ColorRole::ButtonText },
+
+        { Gfx::ColorRole::Tooltip },
+        { Gfx::ColorRole::TooltipText },
+        { Gfx::PathRole::TooltipShadow },
+
+        { Gfx::ColorRole::Tray },
+        { Gfx::ColorRole::TrayText },
+
+        { Gfx::ColorRole::Ruler },
+        { Gfx::ColorRole::RulerBorder },
+        { Gfx::ColorRole::RulerActiveText },
+        { Gfx::ColorRole::RulerInactiveText },
+
+        { Gfx::ColorRole::Gutter },
+        { Gfx::ColorRole::GutterBorder },
+
+        { Gfx::ColorRole::RubberBandBorder },
+        { Gfx::ColorRole::RubberBandFill },
+
+        { Gfx::ColorRole::MenuBase },
+        { Gfx::ColorRole::MenuBaseText },
+        { Gfx::ColorRole::MenuSelection },
+        { Gfx::ColorRole::MenuSelectionText },
+        { Gfx::ColorRole::MenuStripe },
+        { Gfx::PathRole::MenuShadow },
+
+        { Gfx::ColorRole::FocusOutline },
+        { Gfx::ColorRole::TextCursor },
+        { Gfx::ColorRole::Selection },
+        { Gfx::ColorRole::SelectionText },
+        { Gfx::ColorRole::InactiveSelection },
+        { Gfx::ColorRole::InactiveSelectionText },
+        { Gfx::ColorRole::HighlightSearching },
+        { Gfx::ColorRole::HighlightSearchingText },
     }
+};
 
-    virtual ~AlignmentModel() = default;
-
-    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 3; }
-    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 2; }
-
-    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+static const PropertyTab syntax_highlighting_tab {
+    "Syntax Highlighting",
     {
-        if (role == GUI::ModelRole::Display)
-            return m_alignments[index.row()].title;
-        if (role == GUI::ModelRole::Custom)
-            return m_alignments[index.row()].setting_value;
-
-        return {};
+        { Gfx::ColorRole::SyntaxComment },
+        { Gfx::ColorRole::SyntaxControlKeyword },
+        { Gfx::ColorRole::SyntaxIdentifier },
+        { Gfx::ColorRole::SyntaxKeyword },
+        { Gfx::ColorRole::SyntaxNumber },
+        { Gfx::ColorRole::SyntaxOperator },
+        { Gfx::ColorRole::SyntaxPreprocessorStatement },
+        { Gfx::ColorRole::SyntaxPreprocessorValue },
+        { Gfx::ColorRole::SyntaxPunctuation },
+        { Gfx::ColorRole::SyntaxString },
+        { Gfx::ColorRole::SyntaxType },
+        { Gfx::ColorRole::SyntaxFunction },
+        { Gfx::ColorRole::SyntaxVariable },
+        { Gfx::ColorRole::SyntaxCustomType },
+        { Gfx::ColorRole::SyntaxNamespace },
+        { Gfx::ColorRole::SyntaxMember },
+        { Gfx::ColorRole::SyntaxParameter },
     }
-
-private:
-    AlignmentModel() = default;
-
-    struct AlignmentValue {
-        String title;
-        Gfx::TextAlignment setting_value;
-    };
-    Vector<AlignmentValue> m_alignments {
-        { "Center", Gfx::TextAlignment::Center },
-        { "Left", Gfx::TextAlignment::CenterLeft },
-        { "Right", Gfx::TextAlignment::CenterRight },
-    };
 };
 
 MainWidget::MainWidget(Optional<String> path, Gfx::Palette startup_preview_palette)
@@ -97,163 +167,21 @@ MainWidget::MainWidget(Optional<String> path, Gfx::Palette startup_preview_palet
 {
     load_from_gml(theme_editor_gml);
 
-#define __ENUMERATE_COLOR_ROLE(role) m_color_roles.append(Gfx::ColorRole::role);
-    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
-#undef __ENUMERATE_COLOR_ROLE
-
-#define __ENUMERATE_ALIGNMENT_ROLE(role) m_alignment_roles.append(Gfx::AlignmentRole::role);
-    ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
-#undef __ENUMERATE_ALIGNMENT_ROLE
-
-#define __ENUMERATE_FLAG_ROLE(role) m_flag_roles.append(Gfx::FlagRole::role);
-    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
-#undef __ENUMERATE_FLAG_ROLE
-
-#define __ENUMERATE_METRIC_ROLE(role) m_metric_roles.append(Gfx::MetricRole::role);
-    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
-#undef __ENUMERATE_METRIC_ROLE
-
-#define __ENUMERATE_PATH_ROLE(role) m_path_roles.append(Gfx::PathRole::role);
-    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
-#undef __ENUMERATE_PATH_ROLE
+    m_alignment_model = MUST(AlignmentModel::try_create());
 
     m_preview_widget = find_descendant_of_type_named<GUI::Frame>("preview_frame")
                            ->add<ThemeEditor::PreviewWidget>(startup_preview_palette);
-    auto& color_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
-    auto& color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
-
-    auto& alignment_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("alignment_combo_box");
-    auto& alignment_input = *find_descendant_of_type_named<GUI::ComboBox>("alignment_input");
-
-    auto& flag_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("flag_combo_box");
-    auto& flag_input = *find_descendant_of_type_named<GUI::CheckBox>("flag_input");
-
-    auto& metric_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
-    auto& metric_input = *find_descendant_of_type_named<GUI::SpinBox>("metric_input");
-
-    auto& path_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("path_combo_box");
-    auto& path_input = *find_descendant_of_type_named<GUI::TextBox>("path_input");
-    auto& path_picker_button = *find_descendant_of_type_named<GUI::Button>("path_picker_button");
-
-    color_combo_box.set_model(MUST(RoleModel<Gfx::ColorRole>::try_create(m_color_roles)));
-    color_combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(m_preview_widget->preview_palette().color(role), GUI::AllowCallback::No);
-    };
-    color_combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
-
-    color_input.on_change = [&] {
-        auto role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
-        auto preview_palette = m_preview_widget->preview_palette();
-        preview_palette.set_color(role, color_input.color());
-        m_preview_widget->set_preview_palette(preview_palette);
-    };
-    color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window), GUI::AllowCallback::No);
-
-    alignment_combo_box.set_model(MUST(RoleModel<Gfx::AlignmentRole>::try_create(m_alignment_roles)));
-    alignment_combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_alignment_role();
-        alignment_input.set_selected_index((size_t)m_preview_widget->preview_palette().alignment(role), GUI::AllowCallback::No);
-    };
-    alignment_combo_box.set_selected_index((size_t)Gfx::AlignmentRole::TitleAlignment - 1);
-
-    alignment_input.set_only_allow_values_from_model(true);
-    alignment_input.set_model(MUST(AlignmentModel::try_create()));
-    alignment_input.set_selected_index((size_t)startup_preview_palette.alignment(Gfx::AlignmentRole::TitleAlignment), GUI::AllowCallback::No);
-    alignment_input.on_change = [&](auto&, auto& index) {
-        auto role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
-        auto preview_palette = m_preview_widget->preview_palette();
-
-        preview_palette.set_alignment(role, index.data(GUI::ModelRole::Custom).to_text_alignment(Gfx::TextAlignment::CenterLeft));
-        m_preview_widget->set_preview_palette(preview_palette);
-    };
-
-    flag_combo_box.set_model(MUST(RoleModel<Gfx::FlagRole>::try_create(m_flag_roles)));
-    flag_combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_flag_role();
-        flag_input.set_checked(m_preview_widget->preview_palette().flag(role), GUI::AllowCallback::No);
-    };
-    flag_combo_box.set_selected_index((size_t)Gfx::FlagRole::IsDark - 1);
-
-    flag_input.on_checked = [&](bool checked) {
-        auto role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
-        auto preview_palette = m_preview_widget->preview_palette();
-        preview_palette.set_flag(role, checked);
-        m_preview_widget->set_preview_palette(preview_palette);
-    };
-    flag_input.set_checked(startup_preview_palette.flag(Gfx::FlagRole::IsDark), GUI::AllowCallback::No);
-
-    metric_combo_box.set_model(MUST(RoleModel<Gfx::MetricRole>::try_create(m_metric_roles)));
-    metric_combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_metric_role();
-        metric_input.set_value(m_preview_widget->preview_palette().metric(role), GUI::AllowCallback::No);
-    };
-    metric_combo_box.set_selected_index((size_t)Gfx::MetricRole::TitleButtonHeight - 1);
-
-    metric_input.on_change = [&](int value) {
-        auto role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
-        auto preview_palette = m_preview_widget->preview_palette();
-        preview_palette.set_metric(role, value);
-        m_preview_widget->set_preview_palette(preview_palette);
-    };
-    metric_input.set_value(startup_preview_palette.metric(Gfx::MetricRole::TitleButtonHeight), GUI::AllowCallback::No);
-
-    path_combo_box.set_model(MUST(RoleModel<Gfx::PathRole>::try_create(m_path_roles)));
-    path_combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(m_preview_widget->preview_palette().path(role), GUI::AllowCallback::No);
-    };
-    path_combo_box.set_selected_index((size_t)Gfx::PathRole::TitleButtonIcons - 1);
-
-    path_input.on_change = [&] {
-        auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
-        auto preview_palette = m_preview_widget->preview_palette();
-        preview_palette.set_path(role, path_input.text());
-        m_preview_widget->set_preview_palette(preview_palette);
-    };
-    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons), GUI::AllowCallback::No);
-
-    path_picker_button.on_click = [&](auto) {
-        auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
-        bool open_folder = (role == Gfx::PathRole::TitleButtonIcons);
-        auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", path_combo_box.text());
-        auto target_path = path_input.text();
-        if (Core::File::exists(target_path)) {
-            if (!Core::File::is_directory(target_path))
-                target_path = LexicalPath::dirname(target_path);
-        } else {
-            target_path = "/res/icons";
-        }
-        auto result = GUI::FilePicker::get_open_filepath(window(), window_title, target_path, open_folder);
-        if (!result.has_value())
-            return;
-        path_input.set_text(*result);
-    };
+    m_property_tabs = find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
+    add_property_tab(window_tab);
+    add_property_tab(widgets_tab);
+    add_property_tab(syntax_highlighting_tab);
 
     m_preview_widget->on_palette_change = [&] {
         window()->set_modified(true);
     };
 
     m_preview_widget->on_theme_load_from_file = [&](String const& new_path) {
-        set_path(new_path);
-
-        auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(m_preview_widget->preview_palette().color(selected_color_role), GUI::AllowCallback::No);
-
-        auto selected_alignment_role = alignment_combo_box.model()->index(alignment_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_alignment_role();
-        alignment_input.set_selected_index((size_t)(m_preview_widget->preview_palette().alignment(selected_alignment_role), GUI::AllowCallback::No));
-
-        auto selected_flag_role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
-        flag_input.set_checked(m_preview_widget->preview_palette().flag(selected_flag_role), GUI::AllowCallback::No);
-
-        auto selected_metric_role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
-        metric_input.set_value(m_preview_widget->preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
-
-        auto selected_path_role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
-        path_input.set_text(m_preview_widget->preview_palette().path(selected_path_role), GUI::AllowCallback::No);
-
-        m_last_modified_time = Time::now_monotonic();
-        window()->set_modified(false);
+        load_from_file(new_path);
     };
 }
 
@@ -393,25 +321,25 @@ void MainWidget::save_to_file(Core::File& file)
 {
     auto theme = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();
 
-    for (auto role : m_alignment_roles) {
-        theme->write_entry("Alignments", to_string(role), to_string(m_preview_widget->preview_palette().alignment(role)));
-    }
+#define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments", to_string(Gfx::AlignmentRole::role), to_string(m_preview_widget->preview_palette().alignment(Gfx::AlignmentRole::role)));
+    ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
+#undef __ENUMERATE_ALIGNMENT_ROLE
 
-    for (auto role : m_color_roles) {
-        theme->write_entry("Colors", to_string(role), m_preview_widget->preview_palette().color(role).to_string());
-    }
+#define __ENUMERATE_COLOR_ROLE(role) theme->write_entry("Colors", to_string(Gfx::ColorRole::role), m_preview_widget->preview_palette().color(Gfx::ColorRole::role).to_string());
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
 
-    for (auto role : m_flag_roles) {
-        theme->write_bool_entry("Flags", to_string(role), m_preview_widget->preview_palette().flag(role));
-    }
+#define __ENUMERATE_FLAG_ROLE(role) theme->write_bool_entry("Flags", to_string(Gfx::FlagRole::role), m_preview_widget->preview_palette().flag(Gfx::FlagRole::role));
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
 
-    for (auto role : m_metric_roles) {
-        theme->write_num_entry("Metrics", to_string(role), m_preview_widget->preview_palette().metric(role));
-    }
+#define __ENUMERATE_METRIC_ROLE(role) theme->write_num_entry("Metrics", to_string(Gfx::MetricRole::role), m_preview_widget->preview_palette().metric(Gfx::MetricRole::role));
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
 
-    for (auto role : m_path_roles) {
-        theme->write_entry("Paths", to_string(role), m_preview_widget->preview_palette().path(role));
-    }
+#define __ENUMERATE_PATH_ROLE(role) theme->write_entry("Paths", to_string(Gfx::PathRole::role), m_preview_widget->preview_palette().path(Gfx::PathRole::role));
+    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
 
     auto sync_result = theme->sync();
     if (sync_result.is_error()) {
@@ -421,6 +349,195 @@ void MainWidget::save_to_file(Core::File& file)
         set_path(file.filename());
         window()->set_modified(false);
     }
+}
+
+void MainWidget::add_property_tab(PropertyTab const& property_tab)
+{
+    auto& scrollable_container = m_property_tabs->add_tab<GUI::ScrollableContainerWidget>(property_tab.title);
+    scrollable_container.set_should_hide_unnecessary_scrollbars(true);
+
+    auto properties_list = GUI::Widget::construct();
+    scrollable_container.set_widget(properties_list);
+    properties_list->set_layout<GUI::VerticalBoxLayout>();
+    properties_list->layout()->set_spacing(12);
+    properties_list->layout()->set_margins({ 8 });
+
+    for (auto const& property : property_tab.properties) {
+        NonnullRefPtr<GUI::Widget> row_widget = properties_list->add<GUI::Widget>();
+        row_widget->set_fixed_height(24);
+
+        property.role.visit(
+            [&](Gfx::AlignmentRole role) {
+                row_widget->load_from_gml(alignment_property_gml);
+
+                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                name_label.set_text(to_string(role));
+
+                auto& alignment_picker = *row_widget->find_descendant_of_type_named<GUI::ComboBox>("combo_box");
+                alignment_picker.set_model(*m_alignment_model);
+                alignment_picker.on_change = [&, role](auto&, auto& index) {
+                    set_alignment(role, index.data(GUI::ModelRole::Custom).to_text_alignment(Gfx::TextAlignment::CenterLeft));
+                };
+                alignment_picker.set_selected_index(m_alignment_model->index_of(m_preview_widget->preview_palette().alignment(role)), GUI::AllowCallback::No);
+
+                VERIFY(m_alignment_inputs[to_underlying(role)].is_null());
+                m_alignment_inputs[to_underlying(role)] = alignment_picker;
+            },
+            [&](Gfx::ColorRole role) {
+                row_widget->load_from_gml(color_property_gml);
+
+                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                name_label.set_text(to_string(role));
+
+                auto& color_input = *row_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
+                color_input.on_change = [&, role] {
+                    set_color(role, color_input.color());
+                };
+                color_input.set_color(m_preview_widget->preview_palette().color(role), GUI::AllowCallback::No);
+
+                VERIFY(m_color_inputs[to_underlying(role)].is_null());
+                m_color_inputs[to_underlying(role)] = color_input;
+            },
+            [&](Gfx::FlagRole role) {
+                row_widget->load_from_gml(flag_property_gml);
+
+                auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
+                checkbox.set_text(to_string(role));
+                checkbox.on_checked = [&, role](bool checked) {
+                    set_flag(role, checked);
+                };
+                checkbox.set_checked(m_preview_widget->preview_palette().flag(role), GUI::AllowCallback::No);
+
+                VERIFY(m_flag_inputs[to_underlying(role)].is_null());
+                m_flag_inputs[to_underlying(role)] = checkbox;
+            },
+            [&](Gfx::MetricRole role) {
+                row_widget->load_from_gml(metric_property_gml);
+
+                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                name_label.set_text(to_string(role));
+
+                auto& spin_box = *row_widget->find_descendant_of_type_named<GUI::SpinBox>("spin_box");
+                spin_box.on_change = [&, role](int value) {
+                    set_metric(role, value);
+                };
+                spin_box.set_value(m_preview_widget->preview_palette().metric(role), GUI::AllowCallback::No);
+
+                VERIFY(m_metric_inputs[to_underlying(role)].is_null());
+                m_metric_inputs[to_underlying(role)] = spin_box;
+            },
+            [&](Gfx::PathRole role) {
+                row_widget->load_from_gml(path_property_gml);
+
+                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                name_label.set_text(to_string(role));
+
+                auto& path_input = *row_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
+                path_input.on_change = [&, role] {
+                    set_path(role, path_input.text());
+                };
+                path_input.set_text(m_preview_widget->preview_palette().path(role), GUI::AllowCallback::No);
+
+                auto& path_picker_button = *row_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
+                auto picker_target = (role == Gfx::PathRole::TitleButtonIcons) ? PathPickerTarget::Folder : PathPickerTarget::File;
+                path_picker_button.on_click = [&, role, picker_target](auto) {
+                    show_path_picker_dialog(to_string(role), path_input, picker_target);
+                };
+
+                VERIFY(m_path_inputs[to_underlying(role)].is_null());
+                m_path_inputs[to_underlying(role)] = path_input;
+            });
+    }
+}
+
+void MainWidget::set_alignment(Gfx::AlignmentRole role, Gfx::TextAlignment value)
+{
+    auto preview_palette = m_preview_widget->preview_palette();
+    preview_palette.set_alignment(role, value);
+    m_preview_widget->set_preview_palette(preview_palette);
+}
+
+void MainWidget::set_color(Gfx::ColorRole role, Gfx::Color value)
+{
+    auto preview_palette = m_preview_widget->preview_palette();
+    preview_palette.set_color(role, value);
+    m_preview_widget->set_preview_palette(preview_palette);
+}
+
+void MainWidget::set_flag(Gfx::FlagRole role, bool value)
+{
+    auto preview_palette = m_preview_widget->preview_palette();
+    preview_palette.set_flag(role, value);
+    m_preview_widget->set_preview_palette(preview_palette);
+}
+
+void MainWidget::set_metric(Gfx::MetricRole role, int value)
+{
+    auto preview_palette = m_preview_widget->preview_palette();
+    preview_palette.set_metric(role, value);
+    m_preview_widget->set_preview_palette(preview_palette);
+}
+
+void MainWidget::set_path(Gfx::PathRole role, String value)
+{
+    auto preview_palette = m_preview_widget->preview_palette();
+    preview_palette.set_path(role, value);
+    m_preview_widget->set_preview_palette(preview_palette);
+}
+
+void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::TextBox& path_input, PathPickerTarget path_picker_target)
+{
+    bool open_folder = path_picker_target == PathPickerTarget::Folder;
+    auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", property_display_name);
+    auto target_path = path_input.text();
+    if (Core::File::exists(target_path)) {
+        if (!Core::File::is_directory(target_path))
+            target_path = LexicalPath::dirname(target_path);
+    } else {
+        target_path = "/res/icons";
+    }
+    auto result = GUI::FilePicker::get_open_filepath(window(), window_title, target_path, open_folder);
+    if (!result.has_value())
+        return;
+    path_input.set_text(*result);
+}
+
+void MainWidget::load_from_file(String const& new_path)
+{
+    set_path(new_path);
+
+#define __ENUMERATE_ALIGNMENT_ROLE(role)                                                    \
+    if (auto alignment_input = m_alignment_inputs[to_underlying(Gfx::AlignmentRole::role)]) \
+        alignment_input->set_selected_index(m_alignment_model->index_of(m_preview_widget->preview_palette().alignment(Gfx::AlignmentRole::role)), GUI::AllowCallback::No);
+    ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
+#undef __ENUMERATE_ALIGNMENT_ROLE
+
+#define __ENUMERATE_COLOR_ROLE(role)                                            \
+    if (auto color_input = m_color_inputs[to_underlying(Gfx::ColorRole::role)]) \
+        color_input->set_color(m_preview_widget->preview_palette().color(Gfx::ColorRole::role), GUI::AllowCallback::No);
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+
+#define __ENUMERATE_FLAG_ROLE(role)                                          \
+    if (auto flag_input = m_flag_inputs[to_underlying(Gfx::FlagRole::role)]) \
+        flag_input->set_checked(m_preview_widget->preview_palette().flag(Gfx::FlagRole::role), GUI::AllowCallback::No);
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
+
+#define __ENUMERATE_METRIC_ROLE(role)                                              \
+    if (auto metric_input = m_metric_inputs[to_underlying(Gfx::MetricRole::role)]) \
+        metric_input->set_value(m_preview_widget->preview_palette().metric(Gfx::MetricRole::role), GUI::AllowCallback::No);
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+
+#define __ENUMERATE_PATH_ROLE(role)                                          \
+    if (auto path_input = m_path_inputs[to_underlying(Gfx::PathRole::role)]) \
+        path_input->set_text(m_preview_widget->preview_palette().path(Gfx::PathRole::role), GUI::AllowCallback::No);
+    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
+
+    m_last_modified_time = Time::now_monotonic();
+    window()->set_modified(false);
 }
 
 }
