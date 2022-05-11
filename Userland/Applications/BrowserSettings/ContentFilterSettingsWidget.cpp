@@ -114,12 +114,15 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
     m_domain_list_view = find_descendant_of_type_named<GUI::ListView>("domain_list_view");
     m_add_new_domain_button = find_descendant_of_type_named<GUI::Button>("add_new_domain_button");
 
-    m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "EnableContentFilters"));
+    m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "EnableContentFilters"), GUI::AllowCallback::No);
+    m_enable_content_filtering_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     m_add_new_domain_button->on_click = [&](unsigned) {
         String text;
-        if (GUI::InputBox::show(window(), text, "Enter domain name", "Add domain to Content Filter") == GUI::Dialog::ExecOK)
+        if (GUI::InputBox::show(window(), text, "Enter domain name", "Add domain to Content Filter") == GUI::Dialog::ExecOK) {
             m_domain_list_model->add_domain(std::move(text));
+            set_modified(true);
+        }
     };
 
     m_domain_list_model = make_ref_counted<DomainListModel>();
@@ -128,8 +131,10 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
     m_domain_list_view->set_model(m_domain_list_model);
 
     auto delete_action = GUI::CommonActions::make_delete_action([&](GUI::Action const&) {
-        if (!m_domain_list_view->selection().is_empty())
+        if (!m_domain_list_view->selection().is_empty()) {
             m_domain_list_model->delete_domain(m_domain_list_view->selection().first().row());
+            set_modified(true);
+        }
     });
     m_entry_context_menu = GUI::Menu::construct();
     m_entry_context_menu->add_action(delete_action);
