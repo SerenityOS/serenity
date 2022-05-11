@@ -35,6 +35,7 @@ ClockSettingsWidget::ClockSettingsWidget()
     m_custom_format_input->set_enabled(false);
     m_custom_format_input->on_change = [&] {
         m_time_format = m_custom_format_input->get_text();
+        set_modified(true);
         update_clock_preview();
     };
 
@@ -60,6 +61,7 @@ ClockSettingsWidget::ClockSettingsWidget()
             return;
         m_show_seconds_checkbox->set_enabled(true);
         m_custom_format_input->set_enabled(false);
+        set_modified(true);
         update_time_format_string();
     };
 
@@ -68,10 +70,12 @@ ClockSettingsWidget::ClockSettingsWidget()
             return;
         m_show_seconds_checkbox->set_enabled(true);
         m_custom_format_input->set_enabled(false);
+        set_modified(true);
         update_time_format_string();
     };
 
     m_show_seconds_checkbox->on_checked = [&](bool) {
+        set_modified(true);
         update_time_format_string();
     };
 
@@ -80,6 +84,7 @@ ClockSettingsWidget::ClockSettingsWidget()
             return;
         m_show_seconds_checkbox->set_enabled(false);
         m_custom_format_input->set_enabled(true);
+        set_modified(true);
     };
 
     m_clock_preview_update_timer = Core::Timer::create_repeating(1000, [&]() {

@@ -50,6 +50,9 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
     m_time_zone_combo_box->set_only_allow_values_from_model(true);
     m_time_zone_combo_box->set_model(*StringViewListModel::create(time_zones));
     m_time_zone_combo_box->set_text(m_time_zone);
+    m_time_zone_combo_box->on_change = [&](auto, auto) {
+        set_modified(true);
+    };
 
     auto time_zone_map_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/map.png"sv).release_value_but_fixme_should_propagate_errors();
     auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
