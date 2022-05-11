@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>.
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,11 +7,12 @@
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/Random.h>
+#include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
 #include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 #include <LibDSP/Processor.h>
 #include <LibDSP/Synthesizers.h>
-#include <math.h>
 
 namespace LibDSP::Synthesizers {
 

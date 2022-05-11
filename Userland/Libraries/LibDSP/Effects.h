@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Processor.h"
-#include "ProcessorParameter.h"
-#include "Transport.h"
 #include <AK/Types.h>
+#include <LibDSP/Processor.h>
+#include <LibDSP/ProcessorParameter.h>
+#include <LibDSP/Transport.h>
 
 namespace LibDSP::Effects {
 

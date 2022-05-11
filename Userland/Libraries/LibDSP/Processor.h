@@ -1,15 +1,18 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/Noncopyable.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Types.h>
-#include <LibCore/Object.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Transport.h>
@@ -17,13 +20,10 @@
 namespace LibDSP {
 
 // A processor processes notes or audio into notes or audio. Processors are e.g. samplers, synthesizers, effects, arpeggiators etc.
-class Processor : public Core::Object {
-    C_OBJECT_ABSTRACT(Processor);
+class Processor : public RefCounted<Processor> {
 
 public:
-    virtual ~Processor()
-    {
-    }
+    virtual ~Processor() = default;
     Signal process(Signal const& input_signal)
     {
         VERIFY(input_signal.type() == m_input_type);
