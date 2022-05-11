@@ -31,38 +31,41 @@ Classic::Classic(NonnullRefPtr<Transport> transport)
     m_parameters.append(m_release);
 }
 
-Signal Classic::process_impl(Signal const& input_signal)
+void Classic::process_impl(Signal const& input_signal, [[maybe_unused]] Signal& output_signal)
 {
-    auto& in = input_signal.get<RollNotes>();
+    auto const& in = input_signal.get<RollNotes>();
+    auto& output_samples = output_signal.get<FixedArray<Sample>>();
 
-    Sample out;
+    // Do this for every time step and set the signal accordingly.
+    for (size_t sample_index = 0; sample_index < output_samples.size(); ++sample_index) {
+        Sample& out = output_samples[sample_index];
+        u32 sample_time = m_transport->time() + sample_index;
 
-    SinglyLinkedList<PitchedEnvelope> playing_envelopes;
+        SinglyLinkedList<PitchedEnvelope> playing_envelopes;
 
-    // "Press" the necessary notes in the internal representation,
-    // and "release" all of the others
-    for (u8 i = 0; i < note_frequencies.size(); ++i) {
-        if (auto maybe_note = in.get(i); maybe_note.has_value())
-            m_playing_notes.set(i, maybe_note.value());
+        // "Press" the necessary notes in the internal representation,
+        // and "release" all of the others
+        for (u8 i = 0; i < note_frequencies.size(); ++i) {
+            if (auto maybe_note = in.get(i); maybe_note.has_value())
+                m_playing_notes.set(i, maybe_note.value());
 
-        if (m_playing_notes.contains(i)) {
-            Envelope note_envelope = m_playing_notes.get(i)->to_envelope(m_transport->time(), m_attack * m_transport->ms_sample_rate(), m_decay * m_transport->ms_sample_rate(), m_release * m_transport->ms_sample_rate());
-            if (!note_envelope.is_active()) {
-                m_playing_notes.remove(i);
-                continue;
+            if (m_playing_notes.contains(i)) {
+                Envelope note_envelope = m_playing_notes.get(i)->to_envelope(sample_time, m_attack * m_transport->ms_sample_rate(), m_decay * m_transport->ms_sample_rate(), m_release * m_transport->ms_sample_rate());
+                if (!note_envelope.is_active()) {
+                    m_playing_notes.remove(i);
+                    continue;
+                }
+
+                playing_envelopes.append(PitchedEnvelope { note_envelope, i });
             }
+        }
 
-            playing_envelopes.append(PitchedEnvelope { note_envelope, i });
+        for (auto envelope : playing_envelopes) {
+            double volume = volume_from_envelope(envelope);
+            double wave = wave_position(envelope.note);
+            out += volume * wave;
         }
     }
-
-    for (auto envelope : playing_envelopes) {
-        double volume = volume_from_envelope(envelope);
-        double wave = wave_position(envelope.note);
-        out += volume * wave;
-    }
-
-    return out;
 }
 
 // Linear ADSR envelope with no peak adjustment.

@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
+#include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -66,13 +68,29 @@ enum class SignalType : u8 {
     Note
 };
 
-using RollNotes = OrderedHashMap<u8, RollNote>;
+// Perfect hashing for note (MIDI) values. This just uses the note value as the hash itself.
+class PerfectNoteHashTraits : Traits<u8> {
+public:
+    static constexpr bool equals(u8 const& a, u8 const& b) { return a == b; }
+    static constexpr unsigned hash(u8 value)
+    {
+        return static_cast<unsigned>(value);
+    }
+};
 
-struct Signal : public Variant<Sample, RollNotes> {
+using RollNotes = OrderedHashMap<u8, RollNote, PerfectNoteHashTraits>;
+
+struct Signal : public Variant<FixedArray<Sample>, RollNotes> {
     using Variant::Variant;
+    AK_MAKE_NONCOPYABLE(Signal);
+
+public:
+    Signal& operator=(Signal&&) = default;
+    Signal(Signal&&) = default;
+
     ALWAYS_INLINE SignalType type() const
     {
-        if (has<Sample>())
+        if (has<FixedArray<Sample>>())
             return SignalType::Sample;
         if (has<RollNotes>())
             return SignalType::Note;
