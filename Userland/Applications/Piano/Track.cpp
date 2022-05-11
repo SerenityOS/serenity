@@ -18,7 +18,7 @@
 
 Track::Track(u32 const& time)
     : m_time(time)
-    , m_temporary_transport(LibDSP::Transport::construct(120, 4))
+    , m_temporary_transport(make_ref_counted<LibDSP::Transport>(120, 4))
     , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_temporary_transport))
     , m_synth(make_ref_counted<LibDSP::Synthesizers::Classic>(m_temporary_transport))
 {

@@ -1,27 +1,24 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Clip.h"
-#include "Music.h"
-#include "Processor.h"
-#include <LibCore/Object.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <LibDSP/Clip.h>
+#include <LibDSP/Music.h>
+#include <LibDSP/Processor.h>
 
 namespace LibDSP {
 
 // A track is also known as a channel and serves as a container for the audio pipeline: clips -> processors -> mixing & output
-class Track : public Core::Object {
-    C_OBJECT_ABSTRACT(Track)
+class Track : public RefCounted<Track> {
 public:
-    Track(NonnullRefPtr<Transport> transport)
-        : m_transport(move(transport))
-    {
-    }
-    virtual ~Track() override = default;
+    virtual ~Track() = default;
 
     virtual bool check_processor_chain_valid() const = 0;
     bool add_processor(NonnullRefPtr<Processor> new_processor);
@@ -33,6 +30,10 @@ public:
     NonnullRefPtr<Transport> const transport() const { return m_transport; }
 
 protected:
+    Track(NonnullRefPtr<Transport> transport)
+        : m_transport(move(transport))
+    {
+    }
     bool check_processor_chain_valid_with_initial_type(SignalType initial_type) const;
 
     // Subclasses override to provide the base signal to the processing chain

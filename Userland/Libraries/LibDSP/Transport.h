@@ -1,20 +1,19 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Music.h"
+#include <AK/RefCounted.h>
 #include <AK/Types.h>
-#include <LibCore/Object.h>
+#include <LibDSP/Music.h>
 
 namespace LibDSP {
 
 // The DAW-wide timekeeper and synchronizer
-class Transport final : public Core::Object {
-    C_OBJECT(Transport)
+class Transport final : public RefCounted<Transport> {
 public:
     constexpr u32& time() { return m_time; }
     constexpr u16 beats_per_minute() const { return m_beats_per_minute; }
@@ -24,7 +23,6 @@ public:
     constexpr double ms_sample_rate() const { return m_sample_rate / 1000.; }
     constexpr double current_measure() const { return m_time / samples_per_measure(); }
 
-private:
     Transport(u16 beats_per_minute, u8 beats_per_measure, u32 sample_rate)
         : m_beats_per_minute(beats_per_minute)
         , m_beats_per_measure(beats_per_measure)
@@ -36,6 +34,7 @@ private:
     {
     }
 
+private:
     // FIXME: You can't make more than 24h of (48kHz) music with this.
     // But do you want to, really? :^)
     u32 m_time { 0 };
