@@ -43,36 +43,40 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
 
     switch (m_bell_mode) {
     case VT::TerminalWidget::BellMode::Visible:
-        visual_bell_radio.set_checked(true);
+        visual_bell_radio.set_checked(true, GUI::AllowCallback::No);
         break;
     case VT::TerminalWidget::BellMode::AudibleBeep:
-        beep_bell_radio.set_checked(true);
+        beep_bell_radio.set_checked(true, GUI::AllowCallback::No);
         break;
     case VT::TerminalWidget::BellMode::Disabled:
-        no_bell_radio.set_checked(true);
+        no_bell_radio.set_checked(true, GUI::AllowCallback::No);
         break;
     }
 
     beep_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
         Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        set_modified(true);
     };
     visual_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Visible;
         Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        set_modified(true);
     };
     no_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Disabled;
         Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        set_modified(true);
     };
 
     m_max_history_size = Config::read_i32("Terminal", "Terminal", "MaxHistorySize");
     m_original_max_history_size = m_max_history_size;
     auto& history_size_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
-    history_size_spinbox.set_value(m_max_history_size);
+    history_size_spinbox.set_value(m_max_history_size, GUI::AllowCallback::No);
     history_size_spinbox.on_change = [this](int value) {
         m_max_history_size = value;
         Config::write_i32("Terminal", "Terminal", "MaxHistorySize", static_cast<i32>(m_max_history_size));
+        set_modified(true);
     };
 
     m_show_scrollbar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
@@ -81,8 +85,9 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
     show_scrollbar_checkbox.on_checked = [&](bool show_scrollbar) {
         m_show_scrollbar = show_scrollbar;
         Config::write_bool("Terminal", "Terminal", "ShowScrollBar", show_scrollbar);
+        set_modified(true);
     };
-    show_scrollbar_checkbox.set_checked(m_show_scrollbar);
+    show_scrollbar_checkbox.set_checked(m_show_scrollbar, GUI::AllowCallback::No);
 
     m_confirm_close = Config::read_bool("Terminal", "Terminal", "ConfirmClose", true);
     m_orignal_confirm_close = m_confirm_close;
@@ -90,8 +95,9 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
     confirm_close_checkbox.on_checked = [&](bool confirm_close) {
         m_confirm_close = confirm_close;
         Config::write_bool("Terminal", "Terminal", "ConfirmClose", confirm_close);
+        set_modified(true);
     };
-    confirm_close_checkbox.set_checked(m_confirm_close);
+    confirm_close_checkbox.set_checked(m_confirm_close, GUI::AllowCallback::No);
 }
 
 TerminalSettingsViewWidget::TerminalSettingsViewWidget()
@@ -105,6 +111,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     slider.on_change = [this](int value) {
         m_opacity = value;
         Config::write_i32("Terminal", "Window", "Opacity", static_cast<i32>(m_opacity));
+        set_modified(true);
     };
 
     m_color_scheme = Config::read_string("Terminal", "Window", "ColorScheme");
@@ -128,6 +135,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     color_scheme_combo.on_change = [&](auto&, const GUI::ModelIndex& index) {
         m_color_scheme = index.data().as_string();
         Config::write_string("Terminal", "Window", "ColorScheme", m_color_scheme);
+        set_modified(true);
     };
 
     auto& font_button = *find_descendant_of_type_named<GUI::Button>("terminal_font_button");
@@ -147,6 +155,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
             font_text.set_text(m_font->human_readable_name());
             font_text.set_font(m_font);
             Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
+            set_modified(true);
         }
     };
 
@@ -166,10 +175,12 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
                 : Gfx::FontDatabase::the().get_by_name(font_name);
             Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
         }
+        set_modified(true);
     };
     // The "use default font" setting is not stored itself - we automatically set it if the actually present font is the default,
     // whether that was filled in by the above defaulting code or by the user.
-    use_default_font_button.set_checked(m_font == Gfx::FontDatabase::the().default_fixed_width_font());
+    use_default_font_button.set_checked(m_font == Gfx::FontDatabase::the().default_fixed_width_font(), GUI::AllowCallback::No);
+    font_selection.set_enabled(!use_default_font_button.is_checked());
 }
 
 VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView bell_string)
