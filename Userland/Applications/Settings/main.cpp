@@ -5,7 +5,6 @@
  */
 
 #include <AK/QuickSort.h>
-#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Application.h>
@@ -14,6 +13,7 @@
 #include <LibGUI/IconView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto launch_origin_rect = icon_view->to_widget_rect(icon_view->content_rect(index)).translated(icon_view->screen_relative_rect().location());
         setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
-        MUST(Core::Process::spawn(executable));
+        GUI::Process::spawn_or_show_error(window, executable);
     };
 
     auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());

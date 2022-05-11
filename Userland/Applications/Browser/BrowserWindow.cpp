@@ -16,7 +16,6 @@
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/AboutDialog.h>
@@ -27,6 +26,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
@@ -301,8 +301,8 @@ void BrowserWindow::build_menus()
 
     settings_menu.add_separator();
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
-        [](auto&) {
-            MUST(Core::Process::spawn("/bin/BrowserSettings"));
+        [this](auto&) {
+            GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings");
         });
     settings_menu.add_action(move(open_settings_action));
 

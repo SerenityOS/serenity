@@ -11,7 +11,6 @@
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -27,6 +26,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -328,7 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            MUST(Core::Process::spawn("/bin/TerminalSettings"));
+            GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings");
         });
 
     TRY(terminal->context_menu().try_add_separator());
@@ -336,7 +336,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        MUST(Core::Process::spawn("/bin/Terminal"));
+        GUI::Process::spawn_or_show_error(window, "/bin/Terminal");
     })));
 
     TRY(file_menu->try_add_action(open_settings_action));
