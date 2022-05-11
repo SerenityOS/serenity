@@ -187,6 +187,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         if (!selection.is_empty()) {
             auto& selected_keymap = keymaps_list_model.keymap_at(selection.first().row());
             keymaps_list_model.set_active_keymap(selected_keymap);
+            set_modified(true);
         }
     };
 
@@ -202,8 +203,10 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_add_keymap_button->on_click = [&](auto) {
         auto keymap = KeymapSelectionDialog::select_keymap(window(), keymaps_list_model.keymaps());
-        if (!keymap.is_empty())
+        if (!keymap.is_empty()) {
             keymaps_list_model.add_keymap(keymap);
+            set_modified(true);
+        }
     };
 
     m_remove_keymap_button = find_descendant_of_type_named<GUI::Button>("remove_keymap_button");
@@ -218,6 +221,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         }
         if (active_keymap_deleted)
             keymaps_list_model.set_active_keymap(keymaps_list_model.keymap_at(0));
+        set_modified(true);
     };
 
     m_selected_keymaps_listview->on_selection_change = [&]() {
@@ -243,6 +247,9 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_num_lock_checkbox = find_descendant_of_type_named<GUI::CheckBox>("num_lock_checkbox");
     m_num_lock_checkbox->set_checked(Config::read_bool("KeyboardSettings", "StartupEnable", "NumLock", true));
+    m_num_lock_checkbox->on_checked = [&](auto) {
+        set_modified(true);
+    };
 }
 
 KeyboardSettingsWidget::~KeyboardSettingsWidget()
