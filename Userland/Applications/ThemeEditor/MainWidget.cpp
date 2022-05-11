@@ -22,6 +22,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
@@ -36,129 +37,149 @@ namespace ThemeEditor {
 static const PropertyTab window_tab {
     "Windows",
     {
-        { Gfx::FlagRole::IsDark },
-        { Gfx::AlignmentRole::TitleAlignment },
-        { Gfx::MetricRole::TitleHeight },
-        { Gfx::MetricRole::TitleButtonWidth },
-        { Gfx::MetricRole::TitleButtonHeight },
-        { Gfx::PathRole::TitleButtonIcons },
-        { Gfx::FlagRole::TitleButtonsIconOnly },
+        { "General",
+            { { Gfx::FlagRole::IsDark },
+                { Gfx::AlignmentRole::TitleAlignment },
+                { Gfx::MetricRole::TitleHeight },
+                { Gfx::MetricRole::TitleButtonWidth },
+                { Gfx::MetricRole::TitleButtonHeight },
+                { Gfx::PathRole::TitleButtonIcons },
+                { Gfx::FlagRole::TitleButtonsIconOnly } } },
 
-        { Gfx::MetricRole::BorderThickness },
-        { Gfx::MetricRole::BorderRadius },
+        { "Border",
+            { { Gfx::MetricRole::BorderThickness },
+                { Gfx::MetricRole::BorderRadius } } },
 
-        { Gfx::ColorRole::ActiveWindowBorder1 },
-        { Gfx::ColorRole::ActiveWindowBorder2 },
-        { Gfx::ColorRole::ActiveWindowTitle },
-        { Gfx::ColorRole::ActiveWindowTitleShadow },
-        { Gfx::ColorRole::ActiveWindowTitleStripes },
-        { Gfx::PathRole::ActiveWindowShadow },
+        { "Active Window",
+            { { Gfx::ColorRole::ActiveWindowBorder1 },
+                { Gfx::ColorRole::ActiveWindowBorder2 },
+                { Gfx::ColorRole::ActiveWindowTitle },
+                { Gfx::ColorRole::ActiveWindowTitleShadow },
+                { Gfx::ColorRole::ActiveWindowTitleStripes },
+                { Gfx::PathRole::ActiveWindowShadow } } },
 
-        { Gfx::ColorRole::InactiveWindowBorder1 },
-        { Gfx::ColorRole::InactiveWindowBorder2 },
-        { Gfx::ColorRole::InactiveWindowTitle },
-        { Gfx::ColorRole::InactiveWindowTitleShadow },
-        { Gfx::ColorRole::InactiveWindowTitleStripes },
-        { Gfx::PathRole::InactiveWindowShadow },
+        { "Inactive Window",
+            { { Gfx::ColorRole::InactiveWindowBorder1 },
+                { Gfx::ColorRole::InactiveWindowBorder2 },
+                { Gfx::ColorRole::InactiveWindowTitle },
+                { Gfx::ColorRole::InactiveWindowTitleShadow },
+                { Gfx::ColorRole::InactiveWindowTitleStripes },
+                { Gfx::PathRole::InactiveWindowShadow } } },
 
-        { Gfx::ColorRole::HighlightWindowBorder1 },
-        { Gfx::ColorRole::HighlightWindowBorder2 },
-        { Gfx::ColorRole::HighlightWindowTitle },
-        { Gfx::ColorRole::HighlightWindowTitleShadow },
-        { Gfx::ColorRole::HighlightWindowTitleStripes },
+        { "Highlighted Window",
+            { { Gfx::ColorRole::HighlightWindowBorder1 },
+                { Gfx::ColorRole::HighlightWindowBorder2 },
+                { Gfx::ColorRole::HighlightWindowTitle },
+                { Gfx::ColorRole::HighlightWindowTitleShadow },
+                { Gfx::ColorRole::HighlightWindowTitleStripes } } },
 
-        { Gfx::ColorRole::MovingWindowBorder1 },
-        { Gfx::ColorRole::MovingWindowBorder2 },
-        { Gfx::ColorRole::MovingWindowTitle },
-        { Gfx::ColorRole::MovingWindowTitleShadow },
-        { Gfx::ColorRole::MovingWindowTitleStripes },
+        { "Moving Window",
+            { { Gfx::ColorRole::MovingWindowBorder1 },
+                { Gfx::ColorRole::MovingWindowBorder2 },
+                { Gfx::ColorRole::MovingWindowTitle },
+                { Gfx::ColorRole::MovingWindowTitleShadow },
+                { Gfx::ColorRole::MovingWindowTitleStripes } } },
 
-        { Gfx::ColorRole::Window },
-        { Gfx::ColorRole::WindowText },
+        { "Contents",
+            { { Gfx::ColorRole::Window },
+                { Gfx::ColorRole::WindowText } } },
 
-        { Gfx::ColorRole::DesktopBackground },
-        { Gfx::PathRole::TaskbarShadow },
+        { "Desktop",
+            { { Gfx::ColorRole::DesktopBackground },
+                { Gfx::PathRole::TaskbarShadow } } },
     }
 };
 
 static const PropertyTab widgets_tab {
     "Widgets",
     {
-        { Gfx::ColorRole::Accent },
-        { Gfx::ColorRole::Base },
-        { Gfx::ColorRole::ThreedHighlight },
-        { Gfx::ColorRole::ThreedShadow1 },
-        { Gfx::ColorRole::ThreedShadow2 },
-        { Gfx::ColorRole::HoverHighlight },
+        { "General",
+            { { Gfx::ColorRole::Accent },
+                { Gfx::ColorRole::Base },
+                { Gfx::ColorRole::ThreedHighlight },
+                { Gfx::ColorRole::ThreedShadow1 },
+                { Gfx::ColorRole::ThreedShadow2 },
+                { Gfx::ColorRole::HoverHighlight } } },
 
-        { Gfx::ColorRole::BaseText },
-        { Gfx::ColorRole::DisabledTextFront },
-        { Gfx::ColorRole::DisabledTextBack },
-        { Gfx::ColorRole::PlaceholderText },
+        { "Text",
+            { { Gfx::ColorRole::BaseText },
+                { Gfx::ColorRole::DisabledTextFront },
+                { Gfx::ColorRole::DisabledTextBack },
+                { Gfx::ColorRole::PlaceholderText } } },
 
-        { Gfx::ColorRole::Link },
-        { Gfx::ColorRole::ActiveLink },
-        { Gfx::ColorRole::VisitedLink },
+        { "Links",
+            { { Gfx::ColorRole::Link },
+                { Gfx::ColorRole::ActiveLink },
+                { Gfx::ColorRole::VisitedLink } } },
 
-        { Gfx::ColorRole::Button },
-        { Gfx::ColorRole::ButtonText },
+        { "Buttons",
+            { { Gfx::ColorRole::Button },
+                { Gfx::ColorRole::ButtonText } } },
 
-        { Gfx::ColorRole::Tooltip },
-        { Gfx::ColorRole::TooltipText },
-        { Gfx::PathRole::TooltipShadow },
+        { "Tooltips",
+            { { Gfx::ColorRole::Tooltip },
+                { Gfx::ColorRole::TooltipText },
+                { Gfx::PathRole::TooltipShadow } } },
 
-        { Gfx::ColorRole::Tray },
-        { Gfx::ColorRole::TrayText },
+        { "Trays",
+            { { Gfx::ColorRole::Tray },
+                { Gfx::ColorRole::TrayText } } },
 
-        { Gfx::ColorRole::Ruler },
-        { Gfx::ColorRole::RulerBorder },
-        { Gfx::ColorRole::RulerActiveText },
-        { Gfx::ColorRole::RulerInactiveText },
+        { "Ruler",
+            { { Gfx::ColorRole::Ruler },
+                { Gfx::ColorRole::RulerBorder },
+                { Gfx::ColorRole::RulerActiveText },
+                { Gfx::ColorRole::RulerInactiveText } } },
 
-        { Gfx::ColorRole::Gutter },
-        { Gfx::ColorRole::GutterBorder },
+        { "Gutter",
+            { { Gfx::ColorRole::Gutter },
+                { Gfx::ColorRole::GutterBorder } } },
 
-        { Gfx::ColorRole::RubberBandBorder },
-        { Gfx::ColorRole::RubberBandFill },
+        { "Rubber Band",
+            { { Gfx::ColorRole::RubberBandBorder },
+                { Gfx::ColorRole::RubberBandFill } } },
 
-        { Gfx::ColorRole::MenuBase },
-        { Gfx::ColorRole::MenuBaseText },
-        { Gfx::ColorRole::MenuSelection },
-        { Gfx::ColorRole::MenuSelectionText },
-        { Gfx::ColorRole::MenuStripe },
-        { Gfx::PathRole::MenuShadow },
+        { "Menus",
+            { { Gfx::ColorRole::MenuBase },
+                { Gfx::ColorRole::MenuBaseText },
+                { Gfx::ColorRole::MenuSelection },
+                { Gfx::ColorRole::MenuSelectionText },
+                { Gfx::ColorRole::MenuStripe },
+                { Gfx::PathRole::MenuShadow } } },
 
-        { Gfx::ColorRole::FocusOutline },
-        { Gfx::ColorRole::TextCursor },
-        { Gfx::ColorRole::Selection },
-        { Gfx::ColorRole::SelectionText },
-        { Gfx::ColorRole::InactiveSelection },
-        { Gfx::ColorRole::InactiveSelectionText },
-        { Gfx::ColorRole::HighlightSearching },
-        { Gfx::ColorRole::HighlightSearchingText },
+        { "Selection",
+            { { Gfx::ColorRole::FocusOutline },
+                { Gfx::ColorRole::TextCursor },
+                { Gfx::ColorRole::Selection },
+                { Gfx::ColorRole::SelectionText },
+                { Gfx::ColorRole::InactiveSelection },
+                { Gfx::ColorRole::InactiveSelectionText },
+                { Gfx::ColorRole::HighlightSearching },
+                { Gfx::ColorRole::HighlightSearchingText } } },
     }
 };
 
 static const PropertyTab syntax_highlighting_tab {
     "Syntax Highlighting",
     {
-        { Gfx::ColorRole::SyntaxComment },
-        { Gfx::ColorRole::SyntaxControlKeyword },
-        { Gfx::ColorRole::SyntaxIdentifier },
-        { Gfx::ColorRole::SyntaxKeyword },
-        { Gfx::ColorRole::SyntaxNumber },
-        { Gfx::ColorRole::SyntaxOperator },
-        { Gfx::ColorRole::SyntaxPreprocessorStatement },
-        { Gfx::ColorRole::SyntaxPreprocessorValue },
-        { Gfx::ColorRole::SyntaxPunctuation },
-        { Gfx::ColorRole::SyntaxString },
-        { Gfx::ColorRole::SyntaxType },
-        { Gfx::ColorRole::SyntaxFunction },
-        { Gfx::ColorRole::SyntaxVariable },
-        { Gfx::ColorRole::SyntaxCustomType },
-        { Gfx::ColorRole::SyntaxNamespace },
-        { Gfx::ColorRole::SyntaxMember },
-        { Gfx::ColorRole::SyntaxParameter },
+        { "General",
+            { { Gfx::ColorRole::SyntaxComment },
+                { Gfx::ColorRole::SyntaxControlKeyword },
+                { Gfx::ColorRole::SyntaxIdentifier },
+                { Gfx::ColorRole::SyntaxKeyword },
+                { Gfx::ColorRole::SyntaxNumber },
+                { Gfx::ColorRole::SyntaxOperator },
+                { Gfx::ColorRole::SyntaxPreprocessorStatement },
+                { Gfx::ColorRole::SyntaxPreprocessorValue },
+                { Gfx::ColorRole::SyntaxPunctuation },
+                { Gfx::ColorRole::SyntaxString },
+                { Gfx::ColorRole::SyntaxType },
+                { Gfx::ColorRole::SyntaxFunction },
+                { Gfx::ColorRole::SyntaxVariable },
+                { Gfx::ColorRole::SyntaxCustomType },
+                { Gfx::ColorRole::SyntaxNamespace },
+                { Gfx::ColorRole::SyntaxMember },
+                { Gfx::ColorRole::SyntaxParameter } } },
     }
 };
 
@@ -362,91 +383,99 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
     properties_list->layout()->set_spacing(12);
     properties_list->layout()->set_margins({ 8 });
 
-    for (auto const& property : property_tab.properties) {
-        NonnullRefPtr<GUI::Widget> row_widget = properties_list->add<GUI::Widget>();
-        row_widget->set_fixed_height(24);
+    for (auto const& group : property_tab.property_groups) {
+        NonnullRefPtr<GUI::GroupBox> group_box = properties_list->add<GUI::GroupBox>(group.title);
+        group_box->set_layout<GUI::VerticalBoxLayout>();
+        group_box->layout()->set_spacing(12);
+        // 1px less on the left makes the text line up with the group title.
+        group_box->layout()->set_margins({ 8, 8, 8, 7 });
+        group_box->set_shrink_to_fit(true);
 
-        property.role.visit(
-            [&](Gfx::AlignmentRole role) {
-                row_widget->load_from_gml(alignment_property_gml);
+        for (auto const& property : group.properties) {
+            NonnullRefPtr<GUI::Widget> row_widget = group_box->add<GUI::Widget>();
+            row_widget->set_fixed_height(22);
+            property.role.visit(
+                [&](Gfx::AlignmentRole role) {
+                    row_widget->load_from_gml(alignment_property_gml);
 
-                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                name_label.set_text(to_string(role));
+                    auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                    name_label.set_text(to_string(role));
 
-                auto& alignment_picker = *row_widget->find_descendant_of_type_named<GUI::ComboBox>("combo_box");
-                alignment_picker.set_model(*m_alignment_model);
-                alignment_picker.on_change = [&, role](auto&, auto& index) {
-                    set_alignment(role, index.data(GUI::ModelRole::Custom).to_text_alignment(Gfx::TextAlignment::CenterLeft));
-                };
-                alignment_picker.set_selected_index(m_alignment_model->index_of(m_preview_widget->preview_palette().alignment(role)), GUI::AllowCallback::No);
+                    auto& alignment_picker = *row_widget->find_descendant_of_type_named<GUI::ComboBox>("combo_box");
+                    alignment_picker.set_model(*m_alignment_model);
+                    alignment_picker.on_change = [&, role](auto&, auto& index) {
+                        set_alignment(role, index.data(GUI::ModelRole::Custom).to_text_alignment(Gfx::TextAlignment::CenterLeft));
+                    };
+                    alignment_picker.set_selected_index(m_alignment_model->index_of(m_preview_widget->preview_palette().alignment(role)), GUI::AllowCallback::No);
 
-                VERIFY(m_alignment_inputs[to_underlying(role)].is_null());
-                m_alignment_inputs[to_underlying(role)] = alignment_picker;
-            },
-            [&](Gfx::ColorRole role) {
-                row_widget->load_from_gml(color_property_gml);
+                    VERIFY(m_alignment_inputs[to_underlying(role)].is_null());
+                    m_alignment_inputs[to_underlying(role)] = alignment_picker;
+                },
+                [&](Gfx::ColorRole role) {
+                    row_widget->load_from_gml(color_property_gml);
 
-                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                name_label.set_text(to_string(role));
+                    auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                    name_label.set_text(to_string(role));
 
-                auto& color_input = *row_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
-                color_input.on_change = [&, role] {
-                    set_color(role, color_input.color());
-                };
-                color_input.set_color(m_preview_widget->preview_palette().color(role), GUI::AllowCallback::No);
+                    auto& color_input = *row_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
+                    color_input.on_change = [&, role] {
+                        set_color(role, color_input.color());
+                    };
+                    color_input.set_color(m_preview_widget->preview_palette().color(role), GUI::AllowCallback::No);
 
-                VERIFY(m_color_inputs[to_underlying(role)].is_null());
-                m_color_inputs[to_underlying(role)] = color_input;
-            },
-            [&](Gfx::FlagRole role) {
-                row_widget->load_from_gml(flag_property_gml);
+                    VERIFY(m_color_inputs[to_underlying(role)].is_null());
+                    m_color_inputs[to_underlying(role)] = color_input;
+                },
+                [&](Gfx::FlagRole role) {
+                    row_widget->load_from_gml(flag_property_gml);
 
-                auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
-                checkbox.set_text(to_string(role));
-                checkbox.on_checked = [&, role](bool checked) {
-                    set_flag(role, checked);
-                };
-                checkbox.set_checked(m_preview_widget->preview_palette().flag(role), GUI::AllowCallback::No);
+                    auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
+                    checkbox.set_text(to_string(role));
+                    checkbox.on_checked = [&, role](bool checked) {
+                        set_flag(role, checked);
+                    };
+                    checkbox.set_checked(m_preview_widget->preview_palette().flag(role), GUI::AllowCallback::No);
 
-                VERIFY(m_flag_inputs[to_underlying(role)].is_null());
-                m_flag_inputs[to_underlying(role)] = checkbox;
-            },
-            [&](Gfx::MetricRole role) {
-                row_widget->load_from_gml(metric_property_gml);
+                    VERIFY(m_flag_inputs[to_underlying(role)].is_null());
+                    m_flag_inputs[to_underlying(role)] = checkbox;
+                },
+                [&](Gfx::MetricRole role) {
+                    row_widget->load_from_gml(metric_property_gml);
 
-                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                name_label.set_text(to_string(role));
+                    auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                    name_label.set_text(to_string(role));
 
-                auto& spin_box = *row_widget->find_descendant_of_type_named<GUI::SpinBox>("spin_box");
-                spin_box.on_change = [&, role](int value) {
-                    set_metric(role, value);
-                };
-                spin_box.set_value(m_preview_widget->preview_palette().metric(role), GUI::AllowCallback::No);
+                    auto& spin_box = *row_widget->find_descendant_of_type_named<GUI::SpinBox>("spin_box");
+                    spin_box.on_change = [&, role](int value) {
+                        set_metric(role, value);
+                    };
+                    spin_box.set_value(m_preview_widget->preview_palette().metric(role), GUI::AllowCallback::No);
 
-                VERIFY(m_metric_inputs[to_underlying(role)].is_null());
-                m_metric_inputs[to_underlying(role)] = spin_box;
-            },
-            [&](Gfx::PathRole role) {
-                row_widget->load_from_gml(path_property_gml);
+                    VERIFY(m_metric_inputs[to_underlying(role)].is_null());
+                    m_metric_inputs[to_underlying(role)] = spin_box;
+                },
+                [&](Gfx::PathRole role) {
+                    row_widget->load_from_gml(path_property_gml);
 
-                auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                name_label.set_text(to_string(role));
+                    auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                    name_label.set_text(to_string(role));
 
-                auto& path_input = *row_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
-                path_input.on_change = [&, role] {
-                    set_path(role, path_input.text());
-                };
-                path_input.set_text(m_preview_widget->preview_palette().path(role), GUI::AllowCallback::No);
+                    auto& path_input = *row_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
+                    path_input.on_change = [&, role] {
+                        set_path(role, path_input.text());
+                    };
+                    path_input.set_text(m_preview_widget->preview_palette().path(role), GUI::AllowCallback::No);
 
-                auto& path_picker_button = *row_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
-                auto picker_target = (role == Gfx::PathRole::TitleButtonIcons) ? PathPickerTarget::Folder : PathPickerTarget::File;
-                path_picker_button.on_click = [&, role, picker_target](auto) {
-                    show_path_picker_dialog(to_string(role), path_input, picker_target);
-                };
+                    auto& path_picker_button = *row_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
+                    auto picker_target = (role == Gfx::PathRole::TitleButtonIcons) ? PathPickerTarget::Folder : PathPickerTarget::File;
+                    path_picker_button.on_click = [&, role, picker_target](auto) {
+                        show_path_picker_dialog(to_string(role), path_input, picker_target);
+                    };
 
-                VERIFY(m_path_inputs[to_underlying(role)].is_null());
-                m_path_inputs[to_underlying(role)] = path_input;
-            });
+                    VERIFY(m_path_inputs[to_underlying(role)].is_null());
+                    m_path_inputs[to_underlying(role)] = path_input;
+                });
+        }
     }
 }
 
