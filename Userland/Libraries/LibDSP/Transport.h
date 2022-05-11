@@ -16,6 +16,7 @@ namespace LibDSP {
 class Transport final : public RefCounted<Transport> {
 public:
     constexpr u32& time() { return m_time; }
+    constexpr u32 time() const { return m_time; }
     constexpr u16 beats_per_minute() const { return m_beats_per_minute; }
     constexpr double current_second() const { return static_cast<double>(m_time) / m_sample_rate; }
     constexpr double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }

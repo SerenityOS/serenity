@@ -66,7 +66,7 @@ Signal Classic::process_impl(Signal const& input_signal)
 }
 
 // Linear ADSR envelope with no peak adjustment.
-double Classic::volume_from_envelope(Envelope const& envelope)
+double Classic::volume_from_envelope(Envelope const& envelope) const
 {
     switch (static_cast<EnvelopeState>(envelope)) {
     case EnvelopeState::Off:
@@ -102,12 +102,12 @@ double Classic::wave_position(u8 note)
     VERIFY_NOT_REACHED();
 }
 
-double Classic::samples_per_cycle(u8 note)
+double Classic::samples_per_cycle(u8 note) const
 {
     return m_transport->sample_rate() / note_frequencies[note];
 }
 
-double Classic::sin_position(u8 note)
+double Classic::sin_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double cycle_pos = m_transport->time() / spc;
@@ -115,14 +115,14 @@ double Classic::sin_position(u8 note)
 }
 
 // Absolute value of the saw wave "flips" the negative portion into the positive, creating a ramp up and down.
-double Classic::triangle_position(u8 note)
+double Classic::triangle_position(u8 note) const
 {
     double saw = saw_position(note);
     return AK::fabs(saw) * 2 - 1;
 }
 
 // The first half of the cycle period is 1, the other half -1.
-double Classic::square_position(u8 note)
+double Classic::square_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double progress = AK::fmod(static_cast<double>(m_transport->time()), spc) / spc;
@@ -130,7 +130,7 @@ double Classic::square_position(u8 note)
 }
 
 // Modulus creates inverse saw, which we need to flip and scale.
-double Classic::saw_position(u8 note)
+double Classic::saw_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double unscaled = spc - AK::fmod(static_cast<double>(m_transport->time()), spc);

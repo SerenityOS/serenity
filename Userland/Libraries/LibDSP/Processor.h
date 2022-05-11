@@ -34,6 +34,7 @@ public:
     SignalType input_type() const { return m_input_type; }
     SignalType output_type() const { return m_output_type; }
     Vector<ProcessorParameter&>& parameters() { return m_parameters; }
+    Vector<ProcessorParameter&> const& parameters() const { return m_parameters; }
 
 private:
     SignalType const m_input_type;

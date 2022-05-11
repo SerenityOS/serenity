@@ -47,7 +47,7 @@ class NoteClip final : public Clip {
 public:
     void set_note(RollNote note);
 
-    Array<SinglyLinkedList<RollNote>, note_count>& notes() { return m_notes; }
+    Array<SinglyLinkedList<RollNote>, note_count> const& notes() const { return m_notes; }
 
 private:
     Array<SinglyLinkedList<RollNote>, note_count> m_notes;

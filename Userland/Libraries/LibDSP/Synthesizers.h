@@ -49,13 +49,13 @@ public:
 private:
     virtual Signal process_impl(Signal const&) override;
 
-    double volume_from_envelope(Envelope const&);
+    double volume_from_envelope(Envelope const&) const;
     double wave_position(u8 note);
-    double samples_per_cycle(u8 note);
-    double sin_position(u8 note);
-    double triangle_position(u8 note);
-    double square_position(u8 note);
-    double saw_position(u8 note);
+    double samples_per_cycle(u8 note) const;
+    double sin_position(u8 note) const;
+    double triangle_position(u8 note) const;
+    double square_position(u8 note) const;
+    double saw_position(u8 note) const;
     double noise_position(u8 note);
     double get_random_from_seed(u64 note);
 
