@@ -6,9 +6,9 @@
  */
 
 #include "KeymapStatusWindow.h"
-#include <LibCore/Process.h>
 #include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibKeyboard/CharacterMap.h>
 
 void KeymapStatusWidget::mousedown_event(GUI::MouseEvent& event)
@@ -16,7 +16,7 @@ void KeymapStatusWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() != GUI::MouseButton::Primary)
         return;
 
-    MUST(Core::Process::spawn("/bin/KeyboardSettings"));
+    GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings");
 }
 
 KeymapStatusWindow::KeymapStatusWindow()
