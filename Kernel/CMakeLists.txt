@@ -416,6 +416,7 @@ else()
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
+        Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMU.cpp
@@ -449,6 +450,8 @@ else()
         Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
+
+        Interrupts/GenericInterruptHandler.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
