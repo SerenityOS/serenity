@@ -661,12 +661,22 @@ ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 #endif
 }
 
-ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[])
+static ALWAYS_INLINE ErrorOr<pid_t> posix_spawn_wrapper(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[], StringView function_name, decltype(::posix_spawn) spawn_function)
 {
     pid_t child_pid;
-    if ((errno = ::posix_spawnp(&child_pid, path.to_string().characters(), file_actions, attr, arguments, envp)))
-        return Error::from_syscall("posix_spawnp"sv, -errno);
+    if ((errno = spawn_function(&child_pid, path.to_string().characters(), file_actions, attr, arguments, envp)))
+        return Error::from_syscall(function_name, -errno);
     return child_pid;
+}
+
+ErrorOr<pid_t> posix_spawn(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[])
+{
+    return posix_spawn_wrapper(path, file_actions, attr, arguments, envp, "posix_spawn"sv, ::posix_spawn);
+}
+
+ErrorOr<pid_t> posix_spawnp(StringView path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[])
+{
+    return posix_spawn_wrapper(path, file_actions, attr, arguments, envp, "posix_spawnp"sv, ::posix_spawnp);
 }
 
 ErrorOr<off_t> lseek(int fd, off_t offset, int whence)
