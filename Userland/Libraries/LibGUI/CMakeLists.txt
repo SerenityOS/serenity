@@ -106,6 +106,7 @@ set(SOURCES
     ToolbarContainer.cpp
     Tray.cpp
     TreeView.cpp
+    TreeViewModel.cpp
     UndoStack.cpp
     ValueSlider.cpp
     Variant.cpp
