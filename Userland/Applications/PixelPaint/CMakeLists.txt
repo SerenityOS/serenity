@@ -16,7 +16,7 @@ set(SOURCES
     EditGuideDialogGML.h
     FilterGallery.cpp
     FilterGalleryGML.h
-    FilterModel.cpp
+    FilterTreeModel.cpp
     FilterPreviewWidget.cpp
     Filters/Bloom.cpp
     Filters/BoxBlur3.cpp
