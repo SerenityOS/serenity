@@ -267,22 +267,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 void MainWidget::open_url(URL const& url)
 {
     if (url.protocol() == "file") {
-        auto path = url.path();
-        auto source_result = m_manual_model->page_view(path);
-        if (source_result.is_error()) {
-            GUI::MessageBox::show(window(), String::formatted("{}", source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        auto source = source_result.value();
-        String html;
-        {
-            auto md_document = Markdown::Document::parse(source);
-            VERIFY(md_document);
-            html = md_document->render_to_html();
-        }
-
-        m_web_view->load_html(html, url);
+        m_web_view->load(url);
         m_web_view->scroll_to_top();
 
         GUI::Application::the()->deferred_invoke([&, path = url.path()] {
