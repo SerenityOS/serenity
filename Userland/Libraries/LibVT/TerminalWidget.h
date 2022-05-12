@@ -96,6 +96,13 @@ public:
 
     void set_color_scheme(StringView);
 
+    VT::CursorShape cursor_shape() { return m_cursor_shape; }
+    virtual void set_cursor_blinking(bool) override;
+    virtual void set_cursor_shape(CursorShape) override;
+
+    static Optional<VT::CursorShape> parse_cursor_shape(StringView);
+    static String stringify_cursor_shape(VT::CursorShape);
+
 private:
     TerminalWidget(int ptm_fd, bool automatic_size_policy);
 
@@ -124,7 +131,6 @@ private:
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int delta) override;
     virtual void emit(u8 const*, size_t) override;
-    virtual void set_cursor_style(CursorStyle) override;
 
     // ^GUI::Clipboard::ClipboardClient
     virtual void clipboard_content_did_change(String const&) override { update_paste_action(); }
@@ -196,7 +202,8 @@ private:
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
 
-    VT::CursorStyle m_cursor_style { BlinkingBlock };
+    VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
+    bool m_cursor_is_blinking_set { true };
 
     enum class AutoScrollDirection {
         None,

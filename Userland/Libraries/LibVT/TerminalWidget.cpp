@@ -170,7 +170,9 @@ void TerminalWidget::set_logical_focus(bool focus)
     m_has_logical_focus = focus;
     if (!m_has_logical_focus) {
         m_cursor_blink_timer->stop();
-    } else {
+        m_cursor_blink_state = true;
+    } else if (m_cursor_is_blinking_set) {
+        m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
         m_cursor_blink_timer->start();
     }
@@ -208,9 +210,11 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     }
 
     // Reset timer so cursor doesn't blink while typing.
-    m_cursor_blink_timer->stop();
-    m_cursor_blink_state = true;
-    m_cursor_blink_timer->start();
+    if (m_cursor_is_blinking_set) {
+        m_cursor_blink_timer->stop();
+        m_cursor_blink_state = true;
+        m_cursor_blink_timer->start();
+    }
 
     if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
         m_scrollbar->decrease_slider_by(m_terminal.rows());
@@ -315,7 +319,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
-                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
+                && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -389,7 +393,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (size_t column = 0; column < line.length(); ++column) {
             auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
-                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
+                && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -421,18 +425,18 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (m_terminal.cursor_row() >= (m_terminal.rows() - rows_from_history))
             return;
 
-        if (m_has_logical_focus && (m_cursor_style == VT::CursorStyle::BlinkingBlock || m_cursor_style == VT::CursorStyle::SteadyBlock))
+        if (m_has_logical_focus && m_cursor_shape == VT::CursorShape::Block)
             return; // This has already been handled by inverting the cell colors
 
         auto cursor_color = terminal_color_to_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
         auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-        if (m_cursor_style == VT::CursorStyle::BlinkingUnderline || m_cursor_style == VT::CursorStyle::SteadyUnderline) {
+        if (m_cursor_shape == VT::CursorShape::Underline) {
             auto x1 = cell_rect.bottom_left().x();
             auto x2 = cell_rect.bottom_right().x();
             auto y = cell_rect.bottom_left().y();
             for (auto x = x1; x <= x2; ++x)
                 painter.set_pixel({ x, y }, cursor_color);
-        } else if (m_cursor_style == VT::CursorStyle::BlinkingBar || m_cursor_style == VT::CursorStyle::SteadyBar) {
+        } else if (m_cursor_shape == VT::CursorShape::Bar) {
             auto x = cell_rect.bottom_left().x();
             auto y1 = cell_rect.top_left().y();
             auto y2 = cell_rect.bottom_left().y();
@@ -1037,30 +1041,26 @@ void TerminalWidget::emit(u8 const* data, size_t size)
     }
 }
 
-void TerminalWidget::set_cursor_style(CursorStyle style)
+void TerminalWidget::set_cursor_blinking(bool blinking)
 {
-    switch (style) {
-    case None:
-        m_cursor_blink_timer->stop();
-        m_cursor_blink_state = false;
-        break;
-    case SteadyBlock:
-    case SteadyUnderline:
-    case SteadyBar:
+    if (blinking) {
         m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
-        break;
-    case BlinkingBlock:
-    case BlinkingUnderline:
-    case BlinkingBar:
+        m_cursor_blink_timer->start();
+        m_cursor_is_blinking_set = true;
+    } else {
+        m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
-        m_cursor_blink_timer->restart();
-        break;
-    default:
-        dbgln("Cursor style not implemented");
+        m_cursor_is_blinking_set = false;
     }
-    m_cursor_style = style;
     invalidate_cursor();
+}
+
+void TerminalWidget::set_cursor_shape(CursorShape shape)
+{
+    m_cursor_shape = shape;
+    invalidate_cursor();
+    update();
 }
 
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
@@ -1299,6 +1299,35 @@ void TerminalWidget::set_auto_scroll_direction(AutoScrollDirection direction)
 {
     m_auto_scroll_direction = direction;
     m_auto_scroll_timer->set_active(direction != AutoScrollDirection::None);
+}
+
+Optional<VT::CursorShape> TerminalWidget::parse_cursor_shape(StringView cursor_shape_string)
+{
+    if (cursor_shape_string == "Block"sv)
+        return VT::CursorShape::Block;
+
+    if (cursor_shape_string == "Underline"sv)
+        return VT::CursorShape::Underline;
+
+    if (cursor_shape_string == "Bar"sv)
+        return VT::CursorShape::Bar;
+
+    return {};
+}
+
+String TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
+{
+    switch (cursor_shape) {
+    case VT::CursorShape::Block:
+        return "Block";
+    case VT::CursorShape::Underline:
+        return "Underline";
+    case VT::CursorShape::Bar:
+        return "Bar";
+    case VT::CursorShape::None:
+        return "None";
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }

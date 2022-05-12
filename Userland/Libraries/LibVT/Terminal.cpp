@@ -61,32 +61,6 @@ void Terminal::alter_ansi_mode(bool should_set, Parameters params)
 
 void Terminal::alter_private_mode(bool should_set, Parameters params)
 {
-    auto steady_cursor_to_blinking = [](CursorStyle style) {
-        switch (style) {
-        case SteadyBar:
-            return BlinkingBar;
-        case SteadyBlock:
-            return BlinkingBlock;
-        case SteadyUnderline:
-            return BlinkingUnderline;
-        default:
-            return style;
-        }
-    };
-
-    auto blinking_cursor_to_steady = [](CursorStyle style) {
-        switch (style) {
-        case BlinkingBar:
-            return SteadyBar;
-        case BlinkingBlock:
-            return SteadyBlock;
-        case BlinkingUnderline:
-            return SteadyUnderline;
-        default:
-            return style;
-        }
-    };
-
     for (auto mode : params) {
         switch (mode) {
         case 1:
@@ -105,23 +79,22 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 12:
             if (should_set) {
                 // Start blinking cursor
-                m_cursor_style = steady_cursor_to_blinking(m_cursor_style);
+                m_client.set_cursor_blinking(true);
             } else {
                 // Stop blinking cursor
-                m_cursor_style = blinking_cursor_to_steady(m_cursor_style);
+                m_client.set_cursor_blinking(false);
             }
-            m_client.set_cursor_style(m_cursor_style);
             break;
         case 25:
             if (should_set) {
                 // Show cursor
-                m_cursor_style = m_saved_cursor_style;
-                m_client.set_cursor_style(m_cursor_style);
+                m_cursor_shape = m_saved_cursor_shape;
+                m_client.set_cursor_shape(m_cursor_shape);
             } else {
                 // Hide cursor
-                m_saved_cursor_style = m_cursor_style;
-                m_cursor_style = None;
-                m_client.set_cursor_style(None);
+                m_saved_cursor_shape = m_cursor_shape;
+                m_cursor_shape = VT::CursorShape::None;
+                m_client.set_cursor_shape(VT::CursorShape::None);
             }
             break;
         case 1047:
@@ -674,22 +647,28 @@ void Terminal::DECSCUSR(Parameters params)
         style = params[0];
     switch (style) {
     case 1:
-        m_client.set_cursor_style(BlinkingBlock);
+        m_client.set_cursor_shape(VT::CursorShape::Block);
+        m_client.set_cursor_blinking(true);
         break;
     case 2:
-        m_client.set_cursor_style(SteadyBlock);
+        m_client.set_cursor_shape(VT::CursorShape::Block);
+        m_client.set_cursor_blinking(false);
         break;
     case 3:
-        m_client.set_cursor_style(BlinkingUnderline);
+        m_client.set_cursor_shape(VT::CursorShape::Underline);
+        m_client.set_cursor_blinking(true);
         break;
     case 4:
-        m_client.set_cursor_style(SteadyUnderline);
+        m_client.set_cursor_shape(VT::CursorShape::Underline);
+        m_client.set_cursor_blinking(false);
         break;
     case 5:
-        m_client.set_cursor_style(BlinkingBar);
+        m_client.set_cursor_shape(VT::CursorShape::Bar);
+        m_client.set_cursor_blinking(true);
         break;
     case 6:
-        m_client.set_cursor_style(SteadyBar);
+        m_client.set_cursor_shape(VT::CursorShape::Bar);
+        m_client.set_cursor_blinking(false);
         break;
     default:
         dbgln("Unknown cursor style {}", style);
