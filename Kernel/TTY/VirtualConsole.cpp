@@ -358,7 +358,12 @@ void VirtualConsole::emit(u8 const* data, size_t size)
         TTY::emit(data[i], true);
 }
 
-void VirtualConsole::set_cursor_style(VT::CursorStyle)
+void VirtualConsole::set_cursor_shape(VT::CursorShape)
+{
+    // Do nothing
+}
+
+void VirtualConsole::set_cursor_blinking(bool)
 {
     // Do nothing
 }

@@ -29,14 +29,11 @@ class VirtualConsole;
 
 namespace VT {
 
-enum CursorStyle {
+enum class CursorShape {
     None,
-    BlinkingBlock,
-    SteadyBlock,
-    BlinkingUnderline,
-    SteadyUnderline,
-    BlinkingBar,
-    SteadyBar
+    Block,
+    Underline,
+    Bar,
 };
 
 enum CursorKeysMode {
@@ -54,7 +51,8 @@ public:
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed(int delta) = 0;
     virtual void emit(u8 const*, size_t) = 0;
-    virtual void set_cursor_style(CursorStyle) = 0;
+    virtual void set_cursor_shape(CursorShape) = 0;
+    virtual void set_cursor_blinking(bool) = 0;
 };
 
 class Terminal : public EscapeSequenceExecutor {
@@ -428,8 +426,9 @@ protected:
     bool m_swallow_current { false };
     bool m_stomp { false };
 
-    CursorStyle m_cursor_style { BlinkingBlock };
-    CursorStyle m_saved_cursor_style { BlinkingBlock };
+    CursorShape m_cursor_shape { VT::CursorShape::Block };
+    CursorShape m_saved_cursor_shape { VT::CursorShape::Block };
+    bool m_cursor_is_blinking_set { true };
 
     bool m_needs_bracketed_paste { false };
 
