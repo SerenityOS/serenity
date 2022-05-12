@@ -103,17 +103,6 @@ void __stack_chk_fail()
     Kernel::Processor::halt();
 }
 
-using namespace Kernel;
-
-[[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
-{
-    critical_dmesgln("ASSERTION FAILED: {}", msg);
-    critical_dmesgln("{}:{} in {}", file, line, func);
-
-    // Used for printing a nice backtrace!
-    PANIC("Aborted");
-}
-
 extern "C" void exception_common(TrapFrame const* const trap_frame)
 {
     constexpr bool print_stack_frame = true;
