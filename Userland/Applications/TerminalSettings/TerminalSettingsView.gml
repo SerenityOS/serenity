@@ -60,6 +60,34 @@
     }
 
     @GUI::GroupBox {
+        title: "Cursor settings"
+        shrink_to_fit: true
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_block"
+            text: "Block cursor"
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_underline"
+            text: "Underline cursor"
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_bar"
+            text: "Bar cursor"
+        }
+
+        @GUI::CheckBox {
+            name: "terminal_cursor_blinking"
+            text: "Blinking cursor"
+        }
+    }
+
+    @GUI::GroupBox {
         title: "Color Scheme"
         fixed_height: 70
         layout: @GUI::VerticalBoxLayout {

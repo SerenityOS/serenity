@@ -62,6 +62,8 @@ public:
                 m_parent_terminal.set_show_scrollbar(value);
             else if (key == "ConfirmClose" && on_confirm_close_changed)
                 on_confirm_close_changed(value);
+        } else if (group == "Cursor" && key == "Blinking") {
+            m_parent_terminal.set_cursor_blinking(value);
         }
     }
 
@@ -88,6 +90,9 @@ public:
                 font = Gfx::FontDatabase::default_fixed_width_font();
             m_parent_terminal.set_font_and_resize_to_fit(*font);
             m_parent_terminal.window()->resize(m_parent_terminal.size());
+        } else if (group == "Cursor" && key == "Shape") {
+            auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(value).value_or(VT::CursorShape::Block);
+            m_parent_terminal.set_cursor_shape(cursor_shape);
         }
     }
 
@@ -313,6 +318,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::Visible);
     }
+
+    auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal", "Cursor", "Shape", "Block")).value_or(VT::CursorShape::Block);
+    terminal->set_cursor_shape(cursor_shape);
+
+    auto cursor_blinking = Config::read_bool("Terminal", "Cursor", "Blinking", true);
+    terminal->set_cursor_blinking(cursor_blinking);
 
     auto find_window = TRY(create_find_window(terminal));
 

@@ -181,6 +181,57 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     // whether that was filled in by the above defaulting code or by the user.
     use_default_font_button.set_checked(m_font == Gfx::FontDatabase::the().default_fixed_width_font(), GUI::AllowCallback::No);
     font_selection.set_enabled(!use_default_font_button.is_checked());
+
+    auto& terminal_cursor_block = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_block");
+    auto& terminal_cursor_underline = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_underline");
+    auto& terminal_cursor_bar = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_bar");
+
+    auto& terminal_cursor_blinking = *find_descendant_of_type_named<GUI::CheckBox>("terminal_cursor_blinking");
+
+    m_cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal", "Cursor", "Shape")).value_or(VT::CursorShape::Block);
+    m_original_cursor_shape = m_cursor_shape;
+
+    m_cursor_is_blinking_set = Config::read_bool("Terminal", "Cursor", "Blinking", true);
+    m_original_cursor_is_blinking_set = m_cursor_is_blinking_set;
+
+    switch (m_cursor_shape) {
+    case VT::CursorShape::Underline:
+        terminal_cursor_underline.set_checked(true);
+        break;
+    case VT::CursorShape::Bar:
+        terminal_cursor_bar.set_checked(true);
+        break;
+    default:
+        terminal_cursor_block.set_checked(true);
+    }
+
+    terminal_cursor_blinking.on_checked = [&](bool is_checked) {
+        set_modified(true);
+        m_cursor_is_blinking_set = is_checked;
+        Config::write_bool("Terminal", "Cursor", "Blinking", is_checked);
+    };
+    terminal_cursor_blinking.set_checked(Config::read_bool("Terminal", "Cursor", "Blinking", true));
+
+    terminal_cursor_block.on_checked = [&](bool) {
+        set_modified(true);
+        m_cursor_shape = VT::CursorShape::Block;
+        Config::write_string("Terminal", "Cursor", "Shape", "Block");
+    };
+    terminal_cursor_block.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Block");
+
+    terminal_cursor_underline.on_checked = [&](bool) {
+        set_modified(true);
+        m_cursor_shape = VT::CursorShape::Underline;
+        Config::write_string("Terminal", "Cursor", "Shape", "Underline");
+    };
+    terminal_cursor_underline.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Underline");
+
+    terminal_cursor_bar.on_checked = [&](bool) {
+        set_modified(true);
+        m_cursor_shape = VT::CursorShape::Bar;
+        Config::write_string("Terminal", "Cursor", "Shape", "Bar");
+    };
+    terminal_cursor_bar.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Bar");
 }
 
 VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView bell_string)
@@ -231,6 +282,8 @@ void TerminalSettingsViewWidget::apply_settings()
     m_original_opacity = m_opacity;
     m_original_font = m_font;
     m_original_color_scheme = m_color_scheme;
+    m_original_cursor_shape = m_cursor_shape;
+    m_original_cursor_is_blinking_set = m_cursor_is_blinking_set;
     write_back_settings();
 }
 
@@ -239,6 +292,8 @@ void TerminalSettingsViewWidget::write_back_settings() const
     Config::write_i32("Terminal", "Window", "Opacity", static_cast<i32>(m_original_opacity));
     Config::write_string("Terminal", "Text", "Font", m_original_font->qualified_name());
     Config::write_string("Terminal", "Window", "ColorScheme", m_original_color_scheme);
+    Config::write_string("Terminal", "Cursor", "Shape", VT::TerminalWidget::stringify_cursor_shape(m_original_cursor_shape));
+    Config::write_bool("Terminal", "Cursor", "Blinking", m_original_cursor_is_blinking_set);
 }
 
 void TerminalSettingsViewWidget::cancel_settings()
