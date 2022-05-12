@@ -5,7 +5,7 @@
  */
 
 #include "FilterGallery.h"
-#include "FilterModel.h"
+#include "FilterTreeModel.h"
 #include <Applications/PixelPaint/FilterGalleryGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TreeView.h>
@@ -37,8 +37,8 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     VERIFY(m_config_widget);
     VERIFY(m_preview_widget);
 
-    auto filter_model = FilterModel::create(editor);
-    m_filter_tree->set_model(filter_model);
+    auto filter_tree_model = MUST(create_filter_tree_model(editor));
+    m_filter_tree->set_model(filter_tree_model);
     m_filter_tree->expand_tree();
 
     m_filter_tree->on_selection_change = [this]() {
@@ -48,13 +48,13 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
             return;
         }
 
-        auto selected_filter = static_cast<const FilterModel::FilterInfo*>(selected_index.internal_data());
-        if (selected_filter->type != FilterModel::FilterInfo::Type::Filter) {
+        auto& node = *static_cast<GUI::TreeViewModel::Node*>(selected_index.internal_data());
+        if (!is<FilterNode>(node)) {
             m_preview_widget->clear_filter();
             return;
         }
 
-        m_selected_filter = selected_filter->filter;
+        m_selected_filter = &static_cast<FilterNode&>(node).filter();
         m_selected_filter->on_settings_change = [&]() {
             m_preview_widget->set_filter(m_selected_filter);
         };
