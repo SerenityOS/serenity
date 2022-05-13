@@ -134,6 +134,15 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
+    m_window_actions.on_vertical_tabs = [this](auto& action) {
+        m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+        Config::write_bool("Browser", "Preferences", "VerticalTabs", action.is_checked());
+    };
+
+    bool vertical_tabs = Config::read_bool("Browser", "Preferences", "VerticalTabs", false);
+    m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
+    m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+
     build_menus();
 
     create_new_tab(move(url), true);
@@ -157,6 +166,7 @@ void BrowserWindow::build_menus()
 
     auto& view_menu = add_menu("&View");
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
+    view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
