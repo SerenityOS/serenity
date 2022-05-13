@@ -931,7 +931,8 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+    // AltGr is emulated as Ctrl+Alt; if Ctrl is set check if it's not for AltGr
+    if ((!event.ctrl() || event.altgr()) && !event.alt() && event.code_point() != 0) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         add_code_point(event.code_point());
         return;
