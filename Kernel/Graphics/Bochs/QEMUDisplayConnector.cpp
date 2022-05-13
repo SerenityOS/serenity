@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<QEMUDisplayConnector> QEMUDisplayConnector::must_create(PhysicalAddress framebuffer_address, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
+NonnullRefPtr<QEMUDisplayConnector> QEMUDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
 {
-    auto device_or_error = DeviceManagement::try_create_device<QEMUDisplayConnector>(framebuffer_address, move(registers_mapping));
+    auto device_or_error = DeviceManagement::try_create_device<QEMUDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping));
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
@@ -31,8 +31,8 @@ ErrorOr<void> QEMUDisplayConnector::fetch_and_initialize_edid()
     return {};
 }
 
-QEMUDisplayConnector::QEMUDisplayConnector(PhysicalAddress framebuffer_address, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
-    : BochsDisplayConnector(framebuffer_address)
+QEMUDisplayConnector::QEMUDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
+    : BochsDisplayConnector(framebuffer_address, framebuffer_resource_size)
     , m_registers(move(registers_mapping))
 {
 }
@@ -111,10 +111,7 @@ ErrorOr<void> QEMUDisplayConnector::set_mode_setting(ModeSetting const& mode_set
     if ((u16)width != m_registers->bochs_regs.xres || (u16)height != m_registers->bochs_regs.yres) {
         return Error::from_errno(ENOTIMPL);
     }
-    auto rounded_size = TRY(Memory::page_round_up(width * sizeof(u32) * height * 2));
-    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
-    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
+
     m_framebuffer_console->set_resolution(width, height, width * sizeof(u32));
 
     DisplayConnector::ModeSetting mode_set {
