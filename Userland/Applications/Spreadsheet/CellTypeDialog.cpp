@@ -59,7 +59,7 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     button_layout.add_spacer();
     auto& ok_button = buttonbox.add<GUI::Button>("OK");
     ok_button.set_fixed_width(80);
-    ok_button.on_click = [&](auto) { done(ExecOK); };
+    ok_button.on_click = [&](auto) { done(ExecResult::OK); };
 }
 
 Vector<String> const g_horizontal_alignments { "Left", "Center", "Right" };

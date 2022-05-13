@@ -329,13 +329,13 @@ void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient
 bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+    return confirm_result == GUI::Dialog::ExecResult::OK;
 }
 
 String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
     String response { default_ };
-    if (GUI::InputBox::show(window(), response, message, "Prompt") == GUI::InputBox::ExecOK)
+    if (GUI::InputBox::show(window(), response, message, "Prompt") == GUI::InputBox::ExecResult::OK)
         return response;
     return {};
 }

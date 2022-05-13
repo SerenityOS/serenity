@@ -20,7 +20,7 @@ LevelSelectDialog::LevelSelectDialog(Window* parent_window)
     build();
 }
 
-int LevelSelectDialog::show(int& board_number, Window* parent_window)
+GUI::Dialog::ExecResult LevelSelectDialog::show(int& board_number, Window* parent_window)
 {
     auto box = LevelSelectDialog::construct(parent_window);
     box->set_resizable(false);
@@ -47,12 +47,12 @@ void LevelSelectDialog::build()
 
     level_list.add<GUI::Button>("Rainbow").on_click = [this](auto) {
         m_level = -1;
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 
     level_list.add<GUI::Button>(":^)").on_click = [this](auto) {
         m_level = 0;
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 }
 }

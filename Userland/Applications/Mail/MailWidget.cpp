@@ -101,8 +101,8 @@ bool MailWidget::connect_and_login()
     auto server = Config::read_string("Mail", "Connection", "Server", {});
 
     if (server.is_empty()) {
-        int result = GUI::MessageBox::show(window(), "Mail has no servers configured. Do you want configure them now?", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::YesNo);
-        if (result == GUI::MessageBox::ExecResult::ExecYes)
+        auto result = GUI::MessageBox::show(window(), "Mail has no servers configured. Do you want configure them now?", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::YesNo);
+        if (result == GUI::MessageBox::ExecResult::Yes)
             Desktop::Launcher::open(URL::create_with_file_protocol("/bin/MailSettings"), "/bin/MailSettings");
         return false;
     }
@@ -119,7 +119,7 @@ bool MailWidget::connect_and_login()
 
     auto password = Config::read_string("Mail", "User", "Password", {});
     while (password.is_empty()) {
-        if (GUI::PasswordInputDialog::show(window(), password, "Login", server, username) != GUI::Dialog::ExecOK)
+        if (GUI::PasswordInputDialog::show(window(), password, "Login", server, username) != GUI::Dialog::ExecResult::OK)
             return false;
     }
 

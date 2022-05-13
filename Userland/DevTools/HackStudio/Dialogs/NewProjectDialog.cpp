@@ -28,7 +28,7 @@ namespace HackStudio {
 
 static Regex<PosixExtended> const s_project_name_validity_regex("^([A-Za-z0-9_-])*$");
 
-int NewProjectDialog::show(GUI::Window* parent_window)
+GUI::Dialog::ExecResult NewProjectDialog::show(GUI::Window* parent_window)
 {
     auto dialog = NewProjectDialog::construct(parent_window);
 
@@ -92,7 +92,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
 
     m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     m_cancel_button->on_click = [this](auto) {
-        done(ExecResult::ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     m_browse_button = *find_descendant_of_type_named<GUI::Button>("browse_button");
@@ -198,7 +198,7 @@ void NewProjectDialog::do_create_project()
     auto create_in = m_create_in_input->text();
     if (!Core::File::exists(create_in) || !Core::File::is_directory(create_in)) {
         auto result = GUI::MessageBox::show(this, String::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-        if (result != GUI::MessageBox::ExecResult::ExecYes)
+        if (result != GUI::MessageBox::ExecResult::Yes)
             return;
 
         auto created = Core::Directory::create(maybe_project_full_path.value(), Core::Directory::CreateDirectories::Yes);
@@ -212,7 +212,7 @@ void NewProjectDialog::do_create_project()
     if (!creation_result.is_error()) {
         // Successfully created, attempt to open the new project
         m_created_project_path = maybe_project_full_path.value();
-        done(ExecResult::ExecOK);
+        done(ExecResult::OK);
     } else {
         GUI::MessageBox::show_error(this, String::formatted("Could not create project: {}", creation_result.error()));
     }

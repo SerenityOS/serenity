@@ -35,7 +35,7 @@ public:
         editor->set_title("Edit Bookmark");
         editor->set_icon(g_icon_bag.bookmark_filled);
 
-        if (editor->exec() == Dialog::ExecOK) {
+        if (editor->exec() == ExecResult::OK) {
             return Vector<JsonValue> { editor->title(), editor->url() };
         }
 
@@ -58,23 +58,23 @@ private:
         m_title_textbox->set_focus(true);
         m_title_textbox->select_all();
         m_title_textbox->on_return_pressed = [this] {
-            done(Dialog::ExecOK);
+            done(ExecResult::OK);
         };
 
         m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
         m_url_textbox->set_text(url);
         m_url_textbox->on_return_pressed = [this] {
-            done(Dialog::ExecOK);
+            done(ExecResult::OK);
         };
 
         auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
-            done(Dialog::ExecOK);
+            done(ExecResult::OK);
         };
 
         auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
-            done(Dialog::ExecCancel);
+            done(ExecResult::Cancel);
         };
     }
 

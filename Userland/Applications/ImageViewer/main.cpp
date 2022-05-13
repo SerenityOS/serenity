@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
 
-            if (msgbox_result == GUI::MessageBox::ExecCancel)
+            if (msgbox_result == GUI::MessageBox::ExecResult::Cancel)
                 return;
 
             auto unlinked_or_error = Core::System::unlink(widget->path());

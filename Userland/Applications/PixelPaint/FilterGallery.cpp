@@ -69,16 +69,16 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
 
     apply_button->on_click = [this](auto) {
         if (!m_selected_filter) {
-            done(ExecResult::ExecAborted);
+            done(ExecResult::Aborted);
             return;
         }
 
         m_selected_filter->apply();
-        done(ExecResult::ExecOK);
+        done(ExecResult::OK);
     };
 
     cancel_button->on_click = [this](auto) {
-        done(ExecResult::ExecCancel);
+        done(ExecResult::Cancel);
     };
 }
 

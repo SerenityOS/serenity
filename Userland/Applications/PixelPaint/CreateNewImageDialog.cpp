@@ -49,12 +49,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     auto& ok_button = button_container.add<GUI::Button>("OK");
     ok_button.on_click = [this](auto) {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     width_spinbox.on_change = [this](int value) {
@@ -66,7 +66,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     m_name_textbox->on_return_pressed = [this] {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     width_spinbox.set_range(1, 16384);

@@ -31,7 +31,7 @@ static constexpr Array<Option, 2> options = {
     }
 };
 
-int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
+GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
     auto dialog = FindDialog::construct();
 
@@ -46,7 +46,7 @@ int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& o
 
     auto result = dialog->exec();
 
-    if (result != GUI::Dialog::ExecOK)
+    if (result != ExecResult::OK)
         return result;
 
     auto selected_option = dialog->selected_option();
@@ -56,7 +56,7 @@ int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& o
 
     if (processed.is_error()) {
         GUI::MessageBox::show_error(parent_window, processed.error());
-        result = GUI::Dialog::ExecAborted;
+        result = ExecResult::Aborted;
     } else {
         out_buffer = move(processed.value());
     }
@@ -138,7 +138,7 @@ FindDialog::FindDialog()
         auto text = m_text_editor->text();
         if (!text.is_empty()) {
             m_text_value = text;
-            done(ExecResult::ExecOK);
+            done(ExecResult::OK);
         }
     };
 
@@ -148,6 +148,6 @@ FindDialog::FindDialog()
     };
 
     m_cancel_button->on_click = [this](auto) {
-        done(ExecResult::ExecCancel);
+        done(ExecResult::Cancel);
     };
 }

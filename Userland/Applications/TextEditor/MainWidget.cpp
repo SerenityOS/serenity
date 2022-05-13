@@ -239,9 +239,9 @@ MainWidget::MainWidget()
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+            if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
                 m_save_action->activate();
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
+            if (save_document_first_result != GUI::Dialog::ExecResult::No && editor().document().is_modified())
                 return;
         }
 
@@ -253,9 +253,9 @@ MainWidget::MainWidget()
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+            if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
                 m_save_action->activate();
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
+            if (save_document_first_result != GUI::Dialog::ExecResult::No && editor().document().is_modified())
                 return;
         }
 
@@ -423,7 +423,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, &m_editor->font(), false);
-            if (picker->exec() == GUI::Dialog::ExecOK) {
+            if (picker->exec() == GUI::Dialog::ExecResult::OK) {
                 dbgln("setting font {}", picker->font()->qualified_name());
                 m_editor->set_font(picker->font());
             }
@@ -719,14 +719,14 @@ bool MainWidget::request_close()
         return true;
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
 
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         m_save_action->activate();
         if (editor().document().is_modified())
             return false;
         return true;
     }
 
-    if (result == GUI::MessageBox::ExecNo)
+    if (result == GUI::MessageBox::ExecResult::No)
         return true;
 
     return false;

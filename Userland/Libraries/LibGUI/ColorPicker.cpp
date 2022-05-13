@@ -236,14 +236,14 @@ void ColorPicker::build_ui()
     ok_button.set_fixed_width(80);
     ok_button.set_text("OK");
     ok_button.on_click = [this](auto) {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     auto& cancel_button = button_container.add<Button>();
     cancel_button.set_fixed_width(80);
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 }
 
@@ -464,7 +464,7 @@ void ColorButton::doubleclick_event(GUI::MouseEvent&)
 {
     click();
     m_selected = true;
-    m_picker.done(Dialog::ExecOK);
+    m_picker.done(Dialog::ExecResult::OK);
 }
 
 void ColorButton::paint_event(PaintEvent& event)

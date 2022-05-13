@@ -25,7 +25,7 @@ InputBox::InputBox(Window* parent_window, String& text_value, StringView prompt,
     build(input_type);
 }
 
-int InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
 {
     auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder, input_type);
     box->set_resizable(false);
@@ -87,7 +87,7 @@ void InputBox::build(InputType input_type)
     m_ok_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: OK button clicked");
         m_text_value = m_text_editor->text();
-        done(ExecOK);
+        done(ExecResult::OK);
     };
     m_ok_button->set_default(true);
 
@@ -95,7 +95,7 @@ void InputBox::build(InputType input_type)
     m_cancel_button->set_text("Cancel");
     m_cancel_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: Cancel button clicked");
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     m_text_editor->on_escape_pressed = [this] {

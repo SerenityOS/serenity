@@ -65,7 +65,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.set_fixed_width(80);
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     m_process_model->update();
@@ -102,7 +102,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
 void ProcessChooser::set_pid_from_index_and_close(ModelIndex const& index)
 {
     m_pid = index.data(GUI::ModelRole::Custom).as_i32();
-    done(ExecOK);
+    done(ExecResult::OK);
 }
 
 }

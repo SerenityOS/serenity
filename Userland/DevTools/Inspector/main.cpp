@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (gui_mode) {
     choose_pid:
         auto process_chooser = TRY(GUI::ProcessChooser::try_create("Inspector", "Inspect", app_icon.bitmap_for_size(16)));
-        if (process_chooser->exec() == GUI::Dialog::ExecCancel)
+        if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return 0;
         pid = process_chooser->pid();
     } else {

@@ -343,7 +343,7 @@ bool generate_profile(pid_t& pid)
 {
     if (!pid) {
         auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
-        if (process_chooser->exec() == GUI::Dialog::ExecCancel)
+        if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return false;
         pid = process_chooser->pid();
     }

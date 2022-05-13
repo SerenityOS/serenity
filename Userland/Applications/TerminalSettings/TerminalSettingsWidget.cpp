@@ -150,7 +150,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     font_text.set_font(m_font);
     font_button.on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), m_font.ptr(), true);
-        if (picker->exec() == GUI::Dialog::ExecOK) {
+        if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font = picker->font();
             font_text.set_text(m_font->human_readable_name());
             font_text.set_font(m_font);

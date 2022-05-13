@@ -58,11 +58,11 @@ WizardDialog::WizardDialog(Window* parent_window)
         VERIFY(has_pages());
 
         if (!current_page().can_go_next())
-            return done(ExecOK);
+            return done(ExecResult::OK);
 
         auto next_page = current_page().next_page();
         if (!next_page)
-            return done(ExecOK);
+            return done(ExecResult::OK);
 
         push_page(*next_page);
     };
@@ -143,7 +143,7 @@ void WizardDialog::handle_cancel()
     if (on_cancel)
         return on_cancel();
 
-    done(ExecCancel);
+    done(ExecResult::Cancel);
 }
 
 }

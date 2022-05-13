@@ -82,7 +82,7 @@ AboutDialog::AboutDialog(StringView name, Gfx::Bitmap const* icon, Window* paren
     auto& ok_button = button_container.add<Button>("OK");
     ok_button.set_fixed_width(80);
     ok_button.on_click = [this](auto) {
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 }
 

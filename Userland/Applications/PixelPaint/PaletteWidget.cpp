@@ -34,7 +34,7 @@ public:
     {
         if (event.modifiers() & KeyModifier::Mod_Ctrl) {
             auto dialog = GUI::ColorPicker::construct(m_color, window());
-            if (dialog->exec() == GUI::Dialog::ExecOK) {
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 m_color = dialog->color();
                 auto pal = palette();
                 pal.set_color(ColorRole::Background, m_color);
@@ -73,7 +73,7 @@ public:
             return;
 
         auto dialog = GUI::ColorPicker::construct(m_color, window());
-        if (dialog->exec() == GUI::Dialog::ExecOK)
+        if (dialog->exec() == GUI::Dialog::ExecResult::OK)
             on_color_change(dialog->color());
     }
 

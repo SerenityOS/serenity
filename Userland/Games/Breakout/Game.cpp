@@ -20,7 +20,7 @@ Game::Game()
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
     auto level_dialog = LevelSelectDialog::show(m_board, window());
-    if (level_dialog != GUI::Dialog::ExecOK)
+    if (level_dialog != GUI::Dialog::ExecResult::OK)
         m_board = -1;
     set_paused(false);
     start_timer(16);

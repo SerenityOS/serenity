@@ -76,7 +76,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     ok_button.set_fixed_size(80, 20);
     ok_button.on_click = [this](auto) {
         dbgln("TODO: Add event icon on specific tile");
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 
     event_title_textbox.set_focus(true);
