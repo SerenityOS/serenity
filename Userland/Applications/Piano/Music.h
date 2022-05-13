@@ -33,11 +33,6 @@ constexpr double sample_rate = 44100;
 // Headroom for the synth
 constexpr double volume_factor = 0.8;
 
-enum Switch {
-    Off,
-    On,
-};
-
 enum Direction {
     Down,
     Up,
