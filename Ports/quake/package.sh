@@ -8,4 +8,5 @@ makeopts=("V=1" "SYMBOLS_ON=Y")
 depends=("SDL2")
 launcher_name=Quake
 launcher_category=Games
-launcher_command=quake
+launcher_command=/bin/quake
+icon_file=quake.png
