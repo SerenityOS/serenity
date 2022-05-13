@@ -22,7 +22,7 @@ public:
         Yes = 3,
         No = 4,
     };
-    enum ScreenPosition {
+    enum class ScreenPosition {
         CenterWithinParent = 0,
 
         Center = 1,
@@ -50,12 +50,12 @@ public:
     virtual void close() override;
 
 protected:
-    explicit Dialog(Window* parent_window, ScreenPosition screen_position = CenterWithinParent);
+    explicit Dialog(Window* parent_window, ScreenPosition = ScreenPosition::CenterWithinParent);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     ExecResult m_result { ExecResult::Aborted };
-    int m_screen_position { CenterWithinParent };
+    ScreenPosition m_screen_position { ScreenPosition::CenterWithinParent };
 };
 
 }

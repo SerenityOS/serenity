@@ -35,7 +35,7 @@ Dialog::ExecResult Dialog::exec()
     auto right_align = [this, desktop_rect](Gfx::Rect<int>& rect) { rect.set_x(desktop_rect.width() - width() - 12); };
 
     switch (m_screen_position) {
-    case CenterWithinParent:
+    case ScreenPosition::CenterWithinParent:
         if (parent() && is<Window>(parent())) {
             auto& parent_window = *static_cast<Window*>(parent());
             if (parent_window.is_visible()) {
@@ -44,38 +44,38 @@ Dialog::ExecResult Dialog::exec()
             }
         }
         [[fallthrough]]; // Fall back to `Center` if parent window is invalid or not visible
-    case Center:
+    case ScreenPosition::Center:
         window_rect.center_within(desktop_rect);
         break;
-    case CenterLeft:
+    case ScreenPosition::CenterLeft:
         left_align(window_rect);
         window_rect.center_vertically_within(desktop_rect);
         break;
-    case CenterRight:
+    case ScreenPosition::CenterRight:
         right_align(window_rect);
         window_rect.center_vertically_within(desktop_rect);
         break;
-    case TopLeft:
+    case ScreenPosition::TopLeft:
         left_align(window_rect);
         top_align(window_rect);
         break;
-    case TopCenter:
+    case ScreenPosition::TopCenter:
         window_rect.center_horizontally_within(desktop_rect);
         top_align(window_rect);
         break;
-    case TopRight:
+    case ScreenPosition::TopRight:
         right_align(window_rect);
         top_align(window_rect);
         break;
-    case BottomLeft:
+    case ScreenPosition::BottomLeft:
         left_align(window_rect);
         bottom_align(window_rect);
         break;
-    case BottomCenter:
+    case ScreenPosition::BottomCenter:
         window_rect.center_horizontally_within(desktop_rect);
         bottom_align(window_rect);
         break;
-    case BottomRight:
+    case ScreenPosition::BottomRight:
         right_align(window_rect);
         bottom_align(window_rect);
         break;
