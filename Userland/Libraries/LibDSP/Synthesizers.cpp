@@ -51,9 +51,21 @@ void Classic::process_impl(Signal const& input_signal, [[maybe_unused]] Signal& 
 
             if (m_playing_notes.contains(i)) {
                 Envelope note_envelope = m_playing_notes.get(i)->to_envelope(sample_time, m_attack * m_transport->ms_sample_rate(), m_decay * m_transport->ms_sample_rate(), m_release * m_transport->ms_sample_rate());
+                // There are two conditions for removing notes:
+                // 1. The envelope has expired, regardless of whether the note was still given to us in the input.
                 if (!note_envelope.is_active()) {
                     m_playing_notes.remove(i);
                     continue;
+                }
+                // 2. The envelope has not expired, but the note was not given to us.
+                //    This means that the note abruptly stopped playing; i.e. the audio infrastructure didn't know the length of the notes initially.
+                //    That basically means we're dealing with a keyboard note. Chop its end time to end now.
+                if (!note_envelope.is_release() && !in.get(i).has_value()) {
+                    // dbgln("note {} not released, setting release phase, envelope={}", i, note_envelope.envelope);
+                    note_envelope.set_release(0);
+                    auto real_note = *m_playing_notes.get(i);
+                    real_note.off_sample = sample_time;
+                    m_playing_notes.set(i, real_note);
                 }
 
                 playing_envelopes.append(PitchedEnvelope { note_envelope, i });
