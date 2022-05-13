@@ -43,7 +43,7 @@ HardwareScreenBackend::~HardwareScreenBackend()
         m_framebuffer_fd = -1;
     }
     if (m_framebuffer) {
-        free(m_framebuffer);
+        MUST(Core::System::munmap(m_framebuffer, m_size_in_bytes));
 
         m_framebuffer = nullptr;
         m_size_in_bytes = 0;
@@ -71,22 +71,8 @@ ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GraphicsHeadModeSetti
 ErrorOr<void> HardwareScreenBackend::unmap_framebuffer()
 {
     if (m_framebuffer) {
-        free(m_framebuffer);
-    }
-    return {};
-}
-
-ErrorOr<void> HardwareScreenBackend::write_all_contents(Gfx::IntRect const& virtual_rect)
-{
-    lseek(m_framebuffer_fd, 0, SEEK_SET);
-    write(m_framebuffer_fd, scanline(0, 0), virtual_rect.height() * m_pitch);
-    if (m_can_set_head_buffer) {
-        if (lseek(m_framebuffer_fd, virtual_rect.height() * m_pitch, SEEK_SET) < 0) {
-            VERIFY_NOT_REACHED();
-        }
-
-        if (write(m_framebuffer_fd, scanline(0, 0), virtual_rect.height() * m_pitch) < 0)
-            VERIFY_NOT_REACHED();
+        size_t previous_size_in_bytes = m_size_in_bytes;
+        return Core::System::munmap(m_framebuffer, previous_size_in_bytes);
     }
     return {};
 }
@@ -100,7 +86,8 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
         return Error::from_syscall("graphics_connector_get_head_mode_setting", rc);
     }
     m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
-    m_framebuffer = (Gfx::ARGB32*)malloc(m_size_in_bytes);
+    m_framebuffer = (Gfx::ARGB32*)TRY(Core::System::mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0));
+
     if (m_can_set_head_buffer) {
         // Note: fall back to assuming the second buffer starts right after the last line of the first
         // Note: for now, this calculation works quite well, so need to defer it to another function

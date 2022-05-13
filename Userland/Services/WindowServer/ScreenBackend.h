@@ -36,8 +36,6 @@ public:
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) = 0;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() = 0;
 
-    virtual ErrorOr<void> write_all_contents(Gfx::IntRect const&) { return {}; }
-
     bool m_can_device_flush_buffers { true };
     bool m_can_device_flush_entire_framebuffer { true };
     bool m_can_set_head_buffer { false };

@@ -558,11 +558,6 @@ void Screen::flush_display(int buffer_index)
     flush_rects.pending_flush_rects.clear_with_capacity();
 }
 
-void Screen::write_all_display_contents()
-{
-    MUST(m_backend->write_all_contents(m_physical_rect));
-}
-
 void Screen::flush_display_entire_framebuffer()
 {
     VERIFY(m_backend->m_can_device_flush_entire_framebuffer);
