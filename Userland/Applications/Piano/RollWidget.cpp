@@ -126,7 +126,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int distance_to_next_x = next_x_pos - x_pos;
             Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
-            if (keys_widget() && keys_widget()->note_is_set(note))
+            if (m_track_manager.keyboard()->is_pressed(note))
                 painter.fill_rect(rect, note_pressed_color.with_alpha(128));
         }
     }

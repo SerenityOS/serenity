@@ -13,8 +13,10 @@
 
 TrackManager::TrackManager()
     : m_transport(make_ref_counted<LibDSP::Transport>(120, 4))
+    , m_keyboard(make_ref_counted<LibDSP::Keyboard>(m_transport))
 {
     add_track();
+    m_tracks[m_current_track]->set_active(true);
 }
 
 void TrackManager::time_forward(int amount)
@@ -59,36 +61,16 @@ void TrackManager::reset()
 
     m_transport->set_time(0);
 
-    for (auto& track : m_tracks)
+    for (auto& track : m_tracks) {
         track->reset();
-}
-
-void TrackManager::set_keyboard_note(int note, Switch note_switch)
-{
-    m_tracks[m_current_track]->set_keyboard_note(note, note_switch);
-}
-
-void TrackManager::set_octave(Direction direction)
-{
-    if (direction == Up) {
-        if (m_octave < octave_max)
-            ++m_octave;
-    } else {
-        if (m_octave > octave_min)
-            --m_octave;
+        track->set_active(false);
     }
-}
-
-void TrackManager::set_octave(int octave)
-{
-    if (octave <= octave_max && octave >= octave_min) {
-        m_octave = octave;
-    }
+    m_tracks[m_current_track]->set_active(true);
 }
 
 void TrackManager::add_track()
 {
-    m_tracks.append(make<Track>(m_transport));
+    m_tracks.append(make<Track>(m_transport, m_keyboard));
 }
 
 int TrackManager::next_track_index() const
