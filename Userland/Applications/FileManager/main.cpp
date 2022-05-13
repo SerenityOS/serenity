@@ -1153,6 +1153,8 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(tree_view_directory_context_menu->try_add_action(properties_action));
 
     RefPtr<GUI::Menu> file_context_menu;
+    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
         if (index.is_valid()) {
@@ -1163,8 +1165,6 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position(), directory_open_action);
             } else {
-                NonnullRefPtrVector<LauncherHandler> current_file_handlers;
-                RefPtr<GUI::Action> file_context_menu_action_default_action;
                 file_context_menu = GUI::Menu::construct("Directory View File");
 
                 bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
