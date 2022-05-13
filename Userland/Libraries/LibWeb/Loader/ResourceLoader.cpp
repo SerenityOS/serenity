@@ -150,8 +150,12 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     if (url.protocol() == "about") {
         dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
         log_success(request);
-        deferred_invoke([success_callback = move(success_callback)] {
-            success_callback(String::empty().to_byte_buffer(), {}, {});
+
+        HashMap<String, String, CaseInsensitiveStringTraits> response_headers;
+        response_headers.set("Content-Type", "text/html; charset=UTF-8");
+
+        deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
+            success_callback(String::empty().to_byte_buffer(), response_headers, {});
         });
         return;
     }
