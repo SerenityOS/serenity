@@ -24,14 +24,14 @@ class BochsDisplayConnector
 public:
     TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address);
+    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
     virtual IndexID index_id() const;
 
 protected:
     ErrorOr<void> create_attached_framebuffer_console();
 
-    explicit BochsDisplayConnector(PhysicalAddress framebuffer_address);
+    BochsDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
     virtual bool mutable_mode_setting_capable() const override final { return true; }
     virtual bool double_framebuffering_capable() const override { return false; }
@@ -45,15 +45,11 @@ protected:
     // Note: Paravirtualized hardware doesn't require a defined refresh rate for modesetting.
     virtual bool refresh_rate_support() const override final { return false; }
 
-    virtual ErrorOr<size_t> write_to_first_surface(u64 offset, UserOrKernelBuffer const&, size_t length) override final;
     virtual ErrorOr<void> flush_first_surface() override final;
 
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    const PhysicalAddress m_framebuffer_address;
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
-    OwnPtr<Memory::Region> m_framebuffer_region;
-    u8* m_framebuffer_data {};
 };
 }

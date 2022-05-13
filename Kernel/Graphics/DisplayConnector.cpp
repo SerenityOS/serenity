@@ -6,18 +6,42 @@
 
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
-DisplayConnector::DisplayConnector()
+DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
     : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    , m_enable_write_combine_optimization(enable_write_combine_optimization)
+    , m_framebuffer_at_arbitrary_physical_range(false)
+    , m_framebuffer_address(framebuffer_address)
+    , m_framebuffer_resource_size(framebuffer_resource_size)
 {
 }
 
-ErrorOr<Memory::Region*> DisplayConnector::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
+DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization)
+    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    , m_enable_write_combine_optimization(enable_write_combine_optimization)
+    , m_framebuffer_at_arbitrary_physical_range(true)
+    , m_framebuffer_address({})
+    , m_framebuffer_resource_size(framebuffer_resource_size)
 {
-    return Error::from_errno(ENOTSUP);
+}
+
+ErrorOr<Memory::Region*> DisplayConnector::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+{
+    VERIFY(m_shared_framebuffer_vmobject);
+    if (offset != 0)
+        return Error::from_errno(ENOTSUP);
+
+    return process.address_space().allocate_region_with_vmobject(
+        range,
+        *m_shared_framebuffer_vmobject,
+        0,
+        "Mapped Framebuffer",
+        prot,
+        shared);
 }
 
 ErrorOr<size_t> DisplayConnector::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
@@ -32,7 +56,10 @@ ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64 offset, UserOr
     if (console_mode()) {
         return length;
     }
-    return write_to_first_surface(offset, framebuffer_data, length);
+    if (offset + length > m_framebuffer_region->size())
+        return Error::from_errno(EOVERFLOW);
+    TRY(framebuffer_data.read(m_framebuffer_data + offset, 0, length));
+    return length;
 }
 
 void DisplayConnector::will_be_destroyed()
@@ -44,7 +71,24 @@ void DisplayConnector::will_be_destroyed()
 void DisplayConnector::after_inserting()
 {
     Device::after_inserting();
+    auto rounded_size = MUST(Memory::page_round_up(m_framebuffer_resource_size));
+
+    if (!m_framebuffer_at_arbitrary_physical_range) {
+        VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
+        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
+        m_framebuffer_region = MUST(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    } else {
+        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
+        m_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    }
+
+    m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
+    m_fake_writes_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
+
     GraphicsManagement::the().attach_new_display_connector({}, *this);
+    if (m_enable_write_combine_optimization) {
+        [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
+    }
 }
 
 bool DisplayConnector::console_mode() const
@@ -56,15 +100,24 @@ bool DisplayConnector::console_mode() const
 void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode mode)
 {
     SpinlockLocker locker(m_control_lock);
+
     {
         SpinlockLocker locker(m_modeset_lock);
         [[maybe_unused]] auto result = set_y_offset(0);
     }
+
     m_console_mode = mode == DisplayMode::Console ? true : false;
-    if (m_console_mode)
+    if (m_console_mode) {
+        VERIFY(m_framebuffer_region->size() == m_fake_writes_framebuffer_region->size());
+        memcpy(m_fake_writes_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->size());
+        m_shared_framebuffer_vmobject->switch_to_fake_sink_framebuffer_writes({});
         enable_console();
-    else
+    } else {
         disable_console();
+        m_shared_framebuffer_vmobject->switch_to_real_framebuffer_writes({});
+        VERIFY(m_framebuffer_region->size() == m_fake_writes_framebuffer_region->size());
+        memcpy(m_framebuffer_region->vaddr().as_ptr(), m_fake_writes_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->size());
+    }
 }
 
 ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor()

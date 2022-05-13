@@ -48,6 +48,83 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
     return {};
 }
 
+ErrorOr<void> VirtIOGraphicsAdapter::mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, size_t width, size_t height)
+{
+    SpinlockLocker locker(m_operation_lock);
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    auto rounded_buffer_size = TRY(calculate_framebuffer_size(width, height));
+    TRY(attach_physical_range_to_framebuffer(connector, true, 0, rounded_buffer_size));
+    TRY(attach_physical_range_to_framebuffer(connector, false, rounded_buffer_size, rounded_buffer_size));
+    return {};
+}
+
+void VirtIOGraphicsAdapter::set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
+        buffer.dirty_rect = dirty_rect;
+    } else {
+        auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
+        auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
+        buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
+        buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
+        buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
+        buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
+    }
+}
+
+void VirtIOGraphicsAdapter::flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    flush_displayed_image(buffer.resource_id, dirty_rect);
+    buffer.dirty_rect = {};
+}
+
+void VirtIOGraphicsAdapter::transfer_framebuffer_data_to_host(Badge<VirtIODisplayConnector>, VirtIODisplayConnector& connector, Graphics::VirtIOGPU::Protocol::Rect const& rect, bool main_buffer)
+{
+    VERIFY(m_operation_lock.is_locked());
+    VERIFY(connector.scanout_id() < VIRTIO_GPU_MAX_SCANOUTS);
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    transfer_framebuffer_data_to_host(connector.scanout_id(), buffer.resource_id, rect);
+}
+
+ErrorOr<void> VirtIOGraphicsAdapter::attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size)
+{
+    VERIFY(m_operation_lock.is_locked());
+    Scanout::PhysicalBuffer& buffer = main_buffer ? m_scanouts[connector.scanout_id().value()].main_buffer : m_scanouts[connector.scanout_id().value()].back_buffer;
+    buffer.framebuffer_offset = framebuffer_offset;
+
+    // 1. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
+    if (buffer.resource_id.value() != 0)
+        delete_resource(buffer.resource_id);
+    auto display_info = connector.display_information({});
+    buffer.resource_id = create_2d_resource(display_info.rect);
+
+    // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
+    ensure_backing_storage(buffer.resource_id, connector.framebuffer_region(), buffer.framebuffer_offset, framebuffer_size);
+    // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
+    set_scanout_resource(connector.scanout_id(), buffer.resource_id, display_info.rect);
+    // 4. Render our test pattern
+    connector.draw_ntsc_test_pattern({});
+    // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
+    transfer_framebuffer_data_to_host(connector.scanout_id(), buffer.resource_id, display_info.rect);
+    // 6. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
+    flush_displayed_image(buffer.resource_id, display_info.rect);
+
+    // Make sure we constrain the existing dirty rect (if any)
+    if (buffer.dirty_rect.width != 0 || buffer.dirty_rect.height != 0) {
+        auto dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
+        auto dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
+        buffer.dirty_rect.width = min(dirty_right, display_info.rect.x + display_info.rect.width) - buffer.dirty_rect.x;
+        buffer.dirty_rect.height = min(dirty_bottom, display_info.rect.y + display_info.rect.height) - buffer.dirty_rect.y;
+    }
+    return {};
+}
+
 VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier, NonnullOwnPtr<Memory::Region> scratch_space_region)
     : VirtIO::Device(device_identifier)
     , m_scratch_space(move(scratch_space_region))
