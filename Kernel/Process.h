@@ -334,6 +334,7 @@ public:
     ErrorOr<FlatPtr> sys$sigaltstack(Userspace<stack_t const*> ss, Userspace<stack_t*> old_ss);
     ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set);
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
+    ErrorOr<FlatPtr> sys$sigsuspend(Userspace<sigset_t const*>);
     ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<timespec const*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
     ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<gid_t const*>);

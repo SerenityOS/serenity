@@ -326,4 +326,28 @@ ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<sigset_t const*> set, Users
     return info_value.si_signo;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html
+ErrorOr<FlatPtr> Process::sys$sigsuspend(Userspace<sigset_t const*> mask)
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+
+    auto sigmask = TRY(copy_typed_from_user(mask));
+
+    auto* current_thread = Thread::current();
+
+    u32 previous_signal_mask = current_thread->update_signal_mask(sigmask);
+    ScopeGuard rollback_signal_mask([&]() {
+        current_thread->update_signal_mask(previous_signal_mask);
+    });
+
+    // TODO: Ensure that/check if we never return if the action is to terminate the process.
+    // TODO: Ensure that/check if we only return after an eventual signal-catching function returns.
+    Thread::BlockTimeout timeout = {};
+    siginfo_t siginfo = {};
+    if (current_thread->block<Thread::SignalBlocker>(timeout, ~sigmask, siginfo).was_interrupted())
+        return EINTR;
+
+    return 0;
+}
+
 }

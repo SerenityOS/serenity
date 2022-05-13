@@ -175,7 +175,8 @@ void siglongjmp(jmp_buf env, int val)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html
 int sigsuspend(sigset_t const* set)
 {
-    return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
+    int rc = syscall(SC_sigsuspend, set);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009604499/functions/sigwait.html
