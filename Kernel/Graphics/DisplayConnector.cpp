@@ -48,18 +48,10 @@ ErrorOr<size_t> DisplayConnector::read(OpenFileDescription&, u64, UserOrKernelBu
 {
     return Error::from_errno(ENOTIMPL);
 }
-ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64 offset, UserOrKernelBuffer const& framebuffer_data, size_t length)
+
+ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t)
 {
-    SpinlockLocker locker(m_control_lock);
-    // FIXME: We silently ignore the request if we are in console mode.
-    // WindowServer is not ready yet to handle errors such as EBUSY currently.
-    if (console_mode()) {
-        return length;
-    }
-    if (offset + length > m_framebuffer_region->size())
-        return Error::from_errno(EOVERFLOW);
-    TRY(framebuffer_data.read(m_framebuffer_data + offset, 0, length));
-    return length;
+    return Error::from_errno(ENOTIMPL);
 }
 
 void DisplayConnector::will_be_destroyed()
