@@ -91,7 +91,7 @@ void TrackManager::add_track()
     m_tracks.append(make<Track>(m_transport));
 }
 
-int TrackManager::next_track_index()
+int TrackManager::next_track_index() const
 {
     auto next_track_index = m_current_track + 1;
     if (next_track_index >= m_tracks.size())
