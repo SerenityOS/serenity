@@ -160,7 +160,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
-    int x = m_roll_width * (static_cast<double>(m_track_manager.time()) / roll_length);
+    int x = m_roll_width * (static_cast<double>(m_track_manager.transport()->time()) / roll_length);
     if (x > x_offset && x <= x_offset + widget_inner_rect().width())
         painter.draw_line({ x, 0 }, { x, roll_height }, Gfx::Color::Black);
 

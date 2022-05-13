@@ -9,20 +9,22 @@
 
 #include "TrackManager.h"
 #include "Applications/Piano/Music.h"
+#include <AK/NonnullRefPtr.h>
 
 TrackManager::TrackManager()
+    : m_transport(make_ref_counted<LibDSP::Transport>(120, 4))
 {
     add_track();
 }
 
 void TrackManager::time_forward(int amount)
 {
-    int new_value = (static_cast<int>(m_time) + amount) % roll_length;
+    int new_value = (static_cast<int>(m_transport->time()) + amount) % roll_length;
 
     if (new_value < 0) { // If the new time value is negative add roll_length to wrap around
-        m_time = roll_length + new_value;
+        m_transport->set_time(roll_length + new_value);
     } else {
-        m_time = new_value;
+        m_transport->set_time(new_value);
     }
 }
 
@@ -34,8 +36,10 @@ void TrackManager::fill_buffer(Span<Sample> buffer)
         for (auto& track : m_tracks)
             track->fill_sample(buffer[i]);
 
-        if (++m_time >= roll_length) {
-            m_time = 0;
+        m_transport->set_time(m_transport->time() + 1);
+        // FIXME: This should be handled automatically by Transport.
+        if (m_transport->time() >= roll_length) {
+            m_transport->set_time(0);
             if (!m_should_loop)
                 break;
         }
@@ -53,7 +57,7 @@ void TrackManager::reset()
     m_current_front_buffer = m_front_buffer.span();
     m_current_back_buffer = m_back_buffer.span();
 
-    m_time = 0;
+    m_transport->set_time(0);
 
     for (auto& track : m_tracks)
         track->reset();
@@ -84,7 +88,7 @@ void TrackManager::set_octave(int octave)
 
 void TrackManager::add_track()
 {
-    m_tracks.append(make<Track>(m_time));
+    m_tracks.append(make<Track>(m_transport));
 }
 
 int TrackManager::next_track_index()

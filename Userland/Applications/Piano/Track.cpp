@@ -16,29 +16,26 @@
 #include <LibDSP/Music.h>
 #include <math.h>
 
-Track::Track(u32 const& time)
-    : m_time(time)
-    , m_temporary_transport(make_ref_counted<LibDSP::Transport>(120, 4))
-    , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_temporary_transport))
-    , m_synth(make_ref_counted<LibDSP::Synthesizers::Classic>(m_temporary_transport))
+Track::Track(NonnullRefPtr<LibDSP::Transport> transport)
+    : m_transport(move(transport))
+    , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_transport))
+    , m_synth(make_ref_counted<LibDSP::Synthesizers::Classic>(m_transport))
 {
     set_volume(volume_max);
 }
 
 void Track::fill_sample(Sample& sample)
 {
-    m_temporary_transport->set_time(m_time);
-
     auto playing_notes = LibDSP::RollNotes {};
 
     for (size_t i = 0; i < note_count; ++i) {
         auto& notes_at_pitch = m_roll_notes[i];
         for (auto& note : notes_at_pitch) {
-            if (note.is_playing(m_time))
+            if (note.is_playing(m_transport->time()))
                 playing_notes.set(i, note);
         }
         auto& key_at_pitch = m_keyboard_notes[i];
-        if (key_at_pitch.has_value() && key_at_pitch.value().is_playing(m_time))
+        if (key_at_pitch.has_value() && key_at_pitch.value().is_playing(m_transport->time()))
             playing_notes.set(i, key_at_pitch.value());
         // No need to keep non-playing keyboard notes around.
         else
@@ -70,7 +67,7 @@ void Track::reset()
 
 void Track::sync_roll(int note)
 {
-    auto it = m_roll_notes[note].find_if([&](auto& roll_note) { return roll_note.off_sample > m_time; });
+    auto it = m_roll_notes[note].find_if([&](auto& roll_note) { return roll_note.off_sample > m_transport->time(); });
     if (it.is_end())
         m_roll_iterators[note] = m_roll_notes[note].begin();
     else
@@ -115,15 +112,15 @@ void Track::set_keyboard_note(int note, Switch state)
         // If the note is playing, we need to start releasing it, otherwise just delete
         if (auto& maybe_roll_note = m_keyboard_notes[note]; maybe_roll_note.has_value()) {
             auto& roll_note = maybe_roll_note.value();
-            if (roll_note.is_playing(m_time))
-                roll_note.off_sample = m_time;
+            if (roll_note.is_playing(m_transport->time()))
+                roll_note.off_sample = m_transport->time();
             else
                 m_keyboard_notes[note] = {};
         }
     } else
         // FIXME: The end time needs to be far in the future.
         m_keyboard_notes[note]
-            = RollNote { m_time, m_time + static_cast<u32>(sample_rate) * 10'000, static_cast<u8>(note), 0 };
+            = RollNote { m_transport->time(), m_transport->time() + static_cast<u32>(sample_rate) * 10'000, static_cast<u8>(note), 0 };
 }
 
 void Track::set_volume(int volume)

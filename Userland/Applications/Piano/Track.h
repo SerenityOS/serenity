@@ -16,6 +16,7 @@
 #include <LibDSP/Effects.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/Synthesizers.h>
+#include <LibDSP/Transport.h>
 
 using LibDSP::RollNote;
 using RollIter = AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
@@ -25,7 +26,7 @@ class Track {
     AK_MAKE_NONMOVABLE(Track);
 
 public:
-    explicit Track(u32 const& time);
+    Track(NonnullRefPtr<LibDSP::Transport>);
     ~Track() = default;
 
     Vector<Audio::Sample> const& recorded_sample() const { return m_recorded_sample; }
@@ -50,9 +51,7 @@ private:
 
     int m_volume;
 
-    u32 const& m_time;
-
-    NonnullRefPtr<LibDSP::Transport> m_temporary_transport;
+    NonnullRefPtr<LibDSP::Transport> m_transport;
     NonnullRefPtr<LibDSP::Effects::Delay> m_delay;
     NonnullRefPtr<LibDSP::Synthesizers::Classic> m_synth;
 
