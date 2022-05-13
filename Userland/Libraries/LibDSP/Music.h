@@ -196,6 +196,7 @@ constexpr Array<double, 84> note_frequencies = {
     3951.0664100489994,
 };
 
+constexpr size_t const notes_per_octave = 12;
 constexpr double const middle_c = note_frequencies[36];
 
 }
