@@ -39,7 +39,7 @@ CharacterMapWidget::CharacterMapWidget()
 
     m_choose_font_action = GUI::Action::create("Choose Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         auto font_picker = GUI::FontPicker::construct(window(), &font(), false);
-        if (font_picker->exec() == GUI::Dialog::ExecOK) {
+        if (font_picker->exec() == GUI::Dialog::ExecResult::OK) {
             auto& font = *font_picker->font();
             Config::write_string("CharacterMap", "History", "Font", font.qualified_name());
             set_font(font);
@@ -70,7 +70,7 @@ CharacterMapWidget::CharacterMapWidget()
 
     m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;

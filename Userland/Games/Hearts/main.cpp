@@ -75,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto change_settings = [&] {
         auto settings_dialog = SettingsDialog::construct(window, player_name);
-        if (settings_dialog->exec() || settings_dialog->result() != GUI::Dialog::ExecOK)
+        if (settings_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
         player_name = settings_dialog->player_name();

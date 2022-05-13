@@ -37,7 +37,7 @@ public:
         auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
         dialog->set_title("Add a keymap");
 
-        if (dialog->exec() == GUI::Dialog::ExecOK) {
+        if (dialog->exec() == ExecResult::OK) {
             return dialog->selected_keymap();
         }
 
@@ -87,12 +87,12 @@ private:
 
         auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
-            done(Dialog::ExecOK);
+            done(ExecResult::OK);
         };
 
         auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
-            done(Dialog::ExecCancel);
+            done(ExecResult::Cancel);
         };
     }
 

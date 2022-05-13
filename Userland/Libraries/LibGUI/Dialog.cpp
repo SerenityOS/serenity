@@ -20,7 +20,7 @@ Dialog::Dialog(Window* parent_window, ScreenPosition screen_position)
     set_minimizable(false);
 }
 
-int Dialog::exec()
+Dialog::ExecResult Dialog::exec()
 {
     VERIFY(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
@@ -87,16 +87,16 @@ int Dialog::exec()
     m_event_loop = nullptr;
     dbgln("{}: Event loop returned with result {}", *this, result);
     remove_from_parent();
-    return result;
+    return static_cast<ExecResult>(result);
 }
 
-void Dialog::done(int result)
+void Dialog::done(ExecResult result)
 {
     if (!m_event_loop)
         return;
     m_result = result;
-    dbgln("{}: Quit event loop with result {}", *this, result);
-    m_event_loop->quit(result);
+    dbgln("{}: Quit event loop with result {}", *this, to_underlying(result));
+    m_event_loop->quit(to_underlying(result));
 }
 
 void Dialog::event(Core::Event& event)
@@ -104,7 +104,7 @@ void Dialog::event(Core::Event& event)
     if (event.type() == Event::KeyUp || event.type() == Event::KeyDown) {
         auto& key_event = static_cast<KeyEvent&>(event);
         if (key_event.key() == KeyCode::Key_Escape) {
-            done(ExecCancel);
+            done(ExecResult::Cancel);
             event.accept();
             return;
         }
@@ -116,7 +116,7 @@ void Dialog::event(Core::Event& event)
 void Dialog::close()
 {
     Window::close();
-    done(ExecCancel);
+    done(ExecResult::Cancel);
 }
 
 }

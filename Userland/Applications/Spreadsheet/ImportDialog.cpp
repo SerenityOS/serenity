@@ -187,7 +187,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
         wizard->replace_page(page.page());
         auto result = wizard->exec();
 
-        if (result == GUI::Dialog::ExecResult::ExecOK) {
+        if (result == GUI::Dialog::ExecResult::OK) {
             auto& reader = page.reader();
 
             NonnullRefPtrVector<Sheet> sheets;
@@ -265,7 +265,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
 
         wizard->push_page(page);
 
-        if (wizard->exec() != GUI::Dialog::ExecResult::ExecOK)
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return String { "Import was cancelled" };
 
         if (format_combo_box->selected_index() == 0)

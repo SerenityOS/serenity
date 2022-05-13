@@ -43,10 +43,10 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, String player_name)
     button_layout.set_spacing(10);
 
     button_box.add<GUI::Button>("Cancel").on_click = [this](auto) {
-        done(Dialog::ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     button_box.add<GUI::Button>("OK").on_click = [this](auto) {
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 }

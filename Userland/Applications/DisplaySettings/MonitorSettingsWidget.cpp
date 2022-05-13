@@ -254,7 +254,7 @@ void MonitorSettingsWidget::apply_settings()
             revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
-            if (box->exec() == GUI::MessageBox::ExecYes) {
+            if (box->exec() == GUI::MessageBox::ExecResult::Yes) {
                 auto save_result = GUI::ConnectionToWindowServer::the().save_screen_layout();
                 if (!save_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),

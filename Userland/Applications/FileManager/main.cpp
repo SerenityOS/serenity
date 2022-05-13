@@ -194,7 +194,7 @@ void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* wind
 void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
 {
     String archive_name;
-    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecOK)
+    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecResult::OK)
         return;
 
     auto output_directory_path = LexicalPath(selected_file_paths.first());

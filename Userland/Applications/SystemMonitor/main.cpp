@@ -442,7 +442,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (pid == -1)
                 return;
             auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-            if (rc == GUI::Dialog::ExecYes)
+            if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGKILL);
         },
         &process_table_view);
@@ -453,7 +453,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (pid == -1)
                 return;
             auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-            if (rc == GUI::Dialog::ExecYes)
+            if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGSTOP);
         },
         &process_table_view);

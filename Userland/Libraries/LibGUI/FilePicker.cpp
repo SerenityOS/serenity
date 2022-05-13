@@ -39,7 +39,7 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, String con
     if (!window_title.is_null())
         picker->set_title(window_title);
 
-    if (picker->exec() == Dialog::ExecOK) {
+    if (picker->exec() == ExecResult::OK) {
         String file_path = picker->selected_file();
 
         if (file_path.is_null())
@@ -54,7 +54,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, String con
 {
     auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path, screen_position);
 
-    if (picker->exec() == Dialog::ExecOK) {
+    if (picker->exec() == ExecResult::OK) {
         String file_path = picker->selected_file();
 
         if (file_path.is_null())
@@ -131,7 +131,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     auto mkdir_action = Action::create(
         "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
-            if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
+            if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecResult::OK && !value.is_empty()) {
                 auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
                 if (rc < 0) {
@@ -185,7 +185,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     m_filename_textbox->on_change = [&] {
@@ -278,12 +278,12 @@ void FilePicker::on_file_return()
 
     if (file_exists && m_mode == Mode::Save) {
         auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
-        if (result == MessageBox::ExecCancel)
+        if (result == MessageBox::ExecResult::Cancel)
             return;
     }
 
     m_selected_file = path;
-    done(ExecOK);
+    done(ExecResult::OK);
 }
 
 void FilePicker::set_path(String const& path)

@@ -81,10 +81,10 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
         auto result = MessageBox::show(window, "Apply these settings before closing?", "Unsaved changes", MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
         switch (result) {
-        case MessageBox::ExecYes:
+        case MessageBox::ExecResult::Yes:
             window->apply_settings();
             return Window::CloseRequestDecision::Close;
-        case MessageBox::ExecNo:
+        case MessageBox::ExecResult::No:
             window->cancel_settings();
             return Window::CloseRequestDecision::Close;
         default:

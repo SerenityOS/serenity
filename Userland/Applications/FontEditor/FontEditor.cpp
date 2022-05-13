@@ -146,7 +146,7 @@ FontEditorWidget::FontEditorWidget()
         if (!request_close())
             return;
         auto new_font_wizard = NewFontDialog::construct(window());
-        if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
+        if (new_font_wizard->exec() == GUI::Dialog::ExecResult::OK) {
             auto metadata = new_font_wizard->new_font_metadata();
             auto new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, 0x110000);
             new_font->set_name(metadata.name);
@@ -241,7 +241,7 @@ FontEditorWidget::FontEditorWidget()
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
@@ -782,12 +782,12 @@ bool FontEditorWidget::request_close()
     if (!window()->is_modified())
         return true;
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, m_undo_stack->last_unmodified_timestamp());
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         m_save_action->activate();
         if (!window()->is_modified())
             return true;
     }
-    if (result == GUI::MessageBox::ExecNo)
+    if (result == GUI::MessageBox::ExecResult::No)
         return true;
     return false;
 }

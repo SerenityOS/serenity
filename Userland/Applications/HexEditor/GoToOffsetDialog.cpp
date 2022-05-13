@@ -17,7 +17,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 
-int GoToOffsetDialog::show(GUI::Window* parent_window, int& history_offset, int& out_offset, int selection_offset, int buffer_size)
+GUI::Dialog::ExecResult GoToOffsetDialog::show(GUI::Window* parent_window, int& history_offset, int& out_offset, int selection_offset, int buffer_size)
 {
     auto dialog = GoToOffsetDialog::construct();
     dialog->m_selection_offset = selection_offset;
@@ -31,7 +31,7 @@ int GoToOffsetDialog::show(GUI::Window* parent_window, int& history_offset, int&
 
     auto result = dialog->exec();
 
-    if (result != GUI::Dialog::ExecOK)
+    if (result != ExecResult::OK)
         return result;
 
     auto input_offset = dialog->process_input();
@@ -41,7 +41,7 @@ int GoToOffsetDialog::show(GUI::Window* parent_window, int& history_offset, int&
     dbgln("Go to offset: value={}", new_offset);
     out_offset = move(new_offset);
 
-    return GUI::Dialog::ExecOK;
+    return ExecResult::OK;
 }
 
 int GoToOffsetDialog::process_input()
@@ -124,7 +124,7 @@ GoToOffsetDialog::GoToOffsetDialog()
     };
 
     m_go_button->on_click = [this](auto) {
-        done(ExecResult::ExecOK);
+        done(ExecResult::OK);
     };
 
     m_text_editor->on_change = [this]() {

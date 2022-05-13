@@ -357,9 +357,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return background_process_count;
     };
 
-    auto check_terminal_quit = [&]() -> int {
+    auto check_terminal_quit = [&]() -> GUI::Dialog::ExecResult {
         if (!should_confirm_close)
-            return GUI::MessageBox::ExecOK;
+            return GUI::MessageBox::ExecResult::OK;
         Optional<String> close_message;
         if (tty_has_foreground_process()) {
             close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
@@ -372,12 +372,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (close_message.has_value())
             return GUI::MessageBox::show(window, *close_message, "Close this terminal?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-        return GUI::MessageBox::ExecOK;
+        return GUI::MessageBox::ExecResult::OK;
     };
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         dbgln("Terminal: Quit menu activated!");
-        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
             GUI::Application::the()->quit();
     })));
 
@@ -408,7 +408,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };

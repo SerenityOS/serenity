@@ -13,7 +13,7 @@ class LevelSelectDialog : public GUI::Dialog {
     C_OBJECT(LevelSelectDialog)
 public:
     virtual ~LevelSelectDialog() override = default;
-    static int show(int& board_number, Window* parent_window);
+    static ExecResult show(int& board_number, Window* parent_window);
     int level() const { return m_level; }
 
 private:

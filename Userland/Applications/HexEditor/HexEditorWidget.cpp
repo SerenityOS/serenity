@@ -94,7 +94,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String value;
-        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 window()->set_modified(false);
@@ -151,7 +151,7 @@ HexEditorWidget::HexEditorWidget()
     m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
         bool find_all = false;
-        if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecOK) {
+        if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecResult::OK) {
             if (find_all) {
                 auto matches = m_editor->find_all(m_search_buffer, 0);
                 m_search_results->set_model(*new SearchResultsModel(move(matches)));
@@ -193,7 +193,7 @@ HexEditorWidget::HexEditorWidget()
             new_offset,
             m_editor->selection_start_offset(),
             m_editor->buffer_size());
-        if (result == GUI::InputBox::ExecOK) {
+        if (result == GUI::InputBox::ExecResult::OK) {
             m_editor->highlight(new_offset, new_offset);
             m_editor->update();
         }
@@ -225,7 +225,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
         }
@@ -508,11 +508,11 @@ bool HexEditorWidget::request_close()
         return true;
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path);
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         m_save_action->activate();
         return !window()->is_modified();
     }
-    return result == GUI::MessageBox::ExecNo;
+    return result == GUI::MessageBox::ExecResult::No;
 }
 
 void HexEditorWidget::set_search_results_visible(bool visible)

@@ -565,12 +565,12 @@ bool ImageEditor::request_close()
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), path(), undo_stack().last_unmodified_timestamp());
 
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         save_project();
         return true;
     }
 
-    if (result == GUI::MessageBox::ExecNo)
+    if (result == GUI::MessageBox::ExecResult::No)
         return true;
 
     return false;
