@@ -25,6 +25,7 @@ class DiskCache;
 class DoubleBuffer;
 class File;
 class OpenFileDescription;
+class DisplayConnector;
 class FileSystem;
 class FutexQueue;
 class IPv4Socket;

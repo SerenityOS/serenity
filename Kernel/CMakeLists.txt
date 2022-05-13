@@ -182,6 +182,7 @@ set(KERNEL_SOURCES
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/ScopedAddressSpaceSwitcher.cpp
+    Memory/SharedFramebufferVMObject.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
