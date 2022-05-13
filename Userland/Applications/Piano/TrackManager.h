@@ -35,7 +35,8 @@ public:
         m_current_track = track_index;
     }
 
-    int time() const { return m_time; }
+    NonnullRefPtr<LibDSP::Transport> transport() const { return m_transport; }
+    // Legacy API, do not add new users.
     void time_forward(int amount);
 
     void fill_buffer(Span<Sample>);
@@ -58,7 +59,7 @@ private:
 
     int m_octave { 4 };
 
-    u32 m_time { 0 };
+    NonnullRefPtr<LibDSP::Transport> m_transport;
 
     bool m_should_loop { true };
 };
