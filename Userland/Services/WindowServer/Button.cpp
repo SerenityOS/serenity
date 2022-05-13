@@ -39,7 +39,7 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
         painter.blit(icon_location, bitmap, bitmap.rect());
     };
 
-    if (m_icon.hover_bitmap && m_hovered)
+    if (m_hovered && m_icon.hover_bitmap && !m_icon.hover_bitmap->is_empty())
         paint_icon(m_icon.hover_bitmap);
     else if (m_icon.bitmap)
         paint_icon(m_icon.bitmap);
