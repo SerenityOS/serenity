@@ -39,15 +39,11 @@ protected:
     // Note: This is possibly a paravirtualized hardware, but since we don't know, we assume there's no refresh rate...
     virtual bool refresh_rate_support() const override final { return false; }
 
-    virtual ErrorOr<size_t> write_to_first_surface(u64 offset, UserOrKernelBuffer const&, size_t length) override final;
     virtual ErrorOr<void> flush_first_surface() override final;
 
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    const PhysicalAddress m_framebuffer_address;
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
-    OwnPtr<Memory::Region> m_framebuffer_region;
-    u8* m_framebuffer_data {};
 };
 }

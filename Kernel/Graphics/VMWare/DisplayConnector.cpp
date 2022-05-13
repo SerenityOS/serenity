@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address)
+NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
-    auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address));
+    auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
     MUST(connector->create_attached_framebuffer_console());
     MUST(connector->initialize_edid_for_generic_monitor());
     return connector;
@@ -22,18 +22,13 @@ NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWare
 
 ErrorOr<void> VMWareDisplayConnector::create_attached_framebuffer_console()
 {
-    auto rounded_size = TRY(Memory::page_round_up(1024 * sizeof(u32) * 768));
-    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
-    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
     m_framebuffer_console = VMWareFramebufferConsole::initialize(*this);
     GraphicsManagement::the().set_console(*m_framebuffer_console);
     return {};
 }
 
-VMWareDisplayConnector::VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address)
-    : DisplayConnector()
-    , m_framebuffer_address(framebuffer_address)
+VMWareDisplayConnector::VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
     , m_parent_adapter(parent_adapter)
 {
 }
@@ -61,15 +56,6 @@ ErrorOr<void> VMWareDisplayConnector::set_safe_mode_setting()
 ErrorOr<void> VMWareDisplayConnector::unblank()
 {
     return Error::from_errno(ENOTIMPL);
-}
-
-ErrorOr<size_t> VMWareDisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
-{
-    VERIFY(m_control_lock.is_locked());
-    if (offset + length > m_framebuffer_region->size())
-        return Error::from_errno(EOVERFLOW);
-    TRY(buffer.read(m_framebuffer_data + offset, 0, length));
-    return length;
 }
 
 void VMWareDisplayConnector::enable_console()
@@ -124,10 +110,6 @@ ErrorOr<void> VMWareDisplayConnector::set_mode_setting(ModeSetting const& mode_s
 
     TRY(m_parent_adapter->modeset_primary_screen_resolution({}, width, height));
 
-    auto rounded_size = TRY(Memory::page_round_up(width * sizeof(u32) * height));
-    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
-    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
     m_framebuffer_console->set_resolution(width, height, width * sizeof(u32));
 
     auto pitch = m_parent_adapter->primary_screen_pitch({});

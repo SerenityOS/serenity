@@ -22,13 +22,13 @@ class QEMUDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<QEMUDisplayConnector> must_create(PhysicalAddress framebuffer_address, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
+    static NonnullRefPtr<QEMUDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
 
     virtual IndexID index_id() const override;
 
 private:
     ErrorOr<void> fetch_and_initialize_edid();
-    QEMUDisplayConnector(PhysicalAddress framebuffer_address, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
+    QEMUDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
 
     virtual bool double_framebuffering_capable() const override { return true; }
     virtual ErrorOr<void> set_mode_setting(ModeSetting const&) override;

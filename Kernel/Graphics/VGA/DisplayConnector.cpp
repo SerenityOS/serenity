@@ -24,8 +24,7 @@ NonnullRefPtr<GenericDisplayConnector> GenericDisplayConnector::must_create_with
 }
 
 GenericDisplayConnector::GenericDisplayConnector(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
-    : DisplayConnector()
-    , m_framebuffer_address(framebuffer_address)
+    : DisplayConnector(framebuffer_address, height * pitch, true)
 {
     m_current_mode_setting.horizontal_active = width;
     m_current_mode_setting.vertical_active = height;
@@ -38,22 +37,9 @@ ErrorOr<void> GenericDisplayConnector::create_attached_framebuffer_console()
     auto height = m_current_mode_setting.vertical_active;
     auto pitch = m_current_mode_setting.horizontal_stride;
 
-    auto rounded_size = TRY(Memory::page_round_up(pitch * height));
-    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
-    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
-    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address, width, height, pitch);
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), width, height, pitch);
     GraphicsManagement::the().set_console(*m_framebuffer_console);
     return {};
-}
-
-ErrorOr<size_t> GenericDisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
-{
-    VERIFY(m_control_lock.is_locked());
-    if (offset + length > m_framebuffer_region->size())
-        return Error::from_errno(EOVERFLOW);
-    TRY(buffer.read(m_framebuffer_data + offset, 0, length));
-    return length;
 }
 
 void GenericDisplayConnector::enable_console()
