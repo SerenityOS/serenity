@@ -34,8 +34,6 @@ public:
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) override;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() override;
 
-    virtual ErrorOr<void> write_all_contents(Gfx::IntRect const&) override;
-
     String m_device {};
     int m_framebuffer_fd { -1 };
 
