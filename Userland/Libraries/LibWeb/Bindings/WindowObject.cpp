@@ -127,7 +127,9 @@ void WindowObject::initialize_global_object()
 
     m_location_object = heap().allocate<LocationObject>(*this, *this);
 
-    define_direct_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    auto* m_navigator_object = heap().allocate<NavigatorObject>(*this, *this);
+    define_direct_property("navigator", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("clientInformation", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
     define_direct_property("location", m_location_object, JS::Attribute::Enumerable);
