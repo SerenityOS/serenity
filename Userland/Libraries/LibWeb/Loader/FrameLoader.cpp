@@ -331,7 +331,7 @@ void FrameLoader::resource_did_load()
     }
     m_redirects_count = 0;
 
-    if (!resource()->has_encoded_data()) {
+    if (!resource()->has_encoded_data() && url.to_string() != "about:blank") {
         load_error_page(url, "No data");
         return;
     }
