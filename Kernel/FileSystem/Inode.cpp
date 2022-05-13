@@ -291,18 +291,14 @@ static inline ErrorOr<void> normalize_flock(OpenFileDescription const& descripti
     return {};
 }
 
-ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flock const& new_lock) const
+ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const&, flock const& new_lock) const
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
+    if (new_lock.l_type == F_UNLCK)
+        return {};
+
     return m_flocks.with([&](auto& flocks) -> ErrorOr<void> {
-        if (new_lock.l_type == F_UNLCK) {
-            for (auto const& lock : flocks) {
-                if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
-                    return {};
-            }
-            return EINVAL;
-        }
         for (auto const& lock : flocks) {
             if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
                 continue;
@@ -329,10 +325,11 @@ ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription con
             for (size_t i = 0; i < flocks.size(); ++i) {
                 if (&description == flocks[i].owner && flocks[i].start == new_lock.l_start && flocks[i].len == new_lock.l_len) {
                     flocks.remove(i);
-                    return {};
                 }
             }
-            return EINVAL;
+
+            // Judging by the Linux implementation, unlocking a non-existent lock also works.
+            return {};
         }
 
         TRY(flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
