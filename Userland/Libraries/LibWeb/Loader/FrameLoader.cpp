@@ -331,11 +331,6 @@ void FrameLoader::resource_did_load()
     }
     m_redirects_count = 0;
 
-    if (!resource()->has_encoded_data() && url.to_string() != "about:blank") {
-        load_error_page(url, "No data");
-        return;
-    }
-
     if (resource()->has_encoding()) {
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
     } else {
