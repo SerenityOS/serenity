@@ -7,7 +7,7 @@
 
 #include "CodeComprehensionEngine.h"
 
-namespace LanguageServers {
+namespace CodeComprehension {
 
 CodeComprehensionEngine::CodeComprehensionEngine(FileDB const& filedb, bool should_store_all_declarations)
     : m_filedb(filedb)
@@ -15,7 +15,7 @@ CodeComprehensionEngine::CodeComprehensionEngine(FileDB const& filedb, bool shou
 {
 }
 
-void CodeComprehensionEngine::set_declarations_of_document(String const& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
+void CodeComprehensionEngine::set_declarations_of_document(String const& filename, Vector<Declaration>&& declarations)
 {
     // Callback may not be configured if we're running tests
     if (!set_declarations_of_document_callback)
@@ -31,7 +31,7 @@ void CodeComprehensionEngine::set_declarations_of_document(String const& filenam
     set_declarations_of_document_callback(filename, move(declarations));
 }
 
-void CodeComprehensionEngine::set_todo_entries_of_document(String const& filename, Vector<Cpp::Parser::TodoEntry>&& todo_entries)
+void CodeComprehensionEngine::set_todo_entries_of_document(String const& filename, Vector<TodoEntry>&& todo_entries)
 {
     // Callback may not be configured if we're running tests
     if (!set_todo_entries_of_document_callback)

@@ -7,9 +7,9 @@ endpoint LanguageServer
     file_edit_remove_text(String filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
     set_file_content(String filename, String content) =|
 
-    auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation location) =|
-    find_declaration(GUI::AutocompleteProvider::ProjectLocation location) =|
-    get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation location) =|
+    auto_complete_suggestions(CodeComprehension::ProjectLocation location) =|
+    find_declaration(CodeComprehension::ProjectLocation location) =|
+    get_parameters_hint(CodeComprehension::ProjectLocation location) =|
     get_tokens_info(String filename) =|
 
 }

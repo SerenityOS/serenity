@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <DevTools/HackStudio/LanguageServers/CodeComprehensionEngine.h>
+#include <LibCodeComprehension/CodeComprehensionEngine.h>
 #include <Shell/Shell.h>
 
-namespace LanguageServers::Shell {
+namespace CodeComprehension::Shell {
 
 class ShellComprehensionEngine : public CodeComprehensionEngine {
 public:
     ShellComprehensionEngine(FileDB const& filedb);
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(String const& file, const GUI::TextPosition& position) override;
+    virtual Vector<CodeComprehension::AutocompleteResultEntry> get_suggestions(String const& file, const GUI::TextPosition& position) override;
     virtual void on_edit(String const& file) override;
     virtual void file_opened([[maybe_unused]] String const& file) override;
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position) override;
+    virtual Optional<CodeComprehension::ProjectLocation> find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position) override;
 
 private:
     struct DocumentData {

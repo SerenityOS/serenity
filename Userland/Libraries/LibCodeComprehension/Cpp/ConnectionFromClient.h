@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "CppComprehensionEngine.h"
 #include <DevTools/HackStudio/LanguageServers/ConnectionFromClient.h>
-#include <LibCodeComprehension/Cpp/CppComprehensionEngine.h>
 
 namespace LanguageServers::Cpp {
 
@@ -18,7 +18,7 @@ private:
     ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : LanguageServers::ConnectionFromClient(move(socket))
     {
-        m_autocomplete_engine = adopt_own(*new CodeComprehension::Cpp::CppComprehensionEngine(m_filedb));
+        m_autocomplete_engine = make<CodeComprehension::Cpp::CppComprehensionEngine>(m_filedb);
         m_autocomplete_engine->set_declarations_of_document_callback = [this](String const& filename, Vector<CodeComprehension::Declaration>&& declarations) {
             async_declarations_in_document(filename, move(declarations));
         };

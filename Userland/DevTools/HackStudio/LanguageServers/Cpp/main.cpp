@@ -5,7 +5,6 @@
  */
 
 #include "ConnectionFromClient.h"
-#include "Tests.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -13,23 +12,7 @@
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 
-static ErrorOr<int> mode_server();
-
-ErrorOr<int> serenity_main(Main::Arguments arguments)
-{
-    bool tests = false;
-
-    Core::ArgsParser parser;
-    parser.add_option(tests, "Run tests", "tests", 't');
-    parser.parse(arguments);
-
-    if (tests)
-        return run_tests();
-
-    return mode_server();
-}
-
-ErrorOr<int> mode_server()
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio unix recvfd rpath"));

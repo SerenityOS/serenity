@@ -9,9 +9,7 @@
 #include "CppComprehensionEngine.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
-
-using namespace LanguageServers;
-using namespace LanguageServers::Cpp;
+#include <LibMain/Main.h>
 
 static bool s_some_test_failed = false;
 
@@ -37,6 +35,28 @@ static bool s_some_test_failed = false;
 
 constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/comprehension";
 
+class FileDB : public CodeComprehension::FileDB {
+public:
+    FileDB() = default;
+
+    void add(String filename, String content)
+    {
+        m_map.set(filename, content);
+    }
+
+    virtual Optional<String> get_or_read_from_filesystem(StringView filename) const override
+    {
+        String target_filename = filename;
+        if (!project_root().is_null() && filename.starts_with(project_root())) {
+            target_filename = LexicalPath::relative_path(filename, project_root());
+        }
+        return m_map.get(target_filename);
+    }
+
+private:
+    HashMap<String, String> m_map;
+};
+
 static void test_complete_local_args();
 static void test_complete_local_vars();
 static void test_complete_type();
@@ -59,7 +79,7 @@ static void add_file(FileDB& filedb, String const& name)
 {
     auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
     VERIFY(!file.is_error());
-    filedb.add(name, file.value()->fd());
+    filedb.add(name, String::copy(file.value()->read_all()));
 }
 
 void test_complete_local_args()
@@ -67,7 +87,7 @@ void test_complete_local_args()
     I_TEST(Complete Local Args)
     FileDB filedb;
     add_file(filedb, "complete_local_args.cpp");
-    CppComprehensionEngine engine(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine engine(filedb);
     auto suggestions = engine.get_suggestions("complete_local_args.cpp", { 2, 6 });
     if (suggestions.size() != 2)
         FAIL(bad size);
@@ -83,7 +103,7 @@ void test_complete_local_vars()
     I_TEST(Complete Local Vars)
     FileDB filedb;
     add_file(filedb, "complete_local_vars.cpp");
-    CppComprehensionEngine autocomplete(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine autocomplete(filedb);
     auto suggestions = autocomplete.get_suggestions("complete_local_vars.cpp", { 3, 7 });
     if (suggestions.size() != 1)
         FAIL(bad size);
@@ -99,7 +119,7 @@ void test_complete_type()
     I_TEST(Complete Type)
     FileDB filedb;
     add_file(filedb, "complete_type.cpp");
-    CppComprehensionEngine autocomplete(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine autocomplete(filedb);
     auto suggestions = autocomplete.get_suggestions("complete_type.cpp", { 5, 7 });
     if (suggestions.size() != 1)
         FAIL(bad size);
@@ -115,7 +135,7 @@ void test_find_variable_definition()
     I_TEST(Find Variable Declaration)
     FileDB filedb;
     add_file(filedb, "find_variable_declaration.cpp");
-    CppComprehensionEngine engine(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine engine(filedb);
     auto position = engine.find_declaration_of("find_variable_declaration.cpp", { 2, 5 });
     if (!position.has_value())
         FAIL("declaration not found");
@@ -127,12 +147,12 @@ void test_find_variable_definition()
 
 void test_complete_includes()
 {
-    I_TEST(Complete Type)
+    I_TEST(Complete include statements)
     FileDB filedb;
     filedb.set_project_root(TESTS_ROOT_DIR);
     add_file(filedb, "complete_includes.cpp");
     add_file(filedb, "sample_header.h");
-    CppComprehensionEngine autocomplete(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine autocomplete(filedb);
 
     auto suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 0, 22 });
     if (suggestions.size() != 1)
@@ -157,7 +177,7 @@ void test_parameters_hint()
     FileDB filedb;
     filedb.set_project_root(TESTS_ROOT_DIR);
     add_file(filedb, "parameters_hint1.cpp");
-    CppComprehensionEngine engine(filedb);
+    CodeComprehension::Cpp::CppComprehensionEngine engine(filedb);
 
     auto result = engine.get_function_params_hint("parameters_hint1.cpp", { 4, 9 });
     if (!result.has_value())
@@ -178,4 +198,9 @@ void test_parameters_hint()
         FAIL("bad result (3)");
 
     PASS;
+}
+
+ErrorOr<int> serenity_main(Main::Arguments)
+{
+    return run_tests();
 }
