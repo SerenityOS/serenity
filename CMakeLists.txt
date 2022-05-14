@@ -129,10 +129,6 @@ if (NOT HACKSTUDIO_BUILD)
 
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 if (ENABLE_ALL_DEBUG_FACILITIES)
     set(ENABLE_ALL_THE_DEBUG_MACROS ON)
     set(ENABLE_EXTRA_KERNEL_DEBUG_SYMBOLS ON)
@@ -165,61 +161,7 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
 set(CMAKE_SKIP_RPATH TRUE)
 
-add_compile_options(-Wall)
-add_compile_options(-Wextra)
-
-if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
-    # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
-    #        Disable -Werror for now.
-    add_compile_options(-Werror)
-endif()
-
-# The following warnings are sorted by the "base" name (the part excluding the initial Wno or W).
-add_compile_options(-Wno-address-of-packed-member)
-add_compile_options(-Wcast-qual)
-add_compile_options(-Wdeprecated-copy)
-add_compile_options(-Wduplicated-cond)
-add_compile_options(-Wformat=2)
-add_compile_options(-Wimplicit-fallthrough)
-add_compile_options(-Wlogical-op)
-add_compile_options(-Wmisleading-indentation)
-add_compile_options(-Wmissing-declarations)
-add_compile_options(-Wnon-virtual-dtor)
-add_compile_options(-Wsuggest-override)
-add_compile_options(-Wno-unknown-warning-option)
-add_compile_options(-Wundef)
-add_compile_options(-Wunused)
-add_compile_options(-Wno-unused-command-line-argument)
-add_compile_options(-Wwrite-strings)
-
-add_compile_options(-fdiagnostics-color=always)
-add_compile_options(-fno-delete-null-pointer-checks)
-add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
-add_compile_options(-fno-exceptions)
-add_compile_options(-fno-semantic-interposition)
-add_compile_options(-fsized-deallocation)
-add_compile_options(-fstack-clash-protection)
-add_compile_options(-fstack-protector-strong)
-add_compile_options(-g1)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Wno-literal-suffix)
-    add_compile_options(-Wno-maybe-uninitialized)
-    # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
-    add_compile_options(-Wno-expansion-to-defined)
-    add_compile_options(-Wcast-align)
-    add_compile_options(-Wdouble-promotion)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    add_compile_options(-Wno-user-defined-literals)
-    add_compile_options(-Wno-atomic-alignment)
-    add_compile_options(-Wno-implicit-const-int-float-conversion)
-    add_compile_options(-Wno-unused-const-variable)
-    add_compile_options(-Wno-unused-private-field)
-    add_compile_options(-fconstexpr-steps=16777216)
-
-    # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
-    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
-endif()
+include(serenity_compile_options)
 
 add_link_options(LINKER:-z,text)
 add_link_options(LINKER:--no-allow-shlib-undefined)
