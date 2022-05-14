@@ -34,6 +34,10 @@ LibAudio is the baseline audio library that provides common audio abstractions, 
 
 LibDSP is the digital signal processing library. It provides structures for audio editing programs, such as tracks and clips, while both dealing with MIDI data and sample data. More important is the Processor system, which allows synthesizers, samplers, sequencers, effects, etc. to be written with a common interface and be combined into chains for unlimited DSP (and musical) potential. The ProcessorParameters provide an interface for changing processor parameters programmatically or through a UI.
 
+The following class diagram outlines the structure of LibDSP pertaining to DAW-like applications:
+
+![LibDSP class diagram](LibDSP_classes.svg)
+
 LibDSP was started to support development efforts in Piano, but it is intended as a general-purpose audio processing library, building on the groundwork from LibAudio. Therefore, users of LibDSP must be familiar with LibAudio classes and concepts, as they are used extensively in LibDSP.
 
 ### Applications
