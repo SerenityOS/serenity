@@ -487,7 +487,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
-    set_source_files_properties(MiniStdlib.cpp
+    set_source_files_properties(MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
     add_link_options(LINKER:-z,pack-relative-relocs)
