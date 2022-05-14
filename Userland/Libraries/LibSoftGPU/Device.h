@@ -93,7 +93,7 @@ private:
     void rasterize_triangle(Triangle&);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
-    bool test_alpha(PixelQuad&);
+    void test_alpha(PixelQuad&);
 
     RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
     GPU::RasterizerOptions m_options;
