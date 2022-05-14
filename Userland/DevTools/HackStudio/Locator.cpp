@@ -22,13 +22,13 @@ class LocatorSuggestionModel final : public GUI::Model {
 public:
     struct Suggestion {
         static Suggestion create_filename(String const& filename);
-        static Suggestion create_symbol_declaration(const GUI::AutocompleteProvider::Declaration&);
+        static Suggestion create_symbol_declaration(CodeComprehension::Declaration const&);
 
         bool is_filename() const { return as_filename.has_value(); }
         bool is_symbol_declaration() const { return as_symbol_declaration.has_value(); }
 
         Optional<String> as_filename;
-        Optional<GUI::AutocompleteProvider::Declaration> as_symbol_declaration;
+        Optional<CodeComprehension::Declaration> as_symbol_declaration;
     };
 
     explicit LocatorSuggestionModel(Vector<Suggestion>&& suggestions)
@@ -88,7 +88,7 @@ LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_fi
     s.as_filename = filename;
     return s;
 }
-LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_symbol_declaration(const GUI::AutocompleteProvider::Declaration& decl)
+LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_symbol_declaration(CodeComprehension::Declaration const& decl)
 {
     LocatorSuggestionModel::Suggestion s;
     s.as_symbol_declaration = decl;

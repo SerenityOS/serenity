@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021-2022, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@
 #include <LibRegex/Regex.h>
 #include <Userland/DevTools/HackStudio/LanguageServers/ConnectionFromClient.h>
 
-namespace LanguageServers::Cpp {
+namespace CodeComprehension::Cpp {
 
 CppComprehensionEngine::CppComprehensionEngine(FileDB const& filedb)
     : CodeComprehensionEngine(filedb, true)
@@ -50,10 +50,10 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     }
     m_unfinished_documents.set(file);
     ScopeGuard mark_finished([&file, this]() { m_unfinished_documents.remove(file); });
-    auto document = filedb().get_or_create_from_filesystem(file);
-    if (!document)
+    auto document = filedb().get_or_read_from_filesystem(file);
+    if (!document.has_value())
         return {};
-    return create_document_data(document->text(), file);
+    return create_document_data(move(document.value()), file);
 }
 
 void CppComprehensionEngine::set_document_data(String const& file, OwnPtr<DocumentData>&& data)
@@ -61,7 +61,7 @@ void CppComprehensionEngine::set_document_data(String const& file, OwnPtr<Docume
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& autocomplete_position)
+Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& autocomplete_position)
 {
     Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
 
@@ -102,7 +102,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
     return {};
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_name(DocumentData const& document, ASTNode const& node, Optional<Token> containing_token) const
+Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEngine::try_autocomplete_name(DocumentData const& document, ASTNode const& node, Optional<Token> containing_token) const
 {
     auto partial_text = String::empty();
     if (containing_token.has_value() && containing_token.value().type() != Token::Type::ColonColon) {
@@ -111,7 +111,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     return autocomplete_name(document, node, partial_text);
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_property(DocumentData const& document, ASTNode const& node, Optional<Token> containing_token) const
+Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEngine::try_autocomplete_property(DocumentData const& document, ASTNode const& node, Optional<Token> containing_token) const
 {
     if (!containing_token.has_value())
         return {};
@@ -131,7 +131,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     return autocomplete_property(document, parent, partial_text);
 }
 
-Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_name(DocumentData const& document, ASTNode const& node, String const& partial_text) const
+Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::autocomplete_name(DocumentData const& document, ASTNode const& node, String const& partial_text) const
 {
     auto reference_scope = scope_of_reference_to_symbol(node);
     auto current_scope = scope_of_node(node);
@@ -163,7 +163,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_na
         return IterationDecision::Continue;
     });
 
-    Vector<GUI::AutocompleteProvider::Entry> suggestions;
+    Vector<CodeComprehension::AutocompleteResultEntry> suggestions;
     for (auto& symbol : matches) {
         suggestions.append({ symbol.name.name, partial_text.length() });
     }
@@ -206,7 +206,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_reference_to_symbol(ASTNode 
     return scope_parts;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_property(DocumentData const& document, MemberExpression const& parent, const String partial_text) const
+Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::autocomplete_property(DocumentData const& document, MemberExpression const& parent, const String partial_text) const
 {
     VERIFY(parent.object());
     auto type = type_of(document, *parent.object());
@@ -215,7 +215,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_pr
         return {};
     }
 
-    Vector<GUI::AutocompleteProvider::Entry> suggestions;
+    Vector<CodeComprehension::AutocompleteResultEntry> suggestions;
     for (auto& prop : properties_of_type(document, type)) {
         if (prop.name.name.starts_with(partial_text)) {
             suggestions.append({ prop.name.name, partial_text.length() });
@@ -331,7 +331,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_typ
     return properties;
 }
 
-CppComprehensionEngine::Symbol CppComprehensionEngine::Symbol::create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Declaration> declaration, IsLocal is_local)
+CppComprehensionEngine::Symbol CppComprehensionEngine::Symbol::create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration> declaration, IsLocal is_local)
 {
     return { { name, scope }, move(declaration), is_local == IsLocal::Yes };
 }
@@ -401,7 +401,7 @@ void CppComprehensionEngine::file_opened([[maybe_unused]] String const& file)
     get_or_create_document_data(file);
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
+Optional<CodeComprehension::ProjectLocation> CppComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
 {
     auto const* document_ptr = get_or_create_document_data(filename);
     if (!document_ptr)
@@ -410,13 +410,13 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::fin
     auto const& document = *document_ptr;
     auto decl = find_declaration_of(document, identifier_position);
     if (decl) {
-        return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
+        return CodeComprehension::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
     }
 
     return find_preprocessor_definition(document, identifier_position);
 }
 
-RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document, const GUI::TextPosition& identifier_position)
+RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document, const GUI::TextPosition& identifier_position)
 {
     auto node = document.parser().node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
@@ -426,13 +426,13 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(DocumentData con
     return find_declaration_of(document, *node);
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_preprocessor_definition(DocumentData const& document, const GUI::TextPosition& text_position)
+Optional<CodeComprehension::ProjectLocation> CppComprehensionEngine::find_preprocessor_definition(DocumentData const& document, const GUI::TextPosition& text_position)
 {
     Position cpp_position { text_position.line(), text_position.column() };
     auto substitution = find_preprocessor_substitution(document, cpp_position);
     if (!substitution.has_value())
         return {};
-    return GUI::AutocompleteProvider::ProjectLocation { substitution->defined_value.filename, substitution->defined_value.line, substitution->defined_value.column };
+    return CodeComprehension::ProjectLocation { substitution->defined_value.filename, substitution->defined_value.line, substitution->defined_value.column };
 }
 
 Optional<Cpp::Preprocessor::Substitution> CppComprehensionEngine::find_preprocessor_substitution(DocumentData const& document, Cpp::Position const& cpp_position)
@@ -467,11 +467,11 @@ static Optional<TargetDeclaration> get_target_declaration(ASTNode const& node)
     }
 
     if (node.is_declaration()) {
-        return get_target_declaration(node, verify_cast<Declaration>(node).full_name());
+        return get_target_declaration(node, verify_cast<Cpp::Declaration>(node).full_name());
     }
 
     if (node.is_type() && node.parent() && node.parent()->is_declaration()) {
-        return get_target_declaration(*node.parent(), verify_cast<Declaration>(node.parent())->full_name());
+        return get_target_declaration(*node.parent(), verify_cast<Cpp::Declaration>(node.parent())->full_name());
     }
 
     dbgln("get_target_declaration: Invalid argument node of type: {}", node.class_name());
@@ -487,7 +487,7 @@ static Optional<TargetDeclaration> get_target_declaration(ASTNode const& node, S
             return TargetDeclaration { TargetDeclaration::Type::Scope, name };
         }
         if (name_node.parent() && name_node.parent()->is_declaration()) {
-            auto declaration = verify_cast<Declaration>(name_node.parent());
+            auto declaration = verify_cast<Cpp::Declaration>(name_node.parent());
             if (declaration->is_struct_or_class() || declaration->is_enum()) {
                 return TargetDeclaration { TargetDeclaration::Type::Type, name };
             }
@@ -509,7 +509,7 @@ static Optional<TargetDeclaration> get_target_declaration(ASTNode const& node, S
 
     return TargetDeclaration { TargetDeclaration::Type::Variable, name };
 }
-RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document_data, ASTNode const& node) const
+RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document_data, ASTNode const& node) const
 {
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
 
@@ -524,7 +524,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(DocumentData con
         bool match_function = target_decl.value().type == TargetDeclaration::Function && symbol.declaration->is_function();
         bool match_variable = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_variable_declaration();
         bool match_type = target_decl.value().type == TargetDeclaration::Type && (symbol.declaration->is_struct_or_class() || symbol.declaration->is_enum());
-        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && verify_cast<Declaration>(symbol.declaration->parent())->is_struct_or_class();
+        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && verify_cast<Cpp::Declaration>(symbol.declaration->parent())->is_struct_or_class();
         bool match_parameter = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_parameter();
         bool match_scope = target_decl.value().type == TargetDeclaration::Scope && (symbol.declaration->is_namespace() || symbol.declaration->is_struct_or_class());
 
@@ -578,14 +578,14 @@ void CppComprehensionEngine::update_declared_symbols(DocumentData& document)
         document.m_symbols.set(symbol.name, move(symbol));
     }
 
-    Vector<GUI::AutocompleteProvider::Declaration> declarations;
+    Vector<CodeComprehension::Declaration> declarations;
     for (auto& symbol_entry : document.m_symbols) {
         auto& symbol = symbol_entry.value;
         declarations.append({ symbol.name.name, { document.filename(), symbol.declaration->start().line, symbol.declaration->start().column }, type_of_declaration(symbol.declaration), symbol.name.scope_as_string() });
     }
 
     for (auto& definition : document.preprocessor().definitions()) {
-        declarations.append({ definition.key, { document.filename(), definition.value.line, definition.value.column }, GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition, {} });
+        declarations.append({ definition.key, { document.filename(), definition.value.line, definition.value.column }, CodeComprehension::DeclarationType::PreprocessorDefinition, {} });
     }
     set_declarations_of_document(document.filename(), move(declarations));
 }
@@ -595,24 +595,24 @@ void CppComprehensionEngine::update_todo_entries(DocumentData& document)
     set_todo_entries_of_document(document.filename(), document.parser().get_todo_entries());
 }
 
-GUI::AutocompleteProvider::DeclarationType CppComprehensionEngine::type_of_declaration(Declaration const& decl)
+CodeComprehension::DeclarationType CppComprehensionEngine::type_of_declaration(Cpp::Declaration const& decl)
 {
     if (decl.is_struct())
-        return GUI::AutocompleteProvider::DeclarationType::Struct;
+        return CodeComprehension::DeclarationType::Struct;
     if (decl.is_class())
-        return GUI::AutocompleteProvider::DeclarationType::Class;
+        return CodeComprehension::DeclarationType::Class;
     if (decl.is_function())
-        return GUI::AutocompleteProvider::DeclarationType::Function;
+        return CodeComprehension::DeclarationType::Function;
     if (decl.is_variable_declaration())
-        return GUI::AutocompleteProvider::DeclarationType::Variable;
+        return CodeComprehension::DeclarationType::Variable;
     if (decl.is_namespace())
-        return GUI::AutocompleteProvider::DeclarationType::Namespace;
+        return CodeComprehension::DeclarationType::Namespace;
     if (decl.is_member())
-        return GUI::AutocompleteProvider::DeclarationType::Member;
-    return GUI::AutocompleteProvider::DeclarationType::Variable;
+        return CodeComprehension::DeclarationType::Member;
+    return CodeComprehension::DeclarationType::Variable;
 }
 
-OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data(String&& text, String const& filename)
+OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data(String text, String const& filename)
 {
     auto document_data = make<DocumentData>();
     document_data->m_filename = filename;
@@ -669,7 +669,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_node(ASTNode const& node) co
     if (!parent->is_declaration())
         return parent_scope;
 
-    auto& parent_decl = static_cast<Declaration&>(*parent);
+    auto& parent_decl = static_cast<Cpp::Declaration&>(*parent);
 
     StringView containing_scope;
     if (parent_decl.is_namespace())
@@ -683,7 +683,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_node(ASTNode const& node) co
     return parent_scope;
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const
+Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEngine::try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const
 {
     VERIFY(include_path_token.type() == Token::Type::IncludePath);
     auto partial_include = include_path_token.text().trim_whitespace();
@@ -726,7 +726,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "searching path: {}, partial_basename: {}", full_dir, partial_basename);
 
     Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
-    Vector<GUI::AutocompleteProvider::Entry> options;
+    Vector<CodeComprehension::AutocompleteResultEntry> options;
 
     auto prefix = include_type == System ? "<" : "\"";
     auto suffix = include_type == System ? ">" : "\"";
@@ -739,21 +739,21 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         if (Core::File::is_directory(LexicalPath::join(full_dir, path).string())) {
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = String::formatted("{}{}{}/", prefix, include_dir, path);
-            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path, GUI::AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
         } else if (path.ends_with(".h")) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
             auto completion = String::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
-            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path);
         }
     }
 
     return options;
 }
 
-RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(CppComprehensionEngine::DocumentData const& document, CppComprehensionEngine::SymbolName const& target_symbol_name) const
+RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(CppComprehensionEngine::DocumentData const& document, CppComprehensionEngine::SymbolName const& target_symbol_name) const
 {
-    RefPtr<Declaration> target_declaration;
+    RefPtr<Cpp::Declaration> target_declaration;
     for_each_available_symbol(document, [&](Symbol const& symbol) {
         if (symbol.name == target_symbol_name) {
             target_declaration = symbol.declaration;
@@ -929,7 +929,7 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
     return hint;
 }
 
-Vector<GUI::AutocompleteProvider::TokenInfo> CppComprehensionEngine::get_tokens_info(String const& filename)
+Vector<CodeComprehension::TokenInfo> CppComprehensionEngine::get_tokens_info(String const& filename)
 {
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "CppComprehensionEngine::get_tokens_info: {}", filename);
 
@@ -939,73 +939,73 @@ Vector<GUI::AutocompleteProvider::TokenInfo> CppComprehensionEngine::get_tokens_
 
     auto const& document = *document_ptr;
 
-    Vector<GUI::AutocompleteProvider::TokenInfo> tokens_info;
+    Vector<CodeComprehension::TokenInfo> tokens_info;
     size_t i = 0;
     for (auto const& token : document.preprocessor().unprocessed_tokens()) {
 
         tokens_info.append({ get_token_semantic_type(document, token),
             token.start().line, token.start().column, token.end().line, token.end().column });
         ++i;
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "{}: {}", token.text(), GUI::AutocompleteProvider::TokenInfo::type_to_string(tokens_info.last().type));
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "{}: {}", token.text(), CodeComprehension::TokenInfo::type_to_string(tokens_info.last().type));
     }
     return tokens_info;
 }
 
-GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_token_semantic_type(DocumentData const& document, Token const& token)
+CodeComprehension::TokenInfo::SemanticType CppComprehensionEngine::get_token_semantic_type(DocumentData const& document, Token const& token)
 {
     using GUI::AutocompleteProvider;
     switch (token.type()) {
     case Cpp::Token::Type::Identifier:
         return get_semantic_type_for_identifier(document, token.start());
     case Cpp::Token::Type::Keyword:
-        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+        return CodeComprehension::TokenInfo::SemanticType::Keyword;
     case Cpp::Token::Type::KnownType:
-        return AutocompleteProvider::TokenInfo::SemanticType::Type;
+        return CodeComprehension::TokenInfo::SemanticType::Type;
     case Cpp::Token::Type::DoubleQuotedString:
     case Cpp::Token::Type::SingleQuotedString:
     case Cpp::Token::Type::RawString:
-        return AutocompleteProvider::TokenInfo::SemanticType::String;
+        return CodeComprehension::TokenInfo::SemanticType::String;
     case Cpp::Token::Type::Integer:
     case Cpp::Token::Type::Float:
-        return AutocompleteProvider::TokenInfo::SemanticType::Number;
+        return CodeComprehension::TokenInfo::SemanticType::Number;
     case Cpp::Token::Type::IncludePath:
-        return AutocompleteProvider::TokenInfo::SemanticType::IncludePath;
+        return CodeComprehension::TokenInfo::SemanticType::IncludePath;
     case Cpp::Token::Type::EscapeSequence:
-        return AutocompleteProvider::TokenInfo::SemanticType::Keyword;
+        return CodeComprehension::TokenInfo::SemanticType::Keyword;
     case Cpp::Token::Type::PreprocessorStatement:
     case Cpp::Token::Type::IncludeStatement:
-        return AutocompleteProvider::TokenInfo::SemanticType::PreprocessorStatement;
+        return CodeComprehension::TokenInfo::SemanticType::PreprocessorStatement;
     case Cpp::Token::Type::Comment:
-        return AutocompleteProvider::TokenInfo::SemanticType::Comment;
+        return CodeComprehension::TokenInfo::SemanticType::Comment;
     default:
-        return AutocompleteProvider::TokenInfo::SemanticType::Unknown;
+        return CodeComprehension::TokenInfo::SemanticType::Unknown;
     }
 }
 
-GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_semantic_type_for_identifier(DocumentData const& document, Position position)
+CodeComprehension::TokenInfo::SemanticType CppComprehensionEngine::get_semantic_type_for_identifier(DocumentData const& document, Position position)
 {
     if (find_preprocessor_substitution(document, position).has_value())
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::PreprocessorMacro;
+        return CodeComprehension::TokenInfo::SemanticType::PreprocessorMacro;
 
     auto decl = find_declaration_of(document, GUI::TextPosition { position.line, position.column });
     if (!decl)
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
+        return CodeComprehension::TokenInfo::SemanticType::Identifier;
 
     if (decl->is_function())
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Function;
+        return CodeComprehension::TokenInfo::SemanticType::Function;
     if (decl->is_parameter())
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Parameter;
+        return CodeComprehension::TokenInfo::SemanticType::Parameter;
     if (decl->is_variable_declaration()) {
         if (decl->is_member())
-            return GUI::AutocompleteProvider::TokenInfo::SemanticType::Member;
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Variable;
+            return CodeComprehension::TokenInfo::SemanticType::Member;
+        return CodeComprehension::TokenInfo::SemanticType::Variable;
     }
     if (decl->is_struct_or_class() || decl->is_enum())
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::CustomType;
+        return CodeComprehension::TokenInfo::SemanticType::CustomType;
     if (decl->is_namespace())
-        return GUI::AutocompleteProvider::TokenInfo::SemanticType::Namespace;
+        return CodeComprehension::TokenInfo::SemanticType::Namespace;
 
-    return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;
+    return CodeComprehension::TokenInfo::SemanticType::Identifier;
 }
 
 }

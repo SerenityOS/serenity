@@ -17,7 +17,7 @@ set(SOURCES
         )
 
 serenity_lib(LibShell shell)
-target_link_libraries(LibShell LibCore LibLine LibSyntax LibRegex)
+target_link_libraries(LibShell LibCore LibLine LibSyntax LibRegex LibCodeComprehension)
 
 set(SOURCES
         main.cpp

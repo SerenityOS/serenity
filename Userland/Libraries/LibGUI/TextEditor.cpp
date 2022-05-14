@@ -757,7 +757,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 {
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
-        if (m_autocomplete_box->apply_suggestion() == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes)
+        if (m_autocomplete_box->apply_suggestion() == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes)
             hide_autocomplete();
         else
             try_update_autocomplete();

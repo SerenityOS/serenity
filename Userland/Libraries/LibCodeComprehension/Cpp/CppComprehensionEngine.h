@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021-2022, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,14 +10,14 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <DevTools/HackStudio/LanguageServers/CodeComprehensionEngine.h>
 #include <DevTools/HackStudio/LanguageServers/FileDB.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Parser.h>
 #include <LibCpp/Preprocessor.h>
 #include <LibGUI/TextPosition.h>
+#include <Libraries/LibCodeComprehension/CodeComprehensionEngine.h>
 
-namespace LanguageServers::Cpp {
+namespace CodeComprehension::Cpp {
 
 using namespace ::Cpp;
 
@@ -25,12 +25,12 @@ class CppComprehensionEngine : public CodeComprehensionEngine {
 public:
     CppComprehensionEngine(FileDB const& filedb);
 
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(String const& file, const GUI::TextPosition& autocomplete_position) override;
+    virtual Vector<CodeComprehension::AutocompleteResultEntry> get_suggestions(String const& file, GUI::TextPosition const& autocomplete_position) override;
     virtual void on_edit(String const& file) override;
     virtual void file_opened([[maybe_unused]] String const& file) override;
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position) override;
-    virtual Optional<FunctionParamsHint> get_function_params_hint(String const&, const GUI::TextPosition&) override;
-    virtual Vector<GUI::AutocompleteProvider::TokenInfo> get_tokens_info(String const& filename) override;
+    virtual Optional<CodeComprehension::ProjectLocation> find_declaration_of(String const& filename, GUI::TextPosition const& identifier_position) override;
+    virtual Optional<FunctionParamsHint> get_function_params_hint(String const&, GUI::TextPosition const&) override;
+    virtual Vector<CodeComprehension::TokenInfo> get_tokens_info(String const& filename) override;
 
 private:
     struct SymbolName {
@@ -47,7 +47,7 @@ private:
 
     struct Symbol {
         SymbolName name;
-        NonnullRefPtr<Declaration> declaration;
+        NonnullRefPtr<Cpp::Declaration> declaration;
 
         // Local symbols are symbols that should not appear in a global symbol search.
         // For example, a variable that is declared inside a function will have is_local = true.
@@ -57,7 +57,7 @@ private:
             No,
             Yes
         };
-        static Symbol create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Declaration>, IsLocal is_local);
+        static Symbol create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration>, IsLocal is_local);
     };
 
     friend Traits<SymbolName>;
@@ -95,15 +95,15 @@ private:
         HashTable<String> m_available_headers;
     };
 
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(DocumentData const&, MemberExpression const&, const String partial_text) const;
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_name(DocumentData const&, ASTNode const&, String const& partial_text) const;
+    Vector<CodeComprehension::AutocompleteResultEntry> autocomplete_property(DocumentData const&, MemberExpression const&, const String partial_text) const;
+    Vector<AutocompleteResultEntry> autocomplete_name(DocumentData const&, ASTNode const&, String const& partial_text) const;
     String type_of(DocumentData const&, Expression const&) const;
     String type_of_property(DocumentData const&, Identifier const&) const;
     String type_of_variable(Identifier const&) const;
     bool is_property(ASTNode const&) const;
-    RefPtr<Declaration> find_declaration_of(DocumentData const&, ASTNode const&) const;
-    RefPtr<Declaration> find_declaration_of(DocumentData const&, SymbolName const&) const;
-    RefPtr<Declaration> find_declaration_of(DocumentData const&, const GUI::TextPosition& identifier_position);
+    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, ASTNode const&) const;
+    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, SymbolName const&) const;
+    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, const GUI::TextPosition& identifier_position);
 
     enum class RecurseIntoScopes {
         No,
@@ -122,17 +122,17 @@ private:
     String document_path_from_include_path(StringView include_path) const;
     void update_declared_symbols(DocumentData&);
     void update_todo_entries(DocumentData&);
-    GUI::AutocompleteProvider::DeclarationType type_of_declaration(Declaration const&);
+    CodeComprehension::DeclarationType type_of_declaration(Cpp::Declaration const&);
     Vector<StringView> scope_of_node(ASTNode const&) const;
     Vector<StringView> scope_of_reference_to_symbol(ASTNode const&) const;
 
-    Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(DocumentData const&, const GUI::TextPosition&);
+    Optional<CodeComprehension::ProjectLocation> find_preprocessor_definition(DocumentData const&, const GUI::TextPosition&);
     Optional<Cpp::Preprocessor::Substitution> find_preprocessor_substitution(DocumentData const&, Cpp::Position const&);
 
-    OwnPtr<DocumentData> create_document_data(String&& text, String const& filename);
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const;
+    OwnPtr<DocumentData> create_document_data(String text, String const& filename);
+    Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_property(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
+    Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_name(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
+    Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const;
     static bool is_symbol_available(Symbol const&, Vector<StringView> const& current_scope, Vector<StringView> const& reference_scope);
     Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall&, size_t argument_index);
 
@@ -142,8 +142,8 @@ private:
     template<typename Func>
     void for_each_included_document_recursive(DocumentData const&, Func) const;
 
-    GUI::AutocompleteProvider::TokenInfo::SemanticType get_token_semantic_type(DocumentData const&, Token const&);
-    GUI::AutocompleteProvider::TokenInfo::SemanticType get_semantic_type_for_identifier(DocumentData const&, Position);
+    CodeComprehension::TokenInfo::SemanticType get_token_semantic_type(DocumentData const&, Token const&);
+    CodeComprehension::TokenInfo::SemanticType get_semantic_type_for_identifier(DocumentData const&, Position);
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 
@@ -189,8 +189,8 @@ void CppComprehensionEngine::for_each_included_document_recursive(DocumentData c
 namespace AK {
 
 template<>
-struct Traits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> : public GenericTraits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> {
-    static unsigned hash(LanguageServers::Cpp::CppComprehensionEngine::SymbolName const& key)
+struct Traits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> : public GenericTraits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> {
+    static unsigned hash(CodeComprehension::Cpp::CppComprehensionEngine::SymbolName const& key)
     {
         unsigned hash = 0;
         hash = pair_int_hash(hash, string_hash(key.name.characters_without_null_termination(), key.name.length()));

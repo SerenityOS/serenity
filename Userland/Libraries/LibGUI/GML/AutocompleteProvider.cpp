@@ -11,7 +11,7 @@
 
 namespace GUI::GML {
 
-void AutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
+void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> callback)
 {
     auto cursor = m_editor->cursor();
     auto text = m_editor->text();
@@ -121,7 +121,7 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> cal
         return fuzzy_str_builder.build();
     };
 
-    Vector<AutocompleteProvider::Entry> class_entries, identifier_entries;
+    Vector<CodeComprehension::AutocompleteResultEntry> class_entries, identifier_entries;
 
     auto register_layouts_matching_pattern = [&](String pattern, size_t partial_input_length) {
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
@@ -146,15 +146,15 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> cal
             if (auto instance = registration->construct()) {
                 for (auto& it : instance->properties()) {
                     if (!it.value->is_readonly() && it.key.matches(pattern))
-                        identifier_entries.empend(String::formatted("{}: ", it.key), partial_input_length, Language::Unspecified, it.key);
+                        identifier_entries.empend(String::formatted("{}: ", it.key), partial_input_length, CodeComprehension::Language::Unspecified, it.key);
                 }
             }
         }
 
         if (can_have_declared_layout(class_names.last()) && "layout"sv.matches(pattern))
-            identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout", AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
+            identifier_entries.empend("layout: ", partial_input_length, CodeComprehension::Language::Unspecified, "layout", CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
         if (class_names.last() == "GUI::ScrollableContainerWidget" && "content_widget"sv.matches(pattern))
-            identifier_entries.empend("content_widget: ", partial_input_length, Language::Unspecified, "content_widget", AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
+            identifier_entries.empend("content_widget: ", partial_input_length, CodeComprehension::Language::Unspecified, "content_widget", CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
     };
 
     auto register_properties_and_widgets_matching_pattern = [&](String pattern, size_t partial_input_length) {
@@ -235,7 +235,7 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> cal
     quick_sort(class_entries, [](auto& a, auto& b) { return a.completion < b.completion; });
     quick_sort(identifier_entries, [](auto& a, auto& b) { return a.completion < b.completion; });
 
-    Vector<GUI::AutocompleteProvider::Entry> entries;
+    Vector<CodeComprehension::AutocompleteResultEntry> entries;
     entries.extend(move(identifier_entries));
     entries.extend(move(class_entries));
 

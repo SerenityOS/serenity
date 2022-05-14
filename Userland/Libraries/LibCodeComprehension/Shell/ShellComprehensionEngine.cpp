@@ -8,9 +8,8 @@
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <LibRegex/Regex.h>
-#include <Userland/DevTools/HackStudio/LanguageServers/ConnectionFromClient.h>
 
-namespace LanguageServers::Shell {
+namespace CodeComprehension::Shell {
 
 RefPtr<::Shell::Shell> ShellComprehensionEngine::s_shell {};
 
@@ -38,11 +37,12 @@ ShellComprehensionEngine::DocumentData const& ShellComprehensionEngine::get_docu
 
 OwnPtr<ShellComprehensionEngine::DocumentData> ShellComprehensionEngine::create_document_data_for(String const& file)
 {
-    auto document = filedb().get(file);
-    if (!document)
+    auto document = filedb().get_or_read_from_filesystem(file);
+    if (!document.has_value())
         return {};
-    auto content = document->text();
-    auto document_data = make<DocumentData>(document->text(), file);
+
+    auto content = document.value();
+    auto document_data = make<DocumentData>(move(content), file);
     for (auto& path : document_data->sourced_paths())
         get_or_create_document_data(path);
 
@@ -133,7 +133,7 @@ size_t ShellComprehensionEngine::resolve(ShellComprehensionEngine::DocumentData 
     return offset;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& position)
+Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get_suggestions(String const& file, const GUI::TextPosition& position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "ShellComprehensionEngine position {}:{}", position.line(), position.column());
 
@@ -147,7 +147,7 @@ Vector<GUI::AutocompleteProvider::Entry> ShellComprehensionEngine::get_suggestio
     }
 
     auto completions = const_cast<::Shell::AST::Node*>(document.node.ptr())->complete_for_editor(shell(), offset_in_file, hit_test);
-    Vector<GUI::AutocompleteProvider::Entry> entries;
+    Vector<CodeComprehension::AutocompleteResultEntry> entries;
     for (auto& completion : completions)
         entries.append({ completion.text_string, completion.input_offset });
 
@@ -164,7 +164,7 @@ void ShellComprehensionEngine::file_opened([[maybe_unused]] String const& file)
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ShellComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
+Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_declaration_of(String const& filename, const GUI::TextPosition& identifier_position)
 {
     dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
     auto const& document = get_or_create_document_data(filename);
@@ -213,7 +213,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
 
                 if (!name.is_empty()) {
                     dbgln("Found variable {}", name);
-                    declarations.append({ move(name), { filename, entry.name->position().start_line.line_number, entry.name->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Variable, {} });
+                    declarations.append({ move(name), { filename, entry.name->position().start_line.line_number, entry.name->position().start_line.line_column }, CodeComprehension::DeclarationType::Variable, {} });
                 }
             }
             ::Shell::AST::NodeVisitor::visit(node);
@@ -222,11 +222,11 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
         void visit(const ::Shell::AST::FunctionDeclaration* node) override
         {
             dbgln("Found function {}", node->name().name);
-            declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Function, {} });
+            declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, CodeComprehension::DeclarationType::Function, {} });
         }
 
         String const& filename;
-        Vector<GUI::AutocompleteProvider::Declaration> declarations;
+        Vector<CodeComprehension::Declaration> declarations;
     } visitor { document.filename };
 
     document.node->visit(visitor);

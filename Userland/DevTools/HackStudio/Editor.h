@@ -92,7 +92,7 @@ private:
         virtual ~LanguageServerAidedAutocompleteProvider() override { }
 
     private:
-        virtual void provide_completions(Function<void(Vector<Entry>)> callback) override;
+        virtual void provide_completions(Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> callback) override;
         LanguageClient& m_language_client;
     };
 
@@ -104,7 +104,7 @@ private:
     void set_autocomplete_provider_for(CodeDocument const&);
     void handle_function_parameters_hint_request();
     void on_token_info_timer_tick();
-    void on_tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info);
+    void on_tokens_info_result(Vector<CodeComprehension::TokenInfo> const& tokens_info);
     void create_tokens_info_timer();
     ErrorOr<void> initialize_documentation_tooltip();
     ErrorOr<void> initialize_parameters_hint_tooltip();
