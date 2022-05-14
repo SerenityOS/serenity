@@ -461,9 +461,13 @@ endif()
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
+
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)
+elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_compile_options(-mgeneral-regs-only)
 endif()
+
 add_compile_options(-fno-asynchronous-unwind-tables)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-fno-exceptions)
