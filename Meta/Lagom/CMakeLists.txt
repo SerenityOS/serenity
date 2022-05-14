@@ -60,22 +60,7 @@ if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
 endif()
 
 include(wasm_spec_tests)
-
-add_compile_options(-fsigned-char)
-add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-implicit-const-int-float-conversion)
-add_compile_options(-O2)
-add_compile_options(-Wall -Wextra -Werror)
-add_compile_options(-fPIC -g)
-add_compile_options(-Wno-maybe-uninitialized)
-add_compile_options(-fno-exceptions)
-add_compile_options(-fdiagnostics-color=always)
-if (NOT ENABLE_FUZZERS)
-    add_compile_options(-fno-semantic-interposition)
-endif()
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include(lagom_compile_options)
 
 include(GNUInstallDirs) # make sure to include before we mess w/RPATH
 
