@@ -13,6 +13,8 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <LibCore/Forward.h>
 #include <LibTest/TestCase.h>
 
 namespace Test {
@@ -33,7 +35,7 @@ public:
         s_global = nullptr;
     }
 
-    int run(NonnullRefPtrVector<TestCase> const&);
+    int run(NonnullRefPtrVector<TestCase> const&, RefPtr<Core::File> json_output);
     int main(String const& suite_name, int argc, char** argv);
     NonnullRefPtrVector<TestCase> find_cases(String const& search, bool find_tests, bool find_benchmarks);
     void add_case(NonnullRefPtr<TestCase> const& test_case)
@@ -42,6 +44,8 @@ public:
     }
 
     void current_test_case_did_fail() { m_current_test_case_passed = false; }
+
+    void vreport_test_details(StringView fmtstr, AK::TypeErasedFormatParams&);
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
 
@@ -52,6 +56,7 @@ private:
     u64 m_benchtime = 0;
     String m_suite_name;
     bool m_current_test_case_passed = true;
+    StringBuilder m_current_test_case_details;
     Function<void()> m_setup;
 };
 

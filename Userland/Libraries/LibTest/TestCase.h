@@ -37,9 +37,20 @@ private:
     bool m_is_benchmark;
 };
 
-// Helper to hide implementation of TestSuite from users
+// Helpers to hide implementation of TestSuite from users
 void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case);
 void set_suite_setup_function(Function<void()> setup);
+void vreport_test_details(StringView fmtstr, AK::TypeErasedFormatParams&);
+
+template<typename... Parameters>
+void report_test_details(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+{
+    AK::VariadicFormatParams variadic_format_params { parameters... };
+    AK::vout(stderr, fmtstr.view(), variadic_format_params, true);
+    // TypeErasedFormatParams are "consumed" when formatting, so create another copy...
+    AK::VariadicFormatParams variadic_format_params2 { parameters... };
+    vreport_test_details(fmtstr.view(), variadic_format_params2);
+}
 }
 
 #define TEST_SETUP                                                  \
