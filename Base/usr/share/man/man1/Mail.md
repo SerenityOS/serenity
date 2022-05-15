@@ -12,7 +12,7 @@ $ Mail
 
 ## Description
 
-Mail is an e-mail client for Serenity. It can connect to real e-mail servers.
+Mail is an e-mail client for Serenity. It can connect to real e-mail servers using the IMAP protocol.
 Currently, a configuration file is required. This must be stored in `~/.config/Mail.ini`
 See the Examples section for an example configuration file.
 
