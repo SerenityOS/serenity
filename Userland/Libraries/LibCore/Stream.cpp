@@ -117,6 +117,11 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
     return file;
 }
 
+bool File::exists(StringView filename)
+{
+    return !Core::System::stat(filename).is_error();
+}
+
 int File::open_mode_to_options(OpenMode mode)
 {
     int flags = 0;
