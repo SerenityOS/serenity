@@ -637,3 +637,49 @@ Salt const& m_salt;
 ```cpp
 const Salt& m_salt;
 ```
+
+### Casts
+
+Before you consider a cast, please see if your problem can be solved another way that avoids the visual clutter.
+
+- Integer constants can be specified to have (some) specific sizes with postfixes like `u, l, ul` etc. The same goes for single-precision floating-point constants with `f`.
+- Working with smaller-size integers in arithmetic expressions is hard because of [implicit promotion](https://wiki.sei.cmu.edu/confluence/display/c/INT02-C.+Understand+integer+conversion+rules). Generally, it is fine to use `int` and other "large" types in local variables, and possibly cast at the end.
+- If you `const_cast`, _really_ consider whether your APIs need to be adjusted in terms of their constness. Does the member function you're writing actually make sense to be `const`?
+- If you do checked casts between base and derived types, also consider your APIs. For example: Does the function being called actually need to receive the more general type or is it fine with the more specialized type?
+
+If you _do_ need to cast: **Don't use C-style casts**. The C-style cast has [complex behavior](https://en.cppreference.com/w/c/language/cast) that is undesired in many instances. Be aware of what sort of type conversion the code is trying to achieve, and use the appropriate (!) C++ cast operator, like `static_cast`, `reinterpret_cast`, `bit_cast`, `dynamic_cast` etc.
+
+There is a single exception to this rule: marking a function parameter as used with `(void)parameter;`.
+
+###### Right:
+```cpp
+MyParentClass& object = get_object();
+// Verify the type...
+MyChildClass& casted = static_cast<MyChildClass&>(object);
+```
+
+```cpp
+// AK::Atomic::exchange()
+
+alignas(T) u8 buffer[sizeof(T)];
+T* ret = reinterpret_cast<T*>(buffer);
+```
+
+```cpp
+// Core::Stream::SeekableStream::tell()
+
+// Seek with 0 and SEEK_CUR does not modify anything despite the const_cast,
+// so it's safe to do this.
+return const_cast<SeekableStream*>(this)->seek(0, SeekMode::FromCurrentPosition);
+```
+
+###### Wrong:
+```cpp
+// These should be static_cast.
+size_t mask_length = (size_t)((u8)-1) + 1;
+```
+
+```cpp
+// This should be reinterpret_cast.
+return (u8 const*)string.characters_without_null_termination();
+```
