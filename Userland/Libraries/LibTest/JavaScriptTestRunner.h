@@ -168,8 +168,8 @@ extern IntermediateRunFileResult (*g_run_file)(String const&, JS::Interpreter&, 
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json, bool detailed_json)
-        : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json, detailed_json)
+    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, OutputFormat output_format)
+        : ::Test::TestRunner(move(test_root), print_times, print_progress, output_format)
         , m_common_path(move(common_path))
     {
         g_test_root = m_test_root;
@@ -264,10 +264,9 @@ inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
 inline void TestRunner::do_run_single_test(String const& test_path, size_t, size_t)
 {
     auto file_result = run_file_test(test_path);
-    if (!m_print_json)
+    if (m_output_format == OutputFormat::UTF8)
         print_file_result(file_result);
-
-    if (needs_detailed_suites())
+    else
         ensure_suites().extend(file_result.suites);
 }
 

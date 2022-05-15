@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 #else
         false;
 #endif
-    bool print_json = false;
+    bool print_json = getenv("LIBTEST_JSON_FD") != nullptr;
     bool per_file = false;
     char const* specified_test_root = nullptr;
     String common_path;
@@ -187,7 +187,13 @@ int main(int argc, char** argv)
         g_vm->enable_default_host_import_module_dynamically_hook();
     }
 
-    Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json, per_file);
+    auto output_format = Test::TestRunner::OutputFormat::UTF8;
+    if (per_file)
+        output_format = Test::TestRunner::OutputFormat::DetailedJSON;
+    else if (print_json)
+        output_format = Test::TestRunner::OutputFormat::JSON;
+
+    Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, output_format);
     test_runner.run(test_glob);
 
     g_vm = nullptr;

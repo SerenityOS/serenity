@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,15 @@
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <LibTest/Results.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -29,12 +35,18 @@ public:
         return s_the;
     }
 
-    TestRunner(String test_root, bool print_times, bool print_progress, bool print_json, bool detailed_json = false)
+    enum class OutputFormat {
+        UTF8,
+        JSON,
+        DetailedJSON,
+        JUnit
+    };
+
+    TestRunner(String test_root, bool print_times, bool print_progress, OutputFormat output_format = OutputFormat::UTF8)
         : m_test_root(move(test_root))
         , m_print_times(print_times)
         , m_print_progress(print_progress)
-        , m_print_json(print_json)
-        , m_detailed_json(detailed_json)
+        , m_output_format(output_format)
     {
         VERIFY(!s_the);
         s_the = this;
@@ -48,7 +60,7 @@ public:
 
     bool is_printing_progress() const { return m_print_progress; }
 
-    bool needs_detailed_suites() const { return m_detailed_json; }
+    bool needs_detailed_suites() const { return m_output_format == OutputFormat::DetailedJSON || m_output_format == OutputFormat::JUnit; }
     Vector<Test::Suite> const& suites() const { return *m_suites; }
 
     Vector<Test::Suite>& ensure_suites()
@@ -63,6 +75,7 @@ protected:
 
     void print_test_results() const;
     void print_test_results_as_json() const;
+    void print_test_results_as_junit() const;
 
     virtual Vector<String> get_test_paths() const = 0;
     virtual void do_run_single_test(String const&, size_t current_test_index, size_t num_tests) = 0;
@@ -71,8 +84,8 @@ protected:
     String m_test_root;
     bool m_print_times;
     bool m_print_progress;
-    bool m_print_json;
-    bool m_detailed_json;
+
+    OutputFormat m_output_format;
 
     double m_total_elapsed_time_in_ms { 0 };
     Test::Counts m_counts;
@@ -136,10 +149,18 @@ inline void TestRunner::run(String test_glob)
     if (m_print_progress)
         warn("\033]9;-1;\033\\");
 
-    if (!m_print_json)
+    switch (m_output_format) {
+    case OutputFormat::UTF8:
         print_test_results();
-    else
+        break;
+    case OutputFormat::JSON:
+    case OutputFormat::DetailedJSON:
         print_test_results_as_json();
+        break;
+    case OutputFormat::JUnit:
+        print_test_results_as_junit();
+        break;
+    }
 }
 
 enum Modifier {
@@ -237,6 +258,21 @@ inline void TestRunner::print_test_results() const
 inline void TestRunner::print_test_results_as_json() const
 {
     JsonObject root;
+
+    auto result_to_str = [](Result res) {
+        switch (res) {
+        case Result::Pass:
+            return "PASSED"sv;
+        case Result::Fail:
+            return "FAILED"sv;
+        case Result::Skip:
+            return "SKIPPED"sv;
+        case Result::Crashed:
+            return "PROCESS_ERROR"sv;
+        }
+        return "FAILED"sv;
+    };
+
     if (needs_detailed_suites()) {
         auto& suites = this->suites();
         u64 duration_us = 0;
@@ -245,21 +281,7 @@ inline void TestRunner::print_test_results_as_json() const
         for (auto& suite : suites) {
             for (auto& case_ : suite.tests) {
                 duration_us += case_.duration_us;
-                StringView result_name;
-                switch (case_.result) {
-                case Result::Pass:
-                    result_name = "PASSED";
-                    break;
-                case Result::Fail:
-                    result_name = "FAILED";
-                    break;
-                case Result::Skip:
-                    result_name = "SKIPPED";
-                    break;
-                case Result::Crashed:
-                    result_name = "PROCESS_ERROR";
-                    break;
-                }
+                StringView result_name = result_to_str(case_.result);
 
                 auto name = suite.name;
                 if (name == "__$$TOP_LEVEL$$__"sv)
@@ -274,26 +296,172 @@ inline void TestRunner::print_test_results_as_json() const
         root.set("duration", static_cast<double>(duration_us) / 1000000.);
         root.set("results", move(tests));
     } else {
-        JsonObject suites;
-        suites.set("failed", m_counts.suites_failed);
-        suites.set("passed", m_counts.suites_passed);
-        suites.set("total", m_counts.suites_failed + m_counts.suites_passed);
+        JsonArray tests;
+        for (auto const& suite : suites()) {
+            for (auto const& case_ : suite.tests) {
+                StringView result_name = result_to_str(case_.result);
 
-        JsonObject tests;
-        tests.set("failed", m_counts.tests_failed);
-        tests.set("passed", m_counts.tests_passed);
-        tests.set("skipped", m_counts.tests_skipped);
-        tests.set("total", m_counts.tests_failed + m_counts.tests_passed + m_counts.tests_skipped);
+                auto name = suite.name;
+                if (name == "__$$TOP_LEVEL$$__"sv)
+                    name = String::empty();
 
-        JsonObject results;
-        results.set("suites", suites);
-        results.set("tests", tests);
+                auto path = LexicalPath::relative_path(suite.path, m_test_root);
 
-        root.set("results", results);
-        root.set("files_total", m_counts.files_total);
-        root.set("duration", m_total_elapsed_time_in_ms / 1000.0);
+                JsonObject current_test;
+                current_test.set("name", String::formatted("{}/{}::{}", path, name, case_.name));
+                current_test.set("type", "test");
+                current_test.set("elapsed_ms", case_.duration_us / 1000);
+                current_test.set("result", result_name);
+                current_test.set("details", case_.details);
+                tests.append(current_test);
+            }
+        }
+
+        root.set("results", move(tests));
+
+        root.set("name", ""); // FIXME: use current program name from somewhere
+        root.set("total_ms", m_total_elapsed_time_in_ms);
+        root.set("passed", m_counts.tests_passed);
+        root.set("failed", m_counts.tests_failed);
     }
-    outln("{}", root.to_string());
+
+    if (StringView fd_str = getenv("LIBTEST_JSON_FD"); !fd_str.is_empty()) {
+        auto fd = fd_str.to_int();
+        if (fd.has_value()) {
+            auto file = MUST(Core::Stream::File::adopt_fd(fd.release_value(), Core::Stream::OpenMode::Write));
+            MUST(file->write(root.to_string().bytes()));
+        } else {
+            warnln("Unable to open fd {} for test output", fd_str);
+        }
+    } else {
+        outln("{}", root.to_string());
+    }
 }
 
+inline void write_junit_test_case_xml(FILE* out, ::Test::Case const& test, StringView suite_name)
+{
+    auto status = [](Test::Result res) {
+        switch (res) {
+        case Test::Result::Pass:
+            return "run"sv;
+        case Test::Result::Skip:
+            return "disabled"sv;
+        case Test::Result::Crashed:
+            return "error"sv;
+        case Test::Result::Fail:
+            return "fail"sv;
+        }
+        VERIFY_NOT_REACHED();
+    }(test.result);
+
+    outln(out, R"~~~(<testcase name="{}" classname="{}" time="{}" status="{}">)~~~",
+        test.name, suite_name, static_cast<double>(test.duration_us) / 1'000'000.0, status);
+
+    // Get the control chars and XML reserved chars out of the test-reported details
+    StringBuilder details_builder;
+    details_builder.append_escaped_for_json(escape_html_entities(test.details));
+    auto details = details_builder.to_string();
+
+    switch (test.result) {
+    case Test::Result::Fail:
+        // Azure PublishTestResults pulls failure reason out of the message attribute
+        outln(out, R"~~~(<failure message="{}"/>)~~~", details);
+        outln(out, R"~~~(<system-err>{}</system-err>)~~~", details);
+        break;
+    case Test::Result::Crashed:
+        outln(out, R"~~~(<error message="{}"/>)~~~", details);
+        outln(out, R"~~~(<system-err>{}</system-err>)~~~", details);
+        break;
+    default:
+        break;
+    }
+    outln(out, "</testcase>");
+}
+
+inline void TestRunner::print_test_results_as_junit() const
+{
+    // FIXME: Configure output filepath instead of always using ~/junit.xml
+    //        Would be particularly useful for output from nested TestRunners like test-js or test-wasm
+    auto* junit_out = fopen(String::formatted("{}/{}", Core::StandardPaths::home_directory(), "junit.xml").characters(), "+w");
+
+    constexpr auto iso8601_format = "%Y-%m-dT%H:%M:%S%z"sv;
+
+    String hostname = "localhost"sv;
+    auto hostname_or_error = Core::System::gethostname();
+    if (!hostname_or_error.is_error())
+        hostname = hostname_or_error.release_value();
+    String timestamp = Core::DateTime::now().to_string(iso8601_format);
+
+    outln(junit_out, R"~~~(<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>)~~~");
+
+    auto const& suites = this->suites();
+
+    for (auto const& suite : suites) {
+        size_t num_failures = 0;
+        size_t num_skipped = 0;
+        size_t num_crashed = 0;
+
+        for (auto const& test : suite.tests) {
+            if (test.result == Test::Result::Skip)
+                ++num_skipped;
+            else if (test.result == Test::Result::Fail) {
+                ++num_failures;
+            } else if (test.result == Test::Result::Crashed) {
+                ++num_crashed;
+            }
+        }
+        // Just one "test" in this case
+        if (suite.tests.is_empty()) {
+            if (suite.most_severe_test_result == Test::Result::Fail)
+                ++num_failures;
+            else if (suite.most_severe_test_result == Test::Result::Skip)
+                ++num_skipped;
+            if (suite.most_severe_test_result == Test::Result::Crashed)
+                ++num_crashed;
+        }
+        String name = LexicalPath(suite.name).basename();
+        if (name == "__$$TOP_LEVEL$$__"sv)
+            name = String::empty();
+
+        auto path = LexicalPath::relative_path(suite.path, m_test_root);
+
+        outln(junit_out, R"~~~(<testsuite name="{}"
+    tests="{}"
+    failures="{}"
+    disabled="0"
+    skipped="{}"
+    errors="{}"
+    hostname="{}"
+    time="{}"
+    timestamp="{}"
+    >)~~~",
+            path,
+            suite.tests.size() ?: 1,
+            num_failures,
+            num_skipped,
+            num_crashed,
+            hostname,
+            static_cast<double>(suite.total_duration_us) / 1'000'000,
+            timestamp);
+
+        for (auto const& test : suite.tests) {
+            write_junit_test_case_xml(junit_out, test, name);
+        }
+        // Just one "test" in this case
+        if (suite.tests.is_empty()) {
+            Case test = {
+                .name = name,
+                .result = suite.most_severe_test_result,
+                .details = ""sv,
+                .duration_us = suite.total_duration_us,
+            };
+            write_junit_test_case_xml(junit_out, test, name);
+        }
+        outln(junit_out, "</testsuite>");
+    }
+
+    outln(junit_out, "</testsuites>");
+    (void)fclose(junit_out);
+}
 }

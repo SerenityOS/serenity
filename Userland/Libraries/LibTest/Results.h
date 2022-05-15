@@ -34,6 +34,7 @@ struct Suite {
     // precedence over a passed test
     Result most_severe_test_result { Result::Pass };
     Vector<Case> tests {};
+    u64 total_duration_us = { 0 };
 };
 
 struct Counts {

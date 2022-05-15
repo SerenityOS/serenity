@@ -37,8 +37,8 @@ String g_currently_running_test;
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
-        : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
+    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool run_skipped_tests, bool print_progress, OutputFormat output_format, bool print_all_output, bool print_times = true)
+        : ::Test::TestRunner(move(test_root), print_times, print_progress, output_format)
         , m_exclude_regex(move(exclude_regex))
         , m_config(move(config))
         , m_skip_regex(move(skip_regex))
@@ -312,6 +312,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         false;
 #endif
     bool print_json = false;
+    bool print_junit = false;
     bool print_all_output = false;
     bool run_benchmarks = false;
     bool run_skipped_tests = false;
@@ -337,6 +338,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
     });
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
+    args_parser.add_option(print_junit, "Show results as JUnit XML", "junit", 'x');
     args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v');
     args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b');
     args_parser.add_option(run_skipped_tests, "Run all matching tests, even those marked as 'skip'", "all", 'a');
@@ -406,7 +408,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TestRunner test_runner(test_root, move(exclude_regex), move(config), move(skip_regex), run_skipped_tests, print_progress, print_json, print_all_output);
+    const TestRunner::OutputFormat output_format = [=] {
+        if (print_json && print_all_output)
+            return TestRunner::OutputFormat::DetailedJSON;
+        if (print_json)
+            return TestRunner::OutputFormat::JSON;
+        if (print_junit)
+            return TestRunner::OutputFormat::JUnit;
+        return TestRunner::OutputFormat::UTF8;
+    }();
+
+    TestRunner test_runner(test_root, move(exclude_regex), move(config), move(skip_regex), run_skipped_tests, print_progress, output_format, print_all_output);
     test_runner.run(test_glob);
 
     return test_runner.counts().tests_failed;
