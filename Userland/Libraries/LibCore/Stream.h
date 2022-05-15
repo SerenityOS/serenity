@@ -179,6 +179,7 @@ class File final : public SeekableStream {
 public:
     static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
+    static bool exists(StringView filename);
 
     File(File&& other) { operator=(move(other)); }
 
