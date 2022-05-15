@@ -327,3 +327,14 @@ TEST_CASE(roman_numerals)
     auto four_thousand = String::roman_number_from(4000);
     EXPECT_EQ(four_thousand, "4000");
 }
+
+TEST_CASE(view_lines)
+{
+    String multiline = "well\nhello\nfriends\n";
+    auto lines = multiline.view().lines();
+
+    EXPECT_EQ(lines.size(), 4U);
+    EXPECT_EQ(lines[0], "well");
+    EXPECT_EQ(lines[1], "hello");
+    EXPECT_EQ(lines[2], "friends");
+}
