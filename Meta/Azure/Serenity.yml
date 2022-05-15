@@ -79,10 +79,10 @@ jobs:
         sudo cat fsmount/home/anon/test-results.log
         echo "##[endgroup]"
 
-        if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
-        then
-          echo "##[error]:^( Tests failed, failing job"
-          exit 1
+        sudo cp fsmount/home/anon/junit.xml .
+        if [ ! -e ./junit.xml ]; then
+            echo "##[error]:^( Tests failed, failing job"
+            return 1
         fi
         sudo umount fsmount
       displayName: 'Test'
@@ -92,6 +92,14 @@ jobs:
         SERENITY_QEMU_CPU: 'max,vmx=off'
         SERENITY_KERNEL_CMDLINE: 'fbdev=off panic=shutdown system_mode=self-test'
         SERENITY_RUN: 'ci'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang/junit.xml
+        testRunTitle: 'Serenity_Clang_${{ parameters.arch }}_Coverage_${{ parameters.coverage }}'
+        platform: ${{ parameters.arch }}_Clang
+        failTaskOnFailedTests: true
 
     - script: |
         [ ! -e debug.log ] || cat debug.log

@@ -207,11 +207,12 @@ jobs:
           sudo mount -t ext2 -o loop,rw _disk_image fsmount
           echo "Results: "
           sudo cat fsmount/home/anon/test-results.log
-          if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
-          then
+          sudo cp fsmount/home/anon/junit.xml .
+          if [ ! -e ./junit.xml ]; then
             echo "::error :^( Tests failed, failing job"
             exit 1
           fi
+          sudo umount fsmount
           echo "::endgroup::"
         timeout-minutes: 60
 
@@ -220,6 +221,15 @@ jobs:
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: '[ ! -e debug.log ] || cat debug.log'
+
+      - name: Upload Test Results
+        if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (GNU ${{ matrix.arch }})
+          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/junit.xml
+          if-no-files-found: error
+          retention-days: 1 # default is 90
 
       - name: Check manpages for completeness
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'i686'}}
@@ -234,3 +244,15 @@ jobs:
           ninja image
           /usr/bin/time ../../Meta/export-argsparser-manpages.sh --verify-git-state
         timeout-minutes: 10
+
+  # Needed for test-results workflow
+  event_file:
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Event File
+        path: ${{ github.event_path }}
+        retention-days: 1 # default is 90
