@@ -57,7 +57,7 @@ requires(IsFloatingPoint<T>) struct Traits<T> : public GenericTraits<T> {
 
 template<typename T>
 requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
-    static unsigned hash(T p) { return ptr_hash((FlatPtr)p); }
+    static unsigned hash(T p) { return ptr_hash(reinterpret_cast<FlatPtr>(p)); }
     static constexpr bool is_trivial() { return true; }
 };
 

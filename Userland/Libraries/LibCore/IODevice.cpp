@@ -51,7 +51,7 @@ ByteBuffer IODevice::read(size_t max_size)
         return {};
     }
     auto buffer = buffer_result.release_value();
-    auto* buffer_ptr = (char*)buffer.data();
+    auto* buffer_ptr = reinterpret_cast<char*>(buffer.data());
 
     memcpy(buffer_ptr, m_buffered_data.data(), size);
     m_buffered_data.remove(0, size);
@@ -142,7 +142,7 @@ ByteBuffer IODevice::read_all()
             set_eof(true);
             break;
         }
-        data.append((u8 const*)read_buffer, nread);
+        data.append(reinterpret_cast<u8 const*>(read_buffer), nread);
     }
 
     auto result = ByteBuffer::copy(data);
@@ -166,7 +166,7 @@ String IODevice::read_line(size_t max_size)
             dbgln("IODevice::read_line: At EOF but there's more than max_size({}) buffered", max_size);
             return {};
         }
-        auto line = String((char const*)m_buffered_data.data(), m_buffered_data.size(), Chomp);
+        auto line = String(reinterpret_cast<char const*>(m_buffered_data.data()), m_buffered_data.size(), Chomp);
         m_buffered_data.clear();
         return line;
     }
@@ -204,7 +204,7 @@ bool IODevice::populate_read_buffer(size_t size) const
         return {};
     }
     auto buffer = buffer_result.release_value();
-    auto* buffer_ptr = (char*)buffer.data();
+    auto* buffer_ptr = reinterpret_cast<char*>(buffer.data());
 
     int nread = ::read(m_fd, buffer_ptr, size);
     if (nread < 0) {
@@ -294,7 +294,7 @@ void IODevice::set_fd(int fd)
 
 bool IODevice::write(StringView v)
 {
-    return write((u8 const*)v.characters_without_null_termination(), v.length());
+    return write(reinterpret_cast<u8 const*>(v.characters_without_null_termination()), v.length());
 }
 
 LineIterator::LineIterator(IODevice& device, bool is_end)

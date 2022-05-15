@@ -259,14 +259,14 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         double sign = (whole < 0) ? -1 : 1;
 
         auto divider = pow(10.0, static_cast<double>(fraction_buffer.size()));
-        value = JsonValue((double)whole + sign * (fraction / divider));
+        value = JsonValue(static_cast<double>(whole) + sign * (fraction / divider));
     } else {
 #endif
         auto to_unsigned_result = number_string.to_uint<u64>();
         if (to_unsigned_result.has_value()) {
             auto number = *to_unsigned_result;
             if (number <= NumericLimits<u32>::max())
-                value = JsonValue((u32)number);
+                value = JsonValue(static_cast<u32>(number));
             else
                 value = JsonValue(number);
         } else {
@@ -274,7 +274,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
             if (!number.has_value())
                 return Error::from_string_literal("JsonParser: Error while parsing number"sv);
             if (number.value() <= NumericLimits<i32>::max()) {
-                value = JsonValue((i32)number.value());
+                value = JsonValue(static_cast<i32>(number.value()));
             } else {
                 value = JsonValue(number.value());
             }

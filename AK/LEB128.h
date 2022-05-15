@@ -97,7 +97,7 @@ struct LEB128 {
 
         if ((num_bytes * 7) < 64 && (byte & 0x40)) {
             // sign extend
-            temp |= ((u64)(-1) << (num_bytes * 7));
+            temp |= (~0ULL << (num_bytes * 7));
         }
 
         // Now that we've accumulated into an i64, make sure it fits into result

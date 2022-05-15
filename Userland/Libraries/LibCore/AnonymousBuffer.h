@@ -52,7 +52,7 @@ public:
         static_assert(IsVoid<T> || IsTrivial<T>);
         if (!m_impl)
             return nullptr;
-        return (T*)m_impl->data();
+        return static_cast<T*>(m_impl->data());
     }
 
     template<typename T>
@@ -61,7 +61,7 @@ public:
         static_assert(IsVoid<T> || IsTrivial<T>);
         if (!m_impl)
             return nullptr;
-        return (const T*)m_impl->data();
+        return static_cast<const T*>(m_impl->data());
     }
 
 private:

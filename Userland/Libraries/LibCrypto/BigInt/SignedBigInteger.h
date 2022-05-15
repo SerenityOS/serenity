@@ -45,7 +45,7 @@ public:
         return { UnsignedBigInteger::create_invalid(), false };
     }
 
-    static SignedBigInteger import_data(StringView data) { return import_data((u8 const*)data.characters_without_null_termination(), data.length()); }
+    static SignedBigInteger import_data(StringView data) { return import_data(reinterpret_cast<u8 const*>(data.characters_without_null_termination()), data.length()); }
     static SignedBigInteger import_data(u8 const* ptr, size_t length);
 
     static SignedBigInteger create_from(i64 value)
@@ -87,7 +87,7 @@ public:
 
     void set_to(i32 other)
     {
-        m_unsigned_data.set_to((u32)other);
+        m_unsigned_data.set_to(static_cast<u32>(other));
         m_sign = other < 0;
     }
     void set_to(SignedBigInteger const& other)

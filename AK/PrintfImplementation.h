@@ -198,16 +198,16 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
     if (sign)
         number = -number;
 
-    length = print_decimal(putch, bufptr, (i64)number, sign, always_sign, left_pad, zero_pad, whole_width, false, 1);
+    length = print_decimal(putch, bufptr, static_cast<i64>(number), sign, always_sign, left_pad, zero_pad, whole_width, false, 1);
     if (precision > 0) {
         putch(bufptr, '.');
         length++;
-        double fraction = number - (i64)number;
+        double fraction = number - static_cast<i64>(number);
 
         for (u32 i = 0; i < precision; ++i)
             fraction = fraction * 10;
 
-        return length + print_decimal(putch, bufptr, (i64)fraction, false, false, false, true, precision, false, 1);
+        return length + print_decimal(putch, bufptr, static_cast<i64>(fraction), false, false, false, true, precision, false, 1);
     }
 
     return length;

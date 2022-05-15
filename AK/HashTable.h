@@ -485,7 +485,7 @@ private:
         if (!new_buckets)
             return Error::from_errno(ENOMEM);
 
-        m_buckets = (BucketType*)new_buckets;
+        m_buckets = static_cast<BucketType*>(new_buckets);
 
         m_capacity = new_capacity;
         m_deleted_count = 0;

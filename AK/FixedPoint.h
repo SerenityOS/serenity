@@ -52,7 +52,7 @@ public:
     template<FloatingPoint F>
     explicit ALWAYS_INLINE operator F() const
     {
-        return (F)m_value * pow<F>(0.5, precision);
+        return static_cast<F>(m_value) * pow<F>(0.5, precision);
     }
 #endif
 
@@ -344,17 +344,17 @@ public:
 
     // Casting from a float should be faster than casting to a float
     template<FloatingPoint F>
-    bool operator==(F other) const { return *this == (This)other; }
+    bool operator==(F other) const { return *this == static_cast<This>(other); }
     template<FloatingPoint F>
-    bool operator!=(F other) const { return *this != (This)other; }
+    bool operator!=(F other) const { return *this != static_cast<This>(other); }
     template<FloatingPoint F>
-    bool operator>(F other) const { return *this > (This)other; }
+    bool operator>(F other) const { return *this > static_cast<This>(other); }
     template<FloatingPoint F>
-    bool operator>=(F other) const { return *this >= (This)other; }
+    bool operator>=(F other) const { return *this >= static_cast<This>(other); }
     template<FloatingPoint F>
-    bool operator<(F other) const { return *this < (This)other; }
+    bool operator<(F other) const { return *this < static_cast<This>(other); }
     template<FloatingPoint F>
-    bool operator<=(F other) const { return *this <= (This)other; }
+    bool operator<=(F other) const { return *this <= static_cast<This>(other); }
 
     template<size_t P, typename U>
     operator FixedPoint<P, U>() const

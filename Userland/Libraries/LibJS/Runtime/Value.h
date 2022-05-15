@@ -24,7 +24,7 @@
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
 // Unique bit representation of negative zero (only sign bit set)
-static constexpr u64 NEGATIVE_ZERO_BITS = ((u64)1 << 63);
+static constexpr u64 NEGATIVE_ZERO_BITS = (1ull << 63);
 
 namespace JS {
 
@@ -299,7 +299,7 @@ public:
         if (m_type == Type::Int32 && m_value.as_i32 >= 0)
             return m_value.as_i32;
         VERIFY(as_double() >= 0);
-        return (u32)min(as_double(), (double)NumericLimits<u32>::max());
+        return static_cast<u32>(min(as_double(), static_cast<double>(NumericLimits<u32>::max())));
     }
 
     u64 encoded() const { return m_value.encoded; }

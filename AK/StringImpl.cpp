@@ -98,7 +98,7 @@ RefPtr<StringImpl> StringImpl::create_lowercased(char const* cstring, size_t len
     char* buffer;
     auto impl = create_uninitialized(length, buffer);
     for (size_t i = 0; i < length; ++i)
-        buffer[i] = (char)to_ascii_lowercase(cstring[i]);
+        buffer[i] = static_cast<char>(to_ascii_lowercase(cstring[i]));
     return impl;
 }
 
@@ -111,7 +111,7 @@ RefPtr<StringImpl> StringImpl::create_uppercased(char const* cstring, size_t len
     char* buffer;
     auto impl = create_uninitialized(length, buffer);
     for (size_t i = 0; i < length; ++i)
-        buffer[i] = (char)to_ascii_uppercase(cstring[i]);
+        buffer[i] = static_cast<char>(to_ascii_uppercase(cstring[i]));
     return impl;
 }
 

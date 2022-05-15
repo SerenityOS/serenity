@@ -50,7 +50,7 @@ void NetworkJob::did_fail(Error error)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_error = error;
-    dbgln_if(NETWORKJOB_DEBUG, "{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, (unsigned)error, to_string(error));
+    dbgln_if(NETWORKJOB_DEBUG, "{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, static_cast<unsigned>(error), to_string(error));
     VERIFY(on_finish);
     on_finish(false);
     shutdown(ShutdownMode::DetachFromSocket);

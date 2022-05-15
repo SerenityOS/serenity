@@ -36,7 +36,7 @@ public:
 
     static UnsignedBigInteger create_invalid();
 
-    static UnsignedBigInteger import_data(StringView data) { return import_data((u8 const*)data.characters_without_null_termination(), data.length()); }
+    static UnsignedBigInteger import_data(StringView data) { return import_data(reinterpret_cast<u8 const*>(data.characters_without_null_termination()), data.length()); }
     static UnsignedBigInteger import_data(u8 const* ptr, size_t length)
     {
         return UnsignedBigInteger(ptr, length);

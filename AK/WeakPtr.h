@@ -44,7 +44,7 @@ public:
     template<typename U>
     WeakPtr& operator=(WeakPtr<U> const& other) requires(IsBaseOf<T, U>)
     {
-        if ((void const*)this != (void const*)&other)
+        if (static_cast<void const*>(this) != static_cast<void const*>(&other))
             m_link = other.m_link;
         return *this;
     }

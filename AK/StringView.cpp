@@ -34,7 +34,7 @@ StringView::StringView(FlyString const& string)
 #endif
 
 StringView::StringView(ByteBuffer const& buffer)
-    : m_characters((char const*)buffer.data())
+    : m_characters(reinterpret_cast<char const*>(buffer.data()))
     , m_length(buffer.size())
 {
 }

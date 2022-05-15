@@ -46,7 +46,7 @@ bool UDPServer::bind(IPv4Address const& address, u16 port)
     auto saddr = SocketAddress(address, port);
     auto in = saddr.to_sockaddr_in();
 
-    if (::bind(m_fd, (sockaddr const*)&in, sizeof(in)) != 0) {
+    if (::bind(m_fd, reinterpret_cast<sockaddr const*>(&in), sizeof(in)) != 0) {
         perror("UDPServer::bind");
         return false;
     }
@@ -66,7 +66,7 @@ ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
     // FIXME: Handle possible OOM situation.
     auto buf = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
     socklen_t in_len = sizeof(in);
-    ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len);
+    ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, reinterpret_cast<sockaddr*>(&in), &in_len);
     if (rlen < 0) {
         dbgln("recvfrom: {}", strerror(errno));
         return {};
@@ -83,7 +83,7 @@ Optional<IPv4Address> UDPServer::local_address() const
 
     sockaddr_in address;
     socklen_t len = sizeof(address);
-    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+    if (getsockname(m_fd, reinterpret_cast<sockaddr*>(&address), &len) != 0)
         return {};
 
     return IPv4Address(address.sin_addr.s_addr);
@@ -96,7 +96,7 @@ Optional<u16> UDPServer::local_port() const
 
     sockaddr_in address;
     socklen_t len = sizeof(address);
-    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+    if (getsockname(m_fd, reinterpret_cast<sockaddr*>(&address), &len) != 0)
         return {};
 
     return ntohs(address.sin_port);
@@ -108,7 +108,7 @@ ErrorOr<size_t> UDPServer::send(ReadonlyBytes buffer, sockaddr_in const& to)
         return Error::from_errno(EBADF);
     }
 
-    auto result = ::sendto(m_fd, buffer.data(), buffer.size(), 0, (sockaddr const*)&to, sizeof(to));
+    auto result = ::sendto(m_fd, buffer.data(), buffer.size(), 0, reinterpret_cast<sockaddr const*>(&to), sizeof(to));
     if (result < 0) {
         return Error::from_errno(errno);
     }

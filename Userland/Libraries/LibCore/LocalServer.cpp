@@ -92,7 +92,7 @@ bool LocalServer::listen(String const& address)
         return false;
     }
     auto un = un_optional.value();
-    rc = ::bind(m_fd, (sockaddr const*)&un, sizeof(un));
+    rc = ::bind(m_fd, reinterpret_cast<sockaddr const*>(&un), sizeof(un));
     if (rc < 0) {
         perror("bind");
         return false;
@@ -115,7 +115,7 @@ ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> LocalServer::accept()
     sockaddr_un un;
     socklen_t un_size = sizeof(un);
 #ifndef AK_OS_MACOS
-    int accepted_fd = ::accept4(m_fd, (sockaddr*)&un, &un_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    int accepted_fd = ::accept4(m_fd, reinterpret_cast<sockaddr*>(&un), &un_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
 #else
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);
 #endif

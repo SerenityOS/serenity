@@ -95,7 +95,7 @@ String StringBuilder::to_string() const
 {
     if (is_empty())
         return String::empty();
-    return String((char const*)data(), length());
+    return String(reinterpret_cast<char const*>(data()), length());
 }
 
 String StringBuilder::build() const

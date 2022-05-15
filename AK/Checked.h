@@ -286,7 +286,7 @@ public:
         checked += v;
         return checked.has_overflow();
 #else
-        return __builtin_add_overflow_p(u, v, (T)0);
+        return __builtin_add_overflow_p(u, v, static_cast<T>(0));
 #endif
     }
 
@@ -299,7 +299,7 @@ public:
         checked *= v;
         return checked.has_overflow();
 #else
-        return __builtin_mul_overflow_p(u, v, (T)0);
+        return __builtin_mul_overflow_p(u, v, static_cast<T>(0));
 #endif
     }
 

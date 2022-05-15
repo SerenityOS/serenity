@@ -265,7 +265,7 @@ ErrorOr<String> File::read_link(String const& link_path)
     // (See above.)
     if (rc == statbuf.st_size)
         return { *buffer };
-    return String { buffer_ptr, (size_t)rc };
+    return String { buffer_ptr, static_cast<size_t>(rc) };
 }
 
 #endif

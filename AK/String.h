@@ -267,7 +267,7 @@ public:
     {
         if (buffer.is_empty())
             return empty();
-        return String((char const*)buffer.data(), buffer.size(), should_chomp);
+        return String(reinterpret_cast<char const*>(buffer.data()), buffer.size(), should_chomp);
     }
 
     [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams&);

@@ -211,7 +211,7 @@ public:
         auto serialized = response.to_string();
         u32 length = serialized.length();
         // FIXME: Propagate errors
-        MUST(m_socket->write({ (u8 const*)&length, sizeof(length) }));
+        MUST(m_socket->write({ reinterpret_cast<u8 const*>(&length), sizeof(length) }));
         MUST(m_socket->write(serialized.bytes()));
     }
 
@@ -257,7 +257,7 @@ public:
         if (type == "SetInspectedObject") {
             auto address = request.get("address").to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
-                if ((FlatPtr)&object == address) {
+                if (reinterpret_cast<FlatPtr>(&object) == address) {
                     if (auto inspected_object = m_inspected_object.strong_ref())
                         inspected_object->decrement_inspector_count({});
                     m_inspected_object = object;
@@ -271,7 +271,7 @@ public:
         if (type == "SetProperty") {
             auto address = request.get("address").to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
-                if ((FlatPtr)&object == address) {
+                if (reinterpret_cast<FlatPtr>(&object) == address) {
                     bool success = object.set_property(request.get("name").to_string(), request.get("value"));
                     JsonObject response;
                     response.set("type", "SetProperty");

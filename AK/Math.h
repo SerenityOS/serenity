@@ -113,7 +113,7 @@ constexpr T sqrt(T x)
 template<FloatingPoint T>
 constexpr T rsqrt(T x)
 {
-    return (T)1. / sqrt(x);
+    return static_cast<T>(1.) / sqrt(x);
 }
 
 #ifdef __SSE__
@@ -317,7 +317,7 @@ constexpr T asin(T x)
     CONSTEXPR_STATE(asin, x);
     if (x > 1 || x < -1)
         return NaN<T>;
-    if (x > (T)0.5 || x < (T)-0.5)
+    if (x > static_cast<T>(0.5) || x < static_cast<T>(-0.5))
         return 2 * atan<T>(x / (1 + sqrt<T>(1 - x * x)));
     T squared = x * x;
     T value = x;
@@ -540,7 +540,7 @@ constexpr T acosh(T x)
 template<FloatingPoint T>
 constexpr T atanh(T x)
 {
-    return log<T>((1 + x) / (1 - x)) / (T)2.0l;
+    return log<T>((1 + x) / (1 - x)) / static_cast<T>(2.0l);
 }
 
 }
@@ -648,8 +648,8 @@ constexpr T pow(T x, T y)
         return 0;
     if (y == 1)
         return x;
-    int y_as_int = (int)y;
-    if (y == (T)y_as_int) {
+    int y_as_int = static_cast<int>(y);
+    if (y == static_cast<T>(y_as_int)) {
         T result = x;
         for (int i = 0; i < fabs<T>(y) - 1; ++i)
             result *= x;

@@ -261,7 +261,10 @@ public:
 
     constexpr Color lightened(float amount = 1.2f) const
     {
-        return Color(min(255, (int)((float)red() * amount)), min(255, (int)((float)green() * amount)), min(255, (int)((float)blue() * amount)), alpha());
+        return Color(min(255, static_cast<int>(static_cast<float>(red()) * amount)),
+            min(255, static_cast<int>(static_cast<float>(green()) * amount)),
+            min(255, static_cast<int>(static_cast<float>(blue()) * amount)),
+            alpha());
     }
 
     Vector<Color> shades(u32 steps, float max = 1.f) const;
@@ -387,9 +390,9 @@ public:
             break;
         }
 
-        u8 out_r = (u8)(r * 255);
-        u8 out_g = (u8)(g * 255);
-        u8 out_b = (u8)(b * 255);
+        u8 out_r = static_cast<u8>(r * 255);
+        u8 out_g = static_cast<u8>(g * 255);
+        u8 out_b = static_cast<u8>(b * 255);
         return Color(out_r, out_g, out_b);
     }
 

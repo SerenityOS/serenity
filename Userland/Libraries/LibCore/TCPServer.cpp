@@ -46,7 +46,7 @@ ErrorOr<void> TCPServer::listen(IPv4Address const& address, u16 port)
 
     auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
-    TRY(Core::System::bind(m_fd, (sockaddr const*)&in, sizeof(in)));
+    TRY(Core::System::bind(m_fd, reinterpret_cast<sockaddr const*>(&in), sizeof(in)));
     TRY(Core::System::listen(m_fd, 5));
     m_listening = true;
 
@@ -74,9 +74,9 @@ ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
     sockaddr_in in;
     socklen_t in_size = sizeof(in);
 #ifndef AK_OS_MACOS
-    int accepted_fd = TRY(Core::System::accept4(m_fd, (sockaddr*)&in, &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC));
+    int accepted_fd = TRY(Core::System::accept4(m_fd, reinterpret_cast<sockaddr*>(&in), &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC));
 #else
-    int accepted_fd = TRY(Core::System::accept(m_fd, (sockaddr*)&in, &in_size));
+    int accepted_fd = TRY(Core::System::accept(m_fd, reinterpret_cast<sockaddr*>(&in), &in_size));
 #endif
 
     auto socket = TRY(Stream::TCPSocket::adopt_fd(accepted_fd));
@@ -99,7 +99,7 @@ Optional<IPv4Address> TCPServer::local_address() const
 
     sockaddr_in address;
     socklen_t len = sizeof(address);
-    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+    if (getsockname(m_fd, reinterpret_cast<sockaddr*>(&address), &len) != 0)
         return {};
 
     return IPv4Address(address.sin_addr.s_addr);
@@ -112,7 +112,7 @@ Optional<u16> TCPServer::local_port() const
 
     sockaddr_in address;
     socklen_t len = sizeof(address);
-    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+    if (getsockname(m_fd, reinterpret_cast<sockaddr*>(&address), &len) != 0)
         return {};
 
     return ntohs(address.sin_port);

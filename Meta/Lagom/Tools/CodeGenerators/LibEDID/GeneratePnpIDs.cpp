@@ -143,7 +143,7 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
             return Error::from_string_literal("Invalid row start tag"sv);
 
         auto row_string = pnp_ids_file_contents.substring_view(row_start_tag_end.value() + 1, row_end.value() - row_start_tag_end.value() - 1);
-        Vector<String, (size_t)PnpIdColumns::ColumnCount> columns;
+        Vector<String, static_cast<size_t>(PnpIdColumns::ColumnCount)> columns;
         for (size_t column_row_offset = 0;;) {
             static auto const column_start_tag = "<td>"sv;
             auto column_start = row_string.find(column_start_tag, column_row_offset);
@@ -164,12 +164,12 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
             column_row_offset = column_end.value() + column_end_tag.length();
         }
 
-        if (columns.size() != (size_t)PnpIdColumns::ColumnCount)
+        if (columns.size() != static_cast<size_t>(PnpIdColumns::ColumnCount))
             return Error::from_string_literal("Unexpected number of columns found"sv);
 
-        auto approval_date = TRY(parse_approval_date(columns[(size_t)PnpIdColumns::ApprovalDate]));
-        auto decoded_manufacturer_name = TRY(decode_html_entities(columns[(size_t)PnpIdColumns::ManufacturerName]));
-        auto hash_set_result = pnp_id_data.set(columns[(size_t)PnpIdColumns::ManufacturerId], PnpIdData { .manufacturer_name = decoded_manufacturer_name, .approval_date = move(approval_date) });
+        auto approval_date = TRY(parse_approval_date(columns[static_cast<size_t>(PnpIdColumns::ApprovalDate)]));
+        auto decoded_manufacturer_name = TRY(decode_html_entities(columns[static_cast<size_t>(PnpIdColumns::ManufacturerName)]));
+        auto hash_set_result = pnp_id_data.set(columns[static_cast<size_t>(PnpIdColumns::ManufacturerId)], PnpIdData { .manufacturer_name = decoded_manufacturer_name, .approval_date = move(approval_date) });
         if (hash_set_result != AK::HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("Duplicate manufacturer ID encountered"sv);
 

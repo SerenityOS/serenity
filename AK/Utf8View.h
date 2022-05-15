@@ -119,7 +119,7 @@ public:
     }
 
 private:
-    u8 const* begin_ptr() const { return (u8 const*)m_string.characters_without_null_termination(); }
+    u8 const* begin_ptr() const { return reinterpret_cast<u8 const*>(m_string.characters_without_null_termination()); }
     u8 const* end_ptr() const { return begin_ptr() + m_string.length(); }
     size_t calculate_length() const;
 

@@ -32,7 +32,7 @@ StackInfo::StackInfo()
         fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
         VERIFY_NOT_REACHED();
     }
-    if ((rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size)) != 0) {
+    if ((rc = pthread_attr_getstack(&attr, reinterpret_cast<void**>(&m_base), &m_size)) != 0) {
         fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
         VERIFY_NOT_REACHED();
     }

@@ -234,9 +234,9 @@ Time Time::operator-(Time const& other) const
     VERIFY(other.m_nanoseconds < 1'000'000'000);
 
     if (other.m_nanoseconds)
-        return *this + Time((i64) ~(u64)other.m_seconds, 1'000'000'000 - other.m_nanoseconds);
+        return *this + Time(static_cast<i64>(~static_cast<u64>(other.m_seconds)), 1'000'000'000 - other.m_nanoseconds);
 
-    if (other.m_seconds != (i64)-0x8000'0000'0000'0000)
+    if (other.m_seconds != static_cast<i64>(-0x8000'0000'0000'0000))
         return *this + Time(-other.m_seconds, 0);
 
     // Only remaining case: We want to subtract -0x8000'0000'0000'0000 seconds,

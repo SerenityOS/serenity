@@ -292,7 +292,7 @@ private:
     NEVER_INLINE ErrorOr<void> try_ensure_capacity_slowpath(size_t new_capacity)
     {
         new_capacity = kmalloc_good_size(new_capacity);
-        auto* new_buffer = (u8*)kmalloc(new_capacity);
+        auto* new_buffer = static_cast<u8*>(kmalloc(new_capacity));
         if (!new_buffer)
             return Error::from_errno(ENOMEM);
 

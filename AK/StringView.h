@@ -25,13 +25,13 @@ public:
         , m_length(length)
     {
         if (!is_constant_evaluated())
-            VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+            VERIFY(!Checked<FlatPtr>::addition_would_overflow(reinterpret_cast<FlatPtr>(characters), length));
     }
     ALWAYS_INLINE StringView(unsigned char const* characters, size_t length)
-        : m_characters((char const*)characters)
+        : m_characters(reinterpret_cast<char const*>(characters))
         , m_length(length)
     {
-        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        VERIFY(!Checked<FlatPtr>::addition_would_overflow(reinterpret_cast<FlatPtr>(characters), length));
     }
     ALWAYS_INLINE constexpr StringView(char const* cstring)
         : m_characters(cstring)
