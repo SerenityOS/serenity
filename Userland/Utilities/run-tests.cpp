@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibMain/Main.h>
@@ -30,6 +33,7 @@ struct FileResult {
     double time_taken { 0 };
     Test::Result result { Test::Result::Pass };
     int stdout_err_fd { -1 };
+    int json_fd { -1 };
     pid_t child_pid { 0 };
 };
 
@@ -199,7 +203,7 @@ void TestRunner::do_run_single_test(String const& test_path, size_t current_test
     fflush(stdout);
 
     if (print_stdout_stderr && test_result.stdout_err_fd > 0) {
-        int ret = lseek(test_result.stdout_err_fd, 0, SEEK_SET);
+        off_t ret = lseek(test_result.stdout_err_fd, 0, SEEK_SET);
         VERIFY(ret == 0);
         for (;;) {
             char buf[32768];
@@ -211,7 +215,7 @@ void TestRunner::do_run_single_test(String const& test_path, size_t current_test
                 break;
             }
             size_t already_written = 0;
-            while (already_written < (size_t)nread) {
+            while (already_written < static_cast<size_t>(nread)) {
                 ssize_t nwritten = write(STDOUT_FILENO, buf + already_written, nread - already_written);
                 if (nwritten < 0) {
                     perror("write");
@@ -223,6 +227,49 @@ void TestRunner::do_run_single_test(String const& test_path, size_t current_test
     }
 
     close(test_result.stdout_err_fd);
+
+    auto result_str_to_result = [](StringView s) {
+        if (s == "PASSED"sv)
+            return Test::Result::Pass;
+        if (s == "FAILED"sv)
+            return Test::Result::Fail;
+        if (s == "SKIPPED"sv)
+            return Test::Result::Skip;
+        if (s == "PROCESS_ERROR"sv)
+            return Test::Result::Crashed;
+        return Test::Result::Fail;
+    };
+
+    // FIXME: This is very nesty, find a way to flatten
+    if (needs_detailed_suites()) {
+        Test::Suite suite = { test_path, test_relative_path, test_result.result };
+        suite.total_duration_us = static_cast<u64>(test_result.time_taken * 1000);
+        if (test_result.result != Test::Result::Skip) {
+            auto file = MUST(Core::Stream::File::adopt_fd(test_result.json_fd, Core::Stream::OpenMode::Read));
+            MUST(file->seek(0, Core::Stream::SeekMode::SetPosition));
+            off_t filesz = MUST(file->size());
+            if (filesz > 0) {
+                // FIXME: Reuse a single chonky buffer? This mallocs a new buffer for every test file
+                auto raw_buf = MUST(ByteBuffer::create_uninitialized(filesz));
+                auto bytes = MUST(file->read(raw_buf));
+                auto maybe_json = JsonValue::from_string(StringView(bytes));
+                if (!maybe_json.is_error()) {
+                    auto test_json = maybe_json.release_value();
+                    suite.total_duration_us = test_json.as_object().get("total_ms").to_u64() * 1000;
+                    test_json.as_object().get("results").as_array().for_each([&](JsonValue const& test_value) {
+                        Test::Case test_case;
+                        auto const& test_object = test_value.as_object();
+                        test_case.name = test_object.get("name").as_string();
+                        test_case.duration_us = test_object.get("elapsed_ms").to_u64() * 1000;
+                        test_case.result = result_str_to_result(test_object.get("result").as_string().view());
+                        test_case.details = test_object.get("details").as_string();
+                        suite.tests.append(move(test_case));
+                    });
+                }
+            }
+        }
+        ensure_suites().append(suite);
+    }
 }
 
 FileResult TestRunner::run_test_file(String const& test_path)
@@ -237,9 +284,12 @@ FileResult TestRunner::run_test_file(String const& test_path)
     // FIXME: actual error handling, mark test as :yaksplode: if any are bad instead of VERIFY
     posix_spawn_file_actions_t file_actions;
     posix_spawn_file_actions_init(&file_actions);
-    char child_out_err_path[] = "/tmp/run-tests.XXXXXX";
+    char child_out_err_path[] = "/tmp/run-tests-out.XXXXXX";
     int child_out_err_file = mkstemp(child_out_err_path);
     VERIFY(child_out_err_file >= 0);
+
+    int child_json_out_file = -1;
+    char child_json_out_path[] = "/tmp/run-tests-json.XXXXXX";
 
     String dirname = path_for_test.dirname();
     String basename = path_for_test.basename();
@@ -255,11 +305,25 @@ FileResult TestRunner::run_test_file(String const& test_path)
         argv.append(arg.characters());
     argv.append(nullptr);
 
-    pid_t child_pid = -1;
     // FIXME: Do we really want to copy test runner's entire env?
-    int ret = posix_spawn(&child_pid, test_path.characters(), &file_actions, nullptr, const_cast<char* const*>(argv.data()), environ);
+    Vector<char const*> envp;
+    for (auto const* e = environ; *e; ++e) {
+        envp.append(*e);
+    }
+
+    if (needs_detailed_suites()) {
+        child_json_out_file = mkstemp(child_json_out_path);
+        VERIFY(child_json_out_file >= 0);
+        (void)posix_spawn_file_actions_adddup2(&file_actions, child_json_out_file, 42);
+        envp.append("LIBTEST_JSON_FD=42");
+    }
+    envp.append(nullptr);
+
+    pid_t child_pid = -1;
+    int ret = posix_spawn(&child_pid, test_path.characters(), &file_actions, nullptr, const_cast<char* const*>(argv.data()), const_cast<char* const*>(envp.data()));
     VERIFY(ret == 0);
     VERIFY(child_pid > 0);
+    (void)posix_spawn_file_actions_destroy(&file_actions);
 
     int wstatus;
 
@@ -287,8 +351,12 @@ FileResult TestRunner::run_test_file(String const& test_path)
     // while the test is executing, but if it hangs that might even be a bonus :)
     ret = unlink(child_out_err_path);
     VERIFY(ret == 0);
+    if (needs_detailed_suites()) {
+        ret = unlink(child_json_out_path);
+        VERIFY(ret == 0);
+    }
 
-    return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file, child_pid };
+    return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file, child_json_out_file, child_pid };
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
