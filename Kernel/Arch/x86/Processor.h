@@ -422,6 +422,21 @@ public:
         return m_features.has_flag(feature);
     }
 
+    ALWAYS_INLINE static bool are_interrupts_enabled()
+    {
+        return Kernel::are_interrupts_enabled();
+    }
+
+    ALWAYS_INLINE static void enable_interrupts()
+    {
+        sti();
+    }
+
+    ALWAYS_INLINE static void disable_interrupts()
+    {
+        cli();
+    }
+
     void check_invoke_scheduler();
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
 
