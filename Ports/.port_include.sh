@@ -694,6 +694,17 @@ prompt_yes_no() {
     fi
 }
 
+prompt_yes_no_default_yes() {
+    read -N1 -rp \
+        "$1 (Y/n) " result
+    2>&1 echo
+    if [ "${result,,}" == n ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 do_dev() {
     if [ -n "${IN_SERENITY_PORT_DEV:-}"  ]; then
         >&2 echo "Error: Already in dev environment for $IN_SERENITY_PORT_DEV"
@@ -729,7 +740,38 @@ do_dev() {
 
                             launch_user_shell
                         fi
-                        git commit --verbose
+                        main_author=''
+                        co_authors=()
+                        patch_name_in_parent_directory="patches/$(basename "$patch")"
+                        while read -r line; do
+                            author="$(echo "$line" | cut -f2 -d'	')"
+                            if [[ -z "$main_author" ]]; then
+                                main_author="$author"
+                            else
+                                co_authors+=("$author")
+                            fi
+                        done < <(git -C .. shortlog -esn -- "$patch_name_in_parent_directory")
+
+                        if [[ -n "$main_author" ]]; then
+                            date="$(git -C .. log --format=%ad -n1 -- "$patch_name_in_parent_directory")"
+                            >&2 echo -n "- This patch was authored by $main_author"
+                            if [[ ${#co_authors[@]} -ne 0 ]]; then
+                                >&2 echo -n " (and ${co_authors[*]})"
+                            fi
+                            >&2 echo " at $date"
+                            if prompt_yes_no_default_yes "- Would you like to preserve that information?"; then
+                                trailers=()
+                                for a in "${co_authors[@]}"; do
+                                    trailers+=("--trailer" "Co-Authored-By: $a")
+                                done
+                                git commit --verbose --author "$main_author" --date "$date" "${trailers[@]}"
+                            else
+                                >&2 echo " Okay, using your current git identity as the author."
+                                git commit --verbose
+                            fi
+                        else
+                            git commit --verbose
+                        fi
                     else
                         # The patch didn't apply, oh no!
                         # Ask the user to figure it out :shrug:
