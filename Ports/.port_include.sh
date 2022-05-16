@@ -711,7 +711,7 @@ do_dev() {
         exit 1
     fi
 
-    git_repo=".$workdir-git"
+    git_repo=".${workdir////_}-git"
     [ -d "$git_repo" ] || (
         mv "$workdir" "$git_repo"
         pushd "$git_repo"
