@@ -1,6 +1,18 @@
---- tuxracer-0.61-original/configure	2021-12-23 14:26:17.978567580 +0000
-+++ tuxracer-0.61/configure	2021-12-24 12:12:08.718881004 +0000
-@@ -1674,7 +1674,7 @@
+From b00365ebd72508d88bc31da63b56230ed23a5c1d Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Fri, 24 Dec 2021 15:24:16 +0100
+Subject: [PATCH 1/2] Explicitly link in SDL2
+
+Also pretend that isnan() works correctly.
+---
+ configure | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/configure b/configure
+index 20d409b..e4de165 100755
+--- a/configure
++++ b/configure
+@@ -1674,7 +1674,7 @@ $ac_func();
  
  ; return 0; }
  EOF
@@ -9,7 +21,7 @@
    rm -rf conftest*
    eval "ac_cv_func_$ac_func=yes"
  else
-@@ -3415,7 +3415,7 @@
+@@ -3417,7 +3417,7 @@ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
    echo $ac_n "(cached) $ac_c" 1>&6
  else
    ac_save_LIBS="$LIBS"
@@ -18,7 +30,7 @@
  cat > conftest.$ac_ext <<EOF
  #line 3423 "configure"
  #include "confdefs.h"
-@@ -3452,7 +3452,7 @@
+@@ -3454,7 +3454,7 @@ fi
  
  	if test "x$have_SDL_mixer" = "xyes" ; then 
  	    TR_CPPFLAGS="$TR_CPPFLAGS -DHAVE_SDL_MIXER=1" 
@@ -27,3 +39,6 @@
  	else
  	    echo "*** SDL_mixer not found.  Configuring without audio support."
  	fi
+-- 
+2.36.1
+
