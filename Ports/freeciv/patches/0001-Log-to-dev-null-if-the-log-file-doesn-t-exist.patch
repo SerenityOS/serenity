@@ -1,7 +1,17 @@
-diff -Naur freeciv-3.0.0-beta2/client/connectdlg_common.c freeciv-3.0.0-beta2.serenity/client/connectdlg_common.c
---- freeciv-3.0.0-beta2/client/connectdlg_common.c	2021-05-14 12:36:45.000000000 +0200
-+++ freeciv-3.0.0-beta2.serenity/client/connectdlg_common.c	2021-06-05 00:22:43.151395241 +0200
-@@ -302,6 +302,7 @@
+From cbcb5538e52f9990387d4d79e676d6ef3d03fe46 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Fri, 4 Jun 2021 23:20:55 +0200
+Subject: [PATCH] Log to /dev/null if the log file doesn't exist
+
+---
+ client/connectdlg_common.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/client/connectdlg_common.c b/client/connectdlg_common.c
+index 0afef96..d931378 100644
+--- a/client/connectdlg_common.c
++++ b/client/connectdlg_common.c
+@@ -302,6 +302,7 @@ bool client_start_server(void)
      char dbg_lvl_buf[32]; /* Do not move this inside the block where it gets filled,
                             * it's needed via the argv[x] pointer later on, so must
                             * remain in scope. */
@@ -9,7 +19,7 @@ diff -Naur freeciv-3.0.0-beta2/client/connectdlg_common.c freeciv-3.0.0-beta2.se
  
      /* Set up the command-line parameters. */
      fc_snprintf(port_buf, sizeof(port_buf), "%d", internal_server_port);
-@@ -376,16 +377,21 @@
+@@ -376,16 +377,21 @@ bool client_start_server(void)
        fclose(stdout);
        fclose(stderr);
  
@@ -39,3 +49,6 @@ diff -Naur freeciv-3.0.0-beta2/client/connectdlg_common.c freeciv-3.0.0-beta2.se
          fchmod(1, 0644);
        }
  
+-- 
+2.36.1
+
