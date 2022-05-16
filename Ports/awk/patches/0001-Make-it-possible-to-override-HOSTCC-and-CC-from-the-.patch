@@ -1,3 +1,13 @@
+From 54cc5812382bc7d3b5e2d1ef0c3a18a60fa896b7 Mon Sep 17 00:00:00 2001
+From: Mattias Nilsson <mattias.nilsson@nshift.com>
+Date: Mon, 4 Apr 2022 22:05:38 +0200
+Subject: [PATCH 1/2] Make it possible to override HOSTCC and CC from the
+ environment
+
+---
+ makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
 diff --git a/makefile b/makefile
 index 9ceaaad..6b9dff5 100644
 --- a/makefile
@@ -13,3 +23,6 @@ index 9ceaaad..6b9dff5 100644
  
  # By fiat, to make our lives easier, yacc is now defined to be bison.
  # If you want something else, you're on your own.
+-- 
+2.36.1
+
