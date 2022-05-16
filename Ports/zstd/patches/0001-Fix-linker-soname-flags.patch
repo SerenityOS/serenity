@@ -1,6 +1,18 @@
---- zstd-1.5.2/lib/Makefile.orig	2022-01-08 01:21:29.874503163 +0000
-+++ zstd-1.5.2/lib/Makefile	2022-01-08 01:21:43.026368517 +0000
-@@ -69,22 +69,10 @@
+From 119adcddd9faa0485a64c49fb461ed24d26499b6 Mon Sep 17 00:00:00 2001
+From: Luke Wilde <lukew@serenityos.org>
+Date: Sun, 13 Mar 2022 16:45:19 +0000
+Subject: [PATCH 1/2] Fix linker soname flags
+
+Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
+---
+ lib/Makefile | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
+
+diff --git a/lib/Makefile b/lib/Makefile
+index ef20218..e4766c9 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -69,22 +69,10 @@ endif
  
  # macOS linker doesn't support -soname, and use different extension
  # see : https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
@@ -27,3 +39,6 @@
  
  .PHONY: all
  all: lib
+-- 
+2.36.1
+
