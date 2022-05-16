@@ -1,7 +1,22 @@
-diff -Naur openttd-1.11.0/cmake/CompileFlags.cmake openttd-1.11.0.serenity/cmake/CompileFlags.cmake
---- openttd-1.11.0/cmake/CompileFlags.cmake	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/cmake/CompileFlags.cmake	2021-04-19 19:30:33.457232215 +0200
-@@ -158,7 +158,7 @@
+From e7cb850da0851c27197f39a2a6593c1c80981a6c Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Tue, 5 Apr 2022 23:05:14 +0200
+Subject: [PATCH 1/6] All sorts of fixes for the build
+
+Co-Authored-By: Kevin Nobel <kevin@2sk.nl>
+---
+ cmake/CompileFlags.cmake          | 2 +-
+ src/network/core/host.cpp         | 2 ++
+ src/network/core/os_abstraction.h | 3 ++-
+ src/os/unix/unix.cpp              | 4 +++-
+ src/stdafx.h                      | 6 +++---
+ 5 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/cmake/CompileFlags.cmake b/cmake/CompileFlags.cmake
+index ad4a46a..50df38e 100644
+--- a/cmake/CompileFlags.cmake
++++ b/cmake/CompileFlags.cmake
+@@ -163,7 +163,7 @@ macro(compile_flags)
          message(FATAL_ERROR "No warning flags are set for this compiler yet; please consider creating a Pull Request to add support for this compiler.")
      endif()
  
@@ -10,10 +25,11 @@ diff -Naur openttd-1.11.0/cmake/CompileFlags.cmake openttd-1.11.0.serenity/cmake
          # rdynamic is used to get useful stack traces from crash reports.
          set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
      endif()
-diff -Naur openttd-1.11.0/src/network/core/host.cpp openttd-1.11.0.serenity/src/network/core/host.cpp
---- openttd-1.11.0/src/network/core/host.cpp	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/src/network/core/host.cpp	2021-04-19 19:30:33.457232215 +0200
-@@ -147,6 +147,7 @@
+diff --git a/src/network/core/host.cpp b/src/network/core/host.cpp
+index b55f5f5..0ae76d3 100644
+--- a/src/network/core/host.cpp
++++ b/src/network/core/host.cpp
+@@ -82,6 +82,7 @@ static void NetworkFindBroadcastIPsInternal(NetworkAddressList *broadcast) // Wi
  
  static void NetworkFindBroadcastIPsInternal(NetworkAddressList *broadcast) // !GETIFADDRS implementation
  {
@@ -21,7 +37,7 @@ diff -Naur openttd-1.11.0/src/network/core/host.cpp openttd-1.11.0.serenity/src/
  	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
  	if (sock == INVALID_SOCKET) return;
  
-@@ -183,6 +184,7 @@
+@@ -118,6 +119,7 @@ static void NetworkFindBroadcastIPsInternal(NetworkAddressList *broadcast) // !G
  	}
  
  	closesocket(sock);
@@ -29,10 +45,11 @@ diff -Naur openttd-1.11.0/src/network/core/host.cpp openttd-1.11.0.serenity/src/
  }
  #endif /* all NetworkFindBroadcastIPsInternals */
  
-diff -Naur openttd-1.11.0/src/network/core/os_abstraction.h openttd-1.11.0.serenity/src/network/core/os_abstraction.h
---- openttd-1.11.0/src/network/core/os_abstraction.h	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/src/network/core/os_abstraction.h	2021-04-19 19:30:33.457232215 +0200
-@@ -59,13 +59,14 @@
+diff --git a/src/network/core/os_abstraction.h b/src/network/core/os_abstraction.h
+index 6bb6101..100678a 100644
+--- a/src/network/core/os_abstraction.h
++++ b/src/network/core/os_abstraction.h
+@@ -74,13 +74,14 @@ typedef unsigned long in_addr_t;
  #	include <unistd.h>
  #	include <sys/ioctl.h>
  #	include <sys/socket.h>
@@ -48,9 +65,10 @@ diff -Naur openttd-1.11.0/src/network/core/os_abstraction.h openttd-1.11.0.seren
  /* If for any reason ifaddrs.h does not exist on your system, comment out
   *   the following two lines and an alternative way will be used to fetch
   *   the list of IPs from the system. */
-diff -Naur openttd-1.11.0/src/os/unix/unix.cpp openttd-1.11.0.serenity/src/os/unix/unix.cpp
---- openttd-1.11.0/src/os/unix/unix.cpp	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/src/os/unix/unix.cpp	2021-04-19 19:30:33.457232215 +0200
+diff --git a/src/os/unix/unix.cpp b/src/os/unix/unix.cpp
+index 95d6fa1..3c7b567 100644
+--- a/src/os/unix/unix.cpp
++++ b/src/os/unix/unix.cpp
 @@ -42,9 +42,11 @@
  #	define HAS_SYSCTL
  #endif
@@ -63,7 +81,7 @@ diff -Naur openttd-1.11.0/src/os/unix/unix.cpp openttd-1.11.0.serenity/src/os/un
  
  #ifdef HAS_SYSCTL
  #include <sys/sysctl.h>
-@@ -84,7 +86,7 @@
+@@ -84,7 +86,7 @@ bool FiosGetDiskFreeSpace(const char *path, uint64 *tot)
  
  	if (statfs(path, &s) != 0) return false;
  	free = (uint64)s.f_bsize * s.f_bavail;
@@ -72,10 +90,11 @@ diff -Naur openttd-1.11.0/src/os/unix/unix.cpp openttd-1.11.0.serenity/src/os/un
  	struct statvfs s;
  
  	if (statvfs(path, &s) != 0) return false;
-diff -Naur openttd-1.11.0/src/stdafx.h openttd-1.11.0.serenity/src/stdafx.h
---- openttd-1.11.0/src/stdafx.h	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/src/stdafx.h	2021-04-19 20:08:30.758187723 +0200
-@@ -28,7 +28,7 @@
+diff --git a/src/stdafx.h b/src/stdafx.h
+index effd57c..98800f9 100644
+--- a/src/stdafx.h
++++ b/src/stdafx.h
+@@ -38,7 +38,7 @@
  #	define TROUBLED_INTS
  #endif
  
@@ -84,7 +103,7 @@ diff -Naur openttd-1.11.0/src/stdafx.h openttd-1.11.0.serenity/src/stdafx.h
  #	include <strings.h> /* strncasecmp */
  #endif
  
-@@ -107,7 +107,7 @@
+@@ -118,7 +118,7 @@
  #	define strcasecmp stricmp
  #endif
  
@@ -93,7 +112,7 @@ diff -Naur openttd-1.11.0/src/stdafx.h openttd-1.11.0.serenity/src/stdafx.h
  #	include <alloca.h>
  #endif
  
-@@ -307,7 +307,7 @@
+@@ -318,7 +318,7 @@
  typedef unsigned char byte;
  
  /* This is already defined in unix, but not in QNX Neutrino (6.x) or Cygwin. */
@@ -102,3 +121,6 @@ diff -Naur openttd-1.11.0/src/stdafx.h openttd-1.11.0.serenity/src/stdafx.h
  	typedef unsigned int uint;
  #endif
  
+-- 
+2.36.1
+
