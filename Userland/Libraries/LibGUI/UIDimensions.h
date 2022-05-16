@@ -285,6 +285,13 @@ inline auto clamp<GUI::UIDimension>(GUI::UIDimension const& input, GUI::UIDimens
             return result.has_value();                                        \
         });
 
+#define REGISTER_READONLY_UI_DIMENSION_PROPERTY(property_name, getter) \
+    register_property(                                                 \
+        property_name,                                                 \
+        [this] {                                                       \
+            return this->getter().as_json_value();                     \
+        });
+
 #define REGISTER_UI_SIZE_PROPERTY(property_name, getter, setter)               \
     register_property(                                                         \
         property_name,                                                         \
@@ -308,4 +315,15 @@ inline auto clamp<GUI::UIDimension>(GUI::UIDimension const& input, GUI::UIDimens
                 return true;                                                   \
             }                                                                  \
             return false;                                                      \
+        });
+
+#define REGISTER_READONLY_UI_SIZE_PROPERTY(property_name, getter)     \
+    register_property(                                                \
+        property_name,                                                \
+        [this] {                                                      \
+            auto size = this->getter();                               \
+            JsonObject size_object;                                   \
+            size_object.set("width", size.width().as_json_value());   \
+            size_object.set("height", size.height().as_json_value()); \
+            return size_object;                                       \
         });
