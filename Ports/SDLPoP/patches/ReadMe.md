@@ -1,18 +1,29 @@
-# Patches for SDLPoP
+# Patches for SDLPoP on SerenityOS
 
-## `sdl-path.patch`
+## `0001-Disable-some-extra-features.patch`
 
-Use the correct path to refer to SDL (instead of a MacOS specific path)
+Disable some extra features
 
-## `includes.patch`
+This just disables some extra features the game has such as screenshots, hardware acceleration, etc.
 
-Use `SDL2/` paths for includes.
+## `0002-Use-the-correct-include-paths-for-SDL.patch`
 
-## `disable_extra_features.patch`
+Use the correct include paths for SDL
 
-Disables some (presumably) unsupported features.
+The SDL port is installed into /usr/local, and its headers are
+accessible as <SDL2/...>.
 
-## `remove_fscanf_unknwn_conversion_specfier.patch`
+## `0003-Remove-some-unsupported-scanf-format-specifiers.patch`
 
-Removes some (presumably) unsupported scanf specifiers.
+Remove some unsupported scanf format specifiers
+
+(Note that scanf has been rewritten since and probably supports these
+modifiers now, so this patch might not be necessary)
+
+## `0004-Fix-SDL2-include-path.patch`
+
+Fix SDL2 include path
+
+SDL2 headers are installed into /usr/local under SDL2, make it so
+they're found.
 
