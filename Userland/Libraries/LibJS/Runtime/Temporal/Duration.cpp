@@ -783,8 +783,11 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         return create_date_duration_record(years, months, weeks, days);
     }
 
-    // 2. Assert: relativeTo is not undefined, because callers of this operation ensure relativeTo is required in conditions where this algorithm does not return in step 1.a.
-    VERIFY(!relative_to_value.is_undefined());
+    // 2. If relativeTo is undefined, then
+    if (relative_to_value.is_undefined()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "calendar units");
+    }
 
     // 3. Let sign be ! DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
     auto sign = duration_sign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
