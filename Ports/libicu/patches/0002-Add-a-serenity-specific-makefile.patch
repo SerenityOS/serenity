@@ -1,6 +1,18 @@
-diff -ur source/config/mh-serenity source.serenity/config/mh-serenity
---- source/config/mh-serenity	1970-01-01 01:00:00.000000000 +0100
-+++ source.serenity/config/mh-serenity	2021-04-11 09:20:23.857575570 +0200
+From 6ff2bd5db3af8d810810f9cd46897f9ab148fb0b Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <mpfard@serenityos.org>
+Date: Mon, 16 May 2022 18:03:31 +0430
+Subject: [PATCH 2/2] Add a serenity-specific makefile
+
+---
+ config/mh-serenity | 87 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+ create mode 100644 config/mh-serenity
+
+diff --git a/config/mh-serenity b/config/mh-serenity
+new file mode 100644
+index 0000000..53d6780
+--- /dev/null
++++ b/config/mh-serenity
 @@ -0,0 +1,87 @@
 +## -*-makefile-*-
 +## Copyright (C) 2016 and later: Unicode, Inc. and others.
@@ -89,15 +101,6 @@ diff -ur source/config/mh-serenity source.serenity/config/mh-serenity
 +
 +## End Linux-specific setup
 +
-diff -ur source/configure source.serenity/configure
---- source/configure	2021-04-08 02:10:27.000000000 +0200
-+++ source.serenity/configure	2021-04-11 09:24:04.971314734 +0200
-@@ -5274,6 +5274,8 @@
- 	else
- 		icu_cv_host_frag=mh-cygwin-msvc
- 	fi ;;
-+*-serenity*)
-+	icu_cv_host_frag=mh-serenity ;;
- *-*-mingw*)
- 	if test "$GCC" = yes; then
-                 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-- 
+2.36.1
+
