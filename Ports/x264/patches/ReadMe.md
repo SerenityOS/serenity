@@ -1,5 +1,7 @@
 # Patches for x264 on SerenityOS
 
-## `serenity-configure.patch`
+## `0001-Add-definitions-for-serenity-to-configure-and-config.patch`
 
-Adds `serenity` as a valid platform
+Add definitions for serenity to configure and config.sub
+
+

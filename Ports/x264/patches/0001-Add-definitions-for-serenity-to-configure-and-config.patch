@@ -1,5 +1,15 @@
+From 6f4145f606671d7be8597af7854bda59ef594802 Mon Sep 17 00:00:00 2001
+From: Hunter Kvalevog <hunterkva@protonmail.com>
+Date: Sat, 2 Apr 2022 19:14:23 -0500
+Subject: [PATCH] Add definitions for serenity to configure and config.sub
+
+---
+ config.sub | 2 ++
+ configure  | 4 ++++
+ 2 files changed, 6 insertions(+)
+
 diff --git a/config.sub b/config.sub
-index 72e9265b..2ee38778 100755
+index 72e9265..2ee3877 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -1514,6 +1514,8 @@ case $os in
@@ -12,7 +22,7 @@ index 72e9265b..2ee38778 100755
  		;;
  	*)
 diff --git a/configure b/configure
-index e242e73c..1f60a1ab 100755
+index e242e73..1f60a1a 100755
 --- a/configure
 +++ b/configure
 @@ -729,6 +729,10 @@ case $host_os in
@@ -26,3 +36,6 @@ index e242e73c..1f60a1ab 100755
      *)
          die "Unknown system $host, edit the configure"
          ;;
+-- 
+2.36.1
+
