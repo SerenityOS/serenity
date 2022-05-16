@@ -35,17 +35,4 @@ private:
     u32 m_flags;
 };
 
-class NonMaskableInterruptDisabler {
-public:
-    NonMaskableInterruptDisabler()
-    {
-        IO::out8(0x70, IO::in8(0x70) | 0x80);
-    }
-
-    ~NonMaskableInterruptDisabler()
-    {
-        IO::out8(0x70, IO::in8(0x70) & 0x7F);
-    }
-};
-
 }
