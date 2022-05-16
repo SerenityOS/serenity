@@ -1,8 +1,17 @@
+From e73cf241735cdc4f0a51b25baa1ee12b3c418ac5 Mon Sep 17 00:00:00 2001
+From: Nico Weber <thakis@chromium.org>
+Date: Sun, 21 Jun 2020 18:41:01 -0400
+Subject: [PATCH 2/3] Disable load average calculation
+
+---
+ src/util.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
 diff --git a/src/util.cc b/src/util.cc
-index ae94d34..72cf501 100644
+index c76f730..5ec2bb8 100644
 --- a/src/util.cc
 +++ b/src/util.cc
-@@ -566,11 +566,14 @@ double GetLoadAverage() {
+@@ -588,11 +588,14 @@ double GetLoadAverage() {
  #else
  double GetLoadAverage() {
    double loadavg[3] = { 0.0f, 0.0f, 0.0f };
@@ -17,3 +26,6 @@ index ae94d34..72cf501 100644
    return loadavg[0];
  }
  #endif // _WIN32
+-- 
+2.36.1
+
