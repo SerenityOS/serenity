@@ -1,5 +1,15 @@
+From 315d38c29eac54f3db525a7077279c37f1d83b15 Mon Sep 17 00:00:00 2001
+From: Michael Manganiello <adamantike@users.noreply.github.com>
+Date: Sun, 27 Mar 2022 12:52:11 -0300
+Subject: [PATCH 2/3] Use pkg-config for SDL_* and SDL2
+
+---
+ CMakeLists.txt            |  9 ++++++---
+ src/engine/CMakeLists.txt | 12 +++++++-----
+ 2 files changed, 13 insertions(+), 8 deletions(-)
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 87282647..ebed16ee 100644
+index 8728264..ebed16e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -26,13 +26,16 @@ option(FHEROES2_STRICT_COMPILATION "Enable -Werror strict compilation" OFF)
@@ -15,15 +25,15 @@ index 87282647..ebed16ee 100644
 +
  find_package(ZLIB REQUIRED)
  find_package(Threads)
-
+ 
  if(ENABLE_IMAGE)
 -	find_package(${USE_SDL_VERSION}_image REQUIRED)
 +	PKG_SEARCH_MODULE(${USE_SDL_VERSION}IMAGE REQUIRED SDL2_image)
  	find_package(PNG REQUIRED)
  endif(ENABLE_IMAGE)
-
+ 
 diff --git a/src/engine/CMakeLists.txt b/src/engine/CMakeLists.txt
-index 8a1fbeb3..b9df3120 100644
+index 8a1fbeb..b9df312 100644
 --- a/src/engine/CMakeLists.txt
 +++ b/src/engine/CMakeLists.txt
 @@ -5,19 +5,21 @@ target_compile_definitions(engine PRIVATE
@@ -53,3 +63,6 @@ index 8a1fbeb3..b9df3120 100644
  	Threads::Threads # To match the build settings of the main app
  	ZLIB::ZLIB
  	)
+-- 
+2.36.1
+
