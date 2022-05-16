@@ -1554,27 +1554,25 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. If isoString does not satisfy the syntax of a TemporalTimeString (see 13.33), then
+    // 2. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeString).
     auto parse_result = parse_iso8601(Production::TemporalTimeString, iso_string);
+
+    // 3. If parseResult is a List of errors, then
     if (!parse_result.has_value()) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeString, iso_string);
     }
 
-    // 3. If isoString contains a UTCDesignator, then
+    // 4. If parseResult contains a UTCDesignator, then
     if (parse_result->utc_designator.has_value()) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeStringUTCDesignator, iso_string);
     }
 
-    // 4. Let result be ? ParseISODateTime(isoString).
+    // 5. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 5. Assert: ParseText(StringToCodePoints(isoString), CalendarDate) is a List of errors.
-    // 6. Assert: ParseText(StringToCodePoints(isoString), DateSpecYearMonth) is a List of errors.
-    // 7. Assert: ParseText(StringToCodePoints(isoString), DateSpecMonthDay) is a List of errors.
-
-    // 8. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
+    // 6. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
