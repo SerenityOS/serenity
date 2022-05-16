@@ -1,0 +1,40 @@
+From 6e40ded922c482c9e2d96d0101d783174ab7c661 Mon Sep 17 00:00:00 2001
+From: AnicJov <contact.andrija@gmail.com>
+Date: Wed, 24 Mar 2021 23:42:01 +0100
+Subject: [PATCH] Don't build misc stuff
+
+Skip building the examples, docs and avoid the checks.
+---
+ Makefile.am | 2 +-
+ Makefile.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 22781f5..4f4317d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -20,7 +20,7 @@
+ ##
+ ## Written by Gary V. Vaughan <gary@gnu.org>
+ 
+-SUBDIRS = . examples lib src doc checks
++SUBDIRS = . lib src 
+ EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
+ 	m4/gnulib-cache.m4
+ DISTCLEANFILES = stamp-h
+diff --git a/Makefile.in b/Makefile.in
+index 261472b..57164a4 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -267,7 +267,7 @@ sysconfdir = @sysconfdir@
+ target_alias = @target_alias@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+-SUBDIRS = . examples lib src doc checks
++SUBDIRS = . lib src
+ EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
+ 	m4/gnulib-cache.m4
+ 
+-- 
+2.36.1
+
