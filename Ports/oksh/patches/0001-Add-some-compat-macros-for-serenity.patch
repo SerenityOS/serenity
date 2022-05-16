@@ -1,3 +1,12 @@
+From bfc602df4e7eedd1cdc54dc5664ff1ff453fef1b Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Fri, 5 Nov 2021 22:32:10 +0100
+Subject: [PATCH 1/5] Add some compat macros for serenity
+
+---
+ portable.h | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
 diff --git a/portable.h b/portable.h
 index 5c86edd..6ccf7f6 100644
 --- a/portable.h
@@ -27,3 +36,6 @@ index 5c86edd..6ccf7f6 100644
  #ifndef HAVE_SETRESGID
  #define setresgid(x, y, z)	setgid(x); setegid(y); setgid(z)
  #endif /* !HAVE_SETRESGID */
+-- 
+2.36.1
+
