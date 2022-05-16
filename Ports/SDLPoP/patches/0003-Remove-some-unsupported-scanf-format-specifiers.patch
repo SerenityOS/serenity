@@ -1,3 +1,15 @@
+From 4776a79fcc39601e79b79909f1fa3c69a42d958c Mon Sep 17 00:00:00 2001
+From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
+Date: Sat, 3 Apr 2021 17:53:44 +0200
+Subject: [PATCH 3/4] Remove some unsupported scanf format specifiers
+
+(Note that scanf has been rewritten since and probably supports these
+modifiers now, so this patch might not be necessary)
+---
+ src/options.c | 6 +++---
+ src/seg009.c  | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
 diff --git a/src/options.c b/src/options.c
 index 1bfe473..2bf173e 100644
 --- a/src/options.c
@@ -35,3 +47,6 @@ index 139c2d8..e2047fb 100644
  			perror(names_path);
  			continue;
  		}
+-- 
+2.36.1
+
