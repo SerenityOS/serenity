@@ -1,7 +1,17 @@
-diff -Naur Super-Mario-Clone-Cpp-master/src/CFG.cpp Super-Mario-Clone-Cpp-master.serenity/src/CFG.cpp
---- Super-Mario-Clone-Cpp-master/src/CFG.cpp	2021-04-29 07:39:18.688987494 +0200
-+++ Super-Mario-Clone-Cpp-master.serenity/src/CFG.cpp	2021-04-29 07:41:19.464330908 +0200
-@@ -14,11 +13,11 @@
+From e9d588e7519a15003ded6b68ed7fa10dbe0f8f11 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Thu, 29 Apr 2021 07:36:37 +0200
+Subject: [PATCH 5/5] Remove global static initializers
+
+---
+ src/CFG.cpp | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/CFG.cpp b/src/CFG.cpp
+index 90595a5..20dd6ea 100644
+--- a/src/CFG.cpp
++++ b/src/CFG.cpp
+@@ -13,11 +13,11 @@ CCFG::~CCFG(void) {
  int CCFG::GAME_HEIGHT = 448;
  int CCFG::GAME_WIDTH = 800;
  
@@ -17,7 +27,7 @@ diff -Naur Super-Mario-Clone-Cpp-master/src/CFG.cpp Super-Mario-Clone-Cpp-master
  
  bool CCFG::keySpace = false;
  int CCFG::keyIDA = 0;
-@@ -30,18 +29,26 @@
+@@ -29,18 +29,26 @@ int CCFG::keyIDShift = 0;
  bool CCFG::canMoveBackward = true;
  
  Text* CCFG::getText() {
@@ -44,3 +54,6 @@ diff -Naur Super-Mario-Clone-Cpp-master/src/CFG.cpp Super-Mario-Clone-Cpp-master
  	return tSMBLOGO;
  }
  
+-- 
+2.36.1
+
