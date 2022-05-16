@@ -1,9 +1,14 @@
-# Patches for dungeonrush
+# Patches for dungeonrush on SerenityOS
 
-## `sw-renderer.patch`
+## `0001-chdir-to-the-resource-install-path-at-program-startu.patch`
 
-Disable SDL hardware acceleration.
+chdir() to the resource install path at program startup
 
-## `cwd.patch`
+The game tries to open its resource files using relative paths, and we
+install them into /opt, so chdr() there.
 
-`chdir()` to the installed directory as the game tries to load resources with relative paths.
+## `0002-Make-it-use-software-rendering.patch`
+
+Make it use software rendering
+
+

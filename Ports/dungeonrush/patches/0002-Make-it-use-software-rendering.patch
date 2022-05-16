@@ -1,0 +1,25 @@
+From 2837d8fc8be4d4bd3d03866cfd139152506f4e31 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Wed, 16 Jun 2021 11:23:34 +0200
+Subject: [PATCH 2/2] Make it use software rendering
+
+---
+ src/res.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/res.c b/src/res.c
+index ef4945a..6c46184 100644
+--- a/src/res.c
++++ b/src/res.c
+@@ -89,6 +89,8 @@ Mix_Music *bgms[AUDIO_BGM_SIZE];
+ int soundsCount;
+ Mix_Chunk *sounds[AUDIO_SOUND_SIZE];
+ 
++#define SOFTWARE_ACC
++
+ bool init() {
+   // Initialization flag
+   bool success = true;
+-- 
+2.36.1
+
