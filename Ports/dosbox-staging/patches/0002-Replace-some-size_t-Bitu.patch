@@ -1,7 +1,19 @@
-diff -Naur dosbox-staging-0.76.0/src/hardware/gus.cpp dosbox-staging-0.76.0.serenity/src/hardware/gus.cpp
---- dosbox-staging-0.76.0/src/hardware/gus.cpp	2020-12-03 19:36:19.000000000 +0100
-+++ dosbox-staging-0.76.0.serenity/src/hardware/gus.cpp	2021-06-18 14:10:46.735285326 +0200
-@@ -245,7 +245,7 @@
+From e62df15632c7473f88055973d2e84aec9f7dc3d8 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Fri, 18 Jun 2021 15:06:37 +0200
+Subject: [PATCH 2/4] Replace some size_t => Bitu
+
+FIXME: No information as to why this is a thing exists as of yet, fill
+       them in when that stuff is known.
+---
+ src/hardware/gus.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/hardware/gus.cpp b/src/hardware/gus.cpp
+index 355a082..6c20b5c 100644
+--- a/src/hardware/gus.cpp
++++ b/src/hardware/gus.cpp
+@@ -245,7 +245,7 @@ private:
  	void PopulatePanScalars() noexcept;
  	void PopulateVolScalars() noexcept;
  	void PrepareForPlayback() noexcept;
@@ -10,7 +22,7 @@ diff -Naur dosbox-staging-0.76.0/src/hardware/gus.cpp dosbox-staging-0.76.0.sere
  	void RegisterIoHandlers();
  	void Reset(uint8_t state);
  	void SetLevelCallback(const AudioFrame &level);
-@@ -253,7 +253,7 @@
+@@ -253,7 +253,7 @@ private:
  	void UpdateDmaAddress(uint8_t new_address);
  	void UpdateWaveMsw(int32_t &addr) const noexcept;
  	void UpdateWaveLsw(int32_t &addr) const noexcept;
@@ -19,3 +31,6 @@ diff -Naur dosbox-staging-0.76.0/src/hardware/gus.cpp dosbox-staging-0.76.0.sere
  	void WriteToRegister();
  
  	// Collections
+-- 
+2.36.1
+
