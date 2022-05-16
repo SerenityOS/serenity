@@ -1,0 +1,25 @@
+From 45136fa3e435eaad300fd8866879e4ef817f885b Mon Sep 17 00:00:00 2001
+From: Sergey Bugaev <bugaevc@gmail.com>
+Date: Wed, 2 Oct 2019 22:50:20 +0300
+Subject: [PATCH 2/2] Manually set the target os instead of using uname
+
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 5673d17..9bd864f 100755
+--- a/configure
++++ b/configure
+@@ -52,7 +52,7 @@ cc_name="gcc"
+ ar_set=
+ 
+ # OS specific
+-targetos=`uname`
++targetos=Serenity
+ case $targetos in
+   Darwin)
+     confvars="$confvars OSX"
+-- 
+2.36.1
+
