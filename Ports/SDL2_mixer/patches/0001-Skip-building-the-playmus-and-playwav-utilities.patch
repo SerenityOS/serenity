@@ -1,7 +1,17 @@
-diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
---- SDL2_mixer-2.0.4/Makefile.in	2018-10-31 15:58:59.000000000 +0100
-+++ SDL2_mixer-2.0.4-patched/Makefile.in	2021-03-08 13:11:59.083146376 +0100
-@@ -38,7 +38,7 @@
+From a8e2b31abe3f56f21b4835af00620ce29ce6becb Mon Sep 17 00:00:00 2001
+From: Andreas Kling <kling@serenityos.org>
+Date: Mon, 8 Mar 2021 13:15:35 +0100
+Subject: [PATCH] Skip building the playmus and playwav utilities
+
+---
+ Makefile.in | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 2ff24b2..0e120a1 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -38,7 +38,7 @@ VERSION_OBJECTS = @VERSION_OBJECTS@
  PLAYWAVE_OBJECTS = @PLAYWAVE_OBJECTS@
  PLAYMUS_OBJECTS = @PLAYMUS_OBJECTS@
  
@@ -10,7 +20,7 @@ diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
  
  LT_AGE      = @LT_AGE@
  LT_CURRENT  = @LT_CURRENT@
-@@ -46,7 +46,7 @@
+@@ -46,7 +46,7 @@ LT_RELEASE  = @LT_RELEASE@
  LT_REVISION = @LT_REVISION@
  LT_LDFLAGS  = -no-undefined -rpath $(libdir) -release $(LT_RELEASE) -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
  
@@ -19,7 +29,7 @@ diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
  
  $(srcdir)/configure: $(srcdir)/configure.in
  	@echo "Warning, configure.in is out of date"
-@@ -64,12 +64,6 @@
+@@ -64,12 +64,6 @@ $(objects):
  $(objects)/$(TARGET): $(OBJECTS) $(VERSION_OBJECTS)
  	$(LIBTOOL) --mode=link $(CC) -o $@ $(OBJECTS) $(VERSION_OBJECTS) $(LDFLAGS) $(EXTRA_LDFLAGS) $(LT_LDFLAGS)
  
@@ -32,7 +42,7 @@ diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
  install: all install-hdrs install-lib #install-bin
  install-hdrs:
  	$(SHELL) $(auxdir)/mkinstalldirs $(includedir)/SDL2
-@@ -84,8 +78,6 @@
+@@ -84,8 +78,6 @@ install-lib: $(objects) $(objects)/$(TARGET)
  	$(LIBTOOL) --mode=install $(INSTALL) $(objects)/$(TARGET) $(libdir)/$(TARGET)
  install-bin:
  	$(SHELL) $(auxdir)/mkinstalldirs $(bindir)
@@ -41,7 +51,7 @@ diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
  
  uninstall: uninstall-hdrs uninstall-lib uninstall-bin
  uninstall-hdrs:
-@@ -99,8 +91,6 @@
+@@ -99,8 +91,6 @@ uninstall-hdrs:
  uninstall-lib:
  	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(TARGET)
  uninstall-bin:
@@ -50,3 +60,6 @@ diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
  
  clean:
  	rm -rf $(objects)
+-- 
+2.36.1
+
