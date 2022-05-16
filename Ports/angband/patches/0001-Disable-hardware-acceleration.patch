@@ -1,7 +1,18 @@
-diff -ur a/src/main-sdl2.c b/src/main-sdl2.c
---- a/src/main-sdl2.c	2021-08-01 01:29:20.000000000 +0200
-+++ b/src/main-sdl2.c	2021-10-31 20:38:37.012720467 +0100
-@@ -4863,7 +4863,7 @@
+From 03f7c6e9c77b5084fd5a2b32b3c6f13c152a52b5 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Sun, 17 Oct 2021 15:44:23 +0200
+Subject: [PATCH 1/2] Disable hardware acceleration
+
+We don't support this, so disable it.
+---
+ src/main-sdl2.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/main-sdl2.c b/src/main-sdl2.c
+index a678c29..51a343c 100644
+--- a/src/main-sdl2.c
++++ b/src/main-sdl2.c
+@@ -4867,7 +4867,7 @@ static void start_window(struct window *window)
  
  	if (window->config == NULL) {
  		window->renderer = SDL_CreateRenderer(window->window,
@@ -10,7 +21,7 @@ diff -ur a/src/main-sdl2.c b/src/main-sdl2.c
  	} else {
  		/* this is necessary for subwindows to have their own textures */
  		window->config->renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
-@@ -5875,9 +5875,7 @@
+@@ -5894,9 +5894,7 @@ static enum parser_error config_window_renderer(struct parser *parser)
  	WINDOW_INIT_OK;
  	const char *type = parser_getsym(parser, "type");
  
@@ -21,3 +32,6 @@ diff -ur a/src/main-sdl2.c b/src/main-sdl2.c
  		window->config->renderer_flags = SDL_RENDERER_SOFTWARE;
  	} else {
  		return PARSE_ERROR_INVALID_VALUE;
+-- 
+2.36.1
+
