@@ -1,7 +1,19 @@
-diff -ur a/configure b/configure
---- a/configure	2022-02-21 23:23:13.000000000 +0100
-+++ b/configure	2022-04-06 02:12:48.027633543 +0200
-@@ -5863,14 +5863,14 @@
+From dce25b95be530cb0d9c650fc93de34ac94161ee3 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Wed, 6 Apr 2022 02:25:34 +0200
+Subject: [PATCH 2/2] Fix up SDL path handling
+
+Fix up some copy-paste and logic mistakes in the configure script that
+prevent us from setting a prefix for the SDL installation.
+---
+ configure | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/configure b/configure
+index c56ed42..d6e8e85 100755
+--- a/configure
++++ b/configure
+@@ -5863,14 +5863,14 @@ $as_echo_n "checking for SDL2 - version >= $min_sdl2_version... " >&6; }
    if test "$SDL2_CONFIG" = "no" ; then
      no_sdl2=yes
    else
@@ -19,7 +31,7 @@ diff -ur a/configure b/configure
             sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
      if test "x$enable_sdl2test" = "xyes" ; then
        ac_save_CFLAGS="$CFLAGS"
-@@ -6024,9 +6024,7 @@
+@@ -6024,9 +6024,7 @@ rm -f core conftest.err conftest.$ac_objext \
  	if test "$SDL2_CONFIG" != "no"; then
  		hold_CPPFLAGS="${CPPFLAGS}"
  		hold_LIBS="${LIBS}"
@@ -29,7 +41,7 @@ diff -ur a/configure b/configure
  		LIBS="${LIBS} ${SDL2_LIBS}"
  		if test "$enable_sdl2" = "yes"; then
  			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL2_image" >&5
-@@ -6278,14 +6276,14 @@
+@@ -6278,14 +6276,14 @@ $as_echo_n "checking for SDL - version >= $min_sdl_version... " >&6; }
    if test "$SDL_CONFIG" = "no" ; then
      no_sdl=yes
    else
@@ -47,7 +59,7 @@ diff -ur a/configure b/configure
             sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
      if test "x$enable_sdltest" = "xyes" ; then
        ac_save_CFLAGS="$CFLAGS"
-@@ -6439,9 +6437,7 @@
+@@ -6439,9 +6437,7 @@ rm -f core conftest.err conftest.$ac_objext \
  	if test "$SDL_CONFIG" != "no"; then
  		hold_CPPFLAGS="${CPPFLAGS}"
  		hold_LIBS="${LIBS}"
@@ -57,3 +69,6 @@ diff -ur a/configure b/configure
  		LIBS="${LIBS} ${SDL_LIBS}"
  		if test "$enable_sdl" = "yes"; then
  			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5
+-- 
+2.36.1
+
