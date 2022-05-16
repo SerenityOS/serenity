@@ -1,14 +1,26 @@
-# Patches for joe's own editor
+# Patches for joe on SerenityOS
 
-## `joe.patch`
+## `0001-Define-__USE_MISC-in-checkwidths.c.patch`
 
-Build a curseless joe's own editor, its only dependency is LibC.
+Define __USE_MISC in checkwidths.c
 
-- Add serenity to `config.sub`.
-- Some hacks in joe source code to make it work.
-    - Undefine the macro `TERMINFO` in `termcap.c`, or it will lead crash.
-    - Define `__USE_MISC` manually in `checkwidths.c` for `ECHOCTL` and `ECHOKE`,
-    see `Kernel/API/POSIX/termios.h`.
-    - Remove the prefix `sys/`, because serenity does not have the header `fcntl.h`
-    in `/usr/include/sys`.
+Define `__USE_MISC` manually in `checkwidths.c` for `ECHOCTL` and `ECHOKE`,
+see `Kernel/API/POSIX/termios.h`.
+
+## `0002-Remove-the-sys-prefix-for-the-fcntl-include.patch`
+
+Remove the sys/ prefix for the fcntl include
+
+Serenity does not have the header `fcntl.h` in `/usr/include/sys`.
+
+## `0003-Teach-config.sub-about-serenity.patch`
+
+Teach config.sub about serenity
+
+
+## `0004-Undefine-TERMINFO-in-termcap.c.patch`
+
+Undefine TERMINFO in termcap.c
+
+Leaving it defined will lead to a crash.
 
