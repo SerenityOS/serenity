@@ -1,6 +1,17 @@
---- fontconfig-2.13.94/src/fccompat.c	2021-10-24 21:16:27.503925061 -0700
-+++ fontconfig-2.13.94/src/fccompat.c	2021-10-24 21:16:21.115917517 -0700
-@@ -184,54 +184,6 @@
+From d84d340b3b9b87902011065a1ea4e97c7f3eb095 Mon Sep 17 00:00:00 2001
+From: Brendan Coles <bcoles@gmail.com>
+Date: Tue, 26 Oct 2021 11:34:34 +0000
+Subject: [PATCH 1/2] Stub out FcRandom()
+
+---
+ src/fccompat.c | 51 --------------------------------------------------
+ 1 file changed, 51 deletions(-)
+
+diff --git a/src/fccompat.c b/src/fccompat.c
+index 65ac84c..96e4087 100644
+--- a/src/fccompat.c
++++ b/src/fccompat.c
+@@ -184,54 +184,6 @@ FcRandom(void)
  {
      int32_t result;
  
@@ -55,7 +66,7 @@
      static FcBool initialized = FcFalse;
  
      if (initialized != FcTrue)
-@@ -240,9 +192,6 @@
+@@ -240,9 +192,6 @@ FcRandom(void)
  	initialized = FcTrue;
      }
      result = rand ();
@@ -65,3 +76,6 @@
  
      return result;
  }
+-- 
+2.36.1
+
