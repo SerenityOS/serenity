@@ -1,9 +1,12 @@
-# Patches for the one true AWK
+# Patches for awk on SerenityOS
 
-## `build.patch`
+## `0001-Make-it-possible-to-override-HOSTCC-and-CC-from-the-.patch`
 
-Patched the assigning of CC to allow override from environment
+Make it possible to override HOSTCC and CC from the environment
 
-## `version.patch`
 
-Patch the version descriptor in `main.c` to reflect the tag built
+## `0002-Make-the-version-descriptor-match-the-built-tag.patch`
+
+Make the version descriptor match the built tag
+
+
