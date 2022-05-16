@@ -31,6 +31,7 @@ public:
         int line_count = m_label->text().count("\n");
         int glyph_height = m_label->font().glyph_height();
         int tooltip_height = glyph_height * (1 + line_count) + ((glyph_height + 1) / 2) * line_count + 8;
+        set_obey_widget_min_size(false);
 
         Gfx::IntRect desktop_rect = Desktop::the().rect();
         if (tooltip_width > desktop_rect.width())

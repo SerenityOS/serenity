@@ -167,6 +167,7 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Find in Terminal");
     window->set_resizable(false);
+    window->set_obey_widget_min_size(false);
     window->resize(300, 90);
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
