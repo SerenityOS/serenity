@@ -721,7 +721,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 }
 
 // 12.2.33 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -825,7 +825,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
 
-    Optional<ISODate> result;
+    Optional<ISODateRecord> result;
 
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {

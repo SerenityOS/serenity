@@ -66,7 +66,7 @@ u8 iso_days_in_month(i32 year, u8 month);
 u8 to_iso_week_of_year(i32 year, u8 month, u8 day);
 String build_iso_month_code(u8 month);
 ThrowCompletionOr<double> resolve_iso_month(GlobalObject&, Object const& fields);
-ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject&, Object const& fields, Object const& options);
+ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject&, Object const& fields, Object const& options);
 ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject&, Object const& fields, Object const& options);
 ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject&, Object const& fields, Object const& options);
 i32 iso_year(Object& temporal_object);

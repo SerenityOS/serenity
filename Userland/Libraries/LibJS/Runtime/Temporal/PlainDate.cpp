@@ -37,6 +37,16 @@ void PlainDate::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
+// 3.5.2 CreateISODateRecord ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record
+ISODateRecord create_iso_date_record(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
+
+    // 2. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+    return { .year = year, .month = month, .day = day };
+}
+
 // 3.5.1 CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate
 ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target)
 {
@@ -154,10 +164,10 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             return create_date_duration_record(0, 0, 0, 0);
 
         // c. Let start be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
-        auto start = ISODate { .year = year1, .month = month1, .day = day1 };
+        auto start = ISODateRecord { .year = year1, .month = month1, .day = day1 };
 
         // d. Let end be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
-        auto end = ISODate { .year = year2, .month = month2, .day = day2 };
+        auto end = ISODateRecord { .year = year2, .month = month2, .day = day2 };
 
         // e. Let years be end.[[Year]] - start.[[Year]].
         double years = end.year - start.year;
@@ -292,15 +302,13 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
-ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
+ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
 {
     auto& vm = global_object.vm();
-    // 1. Assert: year, month, and day are integers.
-    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
-    // 2. Assert: overflow is either "constrain" or "reject".
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
-    // 3. If overflow is "reject", then
+    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
+
+    // 1. If overflow is "reject", then
     if (overflow == "reject"sv) {
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behavior as the call to IsValidISODate will immediately check that these values are valid ISO
@@ -316,9 +324,9 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
         // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return ISODate { .year = y, .month = m, .day = d };
+        return ISODateRecord { .year = y, .month = m, .day = d };
     }
-    // 4. If overflow is "constrain", then
+    // 2. If overflow is "constrain", then
     else if (overflow == "constrain"sv) {
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
         // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
@@ -326,19 +334,17 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
         if (!AK::is_within_range<i32>(year))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-        auto y = static_cast<i32>(year);
-
         // a. Set month to the result of clamping month between 1 and 12.
         month = clamp(month, 1, 12);
 
         // b. Let daysInMonth be ! ISODaysInMonth(year, month).
-        auto days_in_month = iso_days_in_month(y, (u8)month);
+        auto days_in_month = iso_days_in_month(static_cast<i32>(year), static_cast<u8>(month));
 
         // c. Set day to the result of clamping day between 1 and daysInMonth.
         day = clamp(day, 1, days_in_month);
 
-        // d. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return ISODate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
+        // d. Return CreateISODateRecord(year, month, day).
+        return create_iso_date_record(static_cast<i32>(year), static_cast<u8>(month), static_cast<u8>(day));
     }
     VERIFY_NOT_REACHED();
 }
@@ -366,7 +372,7 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
 }
 
 // 3.5.6 BalanceISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodate
-ISODate balance_iso_date(double year, double month, double day)
+ISODateRecord balance_iso_date(double year, double month, double day)
 {
     // 1. Let epochDays be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
     auto epoch_days = make_day(year, month - 1, day);
@@ -377,8 +383,8 @@ ISODate balance_iso_date(double year, double month, double day)
     // 3. Let ms be MakeDate(epochDays, +0𝔽).
     auto ms = make_date(epoch_days, 0);
 
-    // 4. Return the Record { [[Year]]: ℝ(YearFromTime(ms)), [[Month]]: ℝ(MonthFromTime(ms)) + 1, [[Day]]: ℝ(DateFromTime(ms)) }.
-    return { .year = year_from_time(ms), .month = static_cast<u8>(month_from_time(ms) + 1), .day = date_from_time(ms) };
+    // 4. Return CreateISODateRecord(ℝ(YearFromTime(ms)), ℝ(MonthFromTime(ms)) + 1, ℝ(DateFromTime(ms))).
+    return create_iso_date_record(year_from_time(ms), static_cast<u8>(month_from_time(ms) + 1), date_from_time(ms));
 }
 
 // 3.5.7 PadISOYear ( y ), https://tc39.es/proposal-temporal/#sec-temporal-padisoyear
@@ -426,7 +432,7 @@ ThrowCompletionOr<String> temporal_date_to_string(GlobalObject& global_object, P
 }
 
 // 3.5.9 AddISODate ( year, month, day, years, months, weeks, days, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-addisodate
-ThrowCompletionOr<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow)
+ThrowCompletionOr<ISODateRecord> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow)
 {
     // 1. Assert: year, month, day, years, months, weeks, and days are integers.
     VERIFY(years == trunc(years) && months == trunc(months) && weeks == trunc(weeks) && days == trunc(days));
