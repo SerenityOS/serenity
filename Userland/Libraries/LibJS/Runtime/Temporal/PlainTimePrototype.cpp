@@ -244,8 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
-    // FIXME: until, not since (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
     return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Until, *temporal_time, other, options));
 }
 
@@ -259,8 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
-    // FIXME: since, not until (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
     return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Since, *temporal_time, other, options));
 }
 
