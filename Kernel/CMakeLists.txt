@@ -452,6 +452,7 @@ else()
         Memory/VMObject.cpp
 
         Interrupts/GenericInterruptHandler.cpp
+        Interrupts/IRQHandler.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'

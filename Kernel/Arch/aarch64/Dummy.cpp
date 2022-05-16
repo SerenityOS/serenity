@@ -146,4 +146,14 @@ u8 InterruptManagement::acquire_mapped_interrupt_number(u8)
     VERIFY_NOT_REACHED();
 }
 
+InterruptManagement& InterruptManagement::the()
+{
+    VERIFY_NOT_REACHED();
+}
+
+RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8)
+{
+    VERIFY_NOT_REACHED();
+}
+
 }
