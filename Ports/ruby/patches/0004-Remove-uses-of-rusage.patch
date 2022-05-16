@@ -1,6 +1,59 @@
---- ruby-3.2.0/process.c	2021-09-16 13:10:16.001908642 -0700
-+++ ruby-3.2.0/process.c	2021-09-16 14:21:00.080586664 -0700
-@@ -324,9 +324,6 @@
+From de170f190353bb28d0eefacca5087de155948270 Mon Sep 17 00:00:00 2001
+From: Eric Seifert <seiferteric@gmail.com>
+Date: Tue, 21 Sep 2021 23:09:21 -0700
+Subject: [PATCH 4/4] Remove uses of rusage
+
+---
+ gc.c      | 23 -----------------------
+ process.c | 37 -------------------------------------
+ 2 files changed, 60 deletions(-)
+
+diff --git a/gc.c b/gc.c
+index 5d0c342..332340e 100644
+--- a/gc.c
++++ b/gc.c
+@@ -11544,17 +11544,6 @@ getrusage_time(void)
+     }
+ #endif
+ 
+-#ifdef RUSAGE_SELF
+-    {
+-        struct rusage usage;
+-        struct timeval time;
+-        if (getrusage(RUSAGE_SELF, &usage) == 0) {
+-            time = usage.ru_utime;
+-            return time.tv_sec + time.tv_usec * 1e-6;
+-        }
+-    }
+-#endif
+-
+ #ifdef _WIN32
+     {
+ 	FILETIME creation_time, exit_time, kernel_time, user_time;
+@@ -11613,18 +11602,6 @@ gc_prof_setup_new_record(rb_objspace_t *objspace, int reason)
+ 	record->flags = reason | (ruby_gc_stressful ? GPR_FLAG_STRESS : 0);
+ #if MALLOC_ALLOCATED_SIZE
+ 	record->allocated_size = malloc_allocated_size;
+-#endif
+-#if GC_PROFILE_MORE_DETAIL && GC_PROFILE_DETAIL_MEMORY
+-#ifdef RUSAGE_SELF
+-	{
+-	    struct rusage usage;
+-	    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+-		record->maxrss = usage.ru_maxrss;
+-		record->minflt = usage.ru_minflt;
+-		record->majflt = usage.ru_majflt;
+-	    }
+-	}
+-#endif
+ #endif
+     }
+ }
+diff --git a/process.c b/process.c
+index 674f05d..b7941aa 100644
+--- a/process.c
++++ b/process.c
+@@ -324,9 +324,6 @@ static ID id_GETTIMEOFDAY_BASED_CLOCK_REALTIME, id_TIME_BASED_CLOCK_REALTIME;
  static ID id_TIMES_BASED_CLOCK_MONOTONIC;
  static ID id_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID;
  #endif
@@ -10,7 +63,7 @@
  static ID id_CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID;
  #ifdef __APPLE__
  static ID id_MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC;
-@@ -7878,16 +7875,6 @@
+@@ -7878,16 +7875,6 @@ VALUE
  rb_proc_times(VALUE obj)
  {
      VALUE utime, stime, cutime, cstime, ret;
@@ -27,7 +80,7 @@
      const double hertz = (double)get_clk_tck();
      struct tms buf;
  
-@@ -7896,7 +7883,6 @@
+@@ -7896,7 +7883,6 @@ rb_proc_times(VALUE obj)
      stime = DBL2NUM(buf.tms_stime / hertz);
      cutime = DBL2NUM(buf.tms_cutime / hertz);
      cstime = DBL2NUM(buf.tms_cstime / hertz);
@@ -35,7 +88,7 @@
      ret = rb_struct_new(rb_cProcessTms, utime, stime, cutime, cstime);
      RB_GC_GUARD(utime);
      RB_GC_GUARD(stime);
-@@ -8312,26 +8298,6 @@
+@@ -8312,26 +8298,6 @@ rb_clock_gettime(int argc, VALUE *argv, VALUE _)
          }
  #endif
  
@@ -62,52 +115,16 @@
  
  #ifdef HAVE_TIMES
  #define RUBY_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID \
-@@ -9082,9 +9048,6 @@
+@@ -9081,9 +9047,6 @@ Init_process(void)
+ #ifdef HAVE_TIMES
      id_TIMES_BASED_CLOCK_MONOTONIC = rb_intern_const("TIMES_BASED_CLOCK_MONOTONIC");
      id_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID");
- #endif
+-#endif
 -#ifdef RUSAGE_SELF
 -    id_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID");
--#endif
+ #endif
      id_CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID");
  #ifdef __APPLE__
-     id_MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC = rb_intern_const("MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC");
---- ruby-3.2.0/gc.c	2021-09-16 13:10:15.953909370 -0700
-+++ ruby-3.2.0/gc.c	2021-09-16 14:21:52.135786845 -0700
-@@ -11530,17 +11530,6 @@
-     }
- #endif
- 
--#ifdef RUSAGE_SELF
--    {
--        struct rusage usage;
--        struct timeval time;
--        if (getrusage(RUSAGE_SELF, &usage) == 0) {
--            time = usage.ru_utime;
--            return time.tv_sec + time.tv_usec * 1e-6;
--        }
--    }
--#endif
--
- #ifdef _WIN32
-     {
- 	FILETIME creation_time, exit_time, kernel_time, user_time;
-@@ -11600,18 +11589,6 @@
- #if MALLOC_ALLOCATED_SIZE
- 	record->allocated_size = malloc_allocated_size;
- #endif
--#if GC_PROFILE_MORE_DETAIL && GC_PROFILE_DETAIL_MEMORY
--#ifdef RUSAGE_SELF
--	{
--	    struct rusage usage;
--	    if (getrusage(RUSAGE_SELF, &usage) == 0) {
--		record->maxrss = usage.ru_maxrss;
--		record->minflt = usage.ru_minflt;
--		record->majflt = usage.ru_majflt;
--	    }
--	}
--#endif
--#endif
-     }
- }
- 
+-- 
+2.36.1
+
