@@ -453,6 +453,8 @@ else()
 
         Interrupts/GenericInterruptHandler.cpp
         Interrupts/IRQHandler.cpp
+        Interrupts/SharedIRQHandler.cpp
+        Interrupts/UnhandledInterruptHandler.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
