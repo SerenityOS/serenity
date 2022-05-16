@@ -1,8 +1,14 @@
-# Patches for LuaRocks on SerenityOS
+# Patches for luarocks on SerenityOS
 
-## `luarocks.patch`
+## `0001-Setup-the-serenity-platform.patch`
 
-src/luarocks/core/cfg.lua: Setup serenity as a platform and config `defaults.variables.UNZIP` to work around our `unzip` command not supporting the flag `-n`
-src/luarocks/core/sysdetect.lua: Detect SerenityOS using the `uname` command
+Setup the serenity platform
 
-This should should be upstreamed so next versions of LuaRocks will support Serenity out of the box.
+Setup serenity as a platform and configure `defaults.variables.UNZIP` to
+work around our `unzip` command not supporting the flag `-n`
+
+## `0002-Detect-SerenityOS-using-the-uname-command.patch`
+
+Detect SerenityOS using the `uname` command
+
+
