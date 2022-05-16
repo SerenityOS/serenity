@@ -1291,28 +1291,11 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
 // 13.35 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, String const& iso_string)
 {
-    auto& vm = global_object.vm();
+    // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
+    auto parts = TRY(parse_temporal_date_time_string(global_object, iso_string));
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalDateString (see 13.33), then
-    auto parse_result = parse_iso8601(Production::TemporalDateString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateString, iso_string);
-    }
-
-    // 3. If isoString contains a UTCDesignator, then
-    if (parse_result->utc_designator.has_value()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateStringUTCDesignator, iso_string);
-    }
-
-    // 4. Let result be ? ParseISODateTime(isoString).
-    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
-
-    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
-    return TemporalDate { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
+    // 2. Return the Record { [[Year]]: parts.[[Year]], [[Month]]: parts.[[Month]], [[Day]]: parts.[[Day]], [[Calendar]]: parts.[[Calendar]] }.
+    return TemporalDate { .year = parts.year, .month = parts.month, .day = parts.day, .calendar = move(parts.calendar) };
 }
 
 // 13.36 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring

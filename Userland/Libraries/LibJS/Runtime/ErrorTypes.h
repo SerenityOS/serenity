@@ -226,8 +226,6 @@
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidCalendarString, "Invalid calendar string '{}'")                                                                    \
-    M(TemporalInvalidDateString, "Invalid date string '{}'")                                                                            \
-    M(TemporalInvalidDateStringUTCDesignator, "Invalid date string '{}': must not contain a UTC designator")                            \
     M(TemporalInvalidDateTimeString, "Invalid date time string '{}'")                                                                   \
     M(TemporalInvalidDateTimeStringUTCDesignator, "Invalid date time string '{}': must not contain a UTC designator")                   \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
