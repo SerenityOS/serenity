@@ -7,7 +7,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/Hypervisor/VMWareBackdoor.h>

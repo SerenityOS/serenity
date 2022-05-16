@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/NonMaskableInterruptDisabler.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/Time/RTC.h>

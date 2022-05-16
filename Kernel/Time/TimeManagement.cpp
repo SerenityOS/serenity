@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Interrupts/APIC.h>
