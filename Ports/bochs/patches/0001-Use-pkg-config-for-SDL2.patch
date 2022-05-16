@@ -1,3 +1,17 @@
+From cdc23372934196e822175a6ecbd6b06aed2bcea5 Mon Sep 17 00:00:00 2001
+From: Peter Ross <pross@xvid.org>
+Date: Tue, 22 Feb 2022 18:43:09 +1100
+Subject: [PATCH] Use pkg-config for SDL2
+
+Modifies configure to use `pkg_config` to detect SDL2 installed on
+SerenityOS.
+
+Without this patch, configure uses `sdl2_config` and will detect SDL2
+installed on the host system.
+---
+ configure | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
 diff --git a/configure b/configure
 index 5cc4088..d2bff12 100755
 --- a/configure
@@ -29,3 +43,6 @@ index 5cc4088..d2bff12 100755
    fi
    # The enhanced X debugger depends on GTK2
    if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
+-- 
+2.36.1
+
