@@ -1505,11 +1505,11 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. If isoString does not satisfy the syntax of a TemporalRelativeToString (see 13.33), then
-    auto parse_result = parse_iso8601(Production::TemporalRelativeToString, iso_string);
+    // 2. If isoString does not satisfy the syntax of a TemporalDateTimeString (see 13.33), then
+    auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
     if (!parse_result.has_value()) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidRelativeToString, iso_string);
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
     }
 
     // 3. Let result be ? ParseISODateTime(isoString).

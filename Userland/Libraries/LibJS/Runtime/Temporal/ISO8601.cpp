@@ -1725,14 +1725,6 @@ bool ISO8601Parser::parse_temporal_calendar_string()
         || parse_calendar_time();
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalRelativeToString
-bool ISO8601Parser::parse_temporal_relative_to_string()
-{
-    // TemporalRelativeToString :
-    //     TemporalDateTimeString
-    return parse_temporal_date_time_string();
-}
-
 }
 
 #define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                                        \
@@ -1744,8 +1736,7 @@ bool ISO8601Parser::parse_temporal_relative_to_string()
     __JS_ENUMERATE(TemporalTimeZoneString, parse_temporal_time_zone_string)            \
     __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)          \
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
-    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)             \
-    __JS_ENUMERATE(TemporalRelativeToString, parse_temporal_relative_to_string)
+    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
