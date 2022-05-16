@@ -487,4 +487,39 @@ struct ESR_EL1 {
 };
 static_assert(sizeof(ESR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0601/2020-12/AArch64-Registers/DAIF--Interrupt-Mask-Bits?lang=en
+// DAIF, Interrupt Mask Bits
+struct DAIF {
+    u64 : 6;
+    u64 F : 1;
+    u64 I : 1;
+    u64 A : 1;
+    u64 D : 1;
+    u64 : 54;
+
+    static inline DAIF read()
+    {
+        DAIF daif;
+
+        asm("mrs %[value], daif"
+            : [value] "=r"(daif));
+
+        return daif;
+    }
+
+    // Clearing the I bit, causes interrupts to be enabled.
+    static inline void clear_I()
+    {
+        asm volatile("msr daifclr, #2" ::
+                         :);
+    }
+
+    // Setting the I bit, causes interrupts to be disabled.
+    static inline void set_I()
+    {
+        asm volatile("msr daifset, #2" ::
+                         :);
+    }
+};
+static_assert(sizeof(DAIF) == 8);
 }
