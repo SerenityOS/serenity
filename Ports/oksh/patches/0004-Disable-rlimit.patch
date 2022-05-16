@@ -1,3 +1,13 @@
+From 072da9d917bd529cf55973de264c1d288cbf7138 Mon Sep 17 00:00:00 2001
+From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
+Date: Mon, 5 Apr 2021 22:58:01 +0200
+Subject: [PATCH 4/5] Disable rlimit
+
+Serenity does not have rlimit support.
+---
+ c_ulimit.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
 diff --git a/c_ulimit.c b/c_ulimit.c
 index 65e0cca..587f08a 100644
 --- a/c_ulimit.c
@@ -68,3 +78,6 @@ index 65e0cca..587f08a 100644
 -	}
 +	}*/
  }
+-- 
+2.36.1
+

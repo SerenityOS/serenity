@@ -1,6 +1,16 @@
+From 83b82de3eed21eda75179417c1c234b5a56a52d6 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Fri, 5 Nov 2021 22:32:10 +0100
+Subject: [PATCH 2/5] Add pconfig.h
+
+---
+ pconfig.h | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 pconfig.h
+
 diff --git a/pconfig.h b/pconfig.h
 new file mode 100644
-index 0000000..2dd229b
+index 0000000..3274014
 --- /dev/null
 +++ b/pconfig.h
 @@ -0,0 +1,30 @@
@@ -34,4 +44,6 @@ index 0000000..2dd229b
 +#define HAVE_SIGNAME
 +#define HAVE_TIMERADD
 +#define HAVE_TIMERCLEAR
-+#define HAVE_TIMERSUB
+-- 
+2.36.1
+
