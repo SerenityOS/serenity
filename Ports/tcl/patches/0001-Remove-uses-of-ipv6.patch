@@ -1,7 +1,17 @@
-diff -Naur tcl8.6.11/unix/tclUnixSock.c tcl8.6.11.serenity/unix/tclUnixSock.c
---- unix/tclUnixSock.c	2020-09-21 17:15:49.000000000 +0200
-+++ unix.serenity/tclUnixSock.c	2021-04-25 09:39:28.224340150 +0200
-@@ -706,6 +706,7 @@
+From 51db9b91674f5ce8709896f1f752bbed7680fe55 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Tue, 27 Apr 2021 14:58:09 +0200
+Subject: [PATCH] Remove uses of ipv6
+
+---
+ tclUnixSock.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/tclUnixSock.c b/tclUnixSock.c
+index 1a54914..121f8a4 100644
+--- a/tclUnixSock.c
++++ b/tclUnixSock.c
+@@ -706,6 +706,7 @@ static inline int
  IPv6AddressNeedsNumericRendering(
      struct in6_addr addr)
  {
@@ -9,7 +19,7 @@ diff -Naur tcl8.6.11/unix/tclUnixSock.c tcl8.6.11.serenity/unix/tclUnixSock.c
      if (IN6_ARE_ADDR_EQUAL(&addr, &in6addr_any)) {
          return 1;
      }
-@@ -716,11 +717,15 @@
+@@ -716,11 +717,15 @@ IPv6AddressNeedsNumericRendering(
       */
  
      if (!IN6_IS_ADDR_V4MAPPED(&addr)) {
@@ -25,3 +35,6 @@ diff -Naur tcl8.6.11/unix/tclUnixSock.c tcl8.6.11.serenity/unix/tclUnixSock.c
  }
  #if defined (__clang__) || ((__GNUC__)  && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
  #pragma GCC diagnostic pop
+-- 
+2.36.1
+
