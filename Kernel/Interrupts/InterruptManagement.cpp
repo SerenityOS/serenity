@@ -6,8 +6,8 @@
 
 #include <AK/ByteReader.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/Interrupts.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/Interrupts/APIC.h>

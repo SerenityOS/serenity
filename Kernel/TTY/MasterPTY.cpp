@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/POSIX/errno.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/MasterPTY.h>

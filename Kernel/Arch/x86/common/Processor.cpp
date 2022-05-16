@@ -19,12 +19,12 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
 
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/ScopedCritical.h>
 #include <Kernel/Arch/x86/CPUID.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
