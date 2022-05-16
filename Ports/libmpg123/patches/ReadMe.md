@@ -1,5 +1,7 @@
-# Patches for mpg123 on SerenityOS
+# Patches for libmpg123 on SerenityOS
 
-## `add-serenity-target.patch`
+## `0001-Teach-the-multiple-configure-files-that-serenity-is-.patch`
 
-Add `serenity` as a valid target.
+Teach the multiple configure files that serenity is a thing
+
+
