@@ -30,101 +30,7 @@ IGNORE_FILES = {
 
 # Matches port names in Ports/foo/ReadMe.md
 PORT_NAME_REGEX = re.compile(r'([ .()[\]{}\w-]+)\.patch')
-PORTS_MISSING_DESCRIPTIONS = {
-    'Another-World',
-    'chester',
-    'cmatrix',
-    'c-ray',
-    'curl',
-    'dash',
-    'dosbox-staging',
-    'dropbear',
-    'ed',
-    'emu2',
-    'epsilon',
-    'figlet',
-    'flex',
-    'fontconfig',
-    'freeciv',
-    'freedink',
-    'freetype',
-    'gcc',
-    'genemu',
-    'gettext',
-    'git',
-    'gmp',
-    'gnucobol',
-    'gnupg',
-    'gnuplot',
-    'gsl',
-    'harfbuzz',
-    'indent',
-    'jq',
-    'libassuan',
-    'libgcrypt',
-    'libgd',
-    'libgpg-error',
-    'libiconv',
-    'libicu',
-    'libjpeg',
-    'libksba',
-    'libmodplug',
-    'liboggz',
-    'libpng',
-    'libpuffy',
-    'libsodium',
-    'libvorbis',
-    'libzip',
-    'lua',
-    'm4',
-    'make',
-    'mandoc',
-    'mbedtls',
-    'milkytracker',
-    'mruby',
-    'nano',
-    'ncurses',
-    'neofetch',
-    'nethack',
-    'ninja',
-    'npiet',
-    'npth',
-    'ntbtls',
-    'nyancat',
-    'oksh',
-    'openssh',
-    'openssl',
-    'openttd',
-    'opentyrian',
-    'p7zip',
-    'patch',
-    'pcre2',
-    'pfetch',
-    'pkgconf',
-    'qt6-qtbase',
-    'ruby',
-    'sam',
-    'scummvm',
-    'SDL2_image',
-    'SDL2_mixer',
-    'SDL2_net',
-    'SDL2_ttf',
-    'sl',
-    'sqlite',
-    'tcl',
-    'tinycc',
-    'tr',
-    'tuxracer',
-    'vitetris',
-    'wget',
-    'xz',
-    'zsh',
-    'zstd',
-}
-
-# FIXME: Once everything is converted into `git format-patch`-style patches,
-#        enable this to allow only `git format-patch` patches.
-REQUIRE_GIT_PATCHES = False
+REQUIRE_GIT_PATCHES = True
 GIT_PATCH_SUBJECT_RE = re.compile(r'Subject: (.*)\n')
 
 
@@ -307,9 +213,8 @@ def check_descriptions_for_port_patches(patches):
             continue
 
         if not readme_file_exists:
-            if port not in PORTS_MISSING_DESCRIPTIONS:
-                print(f"Ports/{port}/patches contains patches but no ReadMe.md describing them")
-                all_good = False
+            print(f"Ports/{port}/patches contains patches but no ReadMe.md describing them")
+            all_good = False
             continue
 
         with open(str(patches_readme_path), 'r', encoding='utf-8') as f:
@@ -326,24 +231,17 @@ def check_descriptions_for_port_patches(patches):
         patches_ok = True
         for patch_name in patch_names:
             if patch_name not in readme_contents:
-                if port not in PORTS_MISSING_DESCRIPTIONS:
-                    print(f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
-                          " the corresponding ReadMe.md")
-                    all_good = False
-                    patches_ok = False
+                print(f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
+                      " the corresponding ReadMe.md")
+                all_good = False
+                patches_ok = False
 
         for patch_name in readme_contents:
             if patch_name not in patch_names:
-                if port not in PORTS_MISSING_DESCRIPTIONS:
-                    print(f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, "
-                          "but does not actually exist")
-                    all_good = False
-                    patches_ok = False
-
-        if port in PORTS_MISSING_DESCRIPTIONS and patches_ok:
-            print(f"Ports/{port}/patches are all described correctly, but the port is marked "
-                  "as MISSING_DESCRIPTIONS, make sure to remove it from the list in lint-ports.py")
-            all_good = False
+                print(f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, "
+                      "but does not actually exist")
+                all_good = False
+                patches_ok = False
 
     return all_good
 
