@@ -1351,7 +1351,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationString, iso_string);
 
-    // 3. Let each of sign, years, months, weeks, days, hours, fHours, minutes, fMinutes, seconds, and fSeconds be the source text matched by the respective Sign, DurationYears, DurationMonths, DurationWeeks, DurationDays, DurationWholeHours, DurationHoursFraction, DurationWholeMinutes, DurationMinutesFraction, DurationWholeSeconds, and DurationSecondsFraction Parse Node enclosed by duration, or an empty sequence of code points if not present.
+    // 3. Let each of sign, years, months, weeks, days, hours, fHours, minutes, fMinutes, seconds, and fSeconds be the source text matched by the respective Sign, DurationYears, DurationMonths, DurationWeeks, DurationDays, DurationWholeHours, DurationHoursFraction, DurationWholeMinutes, DurationMinutesFraction, DurationWholeSeconds, and DurationSecondsFraction Parse Node contained within duration, or an empty sequence of code points if not present.
     auto sign_part = parse_result->sign;
     auto years_part = parse_result->duration_years;
     auto months_part = parse_result->duration_months;
@@ -1611,7 +1611,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
     }
 
-    // 4. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node enclosed by parseResult, or an empty sequence of code points if not present.
+    // 4. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto z = parse_result->utc_designator;
     auto offset_string = parse_result->time_zone_numeric_utc_offset;
     auto name = parse_result->time_zone_iana_name;
