@@ -1,5 +1,31 @@
+From c818e1fcd3c2e2f5433b20fffd1fda3462b5064f Mon Sep 17 00:00:00 2001
+From: safarp <safar.pavel@gmail.com>
+Date: Mon, 21 Mar 2022 21:51:29 +0100
+Subject: [PATCH] Make it build with SDL 2 instead of 1.2
+
+---
+ Build/Laptop/IMP_Begin_Screen.cc |   2 +-
+ Build/Laptop/IMP_HomePage.cc     |   4 +-
+ Build/SaveLoadGame.cc            |  10 +-
+ Build/Utils/Quantize.cc          |   2 +-
+ Build/Utils/Text_Input.cc        |  23 +-
+ Makefile                         |  15 +-
+ sgp/FileMan.cc                   | 211 +++++++-----
+ sgp/FileMan.h                    |  15 +-
+ sgp/Input.cc                     | 243 +++++++++-----
+ sgp/Input.h                      |  22 +-
+ sgp/PCX.cc                       |   2 +-
+ sgp/Platform.h                   |   8 +-
+ sgp/SGP.cc                       |  23 +-
+ sgp/STCI.cc                      |   2 +-
+ sgp/SoundMan.cc                  | 537 ++++++-------------------------
+ sgp/VSurface.cc                  |  13 +-
+ sgp/Video.cc                     | 282 ++++++----------
+ sgp/Video.h                      |   5 +-
+ 18 files changed, 566 insertions(+), 853 deletions(-)
+
 diff --git a/Build/Laptop/IMP_Begin_Screen.cc b/Build/Laptop/IMP_Begin_Screen.cc
-index 81db08629..63c6babdb 100644
+index 81db086..63c6bab 100644
 --- a/Build/Laptop/IMP_Begin_Screen.cc
 +++ b/Build/Laptop/IMP_Begin_Screen.cc
 @@ -398,7 +398,7 @@ static void GetPlayerKeyBoardInputForIMPBeginScreen(void)
@@ -12,7 +38,7 @@ index 81db08629..63c6babdb 100644
  		  switch( InputEvent.usParam )
  			{
 diff --git a/Build/Laptop/IMP_HomePage.cc b/Build/Laptop/IMP_HomePage.cc
-index 1512a045a..bc0157a99 100644
+index 1512a04..bc0157a 100644
 --- a/Build/Laptop/IMP_HomePage.cc
 +++ b/Build/Laptop/IMP_HomePage.cc
 @@ -230,7 +230,7 @@ static void GetPlayerKeyBoardInputForIMPHomePage(void)
@@ -34,7 +60,7 @@ index 1512a045a..bc0157a99 100644
  						HandleTextEvent(&InputEvent);
  					}
 diff --git a/Build/SaveLoadGame.cc b/Build/SaveLoadGame.cc
-index dbf14b827..9f485037b 100644
+index dbf14b8..9f48503 100644
 --- a/Build/SaveLoadGame.cc
 +++ b/Build/SaveLoadGame.cc
 @@ -2545,8 +2545,8 @@ static void UpdateMercMercContractInfo(void)
@@ -67,7 +93,7 @@ index dbf14b827..9f485037b 100644
  	}
  
 diff --git a/Build/Utils/Quantize.cc b/Build/Utils/Quantize.cc
-index 998179af2..c036a7833 100644
+index 998179a..c036a78 100644
 --- a/Build/Utils/Quantize.cc
 +++ b/Build/Utils/Quantize.cc
 @@ -127,7 +127,7 @@ static size_t GetPaletteColors(const NODE* const pTree, SGPPaletteEntry* const p
@@ -80,7 +106,7 @@ index 998179af2..c036a7833 100644
  	else
  	{
 diff --git a/Build/Utils/Text_Input.cc b/Build/Utils/Text_Input.cc
-index fc64d5813..4869ce29a 100644
+index fc64d58..4869ce2 100644
 --- a/Build/Utils/Text_Input.cc
 +++ b/Build/Utils/Text_Input.cc
 @@ -562,10 +562,19 @@ BOOLEAN HandleTextInput(InputAtom const* const a)
@@ -132,7 +158,7 @@ index fc64d5813..4869ce29a 100644
  
  		case CTRL_DOWN:
 diff --git a/Makefile b/Makefile
-index 6db811f3f..53103d351 100644
+index 6db811f..53103d3 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -38,12 +38,18 @@ CFLAGS += -DGAME_VERSION=\"$(GAME_VERSION)\"
@@ -178,7 +204,7 @@ index 6db811f3f..53103d351 100644
  SOURCE_DIR_NAME := ja2-stracciatella_$(VERSION)
  build-source-archive:
 diff --git a/sgp/FileMan.cc b/sgp/FileMan.cc
-index 0b607c213..cdfca08a2 100644
+index 0b607c2..cdfca08 100644
 --- a/sgp/FileMan.cc
 +++ b/sgp/FileMan.cc
 @@ -9,12 +9,10 @@
@@ -505,7 +531,7 @@ index 0b607c213..cdfca08a2 100644
 +	boost::filesystem::rename(fromPath, toPath);
 +}
 diff --git a/sgp/FileMan.h b/sgp/FileMan.h
-index a7f96cbf3..d4fdf3c2a 100644
+index a7f96cb..d4fdf3c 100644
 --- a/sgp/FileMan.h
 +++ b/sgp/FileMan.h
 @@ -10,8 +10,6 @@
@@ -571,7 +597,7 @@ index a7f96cbf3..d4fdf3c2a 100644
    /** Private constructor to avoid instantiation. */
    FileMan() {};
 diff --git a/sgp/Input.cc b/sgp/Input.cc
-index 3b64602b5..6d82a147a 100644
+index 3b64602..6d82a14 100644
 --- a/sgp/Input.cc
 +++ b/sgp/Input.cc
 @@ -1,3 +1,5 @@
@@ -1012,7 +1038,7 @@ index 3b64602b5..6d82a147a 100644
 +	}
  }
 diff --git a/sgp/Input.h b/sgp/Input.h
-index 84d7cd185..0da0517a6 100644
+index 84d7cd1..0da0517 100644
 --- a/sgp/Input.h
 +++ b/sgp/Input.h
 @@ -8,6 +8,7 @@
@@ -1083,7 +1109,7 @@ index 84d7cd185..0da0517a6 100644
  
  #endif
 diff --git a/sgp/PCX.cc b/sgp/PCX.cc
-index cf1719bad..bfea6df43 100644
+index cf1719b..bfea6df 100644
 --- a/sgp/PCX.cc
 +++ b/sgp/PCX.cc
 @@ -75,7 +75,7 @@ SGPImage* LoadPCXFileToImage(char const* const filename, UINT16 const contents)
@@ -1096,7 +1122,7 @@ index cf1719bad..bfea6df43 100644
  		img->pui16BPPPalette = Create16BPPPalette(dst);
  	}
 diff --git a/sgp/Platform.h b/sgp/Platform.h
-index 263f9b1b6..c232813e2 100644
+index 263f9b1..c232813 100644
 --- a/sgp/Platform.h
 +++ b/sgp/Platform.h
 @@ -43,11 +43,9 @@
@@ -1115,7 +1141,7 @@ index 263f9b1b6..c232813e2 100644
  /**************************************************************
   *
 diff --git a/sgp/SGP.cc b/sgp/SGP.cc
-index 7b9b71048..1c43c4c61 100644
+index 7b9b710..1c43c4c 100644
 --- a/sgp/SGP.cc
 +++ b/sgp/SGP.cc
 @@ -212,28 +212,28 @@ static void MainLoop(int msPerGameCycle)
@@ -1167,7 +1193,7 @@ index 7b9b71048..1c43c4c61 100644
  #ifdef __APPLE__
    // Enable 3-button mouse support if the user haven't instructed
 diff --git a/sgp/STCI.cc b/sgp/STCI.cc
-index c5d958ec8..bc200f7da 100644
+index c5d958e..bc200f7 100644
 --- a/sgp/STCI.cc
 +++ b/sgp/STCI.cc
 @@ -113,7 +113,7 @@ static SGPImage* STCILoadIndexed(UINT16 const contents, HWFILE const f, STCIHead
@@ -1180,7 +1206,7 @@ index c5d958ec8..bc200f7da 100644
  
  		img->fFlags |= IMAGE_PALETTE;
 diff --git a/sgp/SoundMan.cc b/sgp/SoundMan.cc
-index e37d632e7..aff29801e 100644
+index e37d632..aff2980 100644
 --- a/sgp/SoundMan.cc
 +++ b/sgp/SoundMan.cc
 @@ -14,22 +14,18 @@
@@ -1940,7 +1966,7 @@ index e37d632e7..aff29801e 100644
  	return TRUE;
  }
 diff --git a/sgp/VSurface.cc b/sgp/VSurface.cc
-index 9147259b8..4c68143dd 100644
+index 9147259..4c68143 100644
 --- a/sgp/VSurface.cc
 +++ b/sgp/VSurface.cc
 @@ -28,13 +28,13 @@ SGPVSurface::SGPVSurface(UINT16 const w, UINT16 const h, UINT8 const bpp) :
@@ -1983,7 +2009,7 @@ index 9147259b8..4c68143dd 100644
  		{
  			const UINT16* s = os;
 diff --git a/sgp/Video.cc b/sgp/Video.cc
-index 1c6c2170b..57fab03c8 100644
+index 1c6c217..57fab03 100644
 --- a/sgp/Video.cc
 +++ b/sgp/Video.cc
 @@ -22,13 +22,13 @@
@@ -2422,7 +2448,7 @@ index 1c6c2170b..57fab03c8 100644
  	// Delete primary viedeo surfaces
  	DeletePrimaryVideoSurfaces();
 diff --git a/sgp/Video.h b/sgp/Video.h
-index fbb980b63..2158ef3ee 100644
+index fbb980b..2158ef3 100644
 --- a/sgp/Video.h
 +++ b/sgp/Video.h
 @@ -6,13 +6,14 @@
@@ -2450,3 +2476,6 @@ index fbb980b63..2158ef3ee 100644
  void InvalidateRegionEx(INT32 iLeft, INT32 iTop, INT32 iRight, INT32 iBottom);
  
  void RefreshScreen(void);
+-- 
+2.36.1
+
