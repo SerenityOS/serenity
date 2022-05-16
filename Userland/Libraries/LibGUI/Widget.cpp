@@ -50,8 +50,10 @@ Widget::Widget()
     REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
     REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
+    REGISTER_READONLY_UI_SIZE_PROPERTY("effective_min_size", effective_min_size);
     REGISTER_UI_SIZE_PROPERTY("max_size", max_size, set_max_size);
     REGISTER_UI_SIZE_PROPERTY("preferred_size", preferred_size, set_preferred_size);
+    REGISTER_READONLY_UI_SIZE_PROPERTY("effective_preferred_size", effective_preferred_size);
     REGISTER_INT_PROPERTY("width", width, set_width);
     REGISTER_UI_DIMENSION_PROPERTY("min_width", min_width, set_min_width);
     REGISTER_UI_DIMENSION_PROPERTY("max_width", max_width, set_max_width);
