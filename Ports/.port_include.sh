@@ -665,7 +665,7 @@ do_generate_patch_readme() {
         {
             echo "## \`$patch\`"
             echo
-            cat "$tempdir/$patch.desc"
+            sed -e 's/^Co-Authored-By: .*$//g' < "$tempdir/$patch.desc"
             echo
         } >> ReadMe.md
         count=$((count + 1))
