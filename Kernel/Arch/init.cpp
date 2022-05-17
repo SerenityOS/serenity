@@ -12,6 +12,7 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
+#include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
@@ -83,6 +84,9 @@ extern "C" u8 end_of_safemem_text[];
 extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
 #endif
+
+extern "C" USB::DriverInitFunction driver_init_table_start[];
+extern "C" USB::DriverInitFunction driver_init_table_end[];
 
 extern "C" u8 end_of_kernel_image[];
 
@@ -416,6 +420,10 @@ void init_stage2(void*)
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
         PANIC("VirtualFileSystem::mount_root failed");
     }
+
+    // Initialise all USB Drivers
+    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
+        (*init_function)();
 
     // Switch out of early boot mode.
     g_in_early_boot = false;
