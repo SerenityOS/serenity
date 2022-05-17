@@ -14,6 +14,7 @@ struct TimerRegisters;
 
 class Timer {
 public:
+    Timer();
     static Timer& the();
 
     u64 microseconds_since_boot();
@@ -38,8 +39,6 @@ public:
     static u32 set_clock_rate(ClockID, u32 rate_hz, bool skip_setting_turbo = true);
 
 private:
-    Timer();
-
     TimerRegisters volatile* m_registers;
 };
 
