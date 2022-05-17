@@ -764,23 +764,19 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, { "year"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
 
-    // 5. If year is undefined, throw a TypeError exception.
-    if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
-
-    // 6. Let month be ? ResolveISOMonth(fields).
+    // 5. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
+    // 6. Let result be ? RegulateISOYearMonth(year, month, overflow).
     auto result = TRY(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
 
-    // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
+    // 7. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
