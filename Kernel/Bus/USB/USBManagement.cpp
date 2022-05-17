@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Jesse Buhagiar <jesse.buhagiar@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -72,6 +73,20 @@ UNMAP_AFTER_INIT void USBManagement::initialize()
     }
 
     s_the.ensure_instance();
+}
+
+void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
+{
+    dbgln_if(USB_DEBUG, "Registering driver {}", driver->name());
+    m_available_drivers.append(driver);
+}
+
+void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
+{
+    dbgln_if(USB_DEBUG, "Unregistering driver {}", driver->name());
+    auto const& found_driver = m_available_drivers.find(driver);
+    if (!found_driver.is_end())
+        m_available_drivers.remove(found_driver.index());
 }
 
 USBManagement& USBManagement::the()
