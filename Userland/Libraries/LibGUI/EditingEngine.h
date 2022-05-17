@@ -50,10 +50,16 @@ protected:
 
     WeakPtr<TextEditor> m_editor;
 
+    enum class DidMoveALine {
+        No,
+        Yes,
+    };
+
     void move_one_left();
     void move_one_right();
-    void move_one_up(KeyEvent const& event);
-    void move_one_down(KeyEvent const& event);
+    void move_one_helper(KeyEvent const& event, VerticalDirection direction);
+    DidMoveALine move_one_up(KeyEvent const& event);
+    DidMoveALine move_one_down(KeyEvent const& event);
     void move_to_previous_span();
     void move_to_next_span();
     void move_to_logical_line_beginning();

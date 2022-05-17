@@ -81,28 +81,16 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_Up) {
-        if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
-            m_editor->update_selection(event.shift());
-        }
-        move_one_up(event);
-        if (event.shift() && m_editor->selection().start().is_valid()) {
-            m_editor->selection().set_end(m_editor->cursor());
-            m_editor->did_update_selection();
-        }
-        return true;
-    }
+    if (event.key() == KeyCode::Key_Up || event.key() == KeyCode::Key_Down) {
+        auto const direction = key_code_to_vertical_direction(event.key());
 
-    if (event.key() == KeyCode::Key_Down) {
-        if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
+        bool const condition_for_up = direction == VerticalDirection::Up && m_editor->cursor().line() > 0;
+        bool const condition_for_down = direction == VerticalDirection::Down && m_editor->cursor().line() < (m_editor->line_count() - 1);
+
+        if (condition_for_up || condition_for_down || m_editor->is_wrapping_enabled())
             m_editor->update_selection(event.shift());
-        }
-        move_one_down(event);
-        if (event.shift() && m_editor->selection().start().is_valid()) {
-            m_editor->selection().set_end(m_editor->cursor());
-            m_editor->did_update_selection();
-        }
-        return true;
+
+        move_one_helper(event, direction);
     }
 
     if (event.key() == KeyCode::Key_Home) {
@@ -258,12 +246,21 @@ void EditingEngine::move_to_logical_line_end()
     m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().length() });
 }
 
-void EditingEngine::move_one_up(KeyEvent const& event)
+void EditingEngine::move_one_helper(KeyEvent const& event, VerticalDirection direction)
+{
+    auto const result = direction == VerticalDirection::Up ? move_one_up(event) : move_one_down(event);
+    if (result != DidMoveALine::Yes && event.shift() && m_editor->selection().start().is_valid()) {
+        m_editor->selection().set_end(m_editor->cursor());
+        m_editor->did_update_selection();
+    }
+}
+
+EditingEngine::DidMoveALine EditingEngine::move_one_up(KeyEvent const& event)
 {
     if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_up();
-            return;
+            return DidMoveALine::Yes;
         }
         TextPosition new_cursor;
         if (m_editor->is_wrapping_enabled()) {
@@ -276,14 +273,15 @@ void EditingEngine::move_one_up(KeyEvent const& event)
         }
         m_editor->set_cursor(new_cursor);
     }
+    return DidMoveALine::No;
 };
 
-void EditingEngine::move_one_down(KeyEvent const& event)
+EditingEngine::DidMoveALine EditingEngine::move_one_down(KeyEvent const& event)
 {
     if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_down();
-            return;
+            return DidMoveALine::Yes;
         }
         TextPosition new_cursor;
         if (m_editor->is_wrapping_enabled()) {
@@ -296,6 +294,7 @@ void EditingEngine::move_one_down(KeyEvent const& event)
         }
         m_editor->set_cursor(new_cursor);
     }
+    return DidMoveALine::No;
 };
 
 void EditingEngine::move_up(double page_height_factor)
@@ -381,11 +380,11 @@ void EditingEngine::move_selected_lines_up()
 
     auto& lines = m_editor->document().lines();
     lines.insert((int)last_line, lines.take((int)first_line - 1));
-    m_editor->set_cursor({ first_line - 1, 0 });
+    m_editor->set_cursor({ m_editor->cursor().line() - 1, m_editor->cursor().column() });
 
     if (m_editor->has_selection()) {
-        m_editor->selection().set_start({ first_line - 1, 0 });
-        m_editor->selection().set_end({ last_line - 1, m_editor->line(last_line - 1).length() });
+        m_editor->selection().start().set_line(m_editor->selection().start().line() - 1);
+        m_editor->selection().end().set_line(m_editor->selection().end().line() - 1);
     }
 
     m_editor->did_change();
@@ -406,11 +405,11 @@ void EditingEngine::move_selected_lines_down()
         return;
 
     lines.insert((int)first_line, lines.take((int)last_line + 1));
-    m_editor->set_cursor({ first_line + 1, 0 });
+    m_editor->set_cursor({ m_editor->cursor().line() + 1, m_editor->cursor().column() });
 
     if (m_editor->has_selection()) {
-        m_editor->selection().set_start({ first_line + 1, 0 });
-        m_editor->selection().set_end({ last_line + 1, m_editor->line(last_line + 1).length() });
+        m_editor->selection().start().set_line(m_editor->selection().start().line() + 1);
+        m_editor->selection().end().set_line(m_editor->selection().end().line() + 1);
     }
 
     m_editor->did_change();
