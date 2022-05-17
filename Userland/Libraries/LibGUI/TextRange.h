@@ -61,8 +61,8 @@ private:
     TextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
     TextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
 
-    TextPosition m_start;
-    TextPosition m_end;
+    TextPosition m_start {};
+    TextPosition m_end {};
 };
 
 }
