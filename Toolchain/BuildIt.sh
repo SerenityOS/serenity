@@ -271,11 +271,13 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/gcc.patch > /dev/null
+            git am --keep-non-patch "$DIR"/Patches/gcc/*.patch > /dev/null
         else
-            patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
+            for patch in "$DIR"/Patches/gcc/*.patch; do
+                patch -p1 < "$patch" > /dev/null
+            done
         fi
-        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
+        $MD5SUM $DIR/Patches/gcc/*.patch > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then
@@ -390,10 +392,6 @@ pushd "$DIR/Build/$ARCH"
 
     if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
         perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
-    fi
-
-    if [ ! -f "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-userland.h" ]; then
-        cp "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h" "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h"
     fi
 
     rm -rf gcc
