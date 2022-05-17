@@ -1,3 +1,13 @@
+From bc87404dcffad4d0e1577bf407a0bfbacb2d79f2 Mon Sep 17 00:00:00 2001
+From: Patrick Meyer <git@the-space.agency>
+Date: Thu, 28 Apr 2022 01:50:11 +0000
+Subject: [PATCH 5/5] Remove some unsupported socket operations
+
+Co-Authored-By: Yonatan Goldschmidt <yon.goldschmidt@gmail.com>
+---
+ netio.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
 diff --git a/netio.c b/netio.c
 index 2ed9bb1..e0e9962 100644
 --- a/netio.c
@@ -42,3 +52,6 @@ index 2ed9bb1..e0e9962 100644
  
  #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
  		if (res->ai_family == AF_INET6) {
+-- 
+2.36.1
+
