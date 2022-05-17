@@ -155,14 +155,14 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
         auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, { "timeZone"sv }));
 
-        // g. Let timeZone be ? Get(fields, "timeZone").
-        auto time_zone_value = TRY(fields->get(vm.names.timeZone));
+        // g. Let timeZone be ! Get(fields, "timeZone").
+        auto time_zone_value = MUST(fields->get(vm.names.timeZone));
 
         // h. Set timeZone to ? ToTemporalTimeZone(timeZone).
         time_zone = TRY(to_temporal_time_zone(global_object, time_zone_value));
 
-        // i. Let offsetString be ? Get(fields, "offset").
-        auto offset_string_value = TRY(fields->get(vm.names.offset));
+        // i. Let offsetString be ! Get(fields, "offset").
+        auto offset_string_value = MUST(fields->get(vm.names.offset));
 
         // j. If offsetString is undefined, then
         if (offset_string_value.is_undefined()) {
