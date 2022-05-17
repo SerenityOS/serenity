@@ -44,6 +44,4 @@ void register_interrupt_handler(u8 number, void (*handler)());
 void register_user_callable_interrupt_handler(u8 number, void (*handler)());
 void register_disabled_interrupt_handler(u8 number, GenericInterruptHandler& handler);
 
-void idt_init();
-
 }
