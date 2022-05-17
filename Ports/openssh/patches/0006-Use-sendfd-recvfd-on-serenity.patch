@@ -1,5 +1,15 @@
+From 80b391147785edcbf2e1267104e24087ffb420df Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Sat, 30 Apr 2022 10:58:10 +0000
+Subject: [PATCH 6/7] Use sendfd/recvfd on serenity
+
+Co-Authored-By: Patrick Meyer <git@the-space.agency>
+---
+ monitor_fdpass.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
 diff --git a/monitor_fdpass.c b/monitor_fdpass.c
-index a07727a..0a9fe75 100644
+index a07727a..ad6774e 100644
 --- a/monitor_fdpass.c
 +++ b/monitor_fdpass.c
 @@ -51,6 +51,7 @@
@@ -34,3 +44,6 @@ index a07727a..0a9fe75 100644
 +    return recvfd(sock, 0);
 +#endif
  }
+-- 
+2.36.1
+
