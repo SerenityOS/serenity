@@ -373,7 +373,7 @@ private:
     bool m_cursor_line_highlighting { true };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
-    TextRange m_selection;
+    TextRange m_selection {};
 
     Optional<u32> m_substitution_code_point;
     mutable OwnPtr<Vector<u32>> m_substitution_string_data; // Used to avoid repeated String construction.
