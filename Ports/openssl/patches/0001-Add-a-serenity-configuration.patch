@@ -1,6 +1,18 @@
---- openssl-1.1.1n/Configurations/10-main.conf	2021-03-25 21:28:38.000000000 +0800
-+++ openssl-1.1.1n/Configurations/10-main.conf	2021-09-26 00:05:04.340004623 +0800
-@@ -627,6 +627,30 @@
+From 924ba86b0ea438a69f0110ccf16cebe24619d3e1 Mon Sep 17 00:00:00 2001
+From: Luke Wilde <lukew@serenityos.org>
+Date: Wed, 16 Mar 2022 12:52:30 +0000
+Subject: [PATCH 1/2] Add a serenity configuration
+
+Co-Authored-By: Rodrigo Tobar <rtobarc@gmail.com>
+---
+ Configurations/10-main.conf | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
+index 8ca8235..3dea01f 100644
+--- a/Configurations/10-main.conf
++++ b/Configurations/10-main.conf
+@@ -627,6 +627,30 @@ my %targets = (
          shared_extension => ".so",
      },
  
@@ -31,3 +43,6 @@
  ####
  #### Variety of LINUX:-)
  ####
+-- 
+2.36.1
+
