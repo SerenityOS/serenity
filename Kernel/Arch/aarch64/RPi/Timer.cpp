@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
@@ -35,8 +36,8 @@ Timer::Timer()
 
 Timer& Timer::the()
 {
-    static Timer instance;
-    return instance;
+    static AK::NeverDestroyed<Timer> instance;
+    return *instance;
 }
 
 u64 Timer::microseconds_since_boot()
