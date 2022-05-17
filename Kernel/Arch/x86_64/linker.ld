@@ -38,6 +38,13 @@ SECTIONS
         *(.text*)
     } :text
 
+    .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
+    {
+        driver_init_table_start = .;
+        *(.driver_init)
+        driver_init_table_end = .;
+    } :text
+
     .unmap_after_init ALIGN(4K) : AT (ADDR(.unmap_after_init))
     {
         start_of_unmap_after_init = .;

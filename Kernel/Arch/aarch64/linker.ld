@@ -31,6 +31,13 @@ SECTIONS
         *(.text*)
     } :text
 
+    .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
+    {
+        driver_init_table_start = .;
+        *(.driver_init)
+        driver_init_table_end = .;
+    } :text
+
     .rodata ALIGN(4K) : AT (ADDR(.rodata) - KERNEL_MAPPING_BASE)
     {
         start_heap_ctors = .;
