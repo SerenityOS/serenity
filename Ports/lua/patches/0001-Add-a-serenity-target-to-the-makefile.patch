@@ -1,7 +1,22 @@
-diff -Naur lua-5.3.6/src/Makefile lua-5.3.6.serenity/src/Makefile
---- lua-5.3.6/src/Makefile	2020-07-13 20:38:14.000000000 +0200
-+++ lua-5.3.6.serenity/src/Makefile	2021-12-27 21:33:37.015610414 +0100
-@@ -26,7 +26,7 @@
+From ffc3fc84ac65d2d1af7faff95e633710aad988ec Mon Sep 17 00:00:00 2001
+From: Daniel Lemos <xspager@gmail.com>
+Date: Tue, 15 Mar 2022 13:30:11 -0300
+Subject: [PATCH] Add a serenity target to the makefile
+
+Co-Authored-By: Gunnar Beutner <gbeutner@serenityos.org>
+Co-Authored-By: Javier Alvarez <javier.alvarez@allthingsembedded.net>
+Co-Authored-By: Larkin <45925460+larb0b@users.noreply.github.com>
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
+Co-Authored-By: Noah Rosamilia <ivoahivoah@gmail.com>
+---
+ src/Makefile | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index a13afb9..c54c7bd 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -26,7 +26,7 @@ MYOBJS=
  
  # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
  
@@ -10,7 +25,7 @@ diff -Naur lua-5.3.6/src/Makefile lua-5.3.6.serenity/src/Makefile
  
  LUA_A=	liblua.a
  CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
-@@ -100,7 +100,6 @@
+@@ -100,7 +100,6 @@ c89:
  	@echo '*** C89 does not guarantee 64-bit integers for Lua.'
  	@echo ''
  
@@ -18,7 +33,7 @@ diff -Naur lua-5.3.6/src/Makefile lua-5.3.6.serenity/src/Makefile
  freebsd:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX -I/usr/include/edit" SYSLIBS="-Wl,-E -ledit" CC="cc"
  
-@@ -124,6 +123,13 @@
+@@ -124,6 +123,13 @@ posix:
  solaris:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
  
@@ -32,3 +47,6 @@ diff -Naur lua-5.3.6/src/Makefile lua-5.3.6.serenity/src/Makefile
  # list targets that do not create files (but not all makes understand .PHONY)
  .PHONY: all $(PLATS) default o a clean depend echo none
  
+-- 
+2.36.1
+
