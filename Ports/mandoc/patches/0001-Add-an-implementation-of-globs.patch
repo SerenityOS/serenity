@@ -1,5 +1,18 @@
---- mandoc-1.14.5/compat_glob.c.orig	Sat Jan 25 20:23:13 2020
-+++ mandoc-1.14.5/compat_glob.c	Sat Jan 25 20:22:56 2020
+From e922f5ca936776e9c4b7182c73008cf475f8a6ea Mon Sep 17 00:00:00 2001
+From: Brian Callahan <bcallah@openbsd.org>
+Date: Sat, 25 Jan 2020 21:20:39 -0500
+Subject: [PATCH 1/9] Add an implementation of globs
+
+---
+ compat_glob.c | 1174 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1174 insertions(+)
+ create mode 100644 compat_glob.c
+
+diff --git a/compat_glob.c b/compat_glob.c
+new file mode 100644
+index 0000000..d155c84
+--- /dev/null
++++ b/compat_glob.c
 @@ -0,0 +1,1174 @@
 +/*	$NetBSD: glob.c,v 1.39 2019/05/29 01:21:33 christos Exp $	*/
 +
@@ -1175,3 +1188,6 @@
 +	(void)printf("\n");
 +}
 +#endif
+-- 
+2.36.1
+

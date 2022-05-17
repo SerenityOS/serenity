@@ -1,5 +1,18 @@
---- mandoc-1.14.5/glob.h.orig	Sat Jan 25 20:20:24 2020
-+++ mandoc-1.14.5/glob.h	Sat Jan 25 20:20:44 2020
+From 05cf3e8e7e355ec1ae1890cff0ed3a86d7bd5d57 Mon Sep 17 00:00:00 2001
+From: Brian Callahan <bcallah@openbsd.org>
+Date: Sat, 25 Jan 2020 21:20:39 -0500
+Subject: [PATCH 2/9] Add a header describing the glob implementation
+
+---
+ glob.h | 115 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 115 insertions(+)
+ create mode 100644 glob.h
+
+diff --git a/glob.h b/glob.h
+new file mode 100644
+index 0000000..c304b69
+--- /dev/null
++++ b/glob.h
 @@ -0,0 +1,115 @@
 +/*	$NetBSD: glob.h,v 1.27 2019/05/29 01:21:33 christos Exp $	*/
 +
@@ -116,3 +129,6 @@
 +__END_DECLS
 +
 +#endif /* !_GLOB_H_ */
+-- 
+2.36.1
+
