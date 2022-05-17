@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sarah Taube <metalflakecobaltpaint@gmail.com>
  * Copyright (c) 2021, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2022, Cameron Youell <cameronyouell@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -17,7 +18,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, bool top, bool in_active_window)
+void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -30,18 +31,19 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
-    if (top) {
+    auto accent = palette.accent();
+    if (!in_active_window)
+        accent = accent.to_grayscale();
+
+    switch (position) {
+    case GUI::TabWidget::TabPosition::Top:
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
         // Top line
         if (active) {
-            auto accent = palette.accent();
-            if (!in_active_window)
-                accent = accent.to_grayscale();
             painter.draw_line({ 3, 0 }, { rect.width() - 3, 0 }, accent.darkened());
-            Gfx::IntRect accent_rect { 1, 1, rect.width() - 2, 2 };
-            painter.fill_rect_with_gradient(accent_rect, accent, accent.lightened(1.5f));
+            painter.fill_rect_with_gradient({ 1, 1, rect.width() - 2, 2 }, accent, accent.lightened(1.5f));
             painter.set_pixel({ 2, 0 }, highlight_color2);
         } else {
             painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
@@ -52,27 +54,17 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.set_pixel({ 1, 1 }, highlight_color2);
 
         // Right side
-
-        IntPoint top_right_outer { rect.width() - 1, 2 };
-        IntPoint bottom_right_outer { rect.width() - 1, rect.height() - 1 };
-        painter.draw_line(top_right_outer, bottom_right_outer, shadow_color2);
-
-        IntPoint top_right_inner { rect.width() - 2, 2 };
-        IntPoint bottom_right_inner { rect.width() - 2, rect.height() - 1 };
-        painter.draw_line(top_right_inner, bottom_right_inner, shadow_color1);
-
+        painter.draw_line({ rect.width() - 1, 2 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
+        painter.draw_line({ rect.width() - 2, 2 }, { rect.width() - 2, rect.height() - 1 }, shadow_color1);
         painter.set_pixel(rect.width() - 2, 1, shadow_color2);
-    } else {
+        break;
+    case GUI::TabWidget::TabPosition::Bottom:
         // Base
         painter.fill_rect({ 0, 0, rect.width() - 1, rect.height() }, base_color);
 
         // Bottom line
         if (active) {
-            auto accent = palette.accent();
-            if (!in_active_window)
-                accent = accent.to_grayscale();
-            Gfx::IntRect accent_rect { 1, rect.height() - 3, rect.width() - 2, 2 };
-            painter.fill_rect_with_gradient(accent_rect, accent, accent.lightened(1.5f));
+            painter.fill_rect_with_gradient({ 1, rect.height() - 3, rect.width() - 2, 2 }, accent, accent.lightened(1.5f));
             painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, accent.darkened());
         } else {
             painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, shadow_color2);
@@ -83,15 +75,48 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.set_pixel({ 1, rect.height() - 2 }, highlight_color2);
 
         // Right side
-        IntPoint top_right_outer { rect.width() - 1, 0 };
-        IntPoint bottom_right_outer { rect.width() - 1, rect.height() - 3 };
-        painter.draw_line(top_right_outer, bottom_right_outer, shadow_color2);
+        painter.draw_line({ rect.width() - 1, 0 }, { rect.width() - 1, rect.height() - 3 }, shadow_color2);
+        painter.draw_line({ rect.width() - 2, 0 }, { rect.width() - 2, rect.height() - 3 }, shadow_color1);
+        painter.set_pixel({ rect.width() - 2, rect.height() - 2 }, shadow_color2);
+        break;
+    case GUI::TabWidget::TabPosition::Left:
+        // Base tab
+        painter.fill_rect({ 1, 1, rect.width(), rect.height() - 1 }, base_color);
+        painter.draw_line({ 2, 0 }, { rect.width(), 0 }, highlight_color2);
+        painter.draw_line({ 2, rect.height() - 1 }, { rect.width(), rect.height() - 1 }, shadow_color2);
 
-        IntPoint top_right_inner { rect.width() - 2, 0 };
-        IntPoint bottom_right_inner { rect.width() - 2, rect.height() - 3 };
-        painter.draw_line(top_right_inner, bottom_right_inner, shadow_color1);
+        // If the tab is active, draw the accent line
+        if (active) {
+            painter.fill_rect_with_gradient({ 1, 1, 2, rect.height() - 2 }, accent, accent.lightened(1.5f));
+            painter.draw_line({ 0, 2 }, { 0, rect.height() - 3 }, accent.darkened());
+        } else {
+            painter.draw_line({ 0, 2 }, { 0, rect.height() - 3 }, highlight_color2);
+            painter.draw_line({ rect.width(), 1 }, { rect.width(), rect.height() - 1 }, shadow_color1);
+        }
 
-        painter.set_pixel(rect.width() - 2, rect.height() - 2, shadow_color2);
+        // Make appear as if the tab is rounded
+        painter.set_pixel({ 1, 1 }, highlight_color2);
+        painter.set_pixel({ 1, rect.height() - 2 }, shadow_color2);
+        break;
+    case GUI::TabWidget::TabPosition::Right:
+        // Base tab
+        painter.fill_rect({ 0, 1, rect.width() - 1, rect.height() - 1 }, base_color);
+        painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);
+        painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 2, rect.height() - 1 }, shadow_color2);
+
+        // If the tab is active, draw the accent line
+        if (active) {
+            painter.fill_rect_with_gradient({ rect.width() - 2, 1, 2, rect.height() - 2 }, accent.lightened(1.5f), accent);
+            painter.draw_line({ rect.width(), 2 }, { rect.width(), rect.height() - 3 }, accent.darkened());
+        } else {
+            painter.draw_line({ rect.width(), 2 }, { rect.width(), rect.height() - 3 }, shadow_color2);
+            painter.draw_line({ 0, 0 }, { 0, rect.height() - 1 }, shadow_color1);
+        }
+
+        // Make appear as if the tab is rounded
+        painter.set_pixel({ rect.width() - 1, 1 }, shadow_color1);
+        painter.set_pixel({ rect.width() - 1, rect.height() - 2 }, shadow_color2);
+        break;
     }
 }
 

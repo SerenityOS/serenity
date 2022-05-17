@@ -18,12 +18,15 @@ public:
     enum TabPosition {
         Top,
         Bottom,
+        Left,
+        Right,
     };
 
     virtual ~TabWidget() override = default;
 
     TabPosition tab_position() const { return m_tab_position; }
     void set_tab_position(TabPosition);
+    bool has_vertical_tabs() const { return m_tab_position == TabPosition::Left || m_tab_position == TabPosition::Right; }
 
     Optional<size_t> active_tab_index() const;
 
@@ -32,7 +35,13 @@ public:
     void set_active_widget(Widget*);
     void set_tab_index(int);
 
-    int bar_height() const { return m_bar_visible ? 21 : 0; }
+    int bar_height() const { return m_bar_visible ? 22 : 0; }
+
+    int get_max_tab_width() const { return m_bar_visible ? m_max_tab_width : 0; }
+    void set_max_tab_width(int width) { m_max_tab_width = width; }
+
+    int get_min_tab_width() const { return m_min_tab_width; }
+    void set_min_tab_width(int width) { m_min_tab_width = width; }
 
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
@@ -110,6 +119,8 @@ protected:
 private:
     Gfx::IntRect child_rect_for_size(Gfx::IntSize const&) const;
     Gfx::IntRect button_rect(size_t index) const;
+    Gfx::IntRect vertical_button_rect(size_t index) const;
+    Gfx::IntRect horizontal_button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
@@ -136,10 +147,13 @@ private:
     bool m_bar_visible { true };
     bool m_close_button_enabled { false };
 
+    int m_max_tab_width { 160 };
+    int m_min_tab_width { 24 };
+
     bool m_reorder_allowed { false };
     bool m_dragging_active_tab { false };
     int m_grab_offset { 0 };
-    int m_mouse_x { 0 };
+    int m_mouse_pos { 0 };
 
     void drag_tab(size_t index);
     void recalculate_tab_order();
