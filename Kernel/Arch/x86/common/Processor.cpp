@@ -656,7 +656,7 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
 #endif
 
     if (cpu == 0)
-        idt_init();
+        initialize_interrupts();
     else
         flush_idt();
 

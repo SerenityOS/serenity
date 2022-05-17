@@ -23,4 +23,9 @@ void unregister_generic_interrupt_handler(u8, GenericInterruptHandler&)
     VERIFY_NOT_REACHED();
 }
 
+void initialize_interrupts()
+{
+    VERIFY_NOT_REACHED();
+}
+
 }

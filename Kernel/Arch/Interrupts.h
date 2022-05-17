@@ -21,4 +21,6 @@ GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
 void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 
+void initialize_interrupts();
+
 }
