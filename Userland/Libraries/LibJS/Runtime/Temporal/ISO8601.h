@@ -136,7 +136,7 @@ public:
     [[nodiscard]] bool parse_time_zone_iana_component();
     [[nodiscard]] bool parse_time_zone_iana_name_tail();
     [[nodiscard]] bool parse_time_zone_iana_name();
-    [[nodiscard]] bool parse_time_zone_bracketed_name();
+    [[nodiscard]] bool parse_time_zone_identifier();
     [[nodiscard]] bool parse_time_zone_bracketed_annotation();
     [[nodiscard]] bool parse_time_zone_offset_required();
     [[nodiscard]] bool parse_time_zone_name_required();
@@ -176,7 +176,6 @@ public:
     [[nodiscard]] bool parse_temporal_duration_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
     [[nodiscard]] bool parse_temporal_time_string();
-    [[nodiscard]] bool parse_temporal_time_zone_identifier();
     [[nodiscard]] bool parse_temporal_time_zone_string();
     [[nodiscard]] bool parse_temporal_year_month_string();
     [[nodiscard]] bool parse_temporal_zoned_date_time_string();

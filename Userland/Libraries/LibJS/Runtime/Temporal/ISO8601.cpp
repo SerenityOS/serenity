@@ -950,10 +950,10 @@ bool ISO8601Parser::parse_time_zone_iana_name()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneBracketedName
-bool ISO8601Parser::parse_time_zone_bracketed_name()
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIdentifier
+bool ISO8601Parser::parse_time_zone_identifier()
 {
-    // TimeZoneBracketedName :
+    // TimeZoneIdentifier :
     //     TimeZoneIANAName
     //     TimeZoneUTCOffsetName
     StateTransaction transaction { *this };
@@ -970,11 +970,11 @@ bool ISO8601Parser::parse_time_zone_bracketed_name()
 bool ISO8601Parser::parse_time_zone_bracketed_annotation()
 {
     // TimeZoneBracketedAnnotation :
-    //     [ TimeZoneBracketedName ]
+    //     [ TimeZoneIdentifier ]
     StateTransaction transaction { *this };
     if (!m_state.lexer.consume_specific('['))
         return false;
-    if (!parse_time_zone_bracketed_name())
+    if (!parse_time_zone_identifier())
         return false;
     if (!m_state.lexer.consume_specific(']'))
         return false;
@@ -1650,24 +1650,14 @@ bool ISO8601Parser::parse_temporal_time_string()
         || parse_calendar_time();
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalTimeZoneIdentifier
-bool ISO8601Parser::parse_temporal_time_zone_identifier()
-{
-    // TemporalTimeZoneIdentifier :
-    //     TimeZoneNumericUTCOffset
-    //     TimeZoneIANAName
-    return parse_time_zone_numeric_utc_offset()
-        || parse_time_zone_iana_name();
-}
-
 // https://tc39.es/proposal-temporal/#prod-TemporalTimeZoneString
 bool ISO8601Parser::parse_temporal_time_zone_string()
 {
     // TemporalTimeZoneString :
-    //     TemporalTimeZoneIdentifier
+    //     TimeZoneIdentifier
     //     Date TimeSpecSeparator[opt] TimeZone Calendar[opt]
     StateTransaction transaction { *this };
-    if (!parse_temporal_time_zone_identifier()) {
+    if (!parse_time_zone_identifier()) {
         if (!parse_date())
             return false;
         (void)parse_time_spec_separator();
