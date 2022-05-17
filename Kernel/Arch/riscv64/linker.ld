@@ -39,6 +39,13 @@ SECTIONS
         end_of_kernel_text = .;
     } :text
 
+    .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
+    {
+        driver_init_table_start = .;
+        *(.driver_init)
+        driver_init_table_end = .;
+    } :text
+
     .rodata ALIGN(4K) :
     {
         start_heap_ctors = .;
