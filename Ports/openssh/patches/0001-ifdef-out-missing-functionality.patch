@@ -1,4 +1,39 @@
-Ifdef out unimplemented functionality
+From 0eca70393610857e0a87f157698b295bd727dcae Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Sat, 30 Apr 2022 10:58:10 +0000
+Subject: [PATCH 1/7] ifdef out missing functionality
+
+Co-Authored-By: Luke <luke.wilde@live.co.uk>
+Co-Authored-By: Patrick Meyer <git@the-space.agency>
+Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
+---
+ atomicio.c                           |  2 +-
+ defines.h                            |  5 +++++
+ dns.c                                |  4 ++++
+ dns.h                                |  4 ++++
+ hostfile.c                           |  2 ++
+ includes.h                           |  2 ++
+ loginrec.c                           |  8 ++++----
+ misc.c                               |  2 ++
+ openbsd-compat/getrrsetbyname-ldns.c |  4 ++++
+ openbsd-compat/getrrsetbyname.c      |  4 ++++
+ openbsd-compat/getrrsetbyname.h      |  4 ++++
+ openbsd-compat/mktemp.c              |  2 +-
+ readconf.c                           |  5 ++++-
+ regress/netcat.c                     |  2 ++
+ sandbox-pledge.c                     |  2 ++
+ servconf.c                           |  2 ++
+ ssh-add.c                            |  4 ++++
+ ssh-agent.c                          |  2 ++
+ ssh-keygen.c                         | 11 +++++++++++
+ ssh-keyscan.c                        |  2 ++
+ ssh-pkcs11-client.c                  |  8 +++++++-
+ ssh-sk-client.c                      |  4 ++++
+ sshbuf-misc.c                        |  2 ++
+ sshconnect.c                         | 10 ++++++++--
+ sshkey.c                             |  4 ++++
+ 25 files changed, 91 insertions(+), 10 deletions(-)
+
 diff --git a/atomicio.c b/atomicio.c
 index 7650733..7a195f5 100644
 --- a/atomicio.c
@@ -590,3 +625,6 @@ index f1e9200..564ff40 100644
  #ifdef WITH_XMSS
  	case KEY_XMSS:
  	case KEY_XMSS_CERT:
+-- 
+2.36.1
+
