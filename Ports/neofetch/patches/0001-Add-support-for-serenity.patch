@@ -1,6 +1,19 @@
---- neofetch-7.1.0/neofetch	2021-01-29 22:24:13.954000000 +0100
-+++ neofetch-7.1.0/neofetch	2021-01-29 22:25:14.498712940 +0100
-@@ -794,7 +794,7 @@
+From 155fe5493eafc3a435136ce429052bcc4440d8c6 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 14 Aug 2021 13:33:46 -0400
+Subject: [PATCH] Add support for serenity
+
+Co-Authored-By: Andreas Kling <kling@serenityos.org>
+Co-Authored-By: Nico Weber <thakis@chromium.org>
+---
+ neofetch | 121 +++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 90 insertions(+), 31 deletions(-)
+
+diff --git a/neofetch b/neofetch
+index 1e4b564..ea5e351 100755
+--- a/neofetch
++++ b/neofetch
+@@ -794,7 +794,7 @@ image_source="auto"
  #       popos, Porteus, PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix,
  #       Raspbian, Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan,
  #       Regata, Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific,
@@ -9,7 +22,7 @@
  #       SmartOS, Solus, Source_Mage, Sparky, Star, SteamOS, SunOS,
  #       openSUSE_Leap, openSUSE_Tumbleweed, openSUSE, SwagArch, Tails,
  #       Trisquel, Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio,
-@@ -929,6 +929,7 @@
+@@ -929,6 +929,7 @@ get_os() {
          AIX)      os=AIX ;;
          IRIX*)    os=IRIX ;;
          FreeMiNT) os=FreeMiNT ;;
@@ -17,7 +30,7 @@
  
          Linux|GNU*)
              os=Linux
-@@ -1185,6 +1186,10 @@
+@@ -1185,6 +1186,10 @@ get_distro() {
          FreeMiNT)
              distro=FreeMiNT
          ;;
@@ -28,7 +41,7 @@
      esac
  
      distro=${distro//Enterprise Server}
-@@ -1356,7 +1361,7 @@
+@@ -1356,7 +1361,7 @@ get_title() {
  
  get_kernel() {
      # Since these OS are integrated systems, it's better to skip this function altogether
@@ -37,7 +50,7 @@
  
      # Haiku uses 'uname -v' and not - 'uname -r'.
      [[ $os == Haiku ]] && {
-@@ -1377,17 +1382,17 @@
+@@ -1377,17 +1382,17 @@ get_kernel() {
      esac
  
      # Hide kernel info if it's identical to the distro info.
@@ -61,7 +74,7 @@
              if [[ -r /proc/uptime ]]; then
                  s=$(< /proc/uptime)
                  s=${s/.*}
-@@ -1628,6 +1633,8 @@
+@@ -1628,6 +1633,8 @@ get_shell() {
          off) shell="${SHELL##*/} " ;;
      esac
  
@@ -70,7 +83,7 @@
      [[ $shell_version != on ]] && return
  
      case ${shell_name:=${SHELL##*/}} in
-@@ -2096,13 +2103,13 @@
+@@ -2096,13 +2103,13 @@ get_cpu() {
              speed_dir="/sys/devices/system/cpu/cpu0/cpufreq"
  
              # Select the right temperature file.
@@ -91,7 +104,7 @@
  
              # Get CPU speed.
              if [[ -d "$speed_dir" ]]; then
-@@ -2268,6 +2275,13 @@
+@@ -2268,6 +2275,13 @@ get_cpu() {
              cpu="$(awk -F':' '/CPU:/ {printf $2}' /kern/cpuinfo)"
              speed="$(awk -F '[:.M]' '/Clocking:/ {printf $2}' /kern/cpuinfo)"
          ;;
@@ -105,7 +118,7 @@
      esac
  
      # Remove un-needed patterns from cpu output.
-@@ -2646,6 +2660,15 @@
+@@ -2646,6 +2660,15 @@ get_memory() {
              mem_used="$((mem_used / 1024))"
          ;;
  
@@ -121,7 +134,7 @@
      esac
  
      [[ "$memory_percent" == "on" ]] && ((mem_perc=mem_used * 100 / mem_total))
-@@ -2980,6 +3003,13 @@
+@@ -2980,6 +3003,13 @@ get_style() {
      # Fix weird output when the function is run multiple times.
      unset gtk2_theme gtk3_theme theme path
  
@@ -135,7 +148,7 @@
      if [[ "$DISPLAY" && $os != "Mac OS X" && $os != "macOS" ]]; then
          # Get DE if user has disabled the function.
          ((de_run != 1)) && get_de
-@@ -3130,8 +3160,7 @@
+@@ -3130,8 +3160,7 @@ get_icons() {
      xfconf="/Net/IconThemeName"
      kde="Theme"
  
@@ -145,7 +158,7 @@
  }
  
  get_font() {
-@@ -3158,6 +3187,8 @@
+@@ -3158,6 +3187,8 @@ get_term() {
          *)              term="${TERM_PROGRAM/\.app}" ;;
      esac
  
@@ -154,7 +167,7 @@
      # Most likely TosWin2 on FreeMiNT - quick check
      [[ "$TERM" == "tw52" || "$TERM" == "tw100" ]] && term="TosWin2"
      [[ "$SSH_CONNECTION" ]] && term="$SSH_TTY"
-@@ -3722,10 +3753,10 @@
+@@ -3722,10 +3753,10 @@ get_local_ip() {
  }
  
  get_public_ip() {
@@ -169,7 +182,7 @@
  
      if [[ -z "$public_ip" ]] && type -p drill >/dev/null; then
          public_ip="$(drill myip.opendns.com @resolver1.opendns.com | \
-@@ -3871,13 +3902,13 @@
+@@ -3871,13 +3902,13 @@ image_backend() {
  }
  
  print_ascii() {
@@ -190,7 +203,7 @@
  
      # Set locale to get correct padding.
      LC_ALL="$sys_locale"
-@@ -4650,8 +4681,8 @@
+@@ -4650,8 +4681,8 @@ term_padding() {
              padding=${xrdb/*internalBorder:}
              padding=${padding/$'\n'*}
  
@@ -201,7 +214,7 @@
          ;;
      esac
  }
-@@ -4936,7 +4967,7 @@
+@@ -4936,7 +4967,7 @@ ASCII:
                                  Porteus, PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix,
                                  Raspbian, Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan,
                                  Regata, Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific,
@@ -210,7 +223,7 @@
                                  SmartOS, Solus, Source_Mage, Sparky, Star, SteamOS, SunOS,
                                  openSUSE_Leap, openSUSE_Tumbleweed, openSUSE, SwagArch, Tails,
                                  Trisquel, Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio,
-@@ -9513,6 +9544,34 @@
+@@ -9513,6 +9544,34 @@ ${c1}              __---''''''---__
  EOF
          ;;
  
@@ -245,3 +258,6 @@
          "SharkLinux"*)
              set_colors 4 7
              read -rd '' ascii_data <<'EOF'
+-- 
+2.36.1
+
