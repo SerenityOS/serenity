@@ -1145,6 +1145,10 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             move_to_logical_line_beginning();
             switch_to_insert_mode();
             return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Uppercase);
+            switch_to_normal_mode();
+            return true;
         default:
             break;
         }
@@ -1173,9 +1177,6 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             yank(Selection);
             m_editor->do_delete();
             switch_to_normal_mode();
-            return true;
-        case (KeyCode::Key_U):
-            // FIXME: Set selection to uppercase.
             return true;
         case (KeyCode::Key_X):
             yank(Selection);
