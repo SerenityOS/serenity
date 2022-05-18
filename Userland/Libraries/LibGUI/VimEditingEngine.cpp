@@ -1195,6 +1195,10 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             yank(Selection);
             switch_to_normal_mode();
             return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Lowercase);
+            switch_to_normal_mode();
+            return true;
         case (KeyCode::Key_PageUp):
             move_page_up();
             update_selection_on_cursor_move();
