@@ -1411,4 +1411,19 @@ void VimEditingEngine::move_to_next_empty_lines_block()
     m_editor->set_cursor(new_cursor);
 };
 
+void VimEditingEngine::casefold_selection(Casing casing)
+{
+    VERIFY(!m_editor.is_null());
+    VERIFY(m_editor->has_selection());
+
+    switch (casing) {
+    case Casing::Uppercase:
+        m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().to_uppercase());
+        return;
+    case Casing::Lowercase:
+        m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().to_lowercase());
+        return;
+    }
+}
+
 }
