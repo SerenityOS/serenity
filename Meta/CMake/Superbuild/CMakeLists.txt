@@ -69,6 +69,11 @@ include(ExternalProject)
 
 # Collect options for Lagom build
 set(lagom_options "")
+
+# NOTE: This should go in the global compile options, or at least the Lagom compile options.
+#       But preventing everyone from using C-style casts is too much work at once,
+#       let's just keep C-style casts out of the superbuild for now and expand on it later.
+list(APPEND lagom_options "-DCMAKE_CXX_FLAGS:STRING=-Wold-style-cast")
 macro(serenity_option name)
     set(${ARGV})
     list(APPEND lagom_options "-D${name}:STRING=${${name}}")
