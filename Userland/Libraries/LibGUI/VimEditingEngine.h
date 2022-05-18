@@ -160,6 +160,11 @@ private:
         Selection
     };
 
+    enum class Casing {
+        Uppercase,
+        Lowercase
+    };
+
     VimMode m_vim_mode { VimMode::Normal };
     VimMotion m_motion;
 
@@ -187,6 +192,8 @@ private:
     bool on_key_in_insert_mode(KeyEvent const& event);
     bool on_key_in_normal_mode(KeyEvent const& event);
     bool on_key_in_visual_mode(KeyEvent const& event);
+
+    void casefold_selection(Casing);
 
     virtual EngineType engine_type() const override { return EngineType::Vim; }
 };
