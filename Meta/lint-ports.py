@@ -21,6 +21,7 @@ PORT_TABLE_FILE = 'AvailablePorts.md'
 IGNORE_FILES = {
     '.gitignore',
     '.port_include.sh',
+    '.strip_env.sh',
     PORT_TABLE_FILE,
     'build_all.sh',
     'build_installed.sh',

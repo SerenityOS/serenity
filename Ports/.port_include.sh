@@ -2,6 +2,12 @@
 set -eu
 
 SCRIPT="$(dirname "${0}")"
+
+if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
+    exec "${SCRIPT}/.strip_env.sh" "${@}"
+fi
+unset SERENITY_STRIPPED_ENV
+
 export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
 
 maybe_source() {
