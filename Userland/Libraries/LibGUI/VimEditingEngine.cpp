@@ -1149,6 +1149,10 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             casefold_selection(Casing::Uppercase);
             switch_to_normal_mode();
             return true;
+        case (KeyCode::Key_Tilde):
+            casefold_selection(Casing::Invertcase);
+            switch_to_normal_mode();
+            return true;
         default:
             break;
         }
@@ -1427,6 +1431,9 @@ void VimEditingEngine::casefold_selection(Casing casing)
         return;
     case Casing::Lowercase:
         m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().to_lowercase());
+        return;
+    case Casing::Invertcase:
+        m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().invert_case());
         return;
     }
 }

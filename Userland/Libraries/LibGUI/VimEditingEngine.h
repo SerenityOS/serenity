@@ -162,7 +162,8 @@ private:
 
     enum class Casing {
         Uppercase,
-        Lowercase
+        Lowercase,
+        Invertcase
     };
 
     VimMode m_vim_mode { VimMode::Normal };
