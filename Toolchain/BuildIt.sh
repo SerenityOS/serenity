@@ -277,7 +277,7 @@ pushd "$DIR/Tarballs"
                 patch -p1 < "$patch" > /dev/null
             done
         fi
-        $MD5SUM $DIR/Patches/gcc/*.patch > .patch.applied
+        $MD5SUM "$DIR"/Patches/gcc/*.patch > .patch.applied
     popd
 
     if [ "$SYSTEM_NAME" = "Darwin" ]; then
