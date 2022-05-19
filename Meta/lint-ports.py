@@ -228,20 +228,17 @@ def check_descriptions_for_port_patches(patches):
 
         patch_names = set(Path(x).stem for x in patch_files)
 
-        patches_ok = True
         for patch_name in patch_names:
             if patch_name not in readme_contents:
                 print(f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
                       " the corresponding ReadMe.md")
                 all_good = False
-                patches_ok = False
 
         for patch_name in readme_contents:
             if patch_name not in patch_names:
                 print(f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, "
                       "but does not actually exist")
                 all_good = False
-                patches_ok = False
 
     return all_good
 
