@@ -121,6 +121,7 @@ public:
     [[nodiscard]] String to_uppercase() const;
     [[nodiscard]] String to_snakecase() const;
     [[nodiscard]] String to_titlecase() const;
+    [[nodiscard]] String invert_case() const;
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
