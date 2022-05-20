@@ -51,6 +51,19 @@ foreach(CMD_SRC ${CMD_SOURCES})
     endif()
 endforeach()
 
+if (ENABLE_JAKT)
+    add_executable(hello-jakt hello-world.cpp)
+    compile_jakt(hello-world.jakt)
+    target_link_libraries(hello-jakt LibC)
+    set_target_properties(hello-jakt PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    install(TARGETS hello-jakt RUNTIME DESTINATION bin OPTIONAL)
+    serenity_component(
+        hello-jakt
+        RECOMMENDED
+        TARGETS hello-jakt
+    )
+endif()
+
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/egrep SYMBOLIC)")
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/rgrep SYMBOLIC)")
 
