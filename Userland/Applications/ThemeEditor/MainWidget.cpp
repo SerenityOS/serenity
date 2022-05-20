@@ -231,7 +231,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     })));
 
     TRY(file_menu->try_add_separator());
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { GUI::Application::the()->quit(); })));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        if (request_close() == GUI::Window::CloseRequestDecision::Close)
+            GUI::Application::the()->quit();
+    })));
 
     auto accessibility_menu = TRY(window.try_add_menu("&Accessibility"));
 
