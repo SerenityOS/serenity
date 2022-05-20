@@ -53,6 +53,9 @@ if (NOT HACKSTUDIO_BUILD)
 
     # Host tools, required to generate files for the build
     find_package(Lagom CONFIG REQUIRED)
+    if (TARGET Lagom::jakt)
+        set(ENABLE_JAKT ON)
+    endif()
 
 endif()
 
