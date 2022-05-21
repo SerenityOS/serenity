@@ -5,7 +5,6 @@
 Teach configure about serenity
 
 
-
 ## `0002-Remove-locale-defines.patch`
 
 Remove locale defines

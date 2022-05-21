@@ -5,4 +5,3 @@
 Rewrite the makefile for serenity
 
 
-

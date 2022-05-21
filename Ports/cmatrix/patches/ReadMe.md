@@ -5,10 +5,8 @@
 Use manual include & library paths for ncurses
 
 
-
 ## `0002-Include-curses.h-from-ncurses-in-serenity.patch`
 
 Include curses.h from <ncurses> in serenity
-
 
 
