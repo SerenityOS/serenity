@@ -934,7 +934,7 @@ public:
     [[nodiscard]] bool has_alternative_signal_stack() const;
     [[nodiscard]] bool is_in_alternative_signal_stack() const;
 
-    FPUState& fpu_state() { return m_fpu_state; }
+    FPUState& fpu_state() { return *m_fpu_state.ptr(); }
 
     ErrorOr<void> make_thread_specific_region(Badge<Process>);
 
@@ -1262,7 +1262,7 @@ private:
     unsigned m_ipv4_socket_read_bytes { 0 };
     unsigned m_ipv4_socket_write_bytes { 0 };
 
-    FPUState m_fpu_state {};
+    NonnullOwnPtr<FPUState> m_fpu_state;
     State m_state { Thread::State::Invalid };
     NonnullOwnPtr<KString> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };

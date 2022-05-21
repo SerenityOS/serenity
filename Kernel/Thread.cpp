@@ -11,6 +11,7 @@
 #include <AK/Time.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/KCOVDevice.h>
@@ -54,6 +55,7 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
+    , m_fpu_state(NonnullOwnPtr<FPUState>::Adopt, *new FPUState)
     , m_name(move(name))
     , m_block_timer(move(block_timer))
 {
@@ -1263,7 +1265,7 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
     auto clone = TRY(Thread::try_create(process));
     m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
-    clone->m_fpu_state = m_fpu_state;
+    *clone->m_fpu_state.ptr() = *m_fpu_state.ptr();
     clone->m_thread_specific_data = m_thread_specific_data;
     return clone;
 }
@@ -1448,7 +1450,7 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
 
 void Thread::reset_fpu_state()
 {
-    memcpy(&m_fpu_state, &Processor::clean_fpu_state(), sizeof(FPUState));
+    memcpy(m_fpu_state.ptr(), &Processor::clean_fpu_state(), sizeof(FPUState));
 }
 
 bool Thread::should_be_stopped() const
