@@ -5,13 +5,10 @@
 Add SerenityOS platform support
 
 
-## `0002-Replace-usages-of-FULL-paths-with-their-relative-cou.patch`
+## `0002-Make-sdl2-config-prefixes-configurable-again.patch`
 
-Replace usages of FULL paths with their relative counterparts
+Make sdl2-config prefixes configurable again
 
-GNUInstallDirs currently doesn't support the seperate STAGING directory,
-and will always prepend the final installation prefix to its paths.
-
-Work around that by just using the path that is relative to the
-installation directory and let CMake figure out the rest.
+These were accidentally removed in
+6956f4aa1982b66b234026b46f7bb2dd44c67894.
 

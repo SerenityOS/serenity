@@ -1,4 +1,4 @@
-From ab6529f3d53a3d596dcf8697aec2f1ca27cf6956 Mon Sep 17 00:00:00 2001
+From f9447fa6782eef2c4791c963cedf469d9062c792 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Sat, 27 Mar 2021 22:05:09 +0100
 Subject: [PATCH 1/2] Add SerenityOS platform support
@@ -16,14 +16,14 @@ Co-Authored-By: Stephan Unverwerth <s.unverwerth@gmx.de>
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 Co-Authored-By: circl <circl.lastname@gmail.com>
 ---
- CMakeLists.txt                                |  24 +-
+ CMakeLists.txt                                |  29 +-
  build-scripts/config.sub                      |   3 +
  cmake/sdlchecks.cmake                         |  20 +
  include/SDL_config.h.cmake                    |   2 +
  src/SDL_error.c                               |   9 +-
  src/audio/SDL_audio.c                         |   3 +
  src/audio/SDL_sysaudio.h                      |   1 +
- src/audio/serenity/SDL_serenityaudio.cpp      | 159 ++++
+ src/audio/serenity/SDL_serenityaudio.cpp      | 160 ++++
  src/audio/serenity/SDL_serenityaudio.h        |  38 +
  src/stdlib/SDL_stdlib.c                       |   2 +-
  src/video/SDL_sysvideo.h                      |   1 +
@@ -36,7 +36,7 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymouse.h        |  39 +
  src/video/serenity/SDL_serenityvideo.cpp      | 717 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        |  98 +++
- 20 files changed, 1410 insertions(+), 24 deletions(-)
+ 20 files changed, 1411 insertions(+), 29 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -49,33 +49,37 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  create mode 100644 src/video/serenity/SDL_serenityvideo.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 358f32f..e744d17 100644
+index 644715a..2400d53 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,10 +1,9 @@
--if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
--  message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the SDL source code and call cmake from there")
+@@ -1,7 +1,3 @@
+-if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
+-  message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the SDL source code and run \"cmake -S ${CMAKE_SOURCE_DIR} -B .\" from there")
 -endif()
 -
  cmake_minimum_required(VERSION 3.0.0)
  project(SDL2 C CXX)
  
+@@ -17,6 +13,9 @@ endif()
+ #  etc. See https://github.com/libsdl-org/SDL/issues/4150
+ add_library(sdl-build-options INTERFACE)
+ 
 +set(UNIX 1)
-+set(VIDEO_WAYLAND off)
++set(VIDEO_WAYLAND OFF)
 +
  if(WINDOWS_STORE)
-   cmake_minimum_required(VERSION 3.11)
-   add_definitions(-DSDL_BUILDING_WINRT=1 -ZW)
-@@ -360,7 +359,7 @@ set_option(VIDEO_DUMMY         "Use dummy video driver" ON)
- set_option(VIDEO_OPENGL        "Include OpenGL support" ON)
- set_option(VIDEO_OPENGLES      "Include OpenGL ES support" ON)
- set_option(PTHREADS            "Use POSIX threads for multi-threading" ${SDL_PTHREADS_ENABLED_BY_DEFAULT})
--dep_option(PTHREADS_SEM        "Use pthread semaphores" ON "PTHREADS" OFF)
-+dep_option(PTHREADS_SEM        "Use pthread semaphores" OFF "PTHREADS" OFF)
- set_option(SDL_DLOPEN          "Use dlopen for shared object loading" ${SDL_DLOPEN_ENABLED_BY_DEFAULT})
- dep_option(OSS                 "Support the OSS audio API" ON "UNIX_SYS OR RISCOS" OFF)
- set_option(ALSA                "Support the ALSA audio API" ${UNIX_SYS})
-@@ -1197,20 +1196,7 @@ elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT RISCOS)
+   cmake_minimum_required(VERSION 3.11.0)
+   target_compile_definitions(sdl-build-options INTERFACE "-DSDL_BUILDING_WINRT=1")
+@@ -397,7 +396,7 @@ set_option(SDL_DUMMYVIDEO          "Use dummy video driver" ON)
+ set_option(SDL_OPENGL              "Include OpenGL support" ON)
+ set_option(SDL_OPENGLES            "Include OpenGL ES support" ON)
+ set_option(SDL_PTHREADS            "Use POSIX threads for multi-threading" ${SDL_PTHREADS_ENABLED_BY_DEFAULT})
+-dep_option(SDL_PTHREADS_SEM        "Use pthread semaphores" ON "SDL_PTHREADS" OFF)
++dep_option(SDL_PTHREADS_SEM        "Use pthread semaphores" OFF "SDL_PTHREADS" OFF)
+ dep_option(SDL_OSS                 "Support the OSS audio API" ON "UNIX_SYS OR RISCOS" OFF)
+ set_option(SDL_ALSA                "Support the ALSA audio API" ${UNIX_SYS})
+ dep_option(SDL_ALSA_SHARED         "Dynamically load ALSA audio support" ON "SDL_ALSA" OFF)
+@@ -1268,25 +1267,7 @@ elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT RISCOS AND NOT HAIKU)
      CheckLibSampleRate()
    endif()
  
@@ -84,24 +88,29 @@ index 358f32f..e744d17 100644
 -    CheckRPI()
 -    CheckX11()
 -    CheckDirectFB()
--    CheckOpenGLX11()
--    CheckOpenGLESX11()
+-    # Need to check for EGL first because KMSDRM and Wayland depends on it.
+-    CheckEGL()
+-    CheckKMSDRM()
+-    CheckGLX()
+-    CheckOpenGL()
+-    CheckOpenGLES()
 -    CheckWayland()
 -    CheckVivante()
--    # Need to check EGL before checking KMSDRM because KMSDRM depends on it.
--    CheckEGLKMSDRM()
--    CheckKMSDRM()
--    CheckOpenGLKMSDRM()
+-    # FIXME: implement CheckVulkan()
+-    if(SDL_VULKAN)
+-      set(SDL_VIDEO_VULKAN 1)
+-      set(HAVE_VULKAN TRUE)
+-    endif()
 -  endif()
 +  CheckSerenity()
  
    if(UNIX)
      file(GLOB CORE_UNIX_SOURCES ${SDL2_SOURCE_DIR}/src/core/unix/*.c)
 diff --git a/build-scripts/config.sub b/build-scripts/config.sub
-index a525aab..717488d 100755
+index dba16e8..39c9ecb 100755
 --- a/build-scripts/config.sub
 +++ b/build-scripts/config.sub
-@@ -1403,6 +1403,9 @@ case $os in
+@@ -1427,6 +1427,9 @@ case $os in
  	os400*)
  		os=os400
  		;;
@@ -112,12 +121,12 @@ index a525aab..717488d 100755
  		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
  		;;
 diff --git a/cmake/sdlchecks.cmake b/cmake/sdlchecks.cmake
-index f21a900..e3b8643 100644
+index 8dcb392..a34c781 100644
 --- a/cmake/sdlchecks.cmake
 +++ b/cmake/sdlchecks.cmake
-@@ -777,6 +777,26 @@ macro(CheckVivante)
-   endif(VIDEO_VIVANTE)
- endmacro(CheckVivante)
+@@ -771,6 +771,26 @@ macro(CheckDirectFB)
+   endif()
+ endmacro()
  
 +# Requires:
 +# - n/a
@@ -140,13 +149,13 @@ index f21a900..e3b8643 100644
 +endmacro(CheckSerenity)
 +
  # Requires:
- # - libglvnd
- macro(CheckOpenGLKMSDRM)
+ # - n/a
+ macro(CheckVivante)
 diff --git a/include/SDL_config.h.cmake b/include/SDL_config.h.cmake
-index 0446547..d7002b1 100644
+index fcd18e5..d7b9cfc 100644
 --- a/include/SDL_config.h.cmake
 +++ b/include/SDL_config.h.cmake
-@@ -291,6 +291,7 @@
+@@ -312,6 +312,7 @@
  #cmakedefine SDL_AUDIO_DRIVER_PULSEAUDIO @SDL_AUDIO_DRIVER_PULSEAUDIO@
  #cmakedefine SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC @SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC@
  #cmakedefine SDL_AUDIO_DRIVER_QSA @SDL_AUDIO_DRIVER_QSA@
@@ -154,7 +163,7 @@ index 0446547..d7002b1 100644
  #cmakedefine SDL_AUDIO_DRIVER_SNDIO @SDL_AUDIO_DRIVER_SNDIO@
  #cmakedefine SDL_AUDIO_DRIVER_SNDIO_DYNAMIC @SDL_AUDIO_DRIVER_SNDIO_DYNAMIC@
  #cmakedefine SDL_AUDIO_DRIVER_SUNAUDIO @SDL_AUDIO_DRIVER_SUNAUDIO@
-@@ -367,6 +368,7 @@
+@@ -394,6 +395,7 @@
  #cmakedefine SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC @SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC@
  #cmakedefine SDL_VIDEO_DRIVER_DUMMY @SDL_VIDEO_DRIVER_DUMMY@
  #cmakedefine SDL_VIDEO_DRIVER_OFFSCREEN @SDL_VIDEO_DRIVER_OFFSCREEN@
@@ -163,7 +172,7 @@ index 0446547..d7002b1 100644
  #cmakedefine SDL_VIDEO_DRIVER_WINRT @SDL_VIDEO_DRIVER_WINRT@
  #cmakedefine SDL_VIDEO_DRIVER_WAYLAND @SDL_VIDEO_DRIVER_WAYLAND@
 diff --git a/src/SDL_error.c b/src/SDL_error.c
-index 3a5667b..d00654b 100644
+index 4d25999..24491ee 100644
 --- a/src/SDL_error.c
 +++ b/src/SDL_error.c
 @@ -33,6 +33,7 @@ SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
@@ -190,7 +199,7 @@ index 3a5667b..d00654b 100644
  
      return -1;
 diff --git a/src/audio/SDL_audio.c b/src/audio/SDL_audio.c
-index 5ce94d1..b98645b 100644
+index fb363f7..59c36e5 100644
 --- a/src/audio/SDL_audio.c
 +++ b/src/audio/SDL_audio.c
 @@ -121,6 +121,9 @@ static const AudioBootStrap *const bootstrap[] = {
@@ -204,10 +213,10 @@ index 5ce94d1..b98645b 100644
      NULL
  };
 diff --git a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
-index 17b9e70..fde6b68 100644
+index 8aa7298..c16af45 100644
 --- a/src/audio/SDL_sysaudio.h
 +++ b/src/audio/SDL_sysaudio.h
-@@ -212,6 +212,7 @@ extern AudioBootStrap PSPAUDIO_bootstrap;
+@@ -208,6 +208,7 @@ extern AudioBootStrap PSPAUDIO_bootstrap;
  extern AudioBootStrap VITAAUD_bootstrap;
  extern AudioBootStrap EMSCRIPTENAUDIO_bootstrap;
  extern AudioBootStrap OS2AUDIO_bootstrap;
@@ -217,10 +226,10 @@ index 17b9e70..fde6b68 100644
  
 diff --git a/src/audio/serenity/SDL_serenityaudio.cpp b/src/audio/serenity/SDL_serenityaudio.cpp
 new file mode 100644
-index 0000000..01633cd
+index 0000000..7f770ed
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.cpp
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,160 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -269,7 +278,7 @@ index 0000000..01633cd
 +    SDL_free(that->hidden);
 +}
 +
-+static int SERENITYAUDIO_OpenDevice(_THIS, void*, char const*, int iscapture)
++static int SERENITYAUDIO_OpenDevice(_THIS, char const*)
 +{
 +    /* Initialize all variables that we clean on shutdown */
 +    that->hidden = static_cast<struct SDL_PrivateAudioData*>(SDL_malloc(sizeof *that->hidden));
@@ -286,7 +295,7 @@ index 0000000..01633cd
 +    SDL_CalculateAudioSpec(&that->spec);
 +
 +    /* Allocate mixing buffer */
-+    if (!iscapture) {
++    if (!that->iscapture) {
 +        that->hidden->mixlen = that->spec.size;
 +        that->hidden->mixbuf = (Uint8*)SDL_malloc(that->hidden->mixlen);
 +        if (!that->hidden->mixbuf)
@@ -361,7 +370,7 @@ index 0000000..01633cd
 +    return that->hidden->mixbuf;
 +}
 +
-+static int SERENITYAUDIO_Init(SDL_AudioDriverImpl* impl)
++static SDL_bool SERENITYAUDIO_Init(SDL_AudioDriverImpl* impl)
 +{
 +    /* Set the function pointers */
 +    impl->OpenDevice = SERENITYAUDIO_OpenDevice;
@@ -369,14 +378,15 @@ index 0000000..01633cd
 +    impl->GetDeviceBuf = SERENITYAUDIO_GetDeviceBuf;
 +    impl->CloseDevice = SERENITYAUDIO_CloseDevice;
 +
-+    impl->AllowsArbitraryDeviceNames = 1;
++    impl->AllowsArbitraryDeviceNames = SDL_TRUE;
 +    impl->HasCaptureSupport = SDL_FALSE;
++    impl->OnlyHasDefaultOutputDevice = SDL_TRUE;
 +
-+    return 1; // this audio target is available.
++    return SDL_TRUE; // this audio target is available.
 +}
 +
 +AudioBootStrap SERENITYAUDIO_bootstrap = {
-+    "serenity", "Serenity using AudioServer", SERENITYAUDIO_Init, 0
++    "serenity", "Serenity using AudioServer", SERENITYAUDIO_Init, SDL_FALSE
 +};
 +
 +#endif
@@ -425,7 +435,7 @@ index 0000000..e1b98b3
 +    size_t mixlen { 0 };
 +};
 diff --git a/src/stdlib/SDL_stdlib.c b/src/stdlib/SDL_stdlib.c
-index b6dc32a..5eda105 100644
+index 9d785aa..6c31981 100644
 --- a/src/stdlib/SDL_stdlib.c
 +++ b/src/stdlib/SDL_stdlib.c
 @@ -533,7 +533,7 @@ int SDL_toupper(int x) { return ((x) >= 'a') && ((x) <= 'z') ? ('A'+((x)-'a')) :
@@ -438,10 +448,10 @@ index b6dc32a..5eda105 100644
  #else
  int SDL_isblank(int x) { return ((x) == ' ') || ((x) == '\t'); }
 diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
-index 682e525..c1047f7 100644
+index 2384a64..5090f3e 100644
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h
-@@ -442,6 +442,7 @@ extern VideoBootStrap QNX_bootstrap;
+@@ -458,6 +458,7 @@ extern VideoBootStrap QNX_bootstrap;
  extern VideoBootStrap OFFSCREEN_bootstrap;
  extern VideoBootStrap OS2DIVE_bootstrap;
  extern VideoBootStrap OS2VMAN_bootstrap;
@@ -450,10 +460,10 @@ index 682e525..c1047f7 100644
  extern SDL_VideoDevice *SDL_GetVideoDevice(void);
  extern int SDL_AddBasicVideoDisplay(const SDL_DisplayMode * desktop_mode);
 diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
-index a5cbe69..a83fb1a 100644
+index 93c803e..36960a1 100644
 --- a/src/video/SDL_video.c
 +++ b/src/video/SDL_video.c
-@@ -119,6 +119,9 @@ static VideoBootStrap *bootstrap[] = {
+@@ -122,6 +122,9 @@ static VideoBootStrap *bootstrap[] = {
      &OS2DIVE_bootstrap,
      &OS2VMAN_bootstrap,
  #endif
@@ -463,18 +473,18 @@ index a5cbe69..a83fb1a 100644
  #if SDL_VIDEO_DRIVER_DUMMY
      &DUMMY_bootstrap,
  #endif
-@@ -4073,6 +4076,10 @@ SDL_IsScreenKeyboardShown(SDL_Window *window)
- #if SDL_VIDEO_DRIVER_VITA
- #include "vita/SDL_vitamessagebox.h"
+@@ -4146,6 +4149,10 @@ SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
+     }
+ }
  #endif
 +#if SDL_VIDEO_DRIVER_SERENITY
 +#include "serenity/SDL_serenitymessagebox.h"
 +#endif
 +
  
- #if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT || SDL_VIDEO_DRIVER_COCOA || SDL_VIDEO_DRIVER_UIKIT || SDL_VIDEO_DRIVER_X11 || SDL_VIDEO_DRIVER_WAYLAND || SDL_VIDEO_DRIVER_HAIKU || SDL_VIDEO_DRIVER_OS2
- static SDL_bool SDL_MessageboxValidForDriver(const SDL_MessageBoxData *messageboxdata, SDL_SYSWM_TYPE drivertype)
-@@ -4199,6 +4206,12 @@ SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
+ SDL_bool
+ SDL_GetWindowWMInfo(SDL_Window * window, struct SDL_SysWMinfo *info)
+@@ -4425,6 +4432,12 @@ SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
          VITA_ShowMessageBox(messageboxdata, buttonid) == 0) {
          retval = 0;
      }
@@ -486,7 +496,7 @@ index a5cbe69..a83fb1a 100644
 +    }
  #endif
      if (retval == -1) {
-         SDL_SetError("No message system available");
+         const char *error = SDL_GetError();
 diff --git a/src/video/serenity/SDL_serenityevents.cpp b/src/video/serenity/SDL_serenityevents.cpp
 new file mode 100644
 index 0000000..04cbf21
