@@ -1,0 +1,25 @@
+From a2b0791418672dffcfc8baae4d0b8158693a794c Mon Sep 17 00:00:00 2001
+From: Grigoris Pavlakis <grigpavl@ece.auth.gr>
+Date: Sat, 28 May 2022 17:21:27 +0300
+Subject: [PATCH] Disable forced fullscreen on logical scaling
+
+---
+ src/SDL12_compat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/SDL12_compat.c b/src/SDL12_compat.c
+index b3a411e..4d8001d 100644
+--- a/src/SDL12_compat.c
++++ b/src/SDL12_compat.c
+@@ -5184,7 +5184,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags12)
+                 fullscreen_flags20 &= ~SDL_WINDOW_FULLSCREEN_DESKTOP;
+                 SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
+                 SDL20_SetWindowSize(VideoWindow20, width, height);
+-                fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN;
++                /* fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN; */
+                 SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
+             }
+         }
+-- 
+2.36.1
+
