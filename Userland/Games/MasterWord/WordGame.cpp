@@ -23,6 +23,7 @@ WordGame::WordGame()
     read_words();
     m_num_letters = Config::read_i32("MasterWord", "", "word_length", 5);
     m_max_guesses = Config::read_i32("MasterWord", "", "max_guesses", 6);
+    m_check_guesses = Config::read_bool("MasterWord", "", "check_guesses_in_dictionary", false);
     reset();
     pick_font();
 }
@@ -74,22 +75,29 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
     // If we can still add a letter and the key was alpha
     if (m_current_guess.length() < m_num_letters && is_ascii_alpha(event.code_point())) {
         m_current_guess = String::formatted("{}{}", m_current_guess, event.text().to_uppercase());
+        m_last_word_not_in_dictionary = false;
     }
     // If backspace pressed and already have some letters entered
     else if (event.key() == KeyCode::Key_Backspace && m_current_guess.length() > 0) {
         m_current_guess = m_current_guess.substring(0, m_current_guess.length() - 1);
+        m_last_word_not_in_dictionary = false;
     }
     // If enough letters and return pressed
     else if (m_current_guess.length() == m_num_letters && event.key() == KeyCode::Key_Return) {
-        add_guess(m_current_guess);
-        auto won = m_current_guess == m_current_word;
-        m_current_guess = {};
-        if (won) {
-            GUI::MessageBox::show(window(), "You win!", "MasterWord");
-            reset();
-        } else if (m_guesses.size() == m_max_guesses) {
-            GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord");
-            reset();
+        if (is_in_dictionary(m_current_guess)) {
+            m_last_word_not_in_dictionary = false;
+            add_guess(m_current_guess);
+            auto won = m_current_guess == m_current_word;
+            m_current_guess = {};
+            if (won) {
+                GUI::MessageBox::show(window(), "You win!", "MasterWord");
+                reset();
+            } else if (m_guesses.size() == m_max_guesses) {
+                GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord");
+                reset();
+            }
+        } else {
+            m_last_word_not_in_dictionary = true;
         }
     }
 
@@ -126,6 +134,9 @@ void WordGame::paint_event(GUI::PaintEvent& event)
             } else if (guess_index == m_guesses.size()) {
                 if (letter_index < m_current_guess.length())
                     painter.draw_text(this_rect, m_current_guess.substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
+                if (m_last_word_not_in_dictionary) {
+                    painter.fill_rect(this_rect, m_word_not_in_dict_color);
+                }
             }
 
             painter.draw_rect(this_rect, m_border_color);
@@ -138,6 +149,11 @@ Gfx::IntRect WordGame::letter_rect(size_t guess_number, size_t letter_number) co
     auto letter_left = m_outer_margin + letter_number * m_letter_width + m_letter_spacing * letter_number;
     auto letter_top = m_outer_margin + guess_number * m_letter_height + m_letter_spacing * guess_number;
     return Gfx::IntRect(int(letter_left), int(letter_top), m_letter_width, m_letter_height);
+}
+
+bool WordGame::is_in_dictionary(AK::StringView guess)
+{
+    return !m_check_guesses || !m_words.ensure(guess.length()).find(guess).is_end();
 }
 
 void WordGame::read_words()
@@ -153,7 +169,7 @@ void WordGame::read_words()
     while (!words_file->eof()) {
         auto current_word = words_file->read_line();
         if (!current_word.starts_with('#') and current_word.length() > 0)
-            m_words.ensure(current_word.length()).append(current_word);
+            m_words.ensure(current_word.length()).append(current_word.to_uppercase());
     }
 }
 
@@ -162,7 +178,7 @@ Optional<String> WordGame::random_word(size_t length)
     auto words_for_length = m_words.get(length);
     if (words_for_length.has_value()) {
         auto i = get_random_uniform(words_for_length->size());
-        return words_for_length->at(i).to_uppercase();
+        return words_for_length->at(i);
     }
 
     return {};
@@ -214,6 +230,17 @@ void WordGame::set_max_guesses(size_t max_guesses)
 {
     m_max_guesses = max_guesses;
     reset();
+}
+
+void WordGame::set_check_guesses_in_dictionary(bool b)
+{
+    m_check_guesses = b;
+    update();
+}
+
+bool WordGame::is_checking_guesses() const
+{
+    return m_check_guesses;
 }
 
 Gfx::IntSize WordGame::game_size() const
