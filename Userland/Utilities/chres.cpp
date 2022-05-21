@@ -33,6 +33,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
     auto& main_screen = screen_layout.screens[screen];
+    // Change resolution only if not already present
+    if (main_screen.resolution.width() == width && main_screen.resolution.height() == height)
+        return 0;
     main_screen.resolution = { width, height };
     if (scale != -1)
         main_screen.scale_factor = scale;
