@@ -68,7 +68,25 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, RegisterState const& regs,
     int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
 {
+#if ARCH(AARCH64)
+    pid=pid;
+    tid=tid;
+    auto r=regs;
+    r=r;
+    type=type;
+    lost_samples=lost_samples;
+    arg1=arg1;
+    arg2=arg2;
+    arg3=arg3;
+    arg4=arg4;
+    arg5=arg5;
+    arg6=arg6;
+    VERIFY_NOT_REACHED();
+#elif ARCH(X86_64) || ARCH(I386)
     return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3, arg4, arg5, arg6);
+#else
+    #error "Unknown platform"
+#endif
 }
 
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
