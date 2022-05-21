@@ -5,10 +5,8 @@
 Add a serenity configuration
 
 
-
 ## `0002-Add-build-configuration-info-for-serenity.patch`
 
 Add build configuration info for serenity
-
 
 

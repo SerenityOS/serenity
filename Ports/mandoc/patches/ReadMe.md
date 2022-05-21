@@ -35,7 +35,6 @@ Use pcre2 for regex
 Use the patched-in version of glob.h
 
 
-
 ## `0008-Build-the-patched-in-glob-implementation.patch`
 
 Build the patched-in glob implementation

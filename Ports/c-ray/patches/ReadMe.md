@@ -10,11 +10,9 @@ Add a dummy configure file
 Disable checkBuf() on serenity
 
 
-
 ## `0003-Let-c-ray-define-its-own-version-of-vasprintf.patch`
 
 Let c-ray define its own version of vasprintf
-
 
 
 ## `0004-Link-with-the-needed-serenity-libraries.patch`
@@ -22,12 +20,9 @@ Let c-ray define its own version of vasprintf
 Link with the needed serenity libraries
 
 
-
-
 ## `0005-Use-usleep-on-serenity.patch`
 
 Use usleep() on serenity
-
 
 
 ## `0006-Reduce-HDR-scene-settings-a-bit.patch`
@@ -40,13 +35,10 @@ Reduce HDR scene settings a bit
 Replace the micro symbol with a 'u'
 
 
-
-
 ## `0008-Make-SDL-use-software-rendering.patch`
 
 Make SDL use software rendering
 
 Serenity does not support accelerated rendering
-
 
 

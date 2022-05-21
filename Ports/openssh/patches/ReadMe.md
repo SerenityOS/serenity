@@ -5,9 +5,6 @@
 ifdef out missing functionality
 
 
-
-
-
 ## `0002-Add-a-missing-stdio.h-include.patch`
 
 Add a missing stdio.h include
@@ -18,11 +15,9 @@ Add a missing stdio.h include
 Fix pledges to conform to serenity's pledge()
 
 
-
 ## `0004-Remove-inet_aton-redefinition.patch`
 
 Remove inet_aton() redefinition
-
 
 
 ## `0005-Assume-SSH-2.0-and-sidestep-some-scanf-issues.patch`
@@ -30,11 +25,9 @@ Remove inet_aton() redefinition
 Assume SSH 2.0 and sidestep some scanf issues
 
 
-
 ## `0006-Use-sendfd-recvfd-on-serenity.patch`
 
 Use sendfd/recvfd on serenity
-
 
 
 ## `0007-Use-unveil-for-privsep.patch`
