@@ -15,6 +15,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
+#include <Kernel/KString.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
