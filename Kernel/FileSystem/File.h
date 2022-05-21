@@ -16,6 +16,7 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/VirtualAddress.h>
+#include <Kernel/Arch/Processor.h>
 
 namespace Kernel {
 
