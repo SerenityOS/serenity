@@ -45,6 +45,6 @@ fi
 
 export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
-export PKG_CONFIG_LIBDIR="${PKG_CONFIG_SYSROOT_DIR}/usr/lib/pkgconfig/:${PKG_CONFIG_SYSROOT_DIR}/usr/local/lib/pkgconfig"
+export PKG_CONFIG_LIBDIR="${PKG_CONFIG_SYSROOT_DIR}/usr/local/lib/pkgconfig"
 
 export SERENITY_INSTALL_ROOT="${SERENITY_BUILD_DIR}/Root"
