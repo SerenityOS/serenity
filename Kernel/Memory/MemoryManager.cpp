@@ -115,7 +115,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-    if (Processor::current().has_nx()) {
+    if (Processor::has_nx()) {
         // Disable execution of the kernel data, bss and heap segments.
         for (auto const* i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -482,7 +482,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             pte.set_physical_page_base(physical_page_array_current_page);
             pte.set_user_allowed(false);
             pte.set_writable(true);
-            if (Processor::current().has_nx())
+            if (Processor::has_nx())
                 pte.set_execute_disabled(false);
             pte.set_global(true);
             pte.set_present(true);

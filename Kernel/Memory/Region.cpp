@@ -230,9 +230,9 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(false);
         else
             pte->set_writable(is_writable());
-        if (Processor::current().has_nx())
+        if (Processor::has_nx())
             pte->set_execute_disabled(!is_executable());
-        if (Processor::current().has_pat())
+        if (Processor::has_pat())
             pte->set_pat(is_write_combine());
         pte->set_user_allowed(user_allowed);
     }
@@ -332,7 +332,7 @@ void Region::remap()
 
 ErrorOr<void> Region::set_write_combine(bool enable)
 {
-    if (enable && !Processor::current().has_pat()) {
+    if (enable && !Processor::has_pat()) {
         dbgln("PAT is not supported, implement MTRR fallback if available");
         return Error::from_errno(ENOTSUP);
     }
