@@ -292,7 +292,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
 
     if (mime == "text/csv") {
         return export_xsv();
-    } else if (mime == "text/plain" && file.filename().ends_with(".sheets")) {
+    } else if (mime == "application/x-sheets+json") {
         return export_worksheet();
     } else {
         auto page = GUI::WizardPage::construct(
