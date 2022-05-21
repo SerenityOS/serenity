@@ -245,7 +245,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
 
     if (mime == "text/csv") {
         return import_xsv();
-    } else if (mime == "text/plain" && file.filename().ends_with(".sheets")) {
+    } else if (mime == "application/x-sheets+json") {
         return import_worksheet();
     } else {
         auto page = GUI::WizardPage::construct(
