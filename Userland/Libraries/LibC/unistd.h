@@ -167,5 +167,6 @@ extern int optreset;
 extern char* optarg;
 
 int getopt(int argc, char* const* argv, char const* short_options);
+int getsubopt(char** optionp, char* const* tokens, char** valuep);
 
 __END_DECLS

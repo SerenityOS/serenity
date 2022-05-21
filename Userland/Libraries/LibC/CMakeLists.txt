@@ -11,6 +11,7 @@ set(LIBC_SOURCES
     fnmatch.cpp
     ifaddrs.cpp
     getopt.cpp
+    getsubopt.cpp
     grp.cpp
     inttypes.cpp
     ioctl.cpp
