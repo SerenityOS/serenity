@@ -3,6 +3,13 @@ From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 21 Dec 2021 23:47:36 -0800
 Subject: [PATCH 2/4] Port: fio - Add SerenityOS platform support
 
+`fio` abstracts individual operating system support out into to an
+`os/os-<name>.h` header where you can select which platform features
+are available and implement missing function stubs for our operating
+system.
+
+This patch implements basic OS support for Serenity just to get fio up
+and running.
 ---
  os/os-serenity.h | 87 ++++++++++++++++++++++++++++++++++++++++++++++++
  os/os.h          |  3 ++
