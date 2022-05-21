@@ -1,6 +1,9 @@
-# Patches for opfor
+# Patches for opfor on SerenityOS
 
 ## `hlsdk-add-serenity.patch`
 
-Add SerenityOS to the supported architectures of hlsdk.
+Build: Add SerenityOS to list of compatible systems
+
+This is required by the build system to spit out a library with
+the correct name/platform.
 

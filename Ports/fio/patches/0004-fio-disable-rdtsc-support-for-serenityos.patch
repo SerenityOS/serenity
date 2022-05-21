@@ -3,6 +3,11 @@ From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 21 Dec 2021 23:48:46 -0800
 Subject: [PATCH 4/4] Port: fio - Disable rdtsc support for serenity
 
+This patch disables the function which uses `rdtsc` to get the current
+clock time, as that instruction isn't allowed to be called from user
+space by serenity.
+
+If you did attempt to call it you would trip a segfault.
 ---
  arch/arch-x86.h | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
