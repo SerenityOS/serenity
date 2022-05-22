@@ -11,7 +11,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -137,16 +136,18 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
         }
 
-        save(current_filename());
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), current_filename(), Core::OpenMode::WriteOnly);
+        if (response.is_error())
+            return;
+        save(*response.value());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         String name = "workbook";
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-        if (!save_path.has_value())
+        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), name, "sheets");
+        if (response.is_error())
             return;
-
-        save(save_path.value());
+        save(*response.value());
         update_window_title();
     });
 
@@ -416,9 +417,9 @@ void SpreadsheetWidget::redo()
     update();
 }
 
-void SpreadsheetWidget::save(StringView filename)
+void SpreadsheetWidget::save(Core::File& file)
 {
-    auto result = m_workbook->save(filename);
+    auto result = m_workbook->write_to_file(file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;

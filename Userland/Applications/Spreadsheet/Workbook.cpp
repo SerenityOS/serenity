@@ -64,25 +64,14 @@ Result<bool, String> Workbook::open_file(Core::File& file)
     return true;
 }
 
-Result<bool, String> Workbook::save(StringView filename)
+Result<bool, String> Workbook::write_to_file(Core::File& file)
 {
-    auto mime = Core::guess_mime_type_based_on_filename(filename);
-    auto file = Core::File::construct(filename);
-    file->open(Core::OpenMode::WriteOnly);
-    if (!file->is_open()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for write. Error: ");
-        sb.append(file->error_string());
-
-        return sb.to_string();
-    }
+    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
     // Make an export dialog, we might need to import it.
-    TRY(ExportDialog::make_and_run_for(mime, *file, *this));
+    TRY(ExportDialog::make_and_run_for(mime, file, *this));
 
-    set_filename(filename);
+    set_filename(file.filename());
     set_dirty(false);
     return true;
 }
