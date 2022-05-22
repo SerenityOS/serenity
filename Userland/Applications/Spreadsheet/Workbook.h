@@ -18,7 +18,6 @@ public:
     Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window);
 
     Result<bool, String> save(StringView filename);
-    Result<bool, String> load(StringView filename);
     Result<bool, String> open_file(Core::File&);
 
     String const& current_filename() const { return m_current_filename; }
