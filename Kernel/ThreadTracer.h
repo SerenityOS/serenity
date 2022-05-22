@@ -10,7 +10,9 @@
 #include <AK/OwnPtr.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
+#if ARCH(X86_64) || ARCH(I386)
 #include <LibC/sys/arch/i386/regs.h>
+#endif
 
 namespace Kernel {
 
@@ -27,6 +29,7 @@ public:
     void set_trace_syscalls(bool val) { m_trace_syscalls = val; }
 
     void set_regs(RegisterState const& regs);
+#if ARCH(X86_64) || ARCH(I386)
     void set_regs(PtraceRegisters const& regs) { m_regs = regs; }
     bool has_regs() const { return m_regs.has_value(); }
     PtraceRegisters const& regs() const
@@ -34,6 +37,7 @@ public:
         VERIFY(m_regs.has_value());
         return m_regs.value();
     }
+#endif
 
 private:
     explicit ThreadTracer(ProcessID);
@@ -46,7 +50,9 @@ private:
     u32 m_pending_signals { 0 };
 
     bool m_trace_syscalls { false };
+#if ARCH(X86_64) || ARCH(I386)
     Optional<PtraceRegisters> m_regs;
+#endif
 };
 
 }
