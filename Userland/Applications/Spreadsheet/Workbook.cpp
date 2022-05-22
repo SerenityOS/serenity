@@ -64,21 +64,6 @@ Result<bool, String> Workbook::open_file(Core::File& file)
     return true;
 }
 
-Result<bool, String> Workbook::load(StringView filename)
-{
-    auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(&m_parent_window, filename);
-    if (response.is_error()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for reading. Error: ");
-        sb.appendff("{}", response.error());
-        return sb.to_string();
-    }
-
-    return open_file(*response.value());
-}
-
 Result<bool, String> Workbook::save(StringView filename)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
