@@ -26,6 +26,7 @@ public:
     Vector<USBEndpointDescriptor> const& endpoints() const { return m_endpoint_descriptors; }
 
     USBInterfaceDescriptor const& descriptor() const { return m_descriptor; }
+    USBConfiguration const& configuration() const { return m_configuration; }
 
 private:
     USBConfiguration const& m_configuration;              // Configuration that this interface belongs to
