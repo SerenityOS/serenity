@@ -22,6 +22,10 @@ namespace Kernel {
 #define OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE 1000
 
 class HardwareTimerBase;
+namespace Memory {
+  class VMObject;
+  class Region;
+}
 
 enum class TimePrecision {
     Coarse = 0,

@@ -23,6 +23,7 @@
 #else
 namespace Kernel {
 class VirtualConsole;
+class KString;
 }
 #    include <LibVT/Attribute.h>
 #endif
