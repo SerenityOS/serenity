@@ -125,11 +125,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!request_close())
             return;
 
-        Optional<String> load_path = GUI::FilePicker::get_open_filepath(window());
-        if (!load_path.has_value())
-            return;
-
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), *load_path);
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
         if (response.is_error())
             return;
         load_file(*response.value());
