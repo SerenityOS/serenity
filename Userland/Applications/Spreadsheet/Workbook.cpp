@@ -57,11 +57,7 @@ Result<bool, String> Workbook::open_file(Core::File& file)
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
     // Make an import dialog, we might need to import it.
-    auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file, *this);
-    if (result.is_error())
-        return result.error();
-
-    m_sheets = result.release_value();
+    m_sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, file, *this));
 
     set_filename(file.filename());
 
@@ -99,9 +95,7 @@ Result<bool, String> Workbook::save(StringView filename)
     }
 
     // Make an export dialog, we might need to import it.
-    auto result = ExportDialog::make_and_run_for(mime, *file, *this);
-    if (result.is_error())
-        return result.error();
+    TRY(ExportDialog::make_and_run_for(mime, *file, *this));
 
     set_filename(filename);
     set_dirty(false);
