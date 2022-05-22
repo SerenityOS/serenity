@@ -9,6 +9,7 @@
 #include <AK/Atomic.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
+#include <Kernel/TimerQueue.h>
 
 namespace Kernel {
 
