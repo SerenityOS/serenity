@@ -8,7 +8,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <Kernel/API/POSIX/errno.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
@@ -17,6 +16,18 @@
 #define TTYDEFCHARS
 #include <LibC/sys/ttydefaults.h>
 #undef TTYDEFCHARS
+
+#if ARCH(X86_64) || ARCH(I386)
+#include <Kernel/Arch/x86/InterruptDisabler.h>
+#elif ARCH(AARCH64)
+//FIXME: create a real class
+class InterruptDisabler {
+public:
+  InterruptDisabler() { VERIFY_NOT_REACHED(); }
+};
+#else
+#    error "Unknown architecture"
+#endif
 
 namespace Kernel {
 
