@@ -33,6 +33,8 @@ public:
     u8 attributes() const { return m_descriptor.attributes_bitmap; }
     u16 max_power_ma() const { return m_descriptor.max_power_in_ma * 2u; } // Note: "Power" is used incorrectly here, however it's what it's called in the descriptor/documentation
 
+    Vector<USBInterface> const& interfaces() const { return m_interfaces; }
+
     ErrorOr<void> get_interfaces();
 
 private:
