@@ -14,3 +14,6 @@ serenity_option(ENABLE_UNICODE_DATABASE_DOWNLOAD ON CACHE BOOL "Enable download 
 serenity_option(INCLUDE_WASM_SPEC_TESTS OFF CACHE BOOL "Download and include the WebAssembly spec testsuite")
 
 serenity_option(HACKSTUDIO_BUILD OFF CACHE BOOL "Automatically enabled when building from HackStudio")
+
+serenity_option(ENABLE_JAKT OFF CACHE BOOL "Enable building jakt files")
+serenity_option(JAKT_SOURCE_DIR "" CACHE STRING "Pre-existing jakt language source directory")

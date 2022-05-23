@@ -59,6 +59,8 @@ There are some optional features that can be enabled during compilation that are
 - `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `ENABLE_MOLD_LINKER`: builds the userland with the [`mold` linker](https://github.com/rui314/mold). `mold` can be built by running `Toolchain/BuildMold.sh`.
+- `ENABLE_JAKT`: builds the `jakt` compiler as a Lagom host tool and enables building applications and libraries that are written in the jakt language.
+- `JAKT_SOURCE_DIR`: `jakt` developer's local checkout of the jakt programming language for rapid testing. To use a local checkout, set to an absolute path when changing the CMake cache of Lagom. e.g. ``cmake -S Meta/Lagom -B Build/lagom -DENABLE_JAKT=ON -DJAKT_SOURCE_DIR=/home/me/jakt``
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests. In order to use this option, you will need to install `prettier` and `wabt`. wabt version 1.0.23 or higher is required to pre-process the WebAssembly spec testsuite.
 - `SERENITY_TOOLCHAIN`: Specifies whether to use the established GNU toolchain, or the experimental Clang-based toolchain for building SerenityOS. See the [Clang-based toolchain](#clang-based-toolchain) section below.
 - `SERENITY_ARCH`: Specifies which architecture to build for. Currently supported options are `i686` and `x86_64`. `x86_64` requires a separate toolchain build from `i686`.
