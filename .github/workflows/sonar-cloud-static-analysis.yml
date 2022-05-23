@@ -54,13 +54,12 @@ jobs:
       # TODO: Is there someway to share these steps with the cmake.yml?
 
       - name: "Install Ubuntu dependencies"
-        # These packages are already part of the ubuntu-20.04 image:
+        # These packages are already part of the ubuntu-22.04 image:
         # cmake libgmp-dev npm shellcheck
         # Packages below aren't.
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
+          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
           sudo apt-get update
           sudo apt-get install -y clang-format-14 gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build unzip
 

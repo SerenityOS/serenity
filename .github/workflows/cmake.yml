@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         arch: ['i686', 'x86_64']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
@@ -39,18 +39,12 @@ jobs:
       # Do we need to update the package cache first?
       # sudo apt-get update -qq
       - name: "Install Ubuntu dependencies"
-        # These packages are already part of the ubuntu-20.04 image:
+        # These packages are already part of the ubuntu-22.04 image:
         # cmake libgmp-dev npm shellcheck
         # Packages below aren't.
-        #
-        # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
-        #    yet another cache in github actions
-        # We add the ubuntu-toolchain-r/test PPA to get gcc-11 on 20.04
         run: |
-          sudo add-apt-repository ppa:canonical-server/server-backports
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
+          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
           sudo apt-get update
           sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
