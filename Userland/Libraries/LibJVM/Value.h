@@ -3,7 +3,11 @@
 #include <AK/Forward.h>
 #include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/NonnullOwnPtr.h>
 #include <LibJVM/Forward.h>
+#include <LibJVM/Array.h>
+#include <LibJVM/Object.h>
+#include<LibJVM/Interface.h>
 
 namespace JVM {
 
@@ -55,11 +59,18 @@ public:
     {
 
     }
+
+    explicit Value()
+        : m_type(Type::Null)
+    {}
     explicit Value(int value)
         : m_type(Type::Int)
     {
-        m_value.as_int = value;
+
     }
+
+
+    void init_from_descriptor(AK::Utf8View desc);
 
     Type type() const { return m_type; }
 private:
@@ -74,10 +85,9 @@ private:
         double as_double;
         long as_ret_address;
         bool as_bool;
-        //These reference types are just indexes right now, but into what I'm not sure.
-        int as_array;
-        int as_class;
-        int as_interface;
+        Array as_array;
+        Object as_class;
+        Interface as_interface;
         int as_null;
     } m_value;
 };
@@ -89,6 +99,7 @@ public:
     {
 
     }
+
 
     explicit StackValue(int value)
         : m_type(StackType::Int)
@@ -109,8 +120,10 @@ private:
         double as_double;
         long as_ret_address;
         bool as_bool;
-        //These reference types are just indexes right now, but into what I'm not sure.
-        int as_array;
+        struct {
+            long long length;
+            StackValue* values;
+        } as_array; //FIXME: Figure out how to represent this as an AK::FixedArray
         int as_class;
         int as_interface;
         int as_null;

@@ -19,13 +19,13 @@ enum class ReferenceKind {
     RefInvokeInterface,
 };
 struct Utf8Info {
-    short length;
+    unsigned short length;
     const char* bytes;
 };
 
 struct MethodHandleInfo {
     ReferenceKind ref_kind;
-    short ref_index;
+    unsigned short ref_index;
 };
 
 enum class ConstantKind {
@@ -64,7 +64,7 @@ enum class ConstantKind {
 class CPEntry {
 public:
 
-    explicit CPEntry(ConstantKind constant_kind, short value)
+    explicit CPEntry(ConstantKind constant_kind, unsigned short value)
         : m_kind(constant_kind)
     {
         if (constant_kind == ConstantKind::Class) {
@@ -89,10 +89,10 @@ public:
 
     }
 
-    explicit CPEntry(ConstantKind constant_kind, short value[2])
+    explicit CPEntry(ConstantKind constant_kind, unsigned short value[2])
         : m_kind(constant_kind)
     {
-        auto array_assign = [](short a[2], short b[2]) { a[0] = b[0]; a[1] = b[1]; };
+        auto array_assign = [](unsigned short a[2], unsigned short b[2]) { a[0] = b[0]; a[1] = b[1]; };
         if (constant_kind == ConstantKind::FieldRef || constant_kind == ConstantKind::MethodRef || constant_kind == ConstantKind::InterfaceMethodRef) {
             array_assign(m_value.ref_info, value);
         }
@@ -131,7 +131,7 @@ public:
         }
     }
 
-    explicit CPEntry(short length, const char* value)
+    explicit CPEntry(unsigned short length, const char* value)
         : m_kind(ConstantKind::Utf8)
     {
         m_value.utf8_info = {length, value};
@@ -149,24 +149,38 @@ public:
 
     ConstantKind kind() const { return m_kind; }
 
+    unsigned short as_class_info();
+    unsigned short* as_ref_info();
+    unsigned short as_string_info();
+    int as_int_info();
+    float as_float_info();
+    long long as_long_info();
+    double as_double_info();
+    unsigned short* as_name_and_type_info();
+    Utf8Info as_utf8_info();
+    MethodHandleInfo as_method_handle_info();
+    unsigned short as_method_type_info();
+    unsigned short* as_dynamic_info(); //Used for both Dynamic and InvokeDynamic.
+    unsigned short as_module_info();
+    unsigned short as_package_info();
 
 private:
     ConstantKind m_kind;
     union {
-        short class_info;
-        short ref_info[2]; //Used for FieldRef, MethodRef, and InterfaceRef.
-        short string_info;
+        unsigned short class_info;
+        unsigned short ref_info[2]; //Used for FieldRef, MethodRef, and InterfaceRef.
+        unsigned short string_info;
         int int_info;
         float float_info;
         long long long_info;
         double double_info;
-        short name_and_type_info[2];
+        unsigned short name_and_type_info[2];
         Utf8Info utf8_info;
         MethodHandleInfo method_handle_info;
-        short method_type_info;
-        short dynamic_info[2]; //Used for both Dynamic and InvokeDynamic.
-        short module_info;
-        short package_info;
+        unsigned short method_type_info;
+        unsigned short dynamic_info[2]; //Used for both Dynamic and InvokeDynamic.
+        unsigned short module_info;
+        unsigned short package_info;
     } m_value;
 };
 }

@@ -8,7 +8,11 @@
 #include <LibJVM/Verification.h>
 
 //FIXME: Remove useless structs and merge structs that are only used in another struct into nameless structs.
-//FIXME: replace all 'short's with 'unsigned short's.
+//FIXME: Replace all 'short's with 'unsigned short's.
+//FIXME: Actually handle errors! (specifically those from try_create())
+//FIXME: A lot of these structs have both FixedArrays and copy constructors. For these, I have just used try_create on a span of the other FixedArray.
+//Does this leak memory? Do we need to deallocate the other FixedArray? I need answers!
+
 
 namespace JVM {
 
@@ -26,6 +30,10 @@ struct Exception {
 
 struct ExceptionTable {
     AK::FixedArray<short> exception_index_table;
+    ExceptionTable(ExceptionTable const &other) {
+        exception_index_table.try_create(other.exception_index_table.span());
+    }
+    ExceptionTable() {}
 };
 
 struct Code {
@@ -34,6 +42,14 @@ struct Code {
     AK::FixedArray<u8> code;
     AK::FixedArray<Exception> exception_table;
     AK::FixedArray<AttributeInfo> attributes;
+    Code(Code const &other) {
+        max_stack = other.max_stack;
+        max_locals = other.max_locals;
+        code.try_create(other.code.span());
+        exception_table.try_create(other.exception_table.span());
+        attributes.try_create(other.attributes.span());
+    }
+    Code() {}
 };
 
 struct InnerClass {
@@ -74,6 +90,10 @@ struct LineNumber {
 
 struct LineNumberTable {
     AK::FixedArray<LineNumber> line_number_table;
+    LineNumberTable(LineNumberTable const &other) {
+        line_number_table.try_create(other.line_number_table.span());
+    }
+    LineNumberTable () {}
 };
 
 struct LocalVariable {
@@ -86,6 +106,10 @@ struct LocalVariable {
 
 struct LocalVariableTable {
     AK::FixedArray<LocalVariable> local_variable_table;
+    LocalVariableTable(LocalVariableTable const &other) {
+        local_variable_table.try_create(other.local_variable_table.span());
+    }
+    LocalVariableTable() {}
 };
 
 struct LocalVariableType {
@@ -98,6 +122,10 @@ struct LocalVariableType {
 
 struct LocalVariableTypeTable {
     AK::FixedArray<LocalVariableType> local_variable_type_table;
+    LocalVariableTypeTable(LocalVariableTypeTable const &other) {
+        local_variable_type_table.try_create(other.local_variable_type_table.span());
+    }
+    LocalVariableTypeTable () {}
 };
 
 struct Deprecated {
@@ -190,10 +218,18 @@ struct Annotation {
 
 struct RuntimeVisibleAnnotations {
     AK::FixedArray<Annotation> annotations;
+    RuntimeVisibleAnnotations() { }
+    RuntimeVisibleAnnotations(RuntimeVisibleAnnotations const &annos) {
+        annotations.try_create(annos.annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct RuntimeInvisibleAnnotations {
     AK::FixedArray<Annotation> annotations;
+    RuntimeInvisibleAnnotations() { }
+    RuntimeInvisibleAnnotations(RuntimeInvisibleAnnotations const &annos) {
+        annotations.try_create(annos.annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct ParameterAnnotations {
@@ -202,10 +238,18 @@ struct ParameterAnnotations {
 
 struct RuntimeVisibleParameterAnnotations {
     AK::FixedArray<ParameterAnnotations> parameter_annotations;
+    RuntimeVisibleParameterAnnotations() { }
+    RuntimeVisibleParameterAnnotations(RuntimeVisibleParameterAnnotations const &annos) {
+        parameter_annotations.try_create(annos.parameter_annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct RuntimeInvisibleParameterAnnotations {
     AK::FixedArray<ParameterAnnotations> parameter_annotations;
+    RuntimeInvisibleParameterAnnotations() { }
+    RuntimeInvisibleParameterAnnotations(RuntimeInvisibleParameterAnnotations const &annos) {
+        parameter_annotations.try_create(annos.parameter_annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct PathEntry {
@@ -226,7 +270,7 @@ struct Localvar_Target{
 
 struct TypeAnnotation {
     u8 target_type;
-    union {
+    union Target {
         u8 type_parameter_target;
         short supertype_target;
         struct {
@@ -235,25 +279,45 @@ struct TypeAnnotation {
         } type_parameter_bound_target;
         u8 formal_parameter_target;
         short throws_target;
-        AK::NonnullOwnPtr<AK::FixedArray<Localvar_Target>> local_var_target;
+        AK::FixedArray<Localvar_Target> local_var_target;
         short catch_target;
         short offset_target;
         struct {
             short offset;
             u8 type_argument_index;
         } type_argument_target;
+        Target() {
+            type_parameter_target = 0;
+        }
+        ~Target() {
+            local_var_target.~FixedArray();
+        }
     } target_info;
     TypePath target_path;
     short type_index;
     AK::FixedArray<ElementValuePair> element_value_pairs;
+
+    TypeAnnotation()
+        : target_type(0)
+    {
+        target_info.type_parameter_target = 0;
+    }
 };
 
 struct RuntimeVisibleTypeAnnotations {
     AK::FixedArray<TypeAnnotation> annotations;
+    RuntimeVisibleTypeAnnotations() { }
+    RuntimeVisibleTypeAnnotations(RuntimeVisibleTypeAnnotations const &annos) {
+        annotations.try_create(annos.annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct RuntimeInvisibleTypeAnnotations {
     AK::FixedArray<TypeAnnotation> annotations;
+    RuntimeInvisibleTypeAnnotations() { }
+    RuntimeInvisibleTypeAnnotations(RuntimeInvisibleTypeAnnotations const &annos) {
+        annotations.try_create(annos.annotations.span()); //I think this should be done with .try_clone(), but the compiler doesn't allow that :(
+    }
 };
 
 struct AnnotationDefault {
@@ -276,6 +340,10 @@ struct MethodParameter {
 
 struct MethodParameters {
     AK::FixedArray<MethodParameters> parameters;
+    MethodParameters(MethodParameters const &other) {
+        parameters.try_create(other.parameters.span());
+    }
+    MethodParameters() {}
 };
 
 struct ModulePackages {
@@ -344,6 +412,8 @@ enum class AttributeKind {
     //As of the writing of this comment, I have no plans to implement this, and this is simply there to catch custom attributes and ignore them.
 };
 
+//A lot ofthe union values are actually pointers to values, because the pointer is much smaller than some of the structures.
+//However, I don't actually know if these values will live or if they will be deallocated.
 class AttributeInfo {
 
 public:
@@ -357,6 +427,77 @@ public:
     {
         m_value.signature = sig;
     }
+    AttributeInfo(Custom cus)
+         : m_kind(AttributeKind::Custom)
+    {
+        m_value.custom = cus;
+    }
+    AttributeInfo(RuntimeVisibleAnnotations annos)
+         : m_kind(AttributeKind::RuntimeVisibleAnnotations)
+    {
+        m_value.runtime_visible_annotations = &annos;
+    }
+    AttributeInfo(RuntimeInvisibleAnnotations annos)
+         : m_kind(AttributeKind::RuntimeInvisibleAnnotations)
+    {
+        m_value.runtime_invisible_annotations = &annos;
+    }
+    AttributeInfo(RuntimeVisibleTypeAnnotations annos)
+         : m_kind(AttributeKind::RuntimeVisibleTypeAnnotations)
+    {
+        m_value.runtime_visible_type_annotations = &annos;
+    }
+    AttributeInfo(RuntimeInvisibleTypeAnnotations annos)
+         : m_kind(AttributeKind::RuntimeInvisibleTypeAnnotations)
+    {
+        m_value.runtime_invisible_type_annotations = &annos;
+    }
+    AttributeInfo(RuntimeVisibleParameterAnnotations annos)
+         : m_kind(AttributeKind::RuntimeVisibleParameterAnnotations)
+    {
+        m_value.runtime_visible_parameter_annotations = &annos;
+    }
+    AttributeInfo(RuntimeInvisibleParameterAnnotations annos)
+         : m_kind(AttributeKind::RuntimeInvisibleParameterAnnotations)
+    {
+        m_value.runtime_invisible_parameter_annotations = &annos;
+    }
+    AttributeInfo(MethodParameters params)
+        : m_kind(AttributeKind::MethodParameters)
+    {
+        m_value.method_parameters = &params;
+    }
+    AttributeInfo(ExceptionTable table)
+        :m_kind(AttributeKind::Execptions)
+    {
+        m_value.exceptions = &table;
+    }
+    AttributeInfo(LocalVariableTypeTable table)
+        :m_kind(AttributeKind::LocalVariableTypeTable)
+    {
+        m_value.local_variable_type_table = &table;
+    }
+    AttributeInfo(LocalVariableTable table)
+        :m_kind(AttributeKind::LocalVariableTable)
+    {
+        m_value.local_variable_table = &table;
+    }
+    AttributeInfo(LineNumberTable table)
+        :m_kind(AttributeKind::LineNumberTable)
+    {
+        m_value.line_number_table = &table;
+    }
+    AttributeInfo(StackMapTable table)
+        : m_kind(AttributeKind::StackMapTable)
+    {
+        m_value.sm_table = table;
+    }
+    AttributeInfo(Code code)
+        : m_kind(AttributeKind::Code)
+    {
+        m_value.code = &code;
+    }
+
     AttributeInfo(AttributeKind kind)
         : m_kind(kind)
     {
@@ -364,20 +505,21 @@ public:
     }
 private:
     AttributeKind m_kind;
-    union {
+    union AttributeValue {
         //Should these all be structs, or should some of them be primitives (if that's what they are)?
         //Also, should tables be wrapper structs around AK::FixedArray, or should they just directly be that?
-        //FIXME: Make more of these pointers to save on struct space. (Or don't do that if it's bad).
-        //FIXME: Another problem here is that a lot of these are unecessarily pointers because the compiler complains about no default constructor otherwise. Fix this! (I don't know how)
+        //FIXME: Make more of these pointers to save on struct space. (Or don't do that if that's bad design).
+        //FIXME: Another problem here is that a lot of these are unecessarily pointers because the compiler complains about no default constructor otherwise. Fix this! (I don't know how).
         ConstantValue constantvalue_index;
         Code* code;
-        AK::FixedArray<StackMapFrame>* sm_table;
+        StackMapTable sm_table;
         ExceptionTable* exceptions;
         InnerClassTable* inner_classes;
         EnclosingMethod enclosing_method;
         Synthetic synthetic;
         Signature signature;
         SourceFile source_file;
+        LineNumberTable* line_number_table;
         LocalVariableTable* local_variable_table;
         LocalVariableTypeTable* local_variable_type_table;
         Deprecated deprecated;
@@ -390,13 +532,29 @@ private:
         AnnotationDefault* annotation_default;
         BootstrapMethods* bootstrap_methods;
         MethodParameters* method_parameters;
-        Module* module; //This is a NonnullOwnPtr because the struct is so large.
+        Module* module; //This is a pointer because the strucutre is very large and would take up too much space
         ModulePackages* module_packages;
         ModuleMainClass module_main_class;
         NestHost nest_host;
         Record* record;
         PermittedSubclasses* permitted_subclasses;
         Custom custom;
+        AttributeValue() {
+
+        }
+        ~AttributeValue() {
+            //FIXME: Add calls to the destructors of the fixed array values here.
+            //Unless they aren't deallocated. I'm new to all the AK classes, and there isn't great documentation on them, so please excuse me if I make any errors.
+        }
+        AttributeValue(AttributeValue const &other) {
+            //FIXME: Add copy operations here.
+        }
+        AttributeValue& operator=(AttributeValue const &other) {
+
+        }
+        AttributeValue& operator=(AttributeValue&& other) {
+
+        }
     } m_value;
 };
 
