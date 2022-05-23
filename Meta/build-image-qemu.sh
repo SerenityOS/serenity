@@ -66,7 +66,7 @@ else
 fi
 
 disk_usage() {
-    # shellcheck disable=SC2003
+    # shellcheck disable=SC2003,SC2307
     expr "$(${GNUDU} -sk --apparent-size "$1" | cut -f1)"
 }
 
