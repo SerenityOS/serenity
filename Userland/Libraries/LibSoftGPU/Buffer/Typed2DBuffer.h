@@ -18,7 +18,7 @@
 namespace SoftGPU {
 
 /**
- * Typed2DBuffer<T> wraps TypedBuffer<T> and only interacts on the 2D plane with z = 0.
+ * Typed2DBuffer<T> wraps Typed3DBuffer<T> and only interacts on the 2D plane with z = 0.
  */
 template<typename T>
 class Typed2DBuffer final : public RefCounted<Typed2DBuffer<T>> {

@@ -5249,6 +5249,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto ident = value.token().ident();
         if (!ident.starts_with("-n-"sv, CaseSensitivity::CaseInsensitive))
             return false;
+        if (ident.length() == 3)
+            return false;
         for (size_t i = 3; i < ident.length(); ++i) {
             if (!is_ascii_digit(ident[i]))
                 return false;
@@ -5327,7 +5329,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         auto& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
             int a = first_value.token().dimension_value_int();
-            int b = -values.next_token().token().to_integer();
+            int b = -second_value.token().to_integer();
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, b };
         }
@@ -5423,6 +5425,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         // '+'?† n <signed-integer>
         if (is_signed_integer(values.peek_token())) {
             int b = values.next_token().token().to_integer();
+            transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, b };
         }
 

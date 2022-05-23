@@ -36,15 +36,16 @@ extern "C" {
 #define MADV_SET_VOLATILE 0x1
 #define MADV_SET_NONVOLATILE 0x2
 #define MADV_DONTNEED 0x3
+#define MADV_WILLNEED 0x4
+#define MADV_SEQUENTIAL 0x5
+#define MADV_RANDOM 0x6
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_madvise.html
 #define POSIX_MADV_NORMAL MADV_NORMAL
 #define POSIX_MADV_DONTNEED MADV_DONTNEED
-
-// Unsupported posix_madvise() advise:
-//  POSIX_MADV_SEQUENTIAL
-//  POSIX_MADV_RANDOM
-//  POSIX_MADV_WILLNEED
+#define POSIX_MADV_WILLNEED MADV_WILLNEED
+#define POSIX_MADV_SEQUENTIAL MADV_SEQUENTIAL
+#define POSIX_MADV_RANDOM MADV_RANDOM
 
 #define MS_SYNC 1
 #define MS_ASYNC 2

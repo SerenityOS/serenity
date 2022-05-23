@@ -29,10 +29,12 @@ private:
     VT::TerminalWidget::BellMode m_bell_mode = VT::TerminalWidget::BellMode::Disabled;
     size_t m_max_history_size;
     bool m_show_scrollbar { true };
+    bool m_confirm_close { true };
 
     VT::TerminalWidget::BellMode m_original_bell_mode;
     size_t m_original_max_history_size;
     bool m_orignal_show_scrollbar { true };
+    bool m_orignal_confirm_close { true };
 };
 
 class TerminalSettingsViewWidget final : public GUI::SettingsWindow::Tab {

@@ -37,7 +37,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
 
@@ -74,9 +74,6 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
     m_tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
-    m_tab_widget->set_reorder_allowed(true);
-    m_tab_widget->set_close_button_enabled(true);
-
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
     };
@@ -137,6 +134,15 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
+    m_window_actions.on_vertical_tabs = [this](auto& action) {
+        m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+        Config::write_bool("Browser", "Preferences", "VerticalTabs", action.is_checked());
+    };
+
+    bool vertical_tabs = Config::read_bool("Browser", "Preferences", "VerticalTabs", false);
+    m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
+    m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+
     build_menus();
 
     create_new_tab(move(url), true);
@@ -160,6 +166,7 @@ void BrowserWindow::build_menus()
 
     auto& view_menu = add_menu("&View");
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
+    view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
@@ -250,7 +257,7 @@ void BrowserWindow::build_menus()
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
             auto homepage_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
-            if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
+            if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser", "Preferences", "Home", homepage_url);
                     Browser::g_home_url = homepage_url;
@@ -376,7 +383,7 @@ void BrowserWindow::build_menus()
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         String user_agent;
-        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecOK || user_agent.is_empty() || user_agent.is_null()) {
+        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecResult::OK || user_agent.is_empty() || user_agent.is_null()) {
             m_disable_user_agent_spoofing->activate();
             return;
         }
@@ -458,7 +465,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
         String search_engine;
-        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecResult::OK || search_engine.is_empty()) {
             m_disable_search_engine_action->activate();
             return;
         }
@@ -551,7 +558,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         m_cookie_jar.dump_cookies();
     };
 
-    new_tab.on_want_cookies = [this]() {
+    new_tab.on_get_cookies_entries = [this]() {
         return m_cookie_jar.get_all_cookies();
     };
 

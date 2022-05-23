@@ -103,7 +103,9 @@ int OpacitySlider::value_at(Gfx::IntPoint const& position) const
     if (position.x() > inner_rect.right())
         return max();
     float relative_offset = (float)(position.x() - inner_rect.x()) / (float)inner_rect.width();
-    return relative_offset * (float)max();
+
+    int range = max() - min();
+    return min() + (int)(relative_offset * (float)range);
 }
 
 void OpacitySlider::mousedown_event(MouseEvent& event)

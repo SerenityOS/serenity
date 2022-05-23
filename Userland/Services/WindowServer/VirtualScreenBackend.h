@@ -30,11 +30,13 @@ private:
 
     virtual ErrorOr<void> flush_framebuffer_rects(int, Span<FBRect const>) override { return {}; }
 
+    virtual ErrorOr<void> flush_framebuffer() override { return {}; }
+
     virtual ErrorOr<void> unmap_framebuffer() override;
     virtual ErrorOr<void> map_framebuffer() override;
 
-    virtual ErrorOr<void> set_head_resolution(FBHeadResolution) override;
-    virtual ErrorOr<FBHeadProperties> get_head_properties() override;
+    virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) override;
+    virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() override;
 
     int m_height { 0 };
     int m_width { 0 };

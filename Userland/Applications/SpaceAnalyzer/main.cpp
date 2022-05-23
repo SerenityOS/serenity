@@ -360,7 +360,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     "Deletion failed",
                     GUI::MessageBox::Type::Error,
                     GUI::MessageBox::InputType::YesNo);
-                if (retry_message_result == GUI::MessageBox::ExecYes) {
+                if (retry_message_result == GUI::MessageBox::ExecResult::Yes) {
                     try_again = true;
                 }
             } else {

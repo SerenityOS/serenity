@@ -106,10 +106,10 @@
 .align 11
 vector_table_el1:
     // Exceptions taken from Current EL, with SP_EL0
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
+    table_entry synchronous_current_elsp_el0
+    table_entry irq_current_elsp_el0
+    table_entry fiq_current_elsp_el0
+    table_entry system_error_current_elsp_el0
 
     // Exceptions taken from Current EL, with SP_ELx, x>0
     table_entry synchronous_current_elsp_elx
@@ -148,6 +148,30 @@ fiq_current_elsp_elx:
     eret
 
 system_error_current_elsp_elx:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+synchronous_current_elsp_el0:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+irq_current_elsp_el0:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+fiq_current_elsp_el0:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+system_error_current_elsp_el0:
     save_current_context
     bl exception_common
     restore_previous_context

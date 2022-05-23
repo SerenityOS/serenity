@@ -422,7 +422,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    bool remove_all_matching(TUnaryPredicate predicate)
+    bool remove_all_matching(TUnaryPredicate const& predicate)
     {
         size_t removed_count = 0;
         for (size_t i = 0; i < m_capacity; ++i) {

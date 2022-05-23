@@ -257,7 +257,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
         wizard->replace_page(page.page());
         auto result = wizard->exec();
 
-        if (result == GUI::Dialog::ExecResult::ExecOK) {
+        if (result == GUI::Dialog::ExecResult::OK) {
             auto& writer = page.writer();
             if (!writer.has_value())
                 return String { "CSV Export failed" };
@@ -292,7 +292,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
 
     if (mime == "text/csv") {
         return export_xsv();
-    } else if (mime == "text/plain" && file.filename().ends_with(".sheets")) {
+    } else if (mime == "application/x-sheets+json") {
         return export_worksheet();
     } else {
         auto page = GUI::WizardPage::construct(
@@ -312,7 +312,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
 
         wizard->push_page(page);
 
-        if (wizard->exec() != GUI::Dialog::ExecResult::ExecOK)
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return String { "Export was cancelled" };
 
         if (format_combo_box->selected_index() == 0)

@@ -177,9 +177,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (window->is_modified()) {
             auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
-            if (result == GUI::MessageBox::ExecYes)
+            if (result == GUI::MessageBox::ExecResult::Yes)
                 save_action->activate();
-            if (result != GUI::MessageBox::ExecNo && window->is_modified())
+            if (result != GUI::MessageBox::ExecResult::No && window->is_modified())
                 return;
         }
 
@@ -257,14 +257,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return GUI::Window::CloseRequestDecision::Close;
 
         auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
-        if (result == GUI::MessageBox::ExecYes) {
+        if (result == GUI::MessageBox::ExecResult::Yes) {
             save_action->activate();
             if (window->is_modified())
                 return GUI::Window::CloseRequestDecision::StayOpen;
             return GUI::Window::CloseRequestDecision::Close;
         }
 
-        if (result == GUI::MessageBox::ExecNo)
+        if (result == GUI::MessageBox::ExecResult::No)
             return GUI::Window::CloseRequestDecision::Close;
 
         return GUI::Window::CloseRequestDecision::StayOpen;

@@ -42,9 +42,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define FIRE_WIDTH 320
-#define FIRE_HEIGHT 200
-#define FIRE_MAX 29
+static constexpr int FIRE_WIDTH = 320;
+static constexpr int FIRE_HEIGHT = 200;
+static constexpr int FIRE_MAX = 29;
 
 static constexpr Array<Color, 30> s_palette = {
     Color(0x07, 0x07, 0x07), Color(0x1F, 0x07, 0x07), Color(0x2F, 0x0F, 0x07),
@@ -174,9 +174,9 @@ void Fire::mousedown_event(GUI::MouseEvent& event)
 void Fire::mousemove_event(GUI::MouseEvent& event)
 {
     if (dragging) {
-        if (event.y() >= 2 && event.y() < 398 && event.x() <= 638) {
-            int ypos = event.y() / 2;
-            int xpos = event.x() / 2;
+        int ypos = event.y() / 2;
+        int xpos = event.x() / 2;
+        if (bitmap->rect().shrunken(1, 1, 0, 0).contains(xpos, ypos)) {
             bitmap->scanline_u8(ypos - 1)[xpos] = FIRE_MAX + 5;
             bitmap->scanline_u8(ypos - 1)[xpos + 1] = FIRE_MAX + 5;
             bitmap->scanline_u8(ypos)[xpos] = FIRE_MAX + 5;

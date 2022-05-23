@@ -158,4 +158,31 @@ void AbstractThemePreview::paint_event(GUI::PaintEvent& event)
     paint_preview(event);
 }
 
+void AbstractThemePreview::center_window_group_within(Span<Window> windows, Gfx::IntRect const& bounds)
+{
+    VERIFY(windows.size() >= 1);
+
+    auto to_frame_rect = [&](Gfx::IntRect const& rect) {
+        return Gfx::WindowTheme::current().frame_rect_for_window(
+            Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
+    };
+
+    auto leftmost_x_value = windows[0].rect.x();
+    auto topmost_y_value = windows[0].rect.y();
+    auto combind_frame_rect = to_frame_rect(windows[0].rect);
+    for (auto& window : windows.slice(1)) {
+        if (window.rect.x() < leftmost_x_value)
+            leftmost_x_value = window.rect.x();
+        if (window.rect.y() < topmost_y_value)
+            topmost_y_value = window.rect.y();
+        combind_frame_rect = combind_frame_rect.united(to_frame_rect(window.rect));
+    }
+
+    combind_frame_rect.center_within(bounds);
+    auto frame_offset = to_frame_rect({}).location();
+    for (auto& window : windows) {
+        window.rect.set_left(combind_frame_rect.left() + (window.rect.x() - leftmost_x_value) - frame_offset.x());
+        window.rect.set_top(combind_frame_rect.top() + (window.rect.y() - topmost_y_value) - frame_offset.y());
+    }
+}
 }

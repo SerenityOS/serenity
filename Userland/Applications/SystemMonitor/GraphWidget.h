@@ -26,7 +26,7 @@ public:
     struct ValueFormat {
         Gfx::ColorRole graph_color_role { Gfx::ColorRole::Base };
         Color text_shadow_color { Color::Transparent };
-        Function<String(size_t)> text_formatter;
+        Function<String(u64)> text_formatter;
     };
     void set_value_format(size_t index, ValueFormat&& format)
     {

@@ -1,6 +1,7 @@
 set(LIBC_SOURCES
     arpa/inet.cpp
     assert.cpp
+    complex.cpp
     ctype.cpp
     cxxabi.cpp
     dirent.cpp
@@ -138,6 +139,11 @@ set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
+
+# Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(string.cpp wchar.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+endif()
 
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)

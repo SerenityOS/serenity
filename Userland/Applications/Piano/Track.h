@@ -13,7 +13,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/SinglyLinkedList.h>
-#include <LibAudio/Buffer.h>
 #include <LibDSP/Effects.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/Synthesizers.h>

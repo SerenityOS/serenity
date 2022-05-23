@@ -20,7 +20,7 @@ public:
     GUI::Action const* selected_action() const { return m_selected_action; }
 
 private:
-    explicit CommandPalette(GUI::Window& parent_window, ScreenPosition screen_position = CenterWithinParent);
+    explicit CommandPalette(GUI::Window& parent_window, ScreenPosition = ScreenPosition::CenterWithinParent);
     virtual ~CommandPalette() override = default;
 
     void collect_actions(GUI::Window& parent_window);

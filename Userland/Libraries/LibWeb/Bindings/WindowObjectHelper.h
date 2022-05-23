@@ -15,8 +15,16 @@
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
+#include <LibWeb/Bindings/CSSConditionRuleConstructor.h>
+#include <LibWeb/Bindings/CSSConditionRulePrototype.h>
 #include <LibWeb/Bindings/CSSFontFaceRuleConstructor.h>
 #include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
+#include <LibWeb/Bindings/CSSGroupingRuleConstructor.h>
+#include <LibWeb/Bindings/CSSGroupingRulePrototype.h>
+#include <LibWeb/Bindings/CSSImportRuleConstructor.h>
+#include <LibWeb/Bindings/CSSImportRulePrototype.h>
+#include <LibWeb/Bindings/CSSMediaRuleConstructor.h>
+#include <LibWeb/Bindings/CSSMediaRulePrototype.h>
 #include <LibWeb/Bindings/CSSRuleConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
@@ -27,6 +35,8 @@
 #include <LibWeb/Bindings/CSSStyleRulePrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
+#include <LibWeb/Bindings/CSSSupportsRuleConstructor.h>
+#include <LibWeb/Bindings/CSSSupportsRulePrototype.h>
 #include <LibWeb/Bindings/CanvasGradientConstructor.h>
 #include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
@@ -230,6 +240,8 @@
 #include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/Bindings/LocationConstructor.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
+#include <LibWeb/Bindings/MediaListConstructor.h>
+#include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
@@ -354,18 +366,23 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
-    ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSConditionRule)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSFontFaceRule)                                                    \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSGroupingRule)                                                    \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSImportRule)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSMediaRule)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleRule)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSSupportsRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasGradient)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)                                           \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                                                            \
+    ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(CustomEvent)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                                                           \
@@ -462,6 +479,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Location)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryListEvent)                                                \
+    ADD_WINDOW_OBJECT_INTERFACE(MediaList)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                                                         \

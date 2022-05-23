@@ -19,7 +19,11 @@
 
 extern "C" {
 
+#ifdef NO_TLS
 int h_errno;
+#else
+__thread int h_errno;
+#endif
 
 static hostent __gethostbyname_buffer;
 static in_addr_t __gethostbyname_address;
@@ -824,5 +828,27 @@ int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char*
     }
 
     return 0;
+}
+
+void herror(char const* s)
+{
+    dbgln("herror(): {}: {}", s, hstrerror(h_errno));
+    warnln("{}: {}", s, hstrerror(h_errno));
+}
+
+char const* hstrerror(int err)
+{
+    switch (err) {
+    case HOST_NOT_FOUND:
+        return "The specified host is unknown.";
+    case NO_DATA:
+        return "The requested name is valid but does not have an IP address.";
+    case NO_RECOVERY:
+        return "A nonrecoverable name server error occurred.";
+    case TRY_AGAIN:
+        return "A temporary error occurred on an authoritative name server. Try again later.";
+    default:
+        return "Unknown error.";
+    }
 }
 }

@@ -196,6 +196,25 @@ ErrorOr<void> VirtualFileSystem::utime(StringView path, Custody& base, time_t at
     return {};
 }
 
+ErrorOr<void> VirtualFileSystem::utimensat(StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options)
+{
+    auto custody = TRY(resolve_path(path, base, nullptr, options));
+    auto& inode = custody->inode();
+    auto& current_process = Process::current();
+    if (!current_process.is_superuser() && inode.metadata().uid != current_process.euid())
+        return EACCES;
+    if (custody->is_readonly())
+        return EROFS;
+
+    // NOTE: A standard ext2 inode cannot store nanosecond timestamps.
+    if (atime.tv_nsec != UTIME_OMIT)
+        TRY(inode.set_atime(atime.tv_sec));
+    if (mtime.tv_nsec != UTIME_OMIT)
+        TRY(inode.set_mtime(mtime.tv_sec));
+
+    return {};
+}
+
 ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(StringView path, Custody& base, int options)
 {
     auto custody = TRY(resolve_path(path, base, nullptr, options));

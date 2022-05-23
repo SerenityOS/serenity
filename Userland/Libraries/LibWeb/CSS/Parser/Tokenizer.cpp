@@ -223,6 +223,8 @@ Tokenizer::Tokenizer(StringView input, String const& encoding)
                 }
             } else if (code_point == '\f') {
                 builder.append('\n');
+            } else if (code_point == 0x00) {
+                builder.append_code_point(REPLACEMENT_CHARACTER);
             } else if (code_point >= 0xD800 && code_point <= 0xDFFF) {
                 builder.append_code_point(REPLACEMENT_CHARACTER);
             } else {

@@ -76,7 +76,7 @@ ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> call
         TRY(vm.host_call_job_callback(global_object, cleanup_callback, js_undefined(), move(arguments)));
     }
 
-    // 4. Return NormalCompletion(empty).
+    // 4. Return unused.
     return {};
 }
 

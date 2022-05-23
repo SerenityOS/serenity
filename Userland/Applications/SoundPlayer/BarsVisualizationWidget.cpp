@@ -15,7 +15,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 
-void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> const& samples)
+void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<float> const& samples)
 {
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
@@ -30,44 +30,44 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
     for (size_t i = 0; i < fft_size / 2; i++)
         m_fft_samples[i + fft_size / 2] = samples[i] * m_fft_window[i + fft_size / 2];
 
-    AK::TypedTransfer<double>::copy(m_previous_samples.data(), samples.data(), samples.size());
+    AK::TypedTransfer<float>::copy(m_previous_samples.data(), samples.data(), samples.size());
 
     LibDSP::fft(m_fft_samples.span(), false);
 
-    Array<double, bar_count> groups {};
+    Array<float, bar_count> groups {};
 
     if (m_logarithmic_spectrum) {
-        auto const log_bar_size = static_cast<double>(bar_count) / AK::log2(fft_size);
+        auto const log_bar_size = static_cast<float>(bar_count) / AK::log2(fft_size);
 
         for (size_t i = 0; i < bar_count; ++i) {
-            auto const bar_start = i == 0 ? 0 : static_cast<size_t>(floor(AK::pow(2., static_cast<double>(i) / log_bar_size)));
-            auto const bar_end = clamp(static_cast<size_t>(floor(AK::pow(2., static_cast<double>(i + 1) / log_bar_size))), bar_start + 1, cutoff);
+            auto const bar_start = i == 0 ? 0 : static_cast<size_t>(floor(AK::pow(2.f, static_cast<float>(i) / log_bar_size)));
+            auto const bar_end = clamp(static_cast<size_t>(floor(AK::pow(2.f, static_cast<float>(i + 1) / log_bar_size))), bar_start + 1, cutoff);
             auto const values_in_bar = bar_end - bar_start;
 
             for (size_t sample_index = bar_start; sample_index < bar_start + values_in_bar; sample_index++) {
-                double const magnitude = m_fft_samples[sample_index].magnitude();
+                float const magnitude = m_fft_samples[sample_index].magnitude();
                 groups[i] += magnitude;
             }
-            groups[i] /= static_cast<double>(values_in_bar);
+            groups[i] /= static_cast<float>(values_in_bar);
         }
     } else {
         static constexpr size_t values_per_bar = (fft_size / 2) / bar_count;
         for (size_t i = 0; i < fft_size / 2; i += values_per_bar) {
-            double const magnitude = m_fft_samples[i].magnitude();
+            float const magnitude = m_fft_samples[i].magnitude();
             groups[i / values_per_bar] = magnitude;
             for (size_t j = 0; j < values_per_bar; j++) {
-                double const magnitude = m_fft_samples[i + j].magnitude();
+                float const magnitude = m_fft_samples[i + j].magnitude();
                 groups[i / values_per_bar] += magnitude;
             }
             groups[i / values_per_bar] /= values_per_bar;
         }
     }
 
-    double const max_peak_value = AK::sqrt(static_cast<double>(fft_size * 2));
+    float const max_peak_value = AK::sqrt(static_cast<float>(fft_size * 2));
     for (size_t i = 0; i < bar_count; i++) {
         groups[i] = AK::log(groups[i] + 1) / AK::log(max_peak_value);
         if (m_adjust_frequencies)
-            groups[i] *= 1 + 2.0 * (static_cast<double>(i) - static_cast<double>(bar_count / 3)) / static_cast<double>(bar_count);
+            groups[i] *= 1 + 2.0f * (static_cast<float>(i) - bar_count / 3.0f) / static_cast<float>(bar_count);
     }
 
     int const horizontal_margin = 30;
@@ -77,8 +77,8 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
     int const max_height = frame_inner_rect().height() - top_vertical_margin;
     int current_xpos = horizontal_margin;
     for (size_t g = 0; g < bar_count; g++) {
-        m_gfx_falling_bars[g] = AK::min(clamp(max_height - (int)(groups[g] * max_height * 0.8), 0, max_height), m_gfx_falling_bars[g]);
-        painter.fill_rect(Gfx::Rect(current_xpos, max_height - (int)(groups[g] * max_height * 0.8), pixel_per_group_width, (int)(groups[g] * max_height * 0.8)), Gfx::Color::from_rgb(0x95d437));
+        m_gfx_falling_bars[g] = AK::min(clamp(max_height - static_cast<int>(groups[g] * static_cast<float>(max_height) * 0.8f), 0, max_height), m_gfx_falling_bars[g]);
+        painter.fill_rect(Gfx::Rect(current_xpos, max_height - static_cast<int>(groups[g] * static_cast<float>(max_height) * 0.8f), pixel_per_group_width, static_cast<int>(groups[g] * max_height * 0.8f)), Gfx::Color::from_rgb(0x95d437));
         painter.fill_rect(Gfx::Rect(current_xpos, m_gfx_falling_bars[g], pixel_per_group_width, 2), Gfx::Color::White);
         current_xpos += pixel_per_group_width + pixels_inbetween_groups;
         m_gfx_falling_bars[g] += 3;
@@ -102,7 +102,7 @@ BarsVisualizationWidget::BarsVisualizationWidget()
     logarithmic_spectrum_action->set_checked(true);
     m_context_menu->add_action(logarithmic_spectrum_action);
 
-    m_fft_window = LibDSP::Window<double>::hann<fft_size>();
+    m_fft_window = LibDSP::Window<float>::hann<fft_size>();
 
     // As we use full-overlapping windows, the passed-in data is only half the size of one FFT operation.
     MUST(set_render_sample_count(fft_size / 2));

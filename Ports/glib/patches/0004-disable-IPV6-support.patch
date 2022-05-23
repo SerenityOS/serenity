@@ -3,7 +3,7 @@ From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Thu, 12 Aug 2021 20:33:11 +0200
 Subject: [PATCH 04/12] meson.build: Disable IPV6 support
 
-Serenity does not ahve IPV6 support so disable it
+Serenity does not have IPV6 support so disable it
 ---
  meson.build | 2 ++
  1 file changed, 2 insertions(+)

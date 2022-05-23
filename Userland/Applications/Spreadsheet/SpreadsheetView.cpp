@@ -392,7 +392,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         auto dialog = CellTypeDialog::construct(positions, *m_sheet, window());
-        if (dialog->exec() == GUI::Dialog::ExecOK) {
+        if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
             for (auto& position : positions) {
                 auto& cell = m_sheet->ensure(position);
                 cell.set_type(dialog->type());

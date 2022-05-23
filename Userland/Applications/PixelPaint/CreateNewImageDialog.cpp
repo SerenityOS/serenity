@@ -5,6 +5,7 @@
  */
 
 #include "CreateNewImageDialog.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -33,6 +34,8 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     m_name_textbox->on_change = [this] {
         m_image_name = m_name_textbox->text();
     };
+    auto default_name = Config::read_string("PixelPaint", "NewImage", "Name");
+    m_name_textbox->set_text(default_name);
 
     auto& width_label = main_widget.add<GUI::Label>("Width:");
     width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -49,12 +52,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     auto& ok_button = button_container.add<GUI::Button>("OK");
     ok_button.on_click = [this](auto) {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     width_spinbox.on_change = [this](int value) {
@@ -66,14 +69,16 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     m_name_textbox->on_return_pressed = [this] {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     width_spinbox.set_range(1, 16384);
     height_spinbox.set_range(1, 16384);
 
-    width_spinbox.set_value(510);
-    height_spinbox.set_value(356);
+    auto default_width = Config::read_i32("PixelPaint", "NewImage", "Width", 510);
+    auto default_height = Config::read_i32("PixelPaint", "NewImage", "Height", 356);
+    width_spinbox.set_value(default_width);
+    height_spinbox.set_value(default_height);
 }
 
 }

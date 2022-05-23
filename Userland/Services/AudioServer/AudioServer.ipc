@@ -1,5 +1,5 @@
 #include <LibCore/AnonymousBuffer.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Queue.h>
 
 endpoint AudioServer
 {

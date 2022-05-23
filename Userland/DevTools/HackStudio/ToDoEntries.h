@@ -20,9 +20,9 @@ class ToDoEntries {
 public:
     static ToDoEntries& the();
 
-    void set_entries(String const& filename, Vector<Cpp::Parser::TodoEntry> const&& entries);
+    void set_entries(String const& filename, Vector<CodeComprehension::TodoEntry> const&& entries);
 
-    Vector<Cpp::Parser::TodoEntry> get_entries();
+    Vector<CodeComprehension::TodoEntry> get_entries();
 
     void clear_entries();
 
@@ -30,7 +30,7 @@ public:
 
 private:
     ToDoEntries() = default;
-    HashMap<String, Vector<Cpp::Parser::TodoEntry>> m_document_to_entries;
+    HashMap<String, Vector<CodeComprehension::TodoEntry>> m_document_to_entries;
 };
 
 }

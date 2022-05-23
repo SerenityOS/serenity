@@ -85,9 +85,9 @@ ErrorOr<bool> ScriptEditor::attempt_to_close()
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path.is_empty() ? name() : m_path, document().undo_stack().last_unmodified_timestamp());
     switch (result) {
-    case GUI::Dialog::ExecResult::ExecYes:
+    case GUI::Dialog::ExecResult::Yes:
         return save();
-    case GUI::Dialog::ExecResult::ExecNo:
+    case GUI::Dialog::ExecResult::No:
         return true;
     default:
         return false;

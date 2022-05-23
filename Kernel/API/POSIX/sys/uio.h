@@ -12,6 +12,9 @@
 extern "C" {
 #endif
 
+// Arbitrary pain threshold.
+#define IOV_MAX 1024
+
 struct iovec {
     void* iov_base;
     size_t iov_len;

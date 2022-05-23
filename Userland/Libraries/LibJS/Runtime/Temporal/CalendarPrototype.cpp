@@ -174,9 +174,9 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     // 7. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, options));
 
-    // 8. Let balanceResult be ! BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
+    // 8. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
     // FIXME: Narrowing conversion from 'double' to 'i64'
-    auto balance_result = MUST(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from(duration->nanoseconds()), "day"sv));
+    auto balance_result = TRY(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from(duration->nanoseconds()), "day"sv));
 
     // 9. Let result be ? AddISODate(date.[[ISOYear]], date.[[ISOMonth]], date.[[ISODay]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], overflow).
     auto result = TRY(add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result.days, overflow));
@@ -208,7 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" », "auto", "day").
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv }, "auto"sv, "day"sv));
 
-    // 8. Let result be ! DifferenceISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], largestUnit).
+    // 8. Let result be DifferenceISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], largestUnit).
     auto result = difference_iso_date(global_object, one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day(), *largest_unit);
 
     // 9. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
@@ -324,8 +324,21 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
     auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
-    // 5. Return 𝔽(! ToISODayOfWeek(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
-    return Value(to_iso_day_of_week(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
+    // 5. Let epochDays be MakeDay(𝔽(temporalDate.[[ISOYear]]), 𝔽(temporalDate.[[ISOMonth]] - 1), 𝔽(temporalDate.[[ISODay]])).
+    auto epoch_days = make_day(temporal_date->iso_year(), temporal_date->iso_month() - 1, temporal_date->iso_day());
+
+    // 6. Assert: epochDays is finite.
+    VERIFY(isfinite(epoch_days));
+
+    // 7. Let dayOfWeek be WeekDay(MakeDate(epochDays, +0𝔽)).
+    auto day_of_week = week_day(make_date(epoch_days, 0));
+
+    // 8. If dayOfWeek = +0𝔽, return 7𝔽.
+    if (day_of_week == 0)
+        return Value(7);
+
+    // 9. Return dayOfWeek.
+    return Value(day_of_week);
 }
 
 // 12.4.14 Temporal.Calendar.prototype.dayOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofyear
@@ -342,8 +355,14 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
     auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
-    // 5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
-    return Value(to_iso_day_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
+    // 5. Let epochDays be MakeDay(𝔽(temporalDate.[[ISOYear]]), 𝔽(temporalDate.[[ISOMonth]] - 1), 𝔽(temporalDate.[[ISODay]])).
+    auto epoch_days = make_day(temporal_date->iso_year(), temporal_date->iso_month() - 1, temporal_date->iso_day());
+
+    // 6. Assert: epochDays is finite.
+    VERIFY(isfinite(epoch_days));
+
+    // 7. Return DayWithinYear(MakeDate(epochDays, +0𝔽)) + 1𝔽.
+    return Value(day_within_year(make_date(epoch_days, 0)) + 1);
 }
 
 // 12.4.15 Temporal.Calendar.prototype.weekOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.weekofyear
@@ -422,8 +441,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
-    // 5. Return 𝔽(! ISODaysInYear(temporalDateLike.[[ISOYear]])).
-    return Value(iso_days_in_year(iso_year(temporal_date_like.as_object())));
+    // 5. Return DaysInYear(𝔽(temporalDateLike.[[ISOYear]])).
+    return Value(JS::days_in_year(iso_year(temporal_date_like.as_object())));
 }
 
 // 12.4.19 Temporal.Calendar.prototype.monthsInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthsinyear
@@ -466,8 +485,12 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
-    // 5. Return ! IsISOLeapYear(temporalDateLike.[[ISOYear]]).
-    return Value(is_iso_leap_year(iso_year(temporal_date_like.as_object())));
+    // 5. If InLeapYear(TimeFromYear(𝔽(temporalDateLike.[[ISOYear]]))) is 1𝔽, return true.
+    if (JS::in_leap_year(time_from_year(iso_year(temporal_date_like.as_object()))))
+        return Value(true);
+
+    // 6. Return false.
+    return Value(false);
 }
 
 // 12.4.21 Temporal.Calendar.prototype.fields ( fields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.fields

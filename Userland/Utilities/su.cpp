@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,6 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     TRY(Core::System::pledge("stdio exec"));
+
+    TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
 
     execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");

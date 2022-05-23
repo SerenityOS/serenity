@@ -1,6 +1,12 @@
+#import <CSS/CSSStyleSheet.idl>
+
+[Exposed=Window]
 interface CSSRule {
 
     attribute CSSOMString cssText;
+
+    readonly attribute CSSRule? parentRule;
+    readonly attribute CSSStyleSheet? parentStyleSheet;
 
     readonly attribute unsigned short type;
 

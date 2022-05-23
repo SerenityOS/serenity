@@ -91,7 +91,7 @@ ThrowCompletionOr<Value> Object::get(PropertyKey const& property_key) const
 // NOTE: 7.3.3 GetV ( V, P ) is implemented as Value::get().
 
 // 7.3.4 Set ( O, P, V, Throw ), https://tc39.es/ecma262/#sec-set-o-p-v-throw
-ThrowCompletionOr<bool> Object::set(PropertyKey const& property_key, Value value, ShouldThrowExceptions throw_exceptions)
+ThrowCompletionOr<void> Object::set(PropertyKey const& property_key, Value value, ShouldThrowExceptions throw_exceptions)
 {
     auto& vm = this->vm();
 
@@ -107,8 +107,8 @@ ThrowCompletionOr<bool> Object::set(PropertyKey const& property_key, Value value
         return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectSetReturnedFalse);
     }
 
-    // 3. Return success.
-    return success;
+    // 3. Return unused.
+    return {};
 }
 
 // 7.3.5 CreateDataProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createdataproperty
@@ -129,12 +129,14 @@ ThrowCompletionOr<bool> Object::create_data_property(PropertyKey const& property
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
-ThrowCompletionOr<bool> Object::create_method_property(PropertyKey const& property_key, Value value)
+ThrowCompletionOr<void> Object::create_method_property(PropertyKey const& property_key, Value value)
 {
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
 
-    // 1. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
+    // 1. Assert: O is an ordinary, extensible object with no non-configurable properties.
+
+    // 2. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     auto new_descriptor = PropertyDescriptor {
         .value = value,
         .writable = true,
@@ -142,8 +144,11 @@ ThrowCompletionOr<bool> Object::create_method_property(PropertyKey const& proper
         .configurable = true,
     };
 
-    // 2. Return ? O.[[DefineOwnProperty]](P, newDesc).
-    return internal_define_own_property(property_key, new_descriptor);
+    // 3. Perform ! O.[[DefineOwnProperty]](P, newDesc).
+    MUST(internal_define_own_property(property_key, new_descriptor));
+
+    // 4. Return unused.
+    return {};
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
@@ -168,20 +173,24 @@ ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyKey const&
 }
 
 // 7.3.8 CreateNonEnumerableDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createnonenumerabledatapropertyorthrow
-ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(PropertyKey const& property_key, Value value)
+void Object::create_non_enumerable_data_property_or_throw(PropertyKey const& property_key, Value value)
 {
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
 
-    // 1. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
+    // 1. Assert: O is an ordinary, extensible object with no non-configurable properties.
+
+    // 2. Let newDesc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     auto new_description = PropertyDescriptor { .value = value, .writable = true, .enumerable = false, .configurable = true };
 
-    // 2. Return ? DefinePropertyOrThrow(O, P, newDesc).
-    return define_property_or_throw(property_key, new_description);
+    // 3. Perform ! DefinePropertyOrThrow(O, P, newDesc).
+    MUST(define_property_or_throw(property_key, new_description));
+
+    // 4. Return unused.
 }
 
 // 7.3.9 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
-ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<void> Object::define_property_or_throw(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
@@ -196,12 +205,12 @@ ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyKey const& prop
         return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
     }
 
-    // 3. Return success.
-    return success;
+    // 3. Return unused.
+    return {};
 }
 
 // 7.3.10 DeletePropertyOrThrow ( O, P ), https://tc39.es/ecma262/#sec-deletepropertyorthrow
-ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyKey const& property_key)
+ThrowCompletionOr<void> Object::delete_property_or_throw(PropertyKey const& property_key)
 {
     auto& vm = this->vm();
 
@@ -216,8 +225,8 @@ ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyKey const& prop
         return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDeleteReturnedFalse);
     }
 
-    // 3. Return success.
-    return success;
+    // 3. Return unused.
+    return {};
 }
 
 // 7.3.12 HasProperty ( O, P ), https://tc39.es/ecma262/#sec-hasproperty
@@ -393,7 +402,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
             // i. Assert: kind is key+value.
             VERIFY(kind == PropertyKind::KeyAndValue);
 
-            // ii. Let entry be ! CreateArrayFromList(« key, value »).
+            // ii. Let entry be CreateArrayFromList(« key, value »).
             auto entry = Array::create_from(global_object, { key, value });
 
             // iii. Append entry to properties.
@@ -406,10 +415,10 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
 }
 
 // 7.3.26 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object)
+ThrowCompletionOr<void> Object::copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object)
 {
     if (source.is_nullish())
-        return this;
+        return {};
 
     auto* from_object = MUST(source.to_object(global_object));
 
@@ -425,7 +434,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
             TRY(create_data_property_or_throw(next_key, prop_value));
         }
     }
-    return this;
+    return {};
 }
 
 // 7.3.27 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
@@ -753,7 +762,7 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_key, Va
     // 2. Let ownDesc be ? O.[[GetOwnProperty]](P).
     auto own_descriptor = TRY(internal_get_own_property(property_key));
 
-    // 3. Return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
+    // 3. Return ? OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
     return ordinary_set_with_own_descriptor(property_key, value, receiver, own_descriptor);
 }
 

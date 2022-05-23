@@ -74,22 +74,29 @@ set(KERNEL_SOURCES
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
     GlobalProcessExposed.cpp
+    Graphics/Bochs/DisplayConnector.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
+    Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp
     Graphics/Console/GenericFramebufferConsole.cpp
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
     Graphics/Console/VGAConsole.cpp
-    Graphics/FramebufferDevice.cpp
+    Graphics/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
+    Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
+    Graphics/VGA/DisplayConnector.cpp
     Graphics/VGA/ISAAdapter.cpp
     Graphics/VGA/PCIAdapter.cpp
-    Graphics/VirtIOGPU/FramebufferDevice.cpp
+    Graphics/VGA/VGACompatibleAdapter.cpp
+    Graphics/VMWare/Console.cpp
+    Graphics/VMWare/GraphicsAdapter.cpp
+    Graphics/VMWare/DisplayConnector.cpp
+    Graphics/VirtIOGPU/DisplayConnector.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    Graphics/GenericFramebufferDevice.cpp
     SanCov.cpp
     Storage/ATA/AHCIController.cpp
     Storage/ATA/AHCIPort.cpp
@@ -274,6 +281,7 @@ set(KERNEL_SOURCES
     Syscalls/unlink.cpp
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
+    Syscalls/utimensat.cpp
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
@@ -390,71 +398,76 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${CRYPTO_SOURCES}
     )
 else()
-    set(PREKERNEL_SOURCES
-        Arch/aarch64/Prekernel/PrekernelMMU.cpp
-        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
-        Arch/aarch64/Prekernel/PrekernelCommon.cpp
-        Arch/aarch64/Prekernel/boot.S
-        Arch/aarch64/Prekernel/Aarch64_asm_utils.S
-
-        Prekernel/UBSanitizer.cpp
-    )
     set(RPI_SOURCES
-        Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
+        Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/Mailbox.cpp
+        Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
-        Arch/aarch64/RPi/MMIO.cpp
     )
     set(SOURCES
         ${AK_SOURCES}
-        ${PREKERNEL_SOURCES}
         ${RPI_SOURCES}
 
+        Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/Exceptions.cpp
+        Arch/aarch64/init.cpp
+        Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
+        Arch/aarch64/Panic.cpp
+        Arch/aarch64/Processor.cpp
+        Arch/aarch64/SafeMem.cpp
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/Utils.cpp
-        Arch/aarch64/init.cpp
+        Arch/aarch64/Spinlock.cpp
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
-        Heap/kmalloc.cpp
+        KSyms.cpp
         MiniStdLib.cpp
+        UBSanitizer.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
         Memory/InodeVMObject.cpp
-        Memory/PhysicalRegion.cpp
-        Memory/PhysicalPage.cpp
-        Memory/PhysicalZone.cpp
-        Memory/PageDirectory.cpp
         Memory/MemoryManager.cpp
+        Memory/PageDirectory.cpp
+        Memory/PhysicalPage.cpp
+        Memory/PhysicalRegion.cpp
+        Memory/PhysicalZone.cpp
         Memory/PrivateInodeVMObject.cpp
         Memory/Region.cpp
         Memory/RegionTree.cpp
         Memory/RingBuffer.cpp
-        Memory/SharedInodeVMObject.cpp
         Memory/ScatterGatherList.cpp
+        Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
     add_compile_options(-mno-outline-atomics -latomic)
+
+    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
+    add_compile_options(-Wno-nonnull)
 endif()
 
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
+
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)
+elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_compile_options(-mgeneral-regs-only)
 endif()
+
 add_compile_options(-fno-asynchronous-unwind-tables)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-fno-exceptions)
@@ -471,6 +484,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 
     set(TARGET_STRING "")
+
+
+    # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
+    set_source_files_properties(MiniStdLib.cpp
+        PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
     add_link_options(LINKER:-z,pack-relative-relocs)
 else() # Assume Clang
@@ -533,8 +551,10 @@ elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
 endif()
 
-# Kernel Undefined Behavior Sanitizer (KUBSAN)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
+    # Kernel Undefined Behavior Sanitizer (KUBSAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
 
 # Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
 # is not currently meant to be used, besides when developing Kernel ASAN support.
@@ -551,9 +571,8 @@ endif()
 add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-endif()
+add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
@@ -584,12 +603,10 @@ if (ENABLE_KERNEL_LTO)
     endif()
 endif()
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_link_libraries(Kernel PRIVATE kernel_heap gcc)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-        target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
-    endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(Kernel PRIVATE kernel_heap gcc)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
 endif()
 
 add_custom_command(

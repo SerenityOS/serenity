@@ -163,7 +163,7 @@ public:
     VisibleType& last() { return at(size() - 1); }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType&> first_matching(TUnaryPredicate predicate) requires(!contains_reference)
+    Optional<VisibleType&> first_matching(TUnaryPredicate const& predicate) requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -174,7 +174,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType const&> first_matching(TUnaryPredicate predicate) const requires(!contains_reference)
+    Optional<VisibleType const&> first_matching(TUnaryPredicate const& predicate) const requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -185,7 +185,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType&> last_matching(TUnaryPredicate predicate) requires(!contains_reference)
+    Optional<VisibleType&> last_matching(TUnaryPredicate const& predicate) requires(!contains_reference)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
             if (predicate(at(i))) {
@@ -233,7 +233,7 @@ public:
     }
 
     template<typename TUnaryPredicate, typename U = T>
-    void insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    void insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
         MUST(try_insert_before_matching(forward<U>(value), predicate, first_index, inserted_index));
     }
@@ -415,7 +415,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    bool remove_first_matching(TUnaryPredicate predicate)
+    bool remove_first_matching(TUnaryPredicate const& predicate)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -427,7 +427,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    bool remove_all_matching(TUnaryPredicate predicate)
+    bool remove_all_matching(TUnaryPredicate const& predicate)
     {
         bool something_was_removed = false;
         for (size_t i = 0; i < size();) {
@@ -507,7 +507,7 @@ public:
     }
 
     template<typename TUnaryPredicate, typename U = T>
-    ErrorOr<void> try_insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
         for (size_t i = first_index; i < size(); ++i) {
             if (predicate(at(i))) {

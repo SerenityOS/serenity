@@ -1,111 +1,67 @@
-# Patches for glib (and submodules) on SerenityOS
+# Patches for glib on SerenityOS
 
 ## `0001-poll.h-is-located-at-root.patch`
 
-glib includes poll.h from sys/poll.h, but our poll.h is located at root.
+meson.build: 'poll.h' is located at root, not 'sys/poll.h'
 
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
 
 ## `0002-use-glib-in-built-C_IN.patch`
 
-We do not have C_IN so use glib's in-built C_IN
+gio/meson.build: Use glib's in-built C_IN
 
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
+Since we do not have C_IN and glib has functionality for providing it,
+let glib provide it.
 
 ## `0003-let-glib-know-where-our-resolv.h-is.patch`
 
-Let glib's res_query_test know where our resolv.h is located.
+gio/meson.build: Let glib know where our 'resolv.h' is located
 
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
 
 ## `0004-disable-IPV6-support.patch`
 
-Disable IPV6 support since we do not support that yet.
+meson.build: Disable IPV6 support
 
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
+Serenity does not have IPV6 support so disable it
 
 ## `0005-serenity-does-not-have-IN_MULTICAST.patch`
 
-Since Serenity does not have IN_MULTICAST we just return 0 instead of calling IN_MULTICAST.
+gio/ginetaddress.c: Serenity does not have IN_MULTICAST, just return 0
 
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
+Since Serenity does not have IN_MULTICAST we just return 0
 
 ## `0006-conflict-rename-gio-mount-function.patch`
 
-Somehow we get a conflict with glib's mount function. This patch renames glib's mount function to gio_mount.
+gio/gio-tool-mount.c: Rename glib/gio mount function to gio_mount
 
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
+Somehow glib picks up on Serenity's mount function and gets confused
 
 ## `0009-include-section-with-missing-functionality.patch`
 
-This includes a bigger section with functionality that Serenity is missing.
+gio/gthredresolver.c: Need to include this section
 
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
+Serenity is missing all that is defined in this section so let's
+include it.
 
 ## `0010-stub-for-function-dn_expand.patch`
 
-Adds a stub for the function dn_expand.
+gio/gthreadedresolver.c: Add stub for function dn_expand.
 
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
+Serenity is missing dn_expand so include a stub for it
 
 ## `0011-ntohl-ntohs-located-in-arpa-inet.h.patch`
 
-In Serenity ntohl/ntohs is located in arpa/inet.h, other stuff glib needs is included in 'netinet/in.h'.
+gio/xdgmime/xdgmimecache.c: ntohl/ntohs is located in 'arpa/inet.h'
 
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
+In Serenity ntohl/ntohs is located in arpa/inet.h, other stuff glib
+needs is included in 'netinet/in.h'.
 
 ## `0012-include-strings.h-for-strcasecmp.patch`
 
-Include 'strings.h' for strcasecmp.
+Include 'strings.h' for strcasecmp
 
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
 
 ## `0013-nameser.h-is-not-needed.patch`
 
-glib compiles fine without arpa/nameser.h so do not include since we do not yet support it.
+arpa/nameser.h is not needed, and Serenity does not have it at the moment.
 
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
+

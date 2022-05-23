@@ -53,10 +53,10 @@ public:
         No,
     };
 
-    enum class FrameBufferDevices {
+    enum class GraphicsSubsystemMode {
         Enabled,
-        ConsoleOnly,
-        BootloaderOnly
+        Limited,
+        Disabled
     };
 
     [[nodiscard]] StringView string() const { return m_string->view(); }
@@ -74,7 +74,7 @@ public:
     [[nodiscard]] bool is_pci_disabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
-    [[nodiscard]] FrameBufferDevices are_framebuffer_devices_enabled() const;
+    [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;

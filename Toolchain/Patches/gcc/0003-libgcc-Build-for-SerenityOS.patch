@@ -1,0 +1,82 @@
+From 9297a27635e83df95c644b9f776d65078c97162e Mon Sep 17 00:00:00 2001
+From: Andreas Kling <awesomekling@gmail.com>
+Date: Mon, 16 May 2022 15:01:06 +0200
+Subject: [PATCH 3/6] libgcc: Build for SerenityOS
+
+This patch enables building gcc's own C runtime files, and sets up
+exception handling support.
+
+Co-Authored-By: Gunnar Beutner <gbeutner@serenityos.org>
+Co-Authored-By: Itamar <itamar8910@gmail.com>
+Co-Authored-By: Nico Weber <thakis@chromium.org>
+Co-Authored-By: Andrew Kaster <andrewdkaster@gmail.com>
+Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
+Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
+Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+---
+ gcc/configure               |  3 +++
+ libgcc/config.host          | 16 ++++++++++++++++
+ libgcc/unwind-dw2-fde-dip.c |  6 ++++++
+ 3 files changed, 25 insertions(+)
+
+diff --git a/gcc/configure b/gcc/configure
+index 5ce055771..2deaac5bc 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -31608,6 +31608,9 @@ case "$target" in
+   *-linux-musl*)
+     gcc_cv_target_dl_iterate_phdr=yes
+     ;;
++  *-serenity*)
++    gcc_cv_target_dl_iterate_phdr=yes
++    ;;
+ esac
+ 
+ if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 8c56fcae5..f5855cfa6 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -1534,6 +1534,22 @@ nvptx-*)
+ 	tmake_file="$tmake_file nvptx/t-nvptx"
+ 	extra_parts="crt0.o"
+ 	;;
++i[34567]86-*-serenity*)
++	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc t-eh-dw2-dip"
++	;;
++x86_64-*-serenity*)
++	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc t-eh-dw2-dip"
++	;;
++aarch64-*-serenity*)
++	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
++	extra_parts="$extra_parts crtfastmath.o"
++	tmake_file="$tmake_file ${cpu_type}/t-aarch64"
++	tmake_file="$tmake_file ${cpu_type}/t-lse t-slibgcc-libgcc"
++	tmake_file="$tmake_file ${cpu_type}/t-softfp t-softp t-crtfm"
++	md_unwind_header=aarch64/aarch64-unwind.h
++	;;
+ *)
+ 	echo "*** Configuration ${host} not supported" 1>&2
+ 	exit 1
+diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
+index 7f9be5e6b..817c3fe21 100644
+--- a/libgcc/unwind-dw2-fde-dip.c
++++ b/libgcc/unwind-dw2-fde-dip.c
+@@ -57,6 +57,12 @@
+ # define USE_PT_GNU_EH_FRAME
+ #endif
+ 
++#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
++    && defined(TARGET_DL_ITERATE_PHDR) \
++    && defined(__serenity__)
++# define USE_PT_GNU_EH_FRAME
++#endif
++
+ #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
+     && defined(TARGET_DL_ITERATE_PHDR) \
+     && defined(__linux__)
+-- 
+2.36.1
+

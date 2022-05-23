@@ -50,7 +50,7 @@ static Optional<PropertyDescriptor> string_get_own_property(StringObject const& 
     if (property_key.is_symbol())
         return {};
 
-    // 2. Let index be ! CanonicalNumericIndexString(P).
+    // 2. Let index be CanonicalNumericIndexString(P).
     auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
 
     // 3. If index is undefined, return undefined.
@@ -94,7 +94,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_p
     if (descriptor.has_value())
         return descriptor;
 
-    // 3. Return ! StringGetOwnProperty(S, P).
+    // 3. Return StringGetOwnProperty(S, P).
     return string_get_own_property(*this, property_key);
 }
 
@@ -103,7 +103,7 @@ ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyKey c
 {
     VERIFY(property_key.is_valid());
 
-    // 1. Let stringDesc be ! StringGetOwnProperty(S, P).
+    // 1. Let stringDesc be StringGetOwnProperty(S, P).
     auto string_descriptor = string_get_own_property(*this, property_key);
 
     // 2. If stringDesc is not undefined, then
@@ -111,7 +111,7 @@ ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyKey c
         // a. Let extensible be S.[[Extensible]].
         auto extensible = m_is_extensible;
 
-        // b. Return ! IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc).
+        // b. Return IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc).
         return is_compatible_property_descriptor(extensible, property_descriptor, string_descriptor);
     }
 

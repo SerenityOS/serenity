@@ -1,0 +1,28 @@
+From 06371c6e143c43c31070a80d8d717e3213316296 Mon Sep 17 00:00:00 2001
+From: Patrick Meyer <git@the-space.agency>
+Date: Thu, 28 Apr 2022 01:50:11 +0000
+Subject: [PATCH 4/5] Install in bindir
+
+FIXME: Not sure what this is exactly doing.
+
+Co-Authored-By: Yonatan Goldschmidt <yon.goldschmidt@gmail.com>
+---
+ Makefile.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index e824491..f30f508 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -97,7 +97,7 @@ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+ datarootdir = @datarootdir@
+ bindir=@bindir@
+-sbindir=@sbindir@
++sbindir=$(bindir)
+ mandir=@mandir@
+ 
+ .DELETE_ON_ERROR:
+-- 
+2.36.1
+

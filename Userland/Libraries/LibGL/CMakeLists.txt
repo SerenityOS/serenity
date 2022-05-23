@@ -1,20 +1,16 @@
 set(SOURCES
-    GLBlend.cpp
-    GLColor.cpp
+    ClipPlanes.cpp
+    ContextParameter.cpp
+    GLAPI.cpp
     GLContext.cpp
-    GLDraw.cpp
-    GLFog.cpp
-    GLLights.cpp
-    GLLists.cpp
-    GLMap.cpp
-    GLMatrix.cpp
-    GLStencil.cpp
-    GLTexture.cpp
-    GLUtils.cpp
-    GLVert.cpp
-    GLVertexArrays.cpp
+    Lighting.cpp
+    Lists.cpp
+    Matrix.cpp
+    Stencil.cpp
     Tex/NameAllocator.cpp
     Tex/Texture2D.cpp
+    Textures.cpp
+    Vertex.cpp
 )
 
 serenity_lib(LibGL gl)

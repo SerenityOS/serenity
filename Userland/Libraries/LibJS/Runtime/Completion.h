@@ -44,6 +44,11 @@ public:
     {
     }
 
+    ALWAYS_INLINE Completion(Optional<Value> value)
+        : Completion(Type::Normal, move(value), {})
+    {
+    }
+
     ALWAYS_INLINE Completion()
         : Completion(js_undefined())
     {
@@ -80,7 +85,7 @@ public:
         if (m_type == Type::Return || m_type == Type::Throw)
             VERIFY(m_value.has_value());
 
-        // 2. If completionRecord.[[Value]] is not empty, return Completion(completionRecord).
+        // 2. If completionRecord.[[Value]] is not empty, return ? completionRecord.
         if (m_value.has_value())
             return *this;
 

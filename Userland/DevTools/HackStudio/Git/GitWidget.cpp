@@ -86,7 +86,7 @@ bool GitWidget::initialize()
         return false;
     case GitRepo::CreateResult::Type::NoGitRepo: {
         auto decision = GUI::MessageBox::show(window(), "Create git repository?", "Git", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-        if (decision != GUI::Dialog::ExecResult::ExecYes)
+        if (decision != GUI::Dialog::ExecResult::Yes)
             return false;
         m_git_repo = GitRepo::initialize_repository(m_repo_root);
         return true;

@@ -1,5 +1,7 @@
-# Patches for ja2
+# Patches for ja2 on SerenityOS
 
-## `fix_SDL2_compilation.patch`
+## `0001-Make-it-build-with-SDL-2-instead-of-1.2.patch`
 
-Migrates the source code and Makefile to use SDL 2.0 instead of version 1.2.
+Make it build with SDL 2 instead of 1.2
+
+

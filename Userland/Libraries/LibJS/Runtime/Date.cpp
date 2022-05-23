@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,7 +8,6 @@
 #include <AK/NumericLimits.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -140,7 +139,7 @@ double day_from_year(i32 y)
 double time_from_year(i32 y)
 {
     // msPerDay × DayFromYear(y)
-    return Date::ms_per_day * day_from_year(y);
+    return ms_per_day * day_from_year(y);
 }
 
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
@@ -151,12 +150,12 @@ i32 year_from_time(double t)
         return NumericLimits<i32>::max();
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
-    auto year = static_cast<i32>(t / (365.2425 * Date::ms_per_day) + 1970);
+    auto year = static_cast<i32>(t / (365.2425 * ms_per_day) + 1970);
 
     auto year_t = time_from_year(year);
     if (year_t > t)
         year--;
-    else if (year_t + days_in_year(year) * Date::ms_per_day <= t)
+    else if (year_t + days_in_year(year) * ms_per_day <= t)
         year++;
 
     return year;
@@ -222,7 +221,7 @@ u8 hour_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_hour), Date::hours_per_day));
+    return static_cast<u8>(modulo(floor(t / ms_per_hour), hours_per_day));
 }
 
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
@@ -232,7 +231,7 @@ u8 min_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_minute), Date::minutes_per_hour));
+    return static_cast<u8>(modulo(floor(t / ms_per_minute), minutes_per_hour));
 }
 
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
@@ -242,7 +241,7 @@ u8 sec_from_time(double t)
         return 0;
 
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(modulo(floor(t / Date::ms_per_second), Date::seconds_per_minute));
+    return static_cast<u8>(modulo(floor(t / ms_per_second), seconds_per_minute));
 }
 
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
@@ -251,8 +250,8 @@ u16 ms_from_time(double t)
     if (!Value(t).is_finite_number())
         return 0;
 
-    // 𝔽(ℝ(t) modulo msPerSecond)
-    return static_cast<u16>(modulo(t, Date::ms_per_second));
+    // 𝔽(ℝ(t) modulo ℝ(msPerSecond))
+    return static_cast<u16>(modulo(t, ms_per_second));
 }
 
 // 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
@@ -301,104 +300,104 @@ double utc_time(double time)
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
-Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms)
+double make_time(double hour, double min, double sec, double ms)
 {
     // 1. If hour is not finite or min is not finite or sec is not finite or ms is not finite, return NaN.
-    if (!hour.is_finite_number() || !min.is_finite_number() || !sec.is_finite_number() || !ms.is_finite_number())
-        return js_nan();
+    if (!isfinite(hour) || !isfinite(min) || !isfinite(sec) || !isfinite(ms))
+        return NAN;
 
     // 2. Let h be 𝔽(! ToIntegerOrInfinity(hour)).
-    auto h = MUST(hour.to_integer_or_infinity(global_object));
+    auto h = to_integer_or_infinity(hour);
     // 3. Let m be 𝔽(! ToIntegerOrInfinity(min)).
-    auto m = MUST(min.to_integer_or_infinity(global_object));
+    auto m = to_integer_or_infinity(min);
     // 4. Let s be 𝔽(! ToIntegerOrInfinity(sec)).
-    auto s = MUST(sec.to_integer_or_infinity(global_object));
+    auto s = to_integer_or_infinity(sec);
     // 5. Let milli be 𝔽(! ToIntegerOrInfinity(ms)).
-    auto milli = MUST(ms.to_integer_or_infinity(global_object));
+    auto milli = to_integer_or_infinity(ms);
     // 6. Let t be ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli, performing the arithmetic according to IEEE 754-2019 rules (that is, as if using the ECMAScript operators * and +).
     // NOTE: C++ arithmetic abides by IEEE 754 rules
-    auto t = ((h * Date::ms_per_hour + m * Date::ms_per_minute) + s * Date::ms_per_second) + milli;
+    auto t = ((h * ms_per_hour + m * ms_per_minute) + s * ms_per_second) + milli;
     // 7. Return t.
-    return Value(t);
+    return t;
 }
 
 // Day(t), https://tc39.es/ecma262/#eqn-Day
 double day(double time_value)
 {
-    return floor(time_value / Date::ms_per_day);
+    return floor(time_value / ms_per_day);
 }
 
 // TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
 double time_within_day(double time)
 {
     // 𝔽(ℝ(t) modulo ℝ(msPerDay))
-    return modulo(time, Date::ms_per_day);
+    return modulo(time, ms_per_day);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
-Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
+double make_day(double year, double month, double date)
 {
     // 1. If year is not finite or month is not finite or date is not finite, return NaN.
-    if (!year.is_finite_number() || !month.is_finite_number() || !date.is_finite_number())
-        return js_nan();
+    if (!isfinite(year) || !isfinite(month) || !isfinite(date))
+        return NAN;
 
     // 2. Let y be 𝔽(! ToIntegerOrInfinity(year)).
-    auto y = MUST(year.to_integer_or_infinity(global_object));
+    auto y = to_integer_or_infinity(year);
     // 3. Let m be 𝔽(! ToIntegerOrInfinity(month)).
-    auto m = MUST(month.to_integer_or_infinity(global_object));
+    auto m = to_integer_or_infinity(month);
     // 4. Let dt be 𝔽(! ToIntegerOrInfinity(date)).
-    auto dt = MUST(date.to_integer_or_infinity(global_object));
+    auto dt = to_integer_or_infinity(date);
     // 5. Let ym be y + 𝔽(floor(ℝ(m) / 12)).
     auto ym = y + floor(m / 12);
     // 6. If ym is not finite, return NaN.
-    if (!Value(ym).is_finite_number())
-        return js_nan();
+    if (!isfinite(ym))
+        return NAN;
     // 7. Let mn be 𝔽(ℝ(m) modulo 12).
     auto mn = modulo(m, 12);
 
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(ym) || !AK::is_within_range<int>(mn + 1))
-        return js_nan();
+        return NAN;
 
     // FIXME: We are avoiding AK::years_to_days_since_epoch here because it is implemented by looping over
     //        the range [1970, ym), which will spin for any time value with an extremely large year.
-    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * Date::ms_per_day);
+    auto t = time_from_year(ym) + (day_of_year(static_cast<int>(ym), static_cast<int>(mn) + 1, 1) * ms_per_day);
 
     // 9. Return Day(t) + dt - 1𝔽.
-    return Value(day(static_cast<double>(t)) + dt - 1);
+    return day(static_cast<double>(t)) + dt - 1;
 }
 
 // 21.4.1.13 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
-Value make_date(Value day, Value time)
+double make_date(double day, double time)
 {
     // 1. If day is not finite or time is not finite, return NaN.
-    if (!day.is_finite_number() || !time.is_finite_number())
-        return js_nan();
+    if (!isfinite(day) || !isfinite(time))
+        return NAN;
 
     // 2. Let tv be day × msPerDay + time.
-    auto tv = Value(day.as_double() * Date::ms_per_day + time.as_double());
+    auto tv = day * ms_per_day + time;
 
     // 3. If tv is not finite, return NaN.
-    if (!tv.is_finite_number())
-        return js_nan();
+    if (!isfinite(tv))
+        return NAN;
 
     // 4. Return tv.
     return tv;
 }
 
 // 21.4.1.14 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
-Value time_clip(GlobalObject& global_object, Value time)
+double time_clip(double time)
 {
     // 1. If time is not finite, return NaN.
-    if (!time.is_finite_number())
-        return js_nan();
+    if (!isfinite(time))
+        return NAN;
 
     // 2. If abs(ℝ(time)) > 8.64 × 10^15, return NaN.
-    if (fabs(time.as_double()) > 8.64E15)
-        return js_nan();
+    if (fabs(time) > 8.64E15)
+        return NAN;
 
     // 3. Return 𝔽(! ToIntegerOrInfinity(time)).
-    return Value(MUST(time.to_integer_or_infinity(global_object)));
+    return to_integer_or_infinity(time);
 }
 
 }

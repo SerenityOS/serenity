@@ -87,7 +87,7 @@ ThrowCompletionOr<void> ModuleEnvironment::create_import_binding(FlyString name,
         module,
         move(binding_name) });
 
-    // 4. Return NormalCompletion(empty).
+    // 4. Return unused.
     return {};
 }
 

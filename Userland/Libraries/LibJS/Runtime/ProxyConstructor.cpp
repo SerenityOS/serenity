@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,11 +80,11 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
         return js_undefined();
     };
 
-    // 3. Let revoker be ! CreateBuiltinFunction(revokerClosure, 0, "", « [[RevocableProxy]] »).
+    // 3. Let revoker be CreateBuiltinFunction(revokerClosure, 0, "", « [[RevocableProxy]] »).
     // 4. Set revoker.[[RevocableProxy]] to p.
     auto* revoker = NativeFunction::create(global_object, move(revoker_closure), 0, "");
 
-    // 5. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
 
     // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).

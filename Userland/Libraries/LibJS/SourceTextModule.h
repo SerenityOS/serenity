@@ -40,8 +40,8 @@ public:
     }
 
 protected:
-    virtual Completion initialize_environment(VM& vm) override;
-    virtual Completion execute_module(VM& vm, Optional<PromiseCapability> capability) override;
+    virtual ThrowCompletionOr<void> initialize_environment(VM& vm) override;
+    virtual ThrowCompletionOr<void> execute_module(VM& vm, Optional<PromiseCapability> capability) override;
 
 private:
     SourceTextModule(Realm&, StringView filename, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,

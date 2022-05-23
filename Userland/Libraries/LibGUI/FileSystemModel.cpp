@@ -384,6 +384,8 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         LexicalPath path { event.event_path };
         auto& parts = path.parts_view();
         StringView child_name = parts.last();
+        if (!m_should_show_dotfiles && child_name.starts_with("."))
+            break;
 
         auto parent_name = path.parent().string();
         auto parent = node_for_path(parent_name);

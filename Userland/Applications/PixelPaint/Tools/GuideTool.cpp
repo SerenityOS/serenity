@@ -142,7 +142,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
                     editor()->window(),
                     String::formatted("{}", m_context_menu_guide->offset()),
                     m_context_menu_guide->orientation());
-                if (dialog->exec() != GUI::Dialog::ExecOK)
+                if (dialog->exec() != GUI::Dialog::ExecResult::OK)
                     return;
                 auto offset = dialog->offset_as_pixel(*editor());
                 if (!offset.has_value())

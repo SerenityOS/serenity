@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -141,21 +141,22 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
         if (match_indices.has_value())
             match_indices_array = get_match_index_par(global_object, string, *match_indices);
 
-        // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
-        MUST(array->create_data_property(i, match_indices_array));
+        // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), matchIndicesArray).
+        MUST(array->create_data_property_or_throw(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
         auto match_indices_array = get_match_index_par(global_object, string, entry.value);
 
         // e. If i > 0 and groupNames[i - 1] is not undefined, then
-        //     i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
-        MUST(groups.as_object().create_data_property(entry.key, match_indices_array));
+        //     i. Assert: groups is not undefined.
+        //     ii. Perform ! CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray).
+        MUST(groups.as_object().create_data_property_or_throw(entry.key, match_indices_array));
     }
 
-    // 8. Perform ! CreateDataProperty(A, "groups", groups).
+    // 8. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     // NOTE: This step must be performed after the above loops in order for groups to be populated.
-    MUST(array->create_data_property(vm.names.groups, groups));
+    MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
     // 10. Return A.
     return array;
@@ -166,7 +167,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
 {
     auto& vm = global_object.vm();
 
-    // 1. Let length be the number of code units in S.
+    // 1. Let length be the length of S.
     // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
@@ -274,7 +275,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
 
     // 29. If R contains any GroupName, then
-    //     a. Let groups be ! OrdinaryObjectCreate(null).
+    //     a. Let groups be OrdinaryObjectCreate(null).
     //     b. Let hasGroups be true.
     // 30. Else,
     //     a. Let groups be undefined.
@@ -390,12 +391,12 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     if (!unicode)
         return index + 1;
 
-    // 3. Let length be the number of code units in S.
+    // 3. Let length be the length of S.
     // 4. If index + 1 ≥ length, return index + 1.
     if (index + 1 >= string.length_in_code_units())
         return index + 1;
 
-    // 5. Let cp be ! CodePointAt(S, index).
+    // 5. Let cp be CodePointAt(S, index).
     auto code_point = code_point_at(string, index);
 
     // 6. Return index + cp.[[CodeUnitCount]].
@@ -458,17 +459,17 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 
     // 4. Let hasIndices be ToBoolean(? Get(R, "hasIndices")).
     // 5. If hasIndices is true, append the code unit 0x0064 (LATIN SMALL LETTER D) as the last code unit of result.
-    // 6. Let global be ! ToBoolean(? Get(R, "global")).
+    // 6. Let global be ToBoolean(? Get(R, "global")).
     // 7. If global is true, append the code unit 0x0067 (LATIN SMALL LETTER G) as the last code unit of result.
-    // 8. Let ignoreCase be ! ToBoolean(? Get(R, "ignoreCase")).
+    // 8. Let ignoreCase be ToBoolean(? Get(R, "ignoreCase")).
     // 9. If ignoreCase is true, append the code unit 0x0069 (LATIN SMALL LETTER I) as the last code unit of result.
-    // 10. Let multiline be ! ToBoolean(? Get(R, "multiline")).
+    // 10. Let multiline be ToBoolean(? Get(R, "multiline")).
     // 11. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
-    // 12. Let dotAll be ! ToBoolean(? Get(R, "dotAll")).
+    // 12. Let dotAll be ToBoolean(? Get(R, "dotAll")).
     // 13. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
-    // 14. Let unicode be ! ToBoolean(? Get(R, "unicode")).
+    // 14. Let unicode be ToBoolean(? Get(R, "unicode")).
     // 15. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
-    // 16. Let sticky be ! ToBoolean(? Get(R, "sticky")).
+    // 16. Let sticky be ToBoolean(? Get(R, "sticky")).
     // 17. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
     auto flag_##flag_name = TRY(regexp_object->get(vm.names.flagName)); \
@@ -491,7 +492,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
-    // 4. Let global be ! ToBoolean(? Get(rx, "global")).
+    // 4. Let global be ToBoolean(? Get(rx, "global")).
     bool global = TRY(regexp_object->get(vm.names.global)).to_boolean();
 
     // 5. If global is false, then
@@ -503,7 +504,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // 6. Else,
     // a. Assert: global is true.
 
-    // b. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
+    // b. Let fullUnicode be ToBoolean(? Get(rx, "unicode")).
     bool full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
 
     // c. Perform ? Set(rx, "lastIndex", +0𝔽, true).
@@ -587,7 +588,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     // 8. Perform ? Set(matcher, "lastIndex", lastIndex, true).
     TRY(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
-    // 13. Return ! CreateRegExpStringIterator(matcher, S, global, fullUnicode).
+    // 13. Return CreateRegExpStringIterator(matcher, S, global, fullUnicode).
     return RegExpStringIterator::create(global_object, *matcher, move(string), global, full_unicode);
 }
 
@@ -614,13 +615,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         replace_value = js_string(vm, move(replace_string));
     }
 
-    // 7. Let global be ! ToBoolean(? Get(rx, "global")).
+    // 7. Let global be ToBoolean(? Get(rx, "global")).
     bool global = TRY(regexp_object->get(vm.names.global)).to_boolean();
     bool full_unicode = false;
 
     // 8. If global is true, then
     if (global) {
-        // a. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
+        // a. Let fullUnicode be ToBoolean(? Get(rx, "unicode")).
         full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
 
         // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
@@ -680,7 +681,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto matched_value = TRY(result.get(global_object, 0));
         auto matched = TRY(matched_value.to_utf16_string(global_object));
 
-        // d. Let matchLength be the number of code units in matched.
+        // d. Let matchLength be the length of matched.
         auto matched_length = matched.length_in_code_units();
 
         // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).

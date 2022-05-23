@@ -1,19 +1,26 @@
 # Patches for cfunge on SerenityOS
 
-## `arc4random_buf.patch`
-Somewhere on the way of configuring the variable `HAVE_arc4random_buf` was set which lead to the linker complaining about not knowing a certain `arc4random_stir()` function.
-This patch just negates the define and the linker is happy.
+## `0001-Tell-prng.c-that-we-don-t-have-arc4random_buf.patch`
+
+Tell prng.c that we don't have arc4random_buf
+
+FIXME: This function does exist, perhaps outdated or some issue -
+       explain the issue here if so.
+
+## `0002-Define-MAX-inline-instead-of-using-sys-param.h.patch`
+
+Define MAX inline instead of using sys/param.h
 
 
-## `define-max.patch`
-It is expected that `sys/param.h` defines a `MAX` macro. We don't. So here the needed macro is just inserted instead of the include.
+## `0003-define-_POSIX_MAPPED_FILES.patch`
 
+define _POSIX_MAPPED_FILES
 
-## `posix-mapped-files.patch`
-It is expected that `_POSIX_MAPPED_FILES` is defined as at least `1`, so we do that here.
+Serenity has a working mmap().
 
+## `0004-Define-_POSIX_REGEXP.patch`
 
-## `posix-regexp.patch`
-Same as before, just for `_POSIX_REGEXP`
+Define _POSIX_REGEXP
 
+Serenity's libc does have regex.
 

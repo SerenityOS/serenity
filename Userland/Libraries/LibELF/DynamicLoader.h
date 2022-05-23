@@ -42,7 +42,7 @@ enum class ShouldInitializeWeak {
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename, String filepath);
     ~DynamicLoader();
 
     String const& filename() const { return m_filename; }
@@ -83,7 +83,7 @@ public:
     DynamicObject const& dynamic_object() const;
 
 private:
-    DynamicLoader(int fd, String filename, void* file_data, size_t file_size);
+    DynamicLoader(int fd, String filename, void* file_data, size_t file_size, String filepath);
 
     class ProgramHeaderRegion {
     public:
@@ -135,6 +135,7 @@ private:
     ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 
     String m_filename;
+    String m_filepath;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
     void* m_file_data { nullptr };

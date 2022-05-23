@@ -353,6 +353,7 @@ public:
     ErrorOr<FlatPtr> sys$mkdir(Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
+    ErrorOr<FlatPtr> sys$utimensat(Userspace<Syscall::SC_utimensat_params const*>);
     ErrorOr<FlatPtr> sys$link(Userspace<Syscall::SC_link_params const*>);
     ErrorOr<FlatPtr> sys$unlink(int dirfd, Userspace<char const*> pathname, size_t path_length, int flags);
     ErrorOr<FlatPtr> sys$symlink(Userspace<Syscall::SC_symlink_params const*>);
@@ -591,6 +592,9 @@ public:
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS const&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_children_directory(ProcFS const&, StringView name) const;
+    ErrorOr<void> traverse_children_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
+    ErrorOr<size_t> procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const;
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()

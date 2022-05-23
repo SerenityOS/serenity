@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
     auto* plural_rules = TRY(typed_this_object(global_object));
 
-    // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
 
     // 4. For each row of Table 13, except the header row, in table order, do
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // FIXME: Implement this when the data is available in LibUnicode.
     MarkedVector<Value> plural_categories { vm.heap() };
 
-    // 6. Perform ! CreateDataProperty(options, "pluralCategories", ! CreateArrayFromList(pluralCategories)).
+    // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
     MUST(options->create_data_property_or_throw(vm.names.pluralCategories, Array::create_from(global_object, plural_categories)));
 
     // 7. Return options.

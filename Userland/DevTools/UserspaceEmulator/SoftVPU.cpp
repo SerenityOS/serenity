@@ -18,14 +18,35 @@ void SoftVPU::PREFETCHT2(X86::Instruction const&) { TODO(); }
 void SoftVPU::LDMXCSR(X86::Instruction const& insn)
 {
     // FIXME: Shadows
-    m_mxcsr = insn.modrm().read32(m_cpu, insn).value();
+    m_mxcsr.mxcsr = insn.modrm().read32(m_cpu, insn).value();
+
     // #GP - General Protection Fault
-    VERIFY((m_mxcsr & 0xFFFF'0000) == 0);
+    VERIFY((m_mxcsr.mxcsr & 0xFFFF'0000) == 0);
+
+    // Just let the host's SSE (or if not available x87) handle the rounding for us
+    // We do not want to accedentally raise an FP-Exception on the host, so we
+    // mask all exceptions
+#ifdef __SSE__
+    AK::MXCSR temp = m_mxcsr;
+    temp.invalid_operation_mask = 1;
+    temp.denormal_operation_mask = 1;
+    temp.divide_by_zero_mask = 1;
+    temp.overflow_mask = 1;
+    temp.underflow_mask = 1;
+    temp.precision_mask = 1;
+    AK::set_mxcsr(temp);
+#else
+    // FIXME: This will mess with x87-land, because it uses the same trick, and
+    //        Does not know of us doing this
+    AK::X87ControlWord cw { 0x037F };
+    cw.rounding_control = m_mxcsr.rounding_control;
+    AK::set_cw_x87(cw);
+#endif
 }
 void SoftVPU::STMXCSR(X86::Instruction const& insn)
 {
     // FIXME: Shadows
-    insn.modrm().write32(m_cpu, insn, ValueWithShadow<u32>::create_initialized(m_mxcsr));
+    insn.modrm().write32(m_cpu, insn, ValueWithShadow<u32>::create_initialized(m_mxcsr.mxcsr));
 }
 
 void SoftVPU::MOVUPS_xmm1_xmm2m128(X86::Instruction const& insn)
@@ -222,7 +243,7 @@ void SoftVPU::CVTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision
     insn.modrm().write32(m_cpu, insn,
-        ValueWithShadow<u32>::create_initialized((u32)lround(m_xmm[insn.modrm().reg()].ps[0])));
+        ValueWithShadow<u32>::create_initialized(static_cast<i32>(m_xmm[insn.modrm().reg()].ps[0])));
 }
 
 void SoftVPU::UCOMISS_xmm1_xmm2m32(X86::Instruction const& insn)

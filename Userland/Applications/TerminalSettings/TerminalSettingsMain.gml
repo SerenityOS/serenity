@@ -61,4 +61,17 @@
             orientation: "Horizontal"
         }
     }
+
+    @GUI::GroupBox {
+        title: "Exit Behaviour"
+        shrink_to_fit: true
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+        }
+
+        @GUI::CheckBox {
+            name: "terminal_confirm_close"
+            text: "Ask before closing if processes are running in the terminal"
+        }
+    }
 }

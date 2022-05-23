@@ -1545,6 +1545,8 @@ ErrorOr<void> Ext2FSInode::set_atime(time_t t)
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
+    if (t > INT32_MAX)
+        return EINVAL;
     m_raw_inode.i_atime = t;
     set_metadata_dirty(true);
     return {};

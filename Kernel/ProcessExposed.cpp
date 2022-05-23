@@ -67,6 +67,11 @@ InodeIndex build_segmented_index_for_file_description(ProcessID pid, unsigned fd
     return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::OpenFileDescriptions, fd);
 }
 
+InodeIndex build_segmented_index_for_children(ProcessID pid, ProcessID child_pid)
+{
+    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::Children, child_pid.value());
+}
+
 }
 
 static size_t s_allocate_global_inode_index()

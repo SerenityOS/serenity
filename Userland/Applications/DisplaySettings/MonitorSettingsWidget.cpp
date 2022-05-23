@@ -43,6 +43,7 @@ void MonitorSettingsWidget::create_resolution_list()
     m_resolutions.append({ 1600, 1200 });
     m_resolutions.append({ 1920, 1080 });
     m_resolutions.append({ 2048, 1152 });
+    m_resolutions.append({ 2256, 1504 });
     m_resolutions.append({ 2560, 1080 });
     m_resolutions.append({ 2560, 1440 });
     m_resolutions.append({ 3440, 1440 });
@@ -91,6 +92,7 @@ void MonitorSettingsWidget::create_frame()
         // Try to auto re-arrange things if there are overlaps or disconnected screens
         m_screen_layout.normalize();
         selected_screen_index_or_resolution_changed();
+        set_modified(true);
     };
 
     m_display_scale_radio_1x = *find_descendant_of_type_named<GUI::RadioButton>("scale_1x");
@@ -102,6 +104,7 @@ void MonitorSettingsWidget::create_frame()
             m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(1);
             m_monitor_widget->update();
+            set_modified(true);
         }
     };
     m_display_scale_radio_2x = *find_descendant_of_type_named<GUI::RadioButton>("scale_2x");
@@ -113,6 +116,7 @@ void MonitorSettingsWidget::create_frame()
             m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(2);
             m_monitor_widget->update();
+            set_modified(true);
         }
     };
 
@@ -208,12 +212,12 @@ void MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
         dbgln("unexpected ScaleFactor {}, setting to 1", screen.scale_factor);
         screen.scale_factor = 1;
     }
-    (screen.scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true);
+    (screen.scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true, GUI::AllowCallback::No);
     m_monitor_widget->set_desktop_scale_factor(screen.scale_factor);
 
     // Select the current selected resolution as it may differ
     m_monitor_widget->set_desktop_resolution(current_resolution);
-    m_resolution_combo->set_selected_index(index);
+    m_resolution_combo->set_selected_index(index, GUI::AllowCallback::No);
 
     m_monitor_widget->update();
 }
@@ -250,7 +254,7 @@ void MonitorSettingsWidget::apply_settings()
             revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
-            if (box->exec() == GUI::MessageBox::ExecYes) {
+            if (box->exec() == GUI::MessageBox::ExecResult::Yes) {
                 auto save_result = GUI::ConnectionToWindowServer::the().save_screen_layout();
                 if (!save_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),

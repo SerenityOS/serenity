@@ -39,6 +39,7 @@ extern "C" {
 #define O_NOFOLLOW (1 << 10)
 #define O_CLOEXEC (1 << 11)
 #define O_DIRECT (1 << 12)
+#define O_SYNC (1 << 13)
 
 #define F_RDLCK ((short)0)
 #define F_WRLCK ((short)1)

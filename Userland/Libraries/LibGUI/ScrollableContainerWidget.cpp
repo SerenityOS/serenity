@@ -37,25 +37,31 @@ void ScrollableContainerWidget::update_widget_size()
     if (!m_widget)
         return;
     m_widget->do_layout();
-    if (m_widget->is_shrink_to_fit() && m_widget->layout()) {
-        auto new_size = Widget::content_size();
+    auto new_size = Widget::content_size();
+
+    if (m_widget->layout()) {
         auto preferred_size = m_widget->layout()->preferred_size();
-        if (preferred_size.width() != -1)
-            new_size.set_width(preferred_size.width());
-        if (preferred_size.height() != -1)
-            new_size.set_height(preferred_size.height());
-        m_widget->resize(new_size);
-        set_content_size(new_size);
-    } else {
-        auto inner_size = Widget::content_size();
-        auto min_size = m_widget->min_size();
-        auto new_size = Gfx::Size {
-            max(inner_size.width(), min_size.width()),
-            max(inner_size.height(), min_size.height())
-        };
-        m_widget->resize(new_size);
-        set_content_size(new_size);
+        if (m_widget->is_shrink_to_fit()) {
+            if (preferred_size.width() != -1)
+                new_size.set_width(preferred_size.width());
+            if (preferred_size.height() != -1)
+                new_size.set_height(preferred_size.height());
+        } else {
+            new_size = Gfx::Size {
+                max(new_size.width(), preferred_size.width()),
+                max(new_size.height(), preferred_size.height())
+            };
+        }
     }
+
+    auto min_size = m_widget->min_size();
+    new_size = Gfx::Size {
+        max(new_size.width(), min_size.width()),
+        max(new_size.height(), min_size.height()),
+    };
+
+    m_widget->resize(new_size);
+    set_content_size(new_size);
 }
 
 void ScrollableContainerWidget::resize_event(GUI::ResizeEvent& event)
@@ -96,7 +102,7 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
     });
 
     auto content_widget_value = object->get_property("content_widget"sv);
-    if (!content_widget_value.is_null() && !is<Object>(content_widget_value.ptr())) {
+    if (!content_widget_value.is_null() && !is<GUI::GML::Object>(content_widget_value.ptr())) {
         dbgln("content widget is not an object");
         return false;
     }
@@ -108,7 +114,7 @@ bool ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> 
         return false;
     }
 
-    if (!content_widget_value.is_null() && is<Object>(content_widget_value.ptr())) {
+    if (!content_widget_value.is_null() && is<GUI::GML::Object>(content_widget_value.ptr())) {
         auto content_widget = static_ptr_cast<GUI::GML::Object>(content_widget_value);
         auto class_name = content_widget->name();
 

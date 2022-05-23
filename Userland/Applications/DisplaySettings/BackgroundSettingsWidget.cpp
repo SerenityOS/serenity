@@ -61,6 +61,7 @@ void BackgroundSettingsWidget::create_frame()
         }
 
         m_monitor_widget->set_wallpaper(path);
+        set_modified(true);
     };
 
     m_context_menu = GUI::Menu::construct();
@@ -71,7 +72,12 @@ void BackgroundSettingsWidget::create_frame()
     m_context_menu->add_action(*m_show_in_file_manager_action);
 
     m_context_menu->add_separator();
-    m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) { GUI::Clipboard::the().set_plain_text(m_monitor_widget->wallpaper()); }, this);
+    m_copy_action = GUI::CommonActions::make_copy_action(
+        [this](auto&) {
+            auto url = URL::create_with_file_protocol(m_monitor_widget->wallpaper()).to_string();
+            GUI::Clipboard::the().set_data(url.bytes(), "text/uri-list");
+        },
+        this);
     m_context_menu->add_action(*m_copy_action);
 
     m_wallpaper_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
@@ -88,6 +94,7 @@ void BackgroundSettingsWidget::create_frame()
         m_wallpaper_view->selection().clear();
         m_monitor_widget->set_wallpaper(path.value());
         m_background_settings_changed = true;
+        set_modified(true);
     };
 
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
@@ -98,6 +105,7 @@ void BackgroundSettingsWidget::create_frame()
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
         m_background_settings_changed = !first_mode_change;
         first_mode_change = false;
+        set_modified(true);
     };
 
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
@@ -108,6 +116,7 @@ void BackgroundSettingsWidget::create_frame()
         m_monitor_widget->set_background_color(m_color_input->color());
         m_background_settings_changed = !first_color_change;
         first_color_change = false;
+        set_modified(true);
     };
 }
 
@@ -128,7 +137,7 @@ void BackgroundSettingsWidget::load_current_settings()
         mode = "center";
     }
     m_monitor_widget->set_wallpaper_mode(mode);
-    m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0));
+    m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0), GUI::AllowCallback::No);
 
     auto palette_desktop_color = palette().desktop_background();
     auto background_color = ws_config->read_entry("Background", "Color", "");
@@ -139,7 +148,7 @@ void BackgroundSettingsWidget::load_current_settings()
             palette_desktop_color = opt_color.value();
     }
 
-    m_color_input->set_color(palette_desktop_color);
+    m_color_input->set_color(palette_desktop_color, GUI::AllowCallback::No);
     m_monitor_widget->set_background_color(palette_desktop_color);
     m_background_settings_changed = false;
 }

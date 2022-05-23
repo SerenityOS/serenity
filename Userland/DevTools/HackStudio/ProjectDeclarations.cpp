@@ -11,14 +11,14 @@ HackStudio::ProjectDeclarations& HackStudio::ProjectDeclarations::the()
     static ProjectDeclarations s_instance;
     return s_instance;
 }
-void HackStudio::ProjectDeclarations::set_declared_symbols(String const& filename, Vector<GUI::AutocompleteProvider::Declaration> const& declarations)
+void HackStudio::ProjectDeclarations::set_declared_symbols(String const& filename, Vector<CodeComprehension::Declaration> const& declarations)
 {
     m_document_to_declarations.set(filename, declarations);
     if (on_update)
         on_update();
 }
 
-Optional<GUI::Icon> HackStudio::ProjectDeclarations::get_icon_for(GUI::AutocompleteProvider::DeclarationType type)
+Optional<GUI::Icon> HackStudio::ProjectDeclarations::get_icon_for(CodeComprehension::DeclarationType type)
 {
     static GUI::Icon struct_icon(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/Struct.png").release_value_but_fixme_should_propagate_errors());
     static GUI::Icon class_icon(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/Class.png").release_value_but_fixme_should_propagate_errors());
@@ -28,19 +28,19 @@ Optional<GUI::Icon> HackStudio::ProjectDeclarations::get_icon_for(GUI::Autocompl
     static GUI::Icon member_icon(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/Member.png").release_value_but_fixme_should_propagate_errors());
     static GUI::Icon namespace_icon(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/Namespace.png").release_value_but_fixme_should_propagate_errors());
     switch (type) {
-    case GUI::AutocompleteProvider::DeclarationType::Struct:
+    case CodeComprehension::DeclarationType::Struct:
         return struct_icon;
-    case GUI::AutocompleteProvider::DeclarationType::Class:
+    case CodeComprehension::DeclarationType::Class:
         return class_icon;
-    case GUI::AutocompleteProvider::DeclarationType::Function:
+    case CodeComprehension::DeclarationType::Function:
         return function_icon;
-    case GUI::AutocompleteProvider::DeclarationType::Variable:
+    case CodeComprehension::DeclarationType::Variable:
         return variable_icon;
-    case GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition:
+    case CodeComprehension::DeclarationType::PreprocessorDefinition:
         return preprocessor_icon;
-    case GUI::AutocompleteProvider::DeclarationType::Member:
+    case CodeComprehension::DeclarationType::Member:
         return member_icon;
-    case GUI::AutocompleteProvider::DeclarationType::Namespace:
+    case CodeComprehension::DeclarationType::Namespace:
         return namespace_icon;
     default:
         return {};

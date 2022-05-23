@@ -113,7 +113,7 @@ NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
 
 NonnullRefPtr<Action> make_help_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    auto action = Action::create("&Contents", { Mod_None, Key_F1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    auto action = Action::create("&Manual", { Mod_None, Key_F1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), move(callback), parent);
     action->set_status_tip("Show help contents");
     return action;
 }

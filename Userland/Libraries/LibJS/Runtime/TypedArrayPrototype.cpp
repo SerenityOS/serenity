@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -1383,7 +1383,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         // b. Let kValue be ! Get(O, Pk).
         auto value = MUST(typed_array->get(i));
 
-        // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+        // c. Let selected be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
         auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then
@@ -1478,7 +1478,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     // has a fixed length and whose integer-indexed properties are not sparse.
     auto length = typed_array->array_length();
 
-    // 3. Let separator be the String value for the list-separator String appropriate for the host environment's current locale (this is derived in an implementation-defined way).
+    // 3. Let separator be the implementation-defined list-separator String value appropriate for the host environment's current locale (such as ", ").
     constexpr auto separator = ',';
 
     // 4. Let R be the empty String.

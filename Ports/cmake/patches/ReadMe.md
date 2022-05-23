@@ -37,7 +37,7 @@ This patch adds the SerenityOS platform config file to CMake.
 
 cmcurl: Include unistd
 
-Everyone gets this wrong. most platforms are very lax with these includes, but we're not one of them.
+Everyone gets this wrong. Most platforms are very lax with these includes, but we're not one of them.
 
 - [X] Local?
 - [ ] Should be merged to upstream?
@@ -65,3 +65,4 @@ We don't care about building tests for now, and it makes the compilation much fa
 - [ ] Should be merged to upstream?
 - [ ] Resolves issue(s) with our side of things
 - [ ] Hack
+

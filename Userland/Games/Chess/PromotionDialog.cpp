@@ -28,7 +28,7 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
         button.set_icon(chess_widget.get_piece_graphic({ chess_widget.board().turn(), type }));
         button.on_click = [this, type](auto) {
             m_selected_piece = type;
-            done(ExecOK);
+            done(ExecResult::OK);
         };
     }
 }

@@ -9,7 +9,8 @@
 #include "CookiesModel.h"
 #include "LocalStorageModel.h"
 #include "Tab.h"
-#include <LibGUI/SortingProxyModel.h>
+#include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Cookie/Cookie.h>
 
@@ -20,7 +21,7 @@ class StorageWidget final : public GUI::Widget {
 
 public:
     virtual ~StorageWidget() override = default;
-    void add_cookie(Web::Cookie::Cookie const& cookie);
+    void set_cookies_entries(Vector<Web::Cookie::Cookie> entries);
     void clear_cookies();
 
     void set_local_storage_entries(OrderedHashMap<String, String> entries);
@@ -30,11 +31,14 @@ private:
     StorageWidget();
 
     RefPtr<GUI::TableView> m_cookies_table_view;
+    RefPtr<GUI::TextBox> m_cookies_textbox;
     RefPtr<CookiesModel> m_cookies_model;
-    RefPtr<GUI::SortingProxyModel> m_cookie_sorting_model;
+    RefPtr<GUI::FilteringProxyModel> m_cookies_filtering_model;
+
     RefPtr<GUI::TableView> m_local_storage_table_view;
+    RefPtr<GUI::TextBox> m_local_storage_textbox;
     RefPtr<LocalStorageModel> m_local_storage_model;
-    RefPtr<GUI::SortingProxyModel> m_local_storage_sorting_model;
+    RefPtr<GUI::FilteringProxyModel> m_local_storage_filtering_model;
 };
 
 }

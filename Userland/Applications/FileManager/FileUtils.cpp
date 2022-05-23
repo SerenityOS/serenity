@@ -32,7 +32,7 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
             "Confirm deletion",
             GUI::MessageBox::Type::Warning,
             GUI::MessageBox::InputType::OKCancel);
-        if (result == GUI::MessageBox::ExecCancel)
+        if (result == GUI::MessageBox::ExecResult::Cancel)
             return;
     }
 

@@ -30,6 +30,41 @@
 
 namespace GL {
 
+#define APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(name, ...) \
+    if (should_append_to_listing()) {                       \
+        append_to_listing<&GLContext::name>(__VA_ARGS__);   \
+        if (!should_execute_after_appending_to_listing())   \
+            return;                                         \
+    }
+
+#define APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(name, arg) \
+    if (should_append_to_listing()) {                                \
+        auto ptr = store_in_listing(arg);                            \
+        append_to_listing<&GLContext::name>(*ptr);                   \
+        if (!should_execute_after_appending_to_listing())            \
+            return;                                                  \
+    }
+
+#define RETURN_WITH_ERROR_IF(condition, error)                    \
+    if (condition) {                                              \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
+        if (m_error == GL_NO_ERROR)                               \
+            m_error = error;                                      \
+        return;                                                   \
+    }
+
+#define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
+    if (condition) {                                               \
+        dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error);  \
+        if (m_error == GL_NO_ERROR)                                \
+            m_error = error;                                       \
+        return return_value;                                       \
+    }
+
+constexpr size_t MODELVIEW_MATRIX_STACK_LIMIT = 64;
+constexpr size_t PROJECTION_MATRIX_STACK_LIMIT = 8;
+constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
+
 struct ContextParameter {
     GLenum type;
     bool is_capability { false };
@@ -162,8 +197,10 @@ public:
     void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type);
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
     void gl_clip_plane(GLenum plane, GLdouble const* equation);
+    void gl_get_clip_plane(GLenum plane, GLdouble* equation);
     void gl_array_element(GLint i);
     void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+    void gl_point_size(GLfloat size);
 
 private:
     void sync_device_config();
@@ -171,6 +208,7 @@ private:
     void sync_device_texcoord_config();
     void sync_light_state();
     void sync_stencil_configuration();
+    void sync_clip_planes();
 
     void build_extension_string();
 
@@ -270,6 +308,13 @@ private:
 
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
+
+    // User-defined clip planes
+    struct ClipPlaneAttributes {
+        Array<FloatVector4, 6> eye_clip_plane; // TODO: Change to use device-defined constant
+        GLuint enabled { 0 };
+    } m_clip_plane_attributes;
+    bool m_clip_planes_dirty { true };
 
     // Client side arrays
     bool m_client_side_vertex_array_enabled { false };
@@ -407,7 +452,8 @@ private:
             decltype(&GLContext::gl_get_light),
             decltype(&GLContext::gl_clip_plane),
             decltype(&GLContext::gl_array_element),
-            decltype(&GLContext::gl_copy_tex_sub_image_2d)>;
+            decltype(&GLContext::gl_copy_tex_sub_image_2d),
+            decltype(&GLContext::gl_point_size)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -446,7 +492,13 @@ private:
     GLsizei m_unpack_row_length { 0 };
     u8 m_unpack_alignment { 4 };
 
-    float m_line_width { 1.0f };
+    // Point drawing configuration
+    bool m_point_smooth { false };
+    float m_point_size { 1.f };
+
+    // Line drawing configuration
+    bool m_line_smooth { false };
+    float m_line_width { 1.f };
 
     // Lighting configuration
     bool m_lighting_enabled { false };

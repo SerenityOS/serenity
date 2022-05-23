@@ -18,8 +18,8 @@ public:
     virtual size_t bytes_per_base_glyph() const override;
     virtual size_t chars_per_line() const override;
 
-    virtual size_t max_column() const override { return m_width / 8; }
-    virtual size_t max_row() const override { return m_height / 8; }
+    virtual size_t max_column() const override { return m_width / m_pixels_per_column; }
+    virtual size_t max_row() const override { return m_height / m_pixels_per_row; }
 
     virtual bool is_hardware_paged_capable() const override { return false; }
     virtual bool has_hardware_cursor() const override { return false; }
@@ -43,10 +43,17 @@ protected:
         : Console(width, height)
         , m_pitch(pitch)
     {
+        m_cursor_overriden_pixels.fill(0);
     }
     virtual u8* framebuffer_data() = 0;
     size_t framebuffer_pitch() const { return m_pitch; }
     virtual void clear_glyph(size_t x, size_t y);
+
+    size_t const m_pixels_per_column { 8 };
+    size_t const m_pixels_per_row { 16 };
+
+    Array<u32, 8> m_cursor_overriden_pixels;
+
     size_t m_pitch;
 };
 

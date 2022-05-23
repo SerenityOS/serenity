@@ -37,13 +37,13 @@ protected:
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
 
-    virtual Completion initialize_environment(VM& vm);
-    virtual Completion execute_module(VM& vm, Optional<PromiseCapability> capability = {});
+    virtual ThrowCompletionOr<void> initialize_environment(VM& vm);
+    virtual ThrowCompletionOr<void> execute_module(VM& vm, Optional<PromiseCapability> capability = {});
 
-    ThrowCompletionOr<void> execute_async_module(VM& vm);
-    ThrowCompletionOr<void> gather_available_ancestors(Vector<CyclicModule*>& exec_list);
-    ThrowCompletionOr<void> async_module_execution_fulfilled(VM& vm);
-    ThrowCompletionOr<void> async_module_execution_rejected(VM& vm, Value error);
+    void execute_async_module(VM& vm);
+    void gather_available_ancestors(Vector<CyclicModule*>& exec_list);
+    void async_module_execution_fulfilled(VM& vm);
+    void async_module_execution_rejected(VM& vm, Value error);
 
     ModuleStatus m_status { ModuleStatus::Unlinked };   // [[Status]]
     ThrowCompletionOr<void> m_evaluation_error;         // [[EvaluationError]]

@@ -25,7 +25,7 @@ void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPha
     if (phase != PaintPhase::Foreground)
         return;
 
-    auto& graphics_element = verify_cast<SVG::SVGGraphicsElement>(layout_box().dom_node());
+    auto& graphics_element = layout_box().dom_node();
 
     if (graphics_element.fill_color().has_value())
         context.svg_context().set_fill_color(graphics_element.fill_color().value());

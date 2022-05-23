@@ -3,6 +3,13 @@ set -eu
 
 SCRIPT="$(dirname "${0}")"
 
+if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
+    exec "${SCRIPT}/.strip_env.sh" "${@}"
+fi
+unset SERENITY_STRIPPED_ENV
+
+export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
+
 maybe_source() {
     if [ -f "$1" ]; then
         . "$1"
@@ -21,9 +28,15 @@ enable_ccache() {
     if command -v ccache &>/dev/null; then
         ccache_tooldir="${SERENITY_BUILD_DIR}/ccache"
         mkdir -p "$ccache_tooldir"
-        for tool in gcc g++ c++; do
-            ln -sf "$(command -v ccache)" "${ccache_tooldir}/${SERENITY_ARCH}-pc-serenity-${tool}"
-        done
+        if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
+            for tool in clang clang++; do
+                ln -sf "$(command -v ccache)" "${ccache_tooldir}/$tool"
+            done
+        else
+            for tool in gcc g++ c++; do
+                ln -sf "$(command -v ccache)" "${ccache_tooldir}/${SERENITY_ARCH}-pc-serenity-${tool}"
+            done
+        fi
         export PATH="${ccache_tooldir}:$PATH"
     fi
 }
@@ -38,6 +51,7 @@ host_env() {
     export PATH="${HOST_PATH}"
     export READELF="${HOST_READELF}"
     export OBJCOPY="${HOST_OBJCOPY}"
+    export STRIP="${HOST_STRIP}"
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
@@ -46,7 +60,7 @@ host_env() {
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
-makeopts=("-j$(nproc)")
+makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
 configopts=()
@@ -657,7 +671,7 @@ do_generate_patch_readme() {
         {
             echo "## \`$patch\`"
             echo
-            cat "$tempdir/$patch.desc"
+            sed -e '/^Co-Authored-By: /d' < "$tempdir/$patch.desc"
             echo
         } >> ReadMe.md
         count=$((count + 1))
@@ -686,13 +700,24 @@ prompt_yes_no() {
     fi
 }
 
+prompt_yes_no_default_yes() {
+    read -N1 -rp \
+        "$1 (Y/n) " result
+    2>&1 echo
+    if [ "${result,,}" == n ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 do_dev() {
     if [ -n "${IN_SERENITY_PORT_DEV:-}"  ]; then
         >&2 echo "Error: Already in dev environment for $IN_SERENITY_PORT_DEV"
         exit 1
     fi
 
-    git_repo=".$workdir-git"
+    git_repo=".${workdir////_}-git"
     [ -d "$git_repo" ] || (
         mv "$workdir" "$git_repo"
         pushd "$git_repo"
@@ -712,7 +737,7 @@ do_dev() {
                 fi
 
                 echo "Importing patch $patch..."
-                git am "$patch" >/dev/null 2>&1 || {
+                git am --keep-cr "$patch" >/dev/null 2>&1 || {
                     git am --abort >/dev/null 2>&1 || true
                     if git apply < $patch; then
                         git add -A
@@ -721,7 +746,38 @@ do_dev() {
 
                             launch_user_shell
                         fi
-                        git commit --verbose
+                        main_author=''
+                        co_authors=()
+                        patch_name_in_parent_directory="patches/$(basename "$patch")"
+                        while read -r line; do
+                            author="$(echo "$line" | cut -f2 -d'	')"
+                            if [[ -z "$main_author" ]]; then
+                                main_author="$author"
+                            else
+                                co_authors+=("$author")
+                            fi
+                        done < <(git -C .. shortlog -esn -- "$patch_name_in_parent_directory")
+
+                        if [[ -n "$main_author" ]]; then
+                            date="$(git -C .. log --format=%ad -n1 -- "$patch_name_in_parent_directory")"
+                            >&2 echo -n "- This patch was authored by $main_author"
+                            if [[ ${#co_authors[@]} -ne 0 ]]; then
+                                >&2 echo -n " (and ${co_authors[*]})"
+                            fi
+                            >&2 echo " at $date"
+                            if prompt_yes_no_default_yes "- Would you like to preserve that information?"; then
+                                trailers=()
+                                for a in "${co_authors[@]}"; do
+                                    trailers+=("--trailer" "Co-Authored-By: $a")
+                                done
+                                git commit --verbose --author "$main_author" --date "$date" "${trailers[@]}"
+                            else
+                                >&2 echo " Okay, using your current git identity as the author."
+                                git commit --verbose
+                            fi
+                        else
+                            git commit --verbose
+                        fi
                     else
                         # The patch didn't apply, oh no!
                         # Ask the user to figure it out :shrug:

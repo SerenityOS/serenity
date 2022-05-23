@@ -26,7 +26,7 @@ bool KeyboardMapperWidget::request_close()
     if (!window()->is_modified())
         return true;
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_filename);
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         ErrorOr<void> error_or = save();
         if (error_or.is_error())
             show_error_to_user(error_or.error());
@@ -34,7 +34,7 @@ bool KeyboardMapperWidget::request_close()
         if (!window()->is_modified())
             return true;
     }
-    return result == GUI::MessageBox::ExecNo;
+    return result == GUI::MessageBox::ExecResult::No;
 }
 
 void KeyboardMapperWidget::create_frame()
@@ -58,7 +58,7 @@ void KeyboardMapperWidget::create_frame()
 
         tmp_button.on_click = [this, &tmp_button]() {
             String value;
-            if (GUI::InputBox::show(window(), value, "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
+            if (GUI::InputBox::show(window(), value, "New Character:", "Select Character") == GUI::InputBox::ExecResult::OK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
                 VERIFY(i > 0);
 

@@ -1,6 +1,7 @@
-# Patches for SDL2-GNUBoy
+# Patches for SDL2-GNUBoy on SerenityOS
 
-## `fix-make.patch`
+## `0001-Rewrite-the-makefile-for-serenity.patch`
 
-Rewrites the makefile, presumably to make it work for serenity.
+Rewrite the makefile for serenity
+
 

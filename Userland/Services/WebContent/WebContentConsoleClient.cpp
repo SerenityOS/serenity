@@ -162,7 +162,7 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
         return JS::js_undefined();
     }
 
-    auto output = String::join(" ", arguments.get<Vector<JS::Value>>());
+    auto output = String::join(" ", arguments.get<JS::MarkedVector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     StringBuilder html;

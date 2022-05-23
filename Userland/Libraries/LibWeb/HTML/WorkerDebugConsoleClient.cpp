@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 
@@ -52,7 +53,7 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
         return JS::js_undefined();
     }
 
-    auto output = String::join(" ", arguments.get<Vector<JS::Value>>());
+    auto output = String::join(" ", arguments.get<JS::MarkedVector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     switch (log_level) {

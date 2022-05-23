@@ -2,9 +2,14 @@
 
 # Note: This is done before `set -e` to let `command` fail if needed
 FUSE2FS_PATH=$(command -v fuse2fs)
+RESIZE2FS_PATH=$(command -v resize2fs)
 
 if [ -z "$FUSE2FS_PATH" ]; then
     FUSE2FS_PATH=/usr/sbin/fuse2fs
+fi
+
+if [ -z "$RESIZE2FS_PATH" ]; then
+    RESIZE2FS_PATH=/usr/sbin/resize2fs
 fi
 
 set -e
@@ -71,16 +76,25 @@ inode_usage() {
 
 INODE_SIZE=128
 INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
-DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + INODE_COUNT) * 1024))
+INODE_COUNT=$((INODE_COUNT + 2000))  # Some additional inodes for toolchain files, could probably also be calculated
+DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root)) * 1024))
+DISK_SIZE_BYTES=$((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE)))
 
-# Try to use heuristics to guess a good disk size and inode count.
-# The disk must notably fit:
-#   * Data blocks (for both files and directories),
-#   * Indirect/doubly indirect/triply indirect blocks,
-#   * Inodes and block bitmaps for each block group,
-#   * Plenty of extra free space and free inodes.
-DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
-INODE_COUNT=$((INODE_COUNT * 7))
+if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
+    # Try to use heuristics to guess a good disk size and inode count.
+    # The disk must notably fit:
+    #   * Data blocks (for both files and directories),
+    #   * Indirect/doubly indirect/triply indirect blocks,
+    #   * Inodes and block bitmaps for each block group,
+    #   * Plenty of extra free space and free inodes.
+    DISK_SIZE_BYTES=$((DISK_SIZE_BYTES * 2))
+    INODE_COUNT=$((INODE_COUNT * 7))
+else
+    if [ "$DISK_SIZE_BYTES" -gt "$SERENITY_DISK_SIZE_BYTES" ]; then
+        die "SERENITY_DISK_SIZE_BYTES is set to $SERENITY_DISK_SIZE_BYTES but required disk size is $DISK_SIZE_BYTES bytes"
+    fi
+    DISK_SIZE_BYTES="$SERENITY_DISK_SIZE_BYTES"
+fi
 
 USE_EXISTING=0
 
@@ -101,10 +115,10 @@ fi
 
 if [ $USE_EXISTING -eq 1 ];  then
     OLD_DISK_SIZE_BYTES=$(wc -c < _disk_image)
-    if [ $DISK_SIZE_BYTES -gt "$OLD_DISK_SIZE_BYTES" ]; then
+    if [ "$DISK_SIZE_BYTES" -gt "$OLD_DISK_SIZE_BYTES" ]; then
         echo "resizing disk image..."
-        qemu-img resize -f raw _disk_image $DISK_SIZE_BYTES || die "could not resize disk image"
-        if ! resize2fs _disk_image; then
+        qemu-img resize -f raw _disk_image "$DISK_SIZE_BYTES" || die "could not resize disk image"
+        if ! "$RESIZE2FS_PATH" _disk_image; then
             rm -f _disk_image
             USE_EXISTING=0
             echo "failed, not using existing image"
@@ -115,7 +129,7 @@ fi
 
 if [ $USE_EXISTING -ne 1 ]; then
     printf "setting up disk image... "
-    qemu-img create -q -f raw _disk_image $DISK_SIZE_BYTES || die "could not create disk image"
+    qemu-img create -q -f raw _disk_image "$DISK_SIZE_BYTES" || die "could not create disk image"
     chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "could not adjust permissions on disk image"
     echo "done"
 

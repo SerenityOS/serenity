@@ -1012,9 +1012,9 @@ void Parser::print_tokens() const
     }
 }
 
-Vector<Parser::TodoEntry> Parser::get_todo_entries() const
+Vector<CodeComprehension::TodoEntry> Parser::get_todo_entries() const
 {
-    Vector<TodoEntry> ret;
+    Vector<CodeComprehension::TodoEntry> ret;
     for (auto& token : m_tokens) {
         if (token.type() == Token::Type::Comment) {
             if (token.text().contains("TODO")) {

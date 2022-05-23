@@ -26,7 +26,6 @@
 #include <LibGPU/TexCoordGenerationConfig.h>
 #include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
@@ -48,7 +47,7 @@ public:
 
     virtual GPU::DeviceInfo info() const override;
 
-    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units) override;
+    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex>& vertices, Vector<size_t> const& enabled_texture_units) override;
     virtual void resize(Gfx::IntSize const& min_size) override;
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
@@ -69,19 +68,32 @@ public:
     virtual void set_light_state(unsigned, GPU::Light const&) override;
     virtual void set_material_state(GPU::Face, GPU::Material const&) override;
     virtual void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&) override;
+    virtual void set_clip_planes(Vector<FloatVector4> const&) override;
 
     virtual GPU::RasterPosition raster_position() const override { return m_raster_position; }
     virtual void set_raster_position(GPU::RasterPosition const& raster_position) override;
     virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
 
 private:
+    void calculate_vertex_lighting(GPU::Vertex& vertex) const;
     void draw_statistics_overlay(Gfx::Bitmap&);
-    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
+    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size) const;
 
-    void rasterize_triangle(Triangle const& triangle);
+    template<typename CB1, typename CB2, typename CB3>
+    void rasterize(Gfx::IntRect& render_bounds, CB1 set_coverage_mask, CB2 set_quad_depth, CB3 set_quad_attributes);
+
+    void rasterize_line_aliased(GPU::Vertex&, GPU::Vertex&);
+    void rasterize_line_antialiased(GPU::Vertex&, GPU::Vertex&);
+    void rasterize_line(GPU::Vertex&, GPU::Vertex&);
+
+    void rasterize_point_aliased(GPU::Vertex&);
+    void rasterize_point_antialiased(GPU::Vertex&);
+    void rasterize_point(GPU::Vertex&);
+
+    void rasterize_triangle(Triangle&);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
-    bool test_alpha(PixelQuad&);
+    void test_alpha(PixelQuad&);
 
     RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
     GPU::RasterizerOptions m_options;
@@ -96,6 +108,7 @@ private:
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
     GPU::RasterPosition m_raster_position;
+    Vector<FloatVector4> m_clip_planes;
     Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
 };
 

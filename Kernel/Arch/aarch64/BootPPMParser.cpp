@@ -6,7 +6,7 @@
 
 #include "BootPPMParser.h"
 
-namespace Prekernel {
+namespace Kernel {
 
 BootPPMParser::BootPPMParser(u8 const* buffer, u32 buffer_size)
 {

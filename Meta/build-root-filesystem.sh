@@ -160,7 +160,7 @@ mkdir -p mnt/home/anon/Tests/cpp-tests/
 cp "$SERENITY_SOURCE_DIR"/README.md mnt/home/anon/
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibJS/Tests mnt/home/anon/Tests/js-tests
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibWeb/Tests mnt/home/anon/Tests/web-tests
-cp -r "$SERENITY_SOURCE_DIR"/Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests mnt/home/anon/Tests/cpp-tests/comprehension
+cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibCodeComprehension/Cpp/Tests mnt/home/anon/Tests/cpp-tests/comprehension
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibCpp/Tests/parser mnt/home/anon/Tests/cpp-tests/parser
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibCpp/Tests/preprocessor mnt/home/anon/Tests/cpp-tests/preprocessor
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibWasm/Tests mnt/home/anon/Tests/wasm-tests

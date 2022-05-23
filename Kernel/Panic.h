@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Format.h>
+
 namespace Kernel {
 
 [[noreturn]] void __panic(char const* file, unsigned int line, char const* function);

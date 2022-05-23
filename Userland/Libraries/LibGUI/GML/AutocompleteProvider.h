@@ -22,7 +22,7 @@ private:
         return class_name.is_one_of("GUI::Widget", "GUI::Frame");
     }
 
-    virtual void provide_completions(Function<void(Vector<Entry>)> callback) override;
+    virtual void provide_completions(Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> callback) override;
 };
 
 }

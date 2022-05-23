@@ -950,10 +950,10 @@ bool ISO8601Parser::parse_time_zone_iana_name()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneBracketedName
-bool ISO8601Parser::parse_time_zone_bracketed_name()
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIdentifier
+bool ISO8601Parser::parse_time_zone_identifier()
 {
-    // TimeZoneBracketedName :
+    // TimeZoneIdentifier :
     //     TimeZoneIANAName
     //     TimeZoneUTCOffsetName
     StateTransaction transaction { *this };
@@ -970,11 +970,11 @@ bool ISO8601Parser::parse_time_zone_bracketed_name()
 bool ISO8601Parser::parse_time_zone_bracketed_annotation()
 {
     // TimeZoneBracketedAnnotation :
-    //     [ TimeZoneBracketedName ]
+    //     [ TimeZoneIdentifier ]
     StateTransaction transaction { *this };
     if (!m_state.lexer.consume_specific('['))
         return false;
-    if (!parse_time_zone_bracketed_name())
+    if (!parse_time_zone_identifier())
         return false;
     if (!m_state.lexer.consume_specific(']'))
         return false;
@@ -1610,14 +1610,6 @@ bool ISO8601Parser::parse_temporal_instant_string()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalDateString
-bool ISO8601Parser::parse_temporal_date_string()
-{
-    // TemporalDateString :
-    //     CalendarDateTime
-    return parse_calendar_date_time();
-}
-
 // https://tc39.es/proposal-temporal/#prod-TemporalDateTimeString
 bool ISO8601Parser::parse_temporal_date_time_string()
 {
@@ -1658,24 +1650,14 @@ bool ISO8601Parser::parse_temporal_time_string()
         || parse_calendar_time();
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalTimeZoneIdentifier
-bool ISO8601Parser::parse_temporal_time_zone_identifier()
-{
-    // TemporalTimeZoneIdentifier :
-    //     TimeZoneNumericUTCOffset
-    //     TimeZoneIANAName
-    return parse_time_zone_numeric_utc_offset()
-        || parse_time_zone_iana_name();
-}
-
 // https://tc39.es/proposal-temporal/#prod-TemporalTimeZoneString
 bool ISO8601Parser::parse_temporal_time_zone_string()
 {
     // TemporalTimeZoneString :
-    //     TemporalTimeZoneIdentifier
+    //     TimeZoneIdentifier
     //     Date TimeSpecSeparator[opt] TimeZone Calendar[opt]
     StateTransaction transaction { *this };
-    if (!parse_temporal_time_zone_identifier()) {
+    if (!parse_time_zone_identifier()) {
         if (!parse_date())
             return false;
         (void)parse_time_spec_separator();
@@ -1733,19 +1715,10 @@ bool ISO8601Parser::parse_temporal_calendar_string()
         || parse_calendar_time();
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalRelativeToString
-bool ISO8601Parser::parse_temporal_relative_to_string()
-{
-    // TemporalRelativeToString :
-    //     TemporalDateTimeString
-    return parse_temporal_date_time_string();
-}
-
 }
 
 #define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                                        \
     __JS_ENUMERATE(TemporalInstantString, parse_temporal_instant_string)               \
-    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)                     \
     __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string)            \
     __JS_ENUMERATE(TemporalDurationString, parse_temporal_duration_string)             \
     __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string)            \
@@ -1753,8 +1726,7 @@ bool ISO8601Parser::parse_temporal_relative_to_string()
     __JS_ENUMERATE(TemporalTimeZoneString, parse_temporal_time_zone_string)            \
     __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)          \
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
-    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)             \
-    __JS_ENUMERATE(TemporalRelativeToString, parse_temporal_relative_to_string)
+    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,8 +41,8 @@ public:
     };
     ResolvingFunctions create_resolving_functions();
 
-    Value fulfill(Value value);
-    Value reject(Value reason);
+    void fulfill(Value value);
+    void reject(Value reason);
     Value perform_then(Value on_fulfilled, Value on_rejected, Optional<PromiseCapability> result_capability);
 
     bool is_handled() const { return m_is_handled; }

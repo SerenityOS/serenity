@@ -7,7 +7,6 @@
 
 #include "SampleWidget.h"
 #include <AK/Math.h>
-#include <LibAudio/Buffer.h>
 #include <LibGUI/Painter.h>
 
 SampleWidget::SampleWidget()
@@ -15,7 +14,7 @@ SampleWidget::SampleWidget()
     MUST(set_render_sample_count(512));
 }
 
-void SampleWidget::render(GUI::PaintEvent& event, FixedArray<double> const& samples)
+void SampleWidget::render(GUI::PaintEvent& event, FixedArray<float> const& samples)
 {
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);

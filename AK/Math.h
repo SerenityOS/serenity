@@ -130,6 +130,21 @@ constexpr float sqrt(float x)
     return res;
 }
 
+#    ifdef __SSE2__
+template<>
+constexpr double sqrt(double x)
+{
+    if (is_constant_evaluated())
+        return __builtin_sqrt(x);
+
+    double res;
+    asm("sqrtsd %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+#    endif
+
 template<>
 constexpr float rsqrt(float x)
 {
@@ -255,7 +270,8 @@ constexpr void sincos(T angle, T& sin_val, T& cos_val)
         : "=t"(cos_val), "=u"(sin_val)
         : "0"(angle));
 #else
-    __builtin_sincosf(angle, sin_val, cos_val);
+    sin_val = sin(angle);
+    cos_val = cos(angle);
 #endif
 }
 
@@ -265,7 +281,7 @@ constexpr T tan(T angle)
     CONSTEXPR_STATE(tan, angle);
 
 #if ARCH(I386) || ARCH(X86_64)
-    double ret, one;
+    T ret, one;
     asm(
         "fptan"
         : "=t"(one), "=u"(ret)
@@ -536,6 +552,89 @@ using Hyperbolic::cosh;
 using Hyperbolic::sinh;
 using Hyperbolic::tanh;
 
+template<Integral I, FloatingPoint P>
+ALWAYS_INLINE I round_to(P value)
+{
+#if ARCH(I386) || ARCH(X86_64)
+    // Note: fistps outputs into a signed integer location (i16, i32, i64),
+    //       so lets be nice and tell the compiler that.
+    Conditional<sizeof(I) >= sizeof(i16), MakeSigned<I>, i16> ret;
+    if constexpr (sizeof(I) == sizeof(i64)) {
+        asm("fistpll %0"
+            : "=m"(ret)
+            : "t"(value)
+            : "st");
+    } else if constexpr (sizeof(I) == sizeof(i32)) {
+        asm("fistpl %0"
+            : "=m"(ret)
+            : "t"(value)
+            : "st");
+    } else {
+        asm("fistps %0"
+            : "=m"(ret)
+            : "t"(value)
+            : "st");
+    }
+    return static_cast<I>(ret);
+#else
+    if constexpr (IsSame<P, long double>)
+        return static_cast<I>(__builtin_llrintl(value));
+    if constexpr (IsSame<P, double>)
+        return static_cast<I>(__builtin_llrint(value));
+    if constexpr (IsSame<P, float>)
+        return static_cast<I>(__builtin_llrintf(value));
+#endif
+}
+
+#ifdef __SSE__
+template<Integral I>
+ALWAYS_INLINE I round_to(float value)
+{
+    if constexpr (sizeof(I) == sizeof(i64)) {
+        // Note: Outputting into 64-bit registers or memory locations requires the
+        //       REX prefix, so we have to fall back to long doubles on i686
+#    if ARCH(X86_64)
+        i64 ret;
+        asm("cvtss2si %1, %0"
+            : "=r"(ret)
+            : "xm"(value));
+        return static_cast<I>(ret);
+#    else
+        return round_to<I, long double>(value);
+#    endif
+    }
+    i32 ret;
+    asm("cvtss2si %1, %0"
+        : "=r"(ret)
+        : "xm"(value));
+    return static_cast<I>(ret);
+}
+#endif
+#ifdef __SSE2__
+template<Integral I>
+ALWAYS_INLINE I round_to(double value)
+{
+    if constexpr (sizeof(I) == sizeof(i64)) {
+        // Note: Outputting into 64-bit registers or memory locations requires the
+        //       REX prefix, so we have to fall back to long doubles on i686
+#    if ARCH(X86_64)
+        i64 ret;
+        asm("cvtsd2si %1, %0"
+            : "=r"(ret)
+            : "xm"(value));
+        return static_cast<I>(ret);
+#    else
+        return round_to<I, long double>(value);
+#    endif
+    }
+    i32 ret;
+    asm("cvtsd2si %1, %0"
+        : "=r"(ret)
+        : "xm"(value));
+    return static_cast<I>(ret);
+}
+#endif
+
 template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
@@ -563,5 +662,6 @@ constexpr T pow(T x, T y)
 }
 
 #undef CONSTEXPR_STATE
-
 }
+
+using AK::round_to;

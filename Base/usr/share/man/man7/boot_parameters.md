@@ -47,7 +47,8 @@ List of options:
   but only if **`acpi`** is set to **`limited`** or **`on`**, and a `MADT` (APIC) table is available.
   Otherwise, the kernel will fallback to use the i8259 PICs.
 
-* **`fbdev`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment (default). **`off`** - Boot into text mode. **`bootloader`** - Boot into the graphical environment, but only use the frame buffer set up by the bootloader and do not initialize any other graphics cards.
+* **`graphics_subsystem_mode`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment if possible (default). **`off`** - Boot into text mode, don't initialize any driver. **`limited`** - Boot into the pre-defined framebuffer that the bootloader
+has set up before booting the Kernel, don't initialize any driver.
 
 * **`force_pio`** - If present on the command line, the IDE controllers will be force into PIO mode when initialized IDE Channels on boot.
 

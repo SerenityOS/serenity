@@ -9,7 +9,7 @@
 
 #include <AK/Types.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 struct UARTRegisters;
 
@@ -22,38 +22,10 @@ public:
     void send(u32 c);
     u32 receive();
 
-    void print_str(char const* s)
+    void print_str(char const* s, size_t length)
     {
-        while (*s)
+        for (size_t i = 0; i < length; ++i)
             send(*s++);
-    }
-    void print_num(u64 n)
-    {
-        char buf[21];
-        int i = 0;
-        do {
-            buf[i++] = (n % 10) + '0';
-            n /= 10;
-        } while (n);
-        for (i--; i >= 0; i--)
-            send(buf[i]);
-    }
-
-    void print_hex(u64 n)
-    {
-        char buf[17];
-        static char const* digits = "0123456789ABCDEF";
-        int i = 0;
-        do {
-            buf[i++] = digits[n % 16];
-            n /= 16;
-        } while (n);
-        send(static_cast<u32>('0'));
-        send(static_cast<u32>('x'));
-        buf[16] = '\0';
-        for (i--; i >= 0; i--) {
-            send(buf[i]);
-        }
     }
 
 private:

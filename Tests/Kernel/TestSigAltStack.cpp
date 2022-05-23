@@ -22,17 +22,13 @@ static void signal_handler(int)
     _exit(0);
 }
 
-#ifdef __clang__
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Winfinite-recursion"
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winfinite-recursion"
 static size_t infinite_recursion(size_t input)
 {
     return infinite_recursion(input) + 1;
 }
-#ifdef __clang__
-#    pragma clang diagnostic pop
-#endif
+#pragma GCC diagnostic pop
 
 // This test can only pass with sigaltstack correctly enabled, as otherwise the SIGSEGV signal handler itself would also fault due to the overflown stack.
 TEST_CASE(success_case)

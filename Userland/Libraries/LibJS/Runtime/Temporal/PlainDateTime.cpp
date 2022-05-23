@@ -53,24 +53,24 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     VERIFY(is_valid_iso_date(year, month, day));
 
     // 2. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
-    auto date = make_day(global_object, Value(year), Value(month - 1), Value(day));
+    auto date = make_day(year, month - 1, day);
 
     // 3. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
-    auto time = make_time(global_object, Value(hour), Value(minute), Value(second), Value(millisecond));
+    auto time = make_time(hour, minute, second, millisecond);
 
     // 4. Let ms be MakeDate(date, time).
     auto ms = make_date(date, time);
 
     // 5. Assert: ms is finite.
-    VERIFY(ms.is_finite_number());
+    VERIFY(isfinite(ms));
 
     // 6. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
-    return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms.as_double())).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
+    return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms)).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
-// -864 * 10^19 - 864 * 10^11
+// nsMinInstant - nsPerDay
 auto const DATETIME_NANOSECONDS_MIN = "-8640000086400000000000"_sbigint;
-// +864 * 10^19 + 864 * 10^11
+// nsMaxInstant + nsPerDay
 auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
@@ -79,13 +79,13 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
     // 1. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
     auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)->big_integer();
 
-    // 2. If ns ≤ -8.64 × 10^21 - 8.64 × 10^13, then
+    // 2. If ns ≤ nsMinInstant - nsPerDay, then
     if (ns <= DATETIME_NANOSECONDS_MIN) {
         // a. Return false.
         return false;
     }
 
-    // 3. If ns ≥ 8.64 × 10^21 + 8.64 × 10^13, then
+    // 3. If ns ≥ nsMaxInstant + nsPerDay, then
     if (ns >= DATETIME_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
@@ -212,7 +212,7 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
     // 2. Let balancedTime be ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
     auto balanced_time = balance_time(hour, minute, second, millisecond, microsecond, nanosecond);
 
-    // 3. Let balancedDate be ! BalanceISODate(year, month, day + balancedTime.[[Days]]).
+    // 3. Let balancedDate be BalanceISODate(year, month, day + balancedTime.[[Days]]).
     auto balanced_date = balance_iso_date(year, month, day + balanced_time.days);
 
     // 4. Return the Record { [[Year]]: balancedDate.[[Year]], [[Month]]: balancedDate.[[Month]], [[Day]]: balancedDate.[[Day]], [[Hour]]: balancedTime.[[Hour]], [[Minute]]: balancedTime.[[Minute]], [[Second]]: balancedTime.[[Second]], [[Millisecond]]: balancedTime.[[Millisecond]], [[Microsecond]]: balancedTime.[[Microsecond]], [[Nanosecond]]: balancedTime.[[Nanosecond]] }.
@@ -328,14 +328,14 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
 {
     // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
-    // 2. If dayLength is not present, set dayLength to 8.64 × 10^13.
+    // 2. If dayLength is not present, set dayLength to nsPerDay.
     if (!day_length.has_value())
-        day_length = 86400000000000;
+        day_length = ns_per_day;
 
     // 3. Let roundedTime be ! RoundTime(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode, dayLength).
     auto rounded_time = round_time(hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, rounding_mode, day_length);
 
-    // 4. Let balanceResult be ! BalanceISODate(year, month, day + roundedTime.[[Days]]).
+    // 4. Let balanceResult be BalanceISODate(year, month, day + roundedTime.[[Days]]).
     auto balance_result = balance_iso_date(year, month, day + rounded_time.days);
 
     // 5. Return the Record { [[Year]]: balanceResult.[[Year]], [[Month]]: balanceResult.[[Month]], [[Day]]: balanceResult.[[Day]], [[Hour]]: roundedTime.[[Hour]], [[Minute]]: roundedTime.[[Minute]], [[Second]]: roundedTime.[[Second]], [[Millisecond]]: roundedTime.[[Millisecond]], [[Microsecond]]: roundedTime.[[Microsecond]], [[Nanosecond]]: roundedTime.[[Nanosecond]] }.
@@ -357,12 +357,12 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 5. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 6. Let adjustedDate be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
+    // 6. Let adjustedDate be BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
     auto adjusted_date = balance_iso_date(year1, month1, day1 + time_difference.days);
 
     // 7. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
-        // a. Set adjustedDate to ! BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
+        // a. Set adjustedDate to BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
         adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
 
         // b. Set timeDifference to ? BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
@@ -389,6 +389,92 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
 
     // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
     return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);
+}
+
+// 5.5.12 DifferenceTemporalPlainDateTime ( operation, dateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime
+ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(GlobalObject& global_object, DifferenceOperation operation, PlainDateTime& date_time, Value other_value, Value options_value)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
+
+    // 2. Set other to ? ToTemporalDateTime(other).
+    auto* other = TRY(to_temporal_date_time(global_object, other_value));
+
+    // 3. If ? CalendarEquals(dateTime.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
+    if (!TRY(calendar_equals(global_object, date_time.calendar(), other->calendar())))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto const* options = TRY(get_options_object(global_object, options_value));
+
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));
+
+    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
+
+    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
+
+    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 10. If operation is since, then
+    if (operation == DifferenceOperation::Since) {
+        // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+    }
+
+    // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
+
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
+
+    // 13. Let diff be ? DifferenceISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], other.[[ISOYear]], other.[[ISOMonth]], other.[[ISODay]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]], dateTime.[[Calendar]], largestUnit, options).
+    auto diff = TRY(difference_iso_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), date_time.calendar(), *largest_unit, options));
+
+    // 14. Let relativeTo be ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    auto* relative_to = MUST(create_temporal_date(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.calendar()));
+
+    // 15. Let roundResult be (? RoundDuration(diff.[[Years]], diff.[[Months]], diff.[[Weeks]], diff.[[Days]], diff.[[Hours]], diff.[[Minutes]], diff.[[Seconds]], diff.[[Milliseconds]], diff.[[Microseconds]], diff.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to)).duration_record;
+
+    // 16. Let result be ? BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], largestUnit).
+    auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds), *largest_unit));
+
+    // 17. Return ! CreateTemporalDuration(sign × roundResult.[[Years]], sign × roundResult.[[Months]], sign × roundResult.[[Weeks]], sign × result.[[Days]], sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+    return MUST(create_temporal_duration(global_object, sign * round_result.years, sign * round_result.months, sign * round_result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
+}
+
+// 5.5.13 AddDurationToOrSubtractDurationFromPlainDateTime ( operation, dateTime, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplaindatetime
+ThrowCompletionOr<PlainDateTime*> add_duration_to_or_subtract_duration_from_plain_date_time(GlobalObject& global_object, ArithmeticOperation operation, PlainDateTime& date_time, Value temporal_duration_like, Value options_value)
+{
+    // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
+    i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
+
+    // 2. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, options_value));
+
+    // 4. Let result be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], sign × duration.[[Years]], sign × duration.[[Months]], sign × duration.[[Weeks]], sign × duration.[[Days]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]], options).
+    auto result = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), sign * duration.years, sign * duration.months, sign * duration.weeks, sign * duration.days, sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds, options));
+
+    // 5. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    VERIFY(is_valid_iso_date(result.year, result.month, result.day));
+
+    // 6. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+
+    // 7. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
+    return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time.calendar());
 }
 
 }

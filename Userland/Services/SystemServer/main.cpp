@@ -73,13 +73,13 @@ static ErrorOr<void> determine_system_mode()
     g_system_mode = system_mode;
     dbgln("Read system_mode: {}", g_system_mode);
 
-    // FIXME: Support more than one framebuffer detection
     struct stat file_state;
-    int rc = lstat("/dev/fb0", &file_state);
-    if (rc == 0 && g_system_mode == "text") {
-        dbgln("WARNING: Text mode with framebuffers won't work as expected! Consider using 'fbdev=off'.");
+    int rc = lstat("/dev/gpu/connector0", &file_state);
+    if (rc != 0 && g_system_mode == "graphical") {
+        dbgln("WARNING: No device nodes at /dev/gpu/ directory. This is probably a sign of disabled graphics functionality.");
+        dbgln("To cope with this, I'll turn off graphical mode.");
+        g_system_mode = "text";
     }
-    dbgln("System in {} mode", g_system_mode);
     return {};
 }
 
@@ -209,22 +209,17 @@ static void populate_devtmpfs_devices_based_on_devctl()
             break;
         }
         case 28: {
-            create_devtmpfs_block_device(String::formatted("/dev/gpu{}", minor_number), 0666, 28, minor_number);
+            create_devtmpfs_block_device(String::formatted("/dev/gpu/render{}", minor_number), 0666, 28, minor_number);
+            break;
+        }
+        case 226: {
+            create_devtmpfs_char_device(String::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
             break;
         }
         case 29: {
             if (is_block_device) {
                 create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
                 break;
-            }
-
-            switch (minor_number) {
-            case 0: {
-                create_devtmpfs_char_device("/dev/full", 0660, 29, 0);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
             }
             break;
         }
@@ -277,6 +272,10 @@ static void populate_devtmpfs_devices_based_on_devctl()
                 }
                 case 3: {
                     create_devtmpfs_char_device("/dev/null", 0666, 1, 3);
+                    break;
+                }
+                case 7: {
+                    create_devtmpfs_char_device("/dev/full", 0666, 1, 7);
                     break;
                 }
                 case 8: {
@@ -395,6 +394,8 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
+
+    TRY(Core::System::mkdir("/dev/gpu", 0755));
 
     populate_devtmpfs();
 

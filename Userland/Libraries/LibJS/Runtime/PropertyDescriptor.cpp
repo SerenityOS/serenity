@@ -105,7 +105,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 4. If hasEnumerable is true, then
     if (has_enumerable) {
-        // a. Let enumerable be ! ToBoolean(? Get(Obj, "enumerable")).
+        // a. Let enumerable be ToBoolean(? Get(Obj, "enumerable")).
         auto enumerable = TRY(object.get(vm.names.enumerable)).to_boolean();
 
         // b. Set desc.[[Enumerable]] to enumerable.
@@ -117,7 +117,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 6. If hasConfigurable is true, then
     if (has_configurable) {
-        // a. Let configurable be ! ToBoolean(? Get(Obj, "configurable")).
+        // a. Let configurable be ToBoolean(? Get(Obj, "configurable")).
         auto configurable = TRY(object.get(vm.names.configurable)).to_boolean();
 
         // b. Set desc.[[Configurable]] to configurable.
@@ -141,7 +141,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 10. If hasWritable is true, then
     if (has_writable) {
-        // a. Let writable be ! ToBoolean(? Get(Obj, "writable")).
+        // a. Let writable be ToBoolean(? Get(Obj, "writable")).
         auto writable = TRY(object.get(vm.names.writable)).to_boolean();
 
         // b. Set desc.[[Writable]] to writable.

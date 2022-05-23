@@ -15,7 +15,8 @@
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VGA/ISAAdapter.h>
 #include <Kernel/Graphics/VGA/PCIAdapter.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
@@ -39,16 +40,6 @@ bool GraphicsManagement::is_initialized()
 
 UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
 {
-}
-
-bool GraphicsManagement::framebuffer_devices_use_bootloader_framebuffer() const
-{
-    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::BootloaderOnly;
-}
-
-bool GraphicsManagement::framebuffer_devices_console_only() const
-{
-    return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::ConsoleOnly;
 }
 
 void GraphicsManagement::disable_vga_emulation_access_permanently()
@@ -95,15 +86,30 @@ void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x
 
 void GraphicsManagement::deactivate_graphical_mode()
 {
-    for (auto& graphics_device : m_graphics_devices) {
-        graphics_device.enable_consoles();
-    }
+    return m_display_connector_nodes.with([&](auto& display_connectors) {
+        for (auto& connector : display_connectors)
+            connector.set_display_mode({}, DisplayConnector::DisplayMode::Console);
+    });
 }
 void GraphicsManagement::activate_graphical_mode()
 {
-    for (auto& graphics_device : m_graphics_devices) {
-        graphics_device.disable_consoles();
-    }
+    return m_display_connector_nodes.with([&](auto& display_connectors) {
+        for (auto& connector : display_connectors)
+            connector.set_display_mode({}, DisplayConnector::DisplayMode::Graphical);
+    });
+}
+
+void GraphicsManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+{
+    return m_display_connector_nodes.with([&](auto& display_connectors) {
+        display_connectors.append(connector);
+    });
+}
+void GraphicsManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+{
+    return m_display_connector_nodes.with([&](auto& display_connectors) {
+        display_connectors.remove(connector);
+    });
 }
 
 static inline bool is_vga_compatible_pci_device(PCI::DeviceIdentifier const& device_identifier)
@@ -125,7 +131,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_
     dmesgln("Graphics: Using a ISA VGA compatible generic adapter");
     auto adapter = ISAVGAAdapter::initialize();
     m_graphics_devices.append(*adapter);
-    adapter->enable_consoles();
     m_vga_adapter = adapter;
     return true;
 }
@@ -133,24 +138,15 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
-        m_graphics_devices.append(graphics_device);
-        if (framebuffer_devices_console_only()) {
-            graphics_device.enable_consoles();
-            return;
-        }
-        graphics_device.initialize_framebuffer_devices();
-    };
-
     RefPtr<GenericGraphicsAdapter> adapter;
 
     auto create_bootloader_framebuffer_device = [&]() {
         if (multiboot_framebuffer_addr.is_null()) {
             // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
             // is not present, as there is likely never a valid framebuffer at this physical address.
-            dmesgln("Graphics: Bootloader did not set up a framebuffer, ignoring fbdev argument");
+            dmesgln("Graphics: Bootloader did not set up a framebuffer");
         } else if (multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB, ignoring fbdev argument");
+            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB");
         } else {
             dmesgln("Graphics: Using a preset resolution from the bootloader");
             adapter = PCIVGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
@@ -160,9 +156,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
                 multiboot_framebuffer_pitch);
         }
     };
-
-    if (framebuffer_devices_use_bootloader_framebuffer())
-        create_bootloader_framebuffer_device();
 
     if (!adapter) {
         switch (device_identifier.hardware_id().vendor_id) {
@@ -179,7 +172,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
             break;
         case PCI::VendorID::VirtIO:
             dmesgln("Graphics: Using VirtIO console");
-            adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(device_identifier);
+            adapter = VirtIOGraphicsAdapter::initialize(device_identifier);
+            break;
+        case PCI::VendorID::VMWare:
+            adapter = VMWareGraphicsAdapter::try_initialize(device_identifier);
             break;
         default:
             if (!is_vga_compatible_pci_device(device_identifier))
@@ -208,7 +204,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 
     if (!adapter)
         return false;
-    add_and_configure_adapter(*adapter);
+    m_graphics_devices.append(*adapter);
 
     // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
@@ -263,15 +259,32 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * be created, so SystemServer will not try to initialize WindowServer.
      */
 
+    auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
+        VERIFY(!m_console);
+        // If no graphics driver was instantiated and we had a bootloader provided
+        // framebuffer console we can simply re-use it.
+        if (auto* boot_console = g_boot_console.load()) {
+            m_console = *boot_console;
+            boot_console->unref(); // Drop the leaked reference from Kernel::init()
+        }
+        return true;
+    }
+
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
+        m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
+            multiboot_framebuffer_addr,
+            multiboot_framebuffer_width,
+            multiboot_framebuffer_height,
+            multiboot_framebuffer_pitch);
+        return true;
+    }
+
     if (PCI::Access::is_disabled()) {
         determine_and_initialize_isa_graphics_device();
         return true;
     }
-
-    if (framebuffer_devices_console_only())
-        dbgln("Forcing non-initialization of framebuffer devices (console only)");
-    else if (framebuffer_devices_use_bootloader_framebuffer())
-        dbgln("Forcing use of framebuffer set up by the bootloader");
 
     MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution
@@ -296,15 +309,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return false;
     }
     return true;
-}
-
-bool GraphicsManagement::framebuffer_devices_exist() const
-{
-    for (auto& graphics_device : m_graphics_devices) {
-        if (graphics_device.framebuffer_devices_initialized())
-            return true;
-    }
-    return false;
 }
 
 void GraphicsManagement::set_console(Graphics::Console& console)

@@ -75,6 +75,12 @@ static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
 };
 // clang-format on
 
+void HIDManagement::set_client(KeyboardClient* client)
+{
+    SpinlockLocker locker(m_client_lock);
+    m_client = client;
+}
+
 size_t HIDManagement::generate_minor_device_number_for_mouse()
 {
     // FIXME: Lock this to prevent race conditions with hot-plugging devices!

@@ -94,7 +94,7 @@ void TextEditor::create_actions()
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecOK) {
+                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecResult::OK) {
                     auto line_target = value.to_uint();
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -226,7 +226,7 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
     auto position = text_position_at(event.position());
 
-    if (m_substitution_code_point) {
+    if (m_substitution_code_point.has_value()) {
         // NOTE: If we substitute the code points, we don't want double clicking to only select a single word, since
         //       whitespace isn't visible anymore.
         m_selection = document().range_for_entire_line(position.line());
@@ -409,7 +409,7 @@ void TextEditor::paint_event(PaintEvent& event)
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
     auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitute = true) {
-        if (m_substitution_code_point && substitute) {
+        if (m_substitution_code_point.has_value() && substitute) {
             painter.draw_text(rect, substitution_code_point_view(raw_text.length()), font, alignment, attributes.color);
         } else {
             painter.draw_text(rect, raw_text, font, alignment, attributes.color);
@@ -452,7 +452,10 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
     }
 
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    auto horizontal_scrollbar_value = horizontal_scrollbar().value();
+    painter.translate(-horizontal_scrollbar_value, -vertical_scrollbar().value());
+    if (m_icon && horizontal_scrollbar_value > 0)
+        painter.translate(min(icon_size() + icon_padding(), horizontal_scrollbar_value), 0);
     painter.translate(gutter_width(), 0);
     painter.translate(ruler_width(), 0);
 
@@ -754,7 +757,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 {
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
-        if (m_autocomplete_box->apply_suggestion() == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes)
+        if (m_autocomplete_box->apply_suggestion() == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes)
             hide_autocomplete();
         else
             try_update_autocomplete();
@@ -928,7 +931,8 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+    // AltGr is emulated as Ctrl+Alt; if Ctrl is set check if it's not for AltGr
+    if ((!event.ctrl() || event.altgr()) && !event.alt() && event.code_point() != 0) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         add_code_point(event.code_point());
         return;
@@ -1090,7 +1094,7 @@ int TextEditor::content_x_for_position(TextPosition const& position) const
 
 int TextEditor::text_width_for_font(auto const& text, Gfx::Font const& font) const
 {
-    if (m_substitution_code_point)
+    if (m_substitution_code_point.has_value())
         return font.width(substitution_code_point_view(text.length()));
     else
         return font.width(text);
@@ -1098,13 +1102,13 @@ int TextEditor::text_width_for_font(auto const& text, Gfx::Font const& font) con
 
 Utf32View TextEditor::substitution_code_point_view(size_t length) const
 {
-    VERIFY(m_substitution_code_point);
+    VERIFY(m_substitution_code_point.has_value());
     if (!m_substitution_string_data)
         m_substitution_string_data = make<Vector<u32>>();
     if (!m_substitution_string_data->is_empty())
         VERIFY(m_substitution_string_data->first() == m_substitution_code_point);
     while (m_substitution_string_data->size() < length)
-        m_substitution_string_data->append(m_substitution_code_point);
+        m_substitution_string_data->append(m_substitution_code_point.value());
     return Utf32View { m_substitution_string_data->data(), length };
 }
 
@@ -1573,14 +1577,8 @@ void TextEditor::did_change(AllowCallback allow_callback)
     recompute_all_visual_lines();
     hide_autocomplete_if_needed();
     m_needs_rehighlight = true;
-    if (!m_has_pending_change_notification) {
-        m_has_pending_change_notification = true;
-        deferred_invoke([this, allow_callback] {
-            m_has_pending_change_notification = false;
-            if (on_change && allow_callback == AllowCallback::Yes)
-                on_change();
-        });
-    }
+    if (on_change && allow_callback == AllowCallback::Yes)
+        on_change();
 }
 void TextEditor::set_mode(const Mode mode)
 {
@@ -2066,11 +2064,12 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
     m_autocomplete_timer = nullptr;
 }
 
-void TextEditor::set_substitution_code_point(u32 code_point)
+void TextEditor::set_substitution_code_point(Optional<u32> code_point)
 {
-    VERIFY(is_unicode(code_point));
+    if (code_point.has_value())
+        VERIFY(is_unicode(code_point.value()));
     m_substitution_string_data.clear();
-    m_substitution_code_point = code_point;
+    m_substitution_code_point = move(code_point);
 }
 
 int TextEditor::number_of_visible_lines() const

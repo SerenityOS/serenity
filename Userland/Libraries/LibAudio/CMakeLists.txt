@@ -1,6 +1,4 @@
 set(SOURCES
-    Buffer.cpp
-    Resampler.cpp
     SampleFormats.cpp
     ConnectionFromClient.cpp
     Loader.cpp

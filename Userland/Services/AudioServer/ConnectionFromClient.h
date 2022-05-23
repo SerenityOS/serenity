@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibAudio/Buffer.h>
+#include <LibAudio/Queue.h>
 #include <LibCore/EventLoop.h>
 #include <LibIPC/ConnectionFromClient.h>
 

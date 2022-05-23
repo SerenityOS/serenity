@@ -80,6 +80,8 @@ public:
     [[nodiscard]] static ErrorOr<ByteBuffer> copy(void const* data, size_t size)
     {
         auto buffer = TRY(create_uninitialized(size));
+        if (buffer.m_inline && size > inline_capacity)
+            __builtin_unreachable();
         if (size != 0)
             __builtin_memcpy(buffer.data(), data, size);
         return { move(buffer) };

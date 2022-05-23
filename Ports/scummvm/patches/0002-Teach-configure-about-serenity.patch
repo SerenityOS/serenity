@@ -1,0 +1,35 @@
+From 65f374e0cdc9bb7255ad1aadbad1869d21ac7d82 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Sun, 9 Jan 2022 23:01:32 +0100
+Subject: [PATCH 2/3] Teach configure about serenity
+
+---
+ configure | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 65e4731..39509f3 100755
+--- a/configure
++++ b/configure
+@@ -3998,7 +3998,7 @@ case $_host_os in
+ 	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | morphos | n64 | ps3 | psp2 | psp | riscos | wii)
+ 		_posix=no
+ 		;;
+-	3ds | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | switch | uclinux*)
++	3ds | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | serenity* | solaris* | sunos* | switch | uclinux*)
+ 		_posix=yes
+ 		;;
+ 	os2-emx*)
+@@ -5538,6 +5538,9 @@ EOF
+ 		mingw*)
+ 			OPENGL_LIBS="-lopengl32"
+ 			;;
++		serenity*)
++			OPENGL_LIBS="-lgl"
++			;;
+ 		*)
+ 			OPENGL_LIBS="-lGL"
+ 			;;
+-- 
+2.36.1
+

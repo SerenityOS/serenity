@@ -38,13 +38,13 @@ NativeFunction* NativeFunction::create(GlobalObject& global_object, Function<Thr
     // 9. Set func.[[InitialName]] to null.
     auto* function = global_object.heap().allocate<NativeFunction>(global_object, global_object, move(behaviour), prototype.value(), *realm.value());
 
-    // 10. Perform ! SetFunctionLength(func, length).
+    // 10. Perform SetFunctionLength(func, length).
     function->set_function_length(length);
 
     // 11. If prefix is not present, then
-    //     a. Perform ! SetFunctionName(func, name).
+    //     a. Perform SetFunctionName(func, name).
     // 12. Else,
-    //     a. Perform ! SetFunctionName(func, name, prefix).
+    //     a. Perform SetFunctionName(func, name, prefix).
     function->set_function_name(name, prefix);
 
     // 13. Return func.
@@ -156,7 +156,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     // 11. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
     vm.pop_execution_context();
 
-    // 12. Return result.
+    // 12. Return ? result.
     return result;
 }
 
@@ -220,7 +220,7 @@ ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value
     // 11. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
     vm.pop_execution_context();
 
-    // 12. Return result.
+    // 12. Return ? result.
     return result;
 }
 

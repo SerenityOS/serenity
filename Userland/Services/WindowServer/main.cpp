@@ -68,19 +68,19 @@ ErrorOr<int> serenity_main(Main::Arguments)
         WindowServer::ScreenLayout screen_layout;
         String error_msg;
 
-        auto add_unconfigured_devices = [&]() {
+        auto add_unconfigured_display_connector_devices = [&]() {
             // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
-            Core::DirIterator di("/dev", Core::DirIterator::SkipParentAndBaseDir);
+            Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
             while (di.has_next()) {
                 auto path = di.next_path();
-                if (!path.starts_with("fb"))
+                if (!path.starts_with("connector"))
                     continue;
-                auto full_path = String::formatted("/dev/{}", path);
+                auto full_path = String::formatted("/dev/gpu/{}", path);
                 if (!Core::File::is_device(full_path))
                     continue;
                 if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
                     continue;
-                if (!screen_layout.try_auto_add_framebuffer(full_path))
+                if (!screen_layout.try_auto_add_display_connector(full_path))
                     dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
             }
         };
@@ -88,7 +88,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
         auto apply_and_generate_generic_screen_layout = [&]() {
             screen_layout = {};
             fb_devices_configured = {};
-            add_unconfigured_devices();
+
+            add_unconfigured_display_connector_devices();
             if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
                 dbgln("Failed to apply generated fallback screen layout: {}", error_msg);
                 return false;
@@ -103,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device)
                     fb_devices_configured.set(screen_info.device.value());
 
-            add_unconfigured_devices();
+            add_unconfigured_display_connector_devices();
 
             if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
                 dbgln("Error applying screen layout: {}", error_msg);

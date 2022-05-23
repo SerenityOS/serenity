@@ -17,7 +17,7 @@ class PasswordInputDialog : public Dialog {
 public:
     virtual ~PasswordInputDialog() override = default;
 
-    static int show(Window* parent_window, String& text_value, String title, String server, String username);
+    static ExecResult show(Window* parent_window, String& text_value, String title, String server, String username);
 
 private:
     explicit PasswordInputDialog(Window* parent_window, String title, String server, String username);

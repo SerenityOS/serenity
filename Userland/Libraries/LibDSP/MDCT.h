@@ -19,12 +19,12 @@ public:
     {
         for (size_t n = 0; n < N; n++) {
             for (size_t k = 0; k < N / 2; k++) {
-                m_phi[n][k] = AK::cos(AK::Pi<double> / (2 * N) * (2 * n + 1 + N / 2.0) * (2 * k + 1));
+                m_phi[n][k] = AK::cos<float>(AK::Pi<float> / (2 * N) * (2 * static_cast<float>(n) + 1 + N / 2.0f) * static_cast<float>(2 * k + 1));
             }
         }
     }
 
-    void transform(Span<double const> data, Span<double> output)
+    void transform(Span<float const> data, Span<float> output)
     {
         assert(N == 2 * data.size());
         assert(N == output.size());
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    Array<Array<double, N / 2>, N> m_phi;
+    Array<Array<float, N / 2>, N> m_phi;
 };
 
 }

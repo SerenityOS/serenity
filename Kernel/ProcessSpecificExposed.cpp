@@ -80,6 +80,41 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& pro
     return thread_stack_inode.release_value();
 }
 
+ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+{
+    TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, 0 }));
+    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
+    return Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
+        for (auto& process : processes) {
+            if (process.ppid() == pid()) {
+                StringBuilder builder;
+                builder.appendff("{}", process.pid());
+                TRY(callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_children(pid(), process.pid()) }, DT_LNK }));
+            }
+        }
+        return {};
+    });
+}
+
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_children_directory(ProcFS const& procfs, StringView name) const
+{
+    auto maybe_pid = name.to_uint();
+    if (!maybe_pid.has_value())
+        return ENOENT;
+
+    auto child_process = Process::from_pid(*maybe_pid);
+    if (!child_process || child_process->ppid() != pid())
+        return ENOENT;
+
+    return TRY(ProcFSProcessPropertyInode::try_create_for_child_process_link(procfs, *maybe_pid, pid()));
+}
+
+ErrorOr<size_t> Process::procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const
+{
+    TRY(builder.appendff("/proc/{}", child_pid.value()));
+    return builder.length();
+}
+
 ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
 {
     auto file_description = TRY(open_file_description(fd));

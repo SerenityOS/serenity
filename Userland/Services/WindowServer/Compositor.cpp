@@ -629,7 +629,9 @@ void Compositor::flush(Screen& screen)
             bounding_flash = bounding_flash.united(rect);
         }
         if (!bounding_flash.is_empty()) {
-            if (device_can_flush_buffers) {
+            if (screen.can_device_flush_entire_buffer()) {
+                screen.flush_display_entire_framebuffer();
+            } else if (device_can_flush_buffers) {
                 // If the device needs a flush we need to let it know that we
                 // modified the front buffer!
                 bounding_flash.translate_by(-screen_rect.location());
@@ -721,6 +723,13 @@ void Compositor::flush(Screen& screen)
         // now so that they can be sent to the device.
         screen.flush_display(screen_data.m_buffers_are_flipped ? 1 : 0);
     }
+
+    // Note: We write all contents from the internal buffer of WindowServer Screen
+    // to the actual framebuffer with the write() syscall, but after we flush the screen
+    // to ensure we are in a "clean state"...
+    // FIXME: This write is completely inefficient and needs to be done in chunks
+    // only when appropriate...
+    screen.write_all_display_contents();
 }
 
 void Compositor::invalidate_screen()

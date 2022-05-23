@@ -137,7 +137,7 @@ void Game::show_score_card(bool game_over)
 
     auto& close_button = button_container.add<GUI::Button>("OK");
     close_button.on_click = [&score_dialog](auto) {
-        score_dialog->done(GUI::Dialog::ExecOK);
+        score_dialog->done(GUI::Dialog::ExecResult::OK);
     };
     close_button.set_min_width(70);
     close_button.resize(70, 30);

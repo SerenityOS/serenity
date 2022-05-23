@@ -222,6 +222,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
+    // FIXME: Make this constexpr once String is able to.
+    auto const sample_count_percent_format_string = String::formatted("{{:.{}f}}%", number_of_percent_digits);
+    auto const format_sample_count = [&profile, sample_count_percent_format_string](auto const sample_count) {
+        if (profile->show_percentages())
+            return String::formatted(sample_count_percent_format_string, sample_count.as_float_or(0.0));
+        return String::formatted("{} Samples", sample_count.to_i32());
+    };
+
     auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
     auto statusbar_update = [&] {
         auto& view = *timeline_view;
@@ -230,11 +238,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto flamegraph_hovered_index = flamegraph_view->hovered_index();
         if (flamegraph_hovered_index.is_valid()) {
             auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_string();
-            auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount)).to_i32();
-            auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount)).to_i32();
+            auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount));
+            auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount));
             builder.appendff("{}, ", stack);
-            builder.appendff("Samples: {}{}, ", sample_count, profile->show_percentages() ? "%" : " Samples");
-            builder.appendff("Self: {}{}", self_count, profile->show_percentages() ? "%" : " Samples");
+            builder.appendff("Samples: {}, ", format_sample_count(sample_count));
+            builder.appendff("Self: {}", format_sample_count(self_count));
         } else {
             u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
             u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
@@ -335,7 +343,7 @@ bool generate_profile(pid_t& pid)
 {
     if (!pid) {
         auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
-        if (process_chooser->exec() == GUI::Dialog::ExecCancel)
+        if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return false;
         pid = process_chooser->pid();
     }

@@ -393,7 +393,6 @@ void Mandelbrot::export_image(String const& export_path, ImageType image_type)
     }
     fwrite(encoded_data.data(), 1, encoded_data.size(), file);
     fclose(file);
-    GUI::MessageBox::show(window(), "Image was successfully exported.", "Mandelbrot", GUI::MessageBox::Type::Information);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

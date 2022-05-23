@@ -10,19 +10,13 @@
 #include "PreviewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringView.h>
+#include <Applications/ThemeEditor/WindowPreviewGML.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/RadioButton.h>
-#include <LibGUI/Statusbar.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
-#include <WindowServer/Compositor.h>
 
 namespace ThemeEditor {
 
@@ -46,37 +40,13 @@ public:
 private:
     MiniWidgetGallery()
     {
-        m_button = add<GUI::Button>();
-        m_button->set_text("Button");
-        m_checkbox = add<GUI::CheckBox>();
-        m_checkbox->set_text("Check box");
-        m_radio = add<GUI::RadioButton>();
-        m_radio->set_text("Radio button");
-        m_statusbar = add<GUI::Statusbar>();
-        m_statusbar->set_text("Status bar");
-        m_editor = add<GUI::TextEditor>();
-        m_editor->set_text("Text editor\nwith multiple\nlines.");
+        load_from_gml(window_preview_gml);
 
         for_each_child_widget([](auto& child) {
             child.set_focus_policy(GUI::FocusPolicy::NoFocus);
             return IterationDecision::Continue;
         });
     }
-
-    virtual void resize_event(GUI::ResizeEvent&) override
-    {
-        m_editor->set_relative_rect(10, 70, 200, 125);
-        m_button->set_relative_rect(10, 10, 200, 20);
-        m_checkbox->set_relative_rect(10, 30, 200, 20);
-        m_radio->set_relative_rect(10, 50, 200, 20);
-        m_statusbar->set_relative_rect(0, height() - 16, width(), 16);
-    }
-
-    RefPtr<GUI::TextEditor> m_editor;
-    RefPtr<GUI::Button> m_button;
-    RefPtr<GUI::CheckBox> m_checkbox;
-    RefPtr<GUI::RadioButton> m_radio;
-    RefPtr<GUI::Statusbar> m_statusbar;
 };
 
 PreviewWidget::PreviewWidget(Gfx::Palette const& initial_preview_palette)
@@ -100,33 +70,26 @@ void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_fil
 
 void PreviewWidget::update_preview_window_locations()
 {
-    auto to_frame_rect = [&](Gfx::IntRect rect) {
-        return Gfx::WindowTheme::current().frame_rect_for_window(
-            Gfx::WindowTheme::WindowType::Normal, rect, preview_palette(), 0);
-    };
+    auto& palette = preview_palette();
+    int window_title_height = palette.metric(Gfx::MetricRole::TitleHeight)
+        + palette.metric(Gfx::MetricRole::BorderThickness);
 
     constexpr int inactive_offset_x = -20;
-    constexpr int inactive_offset_y = -20;
+    int inactive_offset_y = -(window_title_height + 4);
     constexpr int hightlight_offset_x = 140;
-    constexpr int hightlight_offset_y = 60;
+    int hightlight_offset_y = window_title_height + 40;
 
     m_active_window_rect = Gfx::IntRect(0, 0, 320, 220);
     m_inactive_window_rect = m_active_window_rect.translated(inactive_offset_x, inactive_offset_y);
-    auto active_frame = to_frame_rect(m_active_window_rect);
-    auto x_delta = m_active_window_rect.x() - active_frame.x();
-    auto y_delta = m_active_window_rect.y() - active_frame.y();
+    m_highlight_window_rect = Gfx::IntRect(m_active_window_rect.location(), { 160, 70 }).translated(hightlight_offset_x, hightlight_offset_y);
 
-    // Center preview windows accounting for the window frames,
-    // which can vary in size depending on properties of the theme.
-    auto combind_frame_rect = active_frame.united(to_frame_rect(m_inactive_window_rect)).centered_within(frame_inner_rect());
-    m_inactive_window_rect.set_x(combind_frame_rect.x() + x_delta);
-    m_inactive_window_rect.set_y(combind_frame_rect.y() + y_delta);
-    m_active_window_rect.set_x(m_inactive_window_rect.x() - inactive_offset_x);
-    m_active_window_rect.set_y(m_inactive_window_rect.y() - inactive_offset_y);
-    m_highlight_window_rect = Gfx::IntRect(0, 0, 160, 70)
-                                  .translated(m_active_window_rect.x(), m_active_window_rect.y())
-                                  .translated(hightlight_offset_x, hightlight_offset_y)
-                                  .translated(x_delta, y_delta);
+    auto window_group = Array {
+        Window { m_active_window_rect },
+        Window { m_inactive_window_rect },
+        Window { m_highlight_window_rect },
+    };
+
+    center_window_group_within(window_group, frame_inner_rect());
 
     m_gallery->set_relative_rect(m_active_window_rect);
 }

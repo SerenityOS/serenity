@@ -31,6 +31,11 @@ public:
     Function<void(String const&)> on_theme_load_from_file;
     Function<void()> on_palette_change;
 
+    struct Window {
+        Gfx::IntRect& rect;
+    };
+    void center_window_group_within(Span<Window> windows, Gfx::IntRect const& bounds);
+
 protected:
     explicit AbstractThemePreview(Gfx::Palette const&);
 

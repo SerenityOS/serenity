@@ -19,6 +19,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 
@@ -96,6 +97,7 @@ public:
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
+    void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
 
     Color color_at(Gfx::IntPoint const& point) const;
 

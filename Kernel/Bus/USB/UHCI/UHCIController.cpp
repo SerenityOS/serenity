@@ -430,6 +430,50 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     return transfer_size;
 }
 
+ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
+{
+    Pipe& pipe = transfer.pipe();
+    dbgln_if(UHCI_DEBUG, "UHCI: Received bulk transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
+
+    // Create a new descriptor chain
+    TransferDescriptor* last_data_descriptor;
+    TransferDescriptor* data_descriptor_chain;
+    auto buffer_address = Ptr32<u8>(transfer.buffer_physical().as_ptr());
+    TRY(create_chain(pipe, transfer.pipe().direction() == Pipe::Direction::In ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor));
+
+    last_data_descriptor->terminate();
+
+    if constexpr (UHCI_VERBOSE_DEBUG) {
+        if (data_descriptor_chain) {
+            dbgln("Data TD");
+            data_descriptor_chain->print();
+        }
+    }
+
+    QueueHead* transfer_queue = allocate_queue_head();
+    if (!transfer_queue) {
+        free_descriptor_chain(data_descriptor_chain);
+        return 0;
+    }
+
+    transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
+    transfer_queue->set_transfer(&transfer);
+
+    m_bulk_qh->attach_transfer_queue(*transfer_queue);
+
+    size_t transfer_size = 0;
+    while (!transfer.complete()) {
+        transfer_size = poll_transfer_queue(*transfer_queue);
+        dbgln_if(USB_DEBUG, "Transfer size: {}", transfer_size);
+    }
+
+    free_descriptor_chain(transfer_queue->get_first_td());
+    transfer_queue->free();
+    m_queue_head_pool->release_to_pool(transfer_queue);
+
+    return transfer_size;
+}
+
 size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 {
     Transfer* transfer = transfer_queue.transfer();

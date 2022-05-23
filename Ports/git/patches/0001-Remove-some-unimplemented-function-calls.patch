@@ -1,0 +1,74 @@
+From 5d3c9d7aafc66abe10e035a7930b0868f73916b5 Mon Sep 17 00:00:00 2001
+From: Federico Guerinoni <41150432+guerinoni@users.noreply.github.com>
+Date: Fri, 16 Apr 2021 17:38:54 +0200
+Subject: [PATCH 1/2] Remove some unimplemented function calls
+
+i.e. f(un)lockfile stubs and setitimer.
+---
+ builtin/log.c     | 2 --
+ git-compat-util.h | 8 --------
+ progress.c        | 2 --
+ 3 files changed, 12 deletions(-)
+
+diff --git a/builtin/log.c b/builtin/log.c
+index c211d66..9755174 100644
+--- a/builtin/log.c
++++ b/builtin/log.c
+@@ -373,7 +373,6 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
+ 	 */
+ 	early_output_timer.it_value.tv_sec = 0;
+ 	early_output_timer.it_value.tv_usec = 500000;
+-	setitimer(ITIMER_REAL, &early_output_timer, NULL);
+ }
+ 
+ static void early_output(int signal)
+@@ -407,7 +406,6 @@ static void setup_early_output(void)
+ 	 */
+ 	early_output_timer.it_value.tv_sec = 0;
+ 	early_output_timer.it_value.tv_usec = 100000;
+-	setitimer(ITIMER_REAL, &early_output_timer, NULL);
+ }
+ 
+ static void finish_early_output(struct rev_info *rev)
+diff --git a/git-compat-util.h b/git-compat-util.h
+index 58fd813..0a0f007 100644
+--- a/git-compat-util.h
++++ b/git-compat-util.h
+@@ -1350,14 +1350,6 @@ int open_nofollow(const char *path, int flags);
+ #endif
+ 
+ #ifndef _POSIX_THREAD_SAFE_FUNCTIONS
+-static inline void flockfile(FILE *fh)
+-{
+-	; /* nothing */
+-}
+-static inline void funlockfile(FILE *fh)
+-{
+-	; /* nothing */
+-}
+ #define getc_unlocked(fh) getc(fh)
+ #endif
+ 
+diff --git a/progress.c b/progress.c
+index 0cdd875..19a2a67 100644
+--- a/progress.c
++++ b/progress.c
+@@ -83,7 +83,6 @@ static void set_progress_signal(void)
+ 	v.it_interval.tv_sec = 1;
+ 	v.it_interval.tv_usec = 0;
+ 	v.it_value = v.it_interval;
+-	setitimer(ITIMER_REAL, &v, NULL);
+ }
+ 
+ static void clear_progress_signal(void)
+@@ -93,7 +92,6 @@ static void clear_progress_signal(void)
+ 	if (progress_testing)
+ 		return;
+ 
+-	setitimer(ITIMER_REAL, &v, NULL);
+ 	signal(SIGALRM, SIG_IGN);
+ 	progress_update = 0;
+ }
+-- 
+2.36.1
+

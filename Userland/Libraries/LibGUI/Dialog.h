@@ -15,14 +15,14 @@ namespace GUI {
 class Dialog : public Window {
     C_OBJECT(Dialog)
 public:
-    enum ExecResult {
-        ExecOK = 0,
-        ExecCancel = 1,
-        ExecAborted = 2,
-        ExecYes = 3,
-        ExecNo = 4,
+    enum class ExecResult {
+        OK = 0,
+        Cancel = 1,
+        Aborted = 2,
+        Yes = 3,
+        No = 4,
     };
-    enum ScreenPosition {
+    enum class ScreenPosition {
         CenterWithinParent = 0,
 
         Center = 1,
@@ -40,22 +40,22 @@ public:
 
     virtual ~Dialog() override = default;
 
-    int exec();
+    ExecResult exec();
 
-    int result() const { return m_result; }
-    void done(int result);
+    ExecResult result() const { return m_result; }
+    void done(ExecResult);
 
     virtual void event(Core::Event&) override;
 
     virtual void close() override;
 
 protected:
-    explicit Dialog(Window* parent_window, ScreenPosition screen_position = CenterWithinParent);
+    explicit Dialog(Window* parent_window, ScreenPosition = ScreenPosition::CenterWithinParent);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
-    int m_result { ExecAborted };
-    int m_screen_position { CenterWithinParent };
+    ExecResult m_result { ExecResult::Aborted };
+    ScreenPosition m_screen_position { ScreenPosition::CenterWithinParent };
 };
 
 }

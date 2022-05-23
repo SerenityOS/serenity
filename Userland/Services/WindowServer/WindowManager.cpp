@@ -1585,12 +1585,6 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
-    // FIXME: This is fragile, the kernel should send a signal when we switch back to the WindowManager's framebuffer
-    if (event.type() == Event::KeyDown && (event.modifiers() & Mod_Alt) && (event.key() == Key_ExclamationPoint || event.key() == Key_1)) {
-        Compositor::the().invalidate_screen();
-        return;
-    }
-
     if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && event.key() == Key_I)) {
         reload_icon_bitmaps_after_scale_change();
         Compositor::the().invalidate_screen();
@@ -2266,6 +2260,9 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
 
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
+    if (auto result = m_config->sync(); result.is_error()) {
+        dbgln("Failed to save config file: {}", result.error());
+    }
 }
 
 }

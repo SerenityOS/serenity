@@ -39,11 +39,11 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);
     m_commit_button->on_click = [this](auto) {
         on_commit(m_message_editor->text());
-        done(ExecResult::ExecOK);
+        done(ExecResult::OK);
     };
 
     m_cancel_button->on_click = [this](auto) {
-        done(ExecResult::ExecCancel);
+        done(ExecResult::Cancel);
     };
 }
 

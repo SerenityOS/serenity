@@ -19,7 +19,7 @@ class FindDialog : public GUI::Dialog {
     C_OBJECT(FindDialog);
 
 public:
-    static int show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer, bool& find_all);
+    static ExecResult show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer, bool& find_all);
 
 private:
     Result<ByteBuffer, String> process_input(String text_value, OptionId opt);

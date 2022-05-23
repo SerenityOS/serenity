@@ -37,9 +37,9 @@ extern "C" {
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
-#define SHUT_RD 1
-#define SHUT_WR 2
-#define SHUT_RDWR 3
+#define SHUT_RD 0
+#define SHUT_WR 1
+#define SHUT_RDWR 2
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
@@ -48,6 +48,8 @@ extern "C" {
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
 #define IPPROTO_IPV6 41
+#define IPPROTO_ESP 50
+#define IPPROTO_AH 51
 #define IPPROTO_ICMPV6 58
 #define IPPROTO_RAW 255
 

@@ -1,7 +1,7 @@
-From aaa210d6039aa02ff3bc7998d39c6befa791cfdd Mon Sep 17 00:00:00 2001
+From 75597807e541ebe1ae83345af9250a4113bf1480 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Wed, 12 Jan 2022 22:15:37 +0330
-Subject: [PATCH 3/7] /bin/bash
+Subject: [PATCH 2/6] /bin/bash
 
 This patch swaps out /bin/sh for /bin/bash in two scripts that need it.
 
@@ -15,7 +15,7 @@ This patch swaps out /bin/sh for /bin/bash in two scripts that need it.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/bootstrap b/bootstrap
-index a487375a..8db931d1 100755
+index e0791d58..bde01283 100755
 --- a/bootstrap
 +++ b/bootstrap
 @@ -1,4 +1,4 @@
@@ -34,5 +34,5 @@ index 11622160..0e6fc25d 100755
  cmake_source_dir=`cd "\`dirname \"$0\"\`";pwd`
  exec "${cmake_source_dir}/bootstrap" "$@"
 -- 
-2.34.1
+2.36.1
 

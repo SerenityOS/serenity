@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +24,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/AsyncGenerator.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
@@ -31,6 +32,7 @@
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Collator.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
@@ -314,7 +316,27 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 
 static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 {
-    print_type(object.class_name());
+    if (is<JS::ECMAScriptFunctionObject>(object)) {
+        auto const& function = static_cast<JS::ECMAScriptFunctionObject const&>(object);
+        switch (function.kind()) {
+        case JS::FunctionKind::Normal:
+            print_type("Function");
+            break;
+        case JS::FunctionKind::Generator:
+            print_type("GeneratorFunction");
+            break;
+        case JS::FunctionKind::Async:
+            print_type("AsyncFunction");
+            break;
+        case JS::FunctionKind::AsyncGenerator:
+            print_type("AsyncGeneratorFunction");
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    } else {
+        print_type(object.class_name());
+    }
     if (is<JS::ECMAScriptFunctionObject>(object))
         js_out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(object).name());
     else if (is<JS::NativeFunction>(object))
@@ -449,6 +471,16 @@ static void print_shadow_realm(JS::Object const&, HashTable<JS::Object*>&)
 {
     // Not much we can show here that would be useful. Realm pointer address?!
     print_type("ShadowRealm");
+}
+
+static void print_generator(JS::Object const&, HashTable<JS::Object*>&)
+{
+    print_type("Generator");
+}
+
+static void print_async_generator(JS::Object const&, HashTable<JS::Object*>&)
+{
+    print_type("AsyncGenerator");
 }
 
 template<typename T>
@@ -914,6 +946,10 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_array_buffer(object, seen_objects);
         if (is<JS::ShadowRealm>(object))
             return print_shadow_realm(object, seen_objects);
+        if (is<JS::GeneratorObject>(object))
+            return print_generator(object, seen_objects);
+        if (is<JS::AsyncGenerator>(object))
+            return print_async_generator(object, seen_objects);
         if (object.is_typed_array())
             return print_typed_array(object, seen_objects);
         if (is<JS::StringObject>(object))
@@ -1338,7 +1374,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = String::join(" ", arguments.get<Vector<JS::Value>>());
+        auto output = String::join(" ", arguments.get<JS::MarkedVector<JS::Value>>());
         m_console.output_debug_message(log_level, output);
 
         switch (log_level) {

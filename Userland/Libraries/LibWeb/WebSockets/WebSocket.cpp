@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2021-2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +8,6 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibProtocol/WebSocket.h>
-#include <LibProtocol/WebSocketClient.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/WebSocketWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -28,29 +26,27 @@
 
 namespace Web::WebSockets {
 
+static RefPtr<WebSocketClientManager> s_websocket_client_manager;
+
+void WebSocketClientManager::initialize(RefPtr<WebSocketClientManager> websocket_client_manager)
+{
+    s_websocket_client_manager = websocket_client_manager;
+}
+
 WebSocketClientManager& WebSocketClientManager::the()
 {
-    static RefPtr<WebSocketClientManager> s_the;
-    if (!s_the)
-        s_the = WebSocketClientManager::try_create().release_value_but_fixme_should_propagate_errors();
-    return *s_the;
+    if (!s_websocket_client_manager) [[unlikely]] {
+        dbgln("Web::WebSockets::WebSocketClientManager was not initialized!");
+        VERIFY_NOT_REACHED();
+    }
+    return *s_websocket_client_manager;
 }
 
-ErrorOr<NonnullRefPtr<WebSocketClientManager>> WebSocketClientManager::try_create()
-{
-    auto websocket_client = TRY(Protocol::WebSocketClient::try_create());
-    return adopt_nonnull_ref_or_enomem(new (nothrow) WebSocketClientManager(move(websocket_client)));
-}
+WebSocketClientSocket::WebSocketClientSocket() = default;
 
-WebSocketClientManager::WebSocketClientManager(NonnullRefPtr<Protocol::WebSocketClient> websocket_client)
-    : m_websocket_client(move(websocket_client))
-{
-}
+WebSocketClientSocket::~WebSocketClientSocket() = default;
 
-RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url, String const& origin)
-{
-    return m_websocket_client->connect(url, origin);
-}
+WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
 DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, String const& url)
@@ -107,18 +103,7 @@ WebSocket::ReadyState WebSocket::ready_state() const
 {
     if (!m_websocket)
         return WebSocket::ReadyState::Closed;
-    auto ready_state = const_cast<Protocol::WebSocket&>(*m_websocket).ready_state();
-    switch (ready_state) {
-    case Protocol::WebSocket::ReadyState::Connecting:
-        return WebSocket::ReadyState::Connecting;
-    case Protocol::WebSocket::ReadyState::Open:
-        return WebSocket::ReadyState::Open;
-    case Protocol::WebSocket::ReadyState::Closing:
-        return WebSocket::ReadyState::Closing;
-    case Protocol::WebSocket::ReadyState::Closed:
-        return WebSocket::ReadyState::Closed;
-    }
-    return WebSocket::ReadyState::Closed;
+    return const_cast<WebSocketClientSocket&>(*m_websocket).ready_state();
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-extensions
@@ -212,7 +197,7 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_message(ByteBuffer message, bool is_text)
 {
-    if (m_websocket->ready_state() != Protocol::WebSocket::ReadyState::Open)
+    if (m_websocket->ready_state() != WebSocket::ReadyState::Open)
         return;
     if (is_text) {
         auto text_message = String(ReadonlyBytes(message));

@@ -18,7 +18,7 @@ LiveNodeList::LiveNodeList(Node& root, Function<bool(Node const&)> filter)
 NonnullRefPtrVector<Node> LiveNodeList::collection() const
 {
     NonnullRefPtrVector<Node> nodes;
-    m_root->for_each_in_inclusive_subtree_of_type<Node>([&](auto& node) {
+    m_root->for_each_in_inclusive_subtree([&](auto& node) {
         if (m_filter(node))
             nodes.append(node);
 

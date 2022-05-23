@@ -1,0 +1,25 @@
+From 83c869b96b9651ff4fc16989cffb9a27d21329b2 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Thu, 15 Apr 2021 15:43:18 +0200
+Subject: [PATCH 3/4] Install into /usr/local
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 80dd6ec..7026600 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,7 +2,7 @@ CC=gcc
+ CFLAGS=-O3 -flto -Wall -g -Werror=implicit-function-declaration -Werror=int-conversion
+ LDLIBS=-lm
+ INSTALL=install
+-PREFIX=/usr
++PREFIX=/usr/local
+ 
+ OBJS=\
+  cpu.o\
+-- 
+2.36.1
+

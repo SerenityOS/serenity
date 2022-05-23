@@ -3,6 +3,9 @@ From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 21 Dec 2021 23:48:09 -0800
 Subject: [PATCH 3/4] Port: Add SerenityOS support to configure
 
+This patch implements targetos detection for serenity, and also
+disables shared memory support automatically for serenity, as it's not
+currently supported.
 ---
  configure | 3 +++
  1 file changed, 3 insertions(+)

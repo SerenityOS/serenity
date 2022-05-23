@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -27,6 +28,7 @@
 #endif
 
 namespace Gfx {
+
 template<size_t N, typename T>
 requires(N >= 2 && N <= 4) class VectorN final {
     static_assert(LOOP_UNROLL_N >= N, "Unroll the entire loop for performance.");
@@ -66,7 +68,7 @@ public:
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            m_data[i] += other.m_data[i];
+            m_data[i] += other.data()[i];
         return *this;
     }
 
@@ -74,7 +76,7 @@ public:
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            m_data[i] -= other.m_data[i];
+            m_data[i] -= other.data()[i];
         return *this;
     }
 
@@ -91,7 +93,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] + other.m_data[i];
+            result.m_data[i] = m_data[i] + other.data()[i];
         return result;
     }
 
@@ -100,7 +102,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] - other.m_data[i];
+            result.m_data[i] = m_data[i] - other.data()[i];
         return result;
     }
 
@@ -109,7 +111,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] * other.m_data[i];
+            result.m_data[i] = m_data[i] * other.data()[i];
         return result;
     }
 
@@ -127,7 +129,7 @@ public:
         VectorN result;
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result.m_data[i] = m_data[i] / other.m_data[i];
+            result.m_data[i] = m_data[i] / other.data()[i];
         return result;
     }
 
@@ -156,7 +158,7 @@ public:
         T result {};
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
-            result += m_data[i] * other.m_data[i];
+            result += m_data[i] * other.data()[i];
         return result;
     }
 
@@ -199,11 +201,7 @@ public:
 
     [[nodiscard]] constexpr T length() const
     {
-        T squared_sum {};
-        UNROLL_LOOP
-        for (auto i = 0u; i < N; ++i)
-            squared_sum += m_data[i] * m_data[i];
-        return AK::sqrt(squared_sum);
+        return AK::sqrt(dot(*this));
     }
 
     [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
@@ -226,7 +224,31 @@ public:
             return String::formatted("[{},{},{},{}]", x(), y(), z(), w());
     }
 
+    template<typename U>
+    [[nodiscard]] VectorN<N, U> to_type() const
+    {
+        VectorN<N, U> result;
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i)
+            result.data()[i] = static_cast<U>(m_data[i]);
+        return result;
+    }
+
+    template<typename U>
+    [[nodiscard]] VectorN<N, U> to_rounded() const
+    {
+        VectorN<N, U> result;
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i)
+            result.data()[i] = round_to<U>(m_data[i]);
+        return result;
+    }
+
+    auto& data() { return m_data; }
+    auto const& data() const { return m_data; }
+
 private:
     AK::Array<T, N> m_data;
 };
+
 }

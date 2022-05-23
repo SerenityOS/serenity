@@ -1,0 +1,28 @@
+From 39364e14fd4259ab6c618a228f0b06dc8b9af24b Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Wed, 16 Jun 2021 11:08:32 +0200
+Subject: [PATCH 1/2] Undefine 'SIOCGIFCONF' on serenity
+
+FIXME: We don't know why yet.
+---
+ SDLnet.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/SDLnet.c b/SDLnet.c
+index 53d125a..87eab4c 100644
+--- a/SDLnet.c
++++ b/SDLnet.c
+@@ -184,6 +184,10 @@ const char *SDLNet_ResolveIP(const IPaddress *ip)
+     return inet_ntoa(in);
+ }
+ 
++#ifdef __serenity__
++#undef SIOCGIFCONF
++#endif
++
+ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
+ {
+     int count = 0;
+-- 
+2.36.1
+

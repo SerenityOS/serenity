@@ -91,7 +91,7 @@ private:
             m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())
                 normalize(m_matrix);
-            done(ExecOK);
+            done(ExecResult::OK);
         };
     }
 
@@ -146,7 +146,7 @@ struct FilterParameters<Gfx::GenericConvolutionFilter<N>> {
     {
         auto input = GenericConvolutionFilterInputDialog<N>::construct(parent_window);
         input->exec();
-        if (input->result() == GUI::Dialog::ExecOK)
+        if (input->result() == GUI::Dialog::ExecResult::OK)
             return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(input->matrix(), input->should_wrap());
 
         return {};

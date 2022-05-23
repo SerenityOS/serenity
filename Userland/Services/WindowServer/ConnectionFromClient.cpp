@@ -1128,12 +1128,14 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient
 
 Messages::WindowServer::GetColorUnderCursorResponse ConnectionFromClient::get_color_under_cursor()
 {
+    auto screen_scale_factor = ScreenInput::the().cursor_location_screen().scale_factor();
     // FIXME: Add a mechanism to get screen bitmap without cursor, so we don't have to do this
     //        manual translation to avoid sampling the color on the actual cursor itself.
-    auto cursor_location = ScreenInput::the().cursor_location().translated(-1, -1);
+    auto cursor_location = (ScreenInput::the().cursor_location() * screen_scale_factor).translated(-1, -1);
     auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();
+    auto scaled_screen_rect = screen_with_cursor.rect() * screen_scale_factor;
 
-    if (!screen_with_cursor.rect().contains(cursor_location))
+    if (!scaled_screen_rect.contains(cursor_location))
         return Optional<Color> {};
 
     return { Compositor::the().color_at_position({}, screen_with_cursor, cursor_location) };

@@ -442,7 +442,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (pid == -1)
                 return;
             auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-            if (rc == GUI::Dialog::ExecYes)
+            if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGKILL);
         },
         &process_table_view);
@@ -453,7 +453,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (pid == -1)
                 return;
             auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-            if (rc == GUI::Dialog::ExecYes)
+            if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGSTOP);
         },
         &process_table_view);
@@ -661,13 +661,13 @@ void build_performance_tab(GUI::Widget& graphs_container)
             cpu_graph.set_max(100);
             cpu_graph.set_value_format(0, {
                                               .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                              .text_formatter = [](int value) {
+                                              .text_formatter = [](u64 value) {
                                                   return String::formatted("Total: {}%", value);
                                               },
                                           });
             cpu_graph.set_value_format(1, {
                                               .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                              .text_formatter = [](int value) {
+                                              .text_formatter = [](u64 value) {
                                                   return String::formatted("Kernel: {}%", value);
                                               },
                                           });
@@ -687,19 +687,19 @@ void build_performance_tab(GUI::Widget& graphs_container)
     auto& memory_graph = *graphs_container.find_descendant_of_type_named<SystemMonitor::GraphWidget>("memory_graph");
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
-                                         .text_formatter = [](int bytes) {
+                                         .text_formatter = [](u64 bytes) {
                                              return String::formatted("Committed: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(1, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                         .text_formatter = [](int bytes) {
+                                         .text_formatter = [](u64 bytes) {
                                              return String::formatted("Allocated: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(2, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                         .text_formatter = [](int bytes) {
+                                         .text_formatter = [](u64 bytes) {
                                              return String::formatted("Kernel heap: {}", human_readable_size(bytes));
                                          },
                                      });

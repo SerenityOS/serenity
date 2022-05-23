@@ -10,9 +10,9 @@
 
 namespace GUI {
 
-void ModelSelection::remove_all_matching(Function<bool(ModelIndex const&)> filter)
+void ModelSelection::remove_all_matching(Function<bool(ModelIndex const&)> const& filter)
 {
-    if (m_indices.remove_all_matching([&](ModelIndex const& index) { return filter(index); }))
+    if (m_indices.remove_all_matching(filter))
         notify_selection_changed();
 }
 

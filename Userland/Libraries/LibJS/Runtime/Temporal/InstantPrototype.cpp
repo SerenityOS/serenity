@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -126,14 +127,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
-
-    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
-    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
-
-    // 5. Return ! CreateTemporalInstant(ns).
-    return MUST(create_temporal_instant(global_object, *ns));
+    // 3. Return ? AddDurationToOrSubtractDurationFromInstant(add, instant, temporalDurationLike).
+    return TRY(add_duration_to_or_subtract_duration_from_instant(global_object, ArithmeticOperation::Add, *instant, temporal_duration_like));
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
@@ -145,102 +140,36 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
-
-    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], -duration.[[Hours]], -duration.[[Minutes]], -duration.[[Seconds]], -duration.[[Milliseconds]], -duration.[[Microseconds]], -duration.[[Nanoseconds]]).
-    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
-
-    // 5. Return ! CreateTemporalInstant(ns).
-    return MUST(create_temporal_instant(global_object, *ns));
+    // 3. Return ? AddDurationToOrSubtractDurationFromInstant(subtract, instant, temporalDurationLike).
+    return TRY(add_duration_to_or_subtract_duration_from_instant(global_object, ArithmeticOperation::Subtract, *instant, temporal_duration_like));
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
-
-    // 4. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
-
-    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
-    auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
-
-    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, default_largest_unit));
-
-    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
-    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
-
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
-
-    // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
-
-    // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), *largest_unit));
-
-    // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    // 3. Return ? DifferenceTemporalInstant(until, instant, other, options).
+    return TRY(difference_temporal_instant(global_object, DifferenceOperation::Until, *instant, other, options));
 }
 
 // 8.3.10 Temporal.Instant.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 {
+    auto other = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
-
-    // 4. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
-
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
-
-    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
-    auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
-
-    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
-
-    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
-
-    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
-    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
-
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
-
-    // 12. Let roundedNs be ! DifferenceInstant(other.[[Nanoseconds]], instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
-
-    // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), *largest_unit));
-
-    // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    // 3. Return ? DifferenceTemporalInstant(since, instant, other, options).
+    return TRY(difference_temporal_instant(global_object, DifferenceOperation::Since, *instant, other, options));
 }
 
 // 8.3.11 Temporal.Instant.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
@@ -290,35 +219,35 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     double maximum;
     // 8. If smallestUnit is "hour", then
     if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
+        // a. Let maximum be HoursPerDay.
+        maximum = hours_per_day;
     }
     // 9. Else if smallestUnit is "minute", then
     else if (smallest_unit == "minute"sv) {
-        // a. Let maximum be 1440.
-        maximum = 1440;
+        // a. Let maximum be MinutesPerHour × HoursPerDay.
+        maximum = minutes_per_hour * hours_per_day;
     }
     // 10. Else if smallestUnit is "second", then
     else if (smallest_unit == "second"sv) {
-        // a. Let maximum be 86400.
-        maximum = 86400;
+        // a. Let maximum be SecondsPerMinute × MinutesPerHour × HoursPerDay.
+        maximum = seconds_per_minute * minutes_per_hour * hours_per_day;
     }
     // 11. Else if smallestUnit is "millisecond", then
     else if (smallest_unit == "millisecond"sv) {
-        // a. Let maximum be 8.64 × 10^7.
-        maximum = 86400000;
+        // a. Let maximum be ℝ(msPerDay).
+        maximum = ms_per_day;
     }
     // 12. Else if smallestUnit is "microsecond", then
     else if (smallest_unit == "microsecond"sv) {
-        // a. Let maximum be 8.64 × 10^10.
-        maximum = 86400000000;
+        // a. Let maximum be 10^3 × ℝ(msPerDay).
+        maximum = 1000 * ms_per_day;
     }
     // 13. Else,
     else {
         // a. Assert: smallestUnit is "nanosecond".
         VERIFY(smallest_unit == "nanosecond"sv);
-        // b. Let maximum be 8.64 × 10^13.
-        maximum = 86400000000000;
+        // b. Let maximum be nsPerDay.
+        maximum = ns_per_day;
     }
 
     // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, true).

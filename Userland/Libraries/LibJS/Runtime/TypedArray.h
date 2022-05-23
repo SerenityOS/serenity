@@ -80,7 +80,7 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
     if (typed_array.viewed_array_buffer()->is_detached())
         return false;
 
-    // 2. If ! IsIntegralNumber(index) is false, return false.
+    // 2. If IsIntegralNumber(index) is false, return false.
     // 3. If index is -0𝔽, return false.
     if (!property_index.is_index())
         return false;
@@ -185,11 +185,11 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
+                // i. Let value be IntegerIndexedElementGet(O, numericIndex).
                 auto value = integer_indexed_element_get<T>(*this, numeric_index);
 
                 // ii. If value is undefined, return undefined.
@@ -222,9 +222,9 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
-            // b. If numericIndex is not undefined, return ! IsValidIntegerIndex(O, numericIndex).
+            // b. If numericIndex is not undefined, return IsValidIntegerIndex(O, numericIndex).
             if (!numeric_index.is_undefined())
                 return is_valid_integer_index(*this, numeric_index);
         }
@@ -245,11 +245,11 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+                // i. If IsValidIntegerIndex(O, numericIndex) is false, return false.
                 if (!is_valid_integer_index(*this, numeric_index))
                     return false;
 
@@ -261,7 +261,7 @@ public:
                 if (property_descriptor.enumerable.has_value() && !*property_descriptor.enumerable)
                     return false;
 
-                // iv. If ! IsAccessorDescriptor(Desc) is true, return false.
+                // iv. If IsAccessorDescriptor(Desc) is true, return false.
                 if (property_descriptor.is_accessor_descriptor())
                     return false;
 
@@ -295,11 +295,11 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+                // i. Return IntegerIndexedElementGet(O, numericIndex).
                 return integer_indexed_element_get<T>(*this, numeric_index);
             }
         }
@@ -322,7 +322,7 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
@@ -350,11 +350,11 @@ public:
         // 1. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_key.is_string() || property_key.is_number()) {
-            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // a. Let numericIndex be CanonicalNumericIndexString(P).
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.
+                // i. If IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.
                 if (!is_valid_integer_index(*this, numeric_index))
                     return true;
                 return false;

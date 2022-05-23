@@ -27,8 +27,8 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/x86/ISRStubs.h>
-#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
 extern FlatPtr start_of_unmap_after_init;

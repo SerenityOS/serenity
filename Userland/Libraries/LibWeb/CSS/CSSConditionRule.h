@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,9 @@ class CSSConditionRule : public CSSGroupingRule {
     AK_MAKE_NONMOVABLE(CSSConditionRule);
 
 public:
-    ~CSSConditionRule() = default;
+    using WrapperType = Bindings::CSSConditionRuleWrapper;
+
+    virtual ~CSSConditionRule() = default;
 
     virtual String condition_text() const = 0;
     virtual void set_condition_text(String) = 0;

@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto change_settings = [&] {
         auto size_dialog = GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
-        if (size_dialog->exec() || size_dialog->result() != GUI::Dialog::ExecOK)
+        if (size_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
         board_size = size_dialog->board_size();
@@ -152,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 "Congratulations!",
                 GUI::MessageBox::Type::Question,
                 GUI::MessageBox::InputType::YesNo);
-            if (want_to_continue == GUI::MessageBox::ExecYes)
+            if (want_to_continue == GUI::MessageBox::ExecResult::Yes)
                 game.set_want_to_continue();
             else
                 start_a_new_game();

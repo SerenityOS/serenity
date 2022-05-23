@@ -18,39 +18,37 @@ struct winsize {
     unsigned short ws_ypixel;
 };
 
-struct FBProperties {
+struct GraphicsConnectorProperties {
     unsigned char multihead_support;
     unsigned char doublebuffer_support;
     unsigned char flushing_support;
     unsigned char partial_flushing_support;
+    unsigned char refresh_rate_support;
 };
 
-struct FBHeadProperties {
-    int head_index;
-
-    unsigned pitch;
-    unsigned width;
-    unsigned height;
-
-    unsigned offset;
-    unsigned buffer_length;
+struct GraphicsHeadModeSetting {
+    int horizontal_stride;
+    int pixel_clock_in_khz;
+    int horizontal_active;
+    int horizontal_front_porch_pixels;
+    int horizontal_sync_time_pixels;
+    int horizontal_blank_pixels;
+    int vertical_active;
+    int vertical_front_porch_lines;
+    int vertical_sync_time_lines;
+    int vertical_blank_lines;
+    int horizontal_offset;
+    int vertical_offset;
 };
 
-struct FBHeadResolution {
-    int head_index;
-    int pitch;
-    int width;
-    int height;
-};
-
-struct FBHeadEDID {
+struct GraphicsHeadEDID {
     int head_index;
 
     unsigned char* bytes;
     unsigned bytes_size;
 };
 
-struct FBHeadVerticalOffset {
+struct GraphicsHeadVerticalOffset {
     int head_index;
     int offsetted;
 };
@@ -95,14 +93,15 @@ enum IOCtlNumber {
     TIOCNOTTY,
     TIOCSWINSZ,
     TIOCGPTN,
-    FB_IOCTL_GET_PROPERTIES,
-    FB_IOCTL_GET_HEAD_PROPERTIES,
-    FB_IOCTL_SET_HEAD_RESOLUTION,
-    FB_IOCTL_GET_HEAD_EDID,
-    FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER,
-    FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER,
-    FB_IOCTL_FLUSH_HEAD_BUFFERS,
-    FB_IOCTL_FLUSH_HEAD,
+    GRAPHICS_IOCTL_GET_PROPERTIES,
+    GRAPHICS_IOCTL_GET_HEAD_EDID,
+    GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER,
+    GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER,
+    GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS,
+    GRAPHICS_IOCTL_FLUSH_HEAD,
+    GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING,
+    GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING,
+    GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING,
     KEYBOARD_IOCTL_GET_NUM_LOCK,
     KEYBOARD_IOCTL_SET_NUM_LOCK,
     KEYBOARD_IOCTL_GET_CAPS_LOCK,
@@ -154,14 +153,15 @@ enum IOCtlNumber {
 #define TIOCNOTTY TIOCNOTTY
 #define TIOCSWINSZ TIOCSWINSZ
 #define TIOCGPTN TIOCGPTN
-#define FB_IOCTL_GET_PROPERTIES FB_IOCTL_GET_PROPERTIES
-#define FB_IOCTL_GET_HEAD_PROPERTIES FB_IOCTL_GET_HEAD_PROPERTIES
-#define FB_IOCTL_GET_HEAD_EDID FB_IOCTL_GET_HEAD_EDID
-#define FB_IOCTL_SET_HEAD_RESOLUTION FB_IOCTL_SET_HEAD_RESOLUTION
-#define FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER
-#define FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER
-#define FB_IOCTL_FLUSH_HEAD_BUFFERS FB_IOCTL_FLUSH_HEAD_BUFFERS
-#define FB_IOCTL_FLUSH_HEAD FB_IOCTL_FLUSH_HEAD
+#define GRAPHICS_IOCTL_GET_PROPERTIES GRAPHICS_IOCTL_GET_PROPERTIES
+#define GRAPHICS_IOCTL_GET_HEAD_EDID GRAPHICS_IOCTL_GET_HEAD_EDID
+#define GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER
+#define GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER
+#define GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS
+#define GRAPHICS_IOCTL_FLUSH_HEAD GRAPHICS_IOCTL_FLUSH_HEAD
+#define GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING
+#define GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING
+#define GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING
 #define KEYBOARD_IOCTL_GET_NUM_LOCK KEYBOARD_IOCTL_GET_NUM_LOCK
 #define KEYBOARD_IOCTL_SET_NUM_LOCK KEYBOARD_IOCTL_SET_NUM_LOCK
 #define KEYBOARD_IOCTL_GET_CAPS_LOCK KEYBOARD_IOCTL_GET_CAPS_LOCK

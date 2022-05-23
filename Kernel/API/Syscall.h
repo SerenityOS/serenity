@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 
@@ -186,6 +185,7 @@ enum class NeedsBigProcessLock {
     S(unlink, NeedsBigProcessLock::No)                      \
     S(unveil, NeedsBigProcessLock::Yes)                     \
     S(utime, NeedsBigProcessLock::Yes)                      \
+    S(utimensat, NeedsBigProcessLock::Yes)                  \
     S(waitid, NeedsBigProcessLock::Yes)                     \
     S(write, NeedsBigProcessLock::Yes)                      \
     S(writev, NeedsBigProcessLock::Yes)                     \
@@ -200,21 +200,6 @@ enum Function {
 #undef __ENUMERATE_SYSCALL
         __Count
 };
-
-constexpr StringView to_string(Function function)
-{
-    switch (function) {
-#undef __ENUMERATE_SYSCALL
-#define __ENUMERATE_SYSCALL(sys_call, needs_lock) \
-    case SC_##sys_call:                           \
-        return #sys_call##sv;
-        ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
-#undef __ENUMERATE_SYSCALL
-    default:
-        break;
-    }
-    return "Unknown"sv;
-}
 
 #ifdef __serenity__
 struct StringArgument {
@@ -430,6 +415,13 @@ struct SC_pledge_params {
 struct SC_unveil_params {
     StringArgument path;
     StringArgument permissions;
+};
+
+struct SC_utimensat_params {
+    int dirfd;
+    StringArgument path;
+    struct timespec const* times;
+    int flag;
 };
 
 struct SC_waitid_params {

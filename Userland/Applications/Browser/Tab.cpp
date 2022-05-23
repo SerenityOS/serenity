@@ -36,7 +36,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Browser {
 
@@ -112,7 +112,7 @@ Tab::Tab(BrowserWindow& window)
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
-    m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
+    m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
     if (g_content_filters_enabled)
         m_web_content_view->set_content_filters(g_content_filters);
     else
@@ -603,11 +603,10 @@ void Tab::show_storage_inspector()
         m_storage_widget = storage_window->set_main_widget<StorageWidget>();
     }
 
-    if (on_want_cookies) {
-        auto cookies = on_want_cookies();
+    if (on_get_cookies_entries) {
+        auto cookies = on_get_cookies_entries();
         m_storage_widget->clear_cookies();
-        for (auto cookie : cookies)
-            m_storage_widget->add_cookie(cookie);
+        m_storage_widget->set_cookies_entries(cookies);
     }
 
     if (on_get_local_storage_entries) {

@@ -22,6 +22,7 @@ class PageDirectory;
 };
 
 class Thread;
+class Processor;
 
 // FIXME This needs to go behind some sort of platform abstraction
 //       it is used between Thread and Processor.
@@ -30,8 +31,13 @@ struct [[gnu::aligned(16)]] FPUState
     u8 buffer[512];
 };
 
+// FIXME: Remove this once we support SMP in aarch64
+extern Processor* g_current_processor;
+
 class Processor {
 public:
+    void initialize(u32 cpu);
+
     void set_specific(ProcessorSpecificDataID /*specific_id*/, void* /*ptr*/)
     {
         VERIFY_NOT_REACHED();
@@ -66,7 +72,6 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        VERIFY_NOT_REACHED();
         return false;
     }
 
@@ -80,16 +85,16 @@ public:
         VERIFY_NOT_REACHED();
     }
 
+    // FIXME: When aarch64 supports multiple cores, return the correct core id here.
     ALWAYS_INLINE static u32 current_id()
     {
-        VERIFY_NOT_REACHED();
         return 0;
     }
 
+    // FIXME: Actually return the current thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* current_thread()
     {
-        VERIFY_NOT_REACHED();
-        return 0;
+        return nullptr;
     }
 
     ALWAYS_INLINE bool has_nx() const
@@ -122,23 +127,23 @@ public:
         return 0;
     }
 
+    // FIXME: Actually return the idle thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* idle_thread()
     {
-        VERIFY_NOT_REACHED();
         return nullptr;
     }
 
-    ALWAYS_INLINE static Processor& current() { VERIFY_NOT_REACHED(); }
+    ALWAYS_INLINE static Processor& current()
+    {
+        return *g_current_processor;
+    }
 
     static void deferred_call_queue(Function<void()> /* callback */)
     {
         VERIFY_NOT_REACHED();
     }
 
-    [[noreturn]] static void halt()
-    {
-        for (;;) { }
-    }
+    [[noreturn]] static void halt();
 };
 
 }

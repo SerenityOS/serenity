@@ -91,7 +91,9 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
     } else {
         String path_string = path.to_string();
         String full_path;
-        if (Core::File::looks_like_shared_library(path_string))
+        if (path_string.starts_with('/'))
+            full_path = path_string;
+        else if (Core::File::looks_like_shared_library(path_string))
             full_path = String::formatted("/usr/lib/{}", path);
         else
             full_path = path_string;

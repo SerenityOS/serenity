@@ -226,8 +226,6 @@
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidCalendarString, "Invalid calendar string '{}'")                                                                    \
-    M(TemporalInvalidDateString, "Invalid date string '{}'")                                                                            \
-    M(TemporalInvalidDateStringUTCDesignator, "Invalid date string '{}': must not contain a UTC designator")                            \
     M(TemporalInvalidDateTimeString, "Invalid date time string '{}'")                                                                   \
     M(TemporalInvalidDateTimeStringUTCDesignator, "Invalid date time string '{}': must not contain a UTC designator")                   \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
@@ -249,7 +247,6 @@
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
     M(TemporalInvalidPlainTimeLikeObject, "Invalid plain time-like object")                                                             \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
-    M(TemporalInvalidRelativeToString, "Invalid relative to string '{}'")                                                               \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
     M(TemporalInvalidTimeStringUTCDesignator, "Invalid time string '{}': must not contain a UTC designator")                            \

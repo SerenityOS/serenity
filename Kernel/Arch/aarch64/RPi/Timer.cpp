@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
-#include <Kernel/Arch/aarch64/Utils.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 // "12.1 System Timer Registers" / "10.2 System Timer Registers"
 struct TimerRegisters {
@@ -50,14 +50,14 @@ u64 Timer::microseconds_since_boot()
     return (static_cast<u64>(high) << 32) | low;
 }
 
-class SetClockRateMboxMessage : Prekernel::Mailbox::Message {
+class SetClockRateMboxMessage : Mailbox::Message {
 public:
     u32 clock_id;
     u32 rate_hz;
     u32 skip_setting_turbo;
 
     SetClockRateMboxMessage()
-        : Prekernel::Mailbox::Message(0x0003'8002, 12)
+        : Mailbox::Message(0x0003'8002, 12)
     {
         clock_id = 0;
         rate_hz = 0;
@@ -68,17 +68,17 @@ public:
 u32 Timer::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo)
 {
     struct __attribute__((aligned(16))) {
-        Prekernel::Mailbox::MessageHeader header;
+        Mailbox::MessageHeader header;
         SetClockRateMboxMessage set_clock_rate;
-        Prekernel::Mailbox::MessageTail tail;
+        Mailbox::MessageTail tail;
     } message_queue;
 
     message_queue.set_clock_rate.clock_id = static_cast<u32>(clock_id);
     message_queue.set_clock_rate.rate_hz = rate_hz;
     message_queue.set_clock_rate.skip_setting_turbo = skip_setting_turbo ? 1 : 0;
 
-    if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
-        warnln("Timer::set_clock_rate() failed!");
+    if (!Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+        dbgln("Timer::set_clock_rate() failed!");
         return 0;
     }
 

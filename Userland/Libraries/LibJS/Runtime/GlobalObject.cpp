@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/AsyncFunctionPrototype.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionPrototype.h>
+#include <LibJS/Runtime/AsyncGeneratorPrototype.h>
 #include <LibJS/Runtime/AsyncIteratorPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
@@ -177,12 +178,10 @@ void GlobalObject::initialize_global_object()
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 
-    // %GeneratorFunction.prototype.prototype% must be initialized separately as it has no
-    // companion constructor
-    m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, *this);
-
+    // These must be initialized separately as they have no companion constructor
     m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, *this);
-
+    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(*this, *this);
+    m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, *this);
     m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(*this, *this);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
@@ -298,6 +297,9 @@ void GlobalObject::initialize_global_object()
     // 27.5.1.1 Generator.prototype.constructor, https://tc39.es/ecma262/#sec-generator.prototype.constructor
     m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_prototype, Attribute::Configurable);
 
+    // 27.6.1.1 AsyncGenerator.prototype.constructor, https://tc39.es/ecma262/#sec-asyncgenerator-prototype-constructor
+    m_async_generator_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_prototype, Attribute::Configurable);
+
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
@@ -315,8 +317,9 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
-    visitor.visit(m_generator_prototype);
     visitor.visit(m_async_from_sync_iterator_prototype);
+    visitor.visit(m_async_generator_prototype);
+    visitor.visit(m_generator_prototype);
     visitor.visit(m_intl_segments_prototype);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_date_constructor_now_function);
@@ -486,7 +489,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {
-    return perform_eval(vm.argument(0), global_object, CallerMode::NonStrict, EvalMode::Indirect);
+    return perform_eval(global_object, vm.argument(0), CallerMode::NonStrict, EvalMode::Indirect);
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
@@ -495,7 +498,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
     auto& vm = global_object.vm();
     auto utf16_string = Utf16String(string);
 
-    // 1. Let strLen be the number of code units in string.
+    // 1. Let strLen be the length of string.
     auto string_length = utf16_string.length_in_code_units();
 
     // 2. Let R be the empty String.
@@ -521,7 +524,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
         }
         // d. Else,
         else {
-            // i. Let cp be ! CodePointAt(string, k).
+            // i. Let cp be CodePointAt(string, k).
             auto code_point = code_point_at(utf16_string.view(), k);
             // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
             if (code_point.is_unpaired_surrogate)

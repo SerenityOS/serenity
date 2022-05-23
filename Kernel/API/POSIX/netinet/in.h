@@ -20,6 +20,10 @@ typedef uint32_t in_addr_t;
 #define INADDR_LOOPBACK 0x7f000001
 #define INADDR_BROADCAST 0xffffffff
 
+#define IN_CLASSA_NET 0xff000000
+#define IN_CLASSB_NET 0xffff0000
+#define IN_CLASSC_NET 0xffffff00
+
 #define IN_LOOPBACKNET 127
 
 #define IP_TOS 1

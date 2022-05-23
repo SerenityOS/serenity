@@ -597,43 +597,7 @@ ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Ob
     return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendar);
 }
 
-// 12.2.29 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
-bool is_iso_leap_year(i32 year)
-{
-    // 1. Assert: year is an integer.
-
-    // 2. If year modulo 4 ≠ 0, return false.
-    if (year % 4 != 0)
-        return false;
-
-    // 3. If year modulo 400 = 0, return true.
-    if (year % 400 == 0)
-        return true;
-
-    // 4. If year modulo 100 = 0, return false.
-    if (year % 100 == 0)
-        return false;
-
-    // 5. Return true.
-    return true;
-}
-
-// 12.2.30 ISODaysInYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinyear
-u16 iso_days_in_year(i32 year)
-{
-    // 1. Assert: year is an integer.
-
-    // 2. If ! IsISOLeapYear(year) is true, then
-    if (is_iso_leap_year(year)) {
-        // a. Return 366.
-        return 366;
-    }
-
-    // 3. Return 365.
-    return 365;
-}
-
-// 12.2.31 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
+// 12.2.29 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 u8 iso_days_in_month(i32 year, u8 month)
 {
     // 1. Assert: year is an integer.
@@ -649,50 +613,11 @@ u8 iso_days_in_month(i32 year, u8 month)
     if (month == 4 || month == 6 || month == 9 || month == 11)
         return 30;
 
-    // 5. If ! IsISOLeapYear(year) is true, return 29.
-    if (is_iso_leap_year(year))
-        return 29;
-
-    // 6. Return 28.
-    return 28;
+    // 5. Return 28 + ℝ(InLeapYear(TimeFromYear(𝔽(year)))).
+    return 28 + JS::in_leap_year(time_from_year(year));
 }
 
-// 12.2.32 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
-u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
-{
-    // 1. Assert: year is an integer.
-    // 2. Assert: month is an integer.
-    // 3. Assert: day is an integer.
-
-    // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's day of the week according to ISO-8601 as an integer.
-    // NOTE: Implemented based on https://cs.uwaterloo.ca/~alopez-o/math-faq/node73.html
-    auto normalized_month = month + (month < 3 ? 10 : -2);
-    auto normalized_year = year - (month < 3 ? 1 : 0);
-    auto century = normalized_year / 100;
-    auto truncated_year = normalized_year - (century * 100);
-    auto day_of_week = modulo(day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4), 7);
-
-    // https://cs.uwaterloo.ca/~alopez-o/math-faq/node73.html computes day_of_week as 0 = Sunday, ..., 6 = Saturday, but for ToISODayOfWeek Monday is 1 and Sunday is 7.
-    return day_of_week == 0 ? 7 : day_of_week;
-}
-
-// 12.2.33 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
-u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
-{
-    // 1. Assert: year is an integer.
-    // 2. Assert: month is an integer.
-    // 3. Assert: day is an integer.
-
-    // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's ordinal date in the year according to ISO-8601 as an integer.
-    u16 days = day;
-    for (u8 i = month - 1; i > 0; --i)
-        days += iso_days_in_month(year, i);
-    return days;
-}
-
-// 12.2.34 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
+// 12.2.30 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
 u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: year is an integer.
@@ -701,8 +626,11 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 
     // 4. Let date be the date given by year, month, and day.
     // 5. Return date's week number according to ISO-8601 as an integer.
-    auto day_of_year = to_iso_day_of_year(year, month, day);
-    auto day_of_week = to_iso_day_of_week(year, month, day);
+    auto t = make_date(make_day(year, month - 1, day), 0);
+    auto day_of_year = day_within_year(t) + 1;
+    auto day_of_week = week_day(t);
+    if (day_of_week == 0)
+        day_of_week = 7;
     auto week = (day_of_year - day_of_week + 10) / 7;
 
     if (week < 1) {
@@ -710,13 +638,13 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
         // Thursday (i.e. the first day of the given year is a Friday, or day 5), or the previous
         // year is a leap year and ends with a Friday (i.e. the first day of the given year is a
         // Saturday, or day 6), it has 53 weeks, and 52 weeks otherwise.
-        auto day_of_jump = to_iso_day_of_week(year, 1, 1);
-        if (day_of_jump == 5 || (is_iso_leap_year(year - 1) && day_of_jump == 6))
+        auto day_of_jump = week_day(make_date(make_day(year, 0, 1), 0));
+        if (day_of_jump == 5 || (in_leap_year(time_from_year(year - 1)) && day_of_jump == 6))
             return 53;
         else
             return 52;
     } else if (week == 53) {
-        auto days_in_year = iso_days_in_year(year);
+        auto days_in_year = JS::days_in_year(year);
         if (days_in_year - day_of_year < 4 - day_of_week)
             return 1;
     }
@@ -724,7 +652,7 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
     return week;
 }
 
-// 12.2.35 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
+// 12.2.31 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
 String build_iso_month_code(u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
@@ -732,7 +660,7 @@ String build_iso_month_code(u8 month)
     return String::formatted("M{:02}", month);
 }
 
-// 12.2.36 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
+// 12.2.32 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
 ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object const& fields)
 {
     auto& vm = global_object.vm();
@@ -792,8 +720,8 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     return number_part_integer;
 }
 
-// 12.2.37 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+// 12.2.33 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
+ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -826,7 +754,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
-// 12.2.38 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
+// 12.2.34 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
 ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -836,27 +764,23 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, { "year"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
 
-    // 5. If year is undefined, throw a TypeError exception.
-    if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
-
-    // 6. Let month be ? ResolveISOMonth(fields).
+    // 5. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
+    // 6. Let result be ? RegulateISOYearMonth(year, month, overflow).
     auto result = TRY(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
 
-    // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
+    // 7. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
-// 12.2.39 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
+// 12.2.35 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
 ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -897,7 +821,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
 
-    Optional<ISODate> result;
+    Optional<ISODateRecord> result;
 
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
@@ -914,7 +838,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
-// 12.2.40 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
+// 12.2.36 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
 i32 iso_year(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOYear]] internal slot.
@@ -932,7 +856,7 @@ i32 iso_year(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.41 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
+// 12.2.37 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
 u8 iso_month(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
@@ -950,7 +874,7 @@ u8 iso_month(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.42 ISOMonthCode ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.38 ISOMonthCode ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 String iso_month_code(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
@@ -968,7 +892,7 @@ String iso_month_code(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.43 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.49 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 u8 iso_day(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISODay]] internal slot.
@@ -986,7 +910,7 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.44 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
+// 12.2.40 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
 ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();

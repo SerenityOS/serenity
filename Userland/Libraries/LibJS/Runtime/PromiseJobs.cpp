@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -50,7 +50,7 @@ static ThrowCompletionOr<Value> run_reaction_job(GlobalObject& global_object, Pr
             handler_result = throw_completion(argument);
         }
     }
-    // e. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
+    // e. Else, let handlerResult be Completion(HostCallJobCallback(handler, undefined, « argument »)).
     else {
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling handler callback {} @ {} with argument {}", handler.value().callback.cell()->class_name(), handler.value().callback.cell(), argument);
         MarkedVector<Value> arguments(vm.heap());
@@ -63,7 +63,7 @@ static ThrowCompletionOr<Value> run_reaction_job(GlobalObject& global_object, Pr
         // i. Assert: handlerResult is not an abrupt completion.
         VERIFY(!handler_result.is_abrupt());
 
-        // ii. Return NormalCompletion(empty).
+        // ii. Return empty.
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Reaction has no PromiseCapability, returning empty value");
         // TODO: This can't return an empty value at the moment, because the implicit conversion to Completion would fail.
         //       Change it back when this is using completions (`return normal_completion({})`)
@@ -74,20 +74,18 @@ static ThrowCompletionOr<Value> run_reaction_job(GlobalObject& global_object, Pr
 
     // h. If handlerResult is an abrupt completion, then
     if (handler_result.is_abrupt()) {
-        // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
+        // i. Return ? Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling PromiseCapability's reject function @ {}", reject_function);
         return call(global_object, *reject_function, js_undefined(), *handler_result.value());
     }
     // i. Else,
     else {
-        // i. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
+        // i. Return ? Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
         auto* resolve_function = promise_capability.value().resolve;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob]: Calling PromiseCapability's resolve function @ {}", resolve_function);
         return call(global_object, *resolve_function, js_undefined(), *handler_result.value());
     }
-
-    // j. Return Completion(status).
 }
 
 // 27.2.2.1 NewPromiseReactionJob ( reaction, argument ), https://tc39.es/ecma262/#sec-newpromisereactionjob
@@ -105,7 +103,7 @@ PromiseJob create_promise_reaction_job(GlobalObject& global_object, PromiseReact
     // 3. If reaction.[[Handler]] is not empty, then
     auto& handler = reaction.handler();
     if (handler.has_value()) {
-        // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
+        // a. Let getHandlerRealmResult be Completion(GetFunctionRealm(reaction.[[Handler]].[[Callback]])).
         auto get_handler_realm_result = get_function_realm(global_object, *handler->callback.cell());
 
         // b. If getHandlerRealmResult is a normal completion, set handlerRealm to getHandlerRealmResult.[[Value]].
@@ -131,7 +129,7 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(GlobalObject& global_ob
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     auto [resolve_function, reject_function] = promise_to_resolve.create_resolving_functions();
 
-    // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    // b. Let thenCallResult be Completion(HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
     dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: Calling then job callback for thenable {}", &thenable);
     MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(&resolve_function));
@@ -140,15 +138,12 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(GlobalObject& global_ob
 
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {
-        // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
+        // i. Return ? Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
         dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: then_call_result is an abrupt completion, calling reject function with value {}", *then_call_result.throw_completion().value());
-        auto status = call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
-
-        // ii. Return Completion(status).
-        return status;
+        return call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
     }
 
-    // d. Return Completion(thenCallResult).
+    // d. Return ? thenCallResult.
     dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: Returning then call result {}", then_call_result.value());
     return then_call_result;
 }
@@ -156,9 +151,10 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(GlobalObject& global_ob
 // 27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then ), https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
 PromiseJob create_promise_resolve_thenable_job(GlobalObject& global_object, Promise& promise_to_resolve, Value thenable, JobCallback then)
 {
-    // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
-    Realm* then_realm { nullptr };
+    // 2. Let getThenRealmResult be Completion(GetFunctionRealm(then.[[Callback]])).
     auto get_then_realm_result = get_function_realm(global_object, *then.callback.cell());
+
+    Realm* then_realm;
 
     // 3. If getThenRealmResult is a normal completion, let thenRealm be getThenRealmResult.[[Value]].
     if (!get_then_realm_result.is_throw_completion()) {

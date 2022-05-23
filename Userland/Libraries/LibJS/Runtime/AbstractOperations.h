@@ -56,7 +56,7 @@ enum class EvalMode {
     Direct,
     Indirect
 };
-ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
+ThrowCompletionOr<Value> perform_eval(GlobalObject&, Value, CallerMode, EvalMode);
 
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 

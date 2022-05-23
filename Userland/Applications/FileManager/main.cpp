@@ -131,8 +131,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation)
 {
-    if (selected_file_paths.is_empty())
-        VERIFY_NOT_REACHED();
+    VERIFY(!selected_file_paths.is_empty());
 
     StringBuilder copy_text;
     if (file_operation == FileOperation::Move) {
@@ -195,7 +194,7 @@ void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* wind
 void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
 {
     String archive_name;
-    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecOK)
+    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecResult::OK)
         return;
 
     auto output_directory_path = LexicalPath(selected_file_paths.first());
@@ -343,9 +342,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Move);
         },
@@ -355,9 +352,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto copy_action = GUI::CommonActions::make_copy_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Copy);
         },
@@ -676,7 +671,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     layout_location_action->set_checked(show_location);
     breadcrumb_toolbar.set_visible(show_location);
 
-    toolbar_container.set_visible(show_location | show_toolbar);
+    toolbar_container.set_visible(show_location || show_toolbar);
 
     layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
@@ -699,7 +694,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     location_textbox.on_focusout = [&] {
         if (show_location)
             breadcrumb_toolbar.set_visible(true);
-        if (!(show_location | show_toolbar))
+        if (!(show_location || show_toolbar))
             toolbar_container.set_visible(false);
 
         location_toolbar.set_visible(false);
@@ -727,12 +722,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
             if (paths.is_empty())
                 paths = tree_view_selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Move);
             refresh_tree_view();
@@ -743,12 +735,9 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     auto copy_action = GUI::CommonActions::make_copy_action(
         [&](auto&) {
             auto paths = directory_view->selected_file_paths();
-
             if (paths.is_empty())
                 paths = tree_view_selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
+            VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Copy);
             refresh_tree_view();
@@ -949,7 +938,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(select_all_action));
 
-    auto action_show_dotfiles = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+    auto show_dotfiles_action = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view->set_should_show_dotfiles(action.is_checked());
         directories_model->set_should_show_dotfiles(action.is_checked());
         refresh_tree_view();
@@ -958,11 +947,11 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     auto show_dotfiles = Config::read_bool("FileManager", "DirectoryView", "ShowDotFiles", false);
     directory_view->set_should_show_dotfiles(show_dotfiles);
-    action_show_dotfiles->set_checked(show_dotfiles);
+    show_dotfiles_action->set_checked(show_dotfiles);
 
     auto const initial_location_contains_dotfile = initial_location.contains("/."sv);
-    action_show_dotfiles->set_checked(initial_location_contains_dotfile);
-    action_show_dotfiles->on_activation(action_show_dotfiles);
+    show_dotfiles_action->set_checked(initial_location_contains_dotfile);
+    show_dotfiles_action->on_activation(show_dotfiles_action);
 
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
@@ -977,7 +966,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(view_menu->try_add_action(directory_view->view_as_table_action()));
     TRY(view_menu->try_add_action(directory_view->view_as_columns_action()));
     TRY(view_menu->try_add_separator());
-    TRY(view_menu->try_add_action(action_show_dotfiles));
+    TRY(view_menu->try_add_action(show_dotfiles_action));
 
     auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         toolbar_container.set_visible(true);
@@ -1087,12 +1076,6 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
             }
         }
 
-        struct stat st;
-        if (lstat(new_path.characters(), &st)) {
-            perror("stat");
-            return;
-        }
-
         mkdir_action->set_enabled(can_write_in_path);
         touch_action->set_enabled(can_write_in_path);
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().fetch_mime_type() == "text/uri-list");
@@ -1124,10 +1107,10 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     directory_view->on_selection_change = [&](GUI::AbstractView& view) {
         auto& selection = view.selection();
-        cut_action->set_enabled(!selection.is_empty());
+        cut_action->set_enabled(!selection.is_empty() && access(directory_view->path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
-            || !directory_view->current_view().selection().is_empty());
+            || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
 
     auto directory_open_action = GUI::Action::create("Open", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
@@ -1153,7 +1136,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(directory_view_context_menu->try_add_action(paste_action));
     TRY(directory_view_context_menu->try_add_action(directory_view->open_terminal_action()));
     TRY(directory_view_context_menu->try_add_separator());
-    TRY(directory_view_context_menu->try_add_action(action_show_dotfiles));
+    TRY(directory_view_context_menu->try_add_action(show_dotfiles_action));
     TRY(directory_view_context_menu->try_add_separator());
     TRY(directory_view_context_menu->try_add_action(properties_action));
 

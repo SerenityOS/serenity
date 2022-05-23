@@ -22,7 +22,7 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override = default;
 
-    static int show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
+    static ExecResult show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
 
 private:
     explicit InputBox(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type);

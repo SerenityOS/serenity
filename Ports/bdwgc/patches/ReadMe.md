@@ -42,3 +42,8 @@ In an extremely limited way for now:
 - No fork handling
     Seems borked for unknown reasons.
 
+## `0007-Add-serenity-to-the-conigure-list-of-pthread-unixes.patch`
+
+Add serenity to the conigure list of pthread unixes
+
+

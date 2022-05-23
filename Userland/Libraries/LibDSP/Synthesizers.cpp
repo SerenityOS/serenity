@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>.
+ * Copyright (c) 2021-2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,10 +7,12 @@
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/Random.h>
+#include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
+#include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 #include <LibDSP/Processor.h>
 #include <LibDSP/Synthesizers.h>
-#include <math.h>
 
 namespace LibDSP::Synthesizers {
 
@@ -29,42 +31,45 @@ Classic::Classic(NonnullRefPtr<Transport> transport)
     m_parameters.append(m_release);
 }
 
-Signal Classic::process_impl(Signal const& input_signal)
+void Classic::process_impl(Signal const& input_signal, [[maybe_unused]] Signal& output_signal)
 {
-    auto& in = input_signal.get<RollNotes>();
+    auto const& in = input_signal.get<RollNotes>();
+    auto& output_samples = output_signal.get<FixedArray<Sample>>();
 
-    Sample out;
+    // Do this for every time step and set the signal accordingly.
+    for (size_t sample_index = 0; sample_index < output_samples.size(); ++sample_index) {
+        Sample& out = output_samples[sample_index];
+        u32 sample_time = m_transport->time() + sample_index;
 
-    SinglyLinkedList<PitchedEnvelope> playing_envelopes;
+        SinglyLinkedList<PitchedEnvelope> playing_envelopes;
 
-    // "Press" the necessary notes in the internal representation,
-    // and "release" all of the others
-    for (u8 i = 0; i < note_count; ++i) {
-        if (auto maybe_note = in.get(i); maybe_note.has_value())
-            m_playing_notes.set(i, maybe_note.value());
+        // "Press" the necessary notes in the internal representation,
+        // and "release" all of the others
+        for (u8 i = 0; i < note_frequencies.size(); ++i) {
+            if (auto maybe_note = in.get(i); maybe_note.has_value())
+                m_playing_notes.set(i, maybe_note.value());
 
-        if (m_playing_notes.contains(i)) {
-            Envelope note_envelope = m_playing_notes.get(i)->to_envelope(m_transport->time(), m_attack * m_transport->ms_sample_rate(), m_decay * m_transport->ms_sample_rate(), m_release * m_transport->ms_sample_rate());
-            if (!note_envelope.is_active()) {
-                m_playing_notes.remove(i);
-                continue;
+            if (m_playing_notes.contains(i)) {
+                Envelope note_envelope = m_playing_notes.get(i)->to_envelope(sample_time, m_attack * m_transport->ms_sample_rate(), m_decay * m_transport->ms_sample_rate(), m_release * m_transport->ms_sample_rate());
+                if (!note_envelope.is_active()) {
+                    m_playing_notes.remove(i);
+                    continue;
+                }
+
+                playing_envelopes.append(PitchedEnvelope { note_envelope, i });
             }
+        }
 
-            playing_envelopes.append(PitchedEnvelope { note_envelope, i });
+        for (auto envelope : playing_envelopes) {
+            double volume = volume_from_envelope(envelope);
+            double wave = wave_position(envelope.note);
+            out += volume * wave;
         }
     }
-
-    for (auto envelope : playing_envelopes) {
-        double volume = volume_from_envelope(envelope);
-        double wave = wave_position(envelope.note);
-        out += volume * wave;
-    }
-
-    return out;
 }
 
 // Linear ADSR envelope with no peak adjustment.
-double Classic::volume_from_envelope(Envelope const& envelope)
+double Classic::volume_from_envelope(Envelope const& envelope) const
 {
     switch (static_cast<EnvelopeState>(envelope)) {
     case EnvelopeState::Off:
@@ -100,12 +105,12 @@ double Classic::wave_position(u8 note)
     VERIFY_NOT_REACHED();
 }
 
-double Classic::samples_per_cycle(u8 note)
+double Classic::samples_per_cycle(u8 note) const
 {
     return m_transport->sample_rate() / note_frequencies[note];
 }
 
-double Classic::sin_position(u8 note)
+double Classic::sin_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double cycle_pos = m_transport->time() / spc;
@@ -113,14 +118,14 @@ double Classic::sin_position(u8 note)
 }
 
 // Absolute value of the saw wave "flips" the negative portion into the positive, creating a ramp up and down.
-double Classic::triangle_position(u8 note)
+double Classic::triangle_position(u8 note) const
 {
     double saw = saw_position(note);
     return AK::fabs(saw) * 2 - 1;
 }
 
 // The first half of the cycle period is 1, the other half -1.
-double Classic::square_position(u8 note)
+double Classic::square_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double progress = AK::fmod(static_cast<double>(m_transport->time()), spc) / spc;
@@ -128,7 +133,7 @@ double Classic::square_position(u8 note)
 }
 
 // Modulus creates inverse saw, which we need to flip and scale.
-double Classic::saw_position(u8 note)
+double Classic::saw_position(u8 note) const
 {
     double spc = samples_per_cycle(note);
     double unscaled = spc - AK::fmod(static_cast<double>(m_transport->time()), spc);

@@ -1,0 +1,28 @@
+From 4a6442ab29becbd29418161635930a4d6d5d55e2 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Thu, 29 Apr 2021 23:45:51 +0200
+Subject: [PATCH 4/6] Stub GetPerformanceTimer() to return 0
+
+---
+ src/framerate_gui.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/framerate_gui.cpp b/src/framerate_gui.cpp
+index 1077629..2d15c5b 100644
+--- a/src/framerate_gui.cpp
++++ b/src/framerate_gui.cpp
+@@ -222,8 +222,9 @@ namespace {
+  */
+ static TimingMeasurement GetPerformanceTimer()
+ {
+-	using namespace std::chrono;
+-	return (TimingMeasurement)time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch().count();
++	//using namespace std::chrono;
++	//return (TimingMeasurement)time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch().count();
++	return 0;
+ }
+ 
+ 
+-- 
+2.36.1
+
