@@ -4,7 +4,7 @@ on: [push, pull_request_target]
 
 jobs:
   notify_discord:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request_target' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
 
     steps:
