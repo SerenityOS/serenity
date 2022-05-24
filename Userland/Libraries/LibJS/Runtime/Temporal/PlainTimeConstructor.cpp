@@ -24,7 +24,7 @@ void PlainTimeConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 4.2.1 Temporal.PlainTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plaintime-prototype
+    // 4.2.1 Temporal.PlainTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

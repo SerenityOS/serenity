@@ -22,7 +22,7 @@ void CalendarConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 12.3.1 Temporal.Calendar.prototype, https://tc39.es/proposal-temporal/#sec-temporal-calendar-prototype
+    // 12.3.1 Temporal.Calendar.prototype, https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_calendar_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

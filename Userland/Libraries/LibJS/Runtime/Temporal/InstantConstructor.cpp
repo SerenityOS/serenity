@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,7 +24,7 @@ void InstantConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 8.2.1 Temporal.Instant.prototype, https://tc39.es/proposal-temporal/#sec-temporal-instant-prototype
+    // 8.2.1 Temporal.Instant.prototype, https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_instant_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

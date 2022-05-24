@@ -25,7 +25,7 @@ void DurationConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 7.2.1 Temporal.Duration.prototype, https://tc39.es/proposal-temporal/#sec-temporal-duration-prototype
+    // 7.2.1 Temporal.Duration.prototype, https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_duration_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
