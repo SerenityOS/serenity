@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/MSR.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -372,7 +373,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
 
     // Store the BSP's GDT and IDT for the APs to use
-    auto const& gdtr = Processor::current().get_gdtr();
+    auto const& gdtr = Processor::get_gdtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_gdtr) = FlatPtr(&gdtr);
     auto const& idtr = get_idtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_idtr) = FlatPtr(&idtr);
@@ -481,7 +482,7 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
     }
 
     dbgln_if(APIC_DEBUG, "CPU #{} apic id: {}", cpu, apic_id);
-    Processor::current().info().set_apic_id(apic_id);
+    Processor::info().set_apic_id(apic_id);
 
     dbgln_if(APIC_DEBUG, "Enabling local APIC for CPU #{}, logical APIC ID: {}", cpu, apic_id);
 

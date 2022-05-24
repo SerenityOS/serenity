@@ -6,6 +6,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
@@ -54,13 +55,13 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-StringView Processor::platform_string()
+StringView x86Processor::platform_string()
 {
     return "x86_64"sv;
 }
 
 // FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+FlatPtr x86Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
@@ -164,7 +165,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+void x86Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -244,7 +245,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void x86Processor::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 

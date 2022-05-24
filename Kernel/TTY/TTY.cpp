@@ -18,12 +18,12 @@
 #undef TTYDEFCHARS
 
 #if ARCH(X86_64) || ARCH(I386)
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#    include <Kernel/Arch/x86/InterruptDisabler.h>
 #elif ARCH(AARCH64)
-//FIXME: create a real class
+// FIXME: create a real class
 class InterruptDisabler {
 public:
-  InterruptDisabler() { VERIFY_NOT_REACHED(); }
+    InterruptDisabler() { VERIFY_NOT_REACHED(); }
 };
 #else
 #    error "Unknown architecture"

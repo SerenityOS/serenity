@@ -6,6 +6,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
@@ -100,6 +101,14 @@ READONLY_AFTER_INIT VirtualConsole* tty0;
 
 ProcessID g_init_pid { 0 };
 
+ALWAYS_INLINE static ProcessorImpl& bsp_processor_impl()
+{
+    // This solves a problem where the bsp Processor instance
+    // gets "re"-initialized in init() when we run all global constructors.
+    alignas(ProcessorImpl) static u8 bsp_processor_impl_storage[sizeof(ProcessorImpl)];
+    return (ProcessorImpl&)bsp_processor_impl_storage;
+}
+
 ALWAYS_INLINE static Processor& bsp_processor()
 {
     // This solves a problem where the bsp Processor instance
@@ -187,6 +196,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     multiboot_copy_boot_modules_count = multiboot_modules_count;
 
     new (&bsp_processor()) Processor();
+    new (&bsp_processor_impl()) ProcessorImpl();
+    bsp_processor().set_impl(&bsp_processor_impl());
     bsp_processor().early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap

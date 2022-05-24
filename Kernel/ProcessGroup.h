@@ -9,6 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
 

@@ -38,7 +38,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
 
     auto& apic = APIC::the();
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-    bool supports_tsc = Processor::current().has_feature(CPUFeature::TSC);
+    bool supports_tsc = Processor::has_tsc();
 #endif
 
     // temporarily replace the timer callbacks

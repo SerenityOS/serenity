@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>

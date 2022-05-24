@@ -5,12 +5,16 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Types.h>
+#include <AK/Weakable.h>
+
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Library/ThreadSafeRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
@@ -328,7 +332,7 @@ struct KmallocGlobalData {
 
         expansion_data->next_virtual_address = expansion_data->next_virtual_address.offset(new_subheap_size);
 
-        auto cpu_supports_nx = Processor::current().has_nx();
+        auto cpu_supports_nx = Processor::has_nx();
 
         SpinlockLocker mm_locker(Memory::s_mm_lock);
         SpinlockLocker pd_locker(MM.kernel_page_directory().get_lock());

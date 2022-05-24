@@ -9,11 +9,12 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86/CPUID.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 
 namespace Kernel {
 
-ProcessorInfo::ProcessorInfo(Processor const& processor)
+ProcessorInfo::ProcessorInfo(x86Processor const& processor)
     : m_vendor_id_string(build_vendor_id_string())
     , m_hypervisor_vendor_id_string(build_hypervisor_vendor_id_string(processor))
     , m_brand_string(build_brand_string())
@@ -58,7 +59,7 @@ NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
     return KString::must_create(builder.string_view().trim("\0"sv, TrimMode::Right));
 }
 
-NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(Processor const& processor)
+NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(x86Processor const& processor)
 {
     if (!processor.has_feature(CPUFeature::HYPERVISOR))
         return KString::must_create({});
@@ -94,7 +95,7 @@ NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
     return KString::must_create(builder.string_view().trim("\0"sv, TrimMode::Right));
 }
 
-NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& processor)
+NonnullOwnPtr<KString> ProcessorInfo::build_features_string(x86Processor const& processor)
 {
     StringBuilder builder;
     bool first = true;

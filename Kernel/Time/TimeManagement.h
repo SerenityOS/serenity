@@ -23,8 +23,8 @@ namespace Kernel {
 
 class HardwareTimerBase;
 namespace Memory {
-  class VMObject;
-  class Region;
+class VMObject;
+class Region;
 }
 
 enum class TimePrecision {

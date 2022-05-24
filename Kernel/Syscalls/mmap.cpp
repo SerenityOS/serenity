@@ -8,6 +8,7 @@
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/MSR.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -519,7 +520,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
     TRY(main_thread->make_thread_specific_region({}));
 
 #if ARCH(I386)
-    auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
+    auto& tls_descriptor = Processor::get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 #else

@@ -50,7 +50,7 @@ private:
 
     explicit VMWareGraphicsAdapter(PCI::DeviceIdentifier const&);
 
-    Memory::TypedMapping<volatile VMWareDisplayFIFORegisters> m_fifo_registers;
+    Memory::TypedMapping<VMWareDisplayFIFORegisters volatile> m_fifo_registers;
     RefPtr<VMWareDisplayConnector> m_display_connector;
     const IOAddress m_io_registers_base;
     mutable Spinlock m_io_access_lock;

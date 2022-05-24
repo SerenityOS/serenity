@@ -26,6 +26,7 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/Arch/x86/MSR.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
@@ -34,14 +35,14 @@
 
 namespace Kernel {
 
-READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
+READONLY_AFTER_INIT FPUState x86Processor::s_clean_fpu_state;
 
 READONLY_AFTER_INIT static ProcessorContainer s_processors {};
-READONLY_AFTER_INIT Atomic<u32> Processor::g_total_processors;
+READONLY_AFTER_INIT Atomic<u32> x86Processor::g_total_processors;
 READONLY_AFTER_INIT static bool volatile s_smp_enabled;
 
 static Atomic<ProcessorMessage*> s_message_pool;
-Atomic<u32> Processor::s_idle_cpu_mask { 0 };
+Atomic<u32> x86Processor::s_idle_cpu_mask { 0 };
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
@@ -50,7 +51,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 extern "C" void syscall_entry();
 
-bool Processor::is_smp_enabled()
+bool x86Processor::is_smp_enabled()
 {
     return s_smp_enabled;
 }
@@ -66,7 +67,7 @@ void exit_kernel_thread(void)
     Thread::current()->exit();
 }
 
-UNMAP_AFTER_INIT void Processor::cpu_detect()
+UNMAP_AFTER_INIT void x86Processor::cpu_detect()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -498,7 +499,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
     }
 }
 
-UNMAP_AFTER_INIT void Processor::cpu_setup()
+UNMAP_AFTER_INIT void x86Processor::cpu_setup()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -604,7 +605,7 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         m_features |= CPUFeature::OSPKE;
 }
 
-UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
+UNMAP_AFTER_INIT void x86Processor::early_initialize(u32 cpu)
 {
     m_self = this;
 
@@ -638,7 +639,7 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     VERIFY(&current() == this); // sanity check
 }
 
-UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
+UNMAP_AFTER_INIT void x86Processor::initialize(u32 cpu)
 {
     VERIFY(m_self == this);
     VERIFY(&current() == this); // sanity check
@@ -687,7 +688,7 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     }
 }
 
-UNMAP_AFTER_INIT void Processor::detect_hypervisor()
+UNMAP_AFTER_INIT void x86Processor::detect_hypervisor()
 {
     CPUID hypervisor_leaf_range(0x40000000);
     auto hypervisor_vendor_id_string = m_info->hypervisor_vendor_id_string();
@@ -697,7 +698,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor()
         detect_hypervisor_hyperv(hypervisor_leaf_range);
 }
 
-UNMAP_AFTER_INIT void Processor::detect_hypervisor_hyperv(CPUID const& hypervisor_leaf_range)
+UNMAP_AFTER_INIT void x86Processor::detect_hypervisor_hyperv(CPUID const& hypervisor_leaf_range)
 {
     if (hypervisor_leaf_range.eax() < 0x40000001)
         return;
@@ -726,7 +727,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor_hyperv(CPUID const& hyperviso
     // TODO: Actually do something with Hyper-V.
 }
 
-void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
+void x86Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
 {
     u16 i = (selector & 0xfffc) >> 3;
     u32 prev_gdt_length = m_gdt_length;
@@ -746,18 +747,18 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     }
 }
 
-void Processor::write_gdt_entry(u16 selector, Descriptor& descriptor)
+void x86Processor::write_gdt_entry(u16 selector, Descriptor& descriptor)
 {
     write_raw_gdt_entry(selector, descriptor.low, descriptor.high);
 }
 
-Descriptor& Processor::get_gdt_entry(u16 selector)
+Descriptor& x86Processor::get_gdt_entry(u16 selector)
 {
     u16 i = (selector & 0xfffc) >> 3;
     return *(Descriptor*)(&m_gdt[i]);
 }
 
-void Processor::flush_gdt()
+void x86Processor::flush_gdt()
 {
     m_gdtr.address = m_gdt;
     m_gdtr.limit = (m_gdt_length * 8) - 1;
@@ -765,12 +766,12 @@ void Processor::flush_gdt()
                  : "memory");
 }
 
-DescriptorTablePointer const& Processor::get_gdtr()
+DescriptorTablePointer const& x86Processor::get_gdtr()
 {
     return m_gdtr;
 }
 
-ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+ErrorOr<Vector<FlatPtr, 32>> x86Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;
@@ -825,7 +826,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
     // to get it. It also won't be entirely accurate and merely
     // reflect the status at the last context switch.
     SpinlockLocker lock(g_scheduler_lock);
-    if (&thread == Processor::current_thread()) {
+    if (&thread == x86Processor::current_thread()) {
         VERIFY(thread.state() == Thread::State::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
@@ -833,21 +834,21 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
         lock.unlock();
         TRY(capture_current_thread());
     } else if (thread.is_active()) {
-        VERIFY(thread.cpu() != Processor::current_id());
+        VERIFY(thread.cpu() != x86Processor::current_id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
-        auto& proc = Processor::current();
+        auto& proc = x86Processor::current();
         ErrorOr<void> result;
         smp_unicast(
             thread.cpu(),
             [&]() {
-                dbgln("CPU[{}] getting stack for cpu #{}", Processor::current_id(), proc.id());
+                dbgln("CPU[{}] getting stack for cpu #{}", x86Processor::current_id(), proc.id());
                 ScopedAddressSpaceSwitcher switcher(thread.process());
-                VERIFY(&Processor::current() != &proc);
-                VERIFY(&thread == Processor::current_thread());
+                VERIFY(&x86Processor::current() != &proc);
+                VERIFY(&thread == x86Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
                 // scheduler lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
@@ -901,24 +902,24 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
     return stack_trace;
 }
 
-ProcessorContainer& Processor::processors()
+ProcessorContainer& x86Processor::processors()
 {
     return s_processors;
 }
 
-Processor& Processor::by_id(u32 id)
+x86Processor& x86Processor::by_id(u32 id)
 {
     return *s_processors[id];
 }
 
-void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
+void x86Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
+    VERIFY(&x86Processor::current() == this);
     trap.prev_irq_level = m_in_irq;
     if (raise_irq)
         m_in_irq++;
-    auto* current_thread = Processor::current_thread();
+    auto* current_thread = x86Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         trap.next_trap = current_trap;
@@ -933,10 +934,10 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
     }
 }
 
-void Processor::exit_trap(TrapFrame& trap)
+void x86Processor::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
+    VERIFY(&x86Processor::current() == this);
 
     // Temporarily enter a critical section. This is to prevent critical
     // sections entered and left within e.g. smp_process_pending_messages
@@ -955,7 +956,7 @@ void Processor::exit_trap(TrapFrame& trap)
     // that any pending thread unblocks happen before we enter the scheduler.
     deferred_call_execute_pending();
 
-    auto* current_thread = Processor::current_thread();
+    auto* current_thread = x86Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
@@ -986,19 +987,19 @@ void Processor::exit_trap(TrapFrame& trap)
         check_invoke_scheduler();
 }
 
-void Processor::check_invoke_scheduler()
+void x86Processor::check_invoke_scheduler()
 {
     InterruptDisabler disabler;
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
-    VERIFY(&Processor::current() == this);
+    VERIFY(&x86Processor::current() == this);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
     }
 }
 
-void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
+void x86Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
@@ -1013,7 +1014,7 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     }
 }
 
-void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
+void x86Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current().thread_count() > 1))
         smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
@@ -1021,18 +1022,18 @@ void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAd
         flush_tlb_local(vaddr, page_count);
 }
 
-void Processor::smp_return_to_pool(ProcessorMessage& msg)
+void x86Processor::smp_return_to_pool(ProcessorMessage& msg)
 {
     ProcessorMessage* next = nullptr;
     for (;;) {
         msg.next = next;
         if (s_message_pool.compare_exchange_strong(next, &msg, AK::MemoryOrder::memory_order_acq_rel))
             break;
-        Processor::pause();
+        x86Processor::pause();
     }
 }
 
-ProcessorMessage& Processor::smp_get_from_pool()
+ProcessorMessage& x86Processor::smp_get_from_pool()
 {
     ProcessorMessage* msg;
 
@@ -1040,8 +1041,8 @@ ProcessorMessage& Processor::smp_get_from_pool()
     for (;;) {
         msg = s_message_pool.load(AK::MemoryOrder::memory_order_consume);
         if (!msg) {
-            if (!Processor::current().smp_process_pending_messages()) {
-                Processor::pause();
+            if (!x86Processor::current().smp_process_pending_messages()) {
+                x86Processor::pause();
             }
             continue;
         }
@@ -1060,7 +1061,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
     return *msg;
 }
 
-u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
+u32 x86Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(wake_count > 0);
@@ -1068,12 +1069,12 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
         return 0;
 
     // Wake at most N - 1 processors
-    if (wake_count >= Processor::count()) {
-        wake_count = Processor::count() - 1;
+    if (wake_count >= x86Processor::count()) {
+        wake_count = x86Processor::count() - 1;
         VERIFY(wake_count > 0);
     }
 
-    u32 current_id = Processor::current_id();
+    u32 current_id = x86Processor::current_id();
 
     u32 did_wake_count = 0;
     auto& apic = APIC::the();
@@ -1109,10 +1110,10 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     return did_wake_count;
 }
 
-UNMAP_AFTER_INIT void Processor::smp_enable()
+UNMAP_AFTER_INIT void x86Processor::smp_enable()
 {
-    size_t msg_pool_size = Processor::count() * 100u;
-    size_t msg_entries_cnt = Processor::count();
+    size_t msg_pool_size = x86Processor::count() * 100u;
+    size_t msg_entries_cnt = x86Processor::count();
 
     auto msgs = new ProcessorMessage[msg_pool_size];
     auto msg_entries = new ProcessorMessageEntry[msg_pool_size * msg_entries_cnt];
@@ -1131,7 +1132,7 @@ UNMAP_AFTER_INIT void Processor::smp_enable()
     s_smp_enabled = true;
 }
 
-void Processor::smp_cleanup_message(ProcessorMessage& msg)
+void x86Processor::smp_cleanup_message(ProcessorMessage& msg)
 {
     switch (msg.type) {
     case ProcessorMessage::Callback:
@@ -1142,7 +1143,7 @@ void Processor::smp_cleanup_message(ProcessorMessage& msg)
     }
 }
 
-bool Processor::smp_process_pending_messages()
+bool x86Processor::smp_process_pending_messages()
 {
     VERIFY(s_smp_enabled);
 
@@ -1215,7 +1216,7 @@ bool Processor::smp_process_pending_messages()
     return did_process;
 }
 
-bool Processor::smp_enqueue_message(ProcessorMessage& msg)
+bool x86Processor::smp_enqueue_message(ProcessorMessage& msg)
 {
     // Note that it's quite possible that the other processor may pop
     // the queue at any given time. We rely on the fact that the messages
@@ -1227,7 +1228,7 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
         msg_entry.next = next;
         if (m_message_queue.compare_exchange_strong(next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel))
             break;
-        Processor::pause();
+        x86Processor::pause();
     }
 
     // If the enqueued message was the only message in the queue when posted,
@@ -1235,9 +1236,9 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
     return next == nullptr;
 }
 
-void Processor::smp_broadcast_message(ProcessorMessage& msg)
+void x86Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
-    auto& current_processor = Processor::current();
+    auto& current_processor = x86Processor::current();
 
     dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} processor: {}", current_processor.id(), VirtualAddress(&msg), count(), VirtualAddress(&current_processor));
 
@@ -1245,7 +1246,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
     VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
-        [&](Processor& proc) {
+        [&](x86Processor& proc) {
             if (&proc != &current_processor) {
                 if (proc.smp_enqueue_message(msg))
                     need_broadcast = true;
@@ -1257,14 +1258,14 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
         APIC::the().broadcast_ipi();
 }
 
-void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
+void x86Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
     VERIFY(!msg.async);
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
     while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
-        Processor::pause();
+        x86Processor::pause();
 
         // We need to process any messages that may have been sent to
         // us while we're waiting. This also checks if another processor
@@ -1276,9 +1277,9 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
     smp_return_to_pool(msg);
 }
 
-void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
+void x86Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 {
-    auto& current_processor = Processor::current();
+    auto& current_processor = x86Processor::current();
     VERIFY(cpu != current_processor.id());
     auto& target_processor = processors()[cpu];
     msg.async = async;
@@ -1294,7 +1295,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
         // If synchronous then we must cleanup and return the message back
         // to the pool. Otherwise, the last processor to complete it will return it
         while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
-            Processor::pause();
+            x86Processor::pause();
 
             // We need to process any messages that may have been sent to
             // us while we're waiting. This also checks if another processor
@@ -1307,7 +1308,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     }
 }
 
-void Processor::smp_unicast(u32 cpu, Function<void()> callback, bool async)
+void x86Processor::smp_unicast(u32 cpu, Function<void()> callback, bool async)
 {
     auto& msg = smp_get_from_pool();
     msg.type = ProcessorMessage::Callback;
@@ -1315,7 +1316,7 @@ void Processor::smp_unicast(u32 cpu, Function<void()> callback, bool async)
     smp_unicast_message(cpu, msg, async);
 }
 
-void Processor::smp_broadcast_flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
+void x86Processor::smp_broadcast_flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     auto& msg = smp_get_from_pool();
     msg.async = false;
@@ -1330,12 +1331,12 @@ void Processor::smp_broadcast_flush_tlb(Memory::PageDirectory const* page_direct
     smp_broadcast_wait_sync(msg);
 }
 
-void Processor::smp_broadcast_halt()
+void x86Processor::smp_broadcast_halt()
 {
     // We don't want to use a message, because this could have been triggered
     // by being out of memory and we might not be able to get a message
     for_each(
-        [&](Processor& proc) {
+        [&](x86Processor& proc) {
             proc.m_halt_requested.store(true, AK::MemoryOrder::memory_order_release);
         });
 
@@ -1343,7 +1344,7 @@ void Processor::smp_broadcast_halt()
     APIC::the().broadcast_ipi();
 }
 
-void Processor::Processor::halt()
+void x86Processor::halt()
 {
     if (s_smp_enabled)
         smp_broadcast_halt();
@@ -1351,7 +1352,7 @@ void Processor::Processor::halt()
     halt_this();
 }
 
-UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
+UNMAP_AFTER_INIT void x86Processor::deferred_call_pool_init()
 {
     size_t pool_count = sizeof(m_deferred_call_pool) / sizeof(m_deferred_call_pool[0]);
     for (size_t i = 0; i < pool_count; i++) {
@@ -1364,7 +1365,7 @@ UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
     m_free_deferred_call_pool_entry = &m_deferred_call_pool[0];
 }
 
-void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
+void x86Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 {
     VERIFY(m_in_critical);
     VERIFY(!entry->was_allocated);
@@ -1375,7 +1376,7 @@ void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
     m_free_deferred_call_pool_entry = entry;
 }
 
-DeferredCallEntry* Processor::deferred_call_get_free()
+DeferredCallEntry* x86Processor::deferred_call_get_free()
 {
     VERIFY(m_in_critical);
 
@@ -1393,7 +1394,7 @@ DeferredCallEntry* Processor::deferred_call_get_free()
     return entry;
 }
 
-void Processor::deferred_call_execute_pending()
+void x86Processor::deferred_call_execute_pending()
 {
     VERIFY(m_in_critical);
 
@@ -1430,19 +1431,19 @@ void Processor::deferred_call_execute_pending()
     } while (pending_list);
 }
 
-void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
+void x86Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
 {
     VERIFY(m_in_critical);
     entry->next = m_pending_deferred_calls;
     m_pending_deferred_calls = entry;
 }
 
-void Processor::deferred_call_queue(Function<void()> callback)
+void x86Processor::deferred_call_queue(Function<void()> callback)
 {
     // NOTE: If we are called outside of a critical section and outside
     // of an irq handler, the function will be executed before we return!
     ScopedCritical critical;
-    auto& cur_proc = Processor::current();
+    auto& cur_proc = x86Processor::current();
 
     auto* entry = cur_proc.deferred_call_get_free();
     entry->handler_value() = move(callback);
@@ -1450,7 +1451,7 @@ void Processor::deferred_call_queue(Function<void()> callback)
     cur_proc.deferred_call_queue_entry(entry);
 }
 
-UNMAP_AFTER_INIT void Processor::gdt_init()
+UNMAP_AFTER_INIT void x86Processor::gdt_init()
 {
     m_gdt_length = 0;
     m_gdtr.address = nullptr;
@@ -1483,7 +1484,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 
     Descriptor gs_descriptor {};
     gs_descriptor.set_base(VirtualAddress { this });
-    gs_descriptor.set_limit(sizeof(Processor) - 1);
+    gs_descriptor.set_limit(sizeof(x86Processor) - 1);
     gs_descriptor.dpl = 0;
     gs_descriptor.segment_present = 1;
     gs_descriptor.granularity = 0;
@@ -1551,7 +1552,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
+    x86Processor::restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1570,7 +1571,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     bool has_xsave_avx_support = Processor::current().has_feature(CPUFeature::XSAVE) && Processor::current().has_feature(CPUFeature::AVX);
-    Processor::set_current_thread(*to_thread);
+    x86Processor::set_current_thread(*to_thread);
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
@@ -1626,7 +1627,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
+    x86Processor::restore_in_critical(in_critical);
 
     if (has_xsave_avx_support)
         asm volatile("xrstor %0" ::"m"(to_thread->fpu_state()), "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
@@ -1643,7 +1644,7 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
     return Processor::current().init_context(*thread, true);
 }
 
-void Processor::assume_context(Thread& thread, FlatPtr flags)
+void x86Processor::assume_context(Thread& thread, FlatPtr flags)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -1651,14 +1652,14 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
-    VERIFY(Processor::in_critical() == 2);
+    VERIFY(x86Processor::in_critical() == 2);
 
     do_assume_context(&thread, flags);
 
     VERIFY_NOT_REACHED();
 }
 
-u64 Processor::time_spent_idle() const
+u64 x86Processor::time_spent_idle() const
 {
     return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
 }

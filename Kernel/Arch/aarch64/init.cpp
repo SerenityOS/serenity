@@ -13,11 +13,13 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/CPU.h>
+#include <Kernel/Arch/aarch64/Processor.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/BootInfo.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 
@@ -76,7 +78,7 @@ static void draw_logo();
 static u32 query_firmware_version();
 
 extern "C" [[noreturn]] void halt();
-extern "C" [[noreturn]] void init();
+extern "C" [[noreturn]] void init(BootInfo const&);
 
 ALWAYS_INLINE static Processor& bootstrap_processor()
 {
@@ -84,7 +86,13 @@ ALWAYS_INLINE static Processor& bootstrap_processor()
     return (Processor&)bootstrap_processor_storage;
 }
 
-extern "C" [[noreturn]] void init()
+ALWAYS_INLINE static ProcessorImpl& bootstrap_processor_impl()
+{
+    alignas(ProcessorImpl) static u8 bootstrap_processor_storage_impl[sizeof(ProcessorImpl)];
+    return (ProcessorImpl&)bootstrap_processor_storage_impl;
+}
+
+extern "C" [[noreturn]] void init(BootInfo const&)
 {
     dbgln("Welcome to Serenity OS!");
     dbgln("Imagine this being your ideal operating system.");
@@ -92,6 +100,8 @@ extern "C" [[noreturn]] void init()
     dbgln();
 
     new (&bootstrap_processor()) Processor();
+    new (&bootstrap_processor_impl()) ProcessorImpl();
+    bootstrap_processor().set_impl(&bootstrap_processor_impl());
     bootstrap_processor().initialize(0);
 
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel

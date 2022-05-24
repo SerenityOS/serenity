@@ -12,11 +12,11 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Forward.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/VirtualAddress.h>
-#include <Kernel/Arch/Processor.h>
 
 namespace Kernel {
 

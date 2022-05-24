@@ -11,7 +11,7 @@
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
 #if ARCH(X86_64) || ARCH(I386)
-#include <LibC/sys/arch/i386/regs.h>
+#    include <LibC/sys/arch/i386/regs.h>
 #endif
 
 namespace Kernel {
@@ -30,7 +30,10 @@ public:
 
     void set_regs(RegisterState const& regs);
 #if ARCH(X86_64) || ARCH(I386)
-    void set_regs(PtraceRegisters const& regs) { m_regs = regs; }
+    void set_regs(PtraceRegisters const& regs)
+    {
+        m_regs = regs;
+    }
     bool has_regs() const { return m_regs.has_value(); }
     PtraceRegisters const& regs() const
     {

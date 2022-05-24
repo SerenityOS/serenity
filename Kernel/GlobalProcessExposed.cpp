@@ -7,7 +7,10 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Try.h>
 #include <AK/UBSanitizer.h>
+#include <AK/Vector.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -472,9 +475,12 @@ private:
         TRY(json.add("kernel_time", total_time_scheduled.total_kernel));
         TRY(json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel));
         u64 idle_time = 0;
-        Processor::for_each([&](Processor& processor) {
+        // fixme: make it work
+        /*
+        Processor::for_each([&](ProcessorImpl& processor) {
             idle_time += processor.time_spent_idle();
         });
+        */
         TRY(json.add("idle_time", idle_time));
         TRY(json.finish());
         return {};
@@ -612,7 +618,7 @@ private:
     {
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(Processor::try_for_each(
-            [&](Processor& proc) -> ErrorOr<void> {
+            [&](ProcessorImpl& proc) -> ErrorOr<void> {
                 auto& info = proc.info();
                 auto obj = TRY(array.add_object());
                 TRY(obj.add("processor", proc.id()));

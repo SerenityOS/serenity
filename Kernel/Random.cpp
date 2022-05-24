@@ -26,8 +26,8 @@ KernelRng& KernelRng::the()
 
 UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
-    bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
-    bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
+    bool supports_rdseed = Processor::has_rdseed();
+    bool supports_rdrand = Processor::has_rdrand();
     if (supports_rdseed || supports_rdrand) {
         dmesgln("KernelRng: Using RDSEED or RDRAND as entropy source");
         for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {

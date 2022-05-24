@@ -19,6 +19,7 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Arch/Processor.cpp
     Bus/PCI/Controller/HostBridge.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
@@ -429,8 +430,10 @@ else()
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
+	Arch/Processor.cpp
         KSyms.cpp
         MiniStdLib.cpp
+        PerformanceEventBuffer.cpp
         UBSanitizer.cpp
 
         Memory/AddressSpace.cpp
@@ -449,6 +452,8 @@ else()
         Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
+
+	Syscalls/profiling.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
