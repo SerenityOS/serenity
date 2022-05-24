@@ -23,6 +23,8 @@ public:
         m_endpoint_descriptors.ensure_capacity(descriptor.number_of_endpoints);
     }
 
+    Vector<USBEndpointDescriptor> const& endpoints() const { return m_endpoint_descriptors; }
+
 private:
     USBConfiguration const& m_configuration;              // Configuration that this interface belongs to
     USBInterfaceDescriptor const m_descriptor;            // Descriptor backing this interface
