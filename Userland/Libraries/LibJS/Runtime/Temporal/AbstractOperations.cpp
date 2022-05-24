@@ -1849,13 +1849,11 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(fields) is Object.
-
-    // 2. Let result be OrdinaryObjectCreate(%Object.prototype%).
+    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
     VERIFY(result);
 
-    // 3. For each value property of fieldNames, do
+    // 2. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
         auto value = TRY(fields.get(property));
@@ -1891,7 +1889,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
         MUST(result->create_data_property_or_throw(property, value));
     }
 
-    // 4. Return result.
+    // 3. Return result.
     return result;
 }
 
@@ -1900,15 +1898,13 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(fields) is Object.
-
-    // 2. Let result be OrdinaryObjectCreate(%Object.prototype%).
+    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
 
-    // 3. Let any be false.
+    // 2. Let any be false.
     auto any = false;
 
-    // 4. For each value property of fieldNames, do
+    // 3. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
         auto value = TRY(fields.get(property));
@@ -1933,13 +1929,13 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
         }
     }
 
-    // 5. If any is false, then
+    // 4. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
     }
 
-    // 6. Return result.
+    // 5. Return result.
     return result;
 }
 
