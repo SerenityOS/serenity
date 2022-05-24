@@ -35,18 +35,22 @@ pushd "$DIR/Tarballs"
         exit 1
     fi
 
+    if [ -f "${QEMU_VERSION}/.patch.applied" ] && ! md5sum -c "${QEMU_VERSION}/.patch.applied" > /dev/null; then
+        echo "Patches have been changed, removing old tarball extract..."
+        rm -rf "${QEMU_VERSION}"
+    fi
+
     if [ ! -d "$QEMU_VERSION" ]; then
         echo "Extracting qemu..."
         tar -xf "$QEMU_VERSION.tar.xz"
+
+        pushd "$QEMU_VERSION"
+            patch -p1 < "$DIR/Patches/qemu-cf-protection-none.patch"
+            md5sum "$DIR/Patches/qemu-cf-protection-none.patch" > .patch.applied
+        popd
     else
         echo "Skipped extracting qemu"
     fi
-
-    pushd "$QEMU_VERSION"
-        patch -p1 < "$DIR/Patches/qemu-cf-protection-none.patch" > /dev/null
-        md5sum "$DIR/Patches/qemu-cf-protection-none.patch" > .patch.applied
-    popd
-
 popd
 
 mkdir -p "$PREFIX"
