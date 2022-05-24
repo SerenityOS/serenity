@@ -2,6 +2,8 @@
 
 Please make sure to keep this list up to date when adding and updating ports. :^)
 
+This list is also available at [ports.serenityos.net](https://ports.serenityos.net)
+
 | Port                                                | Name                                                            | Version                  | Website                                                                        |
 |-----------------------------------------------------|-----------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
 | [`Another-World`](Another-World/)                   | Another World Bytecode Interpreter                              |                          | https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter           |
