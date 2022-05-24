@@ -398,8 +398,8 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 11. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
     MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
 
-    // 12. Let date be ? CalendarDateFromFields(calendar, fields, undefined).
-    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields, nullptr));
+    // 12. Let date be ? CalendarDateFromFields(calendar, fields).
+    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields));
 
     // 13. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
