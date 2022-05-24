@@ -26,7 +26,7 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 9.2.1 Temporal.PlainYearMonth.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plainyearmonth-prototype
+    // 9.2.1 Temporal.PlainYearMonth.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_year_month_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
