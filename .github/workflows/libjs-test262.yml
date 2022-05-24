@@ -47,7 +47,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
           sudo apt-get install -y ninja-build unzip gcc-11 g++-11 jq wget
           test -e /opt/wabt-1.0.27 || (

@@ -31,10 +31,12 @@ Now on Ubuntu or Debian you can install gcc-11 with apt like this:
 sudo apt install gcc-11 g++-11
 ```
 
-#### QEMU 5 or later
+#### QEMU 6.2 or later
 
-QEMU version 5 is available in Ubuntu 20.10, but it is recommended to build Qemu as provided by the toolchain by running `Toolchain/BuildQemu.sh`.
-Note that you might need additional dev packages:
+Version 6.2 of QEMU is available in Ubuntu 22.04. On earlier versions of Ubuntu,
+you can build the recommended version of QEMU as provided by the toolchain by running
+`Toolchain/BuildQemu.sh`.
+Note that you might need additional dev packages in order to build QEMU on your machine:
 
 ```console
 sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
