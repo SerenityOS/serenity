@@ -131,8 +131,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(GlobalObject
         if (strict)
             return vm().throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
 
-        // FIXME: Should be `! envRec.CreateMutableBinding(N, true)` (see https://github.com/tc39/ecma262/pull/2764)
-        // b. Perform envRec.CreateMutableBinding(N, true).
+        // b. Perform ! envRec.CreateMutableBinding(N, true).
         MUST(create_mutable_binding(global_object, name, true));
 
         // c. Perform ! envRec.InitializeBinding(N, V).
