@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
@@ -10,6 +10,7 @@
 #include <AK/DateTimeLexer.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyKey.h>
@@ -978,103 +979,282 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     return String::formatted("{}.{}", seconds_string, fraction_string);
 }
 
-// NOTE: We have two variants of this function, one using doubles and one using BigInts - most of the time
+// 13.28 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
+UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative)
+{
+    // 1. If isNegative is true, return the specification type in the third column of Table 14 where the first column is roundingMode and the second column is "negative".
+    if (is_negative) {
+        if (rounding_mode == "ceil"sv)
+            return UnsignedRoundingMode::Zero;
+        if (rounding_mode == "floor"sv)
+            return UnsignedRoundingMode::Infinity;
+        if (rounding_mode == "expand"sv)
+            return UnsignedRoundingMode::Infinity;
+        if (rounding_mode == "trunc"sv)
+            return UnsignedRoundingMode::Zero;
+        if (rounding_mode == "halfCeil"sv)
+            return UnsignedRoundingMode::HalfZero;
+        if (rounding_mode == "halfFloor"sv)
+            return UnsignedRoundingMode::HalfInfinity;
+        if (rounding_mode == "halfExpand"sv)
+            return UnsignedRoundingMode::HalfInfinity;
+        if (rounding_mode == "halfTrunc"sv)
+            return UnsignedRoundingMode::HalfZero;
+        if (rounding_mode == "halfEven"sv)
+            return UnsignedRoundingMode::HalfEven;
+        VERIFY_NOT_REACHED();
+    }
+    // 2. Else, return the specification type in the third column of Table 14 where the first column is roundingMode and the second column is "positive".
+    else {
+        if (rounding_mode == "ceil"sv)
+            return UnsignedRoundingMode::Infinity;
+        if (rounding_mode == "floor"sv)
+            return UnsignedRoundingMode::Zero;
+        if (rounding_mode == "expand"sv)
+            return UnsignedRoundingMode::Infinity;
+        if (rounding_mode == "trunc"sv)
+            return UnsignedRoundingMode::Zero;
+        if (rounding_mode == "halfCeil"sv)
+            return UnsignedRoundingMode::HalfInfinity;
+        if (rounding_mode == "halfFloor"sv)
+            return UnsignedRoundingMode::HalfZero;
+        if (rounding_mode == "halfExpand"sv)
+            return UnsignedRoundingMode::HalfInfinity;
+        if (rounding_mode == "halfTrunc"sv)
+            return UnsignedRoundingMode::HalfZero;
+        if (rounding_mode == "halfEven"sv)
+            return UnsignedRoundingMode::HalfEven;
+        VERIFY_NOT_REACHED();
+    }
+}
+
+// NOTE: We have two variants of these functions, one using doubles and one using BigInts - most of the time
 // doubles will be fine, but take care to choose the right one. The spec is not very clear about this, as
 // it uses mathematical values which can be arbitrarily (but not infinitely) large.
 // Incidentally V8's Temporal implementation does the same :^)
 
-// 13.29 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
-i64 round_number_to_increment(double x, u64 increment, StringView rounding_mode)
+// 13.29 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
-    // 1. Assert: x and increment are mathematical values.
-    // 2. Assert: roundingMode is "ceil", "floor", "trunc", or "halfExpand".
-    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+    // 1. If x is equal to r1, return r1.
+    if (x == r1)
+        return r1;
 
-    // 3. Let quotient be x / increment.
-    auto quotient = x / (double)increment;
+    // 2. Assert: r1 < x < r2.
+    VERIFY(r1 < x && x < r2);
 
-    double rounded;
+    // 3. Assert: unsignedRoundingMode is not undefined.
+    VERIFY(unsigned_rounding_mode.has_value());
 
-    // 4. If roundingMode is "ceil", then
-    if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be -floor(-quotient).
-        rounded = -floor(-quotient);
-    }
-    // 5. Else if roundingMode is "floor", then
-    else if (rounding_mode == "floor"sv) {
-        // a. Let rounded be floor(quotient).
-        rounded = floor(quotient);
-    }
-    // 6. Else if roundingMode is "trunc", then
-    else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be RoundTowardsZero(quotient).
-        rounded = trunc(quotient);
-    }
-    // 7. Else,
-    else {
-        // a. Let rounded be ! RoundHalfAwayFromZero(quotient).
-        rounded = round(quotient);
-    }
+    // 4. If unsignedRoundingMode is zero, return r1.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::Zero)
+        return r1;
 
-    // 8. Return rounded × increment.
-    return (i64)rounded * (i64)increment;
+    // 5. If unsignedRoundingMode is infinity, return r2.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::Infinity)
+        return r2;
+
+    // 6. Let d1 be x – r1.
+    auto d1 = x - r1;
+
+    // 7. Let d2 be r2 – x.
+    auto d2 = r2 - x;
+
+    // 8. If d1 < d2, return r1.
+    if (d1 < d2)
+        return r1;
+
+    // 9. If d2 < d1, return r2.
+    if (d2 < d1)
+        return r2;
+
+    // 10. Assert: d1 is equal to d2.
+    VERIFY(d1 == d2);
+
+    // 11. If unsignedRoundingMode is half-zero, return r1.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::HalfZero)
+        return r1;
+
+    // 12. If unsignedRoundingMode is half-infinity, return r2.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::HalfInfinity)
+        return r2;
+
+    // 13. Assert: unsignedRoundingMode is half-even.
+    VERIFY(unsigned_rounding_mode == UnsignedRoundingMode::HalfEven);
+
+    // 14. Let cardinality be (r1 / (r2 – r1)) modulo 2.
+    auto cardinality = modulo((r1 / (r2 - r1)), 2);
+
+    // 15. If cardinality is 0, return r1.
+    if (cardinality == 0)
+        return r1;
+
+    // 16. Return r2.
+    return r2;
 }
 
-// 13.29 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
-BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, u64 increment, StringView rounding_mode)
+// 13.29 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const& x, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode, Crypto::UnsignedBigInteger const& increment)
 {
-    auto& heap = global_object.heap();
+    // 1. If x is equal to r1, return r1.
+    if (x.quotient == r1 && x.remainder.unsigned_value().is_zero())
+        return r1;
 
-    // 1. Assert: x and increment are mathematical values.
-    // 2. Assert: roundingMode is "ceil", "floor", "trunc", or "halfExpand".
+    // 2. Assert: r1 < x < r2.
+    // NOTE: Skipped for the sake of performance
+
+    // 3. Assert: unsignedRoundingMode is not undefined.
+    VERIFY(unsigned_rounding_mode.has_value());
+
+    // 4. If unsignedRoundingMode is zero, return r1.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::Zero)
+        return r1;
+
+    // 5. If unsignedRoundingMode is infinity, return r2.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::Infinity)
+        return r2;
+
+    // 6. Let d1 be x – r1.
+    auto d1 = x.remainder.unsigned_value();
+
+    // 7. Let d2 be r2 – x.
+    auto d2 = increment.minus(x.remainder.unsigned_value());
+
+    // 8. If d1 < d2, return r1.
+    if (d1 < d2)
+        return r1;
+
+    // 9. If d2 < d1, return r2.
+    if (d2 < d1)
+        return r2;
+
+    // 10. Assert: d1 is equal to d2.
+    // NOTE: Skipped for the sake of performance
+
+    // 11. If unsignedRoundingMode is half-zero, return r1.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::HalfZero)
+        return r1;
+
+    // 12. If unsignedRoundingMode is half-infinity, return r2.
+    if (unsigned_rounding_mode == UnsignedRoundingMode::HalfInfinity)
+        return r2;
+
+    // 13. Assert: unsignedRoundingMode is half-even.
+    VERIFY(unsigned_rounding_mode == UnsignedRoundingMode::HalfEven);
+
+    // 14. Let cardinality be (r1 / (r2 – r1)) modulo 2.
+    auto cardinality = modulo(r1.divided_by(r2.minus(r1)).quotient, "2"_bigint);
+
+    // 15. If cardinality is 0, return r1.
+    if (cardinality.unsigned_value().is_zero())
+        return r1;
+
+    // 16. Return r2.
+    return r2;
+}
+
+// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+double round_number_to_increment(double x, u64 increment, StringView rounding_mode)
+{
+    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+
+    // 1. Let quotient be x / increment.
+    auto quotient = x / static_cast<double>(increment);
+
+    bool is_negative;
+
+    // 2. If quotient < 0, then
+    if (quotient < 0) {
+        // a. Let isNegative be true.
+        is_negative = true;
+
+        // b. Set quotient to -quotient.
+        quotient = -quotient;
+    }
+    // 3. Else,
+    else {
+        // a. Let isNegative be false.
+        is_negative = false;
+    }
+
+    // 4. Let unsignedRoundingMode be GetUnsignedRoundingMode(roundingMode, isNegative).
+    auto unsigned_rounding_mode = get_unsigned_rounding_mode(rounding_mode, is_negative);
+
+    // 5. Let r1 be the largest integer such that r1 ≤ quotient.
+    auto r1 = floor(quotient);
+
+    // 6. Let r2 be the smallest integer such that r2 > quotient.
+    auto r2 = ceil(quotient);
+    if (quotient == r2)
+        r2++;
+
+    // 7. Let rounded be ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode).
+    auto rounded = apply_unsigned_rounding_mode(quotient, r1, r2, unsigned_rounding_mode);
+
+    // 8. If isNegative is true, set rounded to -rounded.
+    if (is_negative)
+        rounded = -rounded;
+
+    // 9. Return rounded × increment.
+    return rounded * static_cast<double>(increment);
+}
+
+// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
+{
     VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
 
     // OPTIMIZATION: If the increment is 1 the number is always rounded
     if (increment == 1)
-        return js_bigint(heap, x.big_integer());
+        return x;
 
     auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
-    // 3. Let quotient be x / increment.
-    auto division_result = x.big_integer().divided_by(increment_big_int);
+
+    // 1. Let quotient be x / increment.
+    auto division_result = x.divided_by(increment_big_int);
 
     // OPTIMIZATION: If there's no remainder the number is already rounded
-    if (division_result.remainder == Crypto::UnsignedBigInteger { 0 })
-        return js_bigint(heap, x.big_integer());
+    if (division_result.remainder.unsigned_value().is_zero())
+        return x;
 
-    Crypto::SignedBigInteger rounded = move(division_result.quotient);
-    // 4. If roundingMode is "ceil", then
-    if (rounding_mode == "ceil"sv) {
-        // a. Let rounded be -floor(-quotient).
-        if (!division_result.remainder.is_negative())
-            rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
+    bool is_negative;
+
+    // 2. If quotient < 0, then
+    if (division_result.quotient.is_negative()) {
+        // a. Let isNegative be true.
+        is_negative = true;
+
+        // b. Set quotient to -quotient.
+        division_result.quotient.negate();
+        division_result.remainder.negate();
     }
-    // 5. Else if roundingMode is "floor", then
-    else if (rounding_mode == "floor"sv) {
-        // a. Let rounded be floor(quotient).
-        if (division_result.remainder.is_negative())
-            rounded = rounded.minus(Crypto::UnsignedBigInteger { 1 });
-    }
-    // 6. Else if roundingMode is "trunc", then
-    else if (rounding_mode == "trunc"sv) {
-        // a. Let rounded be the RoundTowardsZero(quotient).
-        // NOTE: This is a no-op
-    }
-    // 7. Else,
+    // 3. Else,
     else {
-        // a. Let rounded be ! RoundHalfAwayFromZero(quotient).
-        if (division_result.remainder.multiplied_by(Crypto::UnsignedBigInteger { 2 }).unsigned_value() >= increment_big_int) {
-            if (division_result.remainder.is_negative())
-                rounded = rounded.minus(Crypto::UnsignedBigInteger { 1 });
-            else
-                rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
-        }
+        // a. Let isNegative be false.
+        is_negative = false;
     }
 
-    // 8. Return rounded × increment.
-    return js_bigint(heap, rounded.multiplied_by(increment_big_int));
+    // 4. Let unsignedRoundingMode be GetUnsignedRoundingMode(roundingMode, isNegative).
+    auto unsigned_rounding_mode = get_unsigned_rounding_mode(rounding_mode, is_negative);
+
+    // 5. Let r1 be the largest integer such that r1 ≤ quotient.
+    auto r1 = division_result.quotient;
+
+    // 6. Let r2 be the smallest integer such that r2 > quotient.
+    auto r2 = division_result.quotient.plus("1"_bigint);
+
+    // 7. Let rounded be ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode).
+    auto rounded = apply_unsigned_rounding_mode(division_result, r1, r2, unsigned_rounding_mode, increment_big_int);
+
+    // 8. If isNegative is true, set rounded to -rounded.
+    if (is_negative)
+        rounded.negate();
+
+    // 9. Return rounded × increment.
+    return rounded.multiplied_by(increment_big_int);
 }
 
-// 13.31 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
+// 13.32 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, ParseResult const& parse_result)
 {
     auto& vm = global_object.vm();
@@ -1199,7 +1379,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = Optional<String>(move(calendar_part)) };
 }
 
-// 13.32 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
+// 13.33 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1235,7 +1415,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     return TemporalInstant { .year = result.year, .month = result.month, .day = result.day, .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .time_zone_offset = move(offset_string) };
 }
 
-// 13.33 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
+// 13.34 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1261,7 +1441,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = move(time_zone_result) };
 }
 
-// 13.34 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
+// 13.35 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1288,7 +1468,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     return id_part.value();
 }
 
-// 13.35 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
+// 13.36 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, String const& iso_string)
 {
     // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
@@ -1298,7 +1478,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
     return TemporalDate { .year = parts.year, .month = parts.month, .day = parts.day, .calendar = move(parts.calendar) };
 }
 
-// 13.36 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
+// 13.37 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1322,7 +1502,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
     return parse_iso_date_time(global_object, *parse_result);
 }
 
-// 13.37 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
+// 13.38 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1462,7 +1642,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     return create_duration_record(global_object, years * factor, months * factor, weeks * factor, days * factor, hours * factor, floor(minutes) * factor, floor(seconds) * factor, floor(milliseconds) * factor, floor(microseconds) * factor, floor(nanoseconds) * factor);
 }
 
-// 13.38 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
+// 13.39 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1498,7 +1678,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
     return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.39 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
+// 13.40 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1547,7 +1727,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset_string = move(offset_string), .name = move(time_zone) } };
 }
 
-// 13.40 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
+// 13.41 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1576,7 +1756,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
-// 13.41 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
+// 13.42 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1619,7 +1799,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
 }
 
-// 13.42 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
+// 13.43 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1646,7 +1826,7 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.43 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
+// 13.44 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
 ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
@@ -1664,7 +1844,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
     return integer;
 }
 
-// 13.46 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.47 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
@@ -1715,7 +1895,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     return result;
 }
 
-// 13.47 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
+// 13.48 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
 ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
 {
     auto& vm = global_object.vm();

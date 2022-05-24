@@ -573,7 +573,7 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
         quantity = nanosecond;
     }
 
-    // 10. Let result be ! RoundNumberToIncrement(quantity, increment, roundingMode).
+    // 10. Let result be RoundNumberToIncrement(quantity, increment, roundingMode).
     auto result = round_number_to_increment(quantity, increment, rounding_mode);
 
     // If unit is "day", then

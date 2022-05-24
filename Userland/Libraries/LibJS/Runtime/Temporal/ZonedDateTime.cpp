@@ -89,7 +89,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
 
         // c. If matchBehaviour is match minutes, then
         if (match_behavior == MatchBehavior::MatchMinutes) {
-            // i. Let roundedCandidateNanoseconds be ! RoundNumberToIncrement(candidateNanoseconds, 60 × 10^9, "halfExpand").
+            // i. Let roundedCandidateNanoseconds be RoundNumberToIncrement(candidateNanoseconds, 60 × 10^9, "halfExpand").
             auto rounded_candidate_nanoseconds = round_number_to_increment(candidate_nanoseconds, 60000000000, "halfExpand"sv);
 
             // ii. If roundedCandidateNanoseconds = offsetNanoseconds, then
