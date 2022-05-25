@@ -100,6 +100,7 @@ private:
     NonnullRefPtr<GUI::Action> create_new_file_action(String const& label, String const& icon, String const& extension);
     NonnullRefPtr<GUI::Action> create_new_directory_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
+    NonnullRefPtr<GUI::Action> create_open_selected_in_new_tab_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     NonnullRefPtr<GUI::Action> create_new_project_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_tab_widget_action();
@@ -216,6 +217,7 @@ private:
 
     RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
+    RefPtr<GUI::Action> m_open_selected_in_new_tab_action;
     RefPtr<GUI::Action> m_show_in_file_manager_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_tree_view_rename_action;
