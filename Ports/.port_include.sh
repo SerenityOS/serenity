@@ -65,8 +65,8 @@ installopts=()
 configscript=configure
 configopts=()
 useconfigure=false
-config_sub_path=config.sub
-config_guess_path=config.guess
+config_sub_paths=("config.sub")
+config_guess_paths=("config.guess")
 use_fresh_config_sub=false
 use_fresh_config_guess=false
 depends=()
@@ -141,11 +141,15 @@ get_new_config_guess() {
 }
 
 ensure_new_config_sub() {
-    get_new_config_sub "$config_sub_path"
+    for path in "${config_sub_paths[@]}"; do
+        get_new_config_sub "${path}"
+    done
 }
 
 ensure_new_config_guess() {
-    get_new_config_guess "$config_guess_path"
+    for path in "${config_guess_paths[@]}"; do
+        get_new_config_guess "${path}"
+    done
 }
 
 ensure_build() {

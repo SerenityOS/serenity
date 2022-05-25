@@ -4,7 +4,7 @@ version=1.29.3
 useconfigure=true
 workdir=mpg123-${version}
 use_fresh_config_sub=true
-config_sub_path=build/config.sub
+config_sub_paths=("build/config.sub")
 files="https://download.sourceforge.net/project/mpg123/mpg123/${version}/mpg123-${version}.tar.bz2 mpg123-${version}.tar.bz2
 https://download.sourceforge.net/project/mpg123/mpg123/${version}/mpg123-${version}.tar.bz2.sig mpg123-${version}.tar.bz2.sig"
 
