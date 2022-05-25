@@ -125,7 +125,7 @@ get_new_config_sub() {
         exit 1
     fi
     if ! run grep -q serenity "$config_sub"; then
-        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${1:-config.sub}" false
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${config_sub}" false
     fi
 }
 
@@ -136,7 +136,7 @@ get_new_config_guess() {
         exit 1
     fi
     if ! run grep -q SerenityOS "$config_guess"; then
-        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${1:-config_guess}" false
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${config_guess}" false
     fi
 }
 
