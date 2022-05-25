@@ -2,6 +2,7 @@ serenity_component(
     Mail
     RECOMMENDED
     TARGETS Mail
+    DEPENDS WebContent
 )
 
 compile_gml(MailWindow.gml MailWindowGML.h mail_window_gml)
