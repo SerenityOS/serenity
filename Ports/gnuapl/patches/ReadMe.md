@@ -20,8 +20,3 @@ Remove use of sbrk()
 
 Again, for performance reporting the function `sbrk` is needed which we don't have. We just stub it out.
 
-## `0004-Teach-config.sub-about-serenity.patch`
-
-Teach config.sub about serenity
-
-
