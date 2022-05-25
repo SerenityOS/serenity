@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Static Analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       PVS_STUDIO_ANALYSIS_ARCH: i686
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'

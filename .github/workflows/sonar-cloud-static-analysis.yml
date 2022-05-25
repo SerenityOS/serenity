@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Static Analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     env:
       # Latest scanner version is tracked on: https://sonarcloud.io/documentation/analysis/scan/sonarscanner/
