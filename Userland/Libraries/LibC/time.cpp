@@ -199,7 +199,7 @@ struct tm* gmtime_r(time_t const* t, struct tm* tm)
 
 char* asctime(const struct tm* tm)
 {
-    static char buffer[69];
+    static char buffer[31];
     return asctime_r(tm, buffer);
 }
 
@@ -207,7 +207,7 @@ char* asctime_r(const struct tm* tm, char* buffer)
 {
     // Spec states buffer must be at least 26 bytes.
     // However, if we're already allocating 69 bytes for the string, we might as well use them!
-    constexpr size_t assumed_len = 68;
+    constexpr size_t assumed_len = 30;
     size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
 
     // Verify that the buffer was large enough.
@@ -351,10 +351,8 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
                 return 0;
             }
         }
-        if (builder.length() + 1 > max_size) {
-            warnln("{}", builder.length());
+        if (builder.length() + 1 > max_size)
             return 0;
-        }
 
     }
 
