@@ -1,7 +1,7 @@
 From 07d7111359facb2e8ce95ca28743f3b38d991b25 Mon Sep 17 00:00:00 2001
 From: Snow <i@xkun.me>
 Date: Sun, 15 May 2022 11:41:03 +0800
-Subject: [PATCH 4/4] Undefine TERMINFO in termcap.c
+Subject: [PATCH 3/3] Undefine TERMINFO in termcap.c
 
 Leaving it defined will lead to a crash.
 ---
