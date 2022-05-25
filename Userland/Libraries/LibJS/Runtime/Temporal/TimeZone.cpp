@@ -382,7 +382,7 @@ String format_iso_time_zone_offset_string(double offset_nanoseconds)
     // 1. Assert: offsetNanoseconds is an integer.
     VERIFY(trunc(offset_nanoseconds) == offset_nanoseconds);
 
-    // 2. Set offsetNanoseconds to ! RoundNumberToIncrement(offsetNanoseconds, 60 × 10^9, "halfExpand").
+    // 2. Set offsetNanoseconds to RoundNumberToIncrement(offsetNanoseconds, 60 × 10^9, "halfExpand").
     offset_nanoseconds = round_number_to_increment(offset_nanoseconds, 60000000000, "halfExpand"sv);
 
     // 3. If offsetNanoseconds ≥ 0, let sign be "+"; otherwise, let sign be "-".

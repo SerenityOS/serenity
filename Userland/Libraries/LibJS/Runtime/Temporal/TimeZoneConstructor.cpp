@@ -22,7 +22,7 @@ void TimeZoneConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 11.3.1 Temporal.TimeZone.prototype, https://tc39.es/proposal-temporal/#sec-temporal-timezone-prototype
+    // 11.3.1 Temporal.TimeZone.prototype, https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_time_zone_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

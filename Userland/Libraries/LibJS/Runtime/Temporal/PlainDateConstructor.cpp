@@ -26,7 +26,7 @@ void PlainDateConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-prototype
+    // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

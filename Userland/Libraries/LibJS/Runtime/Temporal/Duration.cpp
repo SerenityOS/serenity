@@ -1278,8 +1278,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // y. Let fractionalYears be years + days / abs(oneYearDays).
         auto fractional_years = years + days / fabs(one_year_days);
 
-        // z. Set years to ! RoundNumberToIncrement(fractionalYears, increment, roundingMode).
-        years = (double)round_number_to_increment(fractional_years, increment, rounding_mode);
+        // z. Set years to RoundNumberToIncrement(fractionalYears, increment, roundingMode).
+        years = round_number_to_increment(fractional_years, increment, rounding_mode);
 
         // aa. Set remainder to fractionalYears - years.
         remainder = fractional_years - years;
@@ -1353,8 +1353,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // o. Let fractionalMonths be months + days / abs(oneMonthDays).
         auto fractional_months = months + days / fabs(one_month_days);
 
-        // p. Set months to ! RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
-        months = (double)round_number_to_increment(fractional_months, increment, rounding_mode);
+        // p. Set months to RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
+        months = round_number_to_increment(fractional_months, increment, rounding_mode);
 
         // q. Set remainder to fractionalMonths - months.
         remainder = fractional_months - months;
@@ -1403,8 +1403,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // g. Let fractionalWeeks be weeks + days / abs(oneWeekDays).
         auto fractional_weeks = weeks + days / fabs(one_week_days);
 
-        // h. Set weeks to ! RoundNumberToIncrement(fractionalWeeks, increment, roundingMode).
-        weeks = (double)round_number_to_increment(fractional_weeks, increment, rounding_mode);
+        // h. Set weeks to RoundNumberToIncrement(fractionalWeeks, increment, roundingMode).
+        weeks = round_number_to_increment(fractional_weeks, increment, rounding_mode);
 
         // i. Set remainder to fractionalWeeks - weeks.
         remainder = fractional_weeks - weeks;
@@ -1417,8 +1417,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. Let fractionalDays be days.
         auto fractional_days = days;
 
-        // b. Set days to ! RoundNumberToIncrement(days, increment, roundingMode).
-        days = (double)round_number_to_increment(days, increment, rounding_mode);
+        // b. Set days to RoundNumberToIncrement(days, increment, roundingMode).
+        days = round_number_to_increment(days, increment, rounding_mode);
 
         // c. Set remainder to fractionalDays - days.
         remainder = fractional_days - days;
@@ -1428,8 +1428,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. Let fractionalHours be (fractionalSeconds / 60 + minutes) / 60 + hours.
         auto fractional_hours = (fractional_seconds / 60 + minutes) / 60 + hours;
 
-        // b. Set hours to ! RoundNumberToIncrement(fractionalHours, increment, roundingMode).
-        hours = (double)round_number_to_increment(fractional_hours, increment, rounding_mode);
+        // b. Set hours to RoundNumberToIncrement(fractionalHours, increment, roundingMode).
+        hours = round_number_to_increment(fractional_hours, increment, rounding_mode);
 
         // c. Set remainder to fractionalHours - hours.
         remainder = fractional_hours - hours;
@@ -1446,8 +1446,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. Let fractionalMinutes be fractionalSeconds / 60 + minutes.
         auto fractional_minutes = fractional_seconds / 60 + minutes;
 
-        // b. Set minutes to ! RoundNumberToIncrement(fractionalMinutes, increment, roundingMode).
-        minutes = (double)round_number_to_increment(fractional_minutes, increment, rounding_mode);
+        // b. Set minutes to RoundNumberToIncrement(fractionalMinutes, increment, roundingMode).
+        minutes = round_number_to_increment(fractional_minutes, increment, rounding_mode);
 
         // c. Set remainder to fractionalMinutes - minutes.
         remainder = fractional_minutes - minutes;
@@ -1460,8 +1460,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     }
     // 15. Else if unit is "second", then
     else if (unit == "second"sv) {
-        // a. Set seconds to ! RoundNumberToIncrement(fractionalSeconds, increment, roundingMode).
-        seconds = (double)round_number_to_increment(fractional_seconds, increment, rounding_mode);
+        // a. Set seconds to RoundNumberToIncrement(fractionalSeconds, increment, roundingMode).
+        seconds = round_number_to_increment(fractional_seconds, increment, rounding_mode);
 
         // b. Set remainder to fractionalSeconds - seconds.
         remainder = fractional_seconds - seconds;
@@ -1476,8 +1476,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. Let fractionalMilliseconds be nanoseconds × 10^-6 + microseconds × 10^-3 + milliseconds.
         auto fractional_milliseconds = nanoseconds * 0.000001 + microseconds * 0.001 + milliseconds;
 
-        // b. Set milliseconds to ! RoundNumberToIncrement(fractionalMilliseconds, increment, roundingMode).
-        milliseconds = (double)round_number_to_increment(fractional_milliseconds, increment, rounding_mode);
+        // b. Set milliseconds to RoundNumberToIncrement(fractionalMilliseconds, increment, roundingMode).
+        milliseconds = round_number_to_increment(fractional_milliseconds, increment, rounding_mode);
 
         // c. Set remainder to fractionalMilliseconds - milliseconds.
         remainder = fractional_milliseconds - milliseconds;
@@ -1491,8 +1491,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. Let fractionalMicroseconds be nanoseconds × 10^-3 + microseconds.
         auto fractional_microseconds = nanoseconds * 0.001 + microseconds;
 
-        // b. Set microseconds to ! RoundNumberToIncrement(fractionalMicroseconds, increment, roundingMode).
-        microseconds = (double)round_number_to_increment(fractional_microseconds, increment, rounding_mode);
+        // b. Set microseconds to RoundNumberToIncrement(fractionalMicroseconds, increment, roundingMode).
+        microseconds = round_number_to_increment(fractional_microseconds, increment, rounding_mode);
 
         // c. Set remainder to fractionalMicroseconds - microseconds.
         remainder = fractional_microseconds - microseconds;
@@ -1508,8 +1508,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // b. Set remainder to nanoseconds.
         remainder = nanoseconds;
 
-        // c. Set nanoseconds to ! RoundNumberToIncrement(nanoseconds, increment, roundingMode).
-        nanoseconds = (double)round_number_to_increment(nanoseconds, increment, rounding_mode);
+        // c. Set nanoseconds to RoundNumberToIncrement(nanoseconds, increment, roundingMode).
+        nanoseconds = round_number_to_increment(nanoseconds, increment, rounding_mode);
 
         // d. Set remainder to remainder - nanoseconds.
         remainder -= nanoseconds;
