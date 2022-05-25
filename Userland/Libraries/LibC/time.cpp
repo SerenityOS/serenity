@@ -5,6 +5,7 @@
  */
 
 #include <AK/DateConstants.h>
+#include <AK/Math.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -205,7 +206,8 @@ char* asctime(const struct tm* tm)
 char* asctime_r(const struct tm* tm, char* buffer)
 {
     // Spec states buffer must be at least 26 bytes.
-    constexpr size_t assumed_len = 26;
+    // However, if we're already allocating 69 bytes for the string, we might as well use them!
+    constexpr size_t assumed_len = 68;
     size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
 
     // Verify that the buffer was large enough.
@@ -349,8 +351,11 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
                 return 0;
             }
         }
-        if (builder.length() + 1 > max_size)
+        if (builder.length() + 1 > max_size) {
+            warnln("{}", builder.length());
             return 0;
+        }
+
     }
 
     auto str = builder.build();
