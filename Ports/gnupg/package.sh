@@ -3,7 +3,7 @@ port=gnupg
 version=2.3.0
 useconfigure=true
 use_fresh_config_sub=true
-config_sub_path=build-aux/config.sub
+config_sub_paths=("build-aux/config.sub")
 configopts=("--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
   "--with-libgcrypt-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
   "--with-libassuan-prefix=${SERENITY_INSTALL_ROOT}/usr/local"

@@ -7,7 +7,7 @@ auth_type=sha256
 
 useconfigure=true
 use_fresh_config_sub=true
-config_sub_path="build-aux/config.sub"
+config_sub_paths=("build-aux/config.sub")
 configopts=("--disable-lto" "--disable-jit")
 pre_configure() {
     run autoreconf

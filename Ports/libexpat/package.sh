@@ -3,7 +3,7 @@ port=libexpat
 version=2.4.8
 useconfigure=true
 use_fresh_config_sub=true
-config_sub_path=conftools/config.sub
+config_sub_paths=("conftools/config.sub")
 files="https://github.com/libexpat/libexpat/releases/download/R_${version//./_}/expat-${version}.tar.xz expat-${version}.tar.xz
 https://github.com/libexpat/libexpat/releases/download/R_${version//./_}/expat-${version}.tar.xz.asc expat-${version}.tar.xz.asc"
 workdir=expat-${version}
