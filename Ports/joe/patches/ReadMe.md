@@ -13,12 +13,7 @@ Remove the sys/ prefix for the fcntl include
 
 Serenity does not have the header `fcntl.h` in `/usr/include/sys`.
 
-## `0003-Teach-config.sub-about-serenity.patch`
-
-Teach config.sub about serenity
-
-
-## `0004-Undefine-TERMINFO-in-termcap.c.patch`
+## `0003-Undefine-TERMINFO-in-termcap.c.patch`
 
 Undefine TERMINFO in termcap.c
 
