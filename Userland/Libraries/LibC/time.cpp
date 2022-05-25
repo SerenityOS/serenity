@@ -5,7 +5,6 @@
  */
 
 #include <AK/DateConstants.h>
-#include <AK/Math.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
