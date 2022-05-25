@@ -2,6 +2,7 @@ serenity_component(
     Help
     RECOMMENDED
     TARGETS Help
+    DEPENDS WebContent
 )
 
 compile_gml(HelpWindow.gml HelpWindowGML.h help_window_gml)

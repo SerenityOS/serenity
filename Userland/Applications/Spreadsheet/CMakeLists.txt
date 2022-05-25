@@ -1,6 +1,7 @@
 serenity_component(
     Spreadsheet
     TARGETS Spreadsheet
+    DEPENDS WebContent
 )
 
 compile_gml(CondFormatting.gml CondFormattingGML.h cond_fmt_gml)

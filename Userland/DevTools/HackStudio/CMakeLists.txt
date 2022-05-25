@@ -2,7 +2,7 @@ serenity_component(
     HackStudio
     RECOMMENDED
     TARGETS HackStudio
-    DEPENDS CppLanguageServer ShellLanguageServer
+    DEPENDS CppLanguageServer ShellLanguageServer WebContent
 )
 
 add_subdirectory(LanguageServers)
