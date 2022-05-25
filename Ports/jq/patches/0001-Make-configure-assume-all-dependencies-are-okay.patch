@@ -1,7 +1,7 @@
 From 286ee7f25aefdd17945ba141bb5684857575119a Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 16:20:52 +0430
-Subject: [PATCH 2/3] Make configure assume all dependencies are okay
+Subject: [PATCH 1/2] Make configure assume all dependencies are okay
 
 ---
  configure | 4 ++++
