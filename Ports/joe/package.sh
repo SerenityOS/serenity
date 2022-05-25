@@ -8,3 +8,4 @@ configopts=(
     "--disable-curses"
     "--disable-termcap"
 )
+use_fresh_config_sub=true
