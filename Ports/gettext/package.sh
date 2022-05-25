@@ -5,6 +5,8 @@ useconfigure=true
 files="https://ftp.gnu.org/pub/gnu/gettext/gettext-${version}.tar.gz gettext-${version}.tar.gz c77d0da3102aec9c07f43671e60611ebff89a996ef159497ce8e59d075786b12"
 auth_type=sha256
 depends=("libiconv")
+use_fresh_config_sub=true
+config_sub_paths=("build-aux/config.sub" "libtextstyle/build-aux/config.sub")
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
