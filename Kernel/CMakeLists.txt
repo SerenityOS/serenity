@@ -329,7 +329,6 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
-        
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
