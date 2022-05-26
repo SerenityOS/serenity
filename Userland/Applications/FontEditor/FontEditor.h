@@ -71,6 +71,7 @@ private:
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_export_action;
 
     RefPtr<GUI::Action> m_cut_action;
     RefPtr<GUI::Action> m_copy_action;
