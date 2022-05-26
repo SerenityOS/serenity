@@ -8,6 +8,7 @@
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <serenity.h>
@@ -33,22 +34,12 @@ static void wait_until_coredump_is_ready(String const& coredump_path)
 
 static void launch_crash_reporter(String const& coredump_path, bool unlink_on_exit)
 {
-    pid_t child;
-    char const* argv[4] = { "CrashReporter" };
-    if (unlink_on_exit) {
-        argv[1] = "--unlink";
-        argv[2] = coredump_path.characters();
-        argv[3] = nullptr;
-    } else {
-        argv[1] = coredump_path.characters();
-        argv[2] = nullptr;
-    }
-    if ((errno = posix_spawn(&child, "/bin/CrashReporter", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-    } else {
-        if (disown(child) < 0)
-            perror("disown");
-    }
+    auto pid = Core::Process::spawn("/bin/CrashReporter",
+        unlink_on_exit
+            ? Array { "--unlink", coredump_path.characters() }.span()
+            : Array { coredump_path.characters() }.span());
+    if (pid.is_error())
+        warnln("Failed to launch CrashReporter");
 }
 
 ErrorOr<int> serenity_main(Main::Arguments)

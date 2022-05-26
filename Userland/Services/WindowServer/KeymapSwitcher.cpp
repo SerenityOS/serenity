@@ -7,6 +7,7 @@
 #include <AK/JsonObject.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <WindowServer/KeymapSwitcher.h>
 #include <spawn.h>
 #include <unistd.h>
@@ -101,12 +102,9 @@ String KeymapSwitcher::get_current_keymap() const
 
 void KeymapSwitcher::setkeymap(const AK::String& keymap)
 {
-    pid_t child_pid;
-    char const* argv[] = { "/bin/keymap", "-m", keymap.characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
+    if (Core::Process::spawn("/bin/keymap", Array { "-m", keymap.characters() }).is_error())
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));
-    }
+
     if (on_keymap_change)
         on_keymap_change(keymap);
 }
