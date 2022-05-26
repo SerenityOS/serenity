@@ -15,6 +15,7 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Margins.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibGfx/Palette.h>
 #include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
@@ -156,13 +157,7 @@ Optional<Gfx::FloatPoint> TimeZoneSettingsWidget::compute_time_zone_location() c
     return Gfx::FloatPoint { mercadian_x, mercadian_y };
 }
 
-void TimeZoneSettingsWidget::set_time_zone() const
+void TimeZoneSettingsWidget::set_time_zone()
 {
-    pid_t child_pid = 0;
-    char const* argv[] = { "/bin/timezone", m_time_zone.characters(), nullptr };
-
-    if ((errno = posix_spawn(&child_pid, "/bin/timezone", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-        exit(1);
-    }
+    GUI::Process::spawn_or_show_error(window(), "/bin/timezone", Array { m_time_zone.characters() });
 }

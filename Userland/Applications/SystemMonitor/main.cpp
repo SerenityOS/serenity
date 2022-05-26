@@ -38,6 +38,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/StackWidget.h>
@@ -470,17 +471,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "&Profile Process", { Mod_Ctrl, Key_P },
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
-            if (pid != -1) {
-                auto pid_string = String::number(pid);
-                pid_t child;
-                const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
-                if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                    perror("posix_spawn");
-                } else {
-                    if (disown(child) < 0)
-                        perror("disown");
-                }
-            }
+            if (pid == -1)
+                return;
+            auto pid_string = String::number(pid);
+            GUI::Process::spawn_or_show_error(window, "/bin/Profiler", Array { "--pid", pid_string.characters() });
         },
         &process_table_view);
 
