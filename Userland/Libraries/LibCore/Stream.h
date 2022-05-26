@@ -45,9 +45,10 @@ public:
     /// bytes written into the stream, or an errno in the case of failure.
     virtual ErrorOr<size_t> write(ReadonlyBytes) = 0;
     /// Same as write, but does not return until either the entire buffer
-    /// contents are written or an error occurs. Returns whether the entire
-    /// contents were written without an error.
-    virtual bool write_or_error(ReadonlyBytes);
+    /// contents are written or an error occurs. Returns success or the error in
+    /// case one occurred.
+    virtual ErrorOr<void> write_all(ReadonlyBytes);
+    inline bool write_or_error(ReadonlyBytes buffer) { return !write_all(buffer).is_error(); }
 
     /// Returns whether the stream has reached the end of file. For sockets,
     /// this most likely means that the protocol has disconnected (in the case

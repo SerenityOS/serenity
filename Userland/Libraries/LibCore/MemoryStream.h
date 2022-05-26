@@ -72,13 +72,13 @@ public:
         m_offset += nwritten;
         return nwritten;
     }
-    virtual bool write_or_error(ReadonlyBytes bytes) override
+    virtual ErrorOr<void> write_all(ReadonlyBytes bytes) override
     {
         if (remaining() < bytes.size())
-            return false;
+            return Error::from_errno(EOVERFLOW);
 
         MUST(write(bytes));
-        return true;
+        return {};
     }
 
     Bytes bytes() { return m_bytes; }
