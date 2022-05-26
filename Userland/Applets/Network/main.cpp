@@ -12,6 +12,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Notification.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
@@ -49,17 +50,7 @@ private:
     {
         if (event.button() != GUI::MouseButton::Primary)
             return;
-
-        pid_t child_pid;
-        char const* argv[] = { "SystemMonitor", "-t", "network", nullptr };
-
-        if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-            return;
-        }
-
-        if (disown(child_pid) < 0)
-            perror("disown");
+        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor", Array { "-t", "network" });
     }
 
     virtual void update_widget()
