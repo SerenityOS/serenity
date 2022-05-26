@@ -651,6 +651,16 @@ void glNewList(GLuint list, GLenum mode)
     return g_gl_context->gl_new_list(list, mode);
 }
 
+void glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz)
+{
+    g_gl_context->gl_normal(static_cast<GLfloat>(nx), static_cast<GLfloat>(ny), static_cast<GLfloat>(nz));
+}
+
+void glNormal3dv(GLdouble const* v)
+{
+    g_gl_context->gl_normal(static_cast<GLfloat>(v[0]), static_cast<GLfloat>(v[1]), static_cast<GLfloat>(v[2]));
+}
+
 void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 {
     g_gl_context->gl_normal(nx, ny, nz);
