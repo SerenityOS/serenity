@@ -11,6 +11,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Clipboard.h>
@@ -48,15 +49,10 @@ void FileResult::activate() const
 
 void TerminalResult::activate() const
 {
-    pid_t pid;
-    char const* argv[] = { "Terminal", "-k", "-e", title().characters(), nullptr };
-
-    if ((errno = posix_spawn(&pid, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-    } else {
-        if (disown(pid) < 0)
-            perror("disown");
-    }
+    // FIXME: This should be a GUI::Process::spawn_or_show_error(), however this is a
+    // Assistant::Result object, which does not have access to the application's GUI::Window* pointer
+    // (which spawn_or_show_error() needs incase it has to open a error message box).
+    (void)Core::Process::spawn("/bin/Terminal", Array { "-k", "-e", title().characters() });
 }
 
 void URLResult::activate() const
