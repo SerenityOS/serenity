@@ -14,6 +14,7 @@ set(SOURCES
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
+    Font/BDFWriter.cpp
     Font/BitmapFont.cpp
     Font/Emoji.cpp
     Font/FontDatabase.cpp
