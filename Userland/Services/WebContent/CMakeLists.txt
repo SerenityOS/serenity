@@ -1,6 +1,7 @@
 serenity_component(
     WebContent
     TARGETS WebContent
+    DEPENDS ImageDecoder RequestServer WebSocket
 )
 
 compile_ipc(WebContentServer.ipc WebContentServerEndpoint.h)
