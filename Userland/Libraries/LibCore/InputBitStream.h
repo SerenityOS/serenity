@@ -42,7 +42,7 @@ public:
     }
     virtual bool is_writable() const override { return m_stream.is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
+    virtual ErrorOr<void> write_all(ReadonlyBytes bytes) override { return m_stream.write_all(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream.is_open(); }
     virtual void close() override
@@ -159,7 +159,7 @@ public:
     }
     virtual bool is_writable() const override { return m_stream.is_writable(); }
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
+    virtual ErrorOr<void> write_all(ReadonlyBytes bytes) override { return m_stream.write_all(bytes); }
     virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream.is_open(); }
     virtual void close() override
