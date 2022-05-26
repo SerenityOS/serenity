@@ -1,7 +1,7 @@
 From 4476d98e7c01bf1d5f45fe24a28ceac279949454 Mon Sep 17 00:00:00 2001
 From: Rodrigo Tobar <rtobarc@gmail.com>
 Date: Wed, 8 Sep 2021 00:13:16 +0800
-Subject: [PATCH 2/2] Make configure pass all dependency checks for serenity
+Subject: [PATCH 1/1] Make configure pass all dependency checks for serenity
 
 ---
  configure | 4 ++++

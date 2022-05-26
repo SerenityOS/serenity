@@ -130,7 +130,7 @@ bool AppFile::spawn() const
         return false;
 
     auto pid = Core::Process::spawn(executable());
-    if (pid < 0)
+    if (pid.is_error())
         return false;
 
     return true;

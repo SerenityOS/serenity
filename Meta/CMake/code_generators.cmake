@@ -69,7 +69,7 @@ function(compile_jakt source)
     set(output "${source_base}.cpp")
     add_custom_command(
         OUTPUT ${output}
-        COMMAND $<TARGET_FILE:Lagom::jakt> -o "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp" ${source}
+        COMMAND $<TARGET_FILE:Lagom::jakt> -S -o "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp" ${source}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp/${output}" ${output}
         COMMAND "${CMAKE_COMMAND}" -E remove "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp/${output}"
         VERBATIM

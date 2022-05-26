@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,12 +8,15 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Span.h>
 
 namespace Core {
 
 class Process {
 public:
-    static pid_t spawn(StringView path);
+    static ErrorOr<pid_t> spawn(StringView path, Span<String const> arguments);
+    static ErrorOr<pid_t> spawn(StringView path, Span<StringView const> arguments);
+    static ErrorOr<pid_t> spawn(StringView path, Span<char const* const> arguments = {});
 };
 
 }

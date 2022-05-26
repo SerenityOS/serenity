@@ -469,6 +469,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() co
     return bitmap;
 }
 
+void Bitmap::invert()
+{
+    for (auto y = 0; y < height(); y++) {
+        for (auto x = 0; x < width(); x++)
+            set_pixel(x, y, get_pixel(x, y).inverted());
+    }
+}
+
 Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
@@ -598,6 +606,23 @@ bool Bitmap::visually_equals(Bitmap const& other) const
     }
 
     return true;
+}
+
+Optional<Color> Bitmap::solid_color(u8 alpha_threshold) const
+{
+    Optional<Color> color;
+    for (auto y = 0; y < height(); ++y) {
+        for (auto x = 0; x < width(); ++x) {
+            auto const& pixel = get_pixel(x, y);
+            if (has_alpha_channel() && pixel.alpha() <= alpha_threshold)
+                continue;
+            if (!color.has_value())
+                color = pixel;
+            else if (pixel != color)
+                return {};
+        }
+    }
+    return color;
 }
 
 }

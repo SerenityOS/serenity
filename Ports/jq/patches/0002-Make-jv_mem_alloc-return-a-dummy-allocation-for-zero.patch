@@ -1,7 +1,7 @@
 From 53246ba7b026c92e42aa4c332007f425d297a4ea Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 16:21:08 +0430
-Subject: [PATCH 3/3] Make jv_mem_alloc() return a dummy allocation for
+Subject: [PATCH 2/2] Make jv_mem_alloc() return a dummy allocation for
  zero-sized allocs
 
 And make jv_mem_free() accept it.

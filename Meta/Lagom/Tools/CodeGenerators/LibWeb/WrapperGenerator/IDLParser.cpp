@@ -76,7 +76,8 @@ static String convert_enumeration_value_to_cpp_enum_member(String const& value, 
 
 namespace IDL {
 
-HashMap<String, NonnullRefPtr<Interface>> Parser::s_resolved_imports {};
+HashTable<NonnullOwnPtr<Interface>> Parser::s_interfaces {};
+HashMap<String, Interface*> Parser::s_resolved_imports {};
 
 void Parser::assert_specific(char ch)
 {
@@ -125,7 +126,7 @@ HashMap<String, String> Parser::parse_extended_attributes()
 }
 
 static HashTable<String> import_stack;
-Optional<NonnullRefPtr<Interface>> Parser::resolve_import(auto path)
+Optional<Interface&> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
     if (!Core::File::exists(include_path))
@@ -133,7 +134,7 @@ Optional<NonnullRefPtr<Interface>> Parser::resolve_import(auto path)
 
     auto real_path = Core::File::real_path_for(include_path);
     if (s_resolved_imports.contains(real_path))
-        return s_resolved_imports.find(real_path)->value;
+        return *s_resolved_imports.find(real_path)->value;
 
     if (import_stack.contains(real_path))
         report_parsing_error(String::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
@@ -144,10 +145,10 @@ Optional<NonnullRefPtr<Interface>> Parser::resolve_import(auto path)
         report_parsing_error(String::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
     auto data = file_or_error.value()->read_all();
-    auto result = Parser(real_path, data, import_base_path).parse();
+    auto& result = Parser(real_path, data, import_base_path).parse();
     import_stack.remove(real_path);
 
-    s_resolved_imports.set(real_path, result);
+    s_resolved_imports.set(real_path, &result);
     return result;
 }
 
@@ -709,21 +710,23 @@ void Parser::parse_dictionary(Interface& interface)
 
 void Parser::parse_interface_mixin(Interface& interface)
 {
-    auto mixin_interface = make_ref_counted<Interface>();
-    mixin_interface->module_own_path = interface.module_own_path;
-    mixin_interface->is_mixin = true;
+    auto mixin_interface_ptr = make<Interface>();
+    auto& mixin_interface = *mixin_interface_ptr;
+    VERIFY(s_interfaces.set(move(mixin_interface_ptr)) == AK::HashSetResult::InsertedNewEntry);
+    mixin_interface.module_own_path = interface.module_own_path;
+    mixin_interface.is_mixin = true;
 
     assert_string("interface");
     consume_whitespace();
     assert_string("mixin");
     auto offset = lexer.tell();
 
-    parse_interface(*mixin_interface);
-    if (!mixin_interface->parent_name.is_empty())
+    parse_interface(mixin_interface);
+    if (!mixin_interface.parent_name.is_empty())
         report_parsing_error("Mixin interfaces are not allowed to have inherited parents", filename, input, offset);
 
-    auto name = mixin_interface->name;
-    interface.mixins.set(move(name), move(mixin_interface));
+    auto name = mixin_interface.name;
+    interface.mixins.set(move(name), &mixin_interface);
 }
 
 void Parser::parse_callback_function(HashMap<String, String>& extended_attributes, Interface& interface)
@@ -817,15 +820,18 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
     resolve_parameters_typedefs(interface, function.parameters);
 }
 
-NonnullRefPtr<Interface> Parser::parse()
+Interface& Parser::parse()
 {
     auto this_module = Core::File::real_path_for(filename);
 
-    auto interface = make_ref_counted<Interface>();
-    interface->module_own_path = this_module;
-    s_resolved_imports.set(this_module, interface);
+    auto interface_ptr = make<Interface>();
+    auto& interface = *interface_ptr;
+    VERIFY(s_interfaces.set(move(interface_ptr)) == AK::HashSetResult::InsertedNewEntry);
+    interface.module_own_path = this_module;
+    s_resolved_imports.set(this_module, &interface);
 
-    NonnullRefPtrVector<Interface> imports;
+    Vector<Interface&> imports;
+    HashTable<String> required_imported_paths;
     while (lexer.consume_specific("#import")) {
         consume_whitespace();
         assert_specific('<');
@@ -833,121 +839,121 @@ NonnullRefPtr<Interface> Parser::parse()
         lexer.ignore();
         auto maybe_interface = resolve_import(path);
         if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value()->required_imported_paths)
+            for (auto& entry : maybe_interface.value().required_imported_paths)
                 required_imported_paths.set(entry);
             imports.append(maybe_interface.release_value());
         }
         consume_whitespace();
     }
-    interface->required_imported_paths = required_imported_paths;
+    interface.required_imported_paths = required_imported_paths;
 
-    parse_non_interface_entities(true, *interface);
+    parse_non_interface_entities(true, interface);
 
     if (lexer.consume_specific("interface"))
-        parse_interface(*interface);
+        parse_interface(interface);
 
-    parse_non_interface_entities(false, *interface);
+    parse_non_interface_entities(false, interface);
 
     for (auto& import : imports) {
         // FIXME: Instead of copying every imported entity into the current interface, query imports directly
         for (auto& dictionary : import.dictionaries)
-            interface->dictionaries.set(dictionary.key, dictionary.value);
+            interface.dictionaries.set(dictionary.key, dictionary.value);
 
         for (auto& enumeration : import.enumerations) {
             auto enumeration_copy = enumeration.value;
             enumeration_copy.is_original_definition = false;
-            interface->enumerations.set(enumeration.key, move(enumeration_copy));
+            interface.enumerations.set(enumeration.key, move(enumeration_copy));
         }
 
         for (auto& typedef_ : import.typedefs)
-            interface->typedefs.set(typedef_.key, typedef_.value);
+            interface.typedefs.set(typedef_.key, typedef_.value);
 
         for (auto& mixin : import.mixins) {
-            if (auto it = interface->mixins.find(mixin.key); it != interface->mixins.end() && it->value.ptr() != mixin.value.ptr())
+            if (auto it = interface.mixins.find(mixin.key); it != interface.mixins.end() && it->value != mixin.value)
                 report_parsing_error(String::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
-            interface->mixins.set(mixin.key, mixin.value);
+            interface.mixins.set(mixin.key, mixin.value);
         }
 
         for (auto& callback_function : import.callback_functions)
-            interface->callback_functions.set(callback_function.key, callback_function.value);
+            interface.callback_functions.set(callback_function.key, callback_function.value);
     }
 
     // Resolve mixins
-    if (auto it = interface->included_mixins.find(interface->name); it != interface->included_mixins.end()) {
+    if (auto it = interface.included_mixins.find(interface.name); it != interface.included_mixins.end()) {
         for (auto& entry : it->value) {
-            auto mixin_it = interface->mixins.find(entry);
-            if (mixin_it == interface->mixins.end())
+            auto mixin_it = interface.mixins.find(entry);
+            if (mixin_it == interface.mixins.end())
                 report_parsing_error(String::formatted("Mixin '{}' was never defined", entry), filename, input, lexer.tell());
 
             auto& mixin = mixin_it->value;
-            interface->attributes.extend(mixin->attributes);
-            interface->constants.extend(mixin->constants);
-            interface->functions.extend(mixin->functions);
-            interface->static_functions.extend(mixin->static_functions);
-            if (interface->has_stringifier && mixin->has_stringifier)
-                report_parsing_error(String::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface->name, mixin->name), filename, input, lexer.tell());
+            interface.attributes.extend(mixin->attributes);
+            interface.constants.extend(mixin->constants);
+            interface.functions.extend(mixin->functions);
+            interface.static_functions.extend(mixin->static_functions);
+            if (interface.has_stringifier && mixin->has_stringifier)
+                report_parsing_error(String::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface.name, mixin->name), filename, input, lexer.tell());
 
             if (mixin->has_stringifier) {
-                interface->stringifier_attribute = mixin->stringifier_attribute;
-                interface->has_stringifier = true;
+                interface.stringifier_attribute = mixin->stringifier_attribute;
+                interface.has_stringifier = true;
             }
         }
     }
 
     // Resolve typedefs
-    for (auto& attribute : interface->attributes)
-        resolve_typedef(*interface, attribute.type, &attribute.extended_attributes);
-    for (auto& constant : interface->constants)
-        resolve_typedef(*interface, constant.type);
-    for (auto& constructor : interface->constructors)
-        resolve_parameters_typedefs(*interface, constructor.parameters);
-    for (auto& function : interface->functions)
-        resolve_function_typedefs(*interface, function);
-    for (auto& static_function : interface->static_functions)
-        resolve_function_typedefs(*interface, static_function);
-    if (interface->value_iterator_type.has_value())
-        resolve_typedef(*interface, *interface->value_iterator_type);
-    if (interface->pair_iterator_types.has_value()) {
-        resolve_typedef(*interface, interface->pair_iterator_types->get<0>());
-        resolve_typedef(*interface, interface->pair_iterator_types->get<1>());
+    for (auto& attribute : interface.attributes)
+        resolve_typedef(interface, attribute.type, &attribute.extended_attributes);
+    for (auto& constant : interface.constants)
+        resolve_typedef(interface, constant.type);
+    for (auto& constructor : interface.constructors)
+        resolve_parameters_typedefs(interface, constructor.parameters);
+    for (auto& function : interface.functions)
+        resolve_function_typedefs(interface, function);
+    for (auto& static_function : interface.static_functions)
+        resolve_function_typedefs(interface, static_function);
+    if (interface.value_iterator_type.has_value())
+        resolve_typedef(interface, *interface.value_iterator_type);
+    if (interface.pair_iterator_types.has_value()) {
+        resolve_typedef(interface, interface.pair_iterator_types->get<0>());
+        resolve_typedef(interface, interface.pair_iterator_types->get<1>());
     }
-    if (interface->named_property_getter.has_value())
-        resolve_function_typedefs(*interface, *interface->named_property_getter);
-    if (interface->named_property_setter.has_value())
-        resolve_function_typedefs(*interface, *interface->named_property_setter);
-    if (interface->indexed_property_getter.has_value())
-        resolve_function_typedefs(*interface, *interface->indexed_property_getter);
-    if (interface->indexed_property_setter.has_value())
-        resolve_function_typedefs(*interface, *interface->indexed_property_setter);
-    if (interface->named_property_deleter.has_value())
-        resolve_function_typedefs(*interface, *interface->named_property_deleter);
-    if (interface->named_property_getter.has_value())
-        resolve_function_typedefs(*interface, *interface->named_property_getter);
-    for (auto& dictionary : interface->dictionaries) {
+    if (interface.named_property_getter.has_value())
+        resolve_function_typedefs(interface, *interface.named_property_getter);
+    if (interface.named_property_setter.has_value())
+        resolve_function_typedefs(interface, *interface.named_property_setter);
+    if (interface.indexed_property_getter.has_value())
+        resolve_function_typedefs(interface, *interface.indexed_property_getter);
+    if (interface.indexed_property_setter.has_value())
+        resolve_function_typedefs(interface, *interface.indexed_property_setter);
+    if (interface.named_property_deleter.has_value())
+        resolve_function_typedefs(interface, *interface.named_property_deleter);
+    if (interface.named_property_getter.has_value())
+        resolve_function_typedefs(interface, *interface.named_property_getter);
+    for (auto& dictionary : interface.dictionaries) {
         for (auto& dictionary_member : dictionary.value.members)
-            resolve_typedef(*interface, dictionary_member.type, &dictionary_member.extended_attributes);
+            resolve_typedef(interface, dictionary_member.type, &dictionary_member.extended_attributes);
     }
-    for (auto& callback_function : interface->callback_functions)
-        resolve_function_typedefs(*interface, callback_function.value);
+    for (auto& callback_function : interface.callback_functions)
+        resolve_function_typedefs(interface, callback_function.value);
 
     // Create overload sets
-    for (auto& function : interface->functions) {
-        auto& overload_set = interface->overload_sets.ensure(function.name);
+    for (auto& function : interface.functions) {
+        auto& overload_set = interface.overload_sets.ensure(function.name);
         function.overload_index = overload_set.size();
         overload_set.append(function);
     }
-    for (auto& overload_set : interface->overload_sets) {
+    for (auto& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
         for (auto& overloaded_function : overload_set.value)
             overloaded_function.is_overloaded = true;
     }
-    for (auto& function : interface->static_functions) {
-        auto& overload_set = interface->static_overload_sets.ensure(function.name);
+    for (auto& function : interface.static_functions) {
+        auto& overload_set = interface.static_overload_sets.ensure(function.name);
         function.overload_index = overload_set.size();
         overload_set.append(function);
     }
-    for (auto& overload_set : interface->static_overload_sets) {
+    for (auto& overload_set : interface.static_overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
         for (auto& overloaded_function : overload_set.value)
@@ -955,9 +961,9 @@ NonnullRefPtr<Interface> Parser::parse()
     }
     // FIXME: Add support for overloading constructors
 
-    if (interface->will_generate_code())
-        interface->required_imported_paths.set(this_module);
-    interface->imported_modules = move(imports);
+    if (interface.will_generate_code())
+        interface.required_imported_paths.set(this_module);
+    interface.imported_modules = move(imports);
 
     return interface;
 }

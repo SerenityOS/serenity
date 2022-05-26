@@ -121,6 +121,8 @@ public:
 
     [[nodiscard]] ShareableBitmap to_shareable_bitmap() const;
 
+    void invert();
+
     ~Bitmap();
 
     [[nodiscard]] u8* scanline_u8(int physical_y);
@@ -237,6 +239,8 @@ public:
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
     [[nodiscard]] bool visually_equals(Bitmap const&) const;
+
+    [[nodiscard]] Optional<Color> solid_color(u8 alpha_threshold = 0) const;
 
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);

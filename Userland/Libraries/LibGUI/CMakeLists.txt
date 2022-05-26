@@ -79,6 +79,7 @@ set(SOURCES
     PasswordInputDialog.cpp
     PasswordInputDialogGML.h
     PersistentModelIndex.cpp
+    Process.cpp
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp

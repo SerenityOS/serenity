@@ -1145,6 +1145,10 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             move_to_logical_line_beginning();
             switch_to_insert_mode();
             return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Uppercase);
+            switch_to_normal_mode();
+            return true;
         default:
             break;
         }
@@ -1174,9 +1178,6 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             m_editor->do_delete();
             switch_to_normal_mode();
             return true;
-        case (KeyCode::Key_U):
-            // FIXME: Set selection to uppercase.
-            return true;
         case (KeyCode::Key_X):
             yank(Selection);
             m_editor->do_delete();
@@ -1192,6 +1193,10 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             return true;
         case (KeyCode::Key_Y):
             yank(Selection);
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Lowercase);
             switch_to_normal_mode();
             return true;
         case (KeyCode::Key_PageUp):
@@ -1410,5 +1415,20 @@ void VimEditingEngine::move_to_next_empty_lines_block()
 
     m_editor->set_cursor(new_cursor);
 };
+
+void VimEditingEngine::casefold_selection(Casing casing)
+{
+    VERIFY(!m_editor.is_null());
+    VERIFY(m_editor->has_selection());
+
+    switch (casing) {
+    case Casing::Uppercase:
+        m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().to_uppercase());
+        return;
+    case Casing::Lowercase:
+        m_editor->insert_at_cursor_or_replace_selection(m_editor->selected_text().to_lowercase());
+        return;
+    }
+}
 
 }
