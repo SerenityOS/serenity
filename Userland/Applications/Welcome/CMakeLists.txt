@@ -1,6 +1,7 @@
 serenity_component(
     Welcome
     TARGETS Welcome
+    DEPENDS Help
 )
 
 compile_gml(WelcomeWindow.gml WelcomeWindowGML.h welcome_window_gml)
