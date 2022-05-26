@@ -468,7 +468,7 @@ void MainWidget::add_property_tab(PropertyTab const& property_tab)
         group_box->layout()->set_spacing(12);
         // 1px less on the left makes the text line up with the group title.
         group_box->layout()->set_margins({ 8, 8, 8, 7 });
-        group_box->set_shrink_to_fit(true);
+        group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {
             NonnullRefPtr<GUI::Widget> row_widget = group_box->add<GUI::Widget>();
