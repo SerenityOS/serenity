@@ -5,9 +5,11 @@
     @GUI::Frame {
         layout: @GUI::HorizontalBoxLayout {}
         name: "preview_frame"
+        fixed_width: 400
     }
 
     @GUI::TabWidget {
         name: "property_tabs"
+        min_width: 300
     }
 }

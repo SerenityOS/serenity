@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->resize(820, 520);
-    window->set_resizable(false);
+    window->set_resizable(true);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
     return app->exec();
