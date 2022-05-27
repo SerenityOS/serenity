@@ -347,6 +347,12 @@ def run():
     from_table_set = set(from_table.keys())
     ports_set = set(ports.keys())
 
+    if list(from_table.keys()) != sorted(from_table.keys(), key=str.lower):
+        all_good = False
+        print('AvailablePorts.md is not in the correct order, please ensure that all ports are sorted as follows:')
+        for port in sorted(from_table.keys(), key=str.lower):
+            print(f"    {port}")
+
     if from_table_set - ports_set:
         all_good = False
         print('AvailablePorts.md lists ports that do not appear in the file system:')
