@@ -553,7 +553,7 @@ void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& 
     m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
 
     m_glyph_editor_present_checkbox->set_visible(m_edited_font->is_fixed_width());
-    m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
     m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width(), GUI::AllowCallback::No);
 
     m_name_textbox->set_text(m_edited_font->name(), GUI::AllowCallback::No);
@@ -834,7 +834,7 @@ void FontEditorWidget::update_statusbar()
         builder.appendff(" {}", glyph_name.value());
     }
 
-    if (m_edited_font->contains_raw_glyph(glyph))
+    if (m_edited_font->contains_glyph(glyph))
         builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
     else if (Gfx::Emoji::emoji_for_code_point(glyph))
         builder.appendff(" [emoji]");
@@ -947,7 +947,7 @@ void FontEditorWidget::paste_glyphs()
     m_glyph_map_widget->set_selection(selection.start() + range_bound_glyph_count - 1, -range_bound_glyph_count + 1);
 
     if (m_edited_font->is_fixed_width())
-        m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+        m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
     else
         m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
 
