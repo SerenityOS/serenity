@@ -1,4 +1,4 @@
-From efa276eb16b2857f2fb2c8bc372debf0b14574d9 Mon Sep 17 00:00:00 2001
+From 141841053adcc378af0880381d13db5317182e3b Mon Sep 17 00:00:00 2001
 From: Sergey Bugaev <bugaevc@gmail.com>
 Date: Wed, 2 Oct 2019 22:50:20 +0300
 Subject: [PATCH 1/2] Disable backtrace on serenity
@@ -8,7 +8,7 @@ Subject: [PATCH 1/2] Disable backtrace on serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tcc.h b/tcc.h
-index ccb3b60..efc54be 100644
+index ccb3b60..8cd1b19 100644
 --- a/tcc.h
 +++ b/tcc.h
 @@ -184,7 +184,7 @@ extern long double strtold (const char *__nptr, char **__endptr);
@@ -16,10 +16,10 @@ index ccb3b60..efc54be 100644
  #endif
  
 -#if defined TCC_IS_NATIVE && !defined CONFIG_TCCBOOT
-+#if defined TCC_IS_NATIVE && !defined CONFIG_TCCBOOT && !define __serenity__
++#if defined TCC_IS_NATIVE && !defined CONFIG_TCCBOOT && !defined __serenity__
  # define CONFIG_TCC_BACKTRACE
  # if (defined TCC_TARGET_I386 || defined TCC_TARGET_X86_64 || \
        defined TCC_TARGET_ARM || defined TCC_TARGET_ARM64 || \
 -- 
-2.36.1
+2.34.1
 
