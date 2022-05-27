@@ -48,9 +48,6 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
         }
         m_desired_size.set_width(value);
     };
-    width_spinbox->on_return_pressed = [this]() {
-        done(ExecResult::OK);
-    };
 
     height_spinbox->set_value(m_desired_size.height());
     height_spinbox->on_change = [this, width_spinbox, keep_aspect_ratio_checkbox](int value) {
@@ -60,9 +57,6 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
             m_desired_size.set_width(width_spinbox->value());
         }
         m_desired_size.set_height(value);
-    };
-    height_spinbox->on_return_pressed = [this]() {
-        done(ExecResult::OK);
     };
 
     keep_aspect_ratio_checkbox->on_checked = [this, height_spinbox](bool is_checked) {
@@ -102,6 +96,7 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     ok_button->on_click = [this](auto) {
         done(ExecResult::OK);
     };
+    ok_button->set_default(true);
 
     cancel_button->on_click = [this](auto) {
         done(ExecResult::Cancel);

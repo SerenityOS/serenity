@@ -54,6 +54,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
+    ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.on_click = [this](auto) {
@@ -66,10 +67,6 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     height_spinbox.on_change = [this](int value) {
         m_image_size.set_height(value);
-    };
-
-    m_name_textbox->on_return_pressed = [this] {
-        done(ExecResult::OK);
     };
 
     width_spinbox.set_range(1, 16384);
