@@ -1,7 +1,7 @@
 From a62c4eb1dcf574cd1f02224cd1120e3435864413 Mon Sep 17 00:00:00 2001
 From: Liav A <liavalb@gmail.com>
 Date: Fri, 27 May 2022 10:19:35 +0300
-Subject: [PATCH 2/2] Disable sprintf debug message due to formatting errors
+Subject: [PATCH 2/3] Disable sprintf debug message due to formatting errors
 
 ---
  source/compiler/dtfield.c | 6 +++---
