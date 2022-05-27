@@ -6,6 +6,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 
 | Port                                                | Name                                                            | Version                  | Website                                                                        |
 |-----------------------------------------------------|-----------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
+| [`acpica-tools`](acpica-tools/)                     | ACPI Component Architecture Project Userspace Utilities         | 20220331                 | https://acpica.org/downloads                                                   |
 | [`Another-World`](Another-World/)                   | Another World Bytecode Interpreter                              |                          | https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter           |
 | [`angband`](angband/)                               | Angband                                                         | 4.2.4                    | https://rephial.org                                                            |
 | [`bash`](bash/)                                     | GNU Bash                                                        | 5.1.16                   | https://www.gnu.org/software/bash/                                             |
