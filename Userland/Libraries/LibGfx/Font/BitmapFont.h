@@ -48,10 +48,20 @@ public:
     virtual u8 slope() const override { return m_slope; }
     void set_slope(u8 slope) { m_slope = slope; }
 
+    /// Returns the glyph with the specified code point if it exists, otherwise
+    /// the fallback glyph.
     Glyph glyph(u32 code_point) const override;
-    Glyph raw_glyph(u32 code_point) const;
+    /// Returns the glyph with the specified code point.
+    Optional<Glyph> raw_glyph(u32 code_point) const;
+    /// Returns the glyph with the specified internal index. Since it is
+    /// unlikely for a font to have all characters filled in, it is inefficient
+    /// to store bitmap data for all unset characters. As a consequence, pages
+    /// of 256 characters may be dropped from memory if they are completely
+    /// empty to reduce memory usage.
+    Glyph glyph_at(size_t index) const;
+    /// Returns whether the glyph with the specified code point exists in this
+    /// font, that is, if it is allocated and has non-zero width.
     bool contains_glyph(u32 code_point) const override;
-    bool contains_raw_glyph(u32 code_point) const { return m_glyph_widths[code_point] > 0; }
 
     ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
     {
@@ -65,7 +75,8 @@ public:
     int preferred_line_height() const override { return glyph_height() + m_line_gap; }
 
     u8 glyph_width(u32 code_point) const override;
-    u8 raw_glyph_width(u32 code_point) const { return m_glyph_widths[code_point]; }
+    u8 raw_glyph_width(u32 code_point) const;
+    u8 glyph_width_at(size_t index) const { return m_glyph_widths[index]; }
 
     u8 min_glyph_width() const override { return m_min_glyph_width; }
     u8 max_glyph_width() const override { return m_max_glyph_width; }
@@ -98,14 +109,25 @@ public:
     u8 glyph_spacing() const override { return m_glyph_spacing; }
     void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
 
+    inline size_t glyph_count() const override { return m_page_count * 256; }
+    /// Returns the index of the glyph that will actually be used to draw this
+    /// code point, that is, either the index of the glyph for this code point
+    /// if it exists (is stored in this font and has non-zero size), otherwise
+    /// the index of the fallback glyph.
+    size_t glyph_index(u32 code_point) const;
+    /// Returns the index of the glyph for this code point, if it is stored in
+    /// this font.
+    Optional<size_t> raw_glyph_index(u32 code_point) const;
+    /// Returns the code point for the glyph at the specified internal index.
+    u32 index_to_codepoint(size_t index) const;
+
     void set_glyph_width(u32 code_point, u8 width)
     {
         VERIFY(m_glyph_widths);
-        m_glyph_widths[code_point] = width;
+        auto maybe_index = raw_glyph_index(code_point);
+        VERIFY(maybe_index.has_value());
+        m_glyph_widths[maybe_index.value()] = width;
     }
-
-    size_t glyph_count() const override { return m_glyph_count; }
-    Optional<size_t> glyph_index(u32 code_point) const;
 
     u16 range_size() const { return m_range_mask_size; }
     bool is_range_empty(u32 code_point) const { return !(m_range_mask[code_point / 256 / 8] & 1 << (code_point / 256 % 8)); }
@@ -132,11 +154,12 @@ private:
 
     String m_name;
     String m_family;
-    size_t m_glyph_count { 0 };
+    size_t m_page_count { 0 };
 
     u16 m_range_mask_size { 0 };
     u8* m_range_mask { nullptr };
     Vector<Optional<size_t>> m_range_indices;
+    Vector<size_t> m_page_indices;
 
     u8* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };

@@ -42,10 +42,10 @@ NonnullRefPtr<Font> BitmapFont::clone() const
     auto* new_range_mask = static_cast<u8*>(malloc(m_range_mask_size));
     memcpy(new_range_mask, m_range_mask, m_range_mask_size);
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
-    auto* new_rows = static_cast<u8*>(kmalloc_array(m_glyph_count, bytes_per_glyph));
-    memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
-    auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
-    memcpy(new_widths, m_glyph_widths, m_glyph_count);
+    auto* new_rows = static_cast<u8*>(kmalloc_array(glyph_count(), bytes_per_glyph));
+    memcpy(new_rows, m_rows, bytes_per_glyph * glyph_count());
+    auto* new_widths = static_cast<u8*>(malloc(glyph_count()));
+    memcpy(new_widths, m_glyph_widths, glyph_count());
     return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
@@ -74,7 +74,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::unmasked_character_set() const
     auto* new_rows = static_cast<u8*>(kmalloc_array(s_max_glyph_count, bytes_per_glyph));
     auto* new_widths = static_cast<u8*>(calloc(s_max_glyph_count, 1));
     for (size_t code_point = 0; code_point < s_max_glyph_count; ++code_point) {
-        auto index = glyph_index(code_point);
+        auto index = raw_glyph_index(code_point);
         if (index.has_value()) {
             memcpy(&new_widths[code_point], &m_glyph_widths[index.value()], 1);
             memcpy(&new_rows[code_point * bytes_per_glyph], &m_rows[index.value() * bytes_per_glyph], bytes_per_glyph);
@@ -142,7 +142,8 @@ BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is
     for (size_t i = 0, index = 0; i < m_range_mask_size; ++i) {
         for (size_t j = 0; j < 8; ++j) {
             if (m_range_mask[i] & (1 << j)) {
-                m_glyph_count += 256;
+                m_page_count += 1;
+                m_page_indices.append(m_range_indices.size());
                 m_range_indices.append(index++);
             } else {
                 m_range_indices.append({});
@@ -153,7 +154,7 @@ BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is
     if (!m_fixed_width) {
         u8 maximum = 0;
         u8 minimum = 255;
-        for (size_t i = 0; i < m_glyph_count; ++i) {
+        for (size_t i = 0; i < glyph_count(); ++i) {
             minimum = min(minimum, m_glyph_widths[i]);
             maximum = max(maximum, m_glyph_widths[i]);
         }
@@ -241,8 +242,8 @@ bool BitmapFont::write_to_file(String const& path)
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     stream << ReadonlyBytes { &header, sizeof(header) };
     stream << ReadonlyBytes { m_range_mask, m_range_mask_size };
-    stream << ReadonlyBytes { m_rows, m_glyph_count * bytes_per_glyph };
-    stream << ReadonlyBytes { m_glyph_widths, m_glyph_count };
+    stream << ReadonlyBytes { m_rows, glyph_count() * bytes_per_glyph };
+    stream << ReadonlyBytes { m_glyph_widths, glyph_count() };
 
     stream.flush();
     return !stream.handle_any_error();
@@ -250,9 +251,19 @@ bool BitmapFont::write_to_file(String const& path)
 
 Glyph BitmapFont::glyph(u32 code_point) const
 {
-    // Note: Until all fonts support the 0xFFFD replacement
-    // character, fall back to painting '?' if necessary.
-    auto index = glyph_index(code_point).value_or('?');
+    return glyph_at(glyph_index(code_point));
+}
+
+Optional<Glyph> BitmapFont::raw_glyph(u32 code_point) const
+{
+    auto index = raw_glyph_index(code_point);
+    if (!index.has_value())
+        return {};
+    return glyph_at(index.value());
+}
+
+Glyph BitmapFont::glyph_at(size_t index) const
+{
     auto width = m_glyph_widths[index];
     return Glyph(
         GlyphBitmap(m_rows, index * m_glyph_height, { width, m_glyph_height }),
@@ -261,17 +272,25 @@ Glyph BitmapFont::glyph(u32 code_point) const
         m_glyph_height);
 }
 
-Glyph BitmapFont::raw_glyph(u32 code_point) const
+size_t BitmapFont::glyph_index(u32 code_point) const
 {
-    auto width = m_glyph_widths[code_point];
-    return Glyph(
-        GlyphBitmap(m_rows, code_point * m_glyph_height, { width, m_glyph_height }),
-        0,
-        width,
-        m_glyph_height);
+    auto maybe_index = raw_glyph_index(code_point);
+
+    if (!maybe_index.has_value() || glyph_width_at(maybe_index.value()) == 0) {
+        maybe_index = raw_glyph_index(0xFFFD);
+
+        if (!maybe_index.has_value() || glyph_width_at(maybe_index.value()) == 0) {
+            // Note: Until all fonts support the 0xFFFD replacement
+            // character, fall back to painting '?' if necessary.
+            maybe_index = raw_glyph_index('?');
+            VERIFY(maybe_index.has_value());
+        }
+    }
+
+    return maybe_index.value();
 }
 
-Optional<size_t> BitmapFont::glyph_index(u32 code_point) const
+Optional<size_t> BitmapFont::raw_glyph_index(u32 code_point) const
 {
     auto index = code_point / 256;
     if (index >= m_range_indices.size())
@@ -281,18 +300,38 @@ Optional<size_t> BitmapFont::glyph_index(u32 code_point) const
     return m_range_indices[index].value() * 256 + code_point % 256;
 }
 
+u32 BitmapFont::index_to_codepoint(size_t index) const
+{
+    size_t page = index / 256;
+    return m_page_indices[page] * 256 + index % 256;
+}
+
 bool BitmapFont::contains_glyph(u32 code_point) const
 {
-    auto index = glyph_index(code_point);
-    return index.has_value() && m_glyph_widths[index.value()] > 0;
+    auto index = raw_glyph_index(code_point);
+    return index.has_value() && glyph_width_at(index.value()) > 0;
 }
 
 u8 BitmapFont::glyph_width(u32 code_point) const
 {
     if (is_ascii(code_point) && !is_ascii_printable(code_point))
         return 0;
-    auto index = glyph_index(code_point);
-    return m_fixed_width || !index.has_value() ? m_glyph_width : m_glyph_widths[index.value()];
+
+    if (m_fixed_width) {
+        return m_glyph_width;
+    }
+
+    return glyph_width_at(glyph_index(code_point));
+}
+
+u8 BitmapFont::raw_glyph_width(u32 code_point) const
+{
+    if (m_fixed_width) {
+        return m_glyph_width;
+    }
+
+    auto index = raw_glyph_index(code_point);
+    return !index.has_value() ? 0 : glyph_width_at(index.value());
 }
 
 int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) const
@@ -300,12 +339,7 @@ int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) con
     // FIXME: This is a hack in lieu of proper code point identification.
     // 0xFFFF is arbitrary but also the end of the Basic Multilingual Plane.
     if (code_point < 0xFFFF) {
-        auto index = glyph_index(code_point);
-        if (!index.has_value())
-            return glyph_width(0xFFFD);
-        if (m_glyph_widths[index.value()] > 0)
-            return glyph_width(code_point);
-        return glyph_width(0xFFFD);
+        return glyph_width(code_point);
     }
 
     auto const* emoji = Emoji::emoji_for_code_point(code_point);
