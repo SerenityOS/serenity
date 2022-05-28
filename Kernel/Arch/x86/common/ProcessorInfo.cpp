@@ -36,6 +36,8 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
         m_display_family = family;
         m_display_model = model;
     }
+
+    populate_cache_sizes();
 }
 
 static void emit_u32(StringBuilder& builder, u32 value)
@@ -108,6 +110,50 @@ NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& pro
         }
     }
     return KString::must_create(builder.string_view());
+}
+
+void ProcessorInfo::populate_cache_sizes()
+{
+    u32 max_extended_leaf = CPUID(0x80000000).eax();
+
+    if (max_extended_leaf < 0x80000005)
+        return;
+
+    auto l1_cache_info = CPUID(0x80000005);
+
+    // NOTE: Except for L2, these are not available on Intel CPUs in this form and return 0 for each register in that case.
+    if (l1_cache_info.ecx() != 0) {
+        m_l1_data_cache = Cache {
+            .size = ((l1_cache_info.ecx() >> 24) & 0xff) * KiB,
+            .line_size = l1_cache_info.ecx() & 0xff,
+        };
+    }
+
+    if (l1_cache_info.edx() != 0) {
+        m_l1_instruction_cache = Cache {
+            .size = ((l1_cache_info.edx() >> 24) & 0xff) * KiB,
+            .line_size = l1_cache_info.edx() & 0xff,
+        };
+    }
+
+    if (max_extended_leaf < 0x80000006)
+        return;
+
+    auto l2_l3_cache_info = CPUID(0x80000006);
+
+    if (l2_l3_cache_info.ecx() != 0) {
+        m_l2_cache = Cache {
+            .size = ((l2_l3_cache_info.ecx() >> 16) & 0xffff) * KiB,
+            .line_size = l2_l3_cache_info.ecx() & 0xff,
+        };
+    }
+
+    if (l2_l3_cache_info.edx() != 0) {
+        m_l3_cache = Cache {
+            .size = (static_cast<u64>((l2_l3_cache_info.edx() >> 18)) & 0x3fff) * 512 * KiB,
+            .line_size = l2_l3_cache_info.edx() & 0xff,
+        };
+    }
 }
 
 }
