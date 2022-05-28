@@ -116,8 +116,6 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, S
 
     reload_icon_bitmaps_after_scale_change();
 
-    Compositor::the().screen_resolution_changed();
-
     tell_wms_screen_rects_changed();
 
     for_each_window_stack([&](auto& window_stack) {
@@ -128,6 +126,8 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, S
         });
         return IterationDecision::Continue;
     });
+
+    Compositor::the().screen_resolution_changed();
 
     if (save)
         Screen::layout().save_config(*m_config);
