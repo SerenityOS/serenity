@@ -11,7 +11,7 @@
 #include <Kernel/Arch/DeferredCallEntry.h>
 
 #if ARCH(X86_64) || ARCH(I386)
-#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/x86/x86Processor.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/Processor.h>
 #else

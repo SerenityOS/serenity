@@ -324,7 +324,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/ap_setup.S
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/x86Processor.cpp
     )
 
     set(KERNEL_SOURCES
@@ -336,7 +336,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/x86Processor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp

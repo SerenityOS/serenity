@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/x86/x86Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
 extern "C" void syscall_entry();
