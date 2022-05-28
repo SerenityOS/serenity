@@ -13,6 +13,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
@@ -141,14 +142,7 @@ private:
     {
         if (event.button() != GUI::MouseButton::Primary)
             return;
-        pid_t child_pid;
-        char const* argv[] = { "SystemMonitor", "-t", "graphs", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor", Array { "-t", m_graph_type == GraphType::Network ? "network" : "graphs" });
     }
 
     bool get_cpu_usage(u64& total, u64& idle)
