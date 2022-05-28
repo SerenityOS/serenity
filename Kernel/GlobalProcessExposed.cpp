@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -638,6 +639,27 @@ private:
                 TRY(obj.add("stepping", info.stepping()));
                 TRY(obj.add("type", info.type()));
                 TRY(obj.add("brand", info.brand_string()));
+
+                auto caches = TRY(obj.add_object("caches"));
+
+                auto add_cache_info = [&](StringView name, ProcessorInfo::Cache const& cache) -> ErrorOr<void> {
+                    auto cache_object = TRY(caches.add_object(name));
+                    TRY(cache_object.add("size", cache.size));
+                    TRY(cache_object.add("line_size", cache.line_size));
+                    TRY(cache_object.finish());
+                    return {};
+                };
+
+                if (info.l1_data_cache().has_value())
+                    TRY(add_cache_info("l1_data", *info.l1_data_cache()));
+                if (info.l1_data_cache().has_value())
+                    TRY(add_cache_info("l1_instruction", *info.l1_instruction_cache()));
+                if (info.l1_data_cache().has_value())
+                    TRY(add_cache_info("l2", *info.l2_cache()));
+                if (info.l1_data_cache().has_value())
+                    TRY(add_cache_info("l3", *info.l3_cache()));
+
+                TRY(caches.finish());
 
                 TRY(obj.finish());
                 return {};
