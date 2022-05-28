@@ -37,9 +37,9 @@ UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
 {
 }
 
-ErrorOr<NonnullRefPtr<ProcFS>> ProcFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> ProcFS::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ProcFS());
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcFS));
 }
 
 ProcFS::ProcFS() = default;

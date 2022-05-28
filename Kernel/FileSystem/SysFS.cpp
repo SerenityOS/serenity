@@ -68,9 +68,9 @@ SysFSRootDirectory::SysFSRootDirectory()
     m_buses_directory = buses_directory;
 }
 
-ErrorOr<NonnullRefPtr<SysFS>> SysFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> SysFS::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFS);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SysFS));
 }
 
 SysFS::SysFS() = default;
