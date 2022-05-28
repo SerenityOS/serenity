@@ -22,6 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/bin/DHCPClient", "x"));
     TRY(Core::System::unveil("/etc/Network.ini", "r"));
     TRY(Core::System::unveil("/bin/ifconfig", "x"));
+    TRY(Core::System::unveil("/bin/route", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
@@ -40,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         bool dhcp_enabled = false;
         String ipv4_address = "0.0.0.0";
         String ipv4_netmask = "0.0.0.0";
+        String ipv4_gateway = "0.0.0.0";
     };
 
     Vector<String> interfaces_with_dhcp_enabled;
@@ -59,6 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             if (!config.dhcp_enabled) {
                 config.ipv4_address = config_file->read_entry(ifname, "IPv4Address", "0.0.0.0");
                 config.ipv4_netmask = config_file->read_entry(ifname, "IPv4Netmask", "0.0.0.0");
+                config.ipv4_gateway = config_file->read_entry(ifname, "IPv4Gateway", "0.0.0.0");
             }
         }
         if (config.enabled) {
@@ -69,6 +72,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 // FIXME: Do this asynchronously
                 dbgln("Setting up interface {} statically ({}/{})", ifname, config.ipv4_address, config.ipv4_netmask);
                 MUST(Core::command("ifconfig", { "-a", ifname.characters(), "-i", config.ipv4_address.characters(), "-m", config.ipv4_netmask.characters() }, {}));
+                if (config.ipv4_gateway != "0.0.0.0")
+                    MUST(Core::command("route", { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
             }
         }
     });
