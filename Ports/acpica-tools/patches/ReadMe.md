@@ -1,4 +1,4 @@
-# Patches for nyancat on SerenityOS
+# Patches for acpica-tools on SerenityOS
 
 ## `0001--Stop-compiler-warnings-on-dangling-pointer.patch`
 
