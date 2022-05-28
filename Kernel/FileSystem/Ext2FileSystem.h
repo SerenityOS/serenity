@@ -86,7 +86,7 @@ public:
         FileSize64bits = 1 << 1,
     };
 
-    static ErrorOr<NonnullRefPtr<Ext2FS>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~Ext2FS() override;
     virtual ErrorOr<void> initialize() override;

@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<DevTmpFS>> DevTmpFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> DevTmpFS::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS));
 }
 
 DevTmpFS::DevTmpFS() = default;

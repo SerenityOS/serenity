@@ -118,7 +118,7 @@ class SysFS final : public FileSystem {
 
 public:
     virtual ~SysFS() override;
-    static ErrorOr<NonnullRefPtr<SysFS>> try_create();
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }

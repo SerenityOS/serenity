@@ -19,7 +19,7 @@ class TmpFS final : public FileSystem {
 
 public:
     virtual ~TmpFS() override;
-    static ErrorOr<NonnullRefPtr<TmpFS>> try_create();
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
     virtual ErrorOr<void> initialize() override;
 
     virtual StringView class_name() const override { return "TmpFS"sv; }
