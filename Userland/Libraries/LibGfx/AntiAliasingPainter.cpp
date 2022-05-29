@@ -322,9 +322,9 @@ Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
             return;
         min_paint_x = min(x, min_paint_x);
         max_paint_x = max(x, max_paint_x);
-        auto pixel_colour = color;
-        pixel_colour.set_alpha((alpha * color.alpha()) / 255);
-        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_colour, true);
+        auto pixel_color = color;
+        pixel_color.set_alpha((alpha * color.alpha()) / 255);
+        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_color, true);
     };
 
     auto fill = [&](int x, int ymax, int ymin, int alpha) {
