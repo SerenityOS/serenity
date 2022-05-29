@@ -529,7 +529,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         # otherwise we'll end up with recursive calls to that function.
         ../AK/Format.cpp
         ../AK/StringBuilder.cpp
-        ../Kernel/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+        ../Kernel/Arch/x86/${KERNEL_ARCH}/x86Processor.cpp
         ../Kernel/Devices/KCOVDevice.cpp
         ../Kernel/Devices/KCOVInstance.cpp
         ../Kernel/FileSystem/File.cpp
