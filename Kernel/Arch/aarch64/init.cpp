@@ -112,14 +112,14 @@ extern "C" [[noreturn]] void init()
     dbgln("Initialize MMU");
     init_prekernel_page_tables();
 
-    auto& framebuffer = Framebuffer::the();
+    auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
         draw_logo();
     }
 
     dbgln("Enter loop");
 
-    auto& timer = Timer::the();
+    auto& timer = RPi::Timer::the();
     u64 start_musec = 0;
     for (;;) {
         u64 now_musec;
@@ -130,12 +130,12 @@ extern "C" [[noreturn]] void init()
     }
 }
 
-class QueryFirmwareVersionMboxMessage : Mailbox::Message {
+class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
 public:
     u32 version;
 
     QueryFirmwareVersionMboxMessage()
-        : Mailbox::Message(0x0000'0001, 4)
+        : RPi::Mailbox::Message(0x0000'0001, 4)
     {
         version = 0;
     }
@@ -144,12 +144,12 @@ public:
 static u32 query_firmware_version()
 {
     struct __attribute__((aligned(16))) {
-        Mailbox::MessageHeader header;
+        RPi::Mailbox::MessageHeader header;
         QueryFirmwareVersionMboxMessage query_firmware_version;
-        Mailbox::MessageTail tail;
+        RPi::Mailbox::MessageTail tail;
     } message_queue;
 
-    if (!Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+    if (!RPi::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
         return 0xffff'ffff;
     }
 
@@ -169,7 +169,7 @@ static void draw_logo()
 
     dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
 
-    auto& framebuffer = Framebuffer::the();
+    auto& framebuffer = RPi::Framebuffer::the();
     auto fb_ptr = framebuffer.gpu_buffer();
     auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
     auto image_right = image_left + logo_parser.image.width;
@@ -181,12 +181,12 @@ static void draw_logo()
         for (u32 x = 0; x < framebuffer.width(); x++) {
             if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
                 switch (framebuffer.pixel_order()) {
-                case Framebuffer::PixelOrder::RGB:
+                case RPi::Framebuffer::PixelOrder::RGB:
                     fb_ptr[0] = logo_pixels[0];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[2];
                     break;
-                case Framebuffer::PixelOrder::BGR:
+                case RPi::Framebuffer::PixelOrder::BGR:
                     fb_ptr[0] = logo_pixels[2];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[0];

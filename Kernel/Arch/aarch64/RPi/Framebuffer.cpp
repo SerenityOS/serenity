@@ -8,7 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 Framebuffer::Framebuffer()
 {

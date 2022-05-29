@@ -9,7 +9,7 @@
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // "12.1 System Timer Registers" / "10.2 System Timer Registers"
 struct TimerRegisters {

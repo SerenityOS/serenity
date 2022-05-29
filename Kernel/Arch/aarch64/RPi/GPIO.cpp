@@ -8,7 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // See BCM2835-ARM-Peripherals.pdf section "6 General Purpose I/O" or bcm2711-peripherals.pdf "Chapter 5. General Purpose I/O".
 

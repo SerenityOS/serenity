@@ -7,7 +7,7 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // There's one mailbox at MBOX_BASE_OFFSET for reading responses from VideoCore, and one at MBOX_BASE_OFFSET + 0x20 for sending requests.
 // Each has its own status word.
