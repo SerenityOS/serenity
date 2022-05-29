@@ -9,7 +9,7 @@
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // "13.4 Register View" / "11.5 Register View"
 struct UARTRegisters {
