@@ -462,7 +462,7 @@ void DirectoryView::update_statusbar()
     if (selected_item_count == 1) {
         auto& node = this->node(current_view().selection().first());
         if (!node.symlink_target.is_empty()) {
-            builder.append(" -> ");
+            builder.append(" → ");
             builder.append(node.symlink_target);
         }
     }
