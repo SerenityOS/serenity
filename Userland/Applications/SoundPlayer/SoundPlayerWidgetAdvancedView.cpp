@@ -62,13 +62,13 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
     auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
-    m_play_action = GUI::Action::create("Play", m_play_icon, [&](auto&) {
+    m_play_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
     m_play_action->set_enabled(false);
     menubar.add_action(*m_play_action);
 
-    m_stop_action = GUI::Action::create("Stop", m_stop_icon, [&](auto&) {
+    m_stop_action = GUI::Action::create("Stop", { Key_S }, m_stop_icon, [&](auto&) {
         stop();
     });
     m_stop_action->set_enabled(false);
@@ -132,14 +132,8 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
 
 void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Space)
-        m_play_action->activate();
-
     if (event.key() == Key_M)
         toggle_mute();
-
-    if (event.key() == Key_S)
-        m_stop_action->activate();
 
     if (event.key() == Key_Up)
         m_volume_slider->increase_slider_by_page_steps(1);
