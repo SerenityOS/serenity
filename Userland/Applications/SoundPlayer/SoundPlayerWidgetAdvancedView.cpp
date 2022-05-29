@@ -62,42 +62,35 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
     auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
-    m_play_button = menubar.add<GUI::Button>();
-    m_play_button->set_icon(*m_play_icon);
-    m_play_button->set_fixed_width(50);
-    m_play_button->set_enabled(false);
-    m_play_button->on_click = [&](unsigned) {
+    m_play_action = GUI::Action::create("Play", m_play_icon, [&](auto&) {
         toggle_pause();
-    };
+    });
+    m_play_action->set_enabled(false);
+    menubar.add_action(*m_play_action);
 
-    m_stop_button = menubar.add<GUI::Button>();
-    m_stop_button->set_icon(*m_stop_icon);
-    m_stop_button->set_fixed_width(50);
-    m_stop_button->set_enabled(false);
-    m_stop_button->on_click = [&](unsigned) {
+    m_stop_action = GUI::Action::create("Stop", m_stop_icon, [&](auto&) {
         stop();
-    };
+    });
+    m_stop_action->set_enabled(false);
+    menubar.add_action(*m_stop_action);
 
     m_timestamp_label = menubar.add<GUI::Label>();
     m_timestamp_label->set_fixed_width(110);
 
-    // filler_label
+    // Filler label
     menubar.add<GUI::Label>();
-    m_back_button = menubar.add<GUI::Button>();
-    m_back_button->set_fixed_width(50);
-    m_back_button->set_icon(*m_back_icon);
-    m_back_button->set_enabled(false);
-    m_back_button->on_click = [&](unsigned) {
-        play_file_path(playlist().previous());
-    };
 
-    m_next_button = menubar.add<GUI::Button>();
-    m_next_button->set_fixed_width(50);
-    m_next_button->set_icon(*m_next_icon);
-    m_next_button->set_enabled(false);
-    m_next_button->on_click = [&](unsigned) {
+    m_back_action = GUI::Action::create("Back", m_back_icon, [&](auto&) {
+        play_file_path(playlist().previous());
+    });
+    m_back_action->set_enabled(false);
+    menubar.add_action(*m_back_action);
+
+    m_next_action = GUI::Action::create("Next", m_next_icon, [&](auto&) {
         play_file_path(playlist().next());
-    };
+    });
+    m_next_action->set_enabled(false);
+    menubar.add_action(*m_next_action);
 
     m_volume_label = &menubar.add<GUI::Label>();
     m_volume_label->set_fixed_width(30);
@@ -140,13 +133,13 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
 void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Space)
-        m_play_button->click();
+        m_play_action->activate();
 
     if (event.key() == Key_M)
         toggle_mute();
 
     if (event.key() == Key_S)
-        m_stop_button->click();
+        m_stop_action->activate();
 
     if (event.key() == Key_Up)
         m_volume_slider->increase_slider_by_page_steps(1);
@@ -169,12 +162,12 @@ void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
 
 void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 {
-    sync_previous_next_buttons();
+    sync_previous_next_actions();
 
-    m_play_button->set_enabled(state != PlayState::NoFileLoaded);
-    m_play_button->set_icon(state == PlayState::Playing ? *m_pause_icon : *m_play_icon);
+    m_play_action->set_enabled(state != PlayState::NoFileLoaded);
+    m_play_action->set_icon(state == PlayState::Playing ? m_pause_icon : m_play_icon);
 
-    m_stop_button->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
+    m_stop_action->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
     m_playback_progress_slider->set_enabled(state != PlayState::NoFileLoaded);
 }
@@ -188,15 +181,15 @@ void SoundPlayerWidgetAdvancedView::mute_changed(bool)
     // FIXME: Update the volume slider when player is muted
 }
 
-void SoundPlayerWidgetAdvancedView::sync_previous_next_buttons()
+void SoundPlayerWidgetAdvancedView::sync_previous_next_actions()
 {
-    m_back_button->set_enabled(playlist().size() > 1 && !playlist().shuffling());
-    m_next_button->set_enabled(playlist().size() > 1);
+    m_back_action->set_enabled(playlist().size() > 1 && !playlist().shuffling());
+    m_next_action->set_enabled(playlist().size() > 1);
 }
 
 void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
 {
-    sync_previous_next_buttons();
+    sync_previous_next_actions();
 }
 
 void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
