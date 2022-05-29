@@ -327,7 +327,7 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& re
 
     if (border_radius > 0) {
         // FIXME: This will draw "useless" pixels that'll get drawn over by the window contents.
-        // preferrably we should just remove the corner pixels from the completely drawn window
+        // preferably we should just remove the corner pixels from the completely drawn window
         // but I don't know how to do that yet. :^)
         AntiAliasingPainter aa_painter { painter };
         aa_painter.fill_rect_with_rounded_corners(rect, base_color, border_radius);

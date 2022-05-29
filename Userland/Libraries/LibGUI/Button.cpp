@@ -79,7 +79,7 @@ void Button::paint_event(PaintEvent& event)
 
     if (m_icon) {
         auto solid_color = m_icon->solid_color(60);
-        // Note: 4.5 is the minimum recommended constrast ratio for text on the web:
+        // Note: 4.5 is the minimum recommended contrast ratio for text on the web:
         // (https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast)
         // Reusing that threshold here as it seems to work reasonably well.
         bool should_invert_icon = solid_color.has_value() && palette().button().contrast_ratio(*solid_color) < 4.5f;

@@ -356,7 +356,7 @@ Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
         return is_circle ? i < q : ib_squared < qa_squared;
     };
 
-    // Draws a 8 octants for a circle or 4 quadrants for a (partial) elipse
+    // Draws a 8 octants for a circle or 4 quadrants for a (partial) ellipse
     while (in_symmetric_region()) {
         predict();
         minimize();

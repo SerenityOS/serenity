@@ -647,7 +647,7 @@ void SoftVPU::PSHUFW_mm1_mm2m64_imm8(X86::Instruction const& insn)
 
 void SoftVPU::CMPPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
 {
-    // FIXME: Raise Denormal, Invalid Operation (QNaN dependend on imm8)
+    // FIXME: Raise Denormal, Invalid Operation (QNaN dependent on imm8)
     XMM& xmm1 = m_xmm[insn.modrm().reg()];
     f32x4 xmm2m128;
 
@@ -689,7 +689,7 @@ void SoftVPU::CMPPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
 }
 void SoftVPU::CMPSS_xmm1_xmm2m32_imm8(X86::Instruction const& insn)
 {
-    // FIXME: Raise Denormal, Invalid Operation (QNaN dependend on imm8)
+    // FIXME: Raise Denormal, Invalid Operation (QNaN dependent on imm8)
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
     float xmm2m128;
     bool res;
