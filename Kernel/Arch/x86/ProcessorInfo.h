@@ -42,13 +42,17 @@ public:
 
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
 
+    static constexpr StringView s_amd_vendor_id = "AuthenticAMD";
+    static constexpr StringView s_intel_vendor_id = "GenuineIntel";
+
 private:
     static NonnullOwnPtr<KString> build_vendor_id_string();
     static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(Processor const&);
     static NonnullOwnPtr<KString> build_brand_string();
     static NonnullOwnPtr<KString> build_features_string(Processor const&);
 
-    void populate_cache_sizes();
+    void populate_cache_sizes_amd();
+    void populate_cache_sizes_intel();
 
     NonnullOwnPtr<KString> m_vendor_id_string;
     NonnullOwnPtr<KString> m_hypervisor_vendor_id_string;

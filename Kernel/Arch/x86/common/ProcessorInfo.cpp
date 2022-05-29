@@ -37,7 +37,12 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
         m_display_model = model;
     }
 
-    populate_cache_sizes();
+    // NOTE: Intel exposes detailed CPU's cache information in CPUID 04. On the
+    // other hand, AMD uses CPUID's extended function set.
+    if (m_vendor_id_string->view() == s_amd_vendor_id)
+        populate_cache_sizes_amd();
+    else if (m_vendor_id_string->view() == s_intel_vendor_id)
+        populate_cache_sizes_intel();
 }
 
 static void emit_u32(StringBuilder& builder, u32 value)
@@ -112,16 +117,15 @@ NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& pro
     return KString::must_create(builder.string_view());
 }
 
-void ProcessorInfo::populate_cache_sizes()
+void ProcessorInfo::populate_cache_sizes_amd()
 {
-    u32 max_extended_leaf = CPUID(0x80000000).eax();
+    auto const max_extended_leaf = CPUID(0x80000000).eax();
 
     if (max_extended_leaf < 0x80000005)
         return;
 
-    auto l1_cache_info = CPUID(0x80000005);
+    auto const l1_cache_info = CPUID(0x80000005);
 
-    // NOTE: Except for L2, these are not available on Intel CPUs in this form and return 0 for each register in that case.
     if (l1_cache_info.ecx() != 0) {
         m_l1_data_cache = Cache {
             .size = ((l1_cache_info.ecx() >> 24) & 0xff) * KiB,
@@ -139,7 +143,7 @@ void ProcessorInfo::populate_cache_sizes()
     if (max_extended_leaf < 0x80000006)
         return;
 
-    auto l2_l3_cache_info = CPUID(0x80000006);
+    auto const l2_l3_cache_info = CPUID(0x80000006);
 
     if (l2_l3_cache_info.ecx() != 0) {
         m_l2_cache = Cache {
@@ -154,6 +158,29 @@ void ProcessorInfo::populate_cache_sizes()
             .line_size = l2_l3_cache_info.edx() & 0xff,
         };
     }
+}
+
+void ProcessorInfo::populate_cache_sizes_intel()
+{
+    auto const collect_cache_info = [](u32 ecx) {
+        auto const cache_info = CPUID(0x04, ecx);
+        auto const ways = ((cache_info.ebx() >> 22) & 0x3ff) + 1;
+        auto const partitions = ((cache_info.ebx() >> 12) & 0x3ff) + 1;
+        auto const line_size = (cache_info.ebx() & 0xfff) + 1;
+        auto const sets = cache_info.ecx() + 1;
+
+        return Cache {
+            .size = ways * partitions * line_size * sets,
+            .line_size = line_size
+        };
+    };
+
+    // NOTE: Those ECX numbers are the one used on recent Intel CPUs, an algorithm
+    //       also exists to retrieve them.
+    m_l1_instruction_cache = collect_cache_info(0);
+    m_l1_data_cache = collect_cache_info(1);
+    m_l2_cache = collect_cache_info(2);
+    m_l3_cache = collect_cache_info(3);
 }
 
 }
