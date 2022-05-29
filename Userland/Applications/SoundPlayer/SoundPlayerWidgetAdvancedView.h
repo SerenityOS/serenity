@@ -55,7 +55,7 @@ protected:
 private:
     SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionFromClient&);
 
-    void sync_previous_next_buttons();
+    void sync_previous_next_actions();
 
     void drop_event(GUI::DropEvent& event) override;
     GUI::Window& m_window;
@@ -71,10 +71,11 @@ private:
     RefPtr<Gfx::Bitmap> m_back_icon;
     RefPtr<Gfx::Bitmap> m_next_icon;
 
-    RefPtr<GUI::Button> m_play_button;
-    RefPtr<GUI::Button> m_stop_button;
-    RefPtr<GUI::Button> m_back_button;
-    RefPtr<GUI::Button> m_next_button;
+    RefPtr<GUI::Action> m_play_action;
+    RefPtr<GUI::Action> m_stop_action;
+    RefPtr<GUI::Action> m_back_action;
+    RefPtr<GUI::Action> m_next_action;
+
     RefPtr<AutoSlider> m_playback_progress_slider;
     RefPtr<GUI::Label> m_volume_label;
     RefPtr<GUI::HorizontalSlider> m_volume_slider;
