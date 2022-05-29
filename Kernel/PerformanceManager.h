@@ -172,7 +172,7 @@ public:
         auto* current_thread = Thread::current();
         // FIXME: We currently don't collect samples while idle.
         //        That will be an interesting mode to add in the future. :^)
-        if (!current_thread || current_thread == Processor::idle_thread())
+        if (!current_thread || current_thread == x86Processor::idle_thread())
             return;
 
         auto lost_samples = delay.to_microseconds() / ideal_interval.to_microseconds();

@@ -253,7 +253,7 @@ private:
             if (!(bits & 1))
                 break;
 #ifdef KERNEL
-            Kernel::Processor::wait_check();
+            Kernel::x86Processor::wait_check();
 #endif
         }
         VERIFY(!(bits & 1));
@@ -281,7 +281,7 @@ private:
             if (m_bits.compare_exchange_strong(expected, (FlatPtr)new_ptr, AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL
-            Kernel::Processor::wait_check();
+            Kernel::x86Processor::wait_check();
 #endif
         }
         VERIFY(!(expected & 1));
@@ -301,7 +301,7 @@ private:
             if (m_bits.compare_exchange_strong(expected, expected | 1, AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL
-            Kernel::Processor::wait_check();
+            Kernel::x86Processor::wait_check();
 #endif
         }
 

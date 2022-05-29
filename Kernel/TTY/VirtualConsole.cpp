@@ -253,7 +253,7 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     if (!event.is_press())
         return;
 
-    Processor::deferred_call_queue([this, event]() {
+    x86Processor::deferred_call_queue([this, event]() {
         m_console_impl.handle_key_press(event.key, event.code_point, event.flags);
     });
 }

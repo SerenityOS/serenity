@@ -32,7 +32,7 @@ UNMAP_AFTER_INIT void write_xcr0(u64 value)
 
 void stac()
 {
-    if (!Processor::current().has_feature(CPUFeature::SMAP))
+    if (!x86Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("stac" ::
                      : "cc");
@@ -40,7 +40,7 @@ void stac()
 
 void clac()
 {
-    if (!Processor::current().has_feature(CPUFeature::SMAP))
+    if (!x86Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("clac" ::
                      : "cc");

@@ -38,7 +38,7 @@ UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& dev
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 {
     // Nr of queues = one queue per core
-    auto nr_of_queues = Processor::count();
+    auto nr_of_queues = x86Processor::count();
     auto irq = is_queue_polled ? Optional<u8> {} : m_pci_device_id.interrupt_line().value();
 
     PCI::enable_memory_space(m_pci_device_id.address());

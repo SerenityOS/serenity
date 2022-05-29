@@ -328,7 +328,7 @@ struct KmallocGlobalData {
 
         expansion_data->next_virtual_address = expansion_data->next_virtual_address.offset(new_subheap_size);
 
-        auto cpu_supports_nx = Processor::current().has_nx();
+        auto cpu_supports_nx = x86Processor::current().has_nx();
 
         SpinlockLocker mm_locker(Memory::s_mm_lock);
         SpinlockLocker pd_locker(MM.kernel_page_directory().get_lock());
@@ -413,7 +413,7 @@ static inline void kmalloc_verify_nospinlock_held()
 {
     // Catch bad callers allocating under spinlock.
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
-        VERIFY(!Processor::in_critical());
+        VERIFY(!x86Processor::in_critical());
     }
 }
 
@@ -441,7 +441,7 @@ void* kmalloc(size_t size)
 
     Thread* current_thread = Thread::current();
     if (!current_thread)
-        current_thread = Processor::idle_thread();
+        current_thread = x86Processor::idle_thread();
     if (current_thread) {
         // FIXME: By the time we check this, we have already allocated above.
         //        This means that in the case of an infinite recursion, we can't catch it this way.
@@ -479,7 +479,7 @@ void kfree_sized(void* ptr, size_t size)
     if (g_nested_kfree_calls == 1) {
         Thread* current_thread = Thread::current();
         if (!current_thread)
-            current_thread = Processor::idle_thread();
+            current_thread = x86Processor::idle_thread();
         if (current_thread) {
             VERIFY(current_thread->is_allocation_enabled());
             PerformanceManager::add_kfree_perf_event(*current_thread, 0, (FlatPtr)ptr);

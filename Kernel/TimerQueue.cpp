@@ -153,7 +153,7 @@ bool TimerQueue::cancel_timer(Timer& timer, bool* was_in_use)
     // At this point the deferred call is queued and is being executed
     // on another processor. We need to wait until it's complete!
     while (!timer.is_callback_finished())
-        Processor::wait_check();
+        x86Processor::wait_check();
 
     return false;
 }
@@ -193,7 +193,7 @@ void TimerQueue::fire()
             lock.unlock();
 
             // Defer executing the timer outside of the irq handler
-            Processor::deferred_call_queue([this, timer]() {
+            x86Processor::deferred_call_queue([this, timer]() {
                 // Check if we were cancelled in between being triggered
                 // by the timer irq handler and now. If so, just drop
                 // our reference and don't execute the callback.

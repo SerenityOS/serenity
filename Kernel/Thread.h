@@ -149,7 +149,7 @@ class Thread
 public:
     inline static Thread* current()
     {
-        return Processor::current_thread();
+        return x86Processor::current_thread();
     }
 
     static ErrorOr<NonnullRefPtr<Thread>> try_create(NonnullRefPtr<Process>);

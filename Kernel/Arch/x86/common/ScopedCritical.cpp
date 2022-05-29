@@ -38,14 +38,14 @@ void ScopedCritical::leave()
 {
     VERIFY(m_valid);
     m_valid = false;
-    Processor::leave_critical();
+    x86Processor::leave_critical();
 }
 
 void ScopedCritical::enter()
 {
     VERIFY(!m_valid);
     m_valid = true;
-    Processor::enter_critical();
+    x86Processor::enter_critical();
 }
 
 }

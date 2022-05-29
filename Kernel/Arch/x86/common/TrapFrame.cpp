@@ -13,19 +13,19 @@ namespace Kernel {
 extern "C" void enter_trap_no_irq(TrapFrame* trap)
 {
     InterruptDisabler disable;
-    Processor::current().enter_trap(*trap, false);
+    x86Processor::current().enter_trap(*trap, false);
 }
 
 extern "C" void enter_trap(TrapFrame* trap)
 {
     InterruptDisabler disable;
-    Processor::current().enter_trap(*trap, true);
+    x86Processor::current().enter_trap(*trap, true);
 }
 
 extern "C" void exit_trap(TrapFrame* trap)
 {
     InterruptDisabler disable;
-    return Processor::current().exit_trap(*trap);
+    return x86Processor::current().exit_trap(*trap);
 }
 
 }

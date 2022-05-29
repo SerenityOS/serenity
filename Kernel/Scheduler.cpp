@@ -74,7 +74,7 @@ static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 
 Thread& Scheduler::pull_next_runnable_thread()
 {
-    auto affinity_mask = 1u << Processor::current_id();
+    auto affinity_mask = 1u << x86Processor::current_id();
 
     return g_ready_queues->with([&](auto& ready_queues) -> Thread& {
         auto priority_mask = ready_queues.mask;
@@ -93,7 +93,7 @@ Thread& Scheduler::pull_next_runnable_thread()
                 if (ready_queue.thread_list.is_empty())
                     ready_queues.mask &= ~(1u << priority);
                 // Mark it as active because we are using this thread. This is similar
-                // to comparing it with Processor::current_thread, but when there are
+                // to comparing it with x86Processor::current_thread, but when there are
                 // multiple processors there's no easy way to check whether the thread
                 // is actually still needed. This prevents accidental finalization when
                 // a thread is no longer in Running state, but running on another core.
@@ -107,13 +107,13 @@ Thread& Scheduler::pull_next_runnable_thread()
             }
             priority_mask &= ~(1u << priority);
         }
-        return *Processor::idle_thread();
+        return *x86Processor::idle_thread();
     });
 }
 
 Thread* Scheduler::peek_next_runnable_thread()
 {
-    auto affinity_mask = 1u << Processor::current_id();
+    auto affinity_mask = 1u << x86Processor::current_id();
 
     return g_ready_queues->with([&](auto& ready_queues) -> Thread* {
         auto priority_mask = ready_queues.mask;
@@ -151,7 +151,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
             return false;
         }
 
-        if (check_affinity && !(thread.affinity() & (1 << Processor::current_id())))
+        if (check_affinity && !(thread.affinity() & (1 << x86Processor::current_id())))
             return false;
 
         VERIFY(ready_queues.mask & (1u << priority));
@@ -191,9 +191,9 @@ UNMAP_AFTER_INIT void Scheduler::start()
     // by the idle thread once control transferred there
     g_scheduler_lock.lock();
 
-    auto& processor = Processor::current();
+    auto& processor = x86Processor::current();
     VERIFY(processor.is_initialized());
-    auto& idle_thread = *Processor::idle_thread();
+    auto& idle_thread = *x86Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
@@ -213,13 +213,13 @@ void Scheduler::pick_next()
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     ScopedCritical critical;
-    Processor::set_current_in_scheduler(true);
+    x86Processor::set_current_in_scheduler(true);
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
             // back to this thread!
-            VERIFY(Processor::current_in_scheduler());
-            Processor::set_current_in_scheduler(false);
+            VERIFY(x86Processor::current_in_scheduler());
+            x86Processor::set_current_in_scheduler(false);
         });
 
     SpinlockLocker lock(g_scheduler_lock);
@@ -231,7 +231,7 @@ void Scheduler::pick_next()
     auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
         dbgln("Scheduler[{}]: Switch to {} @ {:#04x}:{:p}",
-            Processor::current_id(),
+            x86Processor::current_id(),
             thread_to_schedule,
             thread_to_schedule.regs().cs, thread_to_schedule.regs().ip());
     }
@@ -249,13 +249,13 @@ void Scheduler::yield()
     InterruptDisabler disabler;
 
     auto const* current_thread = Thread::current();
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", Processor::current_id(), *current_thread, Processor::current_in_irq());
+    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", x86Processor::current_id(), *current_thread, x86Processor::current_in_irq());
     VERIFY(current_thread != nullptr);
-    if (Processor::current_in_irq() || Processor::in_critical()) {
+    if (x86Processor::current_in_irq() || x86Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
-        Processor::current().invoke_scheduler_async();
+        x86Processor::current().invoke_scheduler_async();
         return;
     }
 
@@ -285,11 +285,11 @@ void Scheduler::context_switch(Thread* thread)
     auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
 
     dbgln(msg,
-        Processor::current_id(), from_thread->tid().value(),
+        x86Processor::current_id(), from_thread->tid().value(),
         thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
 #endif
 
-    auto& proc = Processor::current();
+    auto& proc = x86Processor::current();
     if (!thread->is_initialized()) {
         proc.init_context(*thread, false);
         thread->set_initialized(true);
@@ -342,18 +342,18 @@ void Scheduler::leave_on_first_switch(u32 flags)
     // clean up and release locks manually here
     g_scheduler_lock.unlock(flags);
 
-    VERIFY(Processor::current_in_scheduler());
-    Processor::set_current_in_scheduler(false);
+    VERIFY(x86Processor::current_in_scheduler());
+    x86Processor::set_current_in_scheduler(false);
 }
 
 void Scheduler::prepare_after_exec()
 {
     // This is called after exec() when doing a context "switch" into
-    // the new process. This is called from Processor::assume_context
+    // the new process. This is called from x86Processor::assume_context
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
 
-    VERIFY(!Processor::current_in_scheduler());
-    Processor::set_current_in_scheduler(true);
+    VERIFY(!x86Processor::current_in_scheduler());
+    x86Processor::set_current_in_scheduler(true);
 }
 
 void Scheduler::prepare_for_idle_loop()
@@ -363,8 +363,8 @@ void Scheduler::prepare_for_idle_loop()
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
     g_scheduler_lock.lock();
 
-    VERIFY(!Processor::current_in_scheduler());
-    Processor::set_current_in_scheduler(true);
+    VERIFY(!x86Processor::current_in_scheduler());
+    x86Processor::set_current_in_scheduler(true);
 }
 
 Process* Scheduler::colonel()
@@ -386,10 +386,10 @@ static u64 current_time_monotonic()
 
 UNMAP_AFTER_INIT void Scheduler::initialize()
 {
-    VERIFY(Processor::is_initialized()); // sanity check
+    VERIFY(x86Processor::is_initialized()); // sanity check
 
     // Figure out a good scheduling time source
-    if (Processor::current().has_feature(CPUFeature::TSC)) {
+    if (x86Processor::current().has_feature(CPUFeature::TSC)) {
         // TODO: only use if TSC is running at a constant frequency?
         current_time = current_time_tsc;
     } else {
@@ -413,15 +413,15 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
     idle_thread->set_idle_thread();
-    Processor::current().set_idle_thread(*idle_thread);
-    Processor::set_current_thread(*idle_thread);
+    x86Processor::current().set_idle_thread(*idle_thread);
+    x86Processor::set_current_thread(*idle_thread);
 }
 
 UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 {
     VERIFY(cpu != 0);
     // This function is called on the bsp, but creates an idle thread for another AP
-    VERIFY(Processor::is_bootstrap_processor());
+    VERIFY(x86Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
     Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, MUST(KString::formatted("idle thread #{}", cpu)), 1 << cpu, false);
@@ -441,9 +441,9 @@ void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
 void Scheduler::timer_tick(RegisterState const& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current_in_irq());
+    VERIFY(x86Processor::current_in_irq());
 
-    auto* current_thread = Processor::current_thread();
+    auto* current_thread = x86Processor::current_thread();
     if (!current_thread)
         return;
 
@@ -452,7 +452,7 @@ void Scheduler::timer_tick(RegisterState const& regs)
     VERIFY(current_thread->current_trap()->regs == &regs);
 
 #if !SCHEDULE_ON_ALL_PROCESSORS
-    if (!Processor::is_bootstrap_processor())
+    if (!x86Processor::is_bootstrap_processor())
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
@@ -465,9 +465,9 @@ void Scheduler::timer_tick(RegisterState const& regs)
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
-        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
+        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", x86Processor::current_id(), *current_thread);
         current_thread->set_state(Thread::State::Dying);
-        Processor::current().invoke_scheduler_async();
+        x86Processor::current().invoke_scheduler_async();
         return;
     }
 
@@ -480,24 +480,24 @@ void Scheduler::timer_tick(RegisterState const& regs)
         // time slice and let it run!
         current_thread->set_ticks_left(time_slice_for(*current_thread));
         current_thread->did_schedule();
-        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: No other threads ready, give {} another timeslice", Processor::current_id(), *current_thread);
+        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: No other threads ready, give {} another timeslice", x86Processor::current_id(), *current_thread);
         return;
     }
 
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current_in_irq());
-    Processor::current().invoke_scheduler_async();
+    VERIFY(x86Processor::current_in_irq());
+    x86Processor::current().invoke_scheduler_async();
 }
 
 void Scheduler::invoke_async()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
 
     // Since this function is called when leaving critical sections (such
     // as a Spinlock), we need to check if we're not already doing this
     // to prevent recursion
-    if (!Processor::current_in_scheduler())
+    if (!x86Processor::current_in_scheduler())
         pick_next();
 }
 
@@ -509,7 +509,7 @@ void Scheduler::notify_finalizer()
 
 void Scheduler::idle_loop(void*)
 {
-    auto& proc = Processor::current();
+    auto& proc = x86Processor::current();
     dbgln("Scheduler[{}]: idle loop running", proc.id());
     VERIFY(are_interrupts_enabled());
 
@@ -522,7 +522,7 @@ void Scheduler::idle_loop(void*)
 #if SCHEDULE_ON_ALL_PROCESSORS
         yield();
 #else
-        if (Processor::current_id() == 0)
+        if (x86Processor::current_id() == 0)
             yield();
 #endif
     }
@@ -536,7 +536,7 @@ void Scheduler::dump_scheduler_state(bool with_stack_traces)
 bool Scheduler::is_initialized()
 {
     // The scheduler is initialized iff the idle thread exists
-    return Processor::idle_thread() != nullptr;
+    return x86Processor::idle_thread() != nullptr;
 }
 
 TotalTimeScheduled Scheduler::get_total_time_scheduled()
@@ -546,7 +546,7 @@ TotalTimeScheduled Scheduler::get_total_time_scheduled()
 
 void dump_thread_list(bool with_stack_traces)
 {
-    dbgln("Scheduler thread list for processor {}:", Processor::current_id());
+    dbgln("Scheduler thread list for processor {}:", x86Processor::current_id());
 
     auto get_cs = [](Thread& thread) -> u16 {
         if (!thread.current_trap())

@@ -124,11 +124,11 @@ protected:
 
     void evaluate_block_conditions()
     {
-        if (Processor::current_in_irq() != 0) {
+        if (x86Processor::current_in_irq() != 0) {
             // If called from an IRQ handler we need to delay evaluation
             // and unblocking of waiting threads. Note that this File
             // instance may be deleted until the deferred call is executed!
-            Processor::deferred_call_queue([self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
+            x86Processor::deferred_call_queue([self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
                 if (auto file = self.strong_ref())
                     file->do_evaluate_block_conditions();
             });
@@ -140,7 +140,7 @@ protected:
 private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
-        VERIFY(!Processor::current_in_irq());
+        VERIFY(!x86Processor::current_in_irq());
         blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 

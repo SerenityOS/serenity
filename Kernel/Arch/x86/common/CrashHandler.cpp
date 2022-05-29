@@ -31,7 +31,7 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
     // make sure we switch back to the right page tables.
     Memory::MemoryManager::enter_process_address_space(process);
 
-    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
+    dmesgln("CRASH: CPU #{} {} in ring {}", x86Processor::current_id(), description, (regs.cs & 3));
     dump_registers(regs);
 
     if (crashed_in_kernel) {

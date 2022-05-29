@@ -15,11 +15,11 @@ VALIDATE_IS_X86()
 
 namespace Kernel {
 
-class Processor;
+class x86Processor;
 
 class ProcessorInfo {
 public:
-    ProcessorInfo(Processor const& processor);
+    ProcessorInfo(x86Processor const& processor);
 
     struct Cache {
         u64 size;
@@ -47,9 +47,9 @@ public:
 
 private:
     static NonnullOwnPtr<KString> build_vendor_id_string();
-    static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(Processor const&);
+    static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(x86Processor const&);
     static NonnullOwnPtr<KString> build_brand_string();
-    static NonnullOwnPtr<KString> build_features_string(Processor const&);
+    static NonnullOwnPtr<KString> build_features_string(x86Processor const&);
 
     void populate_cache_sizes_amd();
     void populate_cache_sizes_intel();

@@ -281,7 +281,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
     FlatPtr load_base_address = 0;
 
     auto elf_name = TRY(object_description.pseudo_path());
-    VERIFY(!Processor::in_critical());
+    VERIFY(!x86Processor::in_critical());
 
     Memory::MemoryManager::enter_address_space(*new_space);
 
@@ -441,7 +441,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
-    VERIFY(!Processor::in_critical());
+    VERIFY(!x86Processor::in_critical());
     // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
     // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
     auto path = TRY(main_program_description->original_absolute_path());
@@ -577,9 +577,9 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     }
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
-    // and Processor::assume_context() or the next context switch.
+    // and x86Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    Processor::enter_critical();
+    x86Processor::enter_critical();
     prev_flags = cpu_flags();
     cli();
 
@@ -630,7 +630,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     u32 lock_count_to_restore;
     [[maybe_unused]] auto rc = big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::in_critical());
+    VERIFY(x86Processor::in_critical());
     return {};
 }
 
@@ -649,7 +649,7 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
         { ELF::AuxiliaryValue::Gid, (long)gid.value() },
         { ELF::AuxiliaryValue::EGid, (long)egid.value() },
 
-        { ELF::AuxiliaryValue::Platform, Processor::platform_string() },
+        { ELF::AuxiliaryValue::Platform, x86Processor::platform_string() },
         // FIXME: This is platform specific
         { ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() },
 
@@ -885,7 +885,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
     //       get scheduled, it'll be at the entry point of the new executable.
 
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::in_critical());
+    VERIFY(x86Processor::in_critical());
 
     auto* current_thread = Thread::current();
     if (current_thread == new_main_thread) {
@@ -893,10 +893,10 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(Processor::in_critical() == 1);
+        VERIFY(x86Processor::in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
-        Processor::assume_context(*current_thread, prev_flags);
+        x86Processor::assume_context(*current_thread, prev_flags);
         VERIFY_NOT_REACHED();
     }
 
@@ -905,7 +905,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
 
     if (prev_flags & 0x200)
         sti();
-    Processor::leave_critical();
+    x86Processor::leave_critical();
     return 0;
 }
 

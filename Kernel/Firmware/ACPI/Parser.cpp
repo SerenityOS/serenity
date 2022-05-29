@@ -300,7 +300,7 @@ void Parser::try_acpi_reboot()
     auto fadt = fadt_or_error.release_value();
     VERIFY(validate_reset_register(fadt));
     access_generic_address(fadt->reset_reg, fadt->reset_value);
-    Processor::halt();
+    x86Processor::halt();
 }
 
 void Parser::try_acpi_shutdown()

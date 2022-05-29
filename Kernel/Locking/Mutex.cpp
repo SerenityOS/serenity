@@ -18,7 +18,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     if constexpr (LOCK_IN_CRITICAL_DEBUG)
         VERIFY_INTERRUPTS_ENABLED();
     VERIFY(mode != Mode::Unlocked);
@@ -149,7 +149,7 @@ void Mutex::unlock()
     // and also from within critical sections!
     if constexpr (LOCK_IN_CRITICAL_DEBUG)
         VERIFY_INTERRUPTS_ENABLED();
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
     Mode current_mode = m_mode;
@@ -285,7 +285,7 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
     VERIFY(m_behavior == MutexBehavior::BigLock);
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
 
     auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
@@ -323,7 +323,7 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
 {
     VERIFY(m_behavior == MutexBehavior::BigLock);
     VERIFY(lock_count > 0);
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
 
     auto* current_thread = Thread::current();
     bool did_block = false;

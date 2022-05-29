@@ -58,18 +58,18 @@ struct [[gnu::aligned(64), gnu::packed]] FPUState
     u8 ext_save_area[256];
 };
 
-class Processor;
+class x86Processor;
 // Note: We only support 64 processors at most at the moment,
 // so allocate 64 slots of inline capacity in the container.
-using ProcessorContainer = Array<Processor*, 64>;
+using ProcessorContainer = Array<x86Processor*, 64>;
 
-class Processor {
+class x86Processor {
     friend class ProcessorInfo;
 
-    AK_MAKE_NONCOPYABLE(Processor);
-    AK_MAKE_NONMOVABLE(Processor);
+    AK_MAKE_NONCOPYABLE(x86Processor);
+    AK_MAKE_NONMOVABLE(x86Processor);
 
-    Processor* m_self;
+    x86Processor* m_self;
 
 #if ARCH(X86_64)
     // Saved user stack for the syscall instruction.
@@ -136,7 +136,7 @@ class Processor {
     void cpu_setup();
 
 public:
-    Processor() = default;
+    x86Processor() = default;
 
     void early_initialize(u32 cpu);
     void initialize(u32 cpu);
@@ -154,7 +154,7 @@ public:
         s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
     }
 
-    static Processor& by_id(u32);
+    static x86Processor& by_id(u32);
 
     static u32 count()
     {
@@ -175,9 +175,9 @@ public:
 
     ALWAYS_INLINE static void wait_check()
     {
-        Processor::pause();
-        if (Processor::is_smp_enabled())
-            Processor::current().smp_process_pending_messages();
+        x86Processor::pause();
+        if (x86Processor::is_smp_enabled())
+            x86Processor::current().smp_process_pending_messages();
     }
 
     [[noreturn]] static void halt();
@@ -194,7 +194,7 @@ public:
     void flush_gdt();
     DescriptorTablePointer const& get_gdtr();
 
-    template<IteratorFunction<Processor&> Callback>
+    template<IteratorFunction<x86Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
     {
         auto& procs = processors();
@@ -206,7 +206,7 @@ public:
         return IterationDecision::Continue;
     }
 
-    template<VoidFunction<Processor&> Callback>
+    template<VoidFunction<x86Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
     {
         auto& procs = processors();
@@ -218,7 +218,7 @@ public:
         return IterationDecision::Continue;
     }
 
-    static inline ErrorOr<void> try_for_each(Function<ErrorOr<void>(Processor&)> callback)
+    static inline ErrorOr<void> try_for_each(Function<ErrorOr<void>(x86Processor&)> callback)
     {
         auto& procs = processors();
         size_t count = procs.size();
@@ -241,17 +241,17 @@ public:
 #if ARCH(X86_64)
     static constexpr u64 user_stack_offset()
     {
-        return __builtin_offsetof(Processor, m_user_stack);
+        return __builtin_offsetof(x86Processor, m_user_stack);
     }
     static constexpr u64 kernel_stack_offset()
     {
-        return __builtin_offsetof(Processor, m_tss) + __builtin_offsetof(TSS, rsp0l);
+        return __builtin_offsetof(x86Processor, m_tss) + __builtin_offsetof(TSS, rsp0l);
     }
 #endif
 
-    ALWAYS_INLINE static Processor& current()
+    ALWAYS_INLINE static x86Processor& current()
     {
-        return *(Processor*)read_gs_ptr(__builtin_offsetof(Processor, m_self));
+        return *(x86Processor*)read_gs_ptr(__builtin_offsetof(x86Processor, m_self));
     }
 
     ALWAYS_INLINE static bool is_initialized()
@@ -260,7 +260,7 @@ public:
 #if ARCH(I386)
             get_gs() == GDT_SELECTOR_PROC &&
 #endif
-            read_gs_ptr(__builtin_offsetof(Processor, m_self)) != 0;
+            read_gs_ptr(__builtin_offsetof(x86Processor, m_self)) != 0;
     }
 
     template<typename T>
@@ -281,71 +281,71 @@ public:
 
     ALWAYS_INLINE static Thread* current_thread()
     {
-        // If we were to use Processor::current here, we'd have to
+        // If we were to use x86Processor::current here, we'd have to
         // disable interrupts to prevent a race where we may get pre-empted
-        // right after getting the Processor structure and then get moved
+        // right after getting the x86Processor structure and then get moved
         // to another processor, which would lead us to get the wrong thread.
         // To avoid having to disable interrupts, we can just read the field
-        // directly in an atomic fashion, similar to Processor::current.
-        return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_current_thread));
+        // directly in an atomic fashion, similar to x86Processor::current.
+        return (Thread*)read_gs_ptr(__builtin_offsetof(x86Processor, m_current_thread));
     }
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
-        // See comment in Processor::current_thread
-        write_gs_ptr(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
+        // See comment in x86Processor::current_thread
+        write_gs_ptr(__builtin_offsetof(x86Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
     ALWAYS_INLINE static Thread* idle_thread()
     {
-        // See comment in Processor::current_thread
-        return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_idle_thread));
+        // See comment in x86Processor::current_thread
+        return (Thread*)read_gs_ptr(__builtin_offsetof(x86Processor, m_idle_thread));
     }
 
     ALWAYS_INLINE u32 id() const
     {
         // NOTE: This variant should only be used when iterating over all
-        // Processor instances, or when it's guaranteed that the thread
-        // cannot move to another processor in between calling Processor::current
-        // and Processor::get_id, or if this fact is not important.
-        // All other cases should use Processor::id instead!
+        // x86Processor instances, or when it's guaranteed that the thread
+        // cannot move to another processor in between calling x86Processor::current
+        // and x86Processor::get_id, or if this fact is not important.
+        // All other cases should use x86Processor::id instead!
         return m_cpu;
     }
 
     ALWAYS_INLINE static u32 current_id()
     {
-        // See comment in Processor::current_thread
-        return read_gs_ptr(__builtin_offsetof(Processor, m_cpu));
+        // See comment in x86Processor::current_thread
+        return read_gs_ptr(__builtin_offsetof(x86Processor, m_cpu));
     }
 
     ALWAYS_INLINE static bool is_bootstrap_processor()
     {
-        return Processor::current_id() == 0;
+        return x86Processor::current_id() == 0;
     }
 
     ALWAYS_INLINE static FlatPtr current_in_irq()
     {
-        return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
+        return read_gs_ptr(__builtin_offsetof(x86Processor, m_in_irq));
     }
 
     ALWAYS_INLINE static void restore_in_critical(u32 critical)
     {
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), critical);
+        write_gs_ptr(__builtin_offsetof(x86Processor, m_in_critical), critical);
     }
 
     ALWAYS_INLINE static void enter_critical()
     {
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
+        write_gs_ptr(__builtin_offsetof(x86Processor, m_in_critical), in_critical() + 1);
     }
 
     ALWAYS_INLINE static bool current_in_scheduler()
     {
-        return read_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler));
+        return read_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(x86Processor, m_in_scheduler));
     }
 
     ALWAYS_INLINE static void set_current_in_scheduler(bool value)
     {
-        write_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler), value);
+        write_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(x86Processor, m_in_scheduler), value);
     }
 
 private:
@@ -374,7 +374,7 @@ public:
     ALWAYS_INLINE static u32 clear_critical()
     {
         auto prev_critical = in_critical();
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
+        write_gs_ptr(__builtin_offsetof(x86Processor, m_in_critical), 0);
         auto& proc = current();
         if (proc.m_in_irq == 0)
             proc.check_invoke_scheduler();
@@ -387,13 +387,13 @@ public:
         // get preempted in between these steps. If we move to another
         // processors m_in_critical will move along with us. And if we
         // are preempted, we would resume with the same flags.
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), prev_critical);
+        write_gs_ptr(__builtin_offsetof(x86Processor, m_in_critical), prev_critical);
     }
 
     ALWAYS_INLINE static u32 in_critical()
     {
-        // See comment in Processor::current_thread
-        return read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
+        // See comment in x86Processor::current_thread
+        return read_gs_ptr(__builtin_offsetof(x86Processor, m_in_critical));
     }
 
     ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }

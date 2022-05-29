@@ -38,12 +38,12 @@ NAKED void do_assume_context(Thread*, u32)
     asm(
         "    movq %rdi, %r12 \n" // save thread ptr
         "    movq %rsi, %r13 \n" // save flags
-        // We're going to call Processor::init_context, so just make sure
+        // We're going to call x86Processor::init_context, so just make sure
         // we have enough stack space so we don't stomp over it
         "    subq $(" __STRINGIFY(16 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) "), %rsp \n"
         "    cld \n"
         "    call do_init_context \n"
-        "    movq %rax, %rsp \n"                          // move stack pointer to what Processor::init_context set up for us
+        "    movq %rax, %rsp \n"                          // move stack pointer to what x86Processor::init_context set up for us
         "    movq %r12, %rdi \n"                          // to_thread
         "    movq %r12, %rsi \n"                          // from_thread
         "    pushq %r12 \n"                               // to_thread (for thread_context_first_enter)
@@ -54,13 +54,13 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-StringView Processor::platform_string()
+StringView x86Processor::platform_string()
 {
     return "x86_64"sv;
 }
 
 // FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+FlatPtr x86Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
@@ -164,7 +164,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+void x86Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -244,7 +244,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void x86Processor::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 

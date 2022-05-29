@@ -21,7 +21,7 @@ namespace Kernel {
     // We also try the Bochs/Old QEMU shutdown method, if the first didn't work.
     IO::out16(0x604, 0x2000);
     IO::out16(0xb004, 0x2000);
-    Processor::halt();
+    x86Processor::halt();
 }
 
 void __panic(char const* file, unsigned int line, char const* function)
@@ -34,14 +34,14 @@ void __panic(char const* file, unsigned int line, char const* function)
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
     if (!CommandLine::was_initialized())
-        Processor::halt();
+        x86Processor::halt();
     switch (kernel_command_line().panic_mode()) {
     case PanicMode::Shutdown:
         __shutdown();
     case PanicMode::Halt:
         [[fallthrough]];
     default:
-        Processor::halt();
+        x86Processor::halt();
     }
 }
 }

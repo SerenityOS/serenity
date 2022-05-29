@@ -115,7 +115,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-    if (Processor::current().has_nx()) {
+    if (x86Processor::current().has_nx()) {
         // Disable execution of the kernel data, bss and heap segments.
         for (auto const* i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -482,7 +482,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             pte.set_physical_page_base(physical_page_array_current_page);
             pte.set_user_allowed(false);
             pte.set_writable(true);
-            if (Processor::current().has_nx())
+            if (x86Processor::current().has_nx())
                 pte.set_execute_disabled(false);
             pte.set_global(true);
             pte.set_present(true);
@@ -747,13 +747,13 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     if (faulted_in_range(&start_of_kernel_ksyms, &end_of_kernel_ksyms))
         PANIC("Attempt to access KSYMS section");
 
-    if (Processor::current_in_irq()) {
+    if (x86Processor::current_in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
-            Processor::current_id(), fault.code(), fault.vaddr(), Processor::current_in_irq());
+            x86Processor::current_id(), fault.code(), fault.vaddr(), x86Processor::current_in_irq());
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current_id(), fault.code(), fault.vaddr());
+    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", x86Processor::current_id(), fault.code(), fault.vaddr());
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
         return PageFaultResponse::ShouldCrash;
@@ -1048,12 +1048,12 @@ void MemoryManager::enter_address_space(AddressSpace& space)
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
-    Processor::flush_tlb_local(vaddr, page_count);
+    x86Processor::flush_tlb_local(vaddr, page_count);
 }
 
 void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-    Processor::flush_tlb(page_directory, vaddr, page_count);
+    x86Processor::flush_tlb(page_directory, vaddr, page_count);
 }
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
@@ -1114,7 +1114,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
 
-    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + x86Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
     auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
@@ -1134,7 +1134,7 @@ void MemoryManager::unquickmap_page()
     VERIFY(s_mm_lock.is_locked_by_current_processor());
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
-    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + x86Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
     auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
     pte.clear();

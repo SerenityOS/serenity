@@ -29,7 +29,7 @@ UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> que
 
 void NVMeNameSpace::start_request(AsyncBlockDeviceRequest& request)
 {
-    auto index = Processor::current_id();
+    auto index = x86Processor::current_id();
     auto& queue = m_queues.at(index);
     // TODO: For now we support only IO transfers of size PAGE_SIZE (Going along with the current constraint in the block layer)
     // Eventually remove this constraint by using the PRP2 field in the submission struct and remove block layer constraint for NVMe driver.

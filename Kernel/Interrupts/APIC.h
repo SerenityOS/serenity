@@ -90,7 +90,7 @@ private:
     };
 
     OwnPtr<Memory::Region> m_apic_base;
-    Vector<OwnPtr<Processor>> m_ap_processor_info;
+    Vector<OwnPtr<x86Processor>> m_ap_processor_info;
     Vector<OwnPtr<Memory::Region>> m_ap_temporary_boot_stacks;
     Vector<Thread*> m_ap_idle_threads;
     OwnPtr<Memory::Region> m_ap_boot_environment;

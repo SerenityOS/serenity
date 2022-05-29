@@ -149,14 +149,14 @@ public:
 
     inline static Process& current()
     {
-        auto* current_thread = Processor::current_thread();
+        auto* current_thread = x86Processor::current_thread();
         VERIFY(current_thread);
         return current_thread->process();
     }
 
     inline static bool has_current()
     {
-        return Processor::current_thread() != nullptr;
+        return x86Processor::current_thread() != nullptr;
     }
 
     template<typename EntryFunction>

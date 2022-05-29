@@ -259,7 +259,7 @@ void page_fault_handler(TrapFrame* trap)
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();
         dbgln("CPU #{} ring {} {} page fault in PD={:#x}, {}{} {}",
-            Processor::is_initialized() ? Processor::current_id() : 0,
+            x86Processor::is_initialized() ? x86Processor::current_id() : 0,
             regs.cs & 3,
             regs.exception_code & 1 ? "PV" : "NP",
             fault_page_directory,
@@ -272,7 +272,7 @@ void page_fault_handler(TrapFrame* trap)
 
     bool faulted_in_kernel = !(regs.cs & 3);
 
-    if (faulted_in_kernel && Processor::current_in_irq()) {
+    if (faulted_in_kernel && x86Processor::current_in_irq()) {
         // If we're faulting in an IRQ handler, first check if we failed
         // due to safe_memcpy, safe_strnlen, or safe_memset. If we did,
         // gracefully continue immediately. Because we're in an IRQ handler

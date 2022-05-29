@@ -148,7 +148,7 @@ Thread::~Thread()
 
 Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blocker)
 {
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
     VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
@@ -189,7 +189,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
         // Process::kill_all_threads may be called at any time, which will mark all
         // threads to die. In that case
         timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
-            VERIFY(!Processor::current_in_irq());
+            VERIFY(!x86Processor::current_in_irq());
             VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
             VERIFY(!m_block_lock.is_locked_by_current_processor());
             // NOTE: this may execute on the same or any other processor!
@@ -220,9 +220,9 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(Processor::in_critical());
+        VERIFY(x86Processor::in_critical());
         yield_without_releasing_big_lock();
-        VERIFY(Processor::in_critical());
+        VERIFY(x86Processor::in_critical());
 
         SpinlockLocker block_lock2(m_block_lock);
         if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
@@ -262,7 +262,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
 
 void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
 {
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
     VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
@@ -304,7 +304,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(Processor::in_critical());
+        VERIFY(x86Processor::in_critical());
         if (&lock != &big_lock && big_lock.is_exclusively_locked_by_current_thread()) {
             // We're locking another lock and already hold the big lock...
             // We need to release the big lock
@@ -315,7 +315,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
             // verify that we're not holding it.
             yield_without_releasing_big_lock(VerifyLockNotHeld::No);
         }
-        VERIFY(Processor::in_critical());
+        VERIFY(x86Processor::in_critical());
 
         SpinlockLocker block_lock2(m_block_lock);
         VERIFY(!m_blocking_mutex);
@@ -331,7 +331,7 @@ u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker block_lock(m_block_lock);
 
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     VERIFY(m_blocking_mutex == &mutex);
 
     dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
@@ -358,8 +358,8 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         if (!should_be_stopped() && !is_stopped())
             unblock();
     };
-    if (Processor::current_in_irq() != 0) {
-        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
+    if (x86Processor::current_in_irq() != 0) {
+        x86Processor::deferred_call_queue([do_unblock = move(do_unblock), self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
         });
@@ -370,7 +370,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 
 void Thread::unblock(u8 signal)
 {
-    VERIFY(!Processor::current_in_irq());
+    VERIFY(!x86Processor::current_in_irq());
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     VERIFY(m_block_lock.is_locked_by_current_processor());
     if (m_state != Thread::State::Blocked)
@@ -462,8 +462,8 @@ void Thread::die_if_needed()
 
     // Now leave the critical section so that we can also trigger the
     // actual context switch
-    Processor::clear_critical();
-    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current_in_irq());
+    x86Processor::clear_critical();
+    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", x86Processor::current_in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     VERIFY_NOT_REACHED();
@@ -493,9 +493,9 @@ void Thread::yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_
     // Disable interrupts here. This ensures we don't accidentally switch contexts twice
     InterruptDisabler disable;
     Scheduler::yield(); // flag a switch
-    u32 prev_critical = Processor::clear_critical();
+    u32 prev_critical = x86Processor::clear_critical();
     // NOTE: We may be on a different CPU now!
-    Processor::restore_critical(prev_critical);
+    x86Processor::restore_critical(prev_critical);
 }
 
 void Thread::yield_and_release_relock_big_lock()
@@ -523,12 +523,12 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
     // flagged by calling Scheduler::yield above.
     // We have to do it this way because we intentionally
     // leave the critical section here to be able to switch contexts.
-    u32 prev_critical = Processor::clear_critical();
+    u32 prev_critical = x86Processor::clear_critical();
 
     // CONTEXT SWITCH HAPPENS HERE!
 
     // NOTE: We may be on a different CPU now!
-    Processor::restore_critical(prev_critical);
+    x86Processor::restore_critical(prev_critical);
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
@@ -1314,7 +1314,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
 
     if (m_state == Thread::State::Runnable) {
         Scheduler::enqueue_runnable_thread(*this);
-        Processor::smp_wake_n_idle_processors(1);
+        x86Processor::smp_wake_n_idle_processors(1);
     } else if (m_state == Thread::State::Stopped) {
         // We don't want to restore to Running state, only Runnable!
         m_stop_state = previous_state != Thread::State::Running ? previous_state : Thread::State::Runnable;
@@ -1384,7 +1384,7 @@ ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
     auto& process = const_cast<Process&>(this->process());
-    auto stack_trace = TRY(Processor::capture_stack_trace(*this));
+    auto stack_trace = TRY(x86Processor::capture_stack_trace(*this));
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
     ScopedAddressSpaceSwitcher switcher(process);
     for (auto& frame : stack_trace) {
@@ -1448,7 +1448,7 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
 
 void Thread::reset_fpu_state()
 {
-    memcpy(&m_fpu_state, &Processor::clean_fpu_state(), sizeof(FPUState));
+    memcpy(&m_fpu_state, &x86Processor::clean_fpu_state(), sizeof(FPUState));
 }
 
 bool Thread::should_be_stopped() const

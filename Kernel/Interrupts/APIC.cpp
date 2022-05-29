@@ -223,7 +223,7 @@ extern "C" FlatPtr ap_cpu_kernel_map_base;
 extern "C" FlatPtr ap_cpu_kernel_entry_function;
 #endif
 
-extern "C" [[noreturn]] void init_ap(FlatPtr, Processor*);
+extern "C" [[noreturn]] void init_ap(FlatPtr, x86Processor*);
 
 void APIC::eoi()
 {
@@ -360,7 +360,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     // Allocate Processor structures for all APs and store the pointer to the data
     m_ap_processor_info.resize(aps_to_enable);
     for (size_t i = 0; i < aps_to_enable; i++)
-        m_ap_processor_info[i] = adopt_nonnull_own_or_enomem(new (nothrow) Processor()).release_value_but_fixme_should_propagate_errors();
+        m_ap_processor_info[i] = adopt_nonnull_own_or_enomem(new (nothrow) x86Processor()).release_value_but_fixme_should_propagate_errors();
     auto* ap_processor_info_array = &ap_stack_array[aps_to_enable];
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
@@ -372,7 +372,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
 
     // Store the BSP's GDT and IDT for the APs to use
-    auto const& gdtr = Processor::current().get_gdtr();
+    auto const& gdtr = x86Processor::current().get_gdtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_gdtr) = FlatPtr(&gdtr);
     auto const& idtr = get_idtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_idtr) = FlatPtr(&idtr);
@@ -448,7 +448,7 @@ UNMAP_AFTER_INIT void APIC::boot_aps()
     do_boot_aps();
 
     // Enable SMP, which means IPIs may now be sent
-    Processor::smp_enable();
+    x86Processor::smp_enable();
 
     dbgln_if(APIC_DEBUG, "All processors initialized and waiting, trigger all to continue");
 
@@ -481,7 +481,7 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
     }
 
     dbgln_if(APIC_DEBUG, "CPU #{} apic id: {}", cpu, apic_id);
-    Processor::current().info().set_apic_id(apic_id);
+    x86Processor::current().info().set_apic_id(apic_id);
 
     dbgln_if(APIC_DEBUG, "Enabling local APIC for CPU #{}, logical APIC ID: {}", cpu, apic_id);
 
@@ -543,7 +543,7 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
     dbgln_if(APIC_DEBUG, "APIC: CPU #{} continues, all others are initialized", cpu);
 
     // do_boot_aps() freed memory, so we need to update our tlb
-    Processor::flush_entire_tlb_local();
+    x86Processor::flush_entire_tlb_local();
 
     // Now enable all the interrupts
     APIC::the().enable(cpu);
@@ -551,18 +551,18 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 
 void APIC::broadcast_ipi()
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Broadcast IPI from CPU #{}", Processor::current_id());
+    dbgln_if(APIC_SMP_DEBUG, "SMP: Broadcast IPI from CPU #{}", x86Processor::current_id());
     wait_for_pending_icr();
     write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, 0xffffffff, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf });
 }
 
 void APIC::send_ipi(u32 cpu)
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Send IPI from CPU #{} to CPU #{}", Processor::current_id(), cpu);
-    VERIFY(cpu != Processor::current_id());
-    VERIFY(cpu < Processor::count());
+    dbgln_if(APIC_SMP_DEBUG, "SMP: Send IPI from CPU #{} to CPU #{}", x86Processor::current_id(), cpu);
+    VERIFY(cpu != x86Processor::current_id());
+    VERIFY(cpu < x86Processor::count());
     wait_for_pending_icr();
-    write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2 ? Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2 ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
+    write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2 ? x86Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2 ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
 }
 
 UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
@@ -571,7 +571,7 @@ UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibrati
         return nullptr;
 
     // We should only initialize and calibrate the APIC timer once on the BSP!
-    VERIFY(Processor::is_bootstrap_processor());
+    VERIFY(x86Processor::is_bootstrap_processor());
     VERIFY(!m_apic_timer);
 
     m_apic_timer = APICTimer::initialize(IRQ_APIC_TIMER, calibration_timer);
@@ -643,7 +643,7 @@ u32 APIC::get_timer_divisor()
 
 bool APICIPIInterruptHandler::handle_interrupt(RegisterState const&)
 {
-    dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::current_id());
+    dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", x86Processor::current_id());
     return true;
 }
 
@@ -656,7 +656,7 @@ bool APICIPIInterruptHandler::eoi()
 
 bool APICErrInterruptHandler::handle_interrupt(RegisterState const&)
 {
-    dbgln("APIC: SMP error on CPU #{}", Processor::current_id());
+    dbgln("APIC: SMP error on CPU #{}", x86Processor::current_id());
     return true;
 }
 

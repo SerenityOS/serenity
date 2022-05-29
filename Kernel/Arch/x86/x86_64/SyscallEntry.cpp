@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/x86Processor.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
 extern "C" void syscall_entry();
@@ -77,6 +77,6 @@ extern "C" [[gnu::naked]] void syscall_entry()
         "    cli \n"
         "    popq %%rsp \n"
         "    sysretq \n"
-    :: [user_stack] "i"(Kernel::Processor::user_stack_offset()), [kernel_stack] "i"(Kernel::Processor::kernel_stack_offset()));
+    :: [user_stack] "i"(Kernel::x86Processor::user_stack_offset()), [kernel_stack] "i"(Kernel::x86Processor::kernel_stack_offset()));
     // clang-format on
 }

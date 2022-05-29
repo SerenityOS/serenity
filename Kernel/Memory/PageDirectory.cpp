@@ -67,7 +67,7 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
 
         // 2 ** MAXPHYADDR - 1
         // Where MAXPHYADDR = physical_address_bit_width
-        u64 max_physical_address = (1ULL << Processor::current().physical_address_bit_width()) - 1;
+        u64 max_physical_address = (1ULL << x86Processor::current().physical_address_bit_width()) - 1;
 
         // bit 63 = no execute
         // bit 7 = page size

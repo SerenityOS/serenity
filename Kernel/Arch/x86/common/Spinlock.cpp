@@ -11,10 +11,10 @@ namespace Kernel {
 u32 Spinlock::lock()
 {
     u32 prev_flags = cpu_flags();
-    Processor::enter_critical();
+    x86Processor::enter_critical();
     cli();
     while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
-        Processor::wait_check();
+        x86Processor::wait_check();
     track_lock_acquire(m_rank);
     return prev_flags;
 }
@@ -29,21 +29,21 @@ void Spinlock::unlock(u32 prev_flags)
     else
         cli();
 
-    Processor::leave_critical();
+    x86Processor::leave_critical();
 }
 
 u32 RecursiveSpinlock::lock()
 {
     u32 prev_flags = cpu_flags();
     cli();
-    Processor::enter_critical();
-    auto& proc = Processor::current();
+    x86Processor::enter_critical();
+    auto& proc = x86Processor::current();
     FlatPtr cpu = FlatPtr(&proc);
     FlatPtr expected = 0;
     while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
         if (expected == cpu)
             break;
-        Processor::wait_check();
+        x86Processor::wait_check();
         expected = 0;
     }
     if (m_recursions == 0)
@@ -55,7 +55,7 @@ u32 RecursiveSpinlock::lock()
 void RecursiveSpinlock::unlock(u32 prev_flags)
 {
     VERIFY(m_recursions > 0);
-    VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
+    VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&x86Processor::current()));
     if (--m_recursions == 0) {
         track_lock_release(m_rank);
         m_lock.store(0, AK::memory_order_release);
@@ -65,7 +65,7 @@ void RecursiveSpinlock::unlock(u32 prev_flags)
     else
         cli();
 
-    Processor::leave_critical();
+    x86Processor::leave_critical();
 }
 
 }

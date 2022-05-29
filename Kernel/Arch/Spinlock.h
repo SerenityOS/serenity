@@ -59,7 +59,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked_by_current_processor() const
     {
-        return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
+        return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&x86Processor::current());
     }
 
     ALWAYS_INLINE void initialize()

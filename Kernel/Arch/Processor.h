@@ -20,6 +20,13 @@
 
 namespace Kernel {
 
+#if ARCH(X86_64) || ARCH(I386)
+using ProcessorImpl = x86Processor;
+#elif ARCH(AARCH64)
+using ProcessorImpl = Processor;
+using x86Processor = Processor;  // FIXME: remove this soon
+#endif
+
 namespace Memory {
 class PageDirectory;
 }
@@ -70,11 +77,11 @@ class ProcessorSpecific {
 public:
     static void initialize()
     {
-        Processor::current().set_specific(T::processor_specific_data_id(), new T);
+        ProcessorImpl::current().set_specific(T::processor_specific_data_id(), new T);
     }
     static T& get()
     {
-        return *Processor::current().get_specific<T>();
+        return *ProcessorImpl::current().get_specific<T>();
     }
 };
 }

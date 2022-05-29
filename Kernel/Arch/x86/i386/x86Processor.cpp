@@ -42,7 +42,7 @@ NAKED void do_assume_context(Thread*, u32)
     asm(
         "    movl 4(%esp), %ebx \n"
         "    movl 8(%esp), %esi \n"
-        // We're going to call Processor::init_context, so just make sure
+        // We're going to call x86Processor::init_context, so just make sure
         // we have enough stack space so we don't stomp over it
         "    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
         "    pushl %esi \n"
@@ -50,7 +50,7 @@ NAKED void do_assume_context(Thread*, u32)
         "    cld \n"
         "    call do_init_context \n"
         "    addl $8, %esp \n"
-        "    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
+        "    movl %eax, %esp \n" // move stack pointer to what x86Processor::init_context set up for us
         "    pushl %ebx \n" // push to_thread
         "    pushl %ebx \n" // push from_thread
         "    pushl $thread_context_first_enter \n" // should be same as regs.eip
@@ -59,12 +59,12 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-StringView Processor::platform_string()
+StringView x86Processor::platform_string()
 {
     return "i386"sv;
 }
 
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+FlatPtr x86Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
@@ -179,7 +179,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+void x86Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -235,7 +235,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void x86Processor::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 
@@ -268,7 +268,7 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
         :: [new_esp] "g" (regs.esp),
            [new_eip] "a" (regs.eip),
            [from_to_thread] "b" (&initial_thread),
-           [cpu] "c" (Processor::current_id())
+           [cpu] "c" (x86Processor::current_id())
     );
     // clang-format on
 

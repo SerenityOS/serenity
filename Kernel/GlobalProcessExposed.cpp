@@ -473,7 +473,7 @@ private:
         TRY(json.add("kernel_time", total_time_scheduled.total_kernel));
         TRY(json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel));
         u64 idle_time = 0;
-        Processor::for_each([&](Processor& processor) {
+        x86Processor::for_each([&](x86Processor& processor) {
             idle_time += processor.time_spent_idle();
         });
         TRY(json.add("idle_time", idle_time));
@@ -612,8 +612,8 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
-        TRY(Processor::try_for_each(
-            [&](Processor& proc) -> ErrorOr<void> {
+        TRY(x86Processor::try_for_each(
+            [&](x86Processor& proc) -> ErrorOr<void> {
                 auto& info = proc.info();
                 auto obj = TRY(array.add_object());
                 TRY(obj.add("processor", proc.id()));

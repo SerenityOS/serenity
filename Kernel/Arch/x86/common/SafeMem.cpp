@@ -43,7 +43,7 @@ namespace Kernel {
 ALWAYS_INLINE bool validate_canonical_address(size_t address)
 {
 #if ARCH(X86_64)
-    auto most_significant_bits = Processor::current().virtual_address_bit_width() - 1;
+    auto most_significant_bits = x86Processor::current().virtual_address_bit_width() - 1;
     auto insignificant_bits = address >> most_significant_bits;
     return insignificant_bits == 0 || insignificant_bits == (0xffffffffffffffffull >> most_significant_bits);
 #else

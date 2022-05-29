@@ -93,19 +93,19 @@ static void setup_serial_debug();
 // boot.S expects these functions to exactly have the following signatures.
 // We declare them here to ensure their signatures don't accidentally change.
 extern "C" void init_finished(u32 cpu) __attribute__((used));
-extern "C" [[noreturn]] void init_ap(FlatPtr cpu, Processor* processor_info);
+extern "C" [[noreturn]] void init_ap(FlatPtr cpu, x86Processor* processor_info);
 extern "C" [[noreturn]] void init(BootInfo const&);
 
 READONLY_AFTER_INIT VirtualConsole* tty0;
 
 ProcessID g_init_pid { 0 };
 
-ALWAYS_INLINE static Processor& bsp_processor()
+ALWAYS_INLINE static x86Processor& bsp_processor()
 {
-    // This solves a problem where the bsp Processor instance
+    // This solves a problem where the bsp x86Processor instance
     // gets "re"-initialized in init() when we run all global constructors.
-    alignas(Processor) static u8 bsp_processor_storage[sizeof(Processor)];
-    return (Processor&)bsp_processor_storage;
+    alignas(x86Processor) static u8 bsp_processor_storage[sizeof(x86Processor)];
+    return (x86Processor&)bsp_processor_storage;
 }
 
 // SerenityOS Kernel C++ entry point :^)
@@ -186,7 +186,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
     multiboot_copy_boot_modules_count = multiboot_modules_count;
 
-    new (&bsp_processor()) Processor();
+    new (&bsp_processor()) x86Processor();
     bsp_processor().early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
@@ -267,7 +267,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 //
 // The purpose of init_ap() is to initialize APs for multi-tasking.
 //
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(FlatPtr cpu, Processor* processor_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(FlatPtr cpu, x86Processor* processor_info)
 {
     processor_info->early_initialize(cpu);
 
