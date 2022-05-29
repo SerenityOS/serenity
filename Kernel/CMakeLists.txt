@@ -421,7 +421,7 @@ else()
         Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
-        Arch/aarch64/Processor.cpp
+        Arch/aarch64/aarch64Processor.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
