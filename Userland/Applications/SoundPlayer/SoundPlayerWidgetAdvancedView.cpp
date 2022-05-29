@@ -74,6 +74,8 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_stop_action->set_enabled(false);
     menubar.add_action(*m_stop_action);
 
+    menubar.add_separator();
+
     m_timestamp_label = menubar.add<GUI::Label>();
     m_timestamp_label->set_fixed_width(110);
 
@@ -91,6 +93,8 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     });
     m_next_action->set_enabled(false);
     menubar.add_action(*m_next_action);
+
+    menubar.add_separator();
 
     m_volume_label = &menubar.add<GUI::Label>();
     m_volume_label->set_fixed_width(30);
