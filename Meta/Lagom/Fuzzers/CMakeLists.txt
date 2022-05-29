@@ -66,6 +66,7 @@ add_simple_fuzzer(FuzzRSAKeyParsing LagomCrypto)
 add_simple_fuzzer(FuzzWAVLoader LagomAudio)
 add_simple_fuzzer(FuzzWasmParser LagomWasm)
 add_simple_fuzzer(FuzzWOFF LagomGfx)
+add_simple_fuzzer(FuzzXML LagomXML)
 add_simple_fuzzer(FuzzZip LagomArchive)
 add_simple_fuzzer(FuzzZlibDecompression LagomCompress)
 
