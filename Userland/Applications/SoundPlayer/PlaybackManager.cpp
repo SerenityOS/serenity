@@ -10,7 +10,7 @@
 PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionFromClient> connection)
     : m_connection(connection)
 {
-    // FIXME: The buffer enqueuing should happen on a wholly independend second thread.
+    // FIXME: The buffer enqueuing should happen on a wholly independent second thread.
     m_timer = Core::Timer::construct(PlaybackManager::update_rate_ms, [&]() {
         if (!m_loader)
             return;

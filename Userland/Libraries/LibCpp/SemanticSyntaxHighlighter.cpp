@@ -107,7 +107,7 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, CodeC
         return { palette.base_text(), false };
     }
 }
-void SemanticSyntaxHighlighter::update_spans(Vector<CodeComprehension::TokenInfo> const& tokens_info, Gfx::Palette const& pallete)
+void SemanticSyntaxHighlighter::update_spans(Vector<CodeComprehension::TokenInfo> const& tokens_info, Gfx::Palette const& palette)
 {
     Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens_info) {
@@ -115,7 +115,7 @@ void SemanticSyntaxHighlighter::update_spans(Vector<CodeComprehension::TokenInfo
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.start_line, token.start_column });
         span.range.set_end({ token.end_line, token.end_column + 1 });
-        auto style = style_for_token_type(pallete, token.type);
+        auto style = style_for_token_type(palette, token.type);
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
         span.is_skippable = token.type == CodeComprehension::TokenInfo::SemanticType::Whitespace;

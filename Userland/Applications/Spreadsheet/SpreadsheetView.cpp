@@ -194,7 +194,7 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
 {
     // Override the mouse event so that the the cell that is 'clicked' is not
     // the one right beneath the cursor but instead the one that is referred to
-    // when m_is_hovering_cut_zone as it can be the case that the user is targetting
+    // when m_is_hovering_cut_zone as it can be the case that the user is targeting
     // a cell yet be outside of its bounding box due to the select_padding.
     if (m_is_hovering_cut_zone || m_is_hovering_extend_zone) {
         if (m_is_hovering_cut_zone)

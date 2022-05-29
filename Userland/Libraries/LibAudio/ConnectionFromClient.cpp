@@ -97,7 +97,7 @@ void ConnectionFromClient::custom_event(Core::CustomEvent&)
 
         m_user_queue->discard_samples(available_samples);
 
-        // FIXME: Could we recieve interrupts in a good non-IPC way instead?
+        // FIXME: Could we receive interrupts in a good non-IPC way instead?
         auto result = m_buffer->try_blocking_enqueue(next_chunk, [this]() {
             nanosleep(&m_good_sleep_time, nullptr);
         });

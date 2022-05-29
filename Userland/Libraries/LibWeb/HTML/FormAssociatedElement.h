@@ -11,8 +11,8 @@
 
 namespace Web::HTML {
 
-// Form-associated elements should invoke this macro to inject overidden FormAssociatedElement and HTMLElement
-// methods as needed. If your class wished to override an HTMLElement method that is overidden here, use the
+// Form-associated elements should invoke this macro to inject overridden FormAssociatedElement and HTMLElement
+// methods as needed. If your class wished to override an HTMLElement method that is overridden here, use the
 // following methods instead:
 //
 //    HTMLElement::inserted() -> Use form_associated_element_was_inserted()

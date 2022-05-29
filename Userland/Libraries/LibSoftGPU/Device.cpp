@@ -247,7 +247,7 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
     auto const qy1 = render_bounds_bottom & ~1;
 
     // Rasterize all quads
-    // FIXME: this could be embarrasingly parallel
+    // FIXME: this could be embarrassingly parallel
     for (int qy = qy0; qy <= qy1; qy += 2) {
         for (int qx = qx0; qx <= qx1; qx += 2) {
             PixelQuad quad;
