@@ -51,7 +51,7 @@ extern "C" void exception_common(TrapFrame const* const trap_frame)
         dbgln("esr_el1: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
     }
 
-    Kernel::Processor::halt();
+    Kernel::aarch64Processor::halt();
 }
 
 typedef void (*ctor_func_t)();
@@ -67,7 +67,7 @@ extern "C" [[noreturn]] void __stack_chk_fail();
 
 void __stack_chk_fail()
 {
-    Kernel::Processor::halt();
+    Kernel::aarch64Processor::halt();
 }
 
 namespace Kernel {
@@ -78,10 +78,10 @@ static u32 query_firmware_version();
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
 
-ALWAYS_INLINE static Processor& bootstrap_processor()
+ALWAYS_INLINE static aarch64Processor& bootstrap_processor()
 {
-    alignas(Processor) static u8 bootstrap_processor_storage[sizeof(Processor)];
-    return (Processor&)bootstrap_processor_storage;
+    alignas(aarch64Processor) static u8 bootstrap_processor_storage[sizeof(aarch64Processor)];
+    return (aarch64Processor&)bootstrap_processor_storage;
 }
 
 extern "C" [[noreturn]] void init()
@@ -91,7 +91,7 @@ extern "C" [[noreturn]] void init()
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
     dbgln();
 
-    new (&bootstrap_processor()) Processor();
+    new (&bootstrap_processor()) aarch64Processor();
     bootstrap_processor().initialize(0);
 
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel

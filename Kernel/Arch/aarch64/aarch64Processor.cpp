@@ -14,9 +14,9 @@ extern "C" uintptr_t vector_table_el1;
 
 namespace Kernel {
 
-Processor* g_current_processor;
+aarch64Processor* g_current_processor;
 
-void Processor::initialize(u32 cpu)
+void aarch64Processor::initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
 
@@ -32,7 +32,7 @@ void Processor::initialize(u32 cpu)
     g_current_processor = this;
 }
 
-[[noreturn]] void Processor::halt()
+[[noreturn]] void aarch64Processor::halt()
 {
     for (;;)
         asm volatile("wfi");

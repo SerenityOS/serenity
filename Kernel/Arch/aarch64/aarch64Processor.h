@@ -22,7 +22,7 @@ class PageDirectory;
 };
 
 class Thread;
-class Processor;
+class aarch64Processor;
 
 // FIXME This needs to go behind some sort of platform abstraction
 //       it is used between Thread and Processor.
@@ -32,9 +32,9 @@ struct [[gnu::aligned(16)]] FPUState
 };
 
 // FIXME: Remove this once we support SMP in aarch64
-extern Processor* g_current_processor;
+extern aarch64Processor* g_current_processor;
 
-class Processor {
+class aarch64Processor {
 public:
     void initialize(u32 cpu);
 
@@ -133,7 +133,7 @@ public:
         return nullptr;
     }
 
-    ALWAYS_INLINE static Processor& current()
+    ALWAYS_INLINE static aarch64Processor& current()
     {
         return *g_current_processor;
     }

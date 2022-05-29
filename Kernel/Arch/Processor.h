@@ -23,8 +23,8 @@ namespace Kernel {
 #if ARCH(X86_64) || ARCH(I386)
 using ProcessorImpl = x86Processor;
 #elif ARCH(AARCH64)
-using ProcessorImpl = Processor;
-using x86Processor = Processor;  // FIXME: remove this soon
+using ProcessorImpl = aarch64Processor;
+using x86Processor = aarch64Processor;  // FIXME: remove this soon
 #endif
 
 namespace Memory {

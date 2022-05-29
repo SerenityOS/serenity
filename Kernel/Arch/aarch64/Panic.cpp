@@ -28,5 +28,5 @@ void Kernel::__panic(char const* file, unsigned int line, char const* function)
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
 
-    Processor::halt();
+    aarch64Processor::halt();
 }
