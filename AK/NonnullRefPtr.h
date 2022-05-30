@@ -218,6 +218,24 @@ public:
         AK::swap(m_ptr, other.m_ptr);
     }
 
+    bool operator==(NonnullRefPtr& other)
+    {
+        return ptr() == &other.ptr();
+    }
+    bool operator!=(NonnullRefPtr& other)
+    {
+        return ptr() != &other.ptr();
+    }
+
+    bool operator==(NonnullRefPtr const& other) const
+    {
+        return ptr() == other.ptr();
+    }
+    bool operator!=(NonnullRefPtr const& other) const
+    {
+        return ptr() != other.ptr();
+    }
+
     // clang-format off
 private:
     NonnullRefPtr() = delete;
