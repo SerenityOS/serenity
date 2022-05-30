@@ -10,6 +10,8 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/InterruptManagement.h>
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/CPU.h>
@@ -106,6 +108,10 @@ extern "C" [[noreturn]] void init()
 
     load_kernel_symbol_table();
 
+    initialize_interrupts();
+    InterruptManagement::initialize();
+    Processor::enable_interrupts();
+
     auto firmware_version = query_firmware_version();
     dbgln("Firmware version: {}", firmware_version);
 
@@ -117,17 +123,16 @@ extern "C" [[noreturn]] void init()
         draw_logo();
     }
 
+    auto& timer = RPi::Timer::the();
+    timer.set_interrupt_interval_usec(1'000'000);
+    timer.enable_interrupt_mode();
+
     dbgln("Enter loop");
 
-    auto& timer = RPi::Timer::the();
-    u64 start_musec = 0;
-    for (;;) {
-        u64 now_musec;
-        while ((now_musec = timer.microseconds_since_boot()) - start_musec < 1'000'000)
-            ;
-        start_musec = now_musec;
-        dbgln("Timer: {}", now_musec);
-    }
+    // This will not disable interrupts, so the timer will still fire and show that
+    // interrupts are working!
+    for (;;)
+        asm volatile("wfi");
 }
 
 class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
