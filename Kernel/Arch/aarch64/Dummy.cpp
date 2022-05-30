@@ -7,7 +7,6 @@
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 
-#include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -136,24 +135,4 @@ void KString::operator delete(void*)
 
 extern "C" {
 FlatPtr kernel_mapping_base;
-}
-
-// InterruptManagement.cpp
-namespace Kernel {
-
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8)
-{
-    VERIFY_NOT_REACHED();
-}
-
-InterruptManagement& InterruptManagement::the()
-{
-    VERIFY_NOT_REACHED();
-}
-
-RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8)
-{
-    VERIFY_NOT_REACHED();
-}
-
 }
