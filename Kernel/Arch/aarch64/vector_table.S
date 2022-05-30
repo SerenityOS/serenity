@@ -26,6 +26,7 @@
 .endm
 
 .extern exception_common
+.extern handle_interrupt
 
 //
 // Save all register states to the current stack
@@ -161,7 +162,7 @@ synchronous_current_elsp_el0:
 
 irq_current_elsp_el0:
     save_current_context
-    bl exception_common
+    bl handle_interrupt
     restore_previous_context
     eret
 
