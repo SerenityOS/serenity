@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Platform.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
 #ifdef __cplusplus
@@ -14,7 +13,7 @@ extern "C" {
 #endif
 
 struct __attribute__((packed)) __mcontext {
-#if ARCH(I386)
+#ifdef __i386__
     uint32_t eax;
     uint32_t ecx;
     uint32_t edx;
