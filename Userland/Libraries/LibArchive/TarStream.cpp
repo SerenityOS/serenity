@@ -63,7 +63,7 @@ bool TarFileStream::discard_or_error(size_t count)
         return false;
     }
     m_tar_stream.m_file_offset += count;
-    return m_tar_stream.m_stream.discard_or_error(count);
+    return m_tar_stream.discard(count);
 }
 
 TarInputStream::TarInputStream(InputStream& stream)
@@ -71,10 +71,10 @@ TarInputStream::TarInputStream(InputStream& stream)
 {
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
         m_finished = true;
-        m_stream.handle_any_error(); // clear out errors so we dont assert
+        m_stream.handle_any_error(); // clear out errors so we don't assert
         return;
     }
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
+    VERIFY(discard(block_size - sizeof(TarFileHeader)));
 }
 
 static constexpr unsigned long block_ceiling(unsigned long offset)
@@ -88,7 +88,7 @@ void TarInputStream::advance()
         return;
 
     m_generation++;
-    VERIFY(m_stream.discard_or_error(block_ceiling(m_header.size()) - m_file_offset));
+    VERIFY(discard(block_ceiling(m_header.size()) - m_file_offset));
     m_file_offset = 0;
 
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
@@ -100,7 +100,7 @@ void TarInputStream::advance()
         return;
     }
 
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
+    VERIFY(discard(block_size - sizeof(TarFileHeader)));
 }
 
 bool TarInputStream::valid() const
@@ -121,6 +121,25 @@ TarFileStream TarInputStream::file_contents()
 {
     VERIFY(!m_finished);
     return TarFileStream(*this);
+}
+
+bool TarInputStream::discard(size_t count)
+{
+    errno = 0;
+    auto result = m_stream.discard_or_error(count);
+    if (result)
+        return true;
+    if (errno != ESPIPE)
+        return false;
+    m_stream.handle_any_error();
+    char buffer[block_size];
+    while (count > 0) {
+        auto size = min(count, sizeof(buffer));
+        if (!m_stream.read_or_error({ buffer, size }))
+            return false;
+        count -= size;
+    }
+    return true;
 }
 
 TarOutputStream::TarOutputStream(OutputStream& stream)

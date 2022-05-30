@@ -44,6 +44,8 @@ public:
     ErrorOr<void> for_each_extended_header(F func);
 
 private:
+    bool discard(size_t count);
+
     TarFileHeader m_header;
     InputStream& m_stream;
     unsigned long m_file_offset { 0 };
