@@ -142,8 +142,6 @@ public:
     {
         VERIFY_NOT_REACHED();
     }
-
-    [[noreturn]] static void halt();
 };
 
 }

@@ -25,7 +25,7 @@ static void print_location(SourceLocation const& location)
     dump_backtrace(g_ubsan_is_deadly ? PrintToScreen::Yes : PrintToScreen::No);
     if (g_ubsan_is_deadly) {
         critical_dmesgln("UB is configured to be deadly, halting the system.");
-        x86Processor::halt();
+        Processor::halt();
     }
 }
 

@@ -51,7 +51,7 @@ extern "C" void exception_common(TrapFrame const* const trap_frame)
         dbgln("esr_el1: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
     }
 
-    Kernel::aarch64Processor::halt();
+    Kernel::Processor::halt();
 }
 
 typedef void (*ctor_func_t)();
@@ -67,7 +67,7 @@ extern "C" [[noreturn]] void __stack_chk_fail();
 
 void __stack_chk_fail()
 {
-    Kernel::aarch64Processor::halt();
+    Kernel::Processor::halt();
 }
 
 namespace Kernel {

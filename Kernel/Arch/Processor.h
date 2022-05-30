@@ -72,6 +72,11 @@ struct ProcessorMessageEntry {
     ProcessorMessage* msg;
 };
 
+class Processor {
+public:
+    [[noreturn]] static void halt();
+};
+
 template<typename T>
 class ProcessorSpecific {
 public:

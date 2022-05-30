@@ -32,10 +32,4 @@ void aarch64Processor::initialize(u32 cpu)
     g_current_processor = this;
 }
 
-[[noreturn]] void aarch64Processor::halt()
-{
-    for (;;)
-        asm volatile("wfi");
-}
-
 }
