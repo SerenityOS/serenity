@@ -12,10 +12,10 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/x86/IRQController.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IOAPIC.h>
-#include <Kernel/Interrupts/IRQController.h>
 
 namespace Kernel {
 

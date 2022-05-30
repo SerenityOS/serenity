@@ -5,6 +5,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -38,7 +39,6 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>

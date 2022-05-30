@@ -5,9 +5,9 @@
  */
 
 #include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 
 namespace Kernel {
 

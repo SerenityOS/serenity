@@ -7,8 +7,8 @@
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
