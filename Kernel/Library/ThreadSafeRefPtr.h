@@ -62,7 +62,7 @@ struct RefPtrTraits {
             if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL
-            Kernel::x86Processor::wait_check();
+            Kernel::Processor::wait_check();
 #endif
         }
         return expected;
@@ -79,7 +79,7 @@ struct RefPtrTraits {
             if (!is_null(expected))
                 return false;
 #ifdef KERNEL
-            Kernel::x86Processor::wait_check();
+            Kernel::Processor::wait_check();
 #endif
         }
         return true;
@@ -98,7 +98,7 @@ struct RefPtrTraits {
             if ((bits & 1) == 0)
                 break;
 #ifdef KERNEL
-            Kernel::x86Processor::wait_check();
+            Kernel::Processor::wait_check();
 #endif
         }
         VERIFY((bits & 1) == 0);

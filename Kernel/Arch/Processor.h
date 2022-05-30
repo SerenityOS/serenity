@@ -74,6 +74,8 @@ struct ProcessorMessageEntry {
 
 class Processor {
 public:
+    static void wait_check();
+
     [[noreturn]] static void halt();
 };
 

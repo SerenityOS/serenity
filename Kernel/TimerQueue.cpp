@@ -153,7 +153,7 @@ bool TimerQueue::cancel_timer(Timer& timer, bool* was_in_use)
     // At this point the deferred call is queued and is being executed
     // on another processor. We need to wait until it's complete!
     while (!timer.is_callback_finished())
-        x86Processor::wait_check();
+        Processor::wait_check();
 
     return false;
 }

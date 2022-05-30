@@ -80,7 +80,7 @@ public:
         // a strong reference is done
         while (current_consumers > 0) {
 #ifdef KERNEL
-            Kernel::x86Processor::wait_check();
+            Kernel::Processor::wait_check();
 #else
             sched_yield();
 #endif

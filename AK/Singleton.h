@@ -58,7 +58,7 @@ public:
             // Someone else was faster, wait until they're done
             while (obj == (T*)0x1) {
 #ifdef KERNEL
-                Kernel::x86Processor::wait_check();
+                Kernel::Processor::wait_check();
 #else
                 sched_yield();
 #endif

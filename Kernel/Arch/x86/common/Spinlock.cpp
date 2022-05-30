@@ -14,7 +14,7 @@ u32 Spinlock::lock()
     x86Processor::enter_critical();
     cli();
     while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
-        x86Processor::wait_check();
+        Processor::wait_check();
     track_lock_acquire(m_rank);
     return prev_flags;
 }
@@ -43,7 +43,7 @@ u32 RecursiveSpinlock::lock()
     while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
         if (expected == cpu)
             break;
-        x86Processor::wait_check();
+        Processor::wait_check();
         expected = 0;
     }
     if (m_recursions == 0)

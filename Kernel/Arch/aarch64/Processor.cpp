@@ -12,6 +12,11 @@
 
 namespace Kernel {
 
+void Processor::wait_check()
+{
+    VERIFY_NOT_REACHED();
+}
+
 [[noreturn]] void Processor::halt()
 {
     for (;;)

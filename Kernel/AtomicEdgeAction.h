@@ -24,7 +24,7 @@ public:
             if (m_atomic_ref_count.compare_exchange_strong(expected, desired, AK::memory_order_relaxed))
                 break;
 
-            x86Processor::wait_check();
+            Processor::wait_check();
 
             expected &= ~1;
             desired = expected + (1 << 1);
@@ -55,7 +55,7 @@ public:
             if (m_atomic_ref_count.compare_exchange_strong(expected, desired, AK::memory_order_relaxed))
                 break;
 
-            x86Processor::wait_check();
+            Processor::wait_check();
 
             expected &= ~1;
             VERIFY(expected != 0); // Someone should always have at least one reference

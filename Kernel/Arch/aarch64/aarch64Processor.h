@@ -53,10 +53,6 @@ public:
     {
         VERIFY_NOT_REACHED();
     }
-    ALWAYS_INLINE static void wait_check()
-    {
-        VERIFY_NOT_REACHED();
-    }
 
     ALWAYS_INLINE u8 physical_address_bit_width() const
     {

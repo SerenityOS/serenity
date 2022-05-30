@@ -173,13 +173,6 @@ public:
         asm volatile("pause");
     }
 
-    ALWAYS_INLINE static void wait_check()
-    {
-        x86Processor::pause();
-        if (x86Processor::is_smp_enabled())
-            x86Processor::current().smp_process_pending_messages();
-    }
-
     [[noreturn]] static void halt();
 
     static void flush_entire_tlb_local()
