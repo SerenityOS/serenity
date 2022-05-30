@@ -233,7 +233,7 @@ void BookmarksBarWidget::update_content_size()
 
     for (size_t i = 0; i < m_bookmarks.size(); ++i) {
         auto& bookmark = m_bookmarks.at(i);
-        if (x_position + bookmark.width() > width()) {
+        if (x_position + bookmark.width() + m_additional->width() > width()) {
             m_last_visible_index = i;
             break;
         }
