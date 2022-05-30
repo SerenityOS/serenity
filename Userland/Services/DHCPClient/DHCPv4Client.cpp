@@ -151,18 +151,15 @@ void DHCPv4Client::try_discover_ifs()
     if (ifs_result.is_error())
         return;
 
-    dbgln("Interfaces with DHCP enabled: {}", m_interfaces_with_dhcp_enabled);
+    dbgln_if(DHCPV4CLIENT_DEBUG, "Interfaces with DHCP enabled: {}", m_interfaces_with_dhcp_enabled);
     bool sent_discover_request = false;
     Interfaces& ifs = ifs_result.value();
     for (auto& iface : ifs.ready) {
-        dbgln("Checking interface {} / {}", iface.ifname, iface.current_ip_address);
+        dbgln_if(DHCPV4CLIENT_DEBUG, "Checking interface {} / {}", iface.ifname, iface.current_ip_address);
         if (!m_interfaces_with_dhcp_enabled.contains_slow(iface.ifname))
             continue;
-        if (iface.current_ip_address != IPv4Address { 0, 0, 0, 0 }) {
-            dbgln_if(DHCPV4CLIENT_DEBUG, "Resetting params for {}", iface.ifname);
-            set_params(iface, IPv4Address { 0, 0, 0, 0 }, IPv4Address { 0, 0, 0, 0 }, {});
-            iface.current_ip_address = IPv4Address { 0, 0, 0, 0 };
-        }
+        if (iface.current_ip_address != IPv4Address { 0, 0, 0, 0 })
+            continue;
 
         dhcp_discover(iface);
         sent_discover_request = true;
