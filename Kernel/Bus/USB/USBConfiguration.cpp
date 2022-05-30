@@ -12,7 +12,7 @@
 
 namespace Kernel::USB {
 
-ErrorOr<void> USBConfiguration::get_interfaces()
+ErrorOr<void> USBConfiguration::enumerate_interfaces()
 {
     auto descriptor_hierarchy_buffer = TRY(FixedArray<u8>::try_create(m_descriptor.total_length)); // Buffer for us to store the entire hierarchy into
 

@@ -35,7 +35,7 @@ public:
 
     Vector<USBInterface> const& interfaces() const { return m_interfaces; }
 
-    ErrorOr<void> get_interfaces();
+    ErrorOr<void> enumerate_interfaces();
 
 private:
     Device& m_device;                              // Reference to the device linked to this configuration

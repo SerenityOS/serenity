@@ -132,7 +132,7 @@ ErrorOr<void> Device::enumerate_device()
         }
 
         USBConfiguration device_configuration(*this, configuration_descriptor);
-        TRY(device_configuration.get_interfaces());
+        TRY(device_configuration.enumerate_interfaces());
         m_configurations.append(device_configuration);
     }
 
