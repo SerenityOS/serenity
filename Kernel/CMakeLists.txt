@@ -417,6 +417,7 @@ else()
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
+        Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
