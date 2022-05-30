@@ -41,4 +41,24 @@ long double cimagl(long double complex z);
 #define cimagf(z) ((float)__imag__((float complex)z))
 #define cimagl(z) ((long double)__imag__((long double complex)z))
 
+double cabs(double complex z);
+flot cabsf(float complex z);
+long double cabsl(long double complex z);
+
+double carg(double complex z);
+float cargf(float complex z);
+long double cargl(long double complex z);
+
+double complex clog(double complex z);
+float complex clogf(float complex z);
+long double complex clogl(long double complex z);
+
+double complex conj(double complex z);
+float complex conjf(float complex z);
+long double complex conjl(long double complex z);
+
+double complex cproj(double complex z);
+float complex cprojf(float complex z);
+long double complex cprojl(long double complex z);
+
 __END_DECLS
