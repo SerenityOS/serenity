@@ -401,6 +401,7 @@ else()
     set(RPI_SOURCES
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
+        Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/Timer.cpp

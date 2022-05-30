@@ -22,6 +22,8 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) const = 0;
 
+    virtual u64 pending_interrupts() const = 0;
+
     virtual StringView model() const = 0;
 
 protected:
