@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Platform.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
 #ifdef __cplusplus
