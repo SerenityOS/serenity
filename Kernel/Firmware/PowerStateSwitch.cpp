@@ -80,7 +80,7 @@ void PowerStateSwitchNode::reboot()
     IO::out8(0x64, 0xFE);
     dbgln("reboot attempts failed, applications will stop responding.");
     dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
-    x86Processor::halt();
+    Processor::halt();
 }
 
 void PowerStateSwitchNode::poweroff()
@@ -102,7 +102,7 @@ void PowerStateSwitchNode::poweroff()
     IO::out16(0xb004, 0x2000);
     dbgln("shutdown attempts failed, applications will stop responding.");
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
-    x86Processor::halt();
+    Processor::halt();
 }
 
 }
