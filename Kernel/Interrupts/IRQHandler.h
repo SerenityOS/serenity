@@ -8,8 +8,8 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/IRQController.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/IRQController.h>
 
 namespace Kernel {
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Interrupts/IRQController.h>
+#include <Kernel/Arch/x86/IRQController.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {

@@ -159,7 +159,6 @@ set(KERNEL_SOURCES
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IOAPIC.cpp
     Interrupts/IRQHandler.cpp
-    Interrupts/InterruptManagement.cpp
     Interrupts/PIC.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/SpuriousInterruptHandler.cpp
@@ -331,9 +330,10 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp

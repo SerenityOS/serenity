@@ -9,6 +9,7 @@
 #include <AK/Try.h>
 #include <AK/UBSanitizer.h>
 #include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -20,7 +21,6 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkingManagement.h>
