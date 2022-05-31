@@ -727,7 +727,7 @@ do_dev() {
         pushd "$git_repo"
         if [ ! -d "$git_repo/.git" ]; then
             git init .
-            git add .
+            git add --all --force
             git commit -a -m 'Initial import'
         fi
         # Make it allow pushes from other local checkouts
