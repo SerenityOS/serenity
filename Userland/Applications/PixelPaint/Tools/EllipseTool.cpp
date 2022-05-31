@@ -42,7 +42,7 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
         break;
     case FillMode::FillAntiAliased: {
         Gfx::AntiAliasingPainter aa_painter { painter };
-        aa_painter.draw_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        aa_painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
         break;
     }
     default:

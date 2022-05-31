@@ -192,14 +192,14 @@ void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_circle(IntPoint const& center, int radius, Color color)
+void Gfx::AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color)
 {
     if (radius <= 0)
         return;
     draw_ellipse_part(center, radius, radius, color, false, {});
 }
 
-void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color)
+void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color)
 {
     auto center = a_rect.center();
     auto radius_a = a_rect.width() / 2;
@@ -207,7 +207,7 @@ void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color)
     if (radius_a <= 0 || radius_b <= 0)
         return;
     if (radius_a == radius_b)
-        return draw_circle(center, radius_a, color);
+        return fill_circle(center, radius_a, color);
     auto x_paint_range = draw_ellipse_part(center, radius_a, radius_b, color, false, {});
     // FIXME: This paints some extra fill pixels that are clipped
     draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range);
@@ -471,11 +471,11 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
 
     // FIXME: Don't draw a whole circle each time
     if (top_left_radius)
-        draw_circle(top_left_corner, top_left_radius, color);
+        fill_circle(top_left_corner, top_left_radius, color);
     if (top_right_radius)
-        draw_circle(top_right_corner, top_right_radius, color);
+        fill_circle(top_right_corner, top_right_radius, color);
     if (bottom_left_radius)
-        draw_circle(bottom_left_corner, bottom_left_radius, color);
+        fill_circle(bottom_left_corner, bottom_left_radius, color);
     if (bottom_right_radius)
-        draw_circle(bottom_right_corner, bottom_right_radius, color);
+        fill_circle(bottom_right_corner, bottom_right_radius, color);
 }
