@@ -21,7 +21,7 @@ new file mode 100644
 index 0000000..941bf09
 --- /dev/null
 +++ b/os/os-serenity.h
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,61 @@
 +#ifndef FIO_OS_SERENITY_H
 +#define FIO_OS_SERENITY_H
 +
@@ -43,26 +43,6 @@ index 0000000..941bf09
 +
 +#define OS_MAP_ANON		MAP_ANON
 +
-+/* Serenity doesn't support:
-+ *  - MADV_RANDOM
-+ *  - MADV_SEQUENTIAL
-+ *
-+ * So any values will work for these defines.
-+ */
-+#ifndef POSIX_MADV_RANDOM
-+#define POSIX_MADV_RANDOM 0
-+#endif
-+
-+#ifndef POSIX_MADV_SEQUENTIAL
-+#define POSIX_MADV_SEQUENTIAL 0
-+#endif
-+
-+/*
-+ * Serenity doesn't have O_SYNC, so define it here so it can be
-+ * rejected at runtime instead.
-+ */
-+#define O_SYNC		0x2000000
-+
 +static inline int blockdev_size(struct fio_file *f, unsigned long long *bytes)
 +{
 +	// TODO: Implement
@@ -79,12 +59,6 @@ index 0000000..941bf09
 +{
 +	// TODO: Implement
 +	return 0; 
-+}
-+
-+static inline int nice(int incr)
-+{
-+	// TODO: Implement
-+	return 0;
 +}
 +
 +static inline unsigned long long get_fs_free_size(const char *path)
