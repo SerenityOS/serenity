@@ -28,8 +28,9 @@ public:
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint const& delta) { m_transform.translate(delta); }
 
-    void draw_circle(IntPoint const& center, int radius, Color);
-    void draw_ellipse(IntRect const& a_rect, Color);
+    void fill_circle(IntPoint const& center, int radius, Color);
+    void fill_ellipse(IntRect const& a_rect, Color);
+
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
 
