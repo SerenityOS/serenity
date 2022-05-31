@@ -20,7 +20,7 @@ index 5c86edd..6ccf7f6 100644
  #define _PW_NAME_LEN	8
  #else
  #define _PW_NAME_LEN	MAXLOGNAME - 1
-@@ -116,6 +116,15 @@
+@@ -116,6 +116,14 @@
  #define nice(x) (int)0
  #endif /* __HAIKU__ */
  
@@ -30,7 +30,6 @@ index 5c86edd..6ccf7f6 100644
 +#define _CS_PATH 1
 +#define WCOREFLAG 0200
 +#define WCOREDUMP(x) ((x) & WCOREFLAG)
-+#define nice(x) (int)0
 +#endif /* __serenity__ */
 +
  #ifndef HAVE_SETRESGID
