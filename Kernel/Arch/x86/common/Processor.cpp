@@ -14,12 +14,12 @@ void Processor::wait_check()
 {
     x86Processor::pause();
     if (x86Processor::is_smp_enabled())
-      x86Processor::current().smp_process_pending_messages();
+        x86Processor::current().smp_process_pending_messages();
 }
 
 [[noreturn]] void Processor::halt()
 {
-  x86Processor::halt();
+    x86Processor::halt();
 }
 
 }

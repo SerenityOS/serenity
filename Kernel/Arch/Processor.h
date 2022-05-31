@@ -24,7 +24,7 @@ namespace Kernel {
 using ProcessorImpl = x86Processor;
 #elif ARCH(AARCH64)
 using ProcessorImpl = aarch64Processor;
-using x86Processor = aarch64Processor;  // FIXME: remove this soon
+using x86Processor = aarch64Processor; // FIXME: remove this soon
 #endif
 
 namespace Memory {
