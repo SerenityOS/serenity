@@ -17,8 +17,8 @@ index 1153e0c..9c70190 100644
  # libsdl present
 -CFLAGS =  -Wall -O2 -DUSESDL `sdl-config --cflags`
 -LFLAGS = `sdl-config --libs`
-+CFLAGS =  -Wall -O2 -DUSESDL -I../../SDL2/SDL-main-serenity/include -D_REENTRANT
-+LFLAGS = -L../../SDL2 -lSDL2
++CFLAGS =  -Wall -O2 -DUSESDL -I$(SERENITY_INSTALL_ROOT)/usr/local/include/SDL2 -D_REENTRANT
++LFLAGS = -L$(SERENITY_INSTALL_ROOT)/usr/local/lib -lSDL2
  
  # no libsdl present
  #CFLAGS =  -Wall -O2
