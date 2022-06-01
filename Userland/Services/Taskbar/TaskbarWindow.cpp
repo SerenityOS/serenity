@@ -344,6 +344,10 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
         break;
     }
+    case GUI::Event::WM_SuperDKeyPressed: {
+        toggle_show_desktop();
+        break;
+    }
     case GUI::Event::WM_SuperDigitKeyPressed: {
         auto& digit_event = static_cast<GUI::WMSuperDigitKeyPressedEvent&>(event);
         auto index = digit_event.digit() != 0 ? digit_event.digit() - 1 : 9;

@@ -67,6 +67,7 @@ public:
         WM_AppletAreaSizeChanged,
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
+        WM_SuperDKeyPressed,
         WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
         WM_KeymapChanged,
@@ -113,6 +114,14 @@ class WMSuperSpaceKeyPressedEvent : public WMEvent {
 public:
     explicit WMSuperSpaceKeyPressedEvent(int client_id)
         : WMEvent(Event::Type::WM_SuperSpaceKeyPressed, client_id, 0)
+    {
+    }
+};
+
+class WMSuperDKeyPressedEvent : public WMEvent {
+public:
+    explicit WMSuperDKeyPressedEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperDKeyPressed, client_id, 0)
     {
     }
 };

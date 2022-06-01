@@ -64,6 +64,12 @@ void ConnectionToWindowManagerServer::super_space_key_pressed(i32 wm_id)
         Core::EventLoop::current().post_event(*window, make<WMSuperSpaceKeyPressedEvent>(wm_id));
 }
 
+void ConnectionToWindowManagerServer::super_d_key_pressed(i32 wm_id)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMSuperDKeyPressedEvent>(wm_id));
+}
+
 void ConnectionToWindowManagerServer::super_digit_key_pressed(i32 wm_id, u8 digit)
 {
     if (auto* window = Window::from_window_id(wm_id))
