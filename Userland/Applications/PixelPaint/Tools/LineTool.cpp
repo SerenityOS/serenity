@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -12,10 +13,12 @@
 #include <AK/Math.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
+#include <LibGfx/AntiAliasingPainter.h>
 
 namespace PixelPaint {
 
@@ -53,6 +56,19 @@ void LineTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_editor->update();
 }
 
+void LineTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, Color color, int thickness)
+{
+    if (m_antialias_enabled) {
+        Gfx::AntiAliasingPainter aa_painter { painter };
+        auto as_float_point = [](auto const& point) {
+            return Gfx::FloatPoint { point.x(), point.y() };
+        };
+        aa_painter.draw_line(as_float_point(start_position), as_float_point(end_position), color, thickness);
+    } else {
+        painter.draw_line(start_position, end_position, color, thickness);
+    }
+}
+
 void LineTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
     if (!layer)
@@ -61,7 +77,7 @@ void LineTool::on_mouseup(Layer* layer, MouseEvent& event)
     auto& layer_event = event.layer_event();
     if (layer_event.button() == m_drawing_button) {
         GUI::Painter painter(layer->currently_edited_bitmap());
-        painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
+        draw_using(painter, m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();
         m_editor->update();
@@ -103,7 +119,7 @@ void LineTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     auto preview_start = editor_stroke_position(m_line_start_position, m_thickness);
     auto preview_end = editor_stroke_position(m_line_end_position, m_thickness);
-    painter.draw_line(preview_start, preview_end, m_editor->color_for(m_drawing_button), AK::max(m_thickness * m_editor->scale(), 1));
+    draw_using(painter, preview_start, preview_end, m_editor->color_for(m_drawing_button), AK::max(m_thickness * m_editor->scale(), 1));
 }
 
 void LineTool::on_keydown(GUI::KeyEvent& event)
@@ -138,6 +154,19 @@ GUI::Widget* LineTool::get_properties_widget()
             m_thickness = value;
         };
         set_primary_slider(&thickness_slider);
+
+        auto& mode_container = m_properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(20);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:");
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
+
+        auto& aa_enable_checkbox = mode_container.add<GUI::CheckBox>("Anti-alias");
+        aa_enable_checkbox.on_checked = [&](bool checked) {
+            m_antialias_enabled = checked;
+        };
     }
 
     return m_properties_widget.ptr();
