@@ -188,6 +188,7 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     GUI::AbstractScrollableWidget::theme_change_event(event);
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
+    client().async_load_url(m_url);
     request_repaint();
 }
 
