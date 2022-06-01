@@ -110,6 +110,11 @@ void TaskbarWindow::config_string_did_change(String const& domain, String const&
 
 void TaskbarWindow::show_desktop_button_clicked(unsigned)
 {
+    toggle_show_desktop();
+}
+
+void TaskbarWindow::toggle_show_desktop()
+{
     GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
 }
 
