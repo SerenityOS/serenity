@@ -10,5 +10,5 @@ configopts=("--prefix=/usr/local" "--disable-nls")
 export CFLAGS='-O3 -flto'
 
 configure() {
-    run env HOSTCC=gcc ./"$configscript" "${configopts[@]}"
+    run ./"${configscript}" "${configopts[@]}"
 }
