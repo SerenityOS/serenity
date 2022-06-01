@@ -1300,7 +1300,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         return;
     }
 
-    if (type.nullable) {
+    if (type.nullable && !is<UnionType>(type)) {
         if (type.is_string()) {
             scoped_generator.append(R"~~~(
     if (@value@.is_null()) {
@@ -1365,7 +1365,53 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     @result_expression@ @value@;
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
-        TODO();
+        auto& union_type = verify_cast<IDL::UnionType>(type);
+        auto union_types = union_type.flattened_member_types();
+        auto union_generator = scoped_generator.fork();
+
+        union_generator.append(R"~~~(
+    @result_expression@ @value@.visit(
+)~~~");
+
+        for (size_t current_union_type_index = 0; current_union_type_index < union_types.size(); ++current_union_type_index) {
+            auto& current_union_type = union_types.at(current_union_type_index);
+            auto cpp_type = IDL::idl_type_name_to_cpp_type(current_union_type, interface);
+            union_generator.set("current_type", cpp_type.name);
+            union_generator.append(R"~~~(
+        [&vm, &global_object](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
+            // These may be unused.
+            (void)vm;
+            (void)global_object;
+)~~~");
+
+            // NOTE: While we are using const&, the underlying type for wrappable types in unions is (Nonnull)RefPtr, which are not references.
+            generate_wrap_statement(union_generator, String::formatted("visited_union_value{}", recursion_depth), current_union_type, interface, "return"sv, WrappingReference::No, recursion_depth + 1);
+
+            // End of current visit lambda.
+            // The last lambda cannot have a trailing comma on the closing brace, unless the type is nullable, where an extra lambda will be generated for the Empty case.
+            if (current_union_type_index != union_types.size() - 1 || type.nullable) {
+                union_generator.append(R"~~~(
+        },
+)~~~");
+            } else {
+                union_generator.append(R"~~~(
+        }
+)~~~");
+            }
+        }
+
+        if (type.nullable) {
+            union_generator.append(R"~~~(
+        [](Empty) -> JS::Value {
+            return JS::js_null();
+        }
+)~~~");
+        }
+
+        // End of visit.
+        union_generator.append(R"~~~(
+    );
+)~~~");
     } else if (interface.enumerations.contains(type.name)) {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
@@ -1404,7 +1450,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         }
     }
 
-    if (type.nullable) {
+    if (type.nullable && !is<UnionType>(type)) {
         scoped_generator.append(R"~~~(
     }
 )~~~");
