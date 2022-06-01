@@ -13,16 +13,16 @@
 
 namespace GUI {
 
-class ConnectionToWindowMangerServer final
+class ConnectionToWindowManagerServer final
     : public IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
     , public WindowManagerClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToWindowMangerServer, "/tmp/portal/wm")
+    IPC_CLIENT_CONNECTION(ConnectionToWindowManagerServer, "/tmp/portal/wm")
 
 public:
-    static ConnectionToWindowMangerServer& the();
+    static ConnectionToWindowManagerServer& the();
 
 private:
-    ConnectionToWindowMangerServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToWindowManagerServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, move(socket))
     {
     }

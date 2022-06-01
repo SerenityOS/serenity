@@ -13,7 +13,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
@@ -110,7 +110,7 @@ void TaskbarWindow::config_string_did_change(String const& domain, String const&
 
 void TaskbarWindow::show_desktop_button_clicked(unsigned)
 {
-    GUI::ConnectionToWindowMangerServer::the().async_toggle_show_desktop();
+    GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
 }
 
 void TaskbarWindow::on_screen_rects_change(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
@@ -129,7 +129,7 @@ void TaskbarWindow::update_applet_area()
         return;
     main_widget()->do_layout();
     auto new_rect = Gfx::IntRect({}, m_applet_area_size).centered_within(m_applet_area_container->screen_relative_rect());
-    GUI::ConnectionToWindowMangerServer::the().async_set_applet_area_position(new_rect.location());
+    GUI::ConnectionToWindowManagerServer::the().async_set_applet_area_position(new_rect.location());
 }
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(WindowIdentifier const& identifier)
@@ -156,9 +156,9 @@ void TaskbarWindow::add_window_button(::Window& window, WindowIdentifier const& 
         // false because window is the modal window's owner (which is not
         // active)
         if (window->is_minimized() || !button->is_checked()) {
-            GUI::ConnectionToWindowMangerServer::the().async_set_active_window(identifier.client_id(), identifier.window_id());
+            GUI::ConnectionToWindowManagerServer::the().async_set_active_window(identifier.client_id(), identifier.window_id());
         } else {
-            GUI::ConnectionToWindowMangerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
+            GUI::ConnectionToWindowManagerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
         }
     };
 }
