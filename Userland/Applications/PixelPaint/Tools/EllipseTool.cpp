@@ -33,18 +33,21 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
         ellipse_intersecting_rect = Gfx::IntRect::from_two_points(start_position, end_position);
     }
 
+    Gfx::AntiAliasingPainter aa_painter { painter };
+
     switch (m_fill_mode) {
     case FillMode::Outline:
-        painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
+        if (m_antialias_enabled)
+            aa_painter.draw_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
+        else
+            painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
         break;
     case FillMode::Fill:
-        painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        if (m_antialias_enabled)
+            aa_painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        else
+            painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
         break;
-    case FillMode::FillAntiAliased: {
-        Gfx::AntiAliasingPainter aa_painter { painter };
-        aa_painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
-        break;
-    }
     default:
         VERIFY_NOT_REACHED();
     }
@@ -158,23 +161,15 @@ GUI::Widget* EllipseTool::get_properties_widget()
         auto& aa_enable_checkbox = mode_radio_container.add<GUI::CheckBox>("Anti-alias");
 
         aa_enable_checkbox.on_checked = [&](bool checked) {
-            if (fill_mode_radio.is_checked())
-                m_fill_mode = checked ? FillMode::FillAntiAliased : FillMode::Fill;
+            m_antialias_enabled = checked;
         };
         outline_mode_radio.on_checked = [&](bool checked) {
-            if (checked) {
+            if (checked)
                 m_fill_mode = FillMode::Outline;
-                aa_enable_checkbox.set_enabled(false);
-                m_last_aa_checkbox_state = aa_enable_checkbox.is_checked();
-                aa_enable_checkbox.set_checked(false);
-            }
         };
         fill_mode_radio.on_checked = [&](bool checked) {
-            if (checked) {
+            if (checked)
                 m_fill_mode = FillMode::Fill;
-                aa_enable_checkbox.set_checked(m_last_aa_checkbox_state);
-                aa_enable_checkbox.set_enabled(true);
-            }
         };
 
         aa_enable_checkbox.set_checked(false);
