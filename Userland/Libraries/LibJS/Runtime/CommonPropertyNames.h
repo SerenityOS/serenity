@@ -342,6 +342,7 @@ namespace JS {
     P(nanoseconds)                           \
     P(negated)                               \
     P(next)                                  \
+    P(normalize)                             \
     P(notation)                              \
     P(now)                                   \
     P(numberingSystem)                       \

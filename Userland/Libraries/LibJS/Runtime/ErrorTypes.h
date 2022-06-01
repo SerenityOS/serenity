@@ -293,7 +293,8 @@
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
     M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")                                                              \
-    M(InvalidEnumerationValue, "Invalid value '{}' for enumeration type '{}'")
+    M(InvalidEnumerationValue, "Invalid value '{}' for enumeration type '{}'")                                                          \
+    M(InvalidNormalizationForm, "The normalization form must be one of NFC, NFD, NFKC, NFKD. Got '{}'")
 
 namespace JS {
 
