@@ -192,14 +192,44 @@ void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control
     });
 }
 
-void Gfx::AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color)
+void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, int thickness)
+{
+    // FIXME: Come up with an allocation-free version of this!
+    // Using draw_line() for segments of an ellipse was attempted but gave really poor results :^(
+    // There probably is a way to adjust the fill of draw_ellipse_part() to do this, but gettting it rendering correctly is tricky.
+    // The outline of the steps required to paint it efficiently is:
+    //     - Paint the outer ellipse without the fill (from the fill() lambda in draw_ellipse_part())
+    //     - Paint the inner ellipse, but in the set_pixel() invert the alpha values
+    //     - Somehow fill in the gap between the two ellipses (the tricky part to get right)
+    //          - Have to avoid overlapping pixels and accidentally painting over some of the edge pixels
+
+    auto color_no_alpha = color;
+    color_no_alpha.set_alpha(255);
+    auto outline_ellipse_bitmap = ({
+        auto bitmap = Gfx::Bitmap::try_create(BitmapFormat::BGRA8888, a_rect.size());
+        if (bitmap.is_error())
+            return warnln("Failed to allocate temporary bitmap for antialiased outline ellipse!");
+        bitmap.release_value();
+    });
+
+    auto outer_rect = a_rect;
+    outer_rect.set_location({ 0, 0 });
+    auto inner_rect = outer_rect.shrunken(thickness * 2, thickness * 2);
+    Gfx::Painter painter { outline_ellipse_bitmap };
+    AntiAliasingPainter aa_painter { painter };
+    aa_painter.fill_ellipse(outer_rect, color_no_alpha);
+    aa_painter.fill_ellipse(inner_rect, color_no_alpha, BlendMode::AlphaSubtract);
+    m_underlying_painter.blit(a_rect.location(), outline_ellipse_bitmap, outline_ellipse_bitmap->rect(), color.alpha() / 255.);
+}
+
+void Gfx::AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color, BlendMode blend_mode)
 {
     if (radius <= 0)
         return;
-    draw_ellipse_part(center, radius, radius, color, false, {});
+    draw_ellipse_part(center, radius, radius, color, false, {}, blend_mode);
 }
 
-void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color)
+void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color, BlendMode blend_mode)
 {
     auto center = a_rect.center();
     auto radius_a = a_rect.width() / 2;
@@ -207,14 +237,14 @@ void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color)
     if (radius_a <= 0 || radius_b <= 0)
         return;
     if (radius_a == radius_b)
-        return fill_circle(center, radius_a, color);
-    auto x_paint_range = draw_ellipse_part(center, radius_a, radius_b, color, false, {});
+        return fill_circle(center, radius_a, color, blend_mode);
+    auto x_paint_range = draw_ellipse_part(center, radius_a, radius_b, color, false, {}, blend_mode);
     // FIXME: This paints some extra fill pixels that are clipped
-    draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range);
+    draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range, blend_mode);
 }
 
 Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
-    IntPoint center, int radius_a, int radius_b, Color color, bool flip_x_and_y, Optional<Range> x_clip)
+    IntPoint center, int radius_a, int radius_b, Color color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode)
 {
     /*
     Algorithm from: https://cs.uwaterloo.ca/research/tr/1984/CS-84-38.pdf
@@ -322,9 +352,12 @@ Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
             return;
         min_paint_x = min(x, min_paint_x);
         max_paint_x = max(x, max_paint_x);
+        alpha = (alpha * color.alpha()) / 255;
+        if (blend_mode == BlendMode::AlphaSubtract)
+            alpha = ~alpha;
         auto pixel_color = color;
-        pixel_color.set_alpha((alpha * color.alpha()) / 255);
-        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_color, true);
+        pixel_color.set_alpha(alpha);
+        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_color, blend_mode == BlendMode::Normal);
     };
 
     auto fill = [&](int x, int ymax, int ymin, int alpha) {

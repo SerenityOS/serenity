@@ -28,8 +28,15 @@ public:
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint const& delta) { m_transform.translate(delta); }
 
-    void fill_circle(IntPoint const& center, int radius, Color);
-    void fill_ellipse(IntRect const& a_rect, Color);
+    void draw_ellipse(IntRect const& a_rect, Color, int thickness);
+
+    enum class BlendMode {
+        Normal,
+        AlphaSubtract
+    };
+
+    void fill_circle(IntPoint const& center, int radius, Color, BlendMode blend_mode = BlendMode::Normal);
+    void fill_ellipse(IntRect const& a_rect, Color, BlendMode blend_mode = BlendMode::Normal);
 
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
@@ -44,7 +51,8 @@ private:
             return n >= min && n <= max;
         }
     };
-    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip);
+
+    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
 
     enum class AntiAliasPolicy {
         OnlyEnds,
