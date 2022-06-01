@@ -2,16 +2,11 @@
 port=thesilversearcher
 version=2.2.0
 useconfigure="true"
-files="https://github.com/ggreer/the_silver_searcher/archive/refs/tags/${version}.tar.gz the_silver_searcher-${version}.tar.xz 6a0a19ca5e73b2bef9481c29a508d2413ca1a0a9a5a6b1bd9bbd695a7626cbf9"
+files="https://geoff.greer.fm/ag/releases/the_silver_searcher-${version}.tar.gz the_silver_searcher-${version}.tar.xz d9621a878542f3733b5c6e71c849b9d1a830ed77cb1a1f6c2ea441d4b0643170"
 workdir="the_silver_searcher-${version}"
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--disable-utf8")
 depends=("pcre" "xz")
 auth_type="sha256"
+use_fresh_config_sub=true
 
-pre_configure() {
-    export CFLAGS="-fcommon -D_GNU_SOURCE -lpthread"
-    run aclocal
-    run autoconf
-    run autoheader
-    run automake --add-missing
-}
+export CFLAGS="-fcommon -D_GNU_SOURCE -lpthread"
