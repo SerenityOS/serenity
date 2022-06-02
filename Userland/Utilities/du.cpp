@@ -54,8 +54,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
 
     Core::ArgsParser::Option time_option {
         true,
-        "Show time of type time-type of any file in the directory, or any of its subdirectories. "
-        "Available choices: mtime, modification, ctime, status, use, atime, access",
+        "Show timestamp of type time-type for each entry. Available choices are: mtime, modification (modification timestamp), ctime, status, use (change timestamp) and atime, access (access timestamp)",
         "time",
         0,
         "time-type",
@@ -75,16 +74,16 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
-    args_parser.add_option(s_option.all, "Write counts for all files, not just directories", "all", 'a');
+    args_parser.add_option(s_option.all, "Print the sizes of both files and directories", "all", 'a');
     args_parser.add_option(s_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
+    args_parser.add_option(s_option.max_depth, "Print the size of an entry only if it is N or fewer levels below the root of the file hierarchy", "max-depth", 'd', "N");
+    args_parser.add_option(exclude_pattern, "Exclude entries that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(s_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(s_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
-    args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
-    args_parser.add_option(s_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
+    args_parser.add_option(summarize, "Print only the size of each argument", "summarize", 's');
+    args_parser.add_option(s_option.threshold, "Exclude entries smaller than size if positive, or greater than size if negative", "threshold", 't', "size");
     args_parser.add_option(move(time_option));
-    args_parser.add_option(exclude_pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
-    args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude_from", 'X', "file");
-    args_parser.add_positional_argument(s_option.files, "File to process", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(exclude_from, "Exclude entries that match any pattern in file", "exclude-from", 'X', "file");
+    args_parser.add_positional_argument(s_option.files, "Directories or files to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     if (summarize)

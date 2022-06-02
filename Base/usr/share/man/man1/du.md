@@ -5,27 +5,28 @@ du - print disk usage
 ## Synopsis
 
 ```**sh
-$ du [files...]
+$ du [options...] [files...]
 ```
 
 ## Description
 
-`du` prints disk usage data for every argument, in KiB (kibibytes).
+Without any options, `du` recursively prints the disk usage of each directory argument and its subdirectories, and of each file argument.
 
 ## Options
 
-* `-a`, `--all`: Write counts for all files, not just directories
+* `-a`, `--all`: Print the sizes of all files in the file hierarchy, not just directories
 * `--apparent-size`: Print apparent sizes, rather than disk usage
-* `-d N`, `--max-depth N`: Print the total for a directory or file only if it is N or fewer levels below the command line argument
-* `-s`, `--summarize`: Display only a total for each argument
-* `-t size`, `--threshold size`: Exclude entries smaller than size if positive, or entries greater than size if negative
-* `--time time-type`: Show time of time time-type of any file in the directory, or any of its subdirectories. Available choices: mtime, modification, ctime, status, use, atime, access
-* `--exclude pattern`: Exclude files that match pattern
-* `-X file, --exclude_from`: Exclude files that match any pattern in file
+* `-d N`, `--max-depth N`: Print the size of each entry only if it is `N` or fewer levels below the root of the file hierarchy
+* `--exclude pattern`: Exclude entries that match the glob pattern `pattern`
+* `-h`, `--human-readable`: Print the size of each entry in human-readable units (B, KiB, MiB...)
+* `-s`, `--summarize`: Print only the size of each argument, not entries in the file hierarchy. Equivalent to `--max-depth 0`
+* `-t size`, `--threshold size`: Do not print entries smaller than `size` if positive, or entries greater than `size` if negative
+* `--time time-type`: Show timestamp of type `time-type` for each entry. Available choices are: mtime, modification (modification timestamp), ctime, status, use (change timestamp) and atime, access (access timestamp)
+* `-X file`, `--exclude-from file`: Exclude entries that match any of the newline-delimited glob patterns in `file`
 
 ## Arguments
 
-* `files`: Files to print disk usage of
+* `files`: Directories or files to print disk usage of
 
 ## Examples
 
