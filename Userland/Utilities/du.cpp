@@ -122,9 +122,9 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
         }
     } else {
         if (s_option.apparent_size)
-            size = path_stat.st_blocks * 512;
-        else
             size = path_stat.st_size;
+        else
+            size = path_stat.st_blocks * 512;
     }
 
     for (auto const& pattern : s_option.excluded_patterns) {
