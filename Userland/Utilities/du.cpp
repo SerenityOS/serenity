@@ -59,6 +59,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
 {
     bool summarize = false;
     bool block_size_1k = false;
+    bool bytes = false;
     char const* exclude_pattern = nullptr;
     char const* exclude_from = nullptr;
 
@@ -87,6 +88,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     args_parser.add_option(s_option.all, "Print the sizes of both files and directories", "all", 'a');
     args_parser.add_option(s_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
     args_parser.add_option(s_option.block_size, "Print the sizes in a unit of size bytes", "block-size", 'B', "size");
+    args_parser.add_option(bytes, "Print apparent sizes in bytes", "bytes", 'b');
     args_parser.add_option(s_option.total, "Print the total size of all arguments", "total", 'c');
     args_parser.add_option(s_option.max_depth, "Print the size of an entry only if it is N or fewer levels below the root of the file hierarchy", "max-depth", 'd', "N");
     args_parser.add_option(exclude_pattern, "Exclude entries that match pattern", "exclude", 0, "pattern");
@@ -108,6 +110,10 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
         s_option.max_depth = 0;
     if (block_size_1k)
         s_option.block_size = 1024;
+    if (bytes) {
+        s_option.apparent_size = true;
+        s_option.block_size = 1;
+    }
     if (exclude_pattern)
         s_option.excluded_patterns.append(exclude_pattern);
     if (exclude_from) {
