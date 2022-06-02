@@ -21,7 +21,6 @@ def run():
             "*.json",
             "CMake*.txt",
             "**/CMake*.txt",
-            ":!:Kernel/FileSystem/ext2_fs.h",
             ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*',
             ':!:Userland/Libraries/LibCpp/Tests/parser/*',
             ':!:Userland/Libraries/LibCpp/Tests/preprocessor/*'

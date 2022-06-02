@@ -8,15 +8,12 @@
 
 #include <AK/Bitmap.h>
 #include <AK/HashMap.h>
+#include <AK/Types.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
+#include <Kernel/FileSystem/Ext2Base.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/UnixTypes.h>
-
-struct ext2_group_desc;
-struct ext2_inode;
-struct ext2_super_block;
 
 namespace Kernel {
 
@@ -30,8 +27,8 @@ public:
     virtual ~Ext2FSInode() override;
 
     u64 size() const;
-    bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.i_mode); }
-    bool is_directory() const { return Kernel::is_directory(m_raw_inode.i_mode); }
+    bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.mode); }
+    bool is_directory() const { return Kernel::is_directory(m_raw_inode.mode); }
 
 private:
     // ^Inode
@@ -66,7 +63,7 @@ private:
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list() const;
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_with_meta_blocks() const;
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl(bool include_block_list_blocks) const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl_internal(ext2_inode const&, bool include_block_list_blocks) const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl_internal(Ext2::Inode const&, bool include_block_list_blocks) const;
 
     Ext2FS& fs();
     Ext2FS const& fs() const;
@@ -74,7 +71,7 @@ private:
 
     mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
     mutable HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
-    ext2_inode m_raw_inode {};
+    Ext2::Inode m_raw_inode {};
 };
 
 class Ext2FS final : public BlockBasedFileSystem {
@@ -109,17 +106,17 @@ private:
 
     explicit Ext2FS(OpenFileDescription&);
 
-    ext2_super_block const& super_block() const { return m_super_block; }
-    ext2_group_desc const& group_descriptor(GroupIndex) const;
-    ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table->data(); }
-    ext2_group_desc const* block_group_descriptors() const { return (ext2_group_desc const*)m_cached_group_descriptor_table->data(); }
+    Ext2::SuperBlock const& super_block() const { return m_super_block; }
+    Ext2::GroupDescriptor const& group_descriptor(GroupIndex) const;
+    Ext2::GroupDescriptor* block_group_descriptors() { return (Ext2::GroupDescriptor*)m_cached_group_descriptor_table->data(); }
+    Ext2::GroupDescriptor const* block_group_descriptors() const { return (Ext2::GroupDescriptor const*)m_cached_group_descriptor_table->data(); }
     void flush_block_group_descriptor_table();
     u64 inodes_per_block() const;
     u64 inodes_per_group() const;
     u64 blocks_per_group() const;
     u64 inode_size() const;
 
-    ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode const&);
+    ErrorOr<void> write_ext2_inode(InodeIndex, Ext2::Inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     ErrorOr<void> flush_super_block();
@@ -156,7 +153,7 @@ private:
 
     u64 m_block_group_count { 0 };
 
-    mutable ext2_super_block m_super_block {};
+    mutable Ext2::SuperBlock m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
 
     mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;

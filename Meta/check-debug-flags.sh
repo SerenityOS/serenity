@@ -25,7 +25,6 @@ done < <(
         '*.cpp' \
         '*.h' \
         '*.in' \
-        ':!:Kernel/FileSystem/ext2_fs.h' \
     | xargs grep -E '(_DEBUG|DEBUG_)' \
     | sed -re 's,^.*[^a-zA-Z0-9_]([a-zA-Z0-9_]*DEBUG[a-zA-Z0-9_]*).*$,\1,' \
     | sort \

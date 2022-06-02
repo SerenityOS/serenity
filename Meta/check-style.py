@@ -40,7 +40,7 @@ GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
 # We check that "#include <LibM/math.h>" is not being used
 LIBM_MATH_H_INCLUDE_STRING = '#include <LibM/math.h>'
 
-GIT_LS_FILES = ['git', 'ls-files', '--', '*.cpp', '*.h', ':!:Base', ':!:Kernel/FileSystem/ext2_fs.h']
+GIT_LS_FILES = ['git', 'ls-files', '--', '*.cpp', '*.h', ':!:Base']
 
 
 def run():
