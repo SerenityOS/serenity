@@ -58,6 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 ErrorOr<void> parse_args(Main::Arguments const& arguments)
 {
     bool summarize = false;
+    bool block_size_1k = false;
     char const* exclude_pattern = nullptr;
     char const* exclude_from = nullptr;
 
@@ -90,6 +91,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     args_parser.add_option(s_option.max_depth, "Print the size of an entry only if it is N or fewer levels below the root of the file hierarchy", "max-depth", 'd', "N");
     args_parser.add_option(exclude_pattern, "Exclude entries that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(s_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
+    args_parser.add_option(block_size_1k, "Use a block size of 1024 bytes", nullptr, 'k');
     args_parser.add_option(summarize, "Print only the size of each argument", "summarize", 's');
     args_parser.add_option(s_option.threshold, "Exclude entries smaller than size if positive, or greater than size if negative", "threshold", 't', "size");
     args_parser.add_option(move(time_option));
@@ -104,6 +106,8 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
 
     if (summarize)
         s_option.max_depth = 0;
+    if (block_size_1k)
+        s_option.block_size = 1024;
     if (exclude_pattern)
         s_option.excluded_patterns.append(exclude_pattern);
     if (exclude_from) {
