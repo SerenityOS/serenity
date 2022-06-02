@@ -17,6 +17,7 @@ Without any options, `du` recursively prints the disk usage of each directory ar
 * `-a`, `--all`: Print the sizes of all files in the file hierarchy, not just directories
 * `--apparent-size`: Print apparent sizes, rather than disk usage
 * `-B size`, `--block-size size`: Print the sizes in a unit of `size` bytes instead of the default block size of 512 bytes
+* `-c`. `--total`: Print the total size of all arguments
 * `-d N`, `--max-depth N`: Print the size of each entry only if it is `N` or fewer levels below the root of the file hierarchy
 * `--exclude pattern`: Exclude entries that match the glob pattern `pattern`. This option will exclude those entries from the disk usage of the file hierarchy
 * `-h`, `--human-readable`: Print the size of each entry in human-readable units (B, KiB, MiB...) instead of in `block-size` bytes

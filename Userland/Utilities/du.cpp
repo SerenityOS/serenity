@@ -24,6 +24,7 @@ struct DuOption {
     bool human_readable = false;
     bool all = false;
     bool apparent_size = false;
+    bool total = false;
     int threshold = 0;
     int block_size = 512;
     unsigned max_depth = UINT_MAX;
@@ -41,9 +42,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(parse_args(arguments));
 
+    off_t total = 0;
     for (auto const& file : s_option.files)
-        TRY(print_space_usage(file, 0));
+        total += TRY(print_space_usage(file, 0));
 
+    if (s_option.total) {
+        if (s_option.human_readable)
+            outln("{}\ttotal", human_readable_size(total));
+        else
+            outln("{}\ttotal", howmany(total, s_option.block_size));
+    }
     return 0;
 }
 
@@ -78,6 +86,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     args_parser.add_option(s_option.all, "Print the sizes of both files and directories", "all", 'a');
     args_parser.add_option(s_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
     args_parser.add_option(s_option.block_size, "Print the sizes in a unit of size bytes", "block-size", 'B', "size");
+    args_parser.add_option(s_option.total, "Print the total size of all arguments", "total", 'c');
     args_parser.add_option(s_option.max_depth, "Print the size of an entry only if it is N or fewer levels below the root of the file hierarchy", "max-depth", 'd', "N");
     args_parser.add_option(exclude_pattern, "Exclude entries that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(s_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
