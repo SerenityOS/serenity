@@ -10,7 +10,7 @@ $ du [options...] [files...]
 
 ## Description
 
-Without any options, `du` recursively prints the disk usage of each directory argument and its subdirectories, and of each file argument.
+Without any options, `du` recursively prints the disk usage of each directory argument and its subdirectories, and of each file argument. By default, the sizes are displayed in a unit of 512 bytes.
 
 ## Options
 

@@ -110,6 +110,7 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
     bool is_directory = S_ISDIR(path_stat.st_mode);
     off_t size = 0;
     if (is_directory) {
+        size = path_stat.st_size; // According to POSIX, we include the size of the directory itself.
         Core::DirIterator di { path, Core::DirIterator::SkipParentAndBaseDir };
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
@@ -137,7 +138,7 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
     if (s_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        constexpr long long block_size = 1024;
+        constexpr long long block_size = 512;
         out("{}", howmany(size, block_size));
     }
 
