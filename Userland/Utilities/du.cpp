@@ -18,7 +18,7 @@ struct DuOption {
         NotUsed,
         Modification,
         Access,
-        Status
+        Change
     };
 
     bool human_readable = false;
@@ -59,11 +59,11 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
         0,
         "time-type",
         [](StringView s) {
-            if (s == "mtime"sv || s == "modification"sv)
+            if (s.is_one_of("mtime"sv, "modification"sv))
                 s_option.time_type = DuOption::TimeType::Modification;
-            else if (s == "ctime"sv || s == "status"sv || s == "use"sv)
-                s_option.time_type = DuOption::TimeType::Status;
-            else if (s == "atime"sv || s == "access"sv)
+            else if (s.is_one_of("ctime"sv, "status"sv, "use"sv))
+                s_option.time_type = DuOption::TimeType::Change;
+            else if (s.is_one_of("atime"sv, "access"sv))
                 s_option.time_type = DuOption::TimeType::Access;
             else
                 return false;
@@ -144,19 +144,21 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
     if (s_option.time_type == DuOption::TimeType::NotUsed) {
         outln("\t{}", path);
     } else {
-        auto time = path_stat.st_mtime;
+        time_t time = 0;
         switch (s_option.time_type) {
         case DuOption::TimeType::Access:
             time = path_stat.st_atime;
             break;
-        case DuOption::TimeType::Status:
+        case DuOption::TimeType::Change:
             time = path_stat.st_ctime;
             break;
-        default:
+        case DuOption::TimeType::Modification:
+            time = path_stat.st_mtime;
             break;
+        default:
+            VERIFY_NOT_REACHED();
         }
-
-        auto const formatted_time = Core::DateTime::from_timestamp(time).to_string();
+        auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
         outln("\t{}\t{}", formatted_time, path);
     }
 
