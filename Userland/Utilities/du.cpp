@@ -132,10 +132,9 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
             size = path_stat.st_size;
     }
 
-    auto const basename = LexicalPath::basename(path);
     for (auto const& pattern : s_option.excluded_patterns) {
-        if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
-            return { 0 };
+        if (path.matches(pattern, CaseSensitivity::CaseSensitive))
+            return 0;
     }
 
     if ((s_option.threshold > 0 && size < s_option.threshold) || (s_option.threshold < 0 && size > -s_option.threshold))
