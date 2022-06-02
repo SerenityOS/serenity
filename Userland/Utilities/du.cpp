@@ -25,6 +25,7 @@ struct DuOption {
     bool all = false;
     bool apparent_size = false;
     int threshold = 0;
+    int block_size = 512;
     unsigned max_depth = UINT_MAX;
     TimeType time_type = TimeType::NotUsed;
     Vector<String> excluded_patterns;
@@ -76,6 +77,7 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
     args_parser.add_option(s_option.all, "Print the sizes of both files and directories", "all", 'a');
     args_parser.add_option(s_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
+    args_parser.add_option(s_option.block_size, "Print the sizes in a unit of size bytes", "block-size", 'B', "size");
     args_parser.add_option(s_option.max_depth, "Print the size of an entry only if it is N or fewer levels below the root of the file hierarchy", "max-depth", 'd', "N");
     args_parser.add_option(exclude_pattern, "Exclude entries that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(s_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
@@ -85,6 +87,11 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     args_parser.add_option(exclude_from, "Exclude entries that match any pattern in file", "exclude-from", 'X', "file");
     args_parser.add_positional_argument(s_option.files, "Directories or files to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (s_option.all + summarize + (s_option.max_depth != UINT_MAX) > 1)
+        return Error::from_string_literal("Only one of -a, -s or -d can be specified"sv);
+    if (s_option.block_size <= 0)
+        return Error::from_string_literal("Block size must be greater than zero"sv);
 
     if (summarize)
         s_option.max_depth = 0;
@@ -134,12 +141,10 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
 
     bool in_threshold = s_option.threshold == 0 || ((s_option.threshold > 0 && size < s_option.threshold) || (s_option.threshold < 0 && size > -s_option.threshold));
     if ((is_directory || (s_option.all || depth == 0)) && depth <= s_option.max_depth && in_threshold) {
-        if (s_option.human_readable) {
+        if (s_option.human_readable)
             out("{}", human_readable_size(size));
-        } else {
-            constexpr long long block_size = 512;
-            out("{}", howmany(size, block_size));
-        }
+        else
+            out("{}", howmany(size, s_option.block_size));
 
         if (s_option.time_type == DuOption::TimeType::NotUsed) {
             outln("\t{}", path);
