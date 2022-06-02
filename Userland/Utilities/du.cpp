@@ -132,36 +132,35 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
             return 0;
     }
 
-    if ((s_option.threshold > 0 && size < s_option.threshold) || (s_option.threshold < 0 && size > -s_option.threshold))
-        return { 0 };
-
-    if (s_option.human_readable) {
-        out("{}", human_readable_size(size));
-    } else {
-        constexpr long long block_size = 512;
-        out("{}", howmany(size, block_size));
-    }
-
-    if (s_option.time_type == DuOption::TimeType::NotUsed) {
-        outln("\t{}", path);
-    } else {
-        time_t time = 0;
-        switch (s_option.time_type) {
-        case DuOption::TimeType::Access:
-            time = path_stat.st_atime;
-            break;
-        case DuOption::TimeType::Change:
-            time = path_stat.st_ctime;
-            break;
-        case DuOption::TimeType::Modification:
-            time = path_stat.st_mtime;
-            break;
-        default:
-            VERIFY_NOT_REACHED();
+    bool in_threshold = s_option.threshold == 0 || ((s_option.threshold > 0 && size < s_option.threshold) || (s_option.threshold < 0 && size > -s_option.threshold));
+    if ((is_directory || (s_option.all || depth == 0)) && depth <= s_option.max_depth && in_threshold) {
+        if (s_option.human_readable) {
+            out("{}", human_readable_size(size));
+        } else {
+            constexpr long long block_size = 512;
+            out("{}", howmany(size, block_size));
         }
-        auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
-        outln("\t{}\t{}", formatted_time, path);
-    }
 
-    return { size };
+        if (s_option.time_type == DuOption::TimeType::NotUsed) {
+            outln("\t{}", path);
+        } else {
+            time_t time = 0;
+            switch (s_option.time_type) {
+            case DuOption::TimeType::Access:
+                time = path_stat.st_atime;
+                break;
+            case DuOption::TimeType::Change:
+                time = path_stat.st_ctime;
+                break;
+            case DuOption::TimeType::Modification:
+                time = path_stat.st_mtime;
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+            auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
+            outln("\t{}\t{}", formatted_time, path);
+        }
+    }
+    return size;
 }
