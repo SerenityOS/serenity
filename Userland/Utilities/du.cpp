@@ -4,19 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <limits.h>
-#include <string.h>
-#include <sys/stat.h>
+#include <sys/param.h>
 
 struct DuOption {
     enum class TimeType {
@@ -144,8 +139,7 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
         out("{}", human_readable_size(size));
     } else {
         constexpr long long block_size = 1024;
-        size = size / block_size + (size % block_size != 0);
-        out("{}", size);
+        out("{}", howmany(size, block_size));
     }
 
     if (s_option.time_type == DuOption::TimeType::NotUsed) {
