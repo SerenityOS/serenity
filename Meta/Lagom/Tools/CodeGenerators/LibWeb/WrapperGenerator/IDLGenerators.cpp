@@ -2824,10 +2824,11 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
     for (auto& constant : interface.constants) {
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
-        constant_generator.set("constant.value", constant.value);
+
+        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, String::formatted("auto constant_{}_value =", constant.name));
 
         constant_generator.append(R"~~~(
-define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
 )~~~");
     }
 
@@ -3092,10 +3093,11 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
-        constant_generator.set("constant.value", constant.value);
+
+        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, String::formatted("auto constant_{}_value =", constant.name));
 
         constant_generator.append(R"~~~(
-    define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
 )~~~");
     }
 
