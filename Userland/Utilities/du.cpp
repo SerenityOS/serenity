@@ -39,14 +39,14 @@ struct DuOption {
 static DuOption s_option;
 
 static ErrorOr<void> parse_args(Main::Arguments const& arguments);
-static ErrorOr<off_t> print_space_usage(String const& path, unsigned max_depth, bool inside_dir = false);
+static ErrorOr<off_t> print_space_usage(String const& path, unsigned depth);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(parse_args(arguments));
 
     for (auto const& file : s_option.files)
-        TRY(print_space_usage(file, s_option.max_depth));
+        TRY(print_space_usage(file, 0));
 
     return 0;
 }
@@ -110,22 +110,26 @@ ErrorOr<void> parse_args(Main::Arguments const& arguments)
     return {};
 }
 
-ErrorOr<off_t> print_space_usage(String const& path, unsigned max_depth, bool inside_dir)
+ErrorOr<off_t> print_space_usage(String const& path, unsigned depth)
 {
-    struct stat path_stat = TRY(Core::System::lstat(path.characters()));
-    off_t directory_size = 0;
-    bool const is_directory = S_ISDIR(path_stat.st_mode);
-    if (--max_depth >= 0 && is_directory) {
-        auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
+    auto path_stat = TRY(Core::System::lstat(path.characters()));
+    bool is_directory = S_ISDIR(path_stat.st_mode);
+    off_t size = 0;
+    if (is_directory) {
+        Core::DirIterator di { path, Core::DirIterator::SkipParentAndBaseDir };
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
             return Error::from_string_literal("An error occurred. See previous error."sv);
         }
-
         while (di.has_next()) {
-            auto const child_path = di.next_full_path();
-            directory_size += TRY(print_space_usage(child_path, max_depth, true));
+            auto child_path = di.next_full_path();
+            size += TRY(print_space_usage(child_path, depth + 1));
         }
+    } else {
+        if (s_option.apparent_size)
+            size = path_stat.st_blocks * 512;
+        else
+            size = path_stat.st_size;
     }
 
     auto const basename = LexicalPath::basename(path);
@@ -133,18 +137,6 @@ ErrorOr<off_t> print_space_usage(String const& path, unsigned max_depth, bool in
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
             return { 0 };
     }
-
-    off_t size = path_stat.st_size;
-    if (s_option.apparent_size) {
-        constexpr auto block_size = 512;
-        size = path_stat.st_blocks * block_size;
-    }
-
-    if (inside_dir && !s_option.all && !is_directory)
-        return size;
-
-    if (is_directory)
-        size = directory_size;
 
     if ((s_option.threshold > 0 && size < s_option.threshold) || (s_option.threshold < 0 && size > -s_option.threshold))
         return { 0 };
