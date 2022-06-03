@@ -1100,7 +1100,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     if (clipped_src_rect.is_empty())
         return;
 
-    if constexpr (scaling_mode == Painter::ScalingMode::NearestNeighbor) {
+    if constexpr (scaling_mode == Painter::ScalingMode::NearestNeighbor || scaling_mode == Painter::ScalingMode::SmoothPixels) {
         if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
             int hfactor = dst_rect.width() / int_src_rect.width();
             int vfactor = dst_rect.height() / int_src_rect.height();
@@ -1155,6 +1155,27 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 auto bottom = bottom_left.interpolate(bottom_right, x_ratio);
 
                 src_pixel = top.interpolate(bottom, y_ratio);
+            } else if constexpr (scaling_mode == Painter::ScalingMode::SmoothPixels) {
+                auto scaled_x1 = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_x0 = clamp(scaled_x1 - 1, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y1 = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_y0 = clamp(scaled_y1 - 1, clipped_src_rect.top(), clipped_src_rect.bottom());
+
+                float x_ratio = (desired_x & fractional_mask) / (float)shift;
+                float y_ratio = (desired_y & fractional_mask) / (float)shift;
+
+                float scaled_x_ratio = clamp(x_ratio * dst_rect.width() / (float)src_rect.width(), 0.0f, 1.0f);
+                float scaled_y_ratio = clamp(y_ratio * dst_rect.height() / (float)src_rect.height(), 0.0f, 1.0f);
+
+                auto top_left = get_pixel(source, scaled_x0, scaled_y0);
+                auto top_right = get_pixel(source, scaled_x1, scaled_y0);
+                auto bottom_left = get_pixel(source, scaled_x0, scaled_y1);
+                auto bottom_right = get_pixel(source, scaled_x1, scaled_y1);
+
+                auto top = top_left.interpolate(top_right, scaled_x_ratio);
+                auto bottom = bottom_left.interpolate(bottom_right, scaled_x_ratio);
+
+                src_pixel = top.interpolate(bottom, scaled_y_ratio);
             } else {
                 auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
                 auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
@@ -1178,6 +1199,9 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     switch (scaling_mode) {
     case Painter::ScalingMode::NearestNeighbor:
         do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::NearestNeighbor>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        break;
+    case Painter::ScalingMode::SmoothPixels:
+        do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::SmoothPixels>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
         break;
     case Painter::ScalingMode::BilinearBlend:
         do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::BilinearBlend>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
