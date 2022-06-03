@@ -1,7 +1,7 @@
-From 8042f44a1358f080e28e727b3deecd43b046a8f7 Mon Sep 17 00:00:00 2001
+From 05bfb2d4b183e7ab23f9c57ccea2022a46178c26 Mon Sep 17 00:00:00 2001
 From: xSlendiX <gamingxslendix@gmail.com>
 Date: Sat, 18 Sep 2021 16:19:50 +0300
-Subject: [PATCH] Include strings.h
+Subject: [PATCH 1/2] Include strings.h
 
 ---
  src/libmodplug/stdafx.h | 1 +
