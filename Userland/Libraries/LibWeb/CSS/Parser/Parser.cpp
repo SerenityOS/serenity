@@ -3660,7 +3660,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         return value_id == ValueID::RepeatX || value_id == ValueID::RepeatY;
     };
 
-    auto as_repeat = [](ValueID identifier) {
+    auto as_repeat = [](ValueID identifier) -> Optional<Repeat> {
         switch (identifier) {
         case ValueID::NoRepeat:
             return Repeat::NoRepeat;
@@ -3671,7 +3671,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         case ValueID::Space:
             return Repeat::Space;
         default:
-            VERIFY_NOT_REACHED();
+            return {};
         }
     };
 
@@ -3689,20 +3689,29 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
             value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat);
     }
 
+    auto x_repeat = as_repeat(x_value->to_identifier());
+    if (!x_repeat.has_value())
+        return nullptr;
+
     // See if we have a second value for Y
     auto& second_token = tokens.peek_token();
     auto maybe_y_value = parse_css_value(second_token);
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
         transaction.commit();
-        return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(x_value->to_identifier()));
+        return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value());
     }
     tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
         return nullptr;
+
+    auto y_repeat = as_repeat(y_value->to_identifier());
+    if (!y_repeat.has_value())
+        return nullptr;
+
     transaction.commit();
-    return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
+    return BackgroundRepeatStyleValue::create(x_repeat.value(), y_repeat.value());
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
