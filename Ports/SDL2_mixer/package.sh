@@ -15,6 +15,8 @@ configure() {
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-music-opus=false \
         --enable-music-opus-shared=false \
+        --disable-static \
+        --enable-shared \
         EXTRA_LDFLAGS="-lgui -lgfx -lipc -lcore -lcompression"
 }
 
@@ -24,10 +26,4 @@ post_configure() {
 
 build() {
     run make -k
-}
-
-install() {
-    run make -k DESTDIR="${SERENITY_INSTALL_ROOT}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_mixer.so -Wl,-soname,libSDL2_mixer.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_mixer.a -Wl,--no-whole-archive -Wl,--no-as-needed -lvorbis -lvorbisfile
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_mixer.la
 }
