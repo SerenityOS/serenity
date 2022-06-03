@@ -1,7 +1,7 @@
-From 5827fd456bcd7747fca2bb4f447c59ce7886a061 Mon Sep 17 00:00:00 2001
+From ef51fb40f756e2d7a7de4d285590305c782ba9b7 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 16 Jun 2021 11:08:32 +0200
-Subject: [PATCH 2/2] Include sys/select.h
+Subject: [PATCH 2/3] Include sys/select.h
 
 ---
  SDLnetsys.h | 1 +
