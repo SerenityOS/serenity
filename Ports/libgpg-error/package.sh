@@ -12,9 +12,3 @@ auth_type=sha256
 configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
 }
-
-install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgpg-error.so -Wl,-soname,libgpg-error.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgpg-error.a -Wl,--no-whole-archive -lintl
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgpg-error.la
-}

@@ -1,7 +1,7 @@
-From 473f87074e63a2786d42035c919e061c8574b7fe Mon Sep 17 00:00:00 2001
+From 29782147d325747be57381458bc9dffb9bbfaf57 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 14 Apr 2021 04:32:34 +0200
-Subject: [PATCH 2/2] Stub out the gpgrt lock impl
+Subject: [PATCH 2/3] Stub out the gpgrt lock impl
 
 ---
  src/syscfg/lock-obj-pub.i686-pc-serenity.h | 17 +++++++++++++++++
