@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=nano
-version=6.2
+port='nano'
+version='6.3'
 useconfigure="true"
 use_fresh_config_sub=true
 files="https://www.nano-editor.org/dist/v6/nano-${version}.tar.xz nano-${version}.tar.xz
