@@ -8,15 +8,15 @@ Subject: [PATCH] Disable pcre2test's `-S` flag on serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/pcre2test.c b/src/pcre2test.c
-index 84987d7..35a7a5a 100644
+index ea52a20..e9454c4 100644
 --- a/src/pcre2test.c
 +++ b/src/pcre2test.c
-@@ -8689,7 +8689,7 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
+@@ -8917,7 +8917,7 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
    else if (strcmp(arg, "-S") == 0 && argc > 2 &&
        ((uli = strtoul(argv[op+1], &endptr, 10)), *endptr == 0))
      {
--#if defined(_WIN32) || defined(WIN32) || defined(__minix) || defined(NATIVE_ZOS) || defined(__VMS)
-+#if defined(_WIN32) || defined(WIN32) || defined(__minix) || defined(NATIVE_ZOS) || defined(__VMS) || defined(__serenity__)
+-#if defined(_WIN32) || defined(WIN32) || defined(__HAIKU__) || defined(NATIVE_ZOS) || defined(__VMS)
++#if defined(_WIN32) || defined(WIN32) || defined(__HAIKU__) || defined(NATIVE_ZOS) || defined(__VMS) || defined(__serenity__)
      fprintf(stderr, "pcre2test: -S is not supported on this OS\n");
      exit(1);
  #else
