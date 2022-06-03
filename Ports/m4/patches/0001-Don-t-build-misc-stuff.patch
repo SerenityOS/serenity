@@ -10,30 +10,30 @@ Skip building the examples, docs and avoid the checks.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index 22781f5..4f4317d 100644
+index d54ace4..d121df1 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -20,7 +20,7 @@
  ##
  ## Written by Gary V. Vaughan <gary@gnu.org>
  
--SUBDIRS = . examples lib src doc checks
-+SUBDIRS = . lib src 
- EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
- 	m4/gnulib-cache.m4
- DISTCLEANFILES = stamp-h
+-SUBDIRS = . examples lib src doc checks po tests
++SUBDIRS = . lib src
+ 
+ EXTRA_DIST = bootstrap c-boxes.el cfg.mk maint.mk \
+ 	.prev-version .version m4/gnulib-cache.m4 ChangeLog-2014
 diff --git a/Makefile.in b/Makefile.in
-index 261472b..57164a4 100644
+index 746b38c..85cb645 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -267,7 +267,7 @@ sysconfdir = @sysconfdir@
- target_alias = @target_alias@
+@@ -1952,7 +1952,7 @@ target_alias = @target_alias@
+ top_build_prefix = @top_build_prefix@
  top_builddir = @top_builddir@
  top_srcdir = @top_srcdir@
--SUBDIRS = . examples lib src doc checks
+-SUBDIRS = . examples lib src doc checks po tests
 +SUBDIRS = . lib src
- EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
- 	m4/gnulib-cache.m4
+ EXTRA_DIST = bootstrap c-boxes.el cfg.mk maint.mk \
+ 	.prev-version .version m4/gnulib-cache.m4 ChangeLog-2014
  
 -- 
 2.36.1
