@@ -82,6 +82,12 @@
         }
 
         @GUI::RadioButton {
+            name: "smooth_pixels_radio"
+            text: "Smooth Pixels"
+            autosize: true
+        }
+
+        @GUI::RadioButton {
             name: "bilinear_radio"
             text: "Bilinear"
             autosize: true
