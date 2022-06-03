@@ -1,20 +1,18 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=oksh
-useconfigure=true
-version=7.0
+port='oksh'
+version='7.1'
+files="https://github.com/ibara/oksh/releases/download/oksh-${version}/oksh-${version}.tar.gz oksh-${version}.tar.gz 9dc0b0578d9d64d10c834f9757ca11f526b562bc5454da64b2cb270122f52064"
+auth_type='sha256'
+useconfigure='true'
 depends=("ncurses")
-workdir=oksh-${version}
-files="https://github.com/ibara/oksh/releases/download/oksh-${version}/oksh-${version}.tar.gz oksh-${version}.tar.gz 21d5891f38ffea3a5d1aa8c494f0a5579c93778535e0a92275b102dec3221da1"
-auth_type=sha256
 
-export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
+export LDFLAGS='-lncurses'
 
 configure() {
-    export CFLAGS="" 
-    export LDFLAGS="-lncurses"
     run ./configure --no-thanks
 }
 
 install() {
-    run cp oksh "${SERENITY_INSTALL_ROOT}/bin"
+    run mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp oksh "${SERENITY_INSTALL_ROOT}/usr/local/bin"
 }
