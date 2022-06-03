@@ -15,9 +15,3 @@ pre_configure() {
 configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
 }
-
-install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libksba.so -Wl,-soname,libksba.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libksba.a -Wl,--no-whole-archive -lgpg-error
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libksba.la
-}
