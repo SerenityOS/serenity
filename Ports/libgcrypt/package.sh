@@ -16,9 +16,3 @@ pre_configure() {
 configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
 }
-
-install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.so -Wl,-soname,libgcrypt.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.a -Wl,--no-whole-archive -lgpg-error
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.la
-}
