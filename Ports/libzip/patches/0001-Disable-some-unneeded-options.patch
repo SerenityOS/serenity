@@ -6,15 +6,15 @@ Subject: [PATCH] Disable some unneeded options
 Co-Authored-By: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Co-Authored-By: Panagiotis Vasilopoulos <hello@alwayslivid.com>
 ---
- CMakeLists.txt | 30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+ CMakeLists.txt | 32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 017f7cf..3d8cc9f 100644
+index 93b46a6..6b8d4ed 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -9,19 +9,23 @@ project(libzip
-   VERSION 1.7.3
+@@ -9,20 +9,24 @@ project(libzip
+   VERSION 1.8.0
    LANGUAGES C)
  
 -option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
@@ -28,6 +28,7 @@ index 017f7cf..3d8cc9f 100644
  
 -option(ENABLE_BZIP2 "Enable use of BZip2" ON)
 -option(ENABLE_LZMA "Enable use of LZMA" ON)
+-option(ENABLE_ZSTD "Enable use of Zstandard" ON)
 +option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" OFF)
 +option(ENABLE_GNUTLS "Enable use of GnuTLS" OFF)
 +option(ENABLE_MBEDTLS "Enable use of mbed TLS" OFF)
@@ -40,6 +41,7 @@ index 017f7cf..3d8cc9f 100644
 -option(BUILD_DOC "Build documentation" ON)
 +option(ENABLE_BZIP2 "Enable use of BZip2" OFF)
 +option(ENABLE_LZMA "Enable use of LZMA" OFF)
++option(ENABLE_ZSTD "Enable use of Zstandard" OFF)
 +
 +option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" OFF)
 +option(BUILD_REGRESS "Build regression tests" OFF)
@@ -48,8 +50,8 @@ index 017f7cf..3d8cc9f 100644
  
  include(CheckFunctionExists)
  include(CheckIncludeFiles)
-@@ -62,10 +66,10 @@ else()
-   set(WINDOWS_CRYPTO_FOUND FALSE)
+@@ -54,10 +58,10 @@ if(WIN32)
+   endif()
  endif()
  
 -option(BUILD_SHARED_LIBS "Build shared libraries" ON)
