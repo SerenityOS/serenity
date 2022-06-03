@@ -1110,7 +1110,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln(error.to_string());
-            result = JS::SyntaxError::create(interpreter.global_object(), error.to_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -1124,7 +1124,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln(error.to_string());
-            result = JS::SyntaxError::create(interpreter.global_object(), error.to_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
             auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)
