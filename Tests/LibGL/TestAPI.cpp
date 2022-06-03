@@ -40,3 +40,16 @@ TEST_CASE(0001_gl_gen_textures_does_not_return_the_same_texture_name_twice_unles
 
     EXPECT_NE(texture1, texture2);
 }
+
+TEST_CASE(0002_gl_cull_face_does_not_accept_left_and_right)
+{
+    auto context = create_testing_context();
+
+    // glCullFace only accepts GL_FRONT, GL_BACK and GL_FRONT_AND_BACK. We checked if the mode was valid by performing cull_mode < GL_FRONT || cull_mode > GL_FRONT_AND_BACK.
+    // However, this range also contains GL_LEFT and GL_RIGHT, which we would accept when we should return a GL_INVALID_ENUM error.
+    glCullFace(GL_LEFT);
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_INVALID_ENUM));
+
+    glCullFace(GL_RIGHT);
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_INVALID_ENUM));
+}
