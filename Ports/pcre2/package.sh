@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=pcre2
-version=10.39
+port='pcre2'
+version='10.40'
 useconfigure=true
 files="https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${version}/pcre2-${version}.tar.gz pcre2-${version}.tar.gz
 https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${version}/pcre2-${version}.tar.gz.sig pcre2-${version}.tar.gz.sig"
