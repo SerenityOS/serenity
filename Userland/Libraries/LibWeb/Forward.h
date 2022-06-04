@@ -377,6 +377,10 @@ class Resource;
 class ResourceLoader;
 }
 
+namespace Web::WebGL {
+class WebGLContextEvent;
+}
+
 namespace Web::XHR {
 class ProgressEvent;
 class XMLHttpRequest;
@@ -576,6 +580,7 @@ class URLSearchParamsIteratorWrapper;
 class URLSearchParamsPrototype;
 class URLSearchParamsWrapper;
 class URLWrapper;
+class WebGLContextEventWrapper;
 class WebSocketWrapper;
 class WindowObject;
 class WindowProxy;
