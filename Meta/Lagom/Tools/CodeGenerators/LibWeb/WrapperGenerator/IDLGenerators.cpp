@@ -577,6 +577,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
         enum_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
+)~~~");
+
+        if (optional) {
+            enum_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined()) {
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
     auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(global_object));
 )~~~");
         auto first = true;
@@ -595,6 +604,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         enum_generator.append(R"~~~(
     @else@
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
+)~~~");
+
+        if (optional) {
+            enum_generator.append(R"~~~(
+    }
 )~~~");
         }
     } else if (interface.dictionaries.contains(parameter.type->name)) {
