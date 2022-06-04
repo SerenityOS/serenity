@@ -354,6 +354,8 @@ private:
 
     void do_move_to_front(Window&, bool, bool);
 
+    bool sync_config_to_disk();
+
     [[nodiscard]] static WindowStack& get_rendering_window_stacks(WindowStack*&);
 
     RefPtr<Cursor> m_hidden_cursor;
