@@ -809,7 +809,9 @@ void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<St
     auto it = interface.typedefs.find(type->name);
     if (it == interface.typedefs.end())
         return;
+    bool is_nullable = type->nullable;
     type = it->value.type;
+    type->nullable = is_nullable;
     if (!extended_attributes)
         return;
     for (auto& attribute : it->value.extended_attributes)
