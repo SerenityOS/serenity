@@ -1320,6 +1320,12 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         @result_expression@ JS::js_null();
     } else {
 )~~~");
+        } else if (type.name == "sequence") {
+            scoped_generator.append(R"~~~(
+    if (!@value@.has_value()) {
+        @result_expression@ JS::js_null();
+    } else {
+)~~~");
         } else {
             scoped_generator.append(R"~~~(
     if (!@value@) {
@@ -1339,10 +1345,20 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 
         scoped_generator.append(R"~~~(
     auto* new_array@recursion_depth@ = MUST(JS::Array::create(global_object, 0));
+)~~~");
 
+        if (!type.nullable) {
+            scoped_generator.append(R"~~~(
     for (size_t i@recursion_depth@ = 0; i@recursion_depth@ < @value@.size(); ++i@recursion_depth@) {
         auto& element@recursion_depth@ = @value@.at(i@recursion_depth@);
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    auto& @value@_non_optional = @value@.value();
+    for (size_t i@recursion_depth@ = 0; i@recursion_depth@ < @value@_non_optional.size(); ++i@recursion_depth@) {
+        auto& element@recursion_depth@ = @value@_non_optional.at(i@recursion_depth@);
+)~~~");
+        }
 
         generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
 
