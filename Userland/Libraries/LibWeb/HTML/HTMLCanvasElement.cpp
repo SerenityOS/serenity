@@ -35,20 +35,32 @@ unsigned HTMLCanvasElement::height() const
     return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
+void HTMLCanvasElement::reset_context_to_default_state()
+{
+    m_context.visit(
+        [](NonnullRefPtr<CanvasRenderingContext2D>& context) {
+            context->reset_to_default_state();
+        },
+        [](NonnullRefPtr<WebGL::WebGLRenderingContext>&) {
+            TODO();
+        },
+        [](Empty) {
+            // Do nothing.
+        });
+}
+
 void HTMLCanvasElement::set_width(unsigned value)
 {
     set_attribute(HTML::AttributeNames::width, String::number(value));
     m_bitmap = nullptr;
-    if (m_context)
-        m_context->reset_to_default_state();
+    reset_context_to_default_state();
 }
 
 void HTMLCanvasElement::set_height(unsigned value)
 {
     set_attribute(HTML::AttributeNames::height, String::number(value));
     m_bitmap = nullptr;
-    if (m_context)
-        m_context->reset_to_default_state();
+    reset_context_to_default_state();
 }
 
 RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -56,19 +68,62 @@ RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::St
     return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));
 }
 
-CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
+HTMLCanvasElement::HasOrCreatedContext HTMLCanvasElement::create_2d_context()
 {
-    if (type != "2d")
-        return nullptr;
-    if (!m_context)
-        m_context = CanvasRenderingContext2D::create(*this);
-    return m_context;
+    if (!m_context.has<Empty>())
+        return m_context.has<NonnullRefPtr<CanvasRenderingContext2D>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
+
+    m_context = CanvasRenderingContext2D::create(*this);
+    return HasOrCreatedContext::Yes;
 }
 
-static Gfx::IntSize bitmap_size_for_canvas(HTMLCanvasElement const& canvas)
+JS::ThrowCompletionOr<HTMLCanvasElement::HasOrCreatedContext> HTMLCanvasElement::create_webgl_context(JS::Value options)
 {
-    auto width = canvas.width();
-    auto height = canvas.height();
+    if (!m_context.has<Empty>())
+        return m_context.has<NonnullRefPtr<WebGL::WebGLRenderingContext>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
+
+    auto maybe_context = TRY(WebGL::WebGLRenderingContext::create(*this, options));
+    if (!maybe_context)
+        return HasOrCreatedContext::No;
+
+    m_context = maybe_context.release_nonnull();
+    return HasOrCreatedContext::Yes;
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
+JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::get_context(String const& type, JS::Value options)
+{
+    // 1. If options is not an object, then set options to null.
+    if (!options.is_object())
+        options = JS::js_null();
+
+    // 2. Set options to the result of converting options to a JavaScript value.
+    // NOTE: No-op.
+
+    // 3. Run the steps in the cell of the following table whose column header matches this canvas element's canvas context mode and whose row header matches contextId:
+    // NOTE: See the spec for the full table.
+    if (type == "2d"sv) {
+        if (create_2d_context() == HasOrCreatedContext::Yes)
+            return m_context;
+
+        return Empty {};
+    }
+
+    // NOTE: The WebGL spec says "experimental-webgl" is also acceptable and must be equivalent to "webgl". Other engines accept this, so we do too.
+    if (type.is_one_of("webgl"sv, "experimental-webgl"sv)) {
+        if (TRY(create_webgl_context(options)) == HasOrCreatedContext::Yes)
+            return m_context;
+
+        return Empty {};
+    }
+
+    return Empty {};
+}
+
+static Gfx::IntSize bitmap_size_for_canvas(HTMLCanvasElement const& canvas, size_t minimum_width, size_t minimum_height)
+{
+    auto width = max(canvas.width(), minimum_width);
+    auto height = max(canvas.height(), minimum_height);
 
     Checked<size_t> area = width;
     area *= height;
@@ -84,9 +139,9 @@ static Gfx::IntSize bitmap_size_for_canvas(HTMLCanvasElement const& canvas)
     return Gfx::IntSize(width, height);
 }
 
-bool HTMLCanvasElement::create_bitmap()
+bool HTMLCanvasElement::create_bitmap(size_t minimum_width, size_t minimum_height)
 {
-    auto size = bitmap_size_for_canvas(*this);
+    auto size = bitmap_size_for_canvas(*this, minimum_width, minimum_height);
     if (size.is_empty()) {
         m_bitmap = nullptr;
         return false;
@@ -108,6 +163,20 @@ String HTMLCanvasElement::to_data_url(String const& type, [[maybe_unused]] Optio
         return {};
     auto encoded_bitmap = Gfx::PNGWriter::encode(*m_bitmap);
     return AK::URL::create_with_data(type, encode_base64(encoded_bitmap), true).to_string();
+}
+
+void HTMLCanvasElement::present()
+{
+    m_context.visit(
+        [](NonnullRefPtr<CanvasRenderingContext2D>&) {
+            // Do nothing, CRC2D writes directly to the canvas bitmap.
+        },
+        [](NonnullRefPtr<WebGL::WebGLRenderingContext>& context) {
+            context->present();
+        },
+        [](Empty) {
+            // Do nothing.
+        });
 }
 
 }

@@ -500,7 +500,7 @@ if (BUILD_LAGOM)
 
     lagom_lib(Web web
         SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
-        LIBS LagomMarkdown LagomGemini LagomGfx LagomJS LagomTextCodec LagomWasm LagomXML
+        LIBS LagomMarkdown LagomGemini LagomGfx LagomGL LagomJS LagomTextCodec LagomWasm LagomXML
     )
     generate_js_wrappers(LagomWeb)
 

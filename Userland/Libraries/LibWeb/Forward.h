@@ -379,6 +379,8 @@ class ResourceLoader;
 
 namespace Web::WebGL {
 class WebGLContextEvent;
+class WebGLRenderingContext;
+class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
@@ -581,6 +583,7 @@ class URLSearchParamsPrototype;
 class URLSearchParamsWrapper;
 class URLWrapper;
 class WebGLContextEventWrapper;
+class WebGLRenderingContextWrapper;
 class WebSocketWrapper;
 class WindowObject;
 class WindowProxy;
