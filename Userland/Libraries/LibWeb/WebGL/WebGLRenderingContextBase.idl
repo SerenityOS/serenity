@@ -21,8 +21,32 @@ interface mixin WebGLRenderingContextBase {
     sequence<DOMString>? getSupportedExtensions();
     object? getExtension(DOMString name);
 
+    undefined activeTexture(GLenum texture);
+
     undefined clear(GLbitfield mask);
     undefined clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    undefined clearDepth(GLclampf depth);
+    undefined clearStencil(GLint s);
+    undefined colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+
+    undefined cullFace(GLenum mode);
+
+    undefined depthFunc(GLenum func);
+    undefined depthMask(GLboolean flag);
+
+    undefined finish();
+    undefined flush();
+
+    undefined frontFace(GLenum mode);
+
+    undefined polygonOffset(GLfloat factor, GLfloat units);
+
+    undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+
+    undefined stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    undefined stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+
+    undefined viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
     // Enums
     // ClearBufferMask
