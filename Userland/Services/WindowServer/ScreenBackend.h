@@ -9,6 +9,7 @@
 #include "ScreenLayout.h"
 #include <AK/Error.h>
 #include <AK/Span.h>
+#include <LibGfx/Color.h>
 #include <sys/ioctl_numbers.h>
 
 namespace WindowServer {

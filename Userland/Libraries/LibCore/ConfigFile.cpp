@@ -176,11 +176,6 @@ void ConfigFile::write_bool_entry(String const& group, String const& key, bool v
     write_entry(group, key, value ? "true" : "false");
 }
 
-void ConfigFile::write_color_entry(String const& group, String const& key, Color value)
-{
-    write_entry(group, key, String::formatted("{},{},{},{}", value.red(), value.green(), value.blue(), value.alpha()));
-}
-
 ErrorOr<void> ConfigFile::sync()
 {
     if (!m_dirty)
