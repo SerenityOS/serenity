@@ -48,6 +48,10 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "AbortSignal")
         return true;
+    if (type.name == "CanvasRenderingContext2D")
+        return true;
+    if (type.name == "WebGLRenderingContext")
+        return true;
     return false;
 }
 

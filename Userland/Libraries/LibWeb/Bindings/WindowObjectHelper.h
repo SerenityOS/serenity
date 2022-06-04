@@ -341,6 +341,8 @@
 #include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/Bindings/WebGLContextEventConstructor.h>
 #include <LibWeb/Bindings/WebGLContextEventPrototype.h>
+#include <LibWeb/Bindings/WebGLRenderingContextConstructor.h>
+#include <LibWeb/Bindings/WebGLRenderingContextPrototype.h>
 #include <LibWeb/Bindings/WebSocketConstructor.h>
 #include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/Bindings/WindowConstructor.h>
@@ -529,6 +531,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(URL)                                                                \
     ADD_WINDOW_OBJECT_INTERFACE(WebGLContextEvent)                                                  \
+    ADD_WINDOW_OBJECT_INTERFACE(WebGLRenderingContext)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(Worker)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)                                                     \

@@ -352,6 +352,9 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
+    WebGL/WebGLContextAttributes.cpp
+    WebGL/WebGLRenderingContext.cpp
+    WebGL/WebGLRenderingContextBase.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
@@ -372,7 +375,9 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibWasm LibXML)
+
+# NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
 generate_js_wrappers(LibWeb)
