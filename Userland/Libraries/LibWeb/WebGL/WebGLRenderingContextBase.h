@@ -23,6 +23,9 @@ public:
 
     void present();
 
+    Optional<Vector<String>> get_supported_extensions() const;
+    JS::Object* get_extension(String const& name) const;
+
     void clear(GLbitfield mask);
     void clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 

@@ -71,6 +71,28 @@ void WebGLRenderingContextBase::needs_to_present()
     m_canvas_element->layout_node()->set_needs_display();
 }
 
+Optional<Vector<String>> WebGLRenderingContextBase::get_supported_extensions() const
+{
+    if (m_context_lost)
+        return Optional<Vector<String>> {};
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::get_supported_extensions()");
+
+    // FIXME: We don't currently support any extensions.
+    return Vector<String> {};
+}
+
+JS::Object* WebGLRenderingContextBase::get_extension(String const& name) const
+{
+    if (m_context_lost)
+        return nullptr;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::get_extension(name='{}')", name);
+
+    // FIXME: We don't currently support any extensions.
+    return nullptr;
+}
+
 void WebGLRenderingContextBase::clear(GLbitfield mask)
 {
     if (m_context_lost)
