@@ -268,7 +268,7 @@ DisplayConnector::ModeSetting DisplayConnector::current_mode_setting() const
 ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
 {
     if (!m_edid_valid)
-        return Error::from_errno(ENOTIMPL);
+        return Error::from_errno(ENODEV);
     return ByteBuffer::copy(m_edid_bytes, sizeof(m_edid_bytes));
 }
 
