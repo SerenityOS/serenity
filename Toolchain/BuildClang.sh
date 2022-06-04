@@ -321,7 +321,13 @@ pushd "$DIR/Build/clang"
 popd
 
 pushd "$DIR/Local/clang/bin/"
-    buildstep "mold_symlink" ln -s ../../mold/bin/mold ld.mold
+    ln -s ../../mold/bin/mold ld.mold
+
+    for arch in $ARCHS; do
+        ln -s clang "$arch"-pc-serenity-clang
+        ln -s clang++ "$arch"-pc-serenity-clang++
+        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
+    done
 popd
 
 # === SAVE TO CACHE ===
