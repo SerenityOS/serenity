@@ -98,6 +98,10 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
     s_current_tls_offset -= loader->tls_size_of_current_object();
     loader->set_tls_offset(s_current_tls_offset);
 
+    // This actually maps the library at the intended and final place.
+    auto main_library_object = loader->map();
+    s_global_objects.set(get_library_name(filename), *main_library_object);
+
     return loader;
 }
 
@@ -316,12 +320,8 @@ static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String con
     return loaders;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(String const& name, int flags, bool skip_global_objects)
+static Result<void, DlErrorMessage> link_main_library(String const& name, int flags, bool skip_global_objects)
 {
-    auto main_library_loader = *s_loaders.get(name);
-    auto main_library_object = main_library_loader->map();
-    s_global_objects.set(name, *main_library_object);
-
     auto loaders = collect_loaders_for_library(name, skip_global_objects);
 
     for (auto& loader : loaders) {
@@ -360,7 +360,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(St
         loader.load_stage_4();
     }
 
-    return NonnullRefPtr<DynamicLoader>(*main_library_loader);
+    return {};
 }
 
 static Result<void, DlErrorMessage> __dlclose(void* handle)
@@ -447,7 +447,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
         return result2.error();
     }
 
-    auto result = load_main_library(library_name, flags, true);
+    auto result = link_main_library(library_name, flags, true);
     if (result.is_error())
         return result.error();
 
@@ -583,12 +583,12 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     auto entry_point_function = [&main_program_name] {
         auto library_name = get_library_name(main_program_name);
-        auto result = load_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY, false);
+        auto result = link_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY, false);
         if (result.is_error()) {
             warnln("{}", result.error().text);
             _exit(1);
         }
-        auto& main_executable_loader = result.value();
+        auto& main_executable_loader = *s_loaders.get(library_name);
         auto entry_point = main_executable_loader->image().entry();
         if (main_executable_loader->is_dynamic())
             entry_point = entry_point.offset(main_executable_loader->base_address().get());
