@@ -263,9 +263,86 @@ void DynamicLoader::do_lazy_relocations()
 
 void DynamicLoader::load_program_headers()
 {
-    Vector<ProgramHeaderRegion> load_regions;
-    Vector<ProgramHeaderRegion> map_regions;
-    Vector<ProgramHeaderRegion> copy_regions;
+    FlatPtr ph_load_start = SIZE_MAX;
+    FlatPtr ph_load_end = 0;
+
+    // We walk the program header list once to find the requested address ranges of the program.
+    // We don't fill in the list of regions yet to keep malloc memory blocks from interfering with our reservation.
+    image().for_each_program_header([&](Image::ProgramHeader const& program_header) {
+        if (program_header.type() != PT_LOAD)
+            return;
+
+        FlatPtr section_start = program_header.vaddr().get();
+        FlatPtr section_end = section_start + program_header.size_in_memory();
+
+        if (ph_load_start > section_start)
+            ph_load_start = section_start;
+
+        if (ph_load_end < section_end)
+            ph_load_end = section_end;
+    });
+
+    void* requested_load_address = image().is_dynamic() ? nullptr : reinterpret_cast<void*>(ph_load_start);
+
+    int reservation_mmap_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
+    if (image().is_dynamic())
+        reservation_mmap_flags |= MAP_RANDOMIZED;
+#ifdef MAP_FIXED_NOREPLACE
+    else
+        reservation_mmap_flags |= MAP_FIXED_NOREPLACE;
+#endif
+
+    // First, we make a dummy reservation mapping, in order to allocate enough VM
+    // to hold all regions contiguously in the address space.
+
+    FlatPtr ph_load_base = ph_load_start & ~(FlatPtr)0xfffu;
+    ph_load_end = round_up_to_power_of_two(ph_load_end, PAGE_SIZE);
+
+    size_t total_mapping_size = ph_load_end - ph_load_base;
+
+    // Before we make our reservation, unmap our existing mapped ELF image that we used for reading header information.
+    // This leaves our pointers dangling momentarily, but it reduces the chance that we will conflict with ourselves.
+    if (munmap(m_file_data, m_file_size) < 0) {
+        perror("munmap old mapping");
+        VERIFY_NOT_REACHED();
+    }
+    m_elf_image = nullptr;
+    m_file_data = nullptr;
+
+    auto* reservation = mmap(requested_load_address, total_mapping_size, PROT_NONE, reservation_mmap_flags, 0, 0);
+    if (reservation == MAP_FAILED) {
+        perror("mmap reservation");
+        VERIFY_NOT_REACHED();
+    }
+
+    // Now that we can't accidentally block our requested space, re-map our ELF image.
+    String file_mmap_name = String::formatted("ELF_DYN: {}", m_filepath);
+    auto* data = mmap_with_name(nullptr, m_file_size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
+    if (data == MAP_FAILED) {
+        perror("mmap new mapping");
+        VERIFY_NOT_REACHED();
+    }
+
+    m_file_data = data;
+    m_elf_image = adopt_own(*new ELF::Image((u8*)m_file_data, m_file_size));
+
+    VERIFY(requested_load_address == nullptr || reservation == requested_load_address);
+
+    m_base_address = VirtualAddress { reservation };
+
+    // Then we unmap the reservation.
+    if (munmap(reservation, total_mapping_size) < 0) {
+        perror("munmap reservation");
+        VERIFY_NOT_REACHED();
+    }
+
+    // Most binaries have four loadable regions, three of which are mapped
+    // (symbol tables/relocation information, executable instructions, read-only data)
+    // and one of which is copied (modifiable data).
+    // These are allocated in-line to cut down on the malloc calls.
+    Vector<ProgramHeaderRegion, 4> load_regions;
+    Vector<ProgramHeaderRegion, 3> map_regions;
+    Vector<ProgramHeaderRegion, 1> copy_regions;
     Optional<ProgramHeaderRegion> tls_region;
     Optional<ProgramHeaderRegion> relro_region;
 
@@ -305,61 +382,6 @@ void DynamicLoader::load_program_headers()
     quick_sort(copy_regions, compare_load_address);
 
     // Process regions in order: .text, .data, .tls
-    void* requested_load_address = image().is_dynamic() ? nullptr : load_regions.first().desired_load_address().as_ptr();
-
-    int reservation_mmap_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
-    if (image().is_dynamic())
-        reservation_mmap_flags |= MAP_RANDOMIZED;
-#ifdef MAP_FIXED_NOREPLACE
-    else
-        reservation_mmap_flags |= MAP_FIXED_NOREPLACE;
-#endif
-
-    // First, we make a dummy reservation mapping, in order to allocate enough VM
-    // to hold all regions contiguously in the address space.
-
-    FlatPtr ph_load_base = load_regions.first().desired_load_address().page_base().get();
-    FlatPtr ph_load_end = round_up_to_power_of_two(load_regions.last().desired_load_address().offset(load_regions.last().size_in_memory()).get(), PAGE_SIZE);
-
-    size_t total_mapping_size = ph_load_end - ph_load_base;
-
-    // Before we make our reservation, unmap our existing mapped ELF image that we used for reading header information.
-    // This leaves our pointers dangling momentarily, but it reduces the chance that we will conflict with ourselves.
-    // The regions that we collected above are still safe to use because they are independent copies.
-    if (munmap(m_file_data, m_file_size) < 0) {
-        perror("munmap old mapping");
-        VERIFY_NOT_REACHED();
-    }
-    m_elf_image = nullptr;
-    m_file_data = nullptr;
-
-    auto* reservation = mmap(requested_load_address, total_mapping_size, PROT_NONE, reservation_mmap_flags, 0, 0);
-    if (reservation == MAP_FAILED) {
-        perror("mmap reservation");
-        VERIFY_NOT_REACHED();
-    }
-
-    // Now that we can't accidentally block our requested space, re-map our ELF image.
-    String file_mmap_name = String::formatted("ELF_DYN: {}", m_filepath);
-    auto* data = mmap_with_name(nullptr, m_file_size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
-    if (data == MAP_FAILED) {
-        perror("mmap new mapping");
-        VERIFY_NOT_REACHED();
-    }
-
-    m_file_data = data;
-    m_elf_image = adopt_own(*new ELF::Image((u8*)m_file_data, m_file_size));
-
-    VERIFY(requested_load_address == nullptr || reservation == requested_load_address);
-
-    m_base_address = VirtualAddress { reservation };
-
-    // Then we unmap the reservation.
-    if (munmap(reservation, total_mapping_size) < 0) {
-        perror("munmap reservation");
-        VERIFY_NOT_REACHED();
-    }
-
     for (auto& region : map_regions) {
         FlatPtr ph_desired_base = region.desired_load_address().get();
         FlatPtr ph_base = region.desired_load_address().page_base().get();
