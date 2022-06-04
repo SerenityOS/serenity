@@ -143,6 +143,10 @@ private:
     virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(String const&, String const&, bool keep_desktop_background) override;
     virtual Messages::WindowServer::GetSystemThemeResponse get_system_theme() override;
     virtual void apply_cursor_theme(String const&) override;
+    virtual void set_cursor_highlight_radius(int radius) override;
+    virtual Messages::WindowServer::GetCursorHighlightRadiusResponse get_cursor_highlight_radius() override;
+    virtual void set_cursor_highlight_color(Gfx::Color const& color) override;
+    virtual Messages::WindowServer::GetCursorHighlightColorResponse get_cursor_highlight_color() override;
     virtual Messages::WindowServer::GetCursorThemeResponse get_cursor_theme() override;
     virtual Messages::WindowServer::SetSystemFontsResponse set_system_fonts(String const&, String const&) override;
     virtual void set_window_base_size_and_size_increment(i32, Gfx::IntSize const&, Gfx::IntSize const&) override;

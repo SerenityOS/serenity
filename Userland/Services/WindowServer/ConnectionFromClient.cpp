@@ -809,6 +809,26 @@ void ConnectionFromClient::apply_cursor_theme(String const& name)
     WindowManager::the().apply_cursor_theme(name);
 }
 
+void ConnectionFromClient::set_cursor_highlight_radius(int radius)
+{
+    WindowManager::the().set_cursor_highlight_radius(radius);
+}
+
+Messages::WindowServer::GetCursorHighlightRadiusResponse ConnectionFromClient::get_cursor_highlight_radius()
+{
+    return WindowManager::the().cursor_highlight_radius();
+}
+
+void ConnectionFromClient::set_cursor_highlight_color(Gfx::Color const& color)
+{
+    WindowManager::the().set_cursor_highlight_color(color);
+}
+
+Messages::WindowServer::GetCursorHighlightColorResponse ConnectionFromClient::get_cursor_highlight_color()
+{
+    return WindowManager::the().cursor_highlight_color();
+}
+
 Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_theme()
 {
     auto config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
