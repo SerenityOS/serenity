@@ -260,8 +260,7 @@ void WindowManager::set_acceleration_factor(double factor)
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
     m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 void WindowManager::set_scroll_step_size(unsigned step_size)
@@ -269,8 +268,7 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     ScreenInput::the().set_scroll_step_size(step_size);
     dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->filename());
     m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 void WindowManager::set_double_click_speed(int speed)
@@ -279,8 +277,7 @@ void WindowManager::set_double_click_speed(int speed)
     m_double_click_speed = speed;
     dbgln("Saving double-click speed {} to config file at {}", speed, m_config->filename());
     m_config->write_entry("Input", "DoubleClickSpeed", String::number(speed));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 int WindowManager::double_click_speed() const
@@ -293,8 +290,7 @@ void WindowManager::set_buttons_switched(bool switched)
     m_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
     m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 bool WindowManager::get_buttons_switched() const
@@ -2109,10 +2105,8 @@ bool WindowManager::update_theme(String theme_path, String theme_name, bool keep
     m_config->write_entry("Theme", "Name", theme_name);
     if (!keep_desktop_background)
         m_config->remove_entry("Background", "Color");
-    if (auto result = m_config->sync(); result.is_error()) {
-        dbgln("Failed to save config file: {}", result.error());
+    if (!sync_config_to_disk())
         return false;
-    }
     invalidate_after_theme_or_font_change();
     return true;
 }
@@ -2276,9 +2270,16 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
 
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
+    sync_config_to_disk();
+}
+
+bool WindowManager::sync_config_to_disk()
+{
     if (auto result = m_config->sync(); result.is_error()) {
         dbgln("Failed to save config file: {}", result.error());
+        return false;
     }
+    return true;
 }
 
 }
