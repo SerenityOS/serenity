@@ -71,6 +71,12 @@ void WebGLRenderingContextBase::needs_to_present()
     m_canvas_element->layout_node()->set_needs_display();
 }
 
+bool WebGLRenderingContextBase::is_context_lost() const
+{
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::is_context_lost()");
+    return m_context_lost;
+}
+
 Optional<Vector<String>> WebGLRenderingContextBase::get_supported_extensions() const
 {
     if (m_context_lost)
