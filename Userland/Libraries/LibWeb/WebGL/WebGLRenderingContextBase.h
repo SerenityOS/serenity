@@ -21,6 +21,11 @@ class WebGLRenderingContextBase
 public:
     virtual ~WebGLRenderingContextBase();
 
+    void present();
+
+    void clear(GLbitfield mask);
+    void clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+
 protected:
     WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
 
@@ -46,6 +51,8 @@ private:
     // - Canvas resize
     // - clear, drawArrays, or drawElements has been called while the drawing buffer is the currently bound framebuffer
     bool m_should_present { true };
+
+    void needs_to_present();
 };
 
 }
