@@ -323,11 +323,32 @@ void DynamicLoader::load_program_headers()
 
     size_t total_mapping_size = ph_load_end - ph_load_base;
 
+    // Before we make our reservation, unmap our existing mapped ELF image that we used for reading header information.
+    // This leaves our pointers dangling momentarily, but it reduces the chance that we will conflict with ourselves.
+    // The regions that we collected above are still safe to use because they are independent copies.
+    if (munmap(m_file_data, m_file_size) < 0) {
+        perror("munmap old mapping");
+        VERIFY_NOT_REACHED();
+    }
+    m_elf_image = nullptr;
+    m_file_data = nullptr;
+
     auto* reservation = mmap(requested_load_address, total_mapping_size, PROT_NONE, reservation_mmap_flags, 0, 0);
     if (reservation == MAP_FAILED) {
         perror("mmap reservation");
         VERIFY_NOT_REACHED();
     }
+
+    // Now that we can't accidentally block our requested space, re-map our ELF image.
+    String file_mmap_name = String::formatted("ELF_DYN: {}", m_filepath);
+    auto* data = mmap_with_name(nullptr, m_file_size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
+    if (data == MAP_FAILED) {
+        perror("mmap new mapping");
+        VERIFY_NOT_REACHED();
+    }
+
+    m_file_data = data;
+    m_elf_image = adopt_own(*new ELF::Image((u8*)m_file_data, m_file_size));
 
     VERIFY(requested_load_address == nullptr || reservation == requested_load_address);
 
