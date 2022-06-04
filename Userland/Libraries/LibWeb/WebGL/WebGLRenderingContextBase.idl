@@ -13,6 +13,14 @@ dictionary WebGLContextAttributes {
 };
 
 interface mixin WebGLRenderingContextBase {
+    // NOTE: Functions that have the [WebGLHandlesContextLoss] extended attribute in the spec do not have them here.
+    //       This is because context loss is handled manually on a function by function basis instead of having to add it to the
+    //       IDL code generator. This also allows us to handle the return type ourselves instead of adding the complexity of the
+    //       code generator working out the return type and returning the appropriate value to return on context loss.
+
+    undefined clear(GLbitfield mask);
+    undefined clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+
     // Enums
     // ClearBufferMask
     const GLenum DEPTH_BUFFER_BIT = 0x00000100;
