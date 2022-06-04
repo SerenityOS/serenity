@@ -18,6 +18,8 @@ interface mixin WebGLRenderingContextBase {
     //       IDL code generator. This also allows us to handle the return type ourselves instead of adding the complexity of the
     //       code generator working out the return type and returning the appropriate value to return on context loss.
 
+    boolean isContextLost();
+
     sequence<DOMString>? getSupportedExtensions();
     object? getExtension(DOMString name);
 

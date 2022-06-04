@@ -23,6 +23,8 @@ public:
 
     void present();
 
+    bool is_context_lost() const;
+
     Optional<Vector<String>> get_supported_extensions() const;
     JS::Object* get_extension(String const& name) const;
 
