@@ -3,10 +3,12 @@
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "HighlightWidget.h"
 #include "MouseWidget.h"
 #include "ThemeWidget.h"
 #include <LibCore/ArgsParser.h>
@@ -26,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
-    args_parser.add_option(selected_tab, "Tab, one of 'cursor-theme' or 'mouse'", "open-tab", 't', "tab");
+    args_parser.add_option(selected_tab, "Tab, one of 'cursor-theme', 'cursor-highlight',  or 'mouse'", "open-tab", 't', "tab");
     args_parser.parse(arguments);
 
     auto app_icon = GUI::Icon::default_icon("app-mouse");
@@ -34,6 +36,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     (void)TRY(window->add_tab<MouseWidget>("Mouse", "mouse"));
     (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme", "cursor-theme"));
+    (void)TRY(window->add_tab<HighlightWidget>("Cursor Highlight", "cursor-highlight"));
+
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_active_tab(selected_tab);
 
