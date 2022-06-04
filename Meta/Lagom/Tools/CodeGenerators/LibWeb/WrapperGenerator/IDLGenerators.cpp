@@ -1895,6 +1895,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -2811,6 +2812,7 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::UIEvents;
 using namespace Web::XHR;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -3090,6 +3092,7 @@ using namespace Web::SVG;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -3533,6 +3536,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -3648,6 +3652,7 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
