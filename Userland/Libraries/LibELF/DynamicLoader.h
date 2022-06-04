@@ -68,14 +68,14 @@ public:
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
     size_t tls_size_of_current_object() const { return m_tls_size_of_current_object; }
     size_t tls_offset() const { return m_tls_offset; }
-    const ELF::Image& image() const { return m_elf_image; }
+    const ELF::Image& image() const { return *m_elf_image; }
 
     template<typename F>
     void for_each_needed_library(F) const;
 
     VirtualAddress base_address() const { return m_base_address; }
     Vector<LoadedSegment> const text_segments() const { return m_text_segments; }
-    bool is_dynamic() const { return m_elf_image.is_dynamic(); }
+    bool is_dynamic() const { return image().is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
     void copy_initial_tls_data_into(ByteBuffer& buffer) const;
@@ -139,7 +139,7 @@ private:
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
     void* m_file_data { nullptr };
-    ELF::Image m_elf_image;
+    OwnPtr<ELF::Image> m_elf_image;
     bool m_valid { true };
 
     RefPtr<DynamicObject> m_dynamic_object;

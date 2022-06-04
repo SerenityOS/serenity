@@ -67,8 +67,8 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size, S
     , m_file_size(size)
     , m_image_fd(fd)
     , m_file_data(data)
-    , m_elf_image((u8*)m_file_data, m_file_size)
 {
+    m_elf_image = adopt_own(*new ELF::Image((u8*)m_file_data, m_file_size));
     m_valid = validate();
     if (m_valid)
         m_tls_size_of_current_object = calculate_tls_size();
@@ -93,14 +93,14 @@ DynamicObject const& DynamicLoader::dynamic_object() const
     if (!m_cached_dynamic_object) {
         VirtualAddress dynamic_section_address;
 
-        m_elf_image.for_each_program_header([&dynamic_section_address](auto program_header) {
+        image().for_each_program_header([&dynamic_section_address](auto program_header) {
             if (program_header.type() == PT_DYNAMIC) {
                 dynamic_section_address = VirtualAddress(program_header.raw_data());
             }
         });
         VERIFY(!dynamic_section_address.is_null());
 
-        m_cached_dynamic_object = ELF::DynamicObject::create(m_filename, VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
+        m_cached_dynamic_object = ELF::DynamicObject::create(m_filename, VirtualAddress(image().base_address()), dynamic_section_address);
     }
     return *m_cached_dynamic_object;
 }
@@ -108,7 +108,7 @@ DynamicObject const& DynamicLoader::dynamic_object() const
 size_t DynamicLoader::calculate_tls_size() const
 {
     size_t tls_size = 0;
-    m_elf_image.for_each_program_header([&tls_size](auto program_header) {
+    image().for_each_program_header([&tls_size](auto program_header) {
         if (program_header.type() == PT_TLS) {
             tls_size = program_header.size_in_memory();
         }
@@ -118,7 +118,7 @@ size_t DynamicLoader::calculate_tls_size() const
 
 bool DynamicLoader::validate()
 {
-    if (!m_elf_image.is_valid())
+    if (!image().is_valid())
         return false;
 
     auto* elf_header = (ElfW(Ehdr)*)m_file_data;
@@ -271,7 +271,7 @@ void DynamicLoader::load_program_headers()
 
     VirtualAddress dynamic_region_desired_vaddr;
 
-    m_elf_image.for_each_program_header([&](Image::ProgramHeader const& program_header) {
+    image().for_each_program_header([&](Image::ProgramHeader const& program_header) {
         ProgramHeaderRegion region {};
         region.set_program_header(program_header.raw_header());
         if (region.is_tls_template()) {
@@ -305,10 +305,10 @@ void DynamicLoader::load_program_headers()
     quick_sort(copy_regions, compare_load_address);
 
     // Process regions in order: .text, .data, .tls
-    void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : load_regions.first().desired_load_address().as_ptr();
+    void* requested_load_address = image().is_dynamic() ? nullptr : load_regions.first().desired_load_address().as_ptr();
 
     int reservation_mmap_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
-    if (m_elf_image.is_dynamic())
+    if (image().is_dynamic())
         reservation_mmap_flags |= MAP_RANDOMIZED;
 #ifdef MAP_FIXED_NOREPLACE
     else
@@ -377,7 +377,7 @@ void DynamicLoader::load_program_headers()
         m_relro_segment_address = VirtualAddress { (u8*)reservation + relro_region->desired_load_address().get() - ph_load_base };
     }
 
-    if (m_elf_image.is_dynamic())
+    if (image().is_dynamic())
         m_dynamic_section_address = VirtualAddress { (u8*)reservation + dynamic_region_desired_vaddr.get() - ph_load_base };
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
@@ -405,7 +405,7 @@ void DynamicLoader::load_program_headers()
         }
 
         VirtualAddress data_segment_start;
-        if (m_elf_image.is_dynamic())
+        if (image().is_dynamic())
             data_segment_start = VirtualAddress { (u8*)reservation + region.desired_load_address().get() };
         else
             data_segment_start = region.desired_load_address();
@@ -554,7 +554,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         } else {
             auto relocation_address = (FlatPtr*)relocation.address().as_ptr();
 
-            if (m_elf_image.is_dynamic())
+            if (image().is_dynamic())
                 *relocation_address += m_dynamic_object->base_address().get();
         }
         break;
@@ -607,7 +607,7 @@ void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
     u8 const* tls_data = nullptr;
     size_t tls_size_in_image = 0;
 
-    m_elf_image.for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {
+    image().for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {
         if (program_header.type() != PT_TLS)
             return IterationDecision::Continue;
 
@@ -619,7 +619,7 @@ void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
     if (!tls_data || !tls_size_in_image)
         return;
 
-    m_elf_image.for_each_symbol([this, &buffer, tls_data](ELF::Image::Symbol symbol) {
+    image().for_each_symbol([this, &buffer, tls_data](ELF::Image::Symbol symbol) {
         if (symbol.type() != STT_TLS)
             return IterationDecision::Continue;
 
