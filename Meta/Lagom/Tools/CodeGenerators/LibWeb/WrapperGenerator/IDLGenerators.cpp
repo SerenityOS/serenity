@@ -1437,6 +1437,41 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
   @result_expression@ @value@->callback.cell();
 )~~~");
         }
+    } else if (interface.dictionaries.contains(type.name)) {
+        // https://webidl.spec.whatwg.org/#es-dictionary
+        auto dictionary_generator = scoped_generator.fork();
+
+        dictionary_generator.append(R"~~~(
+    auto* dictionary_object@recursion_depth@ = JS::Object::create(global_object, global_object.object_prototype());
+)~~~");
+
+        auto* current_dictionary = &interface.dictionaries.find(type.name)->value;
+        while (true) {
+            for (auto& member : current_dictionary->members) {
+                dictionary_generator.set("member_key", member.name);
+                auto member_key_js_name = String::formatted("{}{}", make_input_acceptable_cpp(member.name.to_snakecase()), recursion_depth);
+                dictionary_generator.set("member_name", member_key_js_name);
+                auto member_value_js_name = String::formatted("{}_value", member_key_js_name);
+                dictionary_generator.set("member_value", member_value_js_name);
+
+                auto wrapped_value_name = String::formatted("auto wrapped_{}", member_value_js_name);
+                dictionary_generator.set("wrapped_value_name", wrapped_value_name);
+                generate_wrap_statement(dictionary_generator, String::formatted("{}.{}", value, member.name), member.type, interface, wrapped_value_name, WrappingReference::No, recursion_depth + 1);
+
+                dictionary_generator.append(R"~~~(
+    MUST(dictionary_object@recursion_depth@->create_data_property("@member_key@", @wrapped_value_name@));
+)~~~");
+            }
+
+            if (current_dictionary->parent_name.is_null())
+                break;
+            VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
+            current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
+        }
+
+        dictionary_generator.append(R"~~~(
+    @result_expression@ dictionary_object@recursion_depth@;
+)~~~");
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
