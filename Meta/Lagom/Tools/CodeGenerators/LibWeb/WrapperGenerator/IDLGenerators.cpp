@@ -1502,6 +1502,10 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         dictionary_generator.append(R"~~~(
     @result_expression@ dictionary_object@recursion_depth@;
 )~~~");
+    } else if (type.name == "object") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value(const_cast<JS::Object*>(@value@));
+)~~~");
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
