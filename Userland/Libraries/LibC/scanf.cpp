@@ -270,7 +270,7 @@ struct ReadElement {
             if constexpr (IsSame<T, int>)
                 return ReadElementConcrete<T, long, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, unsigned>)
-                return ReadElementConcrete<T, unsigned, kind> {}(input_lexer, ap, suppress_assignment);
+                return ReadElementConcrete<T, unsigned long, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, float>)
                 return ReadElementConcrete<int, double, kind> {}(input_lexer, ap, suppress_assignment);
             return false;
