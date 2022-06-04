@@ -93,6 +93,15 @@ JS::Object* WebGLRenderingContextBase::get_extension(String const& name) const
     return nullptr;
 }
 
+void WebGLRenderingContextBase::active_texture(GLenum texture)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::active_texture(texture=0x{:08x})", texture);
+    m_context->gl_active_texture(texture);
+}
+
 void WebGLRenderingContextBase::clear(GLbitfield mask)
 {
     if (m_context_lost)
@@ -112,6 +121,132 @@ void WebGLRenderingContextBase::clear_color(GLclampf red, GLclampf green, GLclam
 
     dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear_color(red={}, green={}, blue={}, alpha={})", red, green, blue, alpha);
     m_context->gl_clear_color(red, green, blue, alpha);
+}
+
+void WebGLRenderingContextBase::clear_depth(GLclampf depth)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear_depth(depth={})", depth);
+    m_context->gl_clear_depth(depth);
+}
+
+void WebGLRenderingContextBase::clear_stencil(GLint s)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::clear_stencil(s=0x{:08x})", s);
+    m_context->gl_clear_stencil(s);
+}
+
+void WebGLRenderingContextBase::color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::color_mask(red={}, green={}, blue={}, alpha={})", red, green, blue, alpha);
+    m_context->gl_color_mask(red, green, blue, alpha);
+}
+
+void WebGLRenderingContextBase::cull_face(GLenum mode)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::cull_face(mode=0x{:08x})", mode);
+    m_context->gl_cull_face(mode);
+}
+
+void WebGLRenderingContextBase::depth_func(GLenum func)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::depth_func(func=0x{:08x})", func);
+    m_context->gl_depth_func(func);
+}
+
+void WebGLRenderingContextBase::depth_mask(GLboolean mask)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::depth_mask(mask={})", mask);
+    m_context->gl_depth_mask(mask);
+}
+
+void WebGLRenderingContextBase::finish()
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::finish()");
+    m_context->gl_finish();
+}
+
+void WebGLRenderingContextBase::flush()
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::flush()");
+    m_context->gl_flush();
+}
+
+void WebGLRenderingContextBase::front_face(GLenum mode)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::front_face(mode=0x{:08x})", mode);
+    m_context->gl_front_face(mode);
+}
+
+void WebGLRenderingContextBase::polygon_offset(GLfloat factor, GLfloat units)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::polygon_offset(factor={}, units={})", factor, units);
+    m_context->gl_polygon_offset(factor, units);
+}
+
+void WebGLRenderingContextBase::scissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::scissor(x={}, y={}, width={}, height={})", x, y, width, height);
+    m_context->gl_scissor(x, y, width, height);
+}
+
+void WebGLRenderingContextBase::stencil_op(GLenum fail, GLenum zfail, GLenum zpass)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op(fail=0x{:08x}, zfail=0x{:08x}, zpass=0x{:08x})", fail, zfail, zpass);
+    m_context->gl_stencil_op_separate(GL_FRONT_AND_BACK, fail, zfail, zpass);
+}
+
+void WebGLRenderingContextBase::stencil_op_separate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::stencil_op_separate(face=0x{:08x}, fail=0x{:08x}, zfail=0x{:08x}, zpass=0x{:08x})", face, fail, zfail, zpass);
+    m_context->gl_stencil_op_separate(face, fail, zfail, zpass);
+}
+
+void WebGLRenderingContextBase::viewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::viewport(x={}, y={}, width={}, height={})", x, y, width, height);
+    m_context->gl_viewport(x, y, width, height);
 }
 
 }

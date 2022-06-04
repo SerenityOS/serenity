@@ -26,8 +26,32 @@ public:
     Optional<Vector<String>> get_supported_extensions() const;
     JS::Object* get_extension(String const& name) const;
 
+    void active_texture(GLenum texture);
+
     void clear(GLbitfield mask);
     void clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    void clear_depth(GLclampf depth);
+    void clear_stencil(GLint s);
+    void color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+
+    void cull_face(GLenum mode);
+
+    void depth_func(GLenum func);
+    void depth_mask(GLboolean mask);
+
+    void finish();
+    void flush();
+
+    void front_face(GLenum mode);
+
+    void polygon_offset(GLfloat factor, GLfloat units);
+
+    void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+
+    void stencil_op(GLenum fail, GLenum zfail, GLenum zpass);
+    void stencil_op_separate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+
+    void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 protected:
     WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
