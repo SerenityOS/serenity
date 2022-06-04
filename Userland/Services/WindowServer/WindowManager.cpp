@@ -82,6 +82,10 @@ void WindowManager::reload_config()
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
+    m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 0);
+    Color default_highlight_color = Color::NamedColor::Yellow;
+    default_highlight_color.set_alpha(80);
+    m_cursor_highlight_color = Color::from_string(m_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
@@ -2271,6 +2275,28 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
     sync_config_to_disk();
+}
+
+void WindowManager::set_cursor_highlight_radius(int radius)
+{
+    // TODO: Validate radius
+    m_cursor_highlight_radius = radius;
+    Compositor::the().invalidate_cursor();
+    m_config->write_num_entry("Mouse", "CursorHighlightRadius", radius);
+    sync_config_to_disk();
+}
+
+void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
+{
+    m_cursor_highlight_color = color;
+    Compositor::the().invalidate_cursor();
+    m_config->write_entry("Mouse", "CursorHighlightColor", color.to_string());
+    sync_config_to_disk();
+}
+
+bool WindowManager::is_cursor_highlight_enabled() const
+{
+    return m_cursor_highlight_radius > 0 && m_cursor_highlight_color.alpha() > 0;
 }
 
 bool WindowManager::sync_config_to_disk()
