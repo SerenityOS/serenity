@@ -203,6 +203,7 @@ public:
     SystemMemoryInfo get_system_memory_info()
     {
         SpinlockLocker lock(s_mm_lock);
+        verify_system_memory_info_consistency();
         return m_system_memory_info;
     }
 
@@ -285,6 +286,12 @@ private:
         No
     };
     void release_pte(PageDirectory&, VirtualAddress, IsLastPTERelease);
+
+    ALWAYS_INLINE void verify_system_memory_info_consistency() const
+    {
+        auto user_physical_pages_unused = m_system_memory_info.user_physical_pages_committed + m_system_memory_info.user_physical_pages_uncommitted;
+        VERIFY(m_system_memory_info.user_physical_pages == (m_system_memory_info.user_physical_pages_used + user_physical_pages_unused));
+    }
 
     RefPtr<PageDirectory> m_kernel_page_directory;
 
