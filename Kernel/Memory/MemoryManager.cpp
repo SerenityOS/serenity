@@ -978,6 +978,10 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_us
     SpinlockLocker lock(s_mm_lock);
     size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
 
+    // We need to make sure we don't touch pages that we have committed to
+    if (m_system_memory_info.user_physical_pages_uncommitted < page_count)
+        return ENOMEM;
+
     for (auto& physical_region : m_user_physical_regions) {
         auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
         if (!physical_pages.is_empty()) {
@@ -985,6 +989,7 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_us
                 auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * page_count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
                 memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
             }
+            m_system_memory_info.user_physical_pages_uncommitted -= page_count;
             m_system_memory_info.user_physical_pages_used += page_count;
             return physical_pages;
         }
