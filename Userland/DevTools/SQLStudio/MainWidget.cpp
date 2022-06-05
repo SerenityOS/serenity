@@ -10,8 +10,10 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
@@ -141,6 +143,7 @@ MainWidget::MainWidget()
     });
 
     m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_results.clear();
         m_current_line_for_parsing = 0;
         // TODO select the database to use in UI.
         m_connection_id = m_sql_client->connect("test");
@@ -204,6 +207,26 @@ MainWidget::MainWidget()
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
         read_next_sql_statement_of_editor();
+    };
+    m_sql_client->on_next_result = [this](int, Vector<String> const& row) {
+        m_results.append(row);
+    };
+    m_sql_client->on_results_exhausted = [this](int, int) {
+        if (m_results.size() == 0)
+            return;
+        if (m_results[0].size() == 0)
+            return;
+        Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
+        for (size_t i = 0; i < m_results[0].size(); i++)
+            query_result_fields.empend(String::formatted("column_{}", i + 1), String::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
+        auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
+        m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
+        for (auto& result_row : m_results) {
+            Vector<JsonValue> individual_result_as_json;
+            for (auto& result_row_column : result_row)
+                individual_result_as_json.append(result_row_column);
+            query_results_model->add(move(individual_result_as_json));
+        }
     };
 }
 
