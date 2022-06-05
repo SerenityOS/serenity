@@ -1092,7 +1092,7 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
     }
 }
 
-template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
+template<bool has_alpha_channel, Painter::ScalingMode scaling_mode, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
     auto int_src_rect = enclosing_int_rect(src_rect);
@@ -1100,7 +1100,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     if (clipped_src_rect.is_empty())
         return;
 
-    if constexpr (!do_bilinear_blend) {
+    if constexpr (scaling_mode == Painter::ScalingMode::NearestNeighbor) {
         if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
             int hfactor = dst_rect.width() / int_src_rect.width();
             int vfactor = dst_rect.height() / int_src_rect.height();
@@ -1137,7 +1137,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 continue;
 
             Color src_pixel;
-            if constexpr (do_bilinear_blend) {
+            if constexpr (scaling_mode == Painter::ScalingMode::BilinearBlend) {
                 auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
                 auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
                 auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
@@ -1177,10 +1177,10 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 {
     switch (scaling_mode) {
     case Painter::ScalingMode::NearestNeighbor:
-        do_draw_scaled_bitmap<has_alpha_channel, false>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::NearestNeighbor>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
         break;
     case Painter::ScalingMode::BilinearBlend:
-        do_draw_scaled_bitmap<has_alpha_channel, true>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::BilinearBlend>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
         break;
     }
 }
