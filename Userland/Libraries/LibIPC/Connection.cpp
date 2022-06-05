@@ -136,6 +136,8 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
         auto bytes_read = maybe_bytes_read.release_value();
         if (bytes_read.is_empty()) {
             deferred_invoke([this] { shutdown(); });
+            if (!bytes.is_empty())
+                break;
             return Error::from_string_literal("IPC connection EOF"sv);
         }
 
