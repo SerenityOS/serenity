@@ -57,6 +57,7 @@ private:
     RefPtr<GUI::TableView> m_query_results_table_view;
 
     RefPtr<SQL::SQLClient> m_sql_client;
+    Vector<Vector<String>> m_results;
 
     String read_next_sql_statement_of_editor();
     Optional<String> read_next_line_of_editor();
