@@ -405,7 +405,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
-    idle_thread->set_name(KString::must_create("idle thread #0"));
+    idle_thread->set_name(KString::must_create("Idle Task #0"));
 
     set_idle_thread(idle_thread);
 }
