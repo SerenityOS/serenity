@@ -329,13 +329,10 @@ Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
     auto correct = [&] {
         int error = y - y_hat;
 
-        if (!is_circle) {
-            // FIXME: For ellipses the alpha values seem too low, which
-            // can make them look overly pointy. This fixes that, though there's
-            // probably a better solution to be found.
-            // (This issue seems to exist in the base algorithm)
-            error /= 4;
-        }
+        // FIXME: The alpha values seem too low, which makes things look
+        // overly pointy. This fixes that, though there's probably a better
+        // solution to be found. (This issue seems to exist in the base algorithm)
+        error /= 4;
 
         delta2_y += error;
         delta_y += error;
