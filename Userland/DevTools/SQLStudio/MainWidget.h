@@ -9,6 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
+#include <LibSQL/SQLClient.h>
 
 namespace SQLStudio {
 
@@ -54,6 +55,14 @@ private:
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::GroupBox> m_query_results_widget;
     RefPtr<GUI::TableView> m_query_results_table_view;
+
+    RefPtr<SQL::SQLClient> m_sql_client;
+
+    String read_next_sql_statement_of_editor();
+    Optional<String> read_next_line_of_editor();
+    size_t m_current_line_for_parsing { 0 };
+    int m_editor_line_level { 0 };
+    int m_connection_id { 0 };
 };
 
 }

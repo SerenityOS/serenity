@@ -19,6 +19,9 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/Token.h>
+#include <LibSQL/SQLClient.h>
 
 #include "MainWidget.h"
 #include "ScriptEditor.h"
@@ -138,7 +141,10 @@ MainWidget::MainWidget()
     });
 
     m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        TODO();
+        m_current_line_for_parsing = 0;
+        // TODO select the database to use in UI.
+        m_connection_id = m_sql_client->connect("test");
+        read_next_sql_statement_of_editor();
     });
 
     auto& toolbar_container = add<GUI::ToolbarContainer>();
@@ -194,6 +200,11 @@ MainWidget::MainWidget()
     m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
     m_query_results_widget->layout()->set_margins(6);
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
+
+    m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
+    m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
+        read_next_sql_statement_of_editor();
+    };
 }
 
 void MainWidget::initialize_menu(GUI::Window* window)
@@ -360,6 +371,76 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
             if (lexical_path.extension().equals_ignoring_case("db"sv))
                 open_database_from_file(lexical_path);
         }
+    }
+}
+
+String MainWidget::read_next_sql_statement_of_editor()
+{
+    StringBuilder piece;
+    do {
+        if (!piece.is_empty())
+            piece.append('\n');
+
+        auto line_maybe = read_next_line_of_editor();
+
+        if (!line_maybe.has_value())
+            return {};
+
+        auto& line = line_maybe.value();
+        auto lexer = SQL::AST::Lexer(line);
+
+        piece.append(line);
+
+        bool is_first_token = true;
+        bool is_command = false;
+        bool last_token_ended_statement = false;
+        bool tokens_found = false;
+
+        for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
+            tokens_found = true;
+            switch (token.type()) {
+            case SQL::AST::TokenType::ParenOpen:
+                ++m_editor_line_level;
+                break;
+            case SQL::AST::TokenType::ParenClose:
+                --m_editor_line_level;
+                break;
+            case SQL::AST::TokenType::SemiColon:
+                last_token_ended_statement = true;
+                break;
+            case SQL::AST::TokenType::Period:
+                if (is_first_token)
+                    is_command = true;
+                break;
+            default:
+                last_token_ended_statement = is_command;
+                break;
+            }
+
+            is_first_token = false;
+        }
+
+        if (tokens_found)
+            m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
+    } while ((m_editor_line_level > 0) || piece.is_empty());
+
+    auto statement_id = m_sql_client->sql_statement(m_connection_id, piece.to_string());
+    m_sql_client->async_statement_execute(statement_id);
+
+    return piece.to_string();
+}
+
+Optional<String> MainWidget::read_next_line_of_editor()
+{
+    auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+    if (!editor)
+        return {};
+    if (m_current_line_for_parsing < editor->document().line_count()) {
+        String result = editor->document().line(m_current_line_for_parsing).to_utf8();
+        m_current_line_for_parsing++;
+        return result;
+    } else {
+        return {};
     }
 }
 
