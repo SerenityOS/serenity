@@ -191,6 +191,19 @@ MainWidget::MainWidget()
         on_editor_change();
     };
 
+    m_action_tab_widget = add<GUI::TabWidget>();
+    m_action_tab_widget->set_fixed_height(0);
+    m_action_tab_widget->set_close_button_enabled(true);
+
+    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
+    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
+    m_query_results_widget->layout()->set_margins(6);
+    m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
+
+    m_action_tab_widget->on_tab_close_click = [this](auto&) {
+        m_action_tab_widget->set_fixed_height(0);
+    };
+
     m_statusbar = add<GUI::Statusbar>(3);
 
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
@@ -198,11 +211,6 @@ MainWidget::MainWidget()
 
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000") + font().max_glyph_width());
-
-    m_query_results_widget = add<GUI::GroupBox>("Results");
-    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
-    m_query_results_widget->layout()->set_margins(6);
-    m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
@@ -227,6 +235,7 @@ MainWidget::MainWidget()
                 individual_result_as_json.append(result_row_column);
             query_results_model->add(move(individual_result_as_json));
         }
+        m_action_tab_widget->set_fixed_height(200);
     };
 }
 

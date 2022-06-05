@@ -53,7 +53,8 @@ private:
     int m_new_script_counter { 1 };
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
-    RefPtr<GUI::GroupBox> m_query_results_widget;
+    RefPtr<GUI::TabWidget> m_action_tab_widget;
+    RefPtr<GUI::Widget> m_query_results_widget;
     RefPtr<GUI::TableView> m_query_results_table_view;
 
     RefPtr<SQL::SQLClient> m_sql_client;
