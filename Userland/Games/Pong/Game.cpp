@@ -6,6 +6,7 @@
 
 #include "Game.h"
 #include <AK/Random.h>
+#include <LibGfx/AntiAliasingPainter.h>
 
 namespace Pong {
 
@@ -66,16 +67,18 @@ void Game::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    Gfx::AntiAliasingPainter aa_painter { painter };
+
     painter.fill_rect(rect(), Color::Black);
     painter.fill_rect(enclosing_int_rect(m_net.rect()), m_net.color);
 
-    painter.fill_ellipse(enclosing_int_rect(m_ball.rect()), Color::Red);
+    aa_painter.fill_ellipse(enclosing_int_rect(m_ball.rect()), Color::Red);
 
     painter.fill_rect(enclosing_int_rect(m_player1_paddle.rect), m_player1_paddle.color);
     painter.fill_rect(enclosing_int_rect(m_player2_paddle.rect), m_player2_paddle.color);
 
     if (m_cursor_paddle_target_y.has_value())
-        painter.fill_ellipse(cursor_paddle_target_rect(), Color::Blue);
+        aa_painter.fill_ellipse(cursor_paddle_target_rect(), Color::Blue);
 
     painter.draw_text(player_1_score_rect(), String::formatted("{}", m_player_1_score), Gfx::TextAlignment::TopLeft, Color::White);
     painter.draw_text(player_2_score_rect(), String::formatted("{}", m_player_2_score), Gfx::TextAlignment::TopLeft, Color::White);
