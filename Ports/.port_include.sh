@@ -824,7 +824,9 @@ do_dev() {
 
     local first_hash="$(git -C "$git_repo" rev-list --max-parents=0 HEAD)"
 
+    pushd "$workdir"
     launch_user_shell
+    popd >/dev/null 2>&1
 
     local current_hash="$(git -C "$git_repo" rev-parse HEAD)"
 
