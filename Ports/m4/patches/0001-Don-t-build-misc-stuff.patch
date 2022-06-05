@@ -1,4 +1,4 @@
-From 6e40ded922c482c9e2d96d0101d783174ab7c661 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: AnicJov <contact.andrija@gmail.com>
 Date: Wed, 24 Mar 2021 23:42:01 +0100
 Subject: [PATCH] Don't build misc stuff
@@ -35,6 +35,3 @@ index 746b38c..85cb645 100644
  EXTRA_DIST = bootstrap c-boxes.el cfg.mk maint.mk \
  	.prev-version .version m4/gnulib-cache.m4 ChangeLog-2014
  
--- 
-2.36.1
-

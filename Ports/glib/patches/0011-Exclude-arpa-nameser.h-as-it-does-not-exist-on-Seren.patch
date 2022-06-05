@@ -1,7 +1,7 @@
-From fb55058ea91d87802c696aa58bcaf97a6ff5b827 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Fri, 13 Aug 2021 22:32:25 +0200
-Subject: [PATCH 13/13] arpa/nameser.h is not needed, and Serenity does not have it at the moment.
+Subject: [PATCH] Exclude arpa/nameser.h as it does not exist on Serenity
 
 ---
  gio/gnetworking.h.in | 2 ++
@@ -21,6 +21,3 @@ index 2fa95ff..1d138cf 100644
  @NAMESER_COMPAT_INCLUDE@
  
  #ifndef T_SRV
--- 
-2.25.1
-

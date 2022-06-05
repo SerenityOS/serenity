@@ -1,7 +1,7 @@
-From 9aeccfdc1257204b18e0c8efa1f18f9a24cdab75 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 16 Jun 2021 11:23:34 +0200
-Subject: [PATCH 1/2] chdir() to the resource install path at program startup
+Subject: [PATCH] chdir() to the resource install path at program startup
 
 The game tries to open its resource files using relative paths, and we
 install them into /opt, so chdr() there.
@@ -22,6 +22,3 @@ index 8fa842f..e16c35e 100644
    prngSrand(time(NULL));
    // Start up SDL and create window
    if (!init()) {
--- 
-2.36.1
-

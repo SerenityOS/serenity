@@ -1,7 +1,7 @@
-From bcf1e45d9975ff326d874eb60abaa148b321eb78 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Valtteri Koskivuori <vkoskiv@gmail.com>
 Date: Sat, 17 Apr 2021 08:30:03 +0000
-Subject: [PATCH 7/8] Replace the micro symbol with a 'u'
+Subject: [PATCH] Replace the micro symbol with a 'u'
 
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 Co-Authored-By: Valtteri Koskivuori <vkoskiv@gmail.com>
@@ -22,6 +22,3 @@ index fe0e44e..6e5e20f 100644
  				 KBLU,
  				 interactive ? ((float)r->state.finishedPasses / (float)r->prefs.sampleCount) * 100.0f :
  							   ((float)r->state.finishedTileCount / (float)r->state.tileCount) * 100.0f,
--- 
-2.36.1
-

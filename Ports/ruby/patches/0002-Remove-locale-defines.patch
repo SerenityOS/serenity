@@ -1,7 +1,7 @@
-From 30fafa059b5793c3f3638564e00465a4f514f25a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Eric Seifert <seiferteric@gmail.com>
 Date: Tue, 21 Sep 2021 23:09:21 -0700
-Subject: [PATCH 2/4] Remove locale defines
+Subject: [PATCH] Remove locale defines
 
 Serenity does not have any of that.
 ---
@@ -27,6 +27,3 @@ index cd30376..7bafe73 100644
  #endif
  
  #ifdef HAVE_LANGINFO_H
--- 
-2.36.1
-

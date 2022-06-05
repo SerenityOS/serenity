@@ -1,6 +1,6 @@
 # Patches for zlib on SerenityOS
 
-## `fix-cross-compilation.patch`
+## `0001-Fix-configure-issue-that-discarded-provided-CC-defin.patch`
 
 Fix configure issue that discarded provided CC definition.
 

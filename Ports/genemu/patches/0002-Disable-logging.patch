@@ -1,7 +1,7 @@
-From bf9d28049d0c69604f968eb23b1a1509f449946a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 15:31:45 +0430
-Subject: [PATCH 2/5] Disable logging
+Subject: [PATCH] Disable logging
 
 ---
  mem.h | 2 +-
@@ -20,6 +20,3 @@ index 8c96952..6c39fd6 100644
  
  void mem_init(int romsize);
  int load_bin(const char *fn);
--- 
-2.36.1
-

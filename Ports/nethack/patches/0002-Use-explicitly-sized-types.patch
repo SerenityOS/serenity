@@ -1,7 +1,7 @@
-From 00d5d3dad4bd9410d106bf48b83dbd01943d8db0 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sun, 11 Apr 2021 23:15:42 +0200
-Subject: [PATCH 2/5] Use explicitly sized types
+Subject: [PATCH] Use explicitly sized types
 
 ---
  include/decl.h     |  2 +-
@@ -185,6 +185,3 @@ index cd971bc..de2757e 100644
                    qt_hdr.n_hdr, ofp);
      if (debug) {
          for (i = 0; i < qt_hdr.n_hdr; i++)
--- 
-2.36.1
-

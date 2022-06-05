@@ -1,4 +1,4 @@
-From 9b3a3057e154062384b46082d423285f21da28a2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Sun, 2 Jan 2022 00:39:02 +1100
 Subject: [PATCH] Build: Add SerenityOS to list of compatible systems

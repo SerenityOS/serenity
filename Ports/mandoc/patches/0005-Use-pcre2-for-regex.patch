@@ -1,7 +1,7 @@
-From 7c8e432900e1aafc14d7012cb1456b55c5db860a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 5/9] Use pcre2 for regex
+Subject: [PATCH] Use pcre2 for regex
 
 ---
  dbm_map.c | 2 +-
@@ -20,6 +20,3 @@ index 87c085d..d5c620e 100644
  #include <stdint.h>
  #include <stdlib.h>
  #include <string.h>
--- 
-2.36.1
-

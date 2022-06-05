@@ -1,4 +1,4 @@
-From a31eefa8225cdf14ac34d57d85cdc27df027b09b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Larkin <45925460+larb0b@users.noreply.github.com>
 Date: Tue, 24 Sep 2019 02:56:39 -0400
 Subject: [PATCH] Disable toilet fonts
@@ -20,6 +20,3 @@ index 5a51d51..5044b4c 100644
  
  # Where to install files
  prefix	= /usr/local
--- 
-2.36.1
-

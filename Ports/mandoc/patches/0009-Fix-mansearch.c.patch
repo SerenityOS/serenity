@@ -1,7 +1,7 @@
-From f71b62d6e3cc1d31ee46721dd7709f68aaa9b44a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 9/9] Fix mansearch.c
+Subject: [PATCH] Fix mansearch.c
 
 ---
  mansearch.c | 4 ++--
@@ -23,6 +23,3 @@ index 0c457f9..b036f39 100644
  #include <stdio.h>
  #include <stdint.h>
  #include <stddef.h>
--- 
-2.36.1
-

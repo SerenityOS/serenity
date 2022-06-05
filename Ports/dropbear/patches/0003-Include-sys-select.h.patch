@@ -1,7 +1,7 @@
-From 6515921fcacaa71f666963a8ef8a8b3c0ad64eb2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Patrick Meyer <git@the-space.agency>
 Date: Thu, 28 Apr 2022 01:50:11 +0000
-Subject: [PATCH 3/5] Include <sys/select.h>
+Subject: [PATCH] Include <sys/select.h>
 
 Co-Authored-By: Yonatan Goldschmidt <yon.goldschmidt@gmail.com>
 ---
@@ -20,6 +20,3 @@ index 1e00002..2208f94 100644
  
  #include <stdio.h>
  #include <errno.h>
--- 
-2.36.1
-

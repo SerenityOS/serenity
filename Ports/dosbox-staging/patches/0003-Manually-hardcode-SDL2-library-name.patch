@@ -1,7 +1,7 @@
-From 73cb3bfcc987687c1ff1c1de02905b302a98a47a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 18 Jun 2021 15:06:37 +0200
-Subject: [PATCH 3/4] Manually hardcode SDL2 library name
+Subject: [PATCH] Manually hardcode SDL2 library name
 
 ---
  configure.ac | 6 ++----
@@ -24,6 +24,3 @@ index 28e9281..1cc3691 100644
  PRESDL_LIBS="$LIBS"
  LIBS="$LIBS $SDL_LIBS"
  CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
--- 
-2.36.1
-

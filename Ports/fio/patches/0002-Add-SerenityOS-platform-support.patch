@@ -1,7 +1,7 @@
-From 50d3ac3b6faa9d117ec26296067aecee988dbd8c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 21 Dec 2021 23:47:36 -0800
-Subject: [PATCH 2/4] Port: fio - Add SerenityOS platform support
+Subject: [PATCH] Add SerenityOS platform support
 
 `fio` abstracts individual operating system support out into to an
 `os/os-<name>.h` header where you can select which platform features
@@ -11,14 +11,14 @@ system.
 This patch implements basic OS support for Serenity just to get fio up
 and running.
 ---
- os/os-serenity.h | 87 ++++++++++++++++++++++++++++++++++++++++++++++++
- os/os.h          |  3 ++
- 2 files changed, 90 insertions(+)
+ os/os-serenity.h | 61 ++++++++++++++++++++++++++++++++++++++++++++++++
+ os/os.h          |  3 +++
+ 2 files changed, 64 insertions(+)
  create mode 100644 os/os-serenity.h
 
 diff --git a/os/os-serenity.h b/os/os-serenity.h
 new file mode 100644
-index 0000000..941bf09
+index 0000000..387727a
 --- /dev/null
 +++ b/os/os-serenity.h
 @@ -0,0 +1,61 @@
@@ -104,6 +104,3 @@ index 5965d7b..46604f7 100644
  #else
  #error "unsupported os"
  #endif
--- 
-2.32.0
-

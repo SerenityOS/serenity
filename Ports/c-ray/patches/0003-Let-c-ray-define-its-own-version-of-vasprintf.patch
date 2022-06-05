@@ -1,7 +1,7 @@
-From e9b3bd5acd86ffe35b0f4e22bf615b53e0af261c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Sat, 13 Mar 2021 22:11:07 +0100
-Subject: [PATCH 3/8] Let c-ray define its own version of vasprintf
+Subject: [PATCH] Let c-ray define its own version of vasprintf
 
 Co-Authored-By: Valtteri Koskivuori <vkoskiv@gmail.com>
 ---
@@ -21,6 +21,3 @@ index 70a95ac..7571e8a 100644
  int cray_vasprintf(char **strp, const char *format, va_list ap) {
  	int len = vscprintf(format, ap);
  	if (len == -1)
--- 
-2.36.1
-

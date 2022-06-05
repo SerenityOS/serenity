@@ -1,7 +1,7 @@
-From 53eae76554d4e4629fc1568cec785b644bde1f86 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: gouchi <gouchi@free.fr>
 Date: Sat, 7 May 2022 18:19:42 +0200
-Subject: [PATCH 1/6] Add SerenityOS platform
+Subject: [PATCH] Add SerenityOS platform
 
 ---
  qb/qb.system.sh | 5 +++--
@@ -27,6 +27,3 @@ index c7ac141..f7f198d 100644
  		*) OS="Win32";;
  	esac
  fi
--- 
-2.36.0
-

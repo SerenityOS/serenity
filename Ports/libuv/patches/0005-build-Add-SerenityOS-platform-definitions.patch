@@ -1,17 +1,17 @@
-From 1c95dc0ae7732d4389eac1688d3a13ba942f316d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 9 Jul 2021 05:01:05 +0430
-Subject: [PATCH 5/7] build: Add SerenityOS platform definitions
+Subject: [PATCH] build: Add SerenityOS platform definitions
 
 ---
  CMakeLists.txt | 15 +++++++++++++++
  1 file changed, 15 insertions(+)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index de1272a..f30ec26 100644
+index ac52412..d285ed9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -356,6 +356,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "QNX")
+@@ -378,6 +378,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "QNX")
    list(APPEND uv_libraries socket)
  endif()
  
@@ -33,6 +33,3 @@ index de1272a..f30ec26 100644
  if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|Linux|NetBSD|OpenBSD")
    list(APPEND uv_test_libraries util)
  endif()
--- 
-2.32.0
-

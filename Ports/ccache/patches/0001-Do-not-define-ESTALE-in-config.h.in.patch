@@ -1,4 +1,4 @@
-From 0bbcd79078f4d8cb88c1738c6aae1bcc705f3ceb Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: SeekingBlues <seekingblues@gmail.com>
 Date: Fri, 3 Jun 2022 16:05:10 -0500
 Subject: [PATCH] Do not define ESTALE in config.h.in
@@ -27,6 +27,3 @@ index 729a1d4..8aa07ca 100644
  #define SYSCONFDIR "@CMAKE_INSTALL_FULL_SYSCONFDIR@"
  
  #cmakedefine INODE_CACHE_SUPPORTED
--- 
-2.36.1
-

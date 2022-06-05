@@ -1,7 +1,7 @@
-From c0fa4cf699ff2f02d9f976deed689d968093313c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nooga <xnooga@gmail.com>
 Date: Sat, 15 May 2021 01:21:59 +0200
-Subject: [PATCH 1/2] Install the game data to /usr/local
+Subject: [PATCH] Install the game data to /usr/local
 
 ---
  config.mk | 2 +-
@@ -18,6 +18,3 @@ index b33967b..9655958 100644
  
  # Include terminal support. Requires ncurses
  TERMINAL := NO
--- 
-2.36.1
-

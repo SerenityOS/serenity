@@ -1,7 +1,7 @@
-From d352df3380953ce7acb34aa26dc3b343853c32df Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gunnar@beutner.name>
 Date: Mon, 19 Apr 2021 16:17:10 +0200
-Subject: [PATCH 2/4] Use the correct include paths for SDL
+Subject: [PATCH] Use the correct include paths for SDL
 
 The SDL port is installed into /usr/local, and its headers are
 accessible as <SDL2/...>.
@@ -24,6 +24,3 @@ index 1f696d1..b5ede07 100644
  //#endif
  
  #if SDL_BYTEORDER != SDL_LIL_ENDIAN
--- 
-2.36.1
-

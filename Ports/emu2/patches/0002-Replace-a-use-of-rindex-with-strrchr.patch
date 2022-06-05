@@ -1,7 +1,7 @@
-From 35566f37112c812ab3695e4843ff653792b1d532 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Thu, 23 Dec 2021 10:26:29 +0100
-Subject: [PATCH 2/4] Replace a use of rindex() with strrchr()
+Subject: [PATCH] Replace a use of rindex() with strrchr()
 
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 ---
@@ -29,6 +29,3 @@ index b6122a9..582a0e2 100644
      if(!p)
      {
          glob = fspec;
--- 
-2.36.1
-

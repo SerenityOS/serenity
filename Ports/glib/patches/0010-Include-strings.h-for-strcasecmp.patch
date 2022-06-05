@@ -1,7 +1,7 @@
-From 5029cb921ae1420ef10d5ecb97d07ef9a9b5070a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Thu, 12 Aug 2021 21:03:13 +0200
-Subject: [PATCH 12/12] Include 'strings.h' for strcasecmp
+Subject: [PATCH] Include 'strings.h' for strcasecmp
 
 ---
  glib/glib-init.c | 3 +++
@@ -9,7 +9,7 @@ Subject: [PATCH 12/12] Include 'strings.h' for strcasecmp
  2 files changed, 6 insertions(+)
 
 diff --git a/glib/glib-init.c b/glib/glib-init.c
-index 2958fb5..ef49806 100644
+index e7b4984..340b358 100644
 --- a/glib/glib-init.c
 +++ b/glib/glib-init.c
 @@ -26,6 +26,9 @@
@@ -23,7 +23,7 @@ index 2958fb5..ef49806 100644
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/glib/gstrfuncs.c b/glib/gstrfuncs.c
-index b6ff60f..670d1aa 100644
+index 9273533..de22330 100644
 --- a/glib/gstrfuncs.c
 +++ b/glib/gstrfuncs.c
 @@ -32,6 +32,9 @@
@@ -36,6 +36,3 @@ index b6ff60f..670d1aa 100644
  #include <string.h>
  #include <locale.h>
  #include <errno.h>
--- 
-2.25.1
-

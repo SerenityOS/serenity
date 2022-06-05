@@ -1,4 +1,4 @@
-From 1bc4a88e6a34b89538f07916479228758dd13155 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Mon, 2 May 2022 01:22:35 +0200
 Subject: [PATCH] Engine: Keep HTTP from endlessly formatting NaN values

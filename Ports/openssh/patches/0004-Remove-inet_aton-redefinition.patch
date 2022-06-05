@@ -1,7 +1,7 @@
-From 5f5cc486c5de5e03aa2397431e881e356f94724f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke <luke.wilde@live.co.uk>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 4/7] Remove inet_aton() redefinition
+Subject: [PATCH] Remove inet_aton() redefinition
 
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
 ---
@@ -217,6 +217,3 @@ index 4316ab8..1c5c338 100644
  int inet_aton(const char *cp, struct in_addr *addr);
  #endif
  
--- 
-2.36.1
-

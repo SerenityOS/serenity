@@ -1,7 +1,7 @@
-From 492088ee0565b8d947d129125ab3518a4da6a7c9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <ibara@users.noreply.github.com>
 Date: Fri, 1 Apr 2022 02:54:00 +0200
-Subject: [PATCH 3/4] Manually link with pcre2
+Subject: [PATCH] Manually link with pcre2
 
 Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
 ---
@@ -21,6 +21,3 @@ index f716df4..c1a7880 100644
  
  r$(progname) : r$(progname).in
  	cat $(VPATH)/r$(progname).in > $@
--- 
-2.36.1
-

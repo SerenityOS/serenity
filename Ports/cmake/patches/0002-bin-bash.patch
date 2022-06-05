@@ -1,7 +1,7 @@
-From 75597807e541ebe1ae83345af9250a4113bf1480 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Wed, 12 Jan 2022 22:15:37 +0330
-Subject: [PATCH 2/6] /bin/bash
+Subject: [PATCH] /bin/bash
 
 This patch swaps out /bin/sh for /bin/bash in two scripts that need it.
 
@@ -33,6 +33,3 @@ index 11622160..0e6fc25d 100755
 +#!/bin/bash
  cmake_source_dir=`cd "\`dirname \"$0\"\`";pwd`
  exec "${cmake_source_dir}/bootstrap" "$@"
--- 
-2.36.1
-

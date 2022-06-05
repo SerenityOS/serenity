@@ -1,7 +1,7 @@
-From 8b2129617d17617124a0cdffd2e4819086ba3473 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Fri, 18 Mar 2022 02:35:30 -0700
-Subject: [PATCH 11/14] serenity: Add bogus O_NDELAY just to allow the port to
+Subject: [PATCH] serenity: Add bogus O_NDELAY just to allow the port to
  compile
 
 ---
@@ -24,6 +24,3 @@ index 7772097..aa98b0a 100644
  /*
   *  Device information is held in a linked list of dev_info_t objects. Each
   *  nth element in the list also points to a unique device state which is
--- 
-2.32.0
-

@@ -1,7 +1,7 @@
-From 031255918e1421e343aedaaeb3a71b77a01dbe60 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 1 Apr 2022 01:55:25 +0200
-Subject: [PATCH 4/8] Link with the needed serenity libraries
+Subject: [PATCH] Link with the needed serenity libraries
 
 Co-Authored-By: Valtteri Koskivuori <vkoskiv@gmail.com>
 Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
@@ -22,6 +22,3 @@ index 20f8440..dc254b5 100644
  endif ()
  
  include(CheckIPOSupported)
--- 
-2.36.1
-

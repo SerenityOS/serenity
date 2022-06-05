@@ -1,7 +1,7 @@
-From bcaa941ae5b682862aacff18e44a8a33294ba716 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:53:48 +0200
-Subject: [PATCH 6/7] SDL: Convert SDL1 to SDL2
+Subject: [PATCH] SDL: Convert SDL1 to SDL2
 
 ---
  nebu/input/input_system.c |  7 ++++---
@@ -108,6 +108,3 @@ index bb787e5..c35eeca 100644
    
  	/* joystick */
  	if(SDL_Init(SDL_INIT_JOYSTICK) >= 0) {
--- 
-2.34.1
-

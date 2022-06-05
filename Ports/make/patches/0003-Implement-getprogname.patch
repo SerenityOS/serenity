@@ -1,7 +1,7 @@
-From 0cb7ee17c3177ca168c7bbd91650fba6616a3f1b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Tue, 15 Dec 2020 01:06:18 +0100
-Subject: [PATCH 3/3] Implement getprogname()
+Subject: [PATCH] Implement getprogname()
 
 ---
  lib/getprogname.c | 10 ++++++++++
@@ -35,6 +35,3 @@ index 9f69f5a..e5adb23 100644
  # else
  #  error "getprogname module not ported to this OS"
  # endif
--- 
-2.36.1
-

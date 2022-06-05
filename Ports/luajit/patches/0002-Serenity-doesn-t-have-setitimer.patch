@@ -1,7 +1,7 @@
-From a8fd0e7a0e83e768acb4503ba06b19875c2b03ab Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: circl <circl.lastname@gmail.com>
 Date: Sat, 19 Mar 2022 20:07:39 +0100
-Subject: [PATCH 2/2] Serenity doesn't have setitimer
+Subject: [PATCH] Serenity doesn't have setitimer
 
 ---
  src/lj_arch.h | 3 +++
@@ -21,6 +21,3 @@ index ba7be19..0bd7b1b 100644
  #if defined(LUAJIT_DISABLE_PROFILE)
  #define LJ_HASPROFILE		0
  #elif LJ_TARGET_POSIX
--- 
-2.32.0
-

@@ -1,7 +1,7 @@
-From 5eb27ed6f09fb3387c23fb6cd4c39204d4592787 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 15:44:53 +0430
-Subject: [PATCH 1/2] Stub out the getprogname() implementation
+Subject: [PATCH] Stub out the getprogname() implementation
 
 ---
  gettext-runtime/gnulib-lib/getprogname.c | 2 ++
@@ -62,6 +62,3 @@ index 5e6f764..e800b89 100644
  # else
  #  error "getprogname module not ported to this OS"
  # endif
--- 
-2.36.1
-

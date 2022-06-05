@@ -1,7 +1,7 @@
-From 07a476646c5585444df983b14bd3041d1dae61f1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Thu, 23 Jan 2020 23:43:31 -0500
-Subject: [PATCH 5/6] Hardcode the m4 include path
+Subject: [PATCH] Hardcode the m4 include path
 
 ---
  src/Makefile.in | 4 ++--
@@ -29,6 +29,3 @@ index 1f8a305..a5dd2e2 100644
  @ENABLE_LIBFL_TRUE@lib_LTLIBRARIES = libfl.la
  libfl_la_SOURCES = \
  	libmain.c \
--- 
-2.36.1
-

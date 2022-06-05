@@ -1,8 +1,7 @@
-From 192e9481041cb925c6934f51b75f27aaf3421432 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Thu, 12 Aug 2021 20:35:16 +0200
-Subject: [PATCH 05/12] gio/ginetaddress.c: Serenity does not have
- IN_MULTICAST, just return 0
+Subject: [PATCH] Serenity does not have IN_MULTICAST, just return 0
 
 Since Serenity does not have IN_MULTICAST we just return 0
 ---
@@ -26,6 +25,3 @@ index ada32f8..7a0a0c2 100644
      }
    else
  #ifdef HAVE_IPV6
--- 
-2.25.1
-

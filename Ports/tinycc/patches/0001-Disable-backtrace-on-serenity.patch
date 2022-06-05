@@ -1,7 +1,7 @@
-From 141841053adcc378af0880381d13db5317182e3b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sergey Bugaev <bugaevc@gmail.com>
 Date: Wed, 2 Oct 2019 22:50:20 +0300
-Subject: [PATCH 1/2] Disable backtrace on serenity
+Subject: [PATCH] Disable backtrace on serenity
 
 ---
  tcc.h | 2 +-
@@ -20,6 +20,3 @@ index ccb3b60..8cd1b19 100644
  # define CONFIG_TCC_BACKTRACE
  # if (defined TCC_TARGET_I386 || defined TCC_TARGET_X86_64 || \
        defined TCC_TARGET_ARM || defined TCC_TARGET_ARM64 || \
--- 
-2.34.1
-

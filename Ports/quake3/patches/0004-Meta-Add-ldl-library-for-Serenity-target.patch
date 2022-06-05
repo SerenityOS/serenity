@@ -1,14 +1,14 @@
-From 5efef55d7dc570bcef21533a952267e6b107d495 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Fri, 25 Mar 2022 09:45:12 +1100
-Subject: [PATCH 4/8] Meta: Add `-ldl` library for Serenity target
+Subject: [PATCH] Meta: Add `-ldl` library for Serenity target
 
 ---
  Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index b26ceb7f..035fea77 100644
+index b26ceb7..035fea7 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -868,7 +868,7 @@ ifeq ($(PLATFORM),serenity)
@@ -20,6 +20,3 @@ index b26ceb7f..035fea77 100644
  
    CLIENT_LIBS =
  
--- 
-2.35.1
-

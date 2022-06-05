@@ -1,7 +1,7 @@
-From 4476d98e7c01bf1d5f45fe24a28ceac279949454 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rodrigo Tobar <rtobarc@gmail.com>
 Date: Wed, 8 Sep 2021 00:13:16 +0800
-Subject: [PATCH 1/1] Make configure pass all dependency checks for serenity
+Subject: [PATCH] Make configure pass all dependency checks for serenity
 
 ---
  configure | 4 ++++
@@ -22,6 +22,3 @@ index b593652..28269b6 100755
  cygwin*)
    # func_win32_libid is a shell function defined in ltmain.sh
    lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
--- 
-2.36.1
-

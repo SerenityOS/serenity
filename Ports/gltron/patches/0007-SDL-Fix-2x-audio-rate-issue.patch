@@ -1,7 +1,7 @@
-From ad6b92ee167f1241de38da428a01c27f410f3d49 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 01:01:47 +0200
-Subject: [PATCH 7/7] SDL: Fix 2x audio rate issue
+Subject: [PATCH] SDL: Fix 2x audio rate issue
 
 By not passing in an `obtained` struct into `SDL_OpenAudio`, we ask SDL
 to perform any sample rate and/or format conversion for us. Previously
@@ -24,6 +24,3 @@ index 9753f09..e08b1b3 100644
        fprintf(stderr, "[error] %s\n", SDL_GetError());
        sound->SetStatus(Sound::eUninitialized);
      } else {
--- 
-2.34.1
-

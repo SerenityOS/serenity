@@ -1,7 +1,7 @@
-From e4b172e0a9db3eaa0c9c14c477e26185a2a596de Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:52:51 +0330
-Subject: [PATCH 6/9] Disable openmp
+Subject: [PATCH] Disable openmp
 
 ---
  makefile | 4 ++--
@@ -29,6 +29,3 @@ index 2e05795..d916511 100644
  
  $(BUILDDIR)/%.o: src/%.cpp
  	$(CXX) -g $(CFLAGS) -c $< $(CXXFLAGS) -o $@
--- 
-2.34.1
-

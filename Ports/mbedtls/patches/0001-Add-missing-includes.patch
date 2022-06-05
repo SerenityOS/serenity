@@ -1,7 +1,7 @@
-From 4f2b20f26ae7ba1f77fa69808f6d4dc926249c0b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Larkin <45925460+larb0b@users.noreply.github.com>
 Date: Tue, 24 Sep 2019 02:56:39 -0400
-Subject: [PATCH 1/2] Add missing includes
+Subject: [PATCH] Add missing includes
 
 ---
  library/ssl_tls.c  | 1 +
@@ -32,6 +32,3 @@ index 97e1d72..9f81247 100644
  #endif /* !_WIN32 || EFIX64 || EFI32 */
  #endif
  
--- 
-2.36.1
-

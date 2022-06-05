@@ -1,7 +1,7 @@
-From d38968ada9bb551330a127ac37d6d3432f2b4700 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Tue, 15 Dec 2020 01:06:18 +0100
-Subject: [PATCH 2/3] Stub getdtablesize() for serenity
+Subject: [PATCH] Stub getdtablesize() for serenity
 
 ---
  lib/getdtablesize.c | 8 ++++++++
@@ -40,6 +40,3 @@ index 0fe7092..a14d697 100644
  }
  
  #endif
--- 
-2.36.1
-

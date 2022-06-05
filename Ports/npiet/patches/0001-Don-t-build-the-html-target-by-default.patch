@@ -1,7 +1,7 @@
-From 725d6d5a3abd45a61b863f424fb230f009f4c832 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Noah Rosamilia <ivoahivoah@gmail.com>
 Date: Thu, 6 Jan 2022 18:28:55 -0500
-Subject: [PATCH 1/2] Don't build the html target by default
+Subject: [PATCH] Don't build the html target by default
 
 ---
  Makefile.in | 2 +-
@@ -20,6 +20,3 @@ index e49616a..8d03935 100644
  
  npiet:		npiet.o
  	$(CC) $(LDFLAGS) $(PROF) -o npiet npiet.o $(LIBS)
--- 
-2.36.1
-

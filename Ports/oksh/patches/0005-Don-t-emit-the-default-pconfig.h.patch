@@ -1,7 +1,7 @@
-From 126df60a9ec402c3a87710500d44b647615c0d8d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Fri, 5 Nov 2021 22:32:10 +0100
-Subject: [PATCH 5/5] Don't emit the default pconfig.h
+Subject: [PATCH] Don't emit the default pconfig.h
 
 ---
  configure | 35 -----------------------------------
@@ -54,6 +54,3 @@ index 710dc3b..0625338 100755
    Makefile
  
    exit 0
--- 
-2.36.1
-

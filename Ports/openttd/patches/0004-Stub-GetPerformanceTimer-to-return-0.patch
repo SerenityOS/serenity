@@ -1,7 +1,7 @@
-From 4a6442ab29becbd29418161635930a4d6d5d55e2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Thu, 29 Apr 2021 23:45:51 +0200
-Subject: [PATCH 4/6] Stub GetPerformanceTimer() to return 0
+Subject: [PATCH] Stub GetPerformanceTimer() to return 0
 
 ---
  src/framerate_gui.cpp | 5 +++--
@@ -23,6 +23,3 @@ index 1077629..2d15c5b 100644
  }
  
  
--- 
-2.36.1
-

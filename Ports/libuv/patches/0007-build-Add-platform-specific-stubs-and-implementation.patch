@@ -1,19 +1,19 @@
-From 5c53f32b401baffb4c6dc896ca07beff2add2a42 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 9 Jul 2021 05:32:00 +0430
-Subject: [PATCH 7/7] build: Add platform-specific stubs and implementations
+Subject: [PATCH] build: Add platform-specific stubs and implementations
 
 ---
  CMakeLists.txt           |   2 +
- src/unix/serenity-core.c | 137 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 139 insertions(+)
+ src/unix/serenity-core.c | 112 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 114 insertions(+)
  create mode 100644 src/unix/serenity-core.c
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f30ec26..6f0bf0c 100644
+index d285ed9..10fbd7f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -365,9 +365,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
+@@ -387,9 +387,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
      src/unix/posix-poll.c
      src/unix/no-fsevents.c
      src/unix/no-proctitle.c
@@ -27,7 +27,7 @@ index f30ec26..6f0bf0c 100644
  
 diff --git a/src/unix/serenity-core.c b/src/unix/serenity-core.c
 new file mode 100644
-index 0000000..821cf37
+index 0000000..4438d15
 --- /dev/null
 +++ b/src/unix/serenity-core.c
 @@ -0,0 +1,112 @@
@@ -143,6 +143,3 @@ index 0000000..821cf37
 +  *rss = 0;
 +  return 0;
 +}
--- 
-2.32.0
-

@@ -1,7 +1,7 @@
-From 0eca70393610857e0a87f157698b295bd727dcae Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 1/7] ifdef out missing functionality
+Subject: [PATCH] ifdef out missing functionality
 
 Co-Authored-By: Luke <luke.wilde@live.co.uk>
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
@@ -625,6 +625,3 @@ index f1e9200..564ff40 100644
  #ifdef WITH_XMSS
  	case KEY_XMSS:
  	case KEY_XMSS_CERT:
--- 
-2.36.1
-

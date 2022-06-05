@@ -1,7 +1,7 @@
-From 05fc282bdbe985fb77d746003ce213012a0292f8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: gouchi <gouchi@free.fr>
 Date: Sat, 7 May 2022 18:20:35 +0200
-Subject: [PATCH 3/6] Add strlcat()
+Subject: [PATCH] Add strlcat()
 
 ---
  Makefile.common | 4 ++++
@@ -22,6 +22,3 @@ index 580beba..dbfbd39 100644
  ifeq ($(HAVE_UNIX), 1)
     OBJ += frontend/drivers/platform_unix.o
  
--- 
-2.36.0
-

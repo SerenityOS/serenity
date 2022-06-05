@@ -1,7 +1,7 @@
-From 2029ec1800c3e9a1d8a50f158c1550523c022cec Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ludovic=20Court=C3=A8s?= <ludo@gnu.org>
 Date: Mon, 28 Feb 2022 22:57:52 +0100
-Subject: [PATCH 1/2] build: When cross-compiling, get type sizes of the target
+Subject: [PATCH] build: When cross-compiling, get type sizes of the target
  system.
 
 Fixes <https://issues.guix.gnu.org/54198>.
@@ -80,6 +80,3 @@ index 01b14f1..691ebd0 100644
  
    pf ("\n");
    pf ("/* same as POSIX \"struct timespec\" -- always defined */\n");
--- 
-2.36.1
-

@@ -1,4 +1,4 @@
-From cdc23372934196e822175a6ecbd6b06aed2bcea5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Peter Ross <pross@xvid.org>
 Date: Tue, 22 Feb 2022 18:43:09 +1100
 Subject: [PATCH] Use pkg-config for SDL2
@@ -43,6 +43,3 @@ index 5cc4088..d2bff12 100755
    fi
    # The enhanced X debugger depends on GTK2
    if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
--- 
-2.36.1
-

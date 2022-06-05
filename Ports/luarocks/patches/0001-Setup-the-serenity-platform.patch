@@ -1,7 +1,7 @@
-From 372c6d3d0119e1c0b38f9eed0d7e9b4e45c355a3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Lemos <xspager@gmail.com>
 Date: Tue, 15 Mar 2022 13:48:34 -0300
-Subject: [PATCH 1/2] Setup the serenity platform
+Subject: [PATCH] Setup the serenity platform
 
 Setup serenity as a platform and configure `defaults.variables.UNZIP` to
 work around our `unzip` command not supporting the flag `-n`
@@ -42,6 +42,3 @@ index 926d479..7c2914b 100644
     -- Expose some more values detected by LuaRocks for use by rockspec authors.
     defaults.variables.LIB_EXTENSION = defaults.lib_extension
     defaults.variables.OBJ_EXTENSION = defaults.obj_extension
--- 
-2.36.1
-

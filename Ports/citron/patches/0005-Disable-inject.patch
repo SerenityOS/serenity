@@ -1,7 +1,7 @@
-From 345758e53e21b23c716c2efccdaccf5434f16f0e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:49:59 +0330
-Subject: [PATCH 5/9] Disable inject
+Subject: [PATCH] Disable inject
 
 tcc requires ucontext.
 ---
@@ -21,6 +21,3 @@ index b262cd0..2e05795 100644
  enable_ctypes ?= true
  enable_inline_asm ?= false
  enable_boehm_gc ?= true
--- 
-2.34.1
-

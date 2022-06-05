@@ -1,7 +1,7 @@
-From 0b19221cc06f6fda8120d1f1bde79ce0a43db8d5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Dante Catalfamo <dante.catalfamo@gmail.com>
 Date: Fri, 20 Aug 2021 00:38:31 -0400
-Subject: [PATCH 2/2] Add a build conf for serenity
+Subject: [PATCH] Add a build conf for serenity
 
 ---
  build_config/serenity.rb | 16 ++++++++++++++++
@@ -30,6 +30,3 @@ index 0000000..b38f5ee
 +
 +  conf.test_runner.command = 'env'
 +end
--- 
-2.36.1
-

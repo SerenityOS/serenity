@@ -1,7 +1,7 @@
-From 80b391147785edcbf2e1267104e24087ffb420df Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 6/7] Use sendfd/recvfd on serenity
+Subject: [PATCH] Use sendfd/recvfd on serenity
 
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
 ---
@@ -44,6 +44,3 @@ index a07727a..ad6774e 100644
 +    return recvfd(sock, 0);
 +#endif
  }
--- 
-2.36.1
-

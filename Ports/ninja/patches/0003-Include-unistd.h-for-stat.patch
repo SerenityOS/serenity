@@ -1,7 +1,7 @@
-From e692da2de8cbe09141e080499e0d7627d1b69b24 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nico Weber <thakis@chromium.org>
 Date: Sun, 21 Jun 2020 18:41:01 -0400
-Subject: [PATCH 3/3] Include unistd.h for stat()
+Subject: [PATCH] Include unistd.h for stat()
 
 ---
  src/disk_interface.cc | 1 +
@@ -19,6 +19,3 @@ index 49af001..cb1fad5 100644
  
  #ifdef _WIN32
  #include <sstream>
--- 
-2.36.1
-

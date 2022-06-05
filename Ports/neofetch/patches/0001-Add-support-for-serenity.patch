@@ -1,4 +1,4 @@
-From 155fe5493eafc3a435136ce429052bcc4440d8c6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Sat, 14 Aug 2021 13:33:46 -0400
 Subject: [PATCH] Add support for serenity
@@ -258,6 +258,3 @@ index 1e4b564..ea5e351 100755
          "SharkLinux"*)
              set_colors 4 7
              read -rd '' ascii_data <<'EOF'
--- 
-2.36.1
-

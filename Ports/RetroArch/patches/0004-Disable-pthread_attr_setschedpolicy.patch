@@ -1,7 +1,7 @@
-From 365f17fb8bb303608d351f3a91219256746cdc60 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: gouchi <gouchi@free.fr>
 Date: Sat, 7 May 2022 18:20:52 +0200
-Subject: [PATCH 4/6] Disable pthread_attr_setschedpolicy()
+Subject: [PATCH] Disable pthread_attr_setschedpolicy()
 
 ---
  libretro-common/rthreads/rthreads.c | 2 +-
@@ -20,6 +20,3 @@ index 30ec6ff..08c8a96 100644
  #define HAVE_THREAD_ATTR
  #endif
  
--- 
-2.36.0
-

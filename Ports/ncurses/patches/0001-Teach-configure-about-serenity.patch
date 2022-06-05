@@ -1,4 +1,4 @@
-From a83fb5794aba24721bc47d1168e5dfc680bdbebd Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Mon, 9 Aug 2021 19:43:03 +0200
 Subject: [PATCH] Teach configure about serenity
@@ -20,6 +20,3 @@ index 421cf85..31bbb85 100755
  		if test "$DFT_LWR_MODEL" = "shared" && test -n "$LD_RPATH_OPT" ; then
  			LOCAL_LDFLAGS="${LD_RPATH_OPT}\$(LOCAL_LIBDIR)"
  			LOCAL_LDFLAGS2="$LOCAL_LDFLAGS"
--- 
-2.36.1
-

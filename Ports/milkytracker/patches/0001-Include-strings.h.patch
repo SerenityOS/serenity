@@ -1,7 +1,7 @@
-From c91a634240ee82739c68dc49aad2bd1b6916fedd Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Tue, 27 Apr 2021 18:34:53 +1000
-Subject: [PATCH 1/5] Include strings.h
+Subject: [PATCH] Include strings.h
 
 ---
  src/ppui/BasicTypes.h | 1 +
@@ -19,6 +19,3 @@ index 20eba8b..e353345 100644
  #include "ScanCodes.h"
  
  #if defined(WIN32) || defined(_WIN32_WCE) 
--- 
-2.36.1
-

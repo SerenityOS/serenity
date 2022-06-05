@@ -1,7 +1,7 @@
-From d29259d2ea80767820f69b9b58f9377166440938 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Fri, 1 Apr 2022 02:54:00 +0200
-Subject: [PATCH 1/4] Make CC and friends overridable from the env
+Subject: [PATCH] Make CC and friends overridable from the env
 
 Co-Authored-By: roytam1 <roytam@gmail.com>
 ---
@@ -27,6 +27,3 @@ index 3531bcd..a225c14 100755
  
  # checking whether we are using GNU C.
  /bin/sh -c "${CC} --version" > /dev/null 2>&1 || { CC=cc ; CFLAGS=-O2 ; }
--- 
-2.36.1
-

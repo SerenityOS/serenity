@@ -1,7 +1,7 @@
-From e552e1be81f8873930f3a75c051cf1efb2069b64 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Sat, 13 Mar 2021 22:11:07 +0100
-Subject: [PATCH 8/8] Make SDL use software rendering
+Subject: [PATCH] Make SDL use software rendering
 
 Serenity does not support accelerated rendering
 
@@ -23,6 +23,3 @@ index 89553c7..4a52e6c 100644
  	if (gdisplay->renderer == NULL) {
  		logr(warning, "Renderer couldn't be created, error: \"%s\"\n", SDL_GetError());
  		destroyDisplay();
--- 
-2.36.1
-

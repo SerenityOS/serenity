@@ -1,7 +1,7 @@
-From 517695e5b4412d2e1b1f95c0f3cd7c5202968efd Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 8/9] Build the patched-in glob implementation
+Subject: [PATCH] Build the patched-in glob implementation
 
 ---
  Makefile | 2 ++
@@ -27,6 +27,3 @@ index f4e2954..51a9816 100644
  		   compat_isblank.o \
  		   compat_mkdtemp.o \
  		   compat_ohash.o \
--- 
-2.36.1
-

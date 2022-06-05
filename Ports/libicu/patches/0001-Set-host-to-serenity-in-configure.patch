@@ -1,7 +1,7 @@
-From 8ab9c30e87cc95f6ad201eaa396c0ea2c62f9a41 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Mon, 16 May 2022 18:03:31 +0430
-Subject: [PATCH 1/2] Set host to serenity in configure
+Subject: [PATCH] Set host to serenity in configure
 
 ---
  configure | 2 ++
@@ -20,6 +20,3 @@ index a2ff7e4..8283dc9 100755
  *-*-mingw*)
  	if test "$GCC" = yes; then
                  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
--- 
-2.36.1
-

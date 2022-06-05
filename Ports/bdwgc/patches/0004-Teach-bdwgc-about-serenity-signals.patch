@@ -1,7 +1,7 @@
-From de33591aec7243f14206913f8188519744714389 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 03:30:02 +0330
-Subject: [PATCH 4/7] Teach bdwgc about serenity signals
+Subject: [PATCH] Teach bdwgc about serenity signals
 
 Serenity doesn't have the realtime POSIX signals, so use SIGXCPU and
 SIGXFSZ instead.
@@ -61,6 +61,3 @@ index 4b2c429..25eb2a5 100644
       || defined(GC_NETBSD_THREADS) || defined(GC_USESIGRT_SIGNALS)
  #   if defined(_SIGRTMIN) && !defined(CPPCHECK)
  #     define SIG_THR_RESTART _SIGRTMIN + 5
--- 
-2.36.1
-

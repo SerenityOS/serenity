@@ -1,7 +1,7 @@
-From 315d38c29eac54f3db525a7077279c37f1d83b15 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Michael Manganiello <adamantike@users.noreply.github.com>
 Date: Sun, 27 Mar 2022 12:52:11 -0300
-Subject: [PATCH 2/3] Use pkg-config for SDL_* and SDL2
+Subject: [PATCH] Use pkg-config for SDL_* and SDL2
 
 ---
  CMakeLists.txt            |  9 ++++++---
@@ -63,6 +63,3 @@ index 8a1fbeb..b9df312 100644
  	Threads::Threads # To match the build settings of the main app
  	ZLIB::ZLIB
  	)
--- 
-2.36.1
-

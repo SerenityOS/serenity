@@ -1,7 +1,7 @@
-From a780c6ee085103b0d3ffa39e0162ddd1848068bb Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Sun, 4 Apr 2021 00:41:48 +0200
-Subject: [PATCH 3/5] Use pkgconfig instead of find_package() to look for
+Subject: [PATCH] Use pkgconfig instead of find_package() to look for
  dependencies
 
 ---
@@ -38,6 +38,3 @@ index 616d876..d1aa020 100644
 +target_link_libraries(uMario ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_MIXER_LIBRARIES}-lSDL2_mixer -lpthread -lm -lgfx -lgui -lipc -lcore)
  
  install(TARGETS uMario RUNTIME DESTINATION ${BIN_DIR})
--- 
-2.36.1
-

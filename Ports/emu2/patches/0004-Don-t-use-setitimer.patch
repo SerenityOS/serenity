@@ -1,7 +1,7 @@
-From 9dec9f5ffc1a75ab15d4ecec19cb03fa4792b31d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Fri, 7 Jan 2022 17:26:40 +0100
-Subject: [PATCH 4/4] Don't use setitimer()
+Subject: [PATCH] Don't use setitimer()
 
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 ---
@@ -33,6 +33,3 @@ index d0c0d2f..7e313a0 100644
      init_bios_mem();
      while(1)
      {
--- 
-2.36.1
-

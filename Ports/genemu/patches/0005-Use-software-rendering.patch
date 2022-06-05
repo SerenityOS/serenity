@@ -1,7 +1,7 @@
-From ca395dd67bfc14dcfe769b42f2ec2d3107987cab Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 15:32:14 +0430
-Subject: [PATCH 5/5] Use software rendering
+Subject: [PATCH] Use software rendering
 
 ---
  hw.c | 4 ++--
@@ -27,6 +27,3 @@ index 6b864df..1f34423 100644
  
          SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");  // make the scaled rendering look smoother.
          SDL_RenderSetLogicalSize(renderer, 320, 240);
--- 
-2.36.1
-

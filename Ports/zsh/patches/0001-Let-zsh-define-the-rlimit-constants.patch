@@ -1,4 +1,4 @@
-From 8d26e03f10054af3f81bd66b3200efeb91f69c7b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Thiago Henrique Hupner <thihup@gmail.com>
 Date: Sat, 5 Jun 2021 08:31:13 -0300
 Subject: [PATCH] Let zsh define the rlimit constants
@@ -21,6 +21,3 @@ index 161b073..00286f2 100644
  /* HPUX does have the BSD rlimits in the kernel.  Officially they are *
   * unsupported but quite a few of them like RLIMIT_CORE seem to work. *
   * All the following are in the <sys/resource.h> but made visible     *
--- 
-2.36.1
-

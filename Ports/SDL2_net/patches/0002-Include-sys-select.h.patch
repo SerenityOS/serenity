@@ -1,7 +1,7 @@
-From ef51fb40f756e2d7a7de4d285590305c782ba9b7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 16 Jun 2021 11:08:32 +0200
-Subject: [PATCH 2/3] Include sys/select.h
+Subject: [PATCH] Include sys/select.h
 
 ---
  SDLnetsys.h | 1 +
@@ -19,6 +19,3 @@ index 6f6dfae..bd9139d 100644
  #ifdef __FreeBSD__
  #include <sys/socket.h>
  #endif
--- 
-2.36.1
-

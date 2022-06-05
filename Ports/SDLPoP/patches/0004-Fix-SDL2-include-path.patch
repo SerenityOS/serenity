@@ -1,7 +1,7 @@
-From ddde9196a6a165ff06ac725c567f7e9aebe1d4a8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gunnar@beutner.name>
 Date: Mon, 19 Apr 2021 16:17:10 +0200
-Subject: [PATCH 4/4] Fix SDL2 include path
+Subject: [PATCH] Fix SDL2 include path
 
 SDL2 headers are installed into /usr/local under SDL2, make it so
 they're found.
@@ -26,6 +26,3 @@ index 3558a6c..d074e48 100644
      link_directories(${SDL2}/lib)
  endif()
  
--- 
-2.36.1
-

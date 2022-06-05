@@ -1,7 +1,7 @@
-From 05bfb2d4b183e7ab23f9c57ccea2022a46178c26 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: xSlendiX <gamingxslendix@gmail.com>
 Date: Sat, 18 Sep 2021 16:19:50 +0300
-Subject: [PATCH 1/2] Include strings.h
+Subject: [PATCH] Include strings.h
 
 ---
  src/libmodplug/stdafx.h | 1 +
@@ -19,6 +19,3 @@ index d45d949..23c66fc 100644
  #ifdef HAVE_MALLOC_H
  #include <malloc.h>
  #endif
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From f131d47415cb23f90c62c51d1483ea4555bd1a19 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sahan Fernando <sahan.h.fernando@gmail.com>
 Date: Sat, 22 Jan 2022 00:54:01 +1100
-Subject: [PATCH 2/2] Manually link against lxml2 and ldl
+Subject: [PATCH] Manually link against lxml2 and ldl
 
 ---
  fontconfig.pc.in | 2 +-
@@ -19,6 +19,3 @@ index 61b35fb..a3c45eb 100644
 +Libs: -L${libdir} -lfontconfig -lxml2 -ldl
  Libs.private: @ICONV_LIBS@ @PKG_EXPAT_LIBS@
  Cflags: -I${includedir} @ICONV_CFLAGS@ @PKG_EXPAT_CFLAGS@
--- 
-2.36.1
-

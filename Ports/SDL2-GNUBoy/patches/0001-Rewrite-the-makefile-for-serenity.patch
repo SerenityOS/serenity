@@ -1,4 +1,4 @@
-From 0b3d749c08bada65bc6868befe6c7190c2caf32b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Sun, 15 May 2022 17:39:49 +0430
 Subject: [PATCH] Rewrite the makefile for serenity
@@ -88,6 +88,3 @@ index 8730b6c..bc1fefb 100644
 -	rm -f *gnuboy sdl2gnuboy.exe mac-sdl2gnuboy gmon.out *.o sys/*.o lib/*/*.o sys/*/*.o src/*.o
 \ No newline at end of file
 +	rm -f *gnuboy sdl2gnuboy.exe gmon.out *.o sys/*.o sys/*/*.o $(OBJS)
--- 
-2.36.1
-

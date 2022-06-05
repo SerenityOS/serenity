@@ -1,7 +1,7 @@
-From 26423a861528dd878910c58af5c13b1d3edb29b1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:58:41 -0800
-Subject: [PATCH 03/14] serenity: Fix duplicate definition of ALWAYS_INLINE on
+Subject: [PATCH] serenity: Fix duplicate definition of ALWAYS_INLINE on
  serenity
 
 ---
@@ -24,6 +24,3 @@ index 84d3bfa..5af02e1 100644
  /* force inlining hint */
  #if (defined(__GNUC__) && NEED_GNUC(3, 4, 0) 					\
       && ((!defined(__s390__) && !defined(__s390x__)) || NEED_GNUC(6, 0, 1))) ||	\
--- 
-2.32.0
-

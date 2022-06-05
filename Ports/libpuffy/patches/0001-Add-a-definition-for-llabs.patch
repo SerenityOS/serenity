@@ -1,4 +1,4 @@
-From 806cad445d82dd4facb0759087881dc6d6a0ec70 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 1 May 2021 22:43:05 +0200
 Subject: [PATCH] Add a definition for llabs
@@ -25,6 +25,3 @@ index 6ad314e..6e68356 100644
  
  /* Format the given "number" into human-readable form in "result".
   * Result must point to an allocated buffer of length FMT_SCALED_STRSIZE.
--- 
-2.36.1
-

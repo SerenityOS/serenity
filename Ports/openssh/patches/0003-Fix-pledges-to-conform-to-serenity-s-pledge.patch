@@ -1,7 +1,7 @@
-From fc2d9a37e6b20ed4544fcb53c25bd34c1c3f2249 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 3/7] Fix pledges to conform to serenity's pledge()
+Subject: [PATCH] Fix pledges to conform to serenity's pledge()
 
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
 ---
@@ -72,6 +72,3 @@ index c52321e..9ae4dbf 100644
  		fatal("%s: pledge: %s", __progname, strerror(errno));
  
  	for (i = found = 0; i < NUM_KEYTYPES; i++) {
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From a866ef2debf6c1639d14e6990be440614dce9a56 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 01:00:57 +0330
-Subject: [PATCH 1/7] Teach os_dep and gcconfig.h about serenity
+Subject: [PATCH] Teach os_dep and gcconfig.h about serenity
 
 ---
  include/private/gcconfig.h | 48 +++++++++++++++++++++++++++++++++++---
@@ -210,6 +210,3 @@ index b183423..a6d62b9 100644
  #     define CODE_OK TRUE
  #   elif defined(LINUX)
  #     define CODE_OK TRUE
--- 
-2.36.1
-

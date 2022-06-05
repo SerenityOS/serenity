@@ -1,14 +1,14 @@
-From e588447c853b3df909747002985f833a428c8c37 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Timothy <timmot@users.noreply.github.com>
 Date: Mon, 16 May 2022 23:23:21 +0430
-Subject: [PATCH 2/2] Manually set the SDL2 include path and library dir
+Subject: [PATCH] Manually set the SDL2 include path and library dir
 
 ---
  Makefile | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 1153e0c..9c70190 100644
+index 1153e0c..da26e9d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@ OBJS = reciter.o sam.o render.o main.o debug.o processframes.o createtransitions
@@ -22,6 +22,3 @@ index 1153e0c..9c70190 100644
  
  # no libsdl present
  #CFLAGS =  -Wall -O2
--- 
-2.36.1
-

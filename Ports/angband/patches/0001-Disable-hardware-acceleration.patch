@@ -1,7 +1,7 @@
-From 03f7c6e9c77b5084fd5a2b32b3c6f13c152a52b5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Sun, 17 Oct 2021 15:44:23 +0200
-Subject: [PATCH 1/2] Disable hardware acceleration
+Subject: [PATCH] Disable hardware acceleration
 
 We don't support this, so disable it.
 ---
@@ -32,6 +32,3 @@ index a678c29..51a343c 100644
  		window->config->renderer_flags = SDL_RENDERER_SOFTWARE;
  	} else {
  		return PARSE_ERROR_INVALID_VALUE;
--- 
-2.36.1
-

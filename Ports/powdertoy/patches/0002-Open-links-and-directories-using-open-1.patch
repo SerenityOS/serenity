@@ -1,7 +1,7 @@
-From 949ac4d0795be7467f7301f2de0a950767794067 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: circl <circl.lastname@gmail.com>
 Date: Sun, 20 Mar 2022 17:16:16 +0100
-Subject: [PATCH 2/2] Open links and directories using open(1)
+Subject: [PATCH] Open links and directories using open(1)
 
 ---
  src/common/Platform.cpp | 2 +-
@@ -20,6 +20,3 @@ index d341561..d32615c 100644
  	if (system(("open \"" + uri + "\"").c_str()))
  	{
  		fprintf(stderr, "cannot open URI: system(...) failed\n");
--- 
-2.32.0
-
