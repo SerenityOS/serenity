@@ -9,10 +9,12 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
@@ -135,6 +137,10 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        TODO();
+    });
+
     auto& toolbar_container = add<GUI::ToolbarContainer>();
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
@@ -149,6 +155,8 @@ MainWidget::MainWidget()
     toolbar.add_separator();
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_run_script_action);
 
     m_tab_widget = add<GUI::TabWidget>();
     m_tab_widget->set_close_button_enabled(true);
@@ -181,6 +189,11 @@ MainWidget::MainWidget()
 
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000") + font().max_glyph_width());
+
+    m_query_results_widget = add<GUI::GroupBox>("Results");
+    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
+    m_query_results_widget->layout()->set_margins(6);
+    m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 }
 
 void MainWidget::initialize_menu(GUI::Window* window)
@@ -203,6 +216,8 @@ void MainWidget::initialize_menu(GUI::Window* window)
     edit_menu.add_separator();
     edit_menu.add_action(*m_undo_action);
     edit_menu.add_action(*m_redo_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_run_script_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
