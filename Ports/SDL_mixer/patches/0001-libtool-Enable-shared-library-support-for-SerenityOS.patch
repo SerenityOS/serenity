@@ -1,4 +1,4 @@
-From bdb6569ba8bcc1332ee220b3128e94c8c69d47f7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Sun, 29 May 2022 15:01:28 +0200
 Subject: [PATCH] libtool: Enable shared library support for SerenityOS
@@ -17,7 +17,7 @@ static library into a shared library.
  1 file changed, 23 insertions(+)
 
 diff --git a/configure b/configure
-index e7c8c97..37ef6b5 100755
+index e7c8c97..c8a27a7 100755
 --- a/configure
 +++ b/configure
 @@ -4244,6 +4244,10 @@ sysv4 | sysv4.3*)
@@ -71,6 +71,3 @@ index e7c8c97..37ef6b5 100755
  *)
    dynamic_linker=no
    ;;
--- 
-2.36.1
-

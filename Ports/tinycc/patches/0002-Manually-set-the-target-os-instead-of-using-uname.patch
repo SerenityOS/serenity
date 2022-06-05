@@ -1,7 +1,7 @@
-From 47e11df165dacb5739aea943e548d73ad56818f0 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sergey Bugaev <bugaevc@gmail.com>
 Date: Wed, 2 Oct 2019 22:50:20 +0300
-Subject: [PATCH 2/2] Manually set the target os instead of using uname
+Subject: [PATCH] Manually set the target os instead of using uname
 
 ---
  configure | 2 +-
@@ -20,6 +20,3 @@ index 5673d17..9bd864f 100755
  case $targetos in
    Darwin)
      confvars="$confvars OSX"
--- 
-2.34.1
-

@@ -1,8 +1,8 @@
-From a6387e37e265be01a76d64d2730bcf390a886104 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:59:35 -0800
-Subject: [PATCH 04/14] serenity: ifdef out key_t type usage, which serenity
- does not have
+Subject: [PATCH] serenity: ifdef out key_t type usage, which serenity does not
+ have
 
 ---
  stress-ng.h | 3 +++
@@ -27,6 +27,3 @@ index 5af02e1..dac6113 100644
  #if defined(STRESS_PERF_STATS)
  	struct {
  		bool no_perf;				/* true = Perf not available */
--- 
-2.32.0
-

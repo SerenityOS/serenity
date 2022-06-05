@@ -1,4 +1,4 @@
-From de9d9f0619d8dbdb42ffa05cd73c50871dc4150e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Edwin Hoksberg <mail@edwinhoksberg.nl>
 Date: Sun, 6 Jun 2021 13:56:15 +0200
 Subject: [PATCH] Disable some unneeded options
@@ -63,6 +63,3 @@ index 93b46a6..6b8d4ed 100644
  
  find_program(MDOCTOOL NAMES mandoc groff)
  if (MDOCTOOL)
--- 
-2.36.1
-

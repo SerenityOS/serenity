@@ -1,7 +1,7 @@
-From 7136012c016c40b890ae4db5b3e4da4bf9b57caf Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Snow <i@xkun.me>
 Date: Sun, 15 May 2022 11:41:03 +0800
-Subject: [PATCH 2/3] Remove the sys/ prefix for the fcntl include
+Subject: [PATCH] Remove the sys/ prefix for the fcntl include
 
 Serenity does not have the header `fcntl.h` in `/usr/include/sys`.
 ---
@@ -21,6 +21,3 @@ index 944faef..e8e3441 100644
  #include <termios.h>
  
  #define TO_CHAR_OK(c) ((char)(c))
--- 
-2.36.1
-

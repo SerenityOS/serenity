@@ -1,8 +1,7 @@
-From d6d5890a9938ce5bfb6e9a1ee98fb2d692a6efa3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sun, 10 May 2020 11:50:31 -0400
-Subject: [PATCH 1/2] Replace a use of wait3() with waitpid() in the job
- control
+Subject: [PATCH] Replace a use of wait3() with waitpid() in the job control
 
 wait3() does not exist on serenity.
 ---
@@ -22,6 +21,3 @@ index 606d603..92ac84d 100644
  		if (err || !block)
  			break;
  
--- 
-2.36.1
-

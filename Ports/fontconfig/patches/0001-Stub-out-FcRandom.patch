@@ -1,7 +1,7 @@
-From d84d340b3b9b87902011065a1ea4e97c7f3eb095 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Tue, 26 Oct 2021 11:34:34 +0000
-Subject: [PATCH 1/2] Stub out FcRandom()
+Subject: [PATCH] Stub out FcRandom()
 
 ---
  src/fccompat.c | 51 --------------------------------------------------
@@ -76,6 +76,3 @@ index 65ac84c..96e4087 100644
  
      return result;
  }
--- 
-2.36.1
-

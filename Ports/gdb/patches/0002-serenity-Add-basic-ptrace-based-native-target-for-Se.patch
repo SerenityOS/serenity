@@ -1,7 +1,7 @@
-From 883a25f5ed8fd8f13b8e30aed3a25001839d892c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 28 Dec 2021 04:35:47 -0800
-Subject: [PATCH 2/6] serenity: Add basic ptrace based native target for
+Subject: [PATCH] serenity: Add basic ptrace based native target for
  SerenityOS/i386
 
 ---
@@ -55,7 +55,7 @@ index e94a19b..06b87ca 100644
  
  xtensa*-*-linux*)	gdb_host=linux ;;
 diff --git a/gdb/configure.nat b/gdb/configure.nat
-index e34cccf..38b687e 100644
+index f48fbda..6a0115f 100644
 --- a/gdb/configure.nat
 +++ b/gdb/configure.nat
 @@ -86,6 +86,9 @@ case ${gdb_host} in
@@ -269,7 +269,7 @@ index 0000000..4ee3fba
 +
 +#endif /* i386-serenity-tdep.h */
 diff --git a/gdb/osabi.c b/gdb/osabi.c
-index aabf895..28789e8 100644
+index 40c86e7..2f4423c 100644
 --- a/gdb/osabi.c
 +++ b/gdb/osabi.c
 @@ -82,6 +82,7 @@ static const struct osabi_names gdb_osabi_names[] =
@@ -281,7 +281,7 @@ index aabf895..28789e8 100644
    { "<invalid>", NULL }
  };
 diff --git a/gdb/osabi.h b/gdb/osabi.h
-index 1ecbed4..73c5549 100644
+index be01673..36471d8 100644
 --- a/gdb/osabi.h
 +++ b/gdb/osabi.h
 @@ -46,6 +46,7 @@ enum gdb_osabi
@@ -398,6 +398,3 @@ index 0000000..43048c6
 +extern void serenity_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch);
 +
 +#endif /* serenity-tdep.h */
--- 
-2.32.0
-

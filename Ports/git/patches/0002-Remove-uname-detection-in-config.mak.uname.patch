@@ -1,7 +1,7 @@
-From 1dc6e8b8d7cb459ce209b9f55a69c1f53f277daa Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: TheFightingCatfish <seekingblues@gmail.com>
 Date: Fri, 13 Aug 2021 06:52:59 +0800
-Subject: [PATCH 2/2] Remove uname detection in config.mak.uname
+Subject: [PATCH] Remove uname detection in config.mak.uname
 
 ---
  config.mak.uname | 12 ++++++------
@@ -30,6 +30,3 @@ index 259d151..b072f4c 100644
  
  ifneq ($(findstring MINGW,$(uname_S)),)
  	uname_S := MINGW
--- 
-2.36.1
-

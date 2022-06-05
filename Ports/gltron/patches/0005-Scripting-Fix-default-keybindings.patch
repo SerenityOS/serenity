@@ -1,7 +1,7 @@
-From d2a56ba682814f2d2451fc0729ada79290de2939 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:36:08 +0200
-Subject: [PATCH 5/7] Scripting: Fix default keybindings
+Subject: [PATCH] Scripting: Fix default keybindings
 
 These constants referred to the wrong keys.
 ---
@@ -41,6 +41,3 @@ index 3c9e6d2..4755678 100644
     },
     { -- player 3
        left = 276, -- cursor left
--- 
-2.34.1
-

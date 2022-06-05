@@ -1,14 +1,14 @@
-From 4d5d4cd86c7e94b3f4b2d8cdaf3909a5016aec23 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Fri, 25 Mar 2022 22:04:17 +1100
-Subject: [PATCH 7/8] Meta: Remove extension from main game exe
+Subject: [PATCH] Meta: Remove extension from main game exe
 
 ---
  Makefile | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index c5a27abe..c0e62001 100644
+index c5a27ab..c0e6200 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -1046,12 +1046,12 @@ endif
@@ -53,6 +53,3 @@ index c5a27abe..c0e62001 100644
    ifneq ($(USE_RENDERER_DLOPEN),0)
  	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
      ifneq ($(BUILD_RENDERER_OPENGL2),0)
--- 
-2.35.1
-

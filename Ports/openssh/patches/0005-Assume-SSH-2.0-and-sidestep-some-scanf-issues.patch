@@ -1,7 +1,7 @@
-From e7f883a58ee451a086a5f6262cbad323f3af6023 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke <luke.wilde@live.co.uk>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 5/7] Assume SSH 2.0 and sidestep some scanf issues
+Subject: [PATCH] Assume SSH 2.0 and sidestep some scanf issues
 
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
 ---
@@ -58,6 +58,3 @@ index 0bcd27d..2539cc2 100644
  	debug("Remote protocol version %d.%d, remote software version %.100s",
  	    remote_major, remote_minor, remote_version);
  	compat_banner(ssh, remote_version);
--- 
-2.36.1
-

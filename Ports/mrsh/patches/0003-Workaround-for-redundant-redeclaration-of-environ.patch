@@ -1,7 +1,7 @@
-From fa1d2ddff869430ad17e78755a06475307c49a7f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Tue, 12 Apr 2022 18:01:44 +0200
-Subject: [PATCH 3/4] Workaround for redundant redeclaration of 'environ'
+Subject: [PATCH] Workaround for redundant redeclaration of 'environ'
 
 ---
  main.c | 2 ++
@@ -21,6 +21,3 @@ index 0f433d2..577afde 100644
  
  int main(int argc, char *argv[]) {
  	struct mrsh_state *state = mrsh_state_create();
--- 
-2.32.0 (Apple Git-132)
-

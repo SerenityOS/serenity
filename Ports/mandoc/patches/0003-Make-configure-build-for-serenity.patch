@@ -1,7 +1,7 @@
-From 75619e06ffe6d4e392bf61ea3cee05706fa6df9a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 3/9] Make configure build for serenity
+Subject: [PATCH] Make configure build for serenity
 
 ---
  configure | 39 ++++++++++++---------------------------
@@ -101,6 +101,3 @@ index 5507de7..16a074b 100755
  
  [ -z "${HTDOCDIR}"        ] && HTDOCDIR="${WWWPREFIX}/htdocs"
  [ -z "${CGIBINDIR}"       ] && CGIBINDIR="${WWWPREFIX}/cgi-bin"
--- 
-2.36.1
-

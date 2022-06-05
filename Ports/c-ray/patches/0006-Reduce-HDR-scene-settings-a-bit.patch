@@ -1,7 +1,7 @@
-From 252852219ee147c38a885ea3f1e6118244f7f57d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Valtteri Koskivuori <vkoskiv@gmail.com>
 Date: Sat, 13 Mar 2021 22:11:07 +0100
-Subject: [PATCH 6/8] Reduce HDR scene settings a bit
+Subject: [PATCH] Reduce HDR scene settings a bit
 
 ---
  input/hdr.json | 6 +++---
@@ -31,6 +31,3 @@ index f2f45b1..b7b5b63 100644
  	},
  	"display": {
  		"isFullscreen": false,
--- 
-2.36.1
-

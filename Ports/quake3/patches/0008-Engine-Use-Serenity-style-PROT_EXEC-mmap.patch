@@ -1,7 +1,7 @@
-From 488dfbc449db59057afabb92d2843a2ae63741ac Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Sat, 26 Mar 2022 00:08:46 +1100
-Subject: [PATCH 8/8] Engine: Use Serenity style PROT_EXEC mmap
+Subject: [PATCH] Engine: Use Serenity style PROT_EXEC mmap
 
 The code for this was really old and crusty, so let's `ifdef` it out and
 use some more friendly Serenity style memory code.
@@ -10,7 +10,7 @@ use some more friendly Serenity style memory code.
  1 file changed, 27 insertions(+), 2 deletions(-)
 
 diff --git a/code/qcommon/vm_x86.c b/code/qcommon/vm_x86.c
-index 8d6321a6..d155efc2 100644
+index 8d6321a..d155efc 100644
 --- a/code/qcommon/vm_x86.c
 +++ b/code/qcommon/vm_x86.c
 @@ -42,6 +42,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -67,6 +67,3 @@ index 8d6321a6..d155efc2 100644
  #elif _WIN32
  	{
  		DWORD oldProtect = 0;
--- 
-2.35.1
-

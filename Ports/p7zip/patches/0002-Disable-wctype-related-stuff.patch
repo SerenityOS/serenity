@@ -1,7 +1,7 @@
-From faeff47d7dce98869667575f1765fcacbce9da2b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: John Brehm <cooljohnny3@gmail.com>
 Date: Mon, 16 May 2022 22:58:31 +0430
-Subject: [PATCH 2/3] Disable wctype related stuff
+Subject: [PATCH] Disable wctype related stuff
 
 ---
  myWindows/config.h | 2 +-
@@ -20,6 +20,3 @@ index 497d197..fa402c6 100644
    
    #if !defined(ENV_BEOS) && !defined(ANDROID_NDK)
  
--- 
-2.36.1
-

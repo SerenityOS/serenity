@@ -1,4 +1,4 @@
-From ffc3fc84ac65d2d1af7faff95e633710aad988ec Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Lemos <xspager@gmail.com>
 Date: Tue, 15 Mar 2022 13:30:11 -0300
 Subject: [PATCH] Add a serenity target to the makefile
@@ -47,6 +47,3 @@ index a13afb9..c54c7bd 100644
  # list targets that do not create files (but not all makes understand .PHONY)
  .PHONY: all $(PLATS) default o a clean depend echo none
  
--- 
-2.36.1
-

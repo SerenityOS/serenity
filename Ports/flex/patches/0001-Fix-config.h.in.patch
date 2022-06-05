@@ -1,7 +1,7 @@
-From 622a451c631ed96575c78f68b9df830fe6beedac Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Thu, 23 Jan 2020 23:43:31 -0500
-Subject: [PATCH 1/6] Fix config.h.in
+Subject: [PATCH] Fix config.h.in
 
 FIXME: This patch does not have any accompanying information.
 ---
@@ -28,6 +28,3 @@ index 4756505..96fba7b 100644
  /* Define to `unsigned int' if <sys/types.h> does not define. */
  #undef size_t
  
--- 
-2.36.1
-

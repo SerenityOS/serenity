@@ -1,7 +1,7 @@
-From ae7f99f75b0957d62364a19e9a75e74e2ef9bd8d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 01:50:40 +0330
-Subject: [PATCH 2/7] Error on unknown arch
+Subject: [PATCH] Error on unknown arch
 
 ---
  include/private/gcconfig.h | 2 ++
@@ -20,6 +20,3 @@ index e9d1d42..8e48b66 100644
  #    endif
  #endif
  # if defined(__HAIKU__) && (defined(__amd64__) || defined(__x86_64__))
--- 
-2.36.1
-

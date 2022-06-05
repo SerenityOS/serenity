@@ -1,7 +1,7 @@
-From e7cb850da0851c27197f39a2a6593c1c80981a6c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Tue, 5 Apr 2022 23:05:14 +0200
-Subject: [PATCH 1/6] All sorts of fixes for the build
+Subject: [PATCH] All sorts of fixes for the build
 
 Co-Authored-By: Kevin Nobel <kevin@2sk.nl>
 ---
@@ -121,6 +121,3 @@ index effd57c..98800f9 100644
  	typedef unsigned int uint;
  #endif
  
--- 
-2.36.1
-

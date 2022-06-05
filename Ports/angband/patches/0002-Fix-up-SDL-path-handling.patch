@@ -1,7 +1,7 @@
-From dce25b95be530cb0d9c650fc93de34ac94161ee3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Wed, 6 Apr 2022 02:25:34 +0200
-Subject: [PATCH 2/2] Fix up SDL path handling
+Subject: [PATCH] Fix up SDL path handling
 
 Fix up some copy-paste and logic mistakes in the configure script that
 prevent us from setting a prefix for the SDL installation.
@@ -69,6 +69,3 @@ index c56ed42..d6e8e85 100755
  		LIBS="${LIBS} ${SDL_LIBS}"
  		if test "$enable_sdl" = "yes"; then
  			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5
--- 
-2.36.1
-

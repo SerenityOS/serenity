@@ -1,7 +1,7 @@
-From 50f72a8d38355f2d9814cc6f507301b11bcbe02f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Michael Manganiello <adamantike@users.noreply.github.com>
 Date: Sun, 27 Mar 2022 12:52:11 -0300
-Subject: [PATCH 3/3] Disable SDL's accelerated rendering
+Subject: [PATCH] Disable SDL's accelerated rendering
 
 ---
  src/engine/screen.cpp | 4 ++--
@@ -24,6 +24,3 @@ index 9cd9ccb..f4fe315 100644
          }
  
          void _createPalette()
--- 
-2.36.1
-

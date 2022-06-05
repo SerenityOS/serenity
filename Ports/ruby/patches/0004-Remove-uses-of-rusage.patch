@@ -1,7 +1,7 @@
-From de170f190353bb28d0eefacca5087de155948270 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Eric Seifert <seiferteric@gmail.com>
 Date: Tue, 21 Sep 2021 23:09:21 -0700
-Subject: [PATCH 4/4] Remove uses of rusage
+Subject: [PATCH] Remove uses of rusage
 
 ---
  gc.c      | 23 -----------------------
@@ -125,6 +125,3 @@ index 674f05d..b7941aa 100644
  #endif
      id_CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID");
  #ifdef __APPLE__
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From a80fc99e8f2e1c5ac1620a8c6c26d65daa98204e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Sun, 20 Feb 2022 00:32:51 -0800
-Subject: [PATCH 5/6] serenity: Implement custom wait override for the
+Subject: [PATCH] serenity: Implement custom wait override for the
  serenity_nat_target
 
 While troubleshooting why gdb wasn't working when attempting to debug
@@ -109,6 +109,3 @@ index dcd24ce..9ae3b87 100644
  };
  
  #endif /* serenity-nat.h */
--- 
-2.32.0
-

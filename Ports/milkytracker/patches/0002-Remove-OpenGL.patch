@@ -1,7 +1,7 @@
-From f02afb523d34a56d8da426cee6fb56d3f57b4882 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Tue, 27 Apr 2021 18:34:53 +1000
-Subject: [PATCH 2/5] Remove OpenGL
+Subject: [PATCH] Remove OpenGL
 
 ---
  src/ppui/sdl/DisplayDevice_SDL.cpp | 42 ++----------------------------
@@ -82,6 +82,3 @@ index a4b966c..7ecedc7 100644
  
  	initMousePointers();
  }
--- 
-2.36.1
-

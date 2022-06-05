@@ -1,7 +1,7 @@
-From 574528250f8113f17a1524266114e297417fd3ff Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Sat, 27 Mar 2021 12:38:07 +0100
-Subject: [PATCH 2/2] Disable vfs locking
+Subject: [PATCH] Disable vfs locking
 
 ---
  sqlite3.c | 2 +-
@@ -27,6 +27,3 @@ index 0b227f0..90c38bd 100644
      UNIXVFS("unix-dotfile",  dotlockIoFinder ),
      UNIXVFS("unix-excl",     posixIoFinder ),
  #if OS_VXWORKS
--- 
-2.36.1
-

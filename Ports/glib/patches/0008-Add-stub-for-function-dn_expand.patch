@@ -1,8 +1,7 @@
-From 1fe4b3e57a1997dac79865b8b9790fae3597f175 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Thu, 12 Aug 2021 20:56:26 +0200
-Subject: [PATCH 10/12] gio/gthreadedresolver.c: Add stub for function
- dn_expand.
+Subject: [PATCH] Add stub for function dn_expand.
 
 Serenity is missing dn_expand so include a stub for it
 ---
@@ -10,7 +9,7 @@ Serenity is missing dn_expand so include a stub for it
  1 file changed, 6 insertions(+)
 
 diff --git a/gio/gthreadedresolver.c b/gio/gthreadedresolver.c
-index 64c3b2e..ef709e0 100644
+index 3a48b27..8d51967 100644
 --- a/gio/gthreadedresolver.c
 +++ b/gio/gthreadedresolver.c
 @@ -462,6 +462,12 @@ typedef struct {
@@ -26,6 +25,3 @@ index 64c3b2e..ef709e0 100644
  #define dn_skipname __dn_skipname
  int dn_skipname(const u_char *, const u_char *);
  
--- 
-2.25.1
-

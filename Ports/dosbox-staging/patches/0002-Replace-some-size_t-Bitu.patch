@@ -1,7 +1,7 @@
-From e62df15632c7473f88055973d2e84aec9f7dc3d8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 18 Jun 2021 15:06:37 +0200
-Subject: [PATCH 2/4] Replace some size_t => Bitu
+Subject: [PATCH] Replace some size_t => Bitu
 
 FIXME: No information as to why this is a thing exists as of yet, fill
        them in when that stuff is known.
@@ -31,6 +31,3 @@ index 355a082..6c20b5c 100644
  	void WriteToRegister();
  
  	// Collections
--- 
-2.36.1
-

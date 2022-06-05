@@ -1,7 +1,7 @@
-From 2b1a1933641853db42a37f772efc6d5271e3db16 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Sun, 29 May 2022 15:01:28 +0200
-Subject: [PATCH 2/2] libtool: Enable shared library support for SerenityOS
+Subject: [PATCH] libtool: Enable shared library support for SerenityOS
 
 For some odd reason, libtool handles the configuration for shared
 libraries entirely statically and in its configure script. If no
@@ -71,6 +71,3 @@ index 7bee4db..dfbc3ea 100755
  *)
    dynamic_linker=no
    ;;
--- 
-2.36.1
-

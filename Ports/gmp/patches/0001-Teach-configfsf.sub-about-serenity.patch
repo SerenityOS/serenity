@@ -1,4 +1,4 @@
-From 09cd709c6d4b7e180b2ddff01f3f03ac658726b3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Thu, 8 Apr 2021 07:11:06 +0000
 Subject: [PATCH] Teach configfsf.sub about serenity
@@ -19,6 +19,3 @@ index 8167d08..ad8066a 100755
  	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
  	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
  	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
--- 
-2.36.1
-

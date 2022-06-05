@@ -1,7 +1,7 @@
-From f62c28eb06da77e271e7ad2f2cf7fd09d112f0f1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: John Brehm <cooljohnny3@gmail.com>
 Date: Mon, 16 May 2022 22:58:31 +0430
-Subject: [PATCH 3/3] Add a missing strings.h include
+Subject: [PATCH] Add a missing strings.h include
 
 ---
  7zip/Archive/Zip/ZipItem.cpp | 1 +
@@ -19,6 +19,3 @@ index 353e895..ad0a3da 100644
  
  namespace NArchive {
  namespace NZip {
--- 
-2.36.1
-

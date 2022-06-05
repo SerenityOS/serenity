@@ -1,7 +1,7 @@
-From 83b82de3eed21eda75179417c1c234b5a56a52d6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Fri, 5 Nov 2021 22:32:10 +0100
-Subject: [PATCH 2/5] Add pconfig.h
+Subject: [PATCH] Add pconfig.h
 
 ---
  pconfig.h | 30 ++++++++++++++++++++++++++++++
@@ -44,6 +44,3 @@ index 0000000..3274014
 +#define HAVE_SIGNAME
 +#define HAVE_TIMERADD
 +#define HAVE_TIMERCLEAR
--- 
-2.36.1
-

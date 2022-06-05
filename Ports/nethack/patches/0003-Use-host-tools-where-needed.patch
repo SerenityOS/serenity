@@ -1,7 +1,7 @@
-From 3d1ff1d1a12a4111b7ef29e8c6bbae05095c1bc1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sun, 11 Apr 2021 23:15:42 +0200
-Subject: [PATCH 3/5] Use host tools where needed
+Subject: [PATCH] Use host tools where needed
 
 ---
  sys/unix/Makefile.dat | 68 +++++++++++++++++++++----------------------
@@ -163,6 +163,3 @@ index 78e9d72..1a7efca 100644
  # makedefs -z makes both vis_tab.h and vis_tab.c, but writes the .h first
  ../src/vis_tab.c: ../include/vis_tab.h
  
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From 9dd73dc37156e39a03cbf4c2af0d754bf84882ab Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:32:42 +0330
-Subject: [PATCH 2/9] Make fiber a noop
+Subject: [PATCH] Make fiber a noop
 
 Serenity doesn't have ucontext.
 ---
@@ -141,6 +141,3 @@ index e8a99f1..23afae6 100644
      CtrStdFiber->info.sticky = 1;
  
      ctr_internal_object_add_property(
--- 
-2.34.1
-

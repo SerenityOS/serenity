@@ -1,4 +1,4 @@
-From d4848aa8e5c1783c7d942a45fc2c7780315e4afe Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Sun, 29 May 2022 15:01:28 +0200
 Subject: [PATCH] libtool: Enable shared library support for SerenityOS
@@ -71,6 +71,3 @@ index 9685eda..6fd2d94 100755
  *)
    dynamic_linker=no
    ;;
--- 
-2.36.1
-

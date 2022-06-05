@@ -1,7 +1,7 @@
-From 65f374e0cdc9bb7255ad1aadbad1869d21ac7d82 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Sun, 9 Jan 2022 23:01:32 +0100
-Subject: [PATCH 2/3] Teach configure about serenity
+Subject: [PATCH] Teach configure about serenity
 
 ---
  configure | 5 ++++-
@@ -30,6 +30,3 @@ index 65e4731..39509f3 100755
  		*)
  			OPENGL_LIBS="-lGL"
  			;;
--- 
-2.36.1
-

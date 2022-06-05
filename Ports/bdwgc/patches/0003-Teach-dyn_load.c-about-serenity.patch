@@ -1,7 +1,7 @@
-From 1f1a8460083486969fd81d0e1bf74fff4fe18e3d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 01:54:50 +0330
-Subject: [PATCH 3/7] Teach dyn_load.c about serenity
+Subject: [PATCH] Teach dyn_load.c about serenity
 
 ---
  dyn_load.c | 23 ++++++++++++++++++++---
@@ -62,6 +62,3 @@ index d857246..734643d 100644
      || (defined(__ELF__) && (defined(LINUX) || defined(FREEBSD) \
                               || defined(NACL) || defined(NETBSD) \
                               || defined(OPENBSD)))
--- 
-2.36.1
-

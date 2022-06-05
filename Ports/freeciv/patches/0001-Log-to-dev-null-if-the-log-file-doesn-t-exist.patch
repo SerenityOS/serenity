@@ -1,4 +1,4 @@
-From cbcb5538e52f9990387d4d79e676d6ef3d03fe46 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 4 Jun 2021 23:20:55 +0200
 Subject: [PATCH] Log to /dev/null if the log file doesn't exist
@@ -49,6 +49,3 @@ index 0afef96..d931378 100644
          fchmod(1, 0644);
        }
  
--- 
-2.36.1
-

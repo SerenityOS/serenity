@@ -1,4 +1,4 @@
-From e04b0fad889f05382a80fd5ac4bd3561afb1c058 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Tue, 30 Mar 2021 17:26:39 +0200
 Subject: [PATCH] Disable SDL accelerated rendering
@@ -30,6 +30,3 @@ index cfd46b8..fc47912 100644
  
    if (sdl_graphics_ptr->renderer == NULL)
      {
--- 
-2.36.1
-

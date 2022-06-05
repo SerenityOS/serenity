@@ -1,7 +1,7 @@
-From 6ff2bd5db3af8d810810f9cd46897f9ab148fb0b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <mpfard@serenityos.org>
 Date: Mon, 16 May 2022 18:03:31 +0430
-Subject: [PATCH 2/2] Add a serenity-specific makefile
+Subject: [PATCH] Add a serenity-specific makefile
 
 ---
  config/mh-serenity | 87 ++++++++++++++++++++++++++++++++++++++++++++++
@@ -101,6 +101,3 @@ index 0000000..53d6780
 +
 +## End Linux-specific setup
 +
--- 
-2.36.1
-

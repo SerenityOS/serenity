@@ -1,4 +1,4 @@
-From 853cee5949361930be3a70e7f54941a8fdfabe4f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 14 Jan 2022 16:13:16 +0330
 Subject: [PATCH] test: Disable '-S' on serenity
@@ -21,6 +21,3 @@ index c1ee128..1ebab82 100644
      printf("PCRE: -S not supported on this OS\n");
      exit(1);
  #else
--- 
-2.34.1
-

@@ -1,6 +1,6 @@
 # Patches for opfor on SerenityOS
 
-## `hlsdk-add-serenity.patch`
+## `0001-Build-Add-SerenityOS-to-list-of-compatible-systems.patch`
 
 Build: Add SerenityOS to list of compatible systems
 

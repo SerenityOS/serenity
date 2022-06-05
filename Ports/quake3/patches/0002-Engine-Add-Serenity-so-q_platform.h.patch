@@ -1,14 +1,14 @@
-From a5f5bd1db818a315cf7da0211a20718f7879791e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Fri, 25 Mar 2022 09:39:42 +1100
-Subject: [PATCH 2/8] Engine: Add Serenity so `q_platform.h`
+Subject: [PATCH] Engine: Add Serenity so `q_platform.h`
 
 ---
  code/qcommon/q_platform.h | 29 +++++++++++++++++++++++++++++
  1 file changed, 29 insertions(+)
 
 diff --git a/code/qcommon/q_platform.h b/code/qcommon/q_platform.h
-index 72dbfe1d..3bd829d4 100644
+index 72dbfe1..3bd829d 100644
 --- a/code/qcommon/q_platform.h
 +++ b/code/qcommon/q_platform.h
 @@ -290,6 +290,35 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -47,6 +47,3 @@ index 72dbfe1d..3bd829d4 100644
  //================================================================== Q3VM ===
  
  #ifdef Q3_VM
--- 
-2.35.1
-

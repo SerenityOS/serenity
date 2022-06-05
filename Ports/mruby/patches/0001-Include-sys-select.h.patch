@@ -1,7 +1,7 @@
-From 2570626cb58a59e45251dffa409547919dc23df2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Dante Catalfamo <dante.catalfamo@gmail.com>
 Date: Fri, 20 Aug 2021 00:38:31 -0400
-Subject: [PATCH 1/2] Include sys/select.h
+Subject: [PATCH] Include sys/select.h
 
 ---
  mrbgems/mruby-io/src/io.c | 1 +
@@ -19,6 +19,3 @@ index 0469c05..0dae6ca 100644
    typedef size_t fsize_t;
    typedef time_t ftime_t;
    typedef suseconds_t fsuseconds_t;
--- 
-2.36.1
-

@@ -1,4 +1,4 @@
-From 101002ce462efc69f8511bcb056eba1ca1d89d90 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Wed, 10 Nov 2021 02:07:36 +0100
 Subject: [PATCH] Remove oversized dirfd cache
@@ -22,6 +22,3 @@ index 5a7202f..562a791 100644
  
    cached_dirfds = hash_initialize (max_cached_fds,
  				   NULL,
--- 
-2.36.1
-

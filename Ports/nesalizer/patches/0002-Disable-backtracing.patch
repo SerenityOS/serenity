@@ -1,7 +1,7 @@
-From 34b8a26412d6e0880516e881c20ec336e6a450b7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Dan MacDonald <allcoms@gmail.com>
 Date: Sun, 8 Dec 2019 17:25:35 +0000
-Subject: [PATCH 2/2] Disable backtracing
+Subject: [PATCH] Disable backtracing
 
 ---
  src/common.cpp | 6 +++---
@@ -37,6 +37,3 @@ index 33df846..4dd9e9c 100644
      abort();
  }
  
--- 
-2.36.1
-

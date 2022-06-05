@@ -1,7 +1,7 @@
-From e100280860217da8822cb5568db71a8cb1456121 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Thu, 23 Dec 2021 11:13:14 +0100
-Subject: [PATCH 7/9] Use the patched-in version of glob.h
+Subject: [PATCH] Use the patched-in version of glob.h
 
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 ---
@@ -28,6 +28,3 @@ index b91c158..cb785cd 100644
  
  enum	outmode {
  	OUTMODE_DEF = 0,
--- 
-2.36.1
-

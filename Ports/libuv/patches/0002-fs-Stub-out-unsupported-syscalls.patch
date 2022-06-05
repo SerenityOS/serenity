@@ -1,14 +1,14 @@
-From a697c23403039b835526011561bbe4182e4d00fc Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 9 Jul 2021 04:56:55 +0430
-Subject: [PATCH 2/7] fs: Stub out unsupported syscalls
+Subject: [PATCH] fs: Stub out unsupported syscalls
 
 ---
  src/unix/fs.c | 13 ++++++++++---
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/src/unix/fs.c b/src/unix/fs.c
-index eb17fb4..cdc57a7 100644
+index b3211ec..dc149e3 100644
 --- a/src/unix/fs.c
 +++ b/src/unix/fs.c
 @@ -88,7 +88,8 @@
@@ -21,7 +21,7 @@ index eb17fb4..cdc57a7 100644
  # include <sys/statvfs.h>
  #else
  # include <sys/statfs.h>
-@@ -655,7 +656,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
+@@ -656,7 +657,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
      defined(__MVS__)    || \
      defined(__NetBSD__) || \
      defined(__HAIKU__)  || \
@@ -31,7 +31,7 @@ index eb17fb4..cdc57a7 100644
    struct statvfs buf;
  
    if (0 != statvfs(req->path, &buf))
-@@ -677,7 +679,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
+@@ -678,7 +680,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
      defined(__OpenBSD__)  || \
      defined(__NetBSD__)   || \
      defined(__HAIKU__)    || \
@@ -41,7 +41,7 @@ index eb17fb4..cdc57a7 100644
    stat_fs->f_type = 0;  /* f_type is not supported. */
  #else
    stat_fs->f_type = buf.f_type;
-@@ -1666,7 +1669,9 @@ static void uv__fs_work(struct uv__work* w) {
+@@ -1718,7 +1721,9 @@ static void uv__fs_work(struct uv__work* w) {
      X(COPYFILE, uv__fs_copyfile(req));
      X(FCHMOD, fchmod(req->file, req->mode));
      X(FCHOWN, fchown(req->file, req->uid, req->gid));
@@ -51,7 +51,7 @@ index eb17fb4..cdc57a7 100644
      X(FDATASYNC, uv__fs_fdatasync(req));
      X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
      X(FSYNC, uv__fs_fsync(req));
-@@ -1805,7 +1810,9 @@ int uv_fs_lchown(uv_loop_t* loop,
+@@ -1857,7 +1862,9 @@ int uv_fs_lchown(uv_loop_t* loop,
                   uv_uid_t uid,
                   uv_gid_t gid,
                   uv_fs_cb cb) {
@@ -61,6 +61,3 @@ index eb17fb4..cdc57a7 100644
    PATH;
    req->uid = uid;
    req->gid = gid;
--- 
-2.34.1
-

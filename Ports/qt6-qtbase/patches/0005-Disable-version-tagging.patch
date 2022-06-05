@@ -1,4 +1,4 @@
-From 830de469bab98268a328fc982c6d4f938e1547fb Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
 Date: Thu, 16 Dec 2021 12:47:31 +0100
 Subject: [PATCH] Disable version tagging
@@ -11,10 +11,10 @@ and other related ELF objects
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/cmake/QtBuild.cmake b/cmake/QtBuild.cmake
-index 702ddf6f..ff60a061 100644
+index ed466b7..30668af 100644
 --- a/cmake/QtBuild.cmake
 +++ b/cmake/QtBuild.cmake
-@@ -323,6 +323,8 @@ elseif(WASM)
+@@ -327,6 +327,8 @@ elseif(WASM)
      set(QT_DEFAULT_MKSPEC wasm-emscripten)
  elseif(SERENITYOS)
      set(QT_DEFAULT_MKSPEC serenity-g++)
@@ -24,7 +24,7 @@ index 702ddf6f..ff60a061 100644
      # Certain POSIX defines are not set if we don't compile with -std=gnuXX
      set(QT_ENABLE_CXX_EXTENSIONS ON)
 diff --git a/src/corelib/global/qversiontagging.cpp b/src/corelib/global/qversiontagging.cpp
-index b5e524bf..a7547a3b 100644
+index b5e524b..a7547a3 100644
 --- a/src/corelib/global/qversiontagging.cpp
 +++ b/src/corelib/global/qversiontagging.cpp
 @@ -42,7 +42,7 @@
@@ -36,6 +36,3 @@ index b5e524bf..a7547a3b 100644
  #  define make_versioned_symbol2(sym, m, n, separator)     \
      Q_CORE_EXPORT extern const char sym ## _ ## m ## _ ## n = 0; \
      asm(".symver " QT_STRINGIFY(sym) "_" QT_STRINGIFY(m) "_" QT_STRINGIFY(n) ", " \
--- 
-2.33.1
-

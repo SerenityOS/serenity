@@ -1,7 +1,7 @@
-From 79a5522062cf03b1f7dc878799c66389e689b1d5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Sat, 3 Apr 2021 17:53:44 +0200
-Subject: [PATCH 1/4] Disable some extra features
+Subject: [PATCH] Disable some extra features
 
 This just disables some extra features the game has such as screenshots, hardware acceleration, etc.
 ---
@@ -95,6 +95,3 @@ index 698e7ed..0a935ee 100644
  
  // Speed up the sound during fast forward using resampling.
  // If disabled, the sound is sped up by clipping out parts from it.
--- 
-2.36.1
-

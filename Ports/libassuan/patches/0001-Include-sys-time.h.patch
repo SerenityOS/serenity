@@ -1,7 +1,7 @@
-From 4bd9445c203d7d46d40a31c54699681fc6042de7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 14 Apr 2021 04:32:19 +0200
-Subject: [PATCH 1/2] Include sys/time.h
+Subject: [PATCH] Include sys/time.h
 
 ---
  src/assuan-socket.c | 1 +
@@ -19,6 +19,3 @@ index 97b2312..39079bc 100644
  # include <sys/socket.h>
  # include <netinet/in.h>
  # include <arpa/inet.h>
--- 
-2.36.1
-

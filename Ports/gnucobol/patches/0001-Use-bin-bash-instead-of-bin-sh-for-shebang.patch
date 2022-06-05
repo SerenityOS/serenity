@@ -1,4 +1,4 @@
-From 1cb46c1d7736ebbfe00194e675d29308beb94911 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Thu, 8 Apr 2021 12:14:24 +0000
 Subject: [PATCH] Use /bin/bash instead of /bin/sh for shebang
@@ -17,6 +17,3 @@ index 6c07e7d..3086d8c 100644
  #
  # cob-config
  #
--- 
-2.36.1
-

@@ -1,4 +1,4 @@
-From d9b8ddabdfcd3113fecdbffa8cc3538419f2d2b4 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 8 May 2021 05:23:29 +0200
 Subject: [PATCH] Mark a possibly-unused variable as [[maybe_unused]]
@@ -20,6 +20,3 @@ index 8b432b5..ab18f2e 100644
      assert (bits == (allocated_var_bits & bits));
  #endif
    }
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From 1e80ecd820c3a16ffeb99ac0587d996b13784062 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Thu, 23 Jan 2020 23:43:31 -0500
-Subject: [PATCH 2/6] Don't use libc's regex
+Subject: [PATCH] Don't use libc's regex
 
 ---
  configure | 4 ++--
@@ -29,6 +29,3 @@ index d88c47c..90e013f 100755
  do :
    as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
  ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
--- 
-2.36.1
-

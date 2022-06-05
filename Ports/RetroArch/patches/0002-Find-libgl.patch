@@ -1,7 +1,7 @@
-From d65b301e331c52fd78a1b0205e4b3630a6200950 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: gouchi <gouchi@free.fr>
 Date: Sat, 7 May 2022 18:20:09 +0200
-Subject: [PATCH 2/6] Find libgl
+Subject: [PATCH] Find libgl
 
 ---
  qb/config.libs.sh | 2 +-
@@ -20,6 +20,3 @@ index 19cd2a6..672fb02 100644
     fi
  
     if [ "$HAVE_OPENGL" = 'yes' ]; then
--- 
-2.36.0
-

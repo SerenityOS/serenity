@@ -1,7 +1,7 @@
-From b01d5c00dd0dbe9512857e32ffd0822bdfb8a9e3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:30:54 +0200
-Subject: [PATCH 3/7] Build: Remove `-ansi` build argument
+Subject: [PATCH] Build: Remove `-ansi` build argument
 
 ---
  lua/src/Makefile.in     | 2 +-
@@ -34,6 +34,3 @@ index e2f256f..d2f4040 100644
  LDFLAGS = 
  LIBS = -lm
  
--- 
-2.34.1
-

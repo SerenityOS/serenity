@@ -1,4 +1,4 @@
-From 53958f5cfb0efa2978bb913ffe610f7903e6c69b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Thu, 28 Oct 2021 11:27:43 +0000
 Subject: [PATCH] Remove android-specific SDL hint
@@ -22,6 +22,3 @@ index b5ae21e..b6ac494 100644
    /* Touch devices */
    {
      int i;
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From e73cf241735cdc4f0a51b25baa1ee12b3c418ac5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nico Weber <thakis@chromium.org>
 Date: Sun, 21 Jun 2020 18:41:01 -0400
-Subject: [PATCH 2/3] Disable load average calculation
+Subject: [PATCH] Disable load average calculation
 
 ---
  src/util.cc | 3 +++
@@ -26,6 +26,3 @@ index c76f730..5ec2bb8 100644
    return loadavg[0];
  }
  #endif // _WIN32
--- 
-2.36.1
-

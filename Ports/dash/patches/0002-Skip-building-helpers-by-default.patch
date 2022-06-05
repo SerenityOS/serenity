@@ -1,7 +1,7 @@
-From 481993ee4f0908cefcbddb0cca4e6811751d809c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Mon, 12 Apr 2021 09:18:56 +0200
-Subject: [PATCH 2/2] Skip building helpers by default
+Subject: [PATCH] Skip building helpers by default
 
 ---
  configure.ac    | 3 +++
@@ -35,6 +35,3 @@ index 139355e..e95491a 100644
  $(HELPERS): %: %.c
  	$(COMPILE_FOR_BUILD) -o $@ $<
 +endif
--- 
-2.36.1
-

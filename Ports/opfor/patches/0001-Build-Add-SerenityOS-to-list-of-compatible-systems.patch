@@ -1,4 +1,4 @@
-From 77ad240d87d86e57d0666d45ea6d7b9127d6924b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Sun, 2 Jan 2022 00:10:53 +1100
 Subject: [PATCH] Build: Add SerenityOS to list of compatible systems
@@ -11,7 +11,7 @@ the correct name/platform.
  2 files changed, 7 insertions(+)
 
 diff --git a/public/build.h b/public/build.h
-index 6e1f326d6..57a7735f4 100644
+index 6e1f326..57a7735 100644
 --- a/public/build.h
 +++ b/public/build.h
 @@ -74,6 +74,7 @@ For more information, please refer to <http://unlicense.org/>
@@ -33,10 +33,10 @@ index 6e1f326d6..57a7735f4 100644
  #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
  #endif
 diff --git a/scripts/waifulib/library_naming.py b/scripts/waifulib/library_naming.py
-index dd8250880..fb46ae604 100644
+index dd82508..fb46ae6 100644
 --- a/scripts/waifulib/library_naming.py
 +++ b/scripts/waifulib/library_naming.py
-@@ -56,6 +56,7 @@
+@@ -56,6 +56,7 @@ DEFINES = [
  'XASH_RISCV_DOUBLEFP',
  'XASH_RISCV_SINGLEFP',
  'XASH_RISCV_SOFTFP',

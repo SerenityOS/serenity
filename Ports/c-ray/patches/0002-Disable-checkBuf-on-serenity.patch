@@ -1,7 +1,7 @@
-From dc634f4d49c98a7c0243b568631c626cd3da4125 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Sat, 13 Mar 2021 22:11:07 +0100
-Subject: [PATCH 2/8] Disable checkBuf() on serenity
+Subject: [PATCH] Disable checkBuf() on serenity
 
 Co-Authored-By: Valtteri Koskivuori <vkoskiv@gmail.com>
 ---
@@ -21,6 +21,3 @@ index 6365973..2edfed8 100644
  	fd_set set;
  	struct timeval timeout;
  	int rv;
--- 
-2.36.1
-

@@ -1,4 +1,4 @@
-From e8f990d19324dd80271db8626b72c57aaceb26b9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Mon, 9 Nov 2020 10:52:11 +0000
 Subject: [PATCH] Don't build docs
@@ -20,6 +20,3 @@ index cdf7999..ce49203 100644
  BUILT_SOURCES = 
  EXTRA_DIST = README \
  		config/config.rpath config/mkinstalldirs \
--- 
-2.36.1
-

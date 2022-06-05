@@ -1,7 +1,7 @@
-From 5db35a017501fd2e8975d931d77591fdd8d40ed7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Tue, 27 Apr 2021 18:34:53 +1000
-Subject: [PATCH 3/5] Set C++ standard to C++20 and remove some unnecessary
+Subject: [PATCH] Set C++ standard to C++20 and remove some unnecessary
  subdirectories
 
 ---
@@ -32,6 +32,3 @@ index 4bdecf1..a64b843 100644
  add_subdirectory(src/compression)
  add_subdirectory(src/fx)
  add_subdirectory(src/milkyplay)
--- 
-2.36.1
-

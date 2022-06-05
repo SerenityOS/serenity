@@ -1,7 +1,7 @@
-From 173fe2329bb943dba5e0c85c16403e0a4ee61b2f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 4/9] Use pcre2 for regex
+Subject: [PATCH] Use pcre2 for regex
 
 ---
  dba_read.c | 2 +-
@@ -20,6 +20,3 @@ index e976057..6183dcb 100644
  #include <stdint.h>
  #include <stdlib.h>
  #include <stdio.h>
--- 
-2.36.1
-

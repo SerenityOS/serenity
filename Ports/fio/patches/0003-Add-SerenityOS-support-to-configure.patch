@@ -1,7 +1,7 @@
-From 99f1cf657e539078c7347c3ddc4a1537d5332e15 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 21 Dec 2021 23:48:09 -0800
-Subject: [PATCH 3/4] Port: Add SerenityOS support to configure
+Subject: [PATCH] Add SerenityOS support to configure
 
 This patch implements targetos detection for serenity, and also
 disables shared memory support automatically for serenity, as it's not
@@ -24,6 +24,3 @@ index 84ccce0..04bac14 100755
  elif check_define _WIN32 ; then
    targetos='CYGWIN'
  else
--- 
-2.32.0
-

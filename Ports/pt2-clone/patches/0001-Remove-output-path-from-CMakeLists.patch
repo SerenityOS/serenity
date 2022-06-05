@@ -1,7 +1,7 @@
-From cffb5fae8afd6a7272fd71665882b2b41b756d13 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Tue, 5 Apr 2022 14:41:31 +0200
-Subject: [PATCH 1/2] Remove output path from CMakeLists
+Subject: [PATCH] Remove output path from CMakeLists
 
 ---
  CMakeLists.txt | 1 -
@@ -19,6 +19,3 @@ index b391653..0d42019 100644
  
  file(GLOB pt2-clone_SRC
      "${pt2-clone_SOURCE_DIR}/src/*.c"
--- 
-2.32.0 (Apple Git-132)
-

@@ -1,4 +1,4 @@
-From 546bd7af0869cb4064d7e29baacfdaa1e174d063 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Liav A <liavalb@gmail.com>
 Date: Fri, 1 Apr 2022 11:01:13 +0300
 Subject: [PATCH] Use serenity's firmware binary path
@@ -20,6 +20,3 @@ index cd2b5c9..49bf30e 100644
  #define SYS_ENTRY_FILE SYS_FIRMWARE_DIR "/smbios_entry_point"
  #define SYS_TABLE_FILE SYS_FIRMWARE_DIR "/DMI"
  
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From 119adcddd9faa0485a64c49fb461ed24d26499b6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke Wilde <lukew@serenityos.org>
 Date: Sun, 13 Mar 2022 16:45:19 +0000
-Subject: [PATCH 1/2] Fix linker soname flags
+Subject: [PATCH] Fix linker soname flags
 
 Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
 ---
@@ -39,6 +39,3 @@ index ef20218..e4766c9 100644
  
  .PHONY: all
  all: lib
--- 
-2.36.1
-

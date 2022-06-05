@@ -1,7 +1,7 @@
-From 3a91827276d7f4797ba1f8a2f37356ce0985dc7a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sun, 11 Apr 2021 23:15:42 +0200
-Subject: [PATCH 1/5] Don't use fcntl on serenity
+Subject: [PATCH] Don't use fcntl on serenity
 
 ---
  include/unixconf.h | 2 ++
@@ -22,6 +22,3 @@ index c126d68..cafe766 100644
  
  /*
   * The remainder of the file should not need to be changed.
--- 
-2.36.1
-

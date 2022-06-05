@@ -1,7 +1,7 @@
-From 7523e59d058e0455bc03d4c3154d18ffa5fdd92a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Thu, 15 Apr 2021 15:43:18 +0200
-Subject: [PATCH 1/2] Install to /usr/local
+Subject: [PATCH] Install to /usr/local
 
 ---
  Makefile | 6 ++++--
@@ -23,6 +23,3 @@ index 069b06c..34b38d8 100644
 +	gzip -9 -c < nyancat.1 > ${DESTDIR}/usr/local/share/man/man1/nyancat.1.gz
  
  .PHONY: FORCE all clean check dist distcheck install
--- 
-2.36.1
-

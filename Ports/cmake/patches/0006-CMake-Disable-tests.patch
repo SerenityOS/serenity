@@ -1,7 +1,7 @@
-From f0ae38c0f10805a2f4359ee0052766c371ee8d54 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Wed, 12 Jan 2022 22:18:57 +0330
-Subject: [PATCH 6/6] CMake: Disable tests
+Subject: [PATCH] CMake: Disable tests
 
 We don't care about building tests for now, and it makes the compilation much faster.
 
@@ -27,6 +27,3 @@ index b2ab30e1..24127b09 100644
  include (${CMAKE_ROOT}/Modules/Dart.cmake)
  
  # Set up test-time configuration.
--- 
-2.36.1
-

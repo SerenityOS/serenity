@@ -1,7 +1,7 @@
-From 94ad2d17986ad9c73efdc9f42a773a217af8ad38 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Fri, 18 Mar 2022 02:36:55 -0700
-Subject: [PATCH 13/14] serenity: Disable prctl stressor on serenity
+Subject: [PATCH] serenity: Disable prctl stressor on serenity
 
 ---
  stress-usersyscall.c | 3 ++-
@@ -21,6 +21,3 @@ index 26732db..a4eb903 100644
  
  #include <sys/prctl.h>
  
--- 
-2.32.0
-

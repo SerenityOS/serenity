@@ -1,7 +1,7 @@
-From e87fd74df2c7fcb4b146eb09b5b710a45003999a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Sat, 19 Feb 2022 19:47:42 -0800
-Subject: [PATCH 3/6] gdb: Add build support for SerenityOS
+Subject: [PATCH] gdb: Add build support for SerenityOS
 
 ---
  bfd/config.bfd       | 9 +++++++++
@@ -37,10 +37,10 @@ index 30087e3..11dc114 100644
    i[3-7]86-*-lynxos*)
      targ_defvec=i386_elf32_vec
 diff --git a/gdbsupport/configure b/gdbsupport/configure
-index a9dd02c..3c5bcf5 100755
+index aad7469..4c45c27 100755
 --- a/gdbsupport/configure
 +++ b/gdbsupport/configure
-@@ -8934,7 +8934,7 @@ $as_echo "$gdb_cv_cxx_std_thread" >&6; }
+@@ -8958,7 +8958,7 @@ $as_echo "$gdb_cv_cxx_std_thread" >&6; }
  
      # This check must be here, while LIBS includes any necessary
      # threading library.
@@ -64,6 +64,3 @@ index fffb91d..defc239 100755
      ;;
  esac
  
--- 
-2.32.0
-

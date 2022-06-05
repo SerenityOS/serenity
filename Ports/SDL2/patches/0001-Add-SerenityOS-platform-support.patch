@@ -1,7 +1,7 @@
-From f9447fa6782eef2c4791c963cedf469d9062c792 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Sat, 27 Mar 2021 22:05:09 +0100
-Subject: [PATCH 1/2] Add SerenityOS platform support
+Subject: [PATCH] Add SerenityOS platform support
 
 Co-Authored-By: Robin Burchell <robin+git@viroteck.net>
 Co-Authored-By: tgsm <doodrabbit@hotmail.com>
@@ -1704,6 +1704,3 @@ index 0000000..b5c6759
 +#endif /* SDL_serenityvideo_h_ */
 +
 +/* vi: set ts=4 sw=4 expandtab: */
--- 
-2.36.1
-

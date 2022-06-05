@@ -1,7 +1,7 @@
-From 2837d8fc8be4d4bd3d03866cfd139152506f4e31 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 16 Jun 2021 11:23:34 +0200
-Subject: [PATCH 2/2] Make it use software rendering
+Subject: [PATCH] Make it use software rendering
 
 ---
  src/res.c | 2 ++
@@ -20,6 +20,3 @@ index ef4945a..6c46184 100644
  bool init() {
    // Initialization flag
    bool success = true;
--- 
-2.36.1
-

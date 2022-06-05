@@ -1,7 +1,7 @@
-From 98597b7f104c73a1955eef077097b5dbb372183f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Sat, 8 Jan 2022 05:33:27 -0700
-Subject: [PATCH 1/2] Teach configure about serenity
+Subject: [PATCH] Teach configure about serenity
 
 ---
  configure | 4 ++++
@@ -29,6 +29,3 @@ index 367f505..df6217c 100755
  *)
    dynamic_linker=no
    ;;
--- 
-2.36.1
-

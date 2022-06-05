@@ -1,7 +1,7 @@
-From 924ba86b0ea438a69f0110ccf16cebe24619d3e1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke Wilde <lukew@serenityos.org>
 Date: Wed, 16 Mar 2022 12:52:30 +0000
-Subject: [PATCH 1/2] Add a serenity configuration
+Subject: [PATCH] Add a serenity configuration
 
 Co-Authored-By: Rodrigo Tobar <rtobarc@gmail.com>
 ---
@@ -43,6 +43,3 @@ index 8ca8235..3dea01f 100644
  ####
  #### Variety of LINUX:-)
  ####
--- 
-2.36.1
-

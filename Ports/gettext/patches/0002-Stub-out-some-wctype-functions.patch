@@ -1,7 +1,7 @@
-From 83aa314598238bfcbd9d55aa96a3fbe937c45a81 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 15:45:32 +0430
-Subject: [PATCH 2/2] Stub out some wctype functions
+Subject: [PATCH] Stub out some wctype functions
 
 ---
  gettext-tools/gnulib-lib/fnmatch.c | 12 ++++++++++++
@@ -30,6 +30,3 @@ index 3937ce3..84aa6e6 100644
  #define IS_CHAR_CLASS(string) wctype (string)
  
  /* Avoid depending on library functions or files
--- 
-2.36.1
-

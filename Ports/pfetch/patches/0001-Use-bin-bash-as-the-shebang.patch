@@ -1,4 +1,4 @@
-From e748988284621d0f7c03293b93652faefb3b08c9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Liav A <liavalb@gmail.com>
 Date: Fri, 24 Dec 2021 18:38:15 +0200
 Subject: [PATCH] Use /bin/bash as the shebang
@@ -18,6 +18,3 @@ index d47b878..d8f98ba 100755
  #
  # pfetch - Simple POSIX sh fetch script.
  
--- 
-2.36.1
-

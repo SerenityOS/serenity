@@ -1,7 +1,7 @@
-From 8938812509ede61e6f50b65ebba94b8809eb0cf5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Tue, 27 Apr 2021 18:34:53 +1000
-Subject: [PATCH 5/5] Replace tmpnam with mkstemp
+Subject: [PATCH] Replace tmpnam with mkstemp
 
 ---
  src/ppui/osinterface/posix/PPSystem_POSIX.cpp | 2 +-
@@ -20,6 +20,3 @@ index 9b84cfe..03b22b4 100644
  #pragma clang diagnostic pop
  	{
  		// should not be the case, if it is the case, create something that
--- 
-2.36.1
-

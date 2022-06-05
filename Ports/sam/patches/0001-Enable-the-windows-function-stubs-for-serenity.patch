@@ -1,7 +1,7 @@
-From e9875cfafe88de258da81b2b366a534d7f1edfc4 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Timothy <timmot@users.noreply.github.com>
 Date: Thu, 3 Jun 2021 14:20:09 -0700
-Subject: [PATCH 1/2] Enable the windows function stubs for serenity
+Subject: [PATCH] Enable the windows function stubs for serenity
 
 ---
  src/main.c | 2 +-
@@ -20,6 +20,3 @@ index 3e8fdde..3432fe8 100644
  static int min(int l, int r) { return l < r ? l : r; }
  static void strcat_s(char * dest, int size, char * str) {
      unsigned int dlen = strlen(dest);
--- 
-2.36.1
-
