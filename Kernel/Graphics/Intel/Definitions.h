@@ -10,6 +10,10 @@
 
 namespace Kernel::IntelGraphics {
 
+constexpr static size_t pci_gen4_reset_register_offset = 0xc0;
+
+constexpr static size_t pci_gen4_reset_register_value = (1 << 0);
+
 enum class Generation {
     Gen4,
     Gen9,

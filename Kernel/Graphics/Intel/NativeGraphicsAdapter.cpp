@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Graphics/Intel/Definitions.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -38,6 +40,20 @@ ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> IntelNativeGraphicsAdapter::c
     return adapter;
 }
 
+ErrorOr<void> IntelNativeGraphicsAdapter::reset_gen4_graphics_device()
+{
+    using namespace IntelGraphics;
+    SpinlockLocker locker(device_identifier().operation_lock());
+    PCI::write8_locked(device_identifier(), static_cast<PCI::RegisterOffset>(pci_gen4_reset_register_offset), pci_gen4_reset_register_value);
+    for (int retry = 0; retry < 50; retry++) {
+        auto status = PCI::read8_locked(device_identifier(), static_cast<PCI::RegisterOffset>(pci_gen4_reset_register_offset));
+        if (!(status & pci_gen4_reset_register_value))
+            return {};
+        microseconds_delay(1000);
+    }
+    return Error::from_errno(EBUSY);
+}
+
 ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 {
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", device_identifier().address());
@@ -56,6 +72,7 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 
     switch (device_identifier().hardware_id().device_id) {
     case 0x29c2:
+        TRY(reset_gen4_graphics_device());
         m_connector_group = TRY(IntelDisplayConnectorGroup::try_create({}, IntelGraphics::Generation::Gen4, first_region, second_region));
         return {};
     default:

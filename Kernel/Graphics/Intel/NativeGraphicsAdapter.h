@@ -33,6 +33,9 @@ private:
 
     explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
 
+    // Global Reset methods
+    ErrorOr<void> reset_gen4_graphics_device();
+
     LockRefPtr<IntelDisplayConnectorGroup> m_connector_group;
 };
 }
