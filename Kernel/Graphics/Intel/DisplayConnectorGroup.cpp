@@ -123,17 +123,17 @@ Optional<IntelGraphics::PLLSettings> IntelDisplayConnectorGroup::create_pll_sett
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation generation, MMIORegion const& first_region, MMIORegion const& second_region)
+ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation generation, IntelGraphics::MMIORegion const& first_region, IntelGraphics::MMIORegion const& second_region)
 {
-    auto registers_region = TRY(MM.allocate_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
+    auto registers_region = TRY(MM.allocate_kernel_region(first_region.paddr, first_region.space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
     // NOTE: 0x5100 is the offset of the start of the GMBus registers
-    auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.pci_bar_paddr.offset(0x5100)));
+    auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.paddr.offset(0x5100)));
     auto connector_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelDisplayConnectorGroup(generation, move(gmbus_connector), move(registers_region), first_region, second_region)));
     TRY(connector_group->initialize_connectors());
     return connector_group;
 }
 
-IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const& first_region, MMIORegion const& second_region)
+IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, IntelGraphics::MMIORegion const& first_region, IntelGraphics::MMIORegion const& second_region)
     : m_mmio_first_region(first_region)
     , m_mmio_second_region(second_region)
     , m_assigned_mmio_registers_region(m_mmio_first_region)
@@ -147,16 +147,16 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
 {
     // NOTE: Just assume we will need one Gen4 "transcoder"
     // NOTE: Main block of registers starting at HorizontalTotalA register (0x60000)
-    auto transcoder_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x60000);
+    auto transcoder_registers_paddr = m_mmio_first_region.paddr.offset(0x60000);
     // NOTE: Main block of Pipe registers starting at PipeA_DSL register (0x70000)
-    auto pipe_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x70000);
+    auto pipe_registers_paddr = m_mmio_first_region.paddr.offset(0x70000);
     // NOTE: DPLL registers starting at DPLLDivisorA0 register (0x6040)
-    auto dpll_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6040);
+    auto dpll_registers_paddr = m_mmio_first_region.paddr.offset(0x6040);
     // NOTE: DPLL A control registers starting at 0x6014 (DPLL A Control register),
     // DPLL A Multiplier is at 0x601C, between them (at 0x6018) there is the DPLL B Control register.
-    auto dpll_control_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6014);
+    auto dpll_control_registers_paddr = m_mmio_first_region.paddr.offset(0x6014);
     m_transcoders[0] = TRY(IntelCRTDisplayTranscoder::create_with_physical_addresses(transcoder_registers_paddr, pipe_registers_paddr, dpll_registers_paddr, dpll_control_registers_paddr));
-    m_planes[0] = TRY(IntelG33DisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
+    m_planes[0] = TRY(IntelG33DisplayPlane::create_with_physical_address(m_mmio_first_region.paddr.offset(0x70180)));
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
@@ -168,7 +168,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
         // For now, this "hack" works well enough.
         crt_edid_bytes[0] = 0x0;
     }
-    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, IntelNativeDisplayConnector::ConnectorIndex::PortA, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
+    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, IntelNativeDisplayConnector::ConnectorIndex::PortA, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.paddr, m_mmio_second_region.space_length));
     m_connectors[0]->set_edid_bytes({}, crt_edid_bytes);
     return {};
 }
@@ -347,7 +347,7 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
     VERIFY(!m_transcoders[0]->pipe_enabled({}));
     MUST(m_transcoders[0]->enable_pipe({}));
 
-    MUST(m_planes[0]->set_aperture_base({}, m_mmio_second_region.pci_bar_paddr));
+    MUST(m_planes[0]->set_aperture_base({}, m_mmio_second_region.paddr));
     MUST(m_planes[0]->set_pipe({}, IntelDisplayPlane::PipeSelect::PipeA));
     MUST(m_planes[0]->set_horizontal_stride({}, mode_setting.horizontal_active * 4));
     MUST(m_planes[0]->set_horizontal_active_pixels_count({}, mode_setting.horizontal_active));

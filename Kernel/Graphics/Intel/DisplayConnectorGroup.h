@@ -24,17 +24,6 @@ class IntelNativeGraphicsAdapter;
 class IntelDisplayConnectorGroup : public RefCounted<IntelDisplayConnectorGroup> {
     friend class IntelNativeGraphicsAdapter;
 
-public:
-    struct MMIORegion {
-        enum class BARAssigned {
-            BAR0,
-            BAR2,
-        };
-        BARAssigned pci_bar_assigned;
-        PhysicalAddress pci_bar_paddr;
-        size_t pci_bar_space_length;
-    };
-
 private:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, RegisterOffset);
 
@@ -44,13 +33,13 @@ private:
     };
 
 public:
-    static ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation, MMIORegion const&, MMIORegion const&);
+    static ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation, IntelGraphics::MMIORegion const&, IntelGraphics::MMIORegion const&);
 
     ErrorOr<void> set_safe_mode_setting(Badge<IntelNativeDisplayConnector>, IntelNativeDisplayConnector&);
     ErrorOr<void> set_mode_setting(Badge<IntelNativeDisplayConnector>, IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
 private:
-    IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector>, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const&, MMIORegion const&);
+    IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector>, NonnullOwnPtr<Memory::Region> registers_region, IntelGraphics::MMIORegion const&, IntelGraphics::MMIORegion const&);
 
     ErrorOr<void> set_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
@@ -94,9 +83,9 @@ private:
     Array<OwnPtr<IntelDisplayTranscoder>, 5> m_transcoders;
     Array<OwnPtr<IntelDisplayPlane>, 3> m_planes;
 
-    const MMIORegion m_mmio_first_region;
-    const MMIORegion m_mmio_second_region;
-    MMIORegion const& m_assigned_mmio_registers_region;
+    const IntelGraphics::MMIORegion m_mmio_first_region;
+    const IntelGraphics::MMIORegion m_mmio_second_region;
+    IntelGraphics::MMIORegion const& m_assigned_mmio_registers_region;
 
     const IntelGraphics::Generation m_generation;
     NonnullOwnPtr<Memory::Region> m_registers_region;

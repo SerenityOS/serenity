@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::IntelGraphics {
 
@@ -17,6 +18,12 @@ constexpr static size_t pci_gen4_reset_register_value = (1 << 0);
 enum class Generation {
     Gen4,
     Gen9,
+};
+
+// FIXME: Generalize this structure (maybe move it to the PCI subsystem folder?)
+struct MMIORegion {
+    PhysicalAddress paddr;
+    size_t space_length;
 };
 
 struct PLLSettings;
