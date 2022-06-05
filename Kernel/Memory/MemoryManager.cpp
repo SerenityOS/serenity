@@ -915,7 +915,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
             break;
         }
     }
-    VERIFY(!committed || !page.is_null());
+    VERIFY(!page.is_null());
     return page;
 }
 
