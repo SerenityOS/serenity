@@ -26,7 +26,10 @@ enum class TarFileType : char {
     FIFO = '6',
     ContiguousFile = '7',
     GlobalExtendedHeader = 'g',
-    ExtendedHeader = 'x'
+    ExtendedHeader = 'x',
+
+    // GNU extensions
+    LongName = 'L',
 };
 
 constexpr size_t block_size = 512;
