@@ -103,7 +103,7 @@ bool MailWidget::connect_and_login()
     if (server.is_empty()) {
         auto result = GUI::MessageBox::show(window(), "Mail has no servers configured. Do you want configure them now?", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::YesNo);
         if (result == GUI::MessageBox::ExecResult::Yes)
-            Desktop::Launcher::open(URL::create_with_file_protocol("/bin/MailSettings"), "/bin/MailSettings");
+            Desktop::Launcher::open(URL::create_with_file_protocol("/bin/MailSettings"));
         return false;
     }
 
