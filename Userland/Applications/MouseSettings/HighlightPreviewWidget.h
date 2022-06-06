@@ -33,6 +33,8 @@ public:
 private:
     explicit HighlightPreviewWidget(Gfx::Palette const& palette);
 
+    ErrorOr<void> reload_cursor();
+
     RefPtr<Gfx::Bitmap> m_cursor_bitmap;
 
     int m_radius { 0 };
