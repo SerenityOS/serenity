@@ -6,7 +6,14 @@ auth_type='sha256'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=("builds/unix/config.sub")
-configopts=("--with-brotli=no" "--with-bzip2=no" "--with-zlib=no" "--with-harfbuzz=no" "--with-png=no")
+configopts=(
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
+    "--with-brotli=no"
+    "--with-bzip2=no"
+    "--with-zlib=no"
+    "--with-harfbuzz=no"
+    "--with-png=no"
+)
 
 install() {
     run make DESTDIR="${SERENITY_INSTALL_ROOT}" "${installopts[@]}" install
