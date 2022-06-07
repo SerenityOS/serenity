@@ -846,9 +846,11 @@ Gfx::IntRect Compositor::current_cursor_rect() const
     Gfx::IntRect cursor_rect { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()), current_cursor.size() };
     if (wm.is_cursor_highlight_enabled()) {
         auto highlight_diameter = wm.cursor_highlight_radius() * 2;
-        cursor_rect.inflate(
-            highlight_diameter - cursor_rect.width(),
-            highlight_diameter - cursor_rect.height());
+        auto inflate_w = highlight_diameter - cursor_rect.width();
+        auto inflate_h = highlight_diameter - cursor_rect.height();
+        cursor_rect.inflate(inflate_w, inflate_h);
+        // Ensures cursor stays in the same location when highlighting is enabled.
+        cursor_rect.translate_by(-(inflate_w % 2), -(inflate_h % 2));
     }
     return cursor_rect;
 }
