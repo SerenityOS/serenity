@@ -80,6 +80,7 @@ public:
     TextDocumentSpan const* span_at(TextPosition const&) const;
 
     void append_line(NonnullOwnPtr<TextDocumentLine>);
+    NonnullOwnPtr<TextDocumentLine> take_line(size_t line_index);
     void remove_line(size_t line_index);
     void remove_all_lines();
     void insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine>);
