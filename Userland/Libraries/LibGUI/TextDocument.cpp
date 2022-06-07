@@ -270,6 +270,16 @@ void TextDocument::insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine
     }
 }
 
+NonnullOwnPtr<TextDocumentLine> TextDocument::take_line(size_t line_index)
+{
+    auto line = lines().take(line_index);
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_remove_line(line_index);
+    }
+    return line;
+}
+
 void TextDocument::remove_line(size_t line_index)
 {
     lines().remove((int)line_index);
