@@ -128,6 +128,16 @@ void UART::send(u32 c)
     m_registers->data = c;
 }
 
+void UART::print_str(char const* s, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        char character = *s++;
+        if (character == '\n')
+            send('\r');
+        send(character);
+    }
+}
+
 u32 UART::receive()
 {
     wait_until_we_can_receive();
