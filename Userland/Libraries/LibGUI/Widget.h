@@ -52,6 +52,13 @@ enum class VerticalDirection {
     Down
 };
 
+constexpr VerticalDirection operator!(VerticalDirection const& other)
+{
+    if (other == VerticalDirection::Up)
+        return VerticalDirection::Down;
+    return VerticalDirection::Up;
+}
+
 constexpr VerticalDirection key_code_to_vertical_direction(KeyCode const& key)
 {
     if (key == Key_Up)
