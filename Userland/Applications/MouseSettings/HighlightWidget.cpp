@@ -75,4 +75,8 @@ void HighlightWidget::reset_default_values()
     m_highlight_opacity_slider->set_value(default_highlight_opacity);
     m_highlight_color_input->set_color(default_highlight_color);
     m_highlight_radius_slider->set_value(default_highlight_radius_length);
+    deferred_invoke([&] {
+        // Avoid artifact due to setting both color and opacity sliders:
+        m_highlight_preview->update();
+    });
 }
