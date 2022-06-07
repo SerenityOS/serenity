@@ -22,11 +22,7 @@ public:
     void send(u32 c);
     u32 receive();
 
-    void print_str(char const* s, size_t length)
-    {
-        for (size_t i = 0; i < length; ++i)
-            send(*s++);
-    }
+    void print_str(char const*, size_t);
 
 private:
     UART();
