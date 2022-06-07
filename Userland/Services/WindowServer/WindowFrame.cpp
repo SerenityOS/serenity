@@ -734,7 +734,8 @@ Optional<HitTestResult> WindowFrame::PerScaleRenderedCache::hit_test(WindowFrame
     } else {
         return {};
     }
-    if (alpha >= alpha_threshold)
+    // Do an alpha test for non-rectangular windows only
+    if (WindowManager::the().palette().window_border_radius() == 0 || alpha >= alpha_threshold)
         return result;
     return {};
 }
