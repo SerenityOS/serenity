@@ -92,6 +92,11 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
             }
         }
     }
+
+    on_active_window_change = [this](bool is_active_window) {
+        if (!is_active_window)
+            close();
+    };
 }
 
 void EmojiInputDialog::event(Core::Event& event)
