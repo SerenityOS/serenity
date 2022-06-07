@@ -52,6 +52,15 @@ enum class VerticalDirection {
     Down
 };
 
+constexpr VerticalDirection key_code_to_vertical_direction(KeyCode const& key)
+{
+    if (key == Key_Up)
+        return VerticalDirection::Up;
+    if (key == Key_Down)
+        return VerticalDirection::Down;
+    VERIFY_NOT_REACHED();
+}
+
 enum class AllowCallback {
     No,
     Yes
