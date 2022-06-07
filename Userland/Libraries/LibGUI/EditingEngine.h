@@ -22,6 +22,8 @@ enum EngineType {
     Vim,
 };
 
+class MoveLineUpOrDownCommand;
+
 class EditingEngine {
     AK_MAKE_NONCOPYABLE(EditingEngine);
     AK_MAKE_NONMOVABLE(EditingEngine);
@@ -44,6 +46,8 @@ public:
 
     bool is_regular() const { return engine_type() == EngineType::Regular; }
     bool is_vim() const { return engine_type() == EngineType::Vim; }
+
+    void get_selection_line_boundaries(Badge<MoveLineUpOrDownCommand>, size_t& first_line, size_t& last_line);
 
 protected:
     EditingEngine() = default;
@@ -80,10 +84,27 @@ protected:
     void delete_char();
 
     virtual EngineType engine_type() const = 0;
+};
+
+class MoveLineUpOrDownCommand : public TextDocumentUndoCommand {
+public:
+    MoveLineUpOrDownCommand(TextDocument&, KeyEvent event, EditingEngine&);
+    virtual void undo() override;
+    virtual void redo() override;
+    bool merge_with(GUI::Command const&) override;
+    String action_text() const override;
+
+    static bool valid_operation(EditingEngine& engine, VerticalDirection direction);
 
 private:
-    void move_selected_lines_up();
-    void move_selected_lines_down();
+    void move_lines(VerticalDirection);
+    TextRange retrieve_selection(VerticalDirection);
+
+    KeyEvent m_event;
+    VerticalDirection m_direction;
+    EditingEngine& m_engine;
+    TextRange m_selection;
+    TextPosition m_cursor;
 };
 
 }
