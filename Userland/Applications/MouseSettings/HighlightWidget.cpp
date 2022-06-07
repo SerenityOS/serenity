@@ -66,13 +66,13 @@ void HighlightWidget::apply_settings()
 
 void HighlightWidget::reset_default_values()
 {
-    constexpr auto default_highlight_color = Gfx::Color::NamedColor::Yellow;
-    constexpr auto default_highlight_opacity = 80; // (in range of 0-255)
+    constexpr auto default_highlight_color = Gfx::Color::NamedColor::Red;
+    constexpr auto default_highlight_opacity = 110; // (in range of 0-255)
     // Disable the highlighting by default.
     // The range of radii you can configure the highlight to is 20 to 60px,
     // anything less than that is treated as 'no highlighting'.
-    constexpr auto default_highlight_radius_length = 19;
-    m_highlight_color_input->set_color(default_highlight_color);
+    constexpr auto default_highlight_radius_length = 25;
     m_highlight_opacity_slider->set_value(default_highlight_opacity);
+    m_highlight_color_input->set_color(default_highlight_color);
     m_highlight_radius_slider->set_value(default_highlight_radius_length);
 }
