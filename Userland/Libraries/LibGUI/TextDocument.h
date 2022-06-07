@@ -215,6 +215,7 @@ protected:
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
     InsertTextCommand(TextDocument&, String const&, TextPosition const&);
+    virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
     virtual void undo() override;
     virtual void redo() override;
@@ -231,6 +232,7 @@ private:
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
     RemoveTextCommand(TextDocument&, String const&, TextRange const&);
+    virtual ~RemoveTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
     TextRange const& range() const { return m_range; }
@@ -246,6 +248,7 @@ class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
     ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text);
+    virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
