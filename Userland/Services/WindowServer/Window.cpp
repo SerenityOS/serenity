@@ -1130,7 +1130,7 @@ Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool inc
     // (partially) moved into another screen where it's not rendered
     if (!frame().rect().intersected(frame().render_rect()).contains(position))
         return {};
-    if (!rect().contains(position)) {
+    if (!rect_adjusted_for_hit_test().contains(position)) {
         if (include_frame)
             return frame().hit_test(position);
         return {};

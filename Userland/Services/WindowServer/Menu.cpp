@@ -485,7 +485,6 @@ void Menu::start_activation_animation(MenuItem& item)
     VERIFY(menu_window()->backing_store());
     auto window = Window::construct(*this, WindowType::Menu);
     window->set_frameless(true);
-    window->set_hit_testing_enabled(false);
     window->set_opacity(0.8f); // start out transparent so we don't have to recompute occlusions
     window->set_rect(item.rect().translated(m_menu_window->rect().location()));
     window->set_event_filter([](Core::Event&) {

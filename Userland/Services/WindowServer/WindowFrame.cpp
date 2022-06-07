@@ -677,7 +677,7 @@ Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position)
         // to also check that we're within these bounds.
         return {};
     }
-    auto window_rect = m_window.rect();
+    auto window_rect = m_window.rect_adjusted_for_hit_test();
     if (window_rect.contains(position))
         return {};
 
@@ -706,7 +706,7 @@ Optional<HitTestResult> WindowFrame::PerScaleRenderedCache::hit_test(WindowFrame
         return result;
     u8 alpha = 0xff;
 
-    auto window_rect = frame.window().rect();
+    auto window_rect = frame.window().rect_adjusted_for_hit_test();
     if (position.y() < window_rect.y()) {
         if (m_top_bottom) {
             auto scaled_relative_point = window_relative_position * m_top_bottom->scale();

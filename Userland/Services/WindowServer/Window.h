@@ -186,6 +186,7 @@ public:
     bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
 
     Gfx::IntRect rect() const { return m_rect; }
+    Gfx::IntRect rect_adjusted_for_hit_test() const { return m_rect.inflated(-4, -4); }
     void set_rect(Gfx::IntRect const&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(Gfx::IntRect const&);
