@@ -362,8 +362,8 @@ void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rec
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
-    Color start_color = palette.active_window_border1();
-    Color end_color = palette.active_window_border2();
+    Color start_color = palette.active_slider_gradient1();
+    Color end_color = palette.active_slider_gradient2();
     painter.fill_rect_with_gradient(orientation, rect, start_color, end_color);
 
     if (!text.is_null()) {

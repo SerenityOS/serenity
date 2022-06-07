@@ -22,6 +22,8 @@ namespace Gfx {
 #define ENUMERATE_COLOR_ROLES(C)   \
     C(Accent)                      \
     C(ActiveLink)                  \
+    C(ActiveSliderGradient1)       \
+    C(ActiveSliderGradient2)       \
     C(ActiveWindowBorder1)         \
     C(ActiveWindowBorder2)         \
     C(ActiveWindowTitle)           \
@@ -47,6 +49,8 @@ namespace Gfx {
     C(HoverHighlight)              \
     C(InactiveSelection)           \
     C(InactiveSelectionText)       \
+    C(InactiveSliderGradient1)     \
+    C(InactiveSliderGradient2)     \
     C(InactiveWindowBorder1)       \
     C(InactiveWindowBorder2)       \
     C(InactiveWindowTitle)         \

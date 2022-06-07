@@ -79,9 +79,9 @@ void ValueSlider::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     if (is_enabled())
-        painter.fill_rect_with_gradient(m_orientation, bar_rect(), palette().active_window_border1(), palette().active_window_border2());
+        painter.fill_rect_with_gradient(m_orientation, bar_rect(), palette().active_slider_gradient1(), palette().active_slider_gradient2());
     else
-        painter.fill_rect_with_gradient(m_orientation, bar_rect(), palette().inactive_window_border1(), palette().inactive_window_border2());
+        painter.fill_rect_with_gradient(m_orientation, bar_rect(), palette().inactive_slider_gradient1(), palette().inactive_slider_gradient2());
 
     auto unfilled_rect = bar_rect();
     unfilled_rect.set_left(knob_rect().right());
