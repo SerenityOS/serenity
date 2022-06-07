@@ -11,6 +11,7 @@ https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 auth_type="sig"
 auth_opts=("--keyring" "./gnu-keyring.gpg" "gnucobol-${version}.tar.bz2.sig")
 configopts=(
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
     "--prefix=/usr/local"
     "--enable-hardening"
     "--disable-rpath"
