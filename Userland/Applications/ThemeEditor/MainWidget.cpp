@@ -139,6 +139,12 @@ static const PropertyTab widgets_tab {
             { { Gfx::ColorRole::RubberBandBorder },
                 { Gfx::ColorRole::RubberBandFill } } },
 
+        { "Sliders",
+            { { Gfx::ColorRole::ActiveSliderGradient1 },
+                { Gfx::ColorRole::ActiveSliderGradient2 },
+                { Gfx::ColorRole::InactiveSliderGradient1 },
+                { Gfx::ColorRole::InactiveSliderGradient2 } } },
+
         { "Menus",
             { { Gfx::ColorRole::MenuBase },
                 { Gfx::ColorRole::MenuBaseText },
