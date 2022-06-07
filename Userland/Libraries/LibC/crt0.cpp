@@ -33,10 +33,15 @@ NAKED void _start(int, char**, char**)
 int _entry(int argc, char** argv, char** env)
 {
     size_t original_stack_chk = __stack_chk_guard;
-    arc4random_buf(&__stack_chk_guard, sizeof(__stack_chk_guard));
 
-    if (__stack_chk_guard == 0)
-        __stack_chk_guard = original_stack_chk;
+    // We can't directly overwrite __stack_chk_guard using arc4random_buf,
+    // as it doesn't know that the stack canary changed and it would instantly
+    // cause a stack protector failure when returning.
+    size_t new_stack_chk = 0;
+    arc4random_buf(&new_stack_chk, sizeof(new_stack_chk));
+
+    if (new_stack_chk != 0)
+        __stack_chk_guard = new_stack_chk;
 
     environ = env;
     __environ_is_malloced = false;
