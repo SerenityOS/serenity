@@ -53,7 +53,7 @@
                 orientation: "Horizontal"
                 max: 230
                 min: 0
-                value: 80
+                value: 110
             }
 
             @GUI::Label {
@@ -87,7 +87,7 @@
                 orientation: "Horizontal"
                 max: 60
                 min: 19
-                value: 30
+                value: 25
             }
 
             @GUI::Label {

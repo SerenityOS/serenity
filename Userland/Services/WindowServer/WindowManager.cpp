@@ -82,9 +82,9 @@ void WindowManager::reload_config()
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
-    m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 0);
-    Color default_highlight_color = Color::NamedColor::Yellow;
-    default_highlight_color.set_alpha(80);
+    m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
+    Color default_highlight_color = Color::NamedColor::Red;
+    default_highlight_color.set_alpha(110);
     m_cursor_highlight_color = Color::from_string(m_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
