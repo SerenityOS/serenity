@@ -263,7 +263,7 @@ void TextDocument::append_line(NonnullOwnPtr<TextDocumentLine> line)
 
 void TextDocument::insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine> line)
 {
-    lines().insert((int)line_index, move(line));
+    lines().insert(line_index, move(line));
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_insert_line(line_index);
@@ -282,7 +282,7 @@ NonnullOwnPtr<TextDocumentLine> TextDocument::take_line(size_t line_index)
 
 void TextDocument::remove_line(size_t line_index)
 {
-    lines().remove((int)line_index);
+    lines().remove(line_index);
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_remove_line(line_index);
