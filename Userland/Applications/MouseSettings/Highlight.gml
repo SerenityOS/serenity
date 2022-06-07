@@ -45,20 +45,20 @@
 
             @GUI::Label {
                 autosize: true
-                text: "0%"
+                text: "Low"
             }
 
             @GUI::Slider {
                 name: "highlight_opacity_slider"
                 orientation: "Horizontal"
                 max: 230
-                min: 0
+                min: 30
                 value: 110
             }
 
             @GUI::Label {
                 autosize: true
-                text: "100%"
+                text: "High"
             }
         }
     }
@@ -79,20 +79,20 @@
 
             @GUI::Label {
                 autosize: true
-                text: "Off"
+                text: "Small"
             }
 
             @GUI::Slider {
                 name: "highlight_radius_slider"
                 orientation: "Horizontal"
                 max: 60
-                min: 19
+                min: 20
                 value: 25
             }
 
             @GUI::Label {
                 autosize: true
-                text: "Largest"
+                text: "Large"
             }
         }
     }

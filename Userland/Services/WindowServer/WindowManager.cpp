@@ -1697,40 +1697,47 @@ void WindowManager::process_key_event(KeyEvent& event)
     if (!active_input_window)
         return;
 
-    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Super && active_input_window->type() != WindowType::Desktop) {
-        if (event.key() == Key_Down) {
-            if (active_input_window->is_resizable() && active_input_window->is_maximized()) {
-                maximize_windows(*active_input_window, false);
-                return;
-            }
-            if (active_input_window->is_minimizable())
-                minimize_windows(*active_input_window, true);
+    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Super) {
+        if (event.key() == Key_H) {
+            m_cursor_highlight_enabled = !m_cursor_highlight_enabled;
+            Compositor::the().invalidate_cursor();
             return;
         }
-        if (active_input_window->is_resizable()) {
-            if (event.key() == Key_Up) {
-                maximize_windows(*active_input_window, !active_input_window->is_maximized());
-                return;
-            }
-            if (event.key() == Key_Left) {
-                if (active_input_window->tile_type() == WindowTileType::Left) {
-                    active_input_window->set_untiled();
+        if (active_input_window->type() != WindowType::Desktop) {
+            if (event.key() == Key_Down) {
+                if (active_input_window->is_resizable() && active_input_window->is_maximized()) {
+                    maximize_windows(*active_input_window, false);
                     return;
                 }
-                if (active_input_window->is_maximized())
-                    maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(WindowTileType::Left);
+                if (active_input_window->is_minimizable())
+                    minimize_windows(*active_input_window, true);
                 return;
             }
-            if (event.key() == Key_Right) {
-                if (active_input_window->tile_type() == WindowTileType::Right) {
-                    active_input_window->set_untiled();
+            if (active_input_window->is_resizable()) {
+                if (event.key() == Key_Up) {
+                    maximize_windows(*active_input_window, !active_input_window->is_maximized());
                     return;
                 }
-                if (active_input_window->is_maximized())
-                    maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(WindowTileType::Right);
-                return;
+                if (event.key() == Key_Left) {
+                    if (active_input_window->tile_type() == WindowTileType::Left) {
+                        active_input_window->set_untiled();
+                        return;
+                    }
+                    if (active_input_window->is_maximized())
+                        maximize_windows(*active_input_window, false);
+                    active_input_window->set_tiled(WindowTileType::Left);
+                    return;
+                }
+                if (event.key() == Key_Right) {
+                    if (active_input_window->tile_type() == WindowTileType::Right) {
+                        active_input_window->set_untiled();
+                        return;
+                    }
+                    if (active_input_window->is_maximized())
+                        maximize_windows(*active_input_window, false);
+                    active_input_window->set_tiled(WindowTileType::Right);
+                    return;
+                }
             }
         }
     }
@@ -2292,11 +2299,6 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorHighlightColor", color.to_string());
     sync_config_to_disk();
-}
-
-bool WindowManager::is_cursor_highlight_enabled() const
-{
-    return m_cursor_highlight_radius > 0 && m_cursor_highlight_color.alpha() > 0;
 }
 
 bool WindowManager::sync_config_to_disk()

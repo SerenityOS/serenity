@@ -329,7 +329,7 @@ public:
     void set_cursor_highlight_radius(int radius);
     void set_cursor_highlight_color(Gfx::Color const& color);
 
-    bool is_cursor_highlight_enabled() const;
+    bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
@@ -386,6 +386,7 @@ private:
     RefPtr<Cursor> m_zoom_cursor;
     int m_cursor_highlight_radius { 0 };
     Gfx::Color m_cursor_highlight_color;
+    bool m_cursor_highlight_enabled { false };
 
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 

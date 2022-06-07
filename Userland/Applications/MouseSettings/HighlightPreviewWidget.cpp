@@ -51,12 +51,10 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
 void HighlightPreviewWidget::paint_preview(GUI::PaintEvent&)
 {
     GUI::Painter painter(*this);
-    if (m_radius > 0 && m_color.alpha() > 0) {
-        Gfx::AntiAliasingPainter aa_painter { painter };
-        Gfx::IntRect highlight_rect { 0, 0, m_radius * 2, m_radius * 2 };
-        highlight_rect.center_within(frame_inner_rect());
-        aa_painter.fill_ellipse(highlight_rect, m_color);
-    }
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    Gfx::IntRect highlight_rect { 0, 0, m_radius * 2, m_radius * 2 };
+    highlight_rect.center_within(frame_inner_rect());
+    aa_painter.fill_ellipse(highlight_rect, m_color);
     if (m_cursor_bitmap) {
         auto cursor_rect = m_cursor_bitmap->rect();
         if (m_cursor_params.frames() > 1)

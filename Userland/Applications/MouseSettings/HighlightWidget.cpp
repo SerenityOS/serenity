@@ -52,10 +52,7 @@ Gfx::Color HighlightWidget::highlight_color()
 
 int HighlightWidget::highlight_radius()
 {
-    auto current_value = m_highlight_radius_slider->value();
-    if (current_value <= m_highlight_radius_slider->min())
-        return 0;
-    return current_value;
+    return m_highlight_radius_slider->value();
 }
 
 void HighlightWidget::apply_settings()
