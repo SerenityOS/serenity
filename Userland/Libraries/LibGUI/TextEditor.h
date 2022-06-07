@@ -229,6 +229,12 @@ public:
 
     virtual Optional<UISize> calculated_min_size() const override;
 
+    template<class T, class... Args>
+    inline void execute(Badge<EditingEngine>, Args&&... args)
+    {
+        execute<T>(forward<Args>(args)...);
+    }
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
