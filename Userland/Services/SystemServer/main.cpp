@@ -83,24 +83,8 @@ static ErrorOr<void> determine_system_mode()
     return {};
 }
 
-static void chown_wrapper(char const* path, uid_t uid, gid_t gid)
+static ErrorOr<void> chown_all_matching_device_nodes_under_specific_directory(StringView directory, group const& group)
 {
-    int rc = chown(path, uid, gid);
-    if (rc < 0 && errno != ENOENT) {
-        VERIFY_NOT_REACHED();
-    }
-}
-static void chmod_wrapper(char const* path, mode_t mode)
-{
-    int rc = chmod(path, mode);
-    if (rc < 0 && errno != ENOENT) {
-        VERIFY_NOT_REACHED();
-    }
-}
-
-static void chown_all_matching_device_nodes_under_specific_directory(StringView directory, group* group)
-{
-    VERIFY(group);
     struct stat cur_file_stat;
 
     Core::DirIterator di(directory, Core::DirIterator::SkipParentAndBaseDir);
@@ -111,13 +95,13 @@ static void chown_all_matching_device_nodes_under_specific_directory(StringView 
         auto rc = stat(entry_name.characters(), &cur_file_stat);
         if (rc < 0)
             continue;
-        chown_wrapper(entry_name.characters(), 0, group->gr_gid);
+        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
     }
+    return {};
 }
 
-static void chown_all_matching_device_nodes(group* group, unsigned major_number)
+static ErrorOr<void> chown_all_matching_device_nodes(group const& group, unsigned major_number)
 {
-    VERIFY(group);
     struct stat cur_file_stat;
 
     Core::DirIterator di("/dev/", Core::DirIterator::SkipParentAndBaseDir);
@@ -130,8 +114,9 @@ static void chown_all_matching_device_nodes(group* group, unsigned major_number)
             continue;
         if (major(cur_file_stat.st_rdev) != major_number)
             continue;
-        chown_wrapper(entry_name.characters(), 0, group->gr_gid);
+        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
     }
+    return {};
 }
 
 inline char offset_character_with_number(char base_char, u8 offset)
@@ -405,26 +390,34 @@ static ErrorOr<void> prepare_synthetic_filesystems()
 
     TRY(Core::System::symlink("/dev/random", "/dev/urandom"));
 
-    chmod_wrapper("/dev/urandom", 0666);
+    TRY(Core::System::chmod("/dev/urandom", 0666));
 
-    auto phys_group = getgrnam("phys");
-    VERIFY(phys_group);
+    auto phys_group = TRY(Core::System::getgrnam("phys"));
+    VERIFY(phys_group.has_value());
     // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
-    chown_all_matching_device_nodes(phys_group, 29);
+    TRY(chown_all_matching_device_nodes(phys_group.value(), 29));
 
-    chown_wrapper("/dev/keyboard0", 0, phys_group->gr_gid);
+    auto const filter_chown_ENOENT = [](ErrorOr<void> result) -> ErrorOr<void> {
+        auto const chown_enoent = Error::from_syscall("chown", -ENOENT);
+        if (result.is_error() && result.error() == chown_enoent) {
+            dbgln("{}", result.release_error());
+            return {};
+        }
+        return result;
+    };
 
-    chown_wrapper("/dev/mouse0", 0, phys_group->gr_gid);
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0", 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0", 0, phys_group.value().gr_gid)));
 
-    auto tty_group = getgrnam("tty");
-    VERIFY(tty_group);
+    auto tty_group = TRY(Core::System::getgrnam("tty"));
+    VERIFY(tty_group.has_value());
     // FIXME: Try to find a way to not hardcode the major number of tty nodes.
-    chown_all_matching_device_nodes(tty_group, 4);
+    TRY(chown_all_matching_device_nodes(tty_group.release_value(), 4));
 
-    auto audio_group = getgrnam("audio");
-    VERIFY(audio_group);
-    chown_wrapper("/dev/audio", 0, audio_group->gr_gid);
-    chown_all_matching_device_nodes_under_specific_directory("/dev/audio", audio_group);
+    auto audio_group = TRY(Core::System::getgrnam("audio"));
+    VERIFY(audio_group.has_value());
+    TRY(Core::System::chown("/dev/audio", 0, audio_group->gr_gid));
+    TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio", audio_group.release_value()));
 
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making
@@ -439,7 +432,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::dup2(stdin_new_fd, 1));
     TRY(Core::System::dup2(stdin_new_fd, 2));
 
-    endgrent();
+    TRY(Core::System::endgrent());
     return {};
 }
 
@@ -448,13 +441,10 @@ static ErrorOr<void> mount_all_filesystems()
     dbgln("Spawning mount -a to mount all filesystems.");
     pid_t pid = TRY(Core::System::fork());
 
-    if (pid == 0) {
-        execl("/bin/mount", "mount", "-a", nullptr);
-        perror("exec");
-        VERIFY_NOT_REACHED();
-    } else {
-        wait(nullptr);
-    }
+    if (pid == 0)
+        TRY(Core::System::exec("/bin/mount", Vector<StringView> { "mount", "-a" }, Core::System::SearchInPath::No));
+
+    wait(nullptr);
     return {};
 }
 
