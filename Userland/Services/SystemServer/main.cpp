@@ -487,8 +487,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto config = (user)
         ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
         : TRY(Core::ConfigFile::open_for_system("SystemServer"));
-    for (auto name : config->groups()) {
-        auto service = Service::construct(*config, name);
+    for (auto const& name : config->groups()) {
+        auto service = TRY(Service::try_create(*config, name));
         if (service->is_enabled())
             services.append(service);
     }
