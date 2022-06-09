@@ -6,14 +6,14 @@ Subject: [PATCH] Build: Add SerenityOS to list of compatible systems
 This is required by the build system to spit out a library with
 the correct name/platform.
 ---
- xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/build.c | 2 ++
- xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/public/build.h        | 4 ++++
+ engine/common/build.c | 2 ++
+ public/build.h        | 4 ++++
  2 files changed, 6 insertions(+)
 
-diff --git a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/build.c b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/build.c
-index c4ddaeeb2..42ba572c4 100644
---- a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/build.c
-+++ b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/build.c
+diff --git a/engine/common/build.c b/engine/common/build.c
+index c4ddaee..42ba572 100644
+--- a/engine/common/build.c
++++ b/engine/common/build.c
 @@ -95,6 +95,8 @@ const char *Q_buildos( void )
  	osname = "DOS4GW";
  #elif XASH_HAIKU
@@ -23,10 +23,10 @@ index c4ddaeeb2..42ba572c4 100644
  #else
  #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
  #endif
-diff --git a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/public/build.h b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/public/build.h
-index 6e1f326d6..57a7735f4 100644
---- a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/public/build.h
-+++ b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/public/build.h
+diff --git a/public/build.h b/public/build.h
+index 6e1f326..57a7735 100644
+--- a/public/build.h
++++ b/public/build.h
 @@ -74,6 +74,7 @@ For more information, please refer to <http://unlicense.org/>
  #undef XASH_RISCV_DOUBLEFP
  #undef XASH_RISCV_SINGLEFP
