@@ -1259,124 +1259,146 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
+    // 1. Let parseResult be empty.
+    // 2. For each nonterminal goal of « TemporalDateTimeString, TemporalInstantString, TemporalMonthDayString, TemporalTimeString, TemporalYearMonthString, TemporalZonedDateTimeString », do
+    //    a. If parseResult is not a Parse Node, set parseResult to ParseText(StringToCodePoints(isoString), goal).
+    // 3. Assert: parseResult is a Parse Node.
+    // NOTE: All of this is done by receiving an already parsed ISO string (ParseResult).
 
-    // 2. Let year, month, day, fraction, and calendar be the parts of isoString produced respectively by the DateYear, DateMonth, DateDay, TimeFraction, and CalendarName productions, or undefined if not present.
-    auto year_part = parse_result.date_year;
-    auto month_part = parse_result.date_month;
-    auto day_part = parse_result.date_day;
-    auto fraction_part = parse_result.time_fraction;
-    auto calendar_part = parse_result.calendar_name;
+    // 4. Let each of year, month, day, fSeconds, and calendar be the source text matched by the respective DateYear, DateMonth, DateDay, TimeFraction, and CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    auto year = parse_result.date_year;
+    auto month = parse_result.date_month;
+    auto day = parse_result.date_day;
+    auto f_seconds = parse_result.time_fraction;
+    auto calendar = parse_result.calendar_name;
 
-    // 3. Let hour be the part of isoString produced by the TimeHour, TimeHourNotValidMonth, TimeHourNotThirtyOneDayMonth, or TimeHourTwoOnly productions, or undefined if none of those are present.
-    auto hour_part = parse_result.time_hour;
-    if (!hour_part.has_value())
-        hour_part = parse_result.time_hour_not_valid_month;
-    if (!hour_part.has_value())
-        hour_part = parse_result.time_hour_not_thirty_one_day_month;
-    if (!hour_part.has_value())
-        hour_part = parse_result.time_hour_two_only;
+    // 5. Let hour be the source text matched by the TimeHour, TimeHourNotValidMonth, TimeHourNotThirtyOneDayMonth, or TimeHourTwoOnly Parse Node contained within parseResult, or an empty sequence of code points if none of those are present.
+    auto hour = parse_result.time_hour;
+    if (!hour.has_value())
+        hour = parse_result.time_hour_not_valid_month;
+    if (!hour.has_value())
+        hour = parse_result.time_hour_not_thirty_one_day_month;
+    if (!hour.has_value())
+        hour = parse_result.time_hour_two_only;
 
-    // 4. Let minute be the part of isoString produced by the TimeMinute, TimeMinuteNotValidDay, TimeMinuteThirtyOnly, or TimeMinuteThirtyOneOnly productions, or undefined if none of those are present.
-    auto minute_part = parse_result.time_minute;
-    if (!minute_part.has_value())
-        minute_part = parse_result.time_minute_not_valid_day;
-    if (!minute_part.has_value())
-        minute_part = parse_result.time_minute_thirty_only;
-    if (!minute_part.has_value())
-        minute_part = parse_result.time_minute_thirty_one_only;
+    // 6. Let minute be the source text matched by the TimeMinute, TimeMinuteNotValidDay, TimeMinuteThirtyOnly, or TimeMinuteThirtyOneOnly Parse Node contained within parseResult, or an empty sequence of code points if none of those are present.
+    auto minute = parse_result.time_minute;
+    if (!minute.has_value())
+        minute = parse_result.time_minute_not_valid_day;
+    if (!minute.has_value())
+        minute = parse_result.time_minute_thirty_only;
+    if (!minute.has_value())
+        minute = parse_result.time_minute_thirty_one_only;
 
-    // 5. Let second be the part of isoString produced by the TimeSecond or TimeSecondNotValidMonth productions, or undefined if neither of those are present.
-    auto second_part = parse_result.time_second;
-    if (!second_part.has_value())
-        second_part = parse_result.time_second_not_valid_month;
+    // 7. Let second be the source text matched by the TimeSecond or TimeSecondNotValidMonth Parse Node contained within parseResult, or an empty sequence of code points if neither of those are present.
+    auto second = parse_result.time_second;
+    if (!second.has_value())
+        second = parse_result.time_second_not_valid_month;
 
-    // 6. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
-    String normalized_year;
-    if (year_part.has_value() && year_part->starts_with("\xE2\x88\x92"sv))
-        normalized_year = String::formatted("-{}", year_part->substring_view(3));
-    else
-        normalized_year = year_part.value_or("0");
-
-    // 7. Set year to ! ToIntegerOrInfinity(year).
-    auto year = *normalized_year.to_int<i32>();
-
-    u8 month;
-    // 8. If month is undefined, then
-    if (!month_part.has_value()) {
-        // a. Set month to 1.
-        month = 1;
-    }
-    // 9. Else,
-    else {
-        // a. Set month to ! ToIntegerOrInfinity(month).
-        month = *month_part->to_uint<u8>();
+    // 8. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
+    Optional<String> normalized_year;
+    if (year.has_value()) {
+        normalized_year = year->starts_with("\xE2\x88\x92"sv)
+            ? String::formatted("-{}", year->substring_view(3))
+            : String { *year };
     }
 
-    u8 day;
-    // 10. If day is undefined, then
-    if (!day_part.has_value()) {
-        // a. Set day to 1.
-        day = 1;
-    }
+    // 9. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
+    auto year_mv = *normalized_year.value_or("0"sv).to_int<i32>();
+
+    // 10. If month is empty, then
+    //    a. Let monthMV be 1.
     // 11. Else,
+    //    a. Let monthMV be ! ToIntegerOrInfinity(CodePointsToString(month)).
+    auto month_mv = *month.value_or("1"sv).to_uint<u8>();
+
+    // 12. If day is empty, then
+    //    a. Let dayMV be 1.
+    // 13. Else,
+    //    a. Let dayMV be ! ToIntegerOrInfinity(CodePointsToString(day)).
+    auto day_mv = *day.value_or("1"sv).to_uint<u8>();
+
+    // 14. Let hourMV be ! ToIntegerOrInfinity(CodePointsToString(hour)).
+    auto hour_mv = *hour.value_or("0"sv).to_uint<u8>();
+
+    // 15. Let minuteMV be ! ToIntegerOrInfinity(CodePointsToString(minute)).
+    auto minute_mv = *minute.value_or("0"sv).to_uint<u8>();
+
+    // 16. Let secondMV be ! ToIntegerOrInfinity(CodePointsToString(second)).
+    auto second_mv = *second.value_or("0"sv).to_uint<u8>();
+
+    // 17. If secondMV is 60, then
+    if (second_mv == 60) {
+        // a. Set secondMV to 59.
+        second_mv = 59;
+    }
+
+    u16 millisecond_mv;
+    u16 microsecond_mv;
+    u16 nanosecond_mv;
+
+    // 18. If fSeconds is not empty, then
+    if (f_seconds.has_value()) {
+        // a. Let fSecondsDigits be the substring of CodePointsToString(fSeconds) from 1.
+        auto f_seconds_digits = f_seconds->substring_view(1);
+
+        // b. Let fSecondsDigitsExtended be the string-concatenation of fSecondsDigits and "000000000".
+        auto f_seconds_digits_extended = String::formatted("{}000000000", f_seconds_digits);
+
+        // c. Let millisecond be the substring of fSecondsDigitsExtended from 0 to 3.
+        auto millisecond = f_seconds_digits_extended.substring(0, 3);
+
+        // d. Let microsecond be the substring of fSecondsDigitsExtended from 3 to 6.
+        auto microsecond = f_seconds_digits_extended.substring(3, 3);
+
+        // e. Let nanosecond be the substring of fSecondsDigitsExtended from 6 to 9.
+        auto nanosecond = f_seconds_digits_extended.substring(6, 3);
+
+        // f. Let millisecondMV be ! ToIntegerOrInfinity(millisecond).
+        millisecond_mv = *millisecond.to_uint<u16>();
+
+        // g. Let microsecondMV be ! ToIntegerOrInfinity(microsecond).
+        microsecond_mv = *microsecond.to_uint<u16>();
+
+        // h. Let nanosecondMV be ! ToIntegerOrInfinity(nanosecond).
+        nanosecond_mv = *nanosecond.to_uint<u16>();
+    }
+    // 19. Else,
     else {
-        // a. Set day to ! ToIntegerOrInfinity(day).
-        day = *day_part->to_uint<u8>();
+        // a. Let millisecondMV be 0.
+        millisecond_mv = 0;
+
+        // b. Let microsecondMV be 0.
+        microsecond_mv = 0;
+
+        // c. Let nanosecondMV be 0.
+        nanosecond_mv = 0;
     }
 
-    // 12. Set hour to ! ToIntegerOrInfinity(hour).
-    u8 hour = *hour_part.value_or("0"sv).to_uint<u8>();
-
-    // 13. Set minute to ! ToIntegerOrInfinity(minute).
-    u8 minute = *minute_part.value_or("0"sv).to_uint<u8>();
-
-    // 14. Set second to ! ToIntegerOrInfinity(second).
-    u8 second = *second_part.value_or("0"sv).to_uint<u8>();
-
-    // 15. If second is 60, then
-    if (second == 60) {
-        // a. Set second to 59.
-        second = 59;
-    }
-
-    u16 millisecond;
-    u16 microsecond;
-    u16 nanosecond;
-    // 16. If fraction is not undefined, then
-    if (fraction_part.has_value()) {
-        // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
-        auto fraction = String::formatted("{}000000000", *fraction_part);
-        // b. Let millisecond be the String value equal to the substring of fraction from 1 to 4.
-        // c. Set millisecond to ! ToIntegerOrInfinity(millisecond).
-        millisecond = *fraction.substring(1, 3).to_uint<u16>();
-        // d. Let microsecond be the String value equal to the substring of fraction from 4 to 7.
-        // e. Set microsecond to ! ToIntegerOrInfinity(microsecond).
-        microsecond = *fraction.substring(4, 3).to_uint<u16>();
-        // f. Let nanosecond be the String value equal to the substring of fraction from 7 to 10.
-        // g. Set nanosecond to ! ToIntegerOrInfinity(nanosecond).
-        nanosecond = *fraction.substring(7, 3).to_uint<u16>();
-    }
-    // 17. Else,
-    else {
-        // a. Let millisecond be 0.
-        millisecond = 0;
-        // b. Let microsecond be 0.
-        microsecond = 0;
-        // c. Let nanosecond be 0.
-        nanosecond = 0;
-    }
-
-    // 18. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
-    if (!is_valid_iso_date(year, month, day))
+    // 20. If IsValidISODate(yearMV, monthMV, dayMV) is false, throw a RangeError exception.
+    if (!is_valid_iso_date(year_mv, month_mv, day_mv))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidISODate);
 
-    // 19. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
-    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
+    // 21. If IsValidTime(hourMV, minuteMV, secondMV, millisecondMV, microsecondMV, nanosecondMV) is false, throw a RangeError exception.
+    if (!is_valid_time(hour_mv, minute_mv, second_mv, millisecond_mv, microsecond_mv, nanosecond_mv))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
 
-    // 20. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
-    return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = Optional<String>(move(calendar_part)) };
+    Optional<String> calendar_val;
+
+    // 22. If calendar is empty, then
+    if (!calendar.has_value()) {
+        // a. Let calendarVal be undefined.
+        calendar_val = {};
+    }
+    // 23. Else,
+    else {
+        // a. Let calendarVal be CodePointsToString(calendar).
+        // NOTE: This turns the StringView into a String.
+        calendar_val = *calendar;
+    }
+
+    // 24. Return the Record { [[Year]]: yearMV, [[Month]]: monthMV, [[Day]]: dayMV, [[Hour]]: hourMV, [[Minute]]: minuteMV, [[Second]]: secondMV, [[Millisecond]]: millisecondMV, [[Microsecond]]: microsecondMV, [[Nanosecond]]: nanosecondMV, [[Calendar]]: calendarVal, }.
+    return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .calendar = move(calendar_val) };
 }
 
 // 13.33 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
@@ -1384,34 +1406,30 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalInstantString (see 13.33), then
+    // 1. If ParseText(StringToCodePoints(isoString), TemporalInstantString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalInstantString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidInstantString, iso_string);
-    }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
+    // 3. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
 
-    // 5. Let offsetString be timeZoneResult.[[OffsetString]].
+    // 4. Let offsetString be timeZoneResult.[[OffsetString]].
     auto offset_string = time_zone_result.offset_string;
 
-    // 6. If timeZoneResult.[[Z]] is true, then
+    // 5. If timeZoneResult.[[Z]] is true, then
     if (time_zone_result.z) {
         // a. Set offsetString to "+00:00".
         offset_string = "+00:00"sv;
     }
 
-    // 7. Assert: offsetString is not undefined.
+    // 6. Assert: offsetString is not undefined.
     VERIFY(offset_string.has_value());
 
-    // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: offsetString }.
+    // 7. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: offsetString }.
     return TemporalInstant { .year = result.year, .month = result.month, .day = result.day, .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .time_zone_offset = move(offset_string) };
 }
 
@@ -1420,22 +1438,18 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalZonedDateTimeString (see 13.33), then
+    // 1. If ParseText(StringToCodePoints(isoString), TemporalZonedDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeString, iso_string);
-    }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
+    // 3. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
 
-    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: timeZoneResult.[[Z]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]], [[TimeZoneName]]: timeZoneResult.[[Name]] }.
+    // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: timeZoneResult.[[Z]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]], [[TimeZoneName]]: timeZoneResult.[[Name]] }.
     // NOTE: This returns the two structs together instead of separated to avoid a copy in ToTemporalZonedDateTime, as the spec tries to put the result of InterpretTemporalDateTimeFields and ParseTemporalZonedDateTimeString into the same `result` variable.
     // InterpretTemporalDateTimeFields returns an ISODateTime, so the moved in `result` here is subsequently moved into ParseTemporalZonedDateTimeString's `result` variable.
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = move(time_zone_result) };
@@ -1446,26 +1460,24 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalCalendarString (see 13.33), then
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalCalendarString).
     auto parse_result = parse_iso8601(Production::TemporalCalendarString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarString, iso_string);
-    }
 
-    // 3. Let id be the part of isoString produced by the CalendarName production, or undefined if not present.
-    auto id_part = parse_result->calendar_name;
+    // 3. Let id be the source text matched by the CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    auto id = parse_result->calendar_name;
 
-    // 4. If id is undefined, then
-    if (!id_part.has_value()) {
+    // 4. If id is empty, then
+    if (!id.has_value()) {
         // a. Return "iso8601".
         return "iso8601"sv;
     }
 
-    // 5. Return id.
-    return id_part.value();
+    // 5. Return CodePointsToString(id).
+    return id.value();
 }
 
 // 13.36 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
@@ -1483,20 +1495,16 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalDateTimeString (see 13.33), then
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
-    }
 
-    // 3. If isoString contains a UTCDesignator, then
-    if (parse_result->utc_designator.has_value()) {
-        // a. Throw a RangeError exception.
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
+
+    // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
+    if (parse_result->utc_designator.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeStringUTCDesignator, iso_string);
-    }
 
     // 4. Return ? ParseISODateTime(isoString).
     return parse_iso_date_time(global_object, *parse_result);
@@ -1627,7 +1635,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     i8 factor;
 
-    // 18. If sign contains the code point 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
+    // 18. If sign contains the code point U+002D (HYPHEN-MINUS) or U+2212 (MINUS SIGN), then
     if (sign_part.has_value() && sign_part->is_one_of("-", "\u2212")) {
         // a. Let factor be -1.
         factor = -1;
@@ -1647,20 +1655,16 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalMonthDayString (see 13.33), then
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalMonthDayString).
     auto parse_result = parse_iso8601(Production::TemporalMonthDayString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayString, iso_string);
-    }
 
-    // 3. If isoString contains a UTCDesignator, then
-    if (parse_result->utc_designator.has_value()) {
-        // a. Throw a RangeError exception.
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayString, iso_string);
+
+    // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
+    if (parse_result->utc_designator.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayStringUTCDesignator, iso_string);
-    }
 
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1668,7 +1672,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
     // 5. Let year be result.[[Year]].
     Optional<i32> year = result.year;
 
-    // 6. If no part of isoString is produced by the DateYear production, then
+    // 6. If parseResult does not contain a DateYear Parse Node, then
     if (!parse_result->date_year.has_value()) {
         // a. Set year to undefined.
         year = {};
@@ -1683,23 +1687,19 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalDateTimeString (see 13.33), then
+    // 1. If ParseText(StringToCodePoints(isoString), TemporalDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
-    }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     bool z;
     Optional<String> offset_string;
     Optional<String> time_zone;
 
-    // 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
+    // 3. If ParseText(StringToCodePoints(isoString), TemporalZonedDateTimeString) is a Parse Node, then
     parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
     if (parse_result.has_value()) {
         // a. Let timeZoneResult be ! ParseTemporalTimeZoneString(isoString).
@@ -1714,7 +1714,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
         // d. Let timeZone be timeZoneResult.[[Name]].
         time_zone = time_zone_result.name;
     }
-    // 5. Else,
+    // 4. Else,
     else {
         // a. Let z be false.
         z = false;
@@ -1723,7 +1723,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
         // c. Let timeZone be undefined.
     }
 
-    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffsetString]]: offsetString, [[TimeZoneIANAName]]: timeZone }.
+    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffsetString]]: offsetString, [[TimeZoneIANAName]]: timeZone }.
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset_string = move(offset_string), .name = move(time_zone) } };
 }
 
@@ -1732,27 +1732,21 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeString).
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeString).
     auto parse_result = parse_iso8601(Production::TemporalTimeString, iso_string);
 
-    // 3. If parseResult is a List of errors, then
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeString, iso_string);
-    }
 
-    // 4. If parseResult contains a UTCDesignator, then
-    if (parse_result->utc_designator.has_value()) {
-        // a. Throw a RangeError exception.
+    // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
+    if (parse_result->utc_designator.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeStringUTCDesignator, iso_string);
-    }
 
-    // 5. Let result be ? ParseISODateTime(isoString).
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 6. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
+    // 5. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
@@ -1761,41 +1755,37 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeZoneString).
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeZoneString).
     auto parse_result = parse_iso8601(Production::TemporalTimeZoneString, iso_string);
 
-    // 3. If parseResult is a List of errors, then
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
-    }
 
-    // 4. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto z = parse_result->utc_designator;
     auto offset_string = parse_result->time_zone_numeric_utc_offset;
     auto name = parse_result->time_zone_iana_name;
 
-    // 5. If name is empty, then
-    //    a. Set name to undefined.
-    // 6. Else,
-    //    a. Set name to CodePointsToString(name).
-    // NOTE: No-op.
+    // 4. If name is empty, then
+    //     a. Set name to undefined.
+    //  5. Else,
+    //     a. Set name to CodePointsToString(name).
+    //  NOTE: No-op.
 
-    // 7. If z is not empty, then
+    // 6. If z is not empty, then
     if (z.has_value()) {
         // a. Return the Record { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: name }.
         return TemporalTimeZone { .z = true, .offset_string = {}, .name = Optional<String>(move(name)) };
     }
 
-    // 8. If offsetString is empty, then
+    // 7. If offsetString is empty, then
     //    a. Set offsetString to undefined.
-    // 9. Else,
+    // 8. Else,
     //    a. Set offsetString to CodePointsToString(offsetString).
     // NOTE: No-op.
 
-    // 10. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
+    // 9. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
     return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
 }
 
@@ -1804,20 +1794,16 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(isoString) is String.
-
-    // 2. If isoString does not satisfy the syntax of a TemporalYearMonthString (see 13.33), then
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalYearMonthString).
     auto parse_result = parse_iso8601(Production::TemporalYearMonthString, iso_string);
-    if (!parse_result.has_value()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
-    }
 
-    // 3. If isoString contains a UTCDesignator, then
-    if (parse_result->utc_designator.has_value()) {
-        // a. Throw a RangeError exception.
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
+
+    // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
+    if (parse_result->utc_designator.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthStringUTCDesignator, iso_string);
-    }
 
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));

@@ -36,7 +36,7 @@ struct ParseResult {
     Optional<StringView> time_zone_utc_offset_hour;
     Optional<StringView> time_zone_utc_offset_minute;
     Optional<StringView> time_zone_utc_offset_second;
-    Optional<StringView> time_zone_utc_offset_fractional_part;
+    Optional<StringView> time_zone_utc_offset_fraction;
     Optional<StringView> time_zone_iana_name;
     Optional<StringView> duration_years;
     Optional<StringView> duration_months;
@@ -60,6 +60,7 @@ enum class Production {
     TemporalYearMonthString,
     TemporalZonedDateTimeString,
     TemporalCalendarString,
+    TimeZoneNumericUTCOffset,
 };
 
 Optional<ParseResult> parse_iso8601(Production, StringView);

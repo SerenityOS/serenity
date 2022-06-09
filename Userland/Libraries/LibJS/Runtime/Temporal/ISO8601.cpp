@@ -706,12 +706,7 @@ bool ISO8601Parser::parse_time_zone_utc_offset_fractional_part()
 {
     // TimeZoneUTCOffsetFractionalPart :
     //     FractionalPart
-    StateTransaction transaction { *this };
-    if (!parse_fractional_part())
-        return false;
-    m_state.parse_result.time_zone_utc_offset_fractional_part = transaction.parsed_string_view();
-    transaction.commit();
-    return true;
+    return parse_fractional_part();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TimeZoneUTCOffsetFraction
@@ -724,6 +719,7 @@ bool ISO8601Parser::parse_time_zone_utc_offset_fraction()
         return false;
     if (!parse_time_zone_utc_offset_fractional_part())
         return false;
+    m_state.parse_result.time_zone_utc_offset_fraction = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
@@ -1726,7 +1722,8 @@ bool ISO8601Parser::parse_temporal_calendar_string()
     __JS_ENUMERATE(TemporalTimeZoneString, parse_temporal_time_zone_string)            \
     __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)          \
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
-    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)
+    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)             \
+    __JS_ENUMERATE(TimeZoneNumericUTCOffset, parse_time_zone_numeric_utc_offset)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
