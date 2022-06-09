@@ -1,7 +1,7 @@
-From 634f30f41971933508832954c142cc6c384d19ed Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Patrick Meyer <git@the-space.agency>
 Date: Thu, 28 Apr 2022 01:50:11 +0000
-Subject: [PATCH 2/5] Disable SSP
+Subject: [PATCH] Disable SSP
 
 Co-Authored-By: Yonatan Goldschmidt <yon.goldschmidt@gmail.com>
 ---
@@ -95,6 +95,3 @@ index 6a19479..28cd987 100644
  	# FORTIFY_SOURCE
  	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
  
--- 
-2.36.1
-

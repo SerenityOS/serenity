@@ -1,7 +1,7 @@
-From 70904f38faffd6917593a67326f124251ea03cd3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Sun, 23 Jan 2022 17:47:17 -0700
-Subject: [PATCH 1/6] Disable mold-wrapper.so for Serenity
+Subject: [PATCH] Disable mold-wrapper.so for Serenity
 
 This feature depends on RTLD_NEXT capabilities which are not yet
 implemented in the Serenity DynamicLoader.
@@ -35,6 +35,3 @@ index e2d7cd9..18262a1 100644
  
  	$(INSTALL) -d $D$(LIBEXECDIR)/mold
  	ln -sf $(BINDIR)/mold $D$(LIBEXECDIR)/mold/ld
--- 
-2.25.1
-

@@ -17,6 +17,7 @@
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Timer.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
@@ -723,13 +724,6 @@ void Compositor::flush(Screen& screen)
         // now so that they can be sent to the device.
         screen.flush_display(screen_data.m_buffers_are_flipped ? 1 : 0);
     }
-
-    // Note: We write all contents from the internal buffer of WindowServer Screen
-    // to the actual framebuffer with the write() syscall, but after we flush the screen
-    // to ensure we are in a "clean state"...
-    // FIXME: This write is completely inefficient and needs to be done in chunks
-    // only when appropriate...
-    screen.write_all_display_contents();
 }
 
 void Compositor::invalidate_screen()
@@ -849,7 +843,14 @@ Gfx::IntRect Compositor::current_cursor_rect() const
 {
     auto& wm = WindowManager::the();
     auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
-    return { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()), current_cursor.size() };
+    Gfx::IntRect cursor_rect { ScreenInput::the().cursor_location().translated(-current_cursor.params().hotspot()), current_cursor.size() };
+    if (wm.is_cursor_highlight_enabled()) {
+        auto highlight_diameter = wm.cursor_highlight_radius() * 2;
+        cursor_rect.inflate(
+            highlight_diameter - cursor_rect.width(),
+            highlight_diameter - cursor_rect.height());
+    }
+    return cursor_rect;
 }
 
 void Compositor::invalidate_cursor(bool compose_immediately)
@@ -956,10 +957,17 @@ void CompositorScreenData::draw_cursor(Screen& screen, Gfx::IntRect const& curso
     auto& compositor = Compositor::the();
     auto& current_cursor = compositor.m_current_cursor ? *compositor.m_current_cursor : wm.active_cursor();
     auto screen_rect = screen.rect();
-    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(screen_rect).translated(-screen_rect.location()));
+    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, cursor_rect.intersected(screen_rect).translated(-screen_rect.location()));
     auto cursor_src_rect = current_cursor.source_rect(compositor.m_current_cursor_frame);
-    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(screen.scale_factor()), cursor_src_rect);
-    m_flush_special_rects.add(Gfx::IntRect(cursor_rect.location(), cursor_src_rect.size()).intersected(screen.rect()));
+    auto cursor_blit_pos = current_cursor.rect().centered_within(cursor_rect).location();
+
+    if (wm.is_cursor_highlight_enabled()) {
+        Gfx::AntiAliasingPainter aa_back_painter { *m_back_painter };
+        aa_back_painter.fill_ellipse(cursor_rect, wm.cursor_highlight_color());
+    }
+    m_back_painter->blit(cursor_blit_pos, current_cursor.bitmap(screen.scale_factor()), cursor_src_rect);
+
+    m_flush_special_rects.add(Gfx::IntRect(cursor_rect.location(), cursor_rect.size()).intersected(screen.rect()));
     m_have_flush_rects = true;
     m_last_cursor_rect = cursor_rect;
     VERIFY(compositor.m_current_cursor_screen == &screen);

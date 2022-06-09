@@ -1,7 +1,7 @@
-From 9a0103cf47963ff94d97885787993048cc5c4680 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Dan MacDonald <allcoms@gmail.com>
 Date: Sun, 8 Dec 2019 17:30:52 +0000
-Subject: [PATCH 1/2] Add Serenity to Makefile
+Subject: [PATCH] Add Serenity to Makefile
 
 - Add `-lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex`
 - Disable RTTI
@@ -37,6 +37,3 @@ index 527a3d0..fa1b849 100644
      link_flags    += $(optimizations) -fuse-linker-plugin
  endif
  
--- 
-2.36.1
-

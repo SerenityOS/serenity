@@ -1,7 +1,7 @@
-From 4a8e24e824e0de7557ae15414d30a1b49d14ce0d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Sun, 4 Apr 2021 00:41:48 +0200
-Subject: [PATCH 2/5] Disable graphics acceleration
+Subject: [PATCH] Disable graphics acceleration
 
 Disables SDL2 hardware acceleration as we don't support that.
 ---
@@ -28,6 +28,3 @@ index c04581b..f0c0308 100644
 -}
 \ No newline at end of file
 +}
--- 
-2.36.1
-

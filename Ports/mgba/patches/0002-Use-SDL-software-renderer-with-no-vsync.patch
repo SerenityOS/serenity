@@ -1,7 +1,7 @@
-From 02fb21126fa6df66dabee40439fab341f2bdd6e8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke Wilde <lukew@serenityos.org>
 Date: Wed, 13 Apr 2022 17:22:56 +0100
-Subject: [PATCH 2/2] Use SDL software renderer with no vsync
+Subject: [PATCH] Use SDL software renderer with no vsync
 
 This makes us use the SDL software renderer with no vsync, as our SDL2 port does not currently support accelerated rendering
 or vsync.
@@ -27,6 +27,3 @@ index 48afc33..11bd58c 100644
  #ifdef COLOR_16_BIT
  #ifdef COLOR_5_6_5
  	renderer->sdlTex = SDL_CreateTexture(renderer->sdlRenderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, width, height);
--- 
-2.36.1
-

@@ -727,7 +727,7 @@ do_dev() {
         pushd "$git_repo"
         if [ ! -d "$git_repo/.git" ]; then
             git init .
-            git add .
+            git add --all --force
             git commit -a -m 'Initial import'
         fi
         # Make it allow pushes from other local checkouts
@@ -824,7 +824,9 @@ do_dev() {
 
     local first_hash="$(git -C "$git_repo" rev-list --max-parents=0 HEAD)"
 
+    pushd "$workdir"
     launch_user_shell
+    popd >/dev/null 2>&1
 
     local current_hash="$(git -C "$git_repo" rev-parse HEAD)"
 
@@ -832,7 +834,7 @@ do_dev() {
     if [ "$first_hash" != "$current_hash" ]; then
         >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
         rm -fr patches/*.patch
-        git -C "$git_repo" format-patch "$first_hash" -o "$(realpath patches)"
+        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath patches)"
         do_generate_patch_readme
     fi
 }

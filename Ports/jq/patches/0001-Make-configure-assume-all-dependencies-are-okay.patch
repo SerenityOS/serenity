@@ -1,7 +1,7 @@
-From 286ee7f25aefdd17945ba141bb5684857575119a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 16:20:52 +0430
-Subject: [PATCH 1/2] Make configure assume all dependencies are okay
+Subject: [PATCH] Make configure assume all dependencies are okay
 
 ---
  configure | 4 ++++
@@ -22,6 +22,3 @@ index de9c48a..1ace244 100755
  cygwin*)
    # func_win32_libid is a shell function defined in ltmain.sh
    lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
--- 
-2.36.1
-

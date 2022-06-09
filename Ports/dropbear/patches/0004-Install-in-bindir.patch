@@ -1,7 +1,7 @@
-From 06371c6e143c43c31070a80d8d717e3213316296 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Patrick Meyer <git@the-space.agency>
 Date: Thu, 28 Apr 2022 01:50:11 +0000
-Subject: [PATCH 4/5] Install in bindir
+Subject: [PATCH] Install in bindir
 
 FIXME: Not sure what this is exactly doing.
 
@@ -23,6 +23,3 @@ index e824491..f30f508 100644
  mandir=@mandir@
  
  .DELETE_ON_ERROR:
--- 
-2.36.1
-

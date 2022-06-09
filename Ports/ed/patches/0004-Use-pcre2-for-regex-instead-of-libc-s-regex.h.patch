@@ -1,7 +1,7 @@
-From 5d79ba1193bb0f9813c9650ee36ec416af525a1e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <ibara@users.noreply.github.com>
 Date: Sat, 1 Feb 2020 14:54:04 -0500
-Subject: [PATCH 4/4] Use pcre2 for regex instead of libc's regex.h
+Subject: [PATCH] Use pcre2 for regex instead of libc's regex.h
 
 ---
  regex.c | 2 +-
@@ -20,6 +20,3 @@ index 9b38120..325b2f6 100644
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
--- 
-2.36.1
-

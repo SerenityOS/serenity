@@ -1,7 +1,7 @@
-From ba3aaa65905f77e6e8bb812ca0ddcdba4f3c0eb3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Patrick Meyer <git@the-space.agency>
 Date: Sat, 30 Apr 2022 10:58:10 +0000
-Subject: [PATCH 7/7] Use unveil for privsep
+Subject: [PATCH] Use unveil for privsep
 
 ---
  sshd.c | 28 +++-------------------------
@@ -53,6 +53,3 @@ index 0ee65b5..e2f84de 100644
  	if (test_flag > 1) {
  		/*
  		 * If no connection info was provided by -C then use
--- 
-2.36.1
-

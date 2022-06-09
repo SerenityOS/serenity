@@ -1,7 +1,7 @@
-From a788810465ed48f0c80494a463a89eec262acd60 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tim Schumacher <timschumi@gmx.de>
 Date: Sat, 21 May 2022 23:33:31 +0200
-Subject: [PATCH 2/2] Make sdl2-config prefixes configurable again
+Subject: [PATCH] Make sdl2-config prefixes configurable again
 
 These were accidentally removed in
 6956f4aa1982b66b234026b46f7bb2dd44c67894.
@@ -26,6 +26,3 @@ index 2400d53..7a55d25 100644
    if(SDL_STATIC)
      set(ENABLE_STATIC_TRUE "")
      set(ENABLE_STATIC_FALSE "#")
--- 
-2.36.1
-

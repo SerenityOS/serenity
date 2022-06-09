@@ -1,4 +1,4 @@
-From c818e1fcd3c2e2f5433b20fffd1fda3462b5064f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: safarp <safar.pavel@gmail.com>
 Date: Mon, 21 Mar 2022 21:51:29 +0100
 Subject: [PATCH] Make it build with SDL 2 instead of 1.2
@@ -2476,6 +2476,3 @@ index fbb980b..2158ef3 100644
  void InvalidateRegionEx(INT32 iLeft, INT32 iTop, INT32 iRight, INT32 iBottom);
  
  void RefreshScreen(void);
--- 
-2.36.1
-

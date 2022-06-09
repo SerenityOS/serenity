@@ -208,8 +208,11 @@ char* asctime_r(const struct tm* tm, char* buffer)
     constexpr size_t assumed_len = 26;
     size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
 
-    // Verify that the buffer was large enough.
-    VERIFY(filled_size != 0);
+    // If the buffer was not large enough, set EOVERFLOW and return null.
+    if (filled_size == 0) {
+        errno = EOVERFLOW;
+        return nullptr;
+    }
 
     return buffer;
 }

@@ -1,7 +1,7 @@
-From 7a5e11d2e9cbe98af96faa4835592686bf261a23 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Tue, 28 Dec 2021 04:39:25 -0800
-Subject: [PATCH 4/6] serenity: Fix compiler -fpermissive warnings from using
+Subject: [PATCH] serenity: Fix compiler -fpermissive warnings from using
  latest GCC
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 4/6] serenity: Fix compiler -fpermissive warnings from using
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/gdb/inf-ptrace.c b/gdb/inf-ptrace.c
-index afa38de..247000a 100644
+index d628886..5f9bba9 100644
 --- a/gdb/inf-ptrace.c
 +++ b/gdb/inf-ptrace.c
 @@ -288,7 +288,7 @@ inf_ptrace_target::resume (ptid_t ptid, int step, enum gdb_signal signal)
@@ -48,6 +48,3 @@ index afa38de..247000a 100644
  	      if (errno != 0)
  		break;
  	    }
--- 
-2.32.0
-

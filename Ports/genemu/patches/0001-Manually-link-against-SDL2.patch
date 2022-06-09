@@ -1,7 +1,7 @@
-From 056b239a373a1ff7dafd50e75f5c08331d1fcb52 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: aabajyan <arsen.abajyan@pm.me>
 Date: Sun, 7 Mar 2021 22:30:13 +0400
-Subject: [PATCH 1/5] Manually link against SDL2
+Subject: [PATCH] Manually link against SDL2
 
 ---
  CMakeLists.txt | 18 ++++++++++++------
@@ -35,6 +35,3 @@ index 94ae8ef..a9a974c 100644
 +target_link_libraries(genemu PRIVATE ${SDL2_LIBRARIES})
 +
 +install(TARGETS genemu RUNTIME DESTINATION bin)
--- 
-2.36.1
-

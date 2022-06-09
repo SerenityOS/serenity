@@ -1,7 +1,7 @@
-From 105eed290d94b22a172c87e23d518d27c131c5b7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Noah Rosamilia <ivoahivoah@gmail.com>
 Date: Thu, 6 Jan 2022 18:28:55 -0500
-Subject: [PATCH 2/2] Remove a 'malloc.h' include
+Subject: [PATCH] Remove a 'malloc.h' include
 
 ---
  npiet-foogol.c | 2 +-
@@ -20,6 +20,3 @@ index 4d9174a..70fc2cd 100644
  #include <limits.h>
  #include <time.h>
  
--- 
-2.36.1
-

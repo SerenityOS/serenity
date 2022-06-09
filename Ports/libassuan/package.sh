@@ -13,11 +13,5 @@ pre_configure() {
 }
 
 configure() {
-    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
-}
-
-install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libassuan.so -Wl,-soname,libassuan.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libassuan.a -Wl,--no-whole-archive -lgpg-error
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libassuan.la
+    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" --disable-static --enable-shared "${configopts[@]}"
 }

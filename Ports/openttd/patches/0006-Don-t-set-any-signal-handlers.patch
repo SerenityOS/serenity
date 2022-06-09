@@ -1,7 +1,7 @@
-From 42d2fd4d5ab2aa8883f3722c9008e7413980a755 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 17 Apr 2021 15:40:17 +0200
-Subject: [PATCH 6/6] Don't set any signal handlers
+Subject: [PATCH] Don't set any signal handlers
 
 ---
  src/os/unix/crashlog_unix.cpp | 2 +-
@@ -20,6 +20,3 @@ index fc3682d..32b5f1e 100644
  	}
  }
  
--- 
-2.36.1
-

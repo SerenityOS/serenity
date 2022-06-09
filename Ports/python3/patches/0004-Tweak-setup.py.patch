@@ -1,7 +1,7 @@
-From 1a5f8c57c86964bff49c0d0f61acb18b9223e7d7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:36:52 +0330
-Subject: [PATCH 4/4] Tweak `setup.py`
+Subject: [PATCH] Tweak `setup.py`
 
 Make some tweaks to Python's `setup.py`:
 
@@ -45,6 +45,3 @@ index e74a275..acd7b05 100644
          panel_library = 'panel'
          if curses_library == 'ncursesw':
              curses_defines.append(('HAVE_NCURSESW', '1'))
--- 
-2.35.1
-

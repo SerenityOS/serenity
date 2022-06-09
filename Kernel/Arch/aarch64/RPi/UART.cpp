@@ -9,7 +9,7 @@
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // "13.4 Register View" / "11.5 Register View"
 struct UARTRegisters {
@@ -101,7 +101,7 @@ UART::UART()
 
     // Set UART clock so that the baud rate divisor ends up as 1.0.
     // FIXME: Not sure if this is a good UART clock rate.
-    u32 rate_in_hz = Timer::the().set_clock_rate(Timer::ClockID::UART, 16 * baud_rate);
+    u32 rate_in_hz = Timer::set_clock_rate(Timer::ClockID::UART, 16 * baud_rate);
 
     // The BCM's PL011 UART is alternate function 0 on pins 14 and 15.
     auto& gpio = GPIO::the();

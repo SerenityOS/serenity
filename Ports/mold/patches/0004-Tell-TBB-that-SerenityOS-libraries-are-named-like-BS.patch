@@ -1,8 +1,7 @@
-From 6f67266ca2e7797506273c50b0a0f2adcfaf5173 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Sun, 23 Jan 2022 17:50:52 -0700
-Subject: [PATCH 4/6] Tell TBB that SerenityOS libraries are named like BSD
- ones
+Subject: [PATCH] Tell TBB that SerenityOS libraries are named like BSD ones
 
 We won't be loading these libraries when building TBB as a static
 library for mold, but the OS detection logic still needs updated.
@@ -37,6 +36,3 @@ index d31a77f..fb676bc 100644
  #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".so"
  #elif __unix__
  #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".so.1"
--- 
-2.25.1
-

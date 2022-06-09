@@ -1,7 +1,7 @@
-From 9714ad7325f578cb41f8f90496d64888eda8a268 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <mpfard@serenityos.org>
 Date: Sat, 8 Jan 2022 17:02:29 +0330
-Subject: [PATCH 1/4] Teach configure about serenity
+Subject: [PATCH] Teach configure about serenity
 
 Co-Authored-By: Eric Seifert <seiferteric@gmail.com>
 ---
@@ -21,6 +21,3 @@ index a0d9a6c..44ebf54 100755
  
  			: ${LDSHARED='$(CC) -shared'}
  			if test "$rb_cv_binary_elf" = yes; then :
--- 
-2.36.1
-

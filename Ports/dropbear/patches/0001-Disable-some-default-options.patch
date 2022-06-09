@@ -1,7 +1,7 @@
-From 828399ef58c44dfe248c46bd3e7cadfcb904c5cd Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Patrick Meyer <git@the-space.agency>
 Date: Thu, 28 Apr 2022 01:50:11 +0000
-Subject: [PATCH 1/5] Disable some default options
+Subject: [PATCH] Disable some default options
 
 Co-Authored-By: Yonatan Goldschmidt <yon.goldschmidt@gmail.com>
 ---
@@ -32,6 +32,3 @@ index 536f4e7..5073b7c 100644
  
  /* Note: PAM auth is quite simple and only works for PAM modules which just do
   * a simple "Login: " "Password: " (you can edit the strings in svr-authpam.c).
--- 
-2.36.1
-

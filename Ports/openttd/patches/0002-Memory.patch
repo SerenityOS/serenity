@@ -1,7 +1,7 @@
-From 1e9569da4e5b1855031495ca2455ed6fa186b3df Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 17 Apr 2021 15:40:17 +0200
-Subject: [PATCH 2/6] Memory
+Subject: [PATCH] Memory
 
 FIXME: There is no information available about this patch, fill this in.
 ---
@@ -31,6 +31,3 @@ index 6d5ce01..2fda8df 100644
  
  	/* A big free block */
  	_spritecache_ptr->size = (_allocated_sprite_cache_size - sizeof(MemBlock)) | S_FREE_MASK;
--- 
-2.36.1
-

@@ -26,7 +26,7 @@ private:
 
     void set_time_zone_location();
     Optional<Gfx::FloatPoint> compute_time_zone_location() const;
-    void set_time_zone() const;
+    void set_time_zone();
 
     String m_time_zone;
     RefPtr<GUI::ComboBox> m_time_zone_combo_box;

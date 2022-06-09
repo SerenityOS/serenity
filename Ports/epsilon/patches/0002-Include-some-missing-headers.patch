@@ -1,7 +1,7 @@
-From 150a510965a5f673ca1fc3459f0f1766cdfa1217 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Joachim Le Fournis <joachimlf@pm.me>
 Date: Tue, 13 Jul 2021 21:17:44 +0200
-Subject: [PATCH 2/3] Include some missing headers
+Subject: [PATCH] Include some missing headers
 
 ---
  ion/src/simulator/linux/platform_files.cpp  | 1 +
@@ -35,6 +35,3 @@ index 0fb2386..94ed16c 100644
  
  #include <ion/src/simulator/linux/platform_images.h>
  
--- 
-2.36.1
-

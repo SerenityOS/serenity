@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    TestAPI.cpp
     TestRender.cpp
 )
 

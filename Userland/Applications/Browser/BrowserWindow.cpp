@@ -111,8 +111,10 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         m_tab_widget->activate_previous_tab();
     };
 
-    for (int i = 0; i <= 7; ++i) {
+    for (size_t i = 0; i <= 7; ++i) {
         m_window_actions.on_tabs.append([this, i] {
+            if (i >= m_tab_widget->tab_count())
+                return;
             m_tab_widget->set_tab_index(i);
         });
     }

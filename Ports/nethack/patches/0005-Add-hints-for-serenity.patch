@@ -1,7 +1,7 @@
-From cac4f570dfb4cb392eaa4f6e8b2845a2875cf17e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Thu, 15 Apr 2021 15:43:18 +0200
-Subject: [PATCH 5/5] Add hints for serenity
+Subject: [PATCH] Add hints for serenity
 
 ---
  sys/unix/hints/serenity | 54 +++++++++++++++++++++++++++++++++++++++++
@@ -68,6 +68,3 @@ index 0000000..1e0ed46
 +VARDIRPERM = 0755
 +VARFILEPERM = 0600
 +GAMEPERM = 0755
--- 
-2.36.1
-

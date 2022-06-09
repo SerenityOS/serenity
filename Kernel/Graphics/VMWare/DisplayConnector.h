@@ -23,10 +23,10 @@ class VMWareDisplayConnector : public DisplayConnector {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address);
+    static NonnullRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
 private:
-    VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address);
+    VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
     ErrorOr<void> create_attached_framebuffer_console();
 
     virtual bool mutable_mode_setting_capable() const override { return true; }
@@ -41,7 +41,6 @@ private:
     // Note: Paravirtualized hardware doesn't require a defined refresh rate for modesetting.
     virtual bool refresh_rate_support() const override { return false; }
 
-    virtual ErrorOr<size_t> write_to_first_surface(u64 offset, UserOrKernelBuffer const&, size_t length) override;
     virtual ErrorOr<void> flush_first_surface() override;
     virtual ErrorOr<void> flush_rectangle(size_t buffer_index, FBRect const& rect) override;
 
@@ -49,12 +48,7 @@ private:
     virtual void disable_console() override;
 
 private:
-    u8* framebuffer_data() { return m_framebuffer_data; }
-
-    const PhysicalAddress m_framebuffer_address;
     NonnullRefPtr<VMWareGraphicsAdapter> m_parent_adapter;
     RefPtr<VMWareFramebufferConsole> m_framebuffer_console;
-    OwnPtr<Memory::Region> m_framebuffer_region;
-    u8* m_framebuffer_data {};
 };
 }

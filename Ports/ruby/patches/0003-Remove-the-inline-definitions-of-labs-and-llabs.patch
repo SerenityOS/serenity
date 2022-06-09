@@ -1,7 +1,7 @@
-From 4c770bb497775cfe017df53b002c6dbfda02c5f2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Eric Seifert <seiferteric@gmail.com>
 Date: Tue, 21 Sep 2021 23:09:21 -0700
-Subject: [PATCH 3/4] Remove the inline definitions of labs and llabs
+Subject: [PATCH] Remove the inline definitions of labs and llabs
 
 ---
  ext/bigdecimal/bigdecimal.h | 17 -----------------
@@ -35,6 +35,3 @@ index 28f3363..a2c8c7e 100644
  
  #ifndef HAVE_FINITE
  static int
--- 
-2.36.1
-

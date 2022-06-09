@@ -1,4 +1,4 @@
-From d64d7a469a8524d2ea8121d10844ff73feef3b55 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Peter Ross <pross@xvid.org>
 Date: Tue, 1 Mar 2022 19:50:19 +1100
 Subject: [PATCH] Assume that EDOM exists
@@ -22,6 +22,3 @@ index 0d3269a..a54d80d 100644
  #define AVERROR(e) (-(e))   ///< Returns a negative error code from a POSIX error code, to return from library functions.
  #define AVUNERROR(e) (-(e)) ///< Returns a POSIX error code from a library function error return value.
  #else
--- 
-2.36.1
-

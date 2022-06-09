@@ -1,7 +1,7 @@
-From c7869092a313c1550a34675d1c9faebc1468ef1e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 4 Jun 2021 00:29:36 +0200
-Subject: [PATCH 1/5] chdir() to the installed directory before execution
+Subject: [PATCH] chdir() to the installed directory before execution
 
 The game expects its assets in the current directory, but we install
 those to /opt/Super_Mario, so chdir() there at program startup to avoid
@@ -32,6 +32,3 @@ index 040eb56..ca14d6f 100644
      
      return 0;
  }
--- 
-2.36.1
-

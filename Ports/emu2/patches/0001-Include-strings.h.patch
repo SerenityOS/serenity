@@ -1,7 +1,7 @@
-From 0e8dbc3e4e44760da5817053eb2a9f6f2f55245b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brendan Coles <bcoles@gmail.com>
 Date: Wed, 14 Apr 2021 17:24:58 +0000
-Subject: [PATCH 1/4] Include <strings.h>
+Subject: [PATCH] Include <strings.h>
 
 ---
  src/codepage.c | 1 +
@@ -19,6 +19,3 @@ index 3916b61..9df0bd8 100644
  
  /* List of code-pages */
  struct cp_data
--- 
-2.36.1
-

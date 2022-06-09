@@ -1,4 +1,4 @@
-From 88cb0766b68056eec4c4f7f39fc188f566037bab Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Oleg Kosenkov <okosenkov@gmail.com>
 Date: Mon, 31 May 2021 14:01:49 -0400
 Subject: [PATCH] Build with CMake
@@ -93,6 +93,3 @@ index 0000000..19d68c0
 +target_link_libraries(tyrian m ${SDL2_LIBRARIES})
 +install(TARGETS tyrian
 +        RUNTIME DESTINATION bin)
--- 
-2.36.1
-

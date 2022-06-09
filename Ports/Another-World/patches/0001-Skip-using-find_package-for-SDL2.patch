@@ -1,4 +1,4 @@
-From a85ea6751a9628b9a6ff3caede0a1365490d3cec Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Pavel Safar <safar.pavel@gmail.com>
 Date: Mon, 7 Jun 2021 14:26:26 +0200
 Subject: [PATCH] Skip using find_package() for SDL2
@@ -24,6 +24,3 @@ index 38f6ba8..d0d8463 100644
 +target_link_libraries(raw SDL2)
  target_link_libraries(raw z)
  
--- 
-2.36.1
-

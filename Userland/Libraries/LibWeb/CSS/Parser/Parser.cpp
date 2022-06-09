@@ -3660,7 +3660,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         return value_id == ValueID::RepeatX || value_id == ValueID::RepeatY;
     };
 
-    auto as_repeat = [](ValueID identifier) {
+    auto as_repeat = [](ValueID identifier) -> Optional<Repeat> {
         switch (identifier) {
         case ValueID::NoRepeat:
             return Repeat::NoRepeat;
@@ -3671,7 +3671,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         case ValueID::Space:
             return Repeat::Space;
         default:
-            VERIFY_NOT_REACHED();
+            return {};
         }
     };
 
@@ -3689,20 +3689,29 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
             value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat);
     }
 
+    auto x_repeat = as_repeat(x_value->to_identifier());
+    if (!x_repeat.has_value())
+        return nullptr;
+
     // See if we have a second value for Y
     auto& second_token = tokens.peek_token();
     auto maybe_y_value = parse_css_value(second_token);
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
         transaction.commit();
-        return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(x_value->to_identifier()));
+        return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value());
     }
     tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
         return nullptr;
+
+    auto y_repeat = as_repeat(y_value->to_identifier());
+    if (!y_repeat.has_value())
+        return nullptr;
+
     transaction.commit();
-    return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
+    return BackgroundRepeatStyleValue::create(x_repeat.value(), y_repeat.value());
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
@@ -4962,9 +4971,18 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    auto block_contains_var_or_attr = [](Block const& block, auto&& recurse) -> bool {
+    auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
+        if (function.name().equals_ignoring_case("var"sv) || function.name().equals_ignoring_case("attr"sv))
+            return true;
+        for (auto const& token : function.values()) {
+            if (token.is_function() && recurse(token.function(), recurse))
+                return true;
+        }
+        return false;
+    };
+    auto block_contains_var_or_attr = [function_contains_var_or_attr](Block const& block, auto&& recurse) -> bool {
         for (auto const& token : block.values()) {
-            if (token.is_function() && (token.function().name().equals_ignoring_case("var"sv) || token.function().name().equals_ignoring_case("attr"sv)))
+            if (token.is_function() && function_contains_var_or_attr(token.function(), function_contains_var_or_attr))
                 return true;
             if (token.is_block() && recurse(token.block(), recurse))
                 return true;
@@ -4993,7 +5011,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         }
 
         if (!contains_var_or_attr) {
-            if (token.is_function() && (token.function().name().equals_ignoring_case("var"sv) || token.function().name().equals_ignoring_case("attr"sv)))
+            if (token.is_function() && function_contains_var_or_attr(token.function(), function_contains_var_or_attr))
                 contains_var_or_attr = true;
             else if (token.is_block() && block_contains_var_or_attr(token.block(), block_contains_var_or_attr))
                 contains_var_or_attr = true;

@@ -1,7 +1,7 @@
-From 352c627e3896ed1305826a1fa2ece85a70e66fd7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Luke <luke.wilde@live.co.uk>
 Date: Sat, 26 Sep 2020 08:12:27 -0700
-Subject: [PATCH 2/7] Add a missing stdio.h include
+Subject: [PATCH] Add a missing stdio.h include
 
 ---
  openbsd-compat/bsd-flock.c | 4 ++++
@@ -22,6 +22,3 @@ index 9b15d1e..bf57389 100644
  int
  flock(int fd, int op)
  {
--- 
-2.36.1
-

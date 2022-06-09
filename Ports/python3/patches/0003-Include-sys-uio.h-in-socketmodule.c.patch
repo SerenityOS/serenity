@@ -1,7 +1,7 @@
-From 1805e2be29193655e29355ba9d93b78a654dcaa2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:36:28 +0330
-Subject: [PATCH 3/4] Include `sys/uio.h` in `socketmodule.c`
+Subject: [PATCH] Include `sys/uio.h` in `socketmodule.c`
 
 This is to ensure that `struct iovec` is defined, which is required by
 the `socket` module.
@@ -22,6 +22,3 @@ index ab8618b..0109d97 100644
  # include <sys/uio.h>
  #endif
  
--- 
-2.35.1
-

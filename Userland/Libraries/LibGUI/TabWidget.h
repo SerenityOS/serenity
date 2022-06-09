@@ -29,6 +29,7 @@ public:
     bool has_vertical_tabs() const { return m_tab_position == TabPosition::Left || m_tab_position == TabPosition::Right; }
 
     Optional<size_t> active_tab_index() const;
+    size_t tab_count() { return m_tabs.size(); }
 
     Widget* active_widget() { return m_active_widget.ptr(); }
     Widget const* active_widget() const { return m_active_widget.ptr(); }

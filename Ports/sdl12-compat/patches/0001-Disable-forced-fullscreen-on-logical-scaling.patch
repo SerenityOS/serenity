@@ -1,8 +1,12 @@
-From a2b0791418672dffcfc8baae4d0b8158693a794c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Grigoris Pavlakis <grigpavl@ece.auth.gr>
 Date: Sat, 28 May 2022 17:21:27 +0300
 Subject: [PATCH] Disable forced fullscreen on logical scaling
 
+sdl12-compat forces fullscreen on anything that sets video mode
+and uses OpenGL logical scaling, causing rapid flickering and preventing
+execution. Not sure if this is an upstream bug or intended behavior,
+but disabling fullscreen at this point fixes the flickering.
 ---
  src/SDL12_compat.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -20,6 +24,3 @@ index b3a411e..4d8001d 100644
                  SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
              }
          }
--- 
-2.36.1
-

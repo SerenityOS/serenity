@@ -1,7 +1,7 @@
-From 426933aab1632c89ecb75918f23baa9f0c279581 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Mon, 16 May 2022 15:32:01 +0430
-Subject: [PATCH 4/5] Use <SDL2> for SDL includes
+Subject: [PATCH] Use <SDL2> for SDL includes
 
 ---
  gfx.cpp     | 2 +-
@@ -46,6 +46,3 @@ index 38bc547..aa70962 100644
  
  extern "C" {
      #include "m68k/m68k.h"
--- 
-2.36.1
-

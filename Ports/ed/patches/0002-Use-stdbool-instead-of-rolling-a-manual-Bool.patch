@@ -1,7 +1,7 @@
-From a61996a48d800229a267d9fef1548b08450997ab Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <ibara@users.noreply.github.com>
 Date: Sat, 1 Feb 2020 14:54:04 -0500
-Subject: [PATCH 2/4] Use stdbool instead of rolling a manual Bool
+Subject: [PATCH] Use stdbool instead of rolling a manual Bool
 
 ---
  ed.h | 3 +--
@@ -21,6 +21,3 @@ index db0b4a6..ef0c134 100644
  #endif
  
  enum Pflags			/* print suffixes */
--- 
-2.36.1
-

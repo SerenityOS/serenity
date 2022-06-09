@@ -11,6 +11,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/StandardCursor.h>
 #include <unistd.h>
 
@@ -124,10 +125,11 @@ void Game::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
+    Gfx::AntiAliasingPainter aa_painter { painter };
 
     painter.fill_rect(rect(), Color::Black);
 
-    painter.fill_ellipse(enclosing_int_rect(m_ball.rect()), Color::Red);
+    aa_painter.fill_ellipse(enclosing_int_rect(m_ball.rect()), Color::Red);
 
     painter.fill_rect(enclosing_int_rect(m_paddle.rect), Color::White);
 

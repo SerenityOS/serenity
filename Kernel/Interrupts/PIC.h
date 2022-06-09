@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Interrupts/IRQController.h>
+#include <Kernel/Arch/x86/IRQController.h>
 
 namespace Kernel {
 

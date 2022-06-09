@@ -31,26 +31,24 @@ Service* Service::find_by_pid(pid_t pid)
     return (*it).value;
 }
 
-void Service::setup_socket(SocketDescriptor& socket)
+ErrorOr<void> Service::setup_socket(SocketDescriptor& socket)
 {
     VERIFY(socket.fd == -1);
 
-    MUST(Core::Directory::create(LexicalPath(socket.path).parent(), Core::Directory::CreateDirectories::Yes));
+    TRY(Core::Directory::create(LexicalPath(socket.path).parent(), Core::Directory::CreateDirectories::Yes));
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
     // after forking off the process.
-    int socket_fd = Core::System::socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0).release_value_but_fixme_should_propagate_errors();
+    int const socket_fd = TRY(Core::System::socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0));
     socket.fd = socket_fd;
 
     if (m_account.has_value()) {
         auto& account = m_account.value();
-        // FIXME: Propagate errors
-        MUST(Core::System::fchown(socket_fd, account.uid(), account.gid()));
+        TRY(Core::System::fchown(socket_fd, account.uid(), account.gid()));
     }
 
-    // FIXME: Propagate errors
-    MUST(Core::System::fchmod(socket_fd, socket.permissions));
+    TRY(Core::System::fchmod(socket_fd, socket.permissions));
 
     auto socket_address = Core::SocketAddress::local(socket.path);
     auto un_optional = socket_address.to_sockaddr_un();
@@ -60,16 +58,16 @@ void Service::setup_socket(SocketDescriptor& socket)
     }
     auto un = un_optional.value();
 
-    // FIXME: Propagate errors
-    MUST(Core::System::bind(socket_fd, (sockaddr const*)&un, sizeof(un)));
-    // FIXME: Propagate errors
-    MUST(Core::System::listen(socket_fd, 16));
+    TRY(Core::System::bind(socket_fd, (sockaddr const*)&un, sizeof(un)));
+    TRY(Core::System::listen(socket_fd, 16));
+    return {};
 }
 
-void Service::setup_sockets()
+ErrorOr<void> Service::setup_sockets()
 {
     for (SocketDescriptor& socket : m_sockets)
-        setup_socket(socket);
+        TRY(setup_socket(socket));
+    return {};
 }
 
 void Service::setup_notifier()
@@ -338,9 +336,14 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     VERIFY(!m_accept_socket_connections || (m_sockets.size() == 1 && m_lazy && m_multi_instance));
     // MultiInstance doesn't work with KeepAlive.
     VERIFY(!m_multi_instance || !m_keep_alive);
+}
 
-    if (is_enabled())
-        setup_sockets();
+ErrorOr<NonnullRefPtr<Service>> Service::try_create(Core::ConfigFile const& config, StringView name)
+{
+    auto service = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Service(config, name)));
+    if (service->is_enabled())
+        TRY(service->setup_sockets());
+    return service;
 }
 
 void Service::save_to(JsonObject& json)

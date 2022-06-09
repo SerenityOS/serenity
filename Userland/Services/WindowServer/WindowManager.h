@@ -153,6 +153,9 @@ public:
     Cursor const& eyedropper_cursor() const { return *m_eyedropper_cursor; }
     Cursor const& zoom_cursor() const { return *m_zoom_cursor; }
 
+    int cursor_highlight_radius() const { return m_cursor_highlight_radius; }
+    Gfx::Color cursor_highlight_color() const { return m_cursor_highlight_color; }
+
     Gfx::Font const& font() const;
     Gfx::Font const& window_title_font() const;
 
@@ -187,6 +190,7 @@ public:
     void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
     void tell_wms_super_space_key_pressed();
+    void tell_wms_super_d_key_pressed();
     void tell_wms_super_digit_key_pressed(u8);
     void tell_wms_current_window_stack_changed();
 
@@ -322,6 +326,11 @@ public:
 
     void apply_cursor_theme(String const& name);
 
+    void set_cursor_highlight_radius(int radius);
+    void set_cursor_highlight_color(Gfx::Color const& color);
+
+    bool is_cursor_highlight_enabled() const;
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 
@@ -353,6 +362,8 @@ private:
 
     void do_move_to_front(Window&, bool, bool);
 
+    bool sync_config_to_disk();
+
     [[nodiscard]] static WindowStack& get_rendering_window_stacks(WindowStack*&);
 
     RefPtr<Cursor> m_hidden_cursor;
@@ -373,6 +384,8 @@ private:
     RefPtr<Cursor> m_crosshair_cursor;
     RefPtr<Cursor> m_eyedropper_cursor;
     RefPtr<Cursor> m_zoom_cursor;
+    int m_cursor_highlight_radius { 0 };
+    Gfx::Color m_cursor_highlight_color;
 
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 

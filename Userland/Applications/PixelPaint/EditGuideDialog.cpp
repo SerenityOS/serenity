@@ -70,6 +70,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
 
         done(ExecResult::OK);
     };
+    ok_button->set_default(true);
 
     cancel_button->on_click = [this](auto) {
         done(ExecResult::Cancel);

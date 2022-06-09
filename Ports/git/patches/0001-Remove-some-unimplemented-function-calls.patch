@@ -1,7 +1,7 @@
-From 5d3c9d7aafc66abe10e035a7930b0868f73916b5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Federico Guerinoni <41150432+guerinoni@users.noreply.github.com>
 Date: Fri, 16 Apr 2021 17:38:54 +0200
-Subject: [PATCH 1/2] Remove some unimplemented function calls
+Subject: [PATCH] Remove some unimplemented function calls
 
 i.e. f(un)lockfile stubs and setitimer.
 ---
@@ -69,6 +69,3 @@ index 0cdd875..19a2a67 100644
  	signal(SIGALRM, SIG_IGN);
  	progress_update = 0;
  }
--- 
-2.36.1
-

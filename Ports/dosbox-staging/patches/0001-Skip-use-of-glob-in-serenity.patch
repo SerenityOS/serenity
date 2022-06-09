@@ -1,7 +1,7 @@
-From 6476eefcda05b18de380eca3b772042648107b07 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 18 Jun 2021 15:06:37 +0200
-Subject: [PATCH 1/4] Skip use of glob() in serenity
+Subject: [PATCH] Skip use of glob() in serenity
 
 We don't have that yet.
 ---
@@ -40,6 +40,3 @@ index fa09872..96002ac 100644
  }
  
  int create_dir(const char *path, uint32_t mode, uint32_t flags) noexcept
--- 
-2.36.1
-

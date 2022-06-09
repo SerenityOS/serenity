@@ -1,7 +1,7 @@
-From f74e17de5c426ae49522008cb5b5d24571345630 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nooga <xnooga@gmail.com>
 Date: Sat, 15 May 2021 01:21:59 +0200
-Subject: [PATCH 2/2] Use pkg-config for SDL2
+Subject: [PATCH] Use pkg-config for SDL2
 
 ---
  config.mk | 2 +-
@@ -20,6 +20,3 @@ index 9655958..0ce2e55 100644
  
  # Select web brogue mode. Requires POSIX system.
  WEBBROGUE := NO
--- 
-2.36.1
-

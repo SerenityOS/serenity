@@ -1,7 +1,7 @@
-From d044a28efff134157154b78c05e881369b512e88 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Sun, 23 Jan 2022 17:55:32 -0700
-Subject: [PATCH 2/6] Disable mimalloc for serenity
+Subject: [PATCH] Disable mimalloc for serenity
 
 mimalloc needs some help to compile and run on serenity.
 That's one yak too far for right now.
@@ -22,6 +22,3 @@ index 18262a1..98c26cc 100644
  else ifeq ($(IS_ANDROID), 1)
    USE_MIMALLOC = 0
  endif
--- 
-2.25.1
-

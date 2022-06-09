@@ -1,7 +1,7 @@
-From 356ec6ffc3184d83e28ba6ad6c4667ac67b6d074 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Wed, 28 Apr 2021 21:19:03 +1000
-Subject: [PATCH 4/5] Link against the needed serenity libraries
+Subject: [PATCH] Link against the needed serenity libraries
 
 ---
  src/tracker/CMakeLists.txt | 3 +++
@@ -19,6 +19,3 @@ index f4243a0..02f67c0 100644
 +set(INSTALL_DEST bin)
 +
  install(TARGETS tracker DESTINATION ${INSTALL_DEST})
--- 
-2.36.1
-

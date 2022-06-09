@@ -1,7 +1,7 @@
-From f376d694af85f2f14de87f235d929895baa66fed Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
 Date: Wed, 15 Dec 2021 19:38:27 +0100
-Subject: [PATCH 3/5] Disable shared memory and semaphores
+Subject: [PATCH] Disable shared memory and semaphores
 
 It's probably not done in the cleanest way but it works
 ---
@@ -11,10 +11,10 @@ It's probably not done in the cleanest way but it works
  3 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
-index c054ddc5..a5a759c0 100644
+index 1f0dd98..65b641e 100644
 --- a/mkspecs/serenity-g++/qplatformdefs.h
 +++ b/mkspecs/serenity-g++/qplatformdefs.h
-@@ -44,6 +44,9 @@
+@@ -43,6 +43,9 @@
  
  #define _GLIBCXX_HAVE_MBSTATE_T 1
  
@@ -25,7 +25,7 @@ index c054ddc5..a5a759c0 100644
  
  // Set any POSIX/XOPEN defines at the top of this file to turn on specific APIs
 diff --git a/src/corelib/kernel/qsharedmemory_p.h b/src/corelib/kernel/qsharedmemory_p.h
-index e06e7e86..7292782d 100644
+index e06e7e8..7292782 100644
 --- a/src/corelib/kernel/qsharedmemory_p.h
 +++ b/src/corelib/kernel/qsharedmemory_p.h
 @@ -51,6 +51,7 @@
@@ -46,7 +46,7 @@ index e06e7e86..7292782d 100644
  #endif
  
 diff --git a/src/corelib/kernel/qsystemsemaphore_p.h b/src/corelib/kernel/qsystemsemaphore_p.h
-index 56619d73..56cf8687 100644
+index 56619d7..56cf868 100644
 --- a/src/corelib/kernel/qsystemsemaphore_p.h
 +++ b/src/corelib/kernel/qsystemsemaphore_p.h
 @@ -51,6 +51,7 @@
@@ -57,6 +57,3 @@ index 56619d73..56cf8687 100644
  #include "qsystemsemaphore.h"
  
  #ifndef QT_NO_SYSTEMSEMAPHORE
--- 
-2.33.1
-

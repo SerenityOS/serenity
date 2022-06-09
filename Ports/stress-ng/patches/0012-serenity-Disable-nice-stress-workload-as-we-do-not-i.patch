@@ -1,7 +1,7 @@
-From b874c0fbbb785423ed93ada0e1f7e5e1fe246ce8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Fri, 18 Mar 2022 02:36:17 -0700
-Subject: [PATCH 12/14] serenity: Disable nice() stress workload as we do not
+Subject: [PATCH] serenity: Disable nice() stress workload as we do not
  implement it
 
 ---
@@ -39,6 +39,3 @@ index ca89124..7dd9e52 100644
  	stress_syncload_spinwrite,
  };
  
--- 
-2.32.0
-

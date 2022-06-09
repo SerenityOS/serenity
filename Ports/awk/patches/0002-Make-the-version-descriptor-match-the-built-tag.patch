@@ -1,7 +1,7 @@
-From 8228e4130e9c373b24f87458bc7248272146bbac Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Mattias Nilsson <mattias.nilsson@nshift.com>
 Date: Mon, 4 Apr 2022 22:05:38 +0200
-Subject: [PATCH 2/2] Make the version descriptor match the built tag
+Subject: [PATCH] Make the version descriptor match the built tag
 
 ---
  main.c | 2 +-
@@ -20,6 +20,3 @@ index 986f1a3..e22f097 100644
  
  #define DEBUG
  #include <stdio.h>
--- 
-2.36.1
-

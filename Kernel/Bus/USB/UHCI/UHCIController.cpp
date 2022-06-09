@@ -509,7 +509,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 ErrorOr<void> UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI hotplug")), [&] {
+    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task")), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();

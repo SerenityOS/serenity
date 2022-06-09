@@ -1,4 +1,4 @@
-From 8b105bbc4c407b78d264054d74c96db093859c51 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jaan <jaan_veersoo@hotmail.com>
 Date: Sat, 20 Mar 2021 23:34:53 +0200
 Subject: [PATCH] Add a missing sys/time.h include
@@ -17,6 +17,3 @@ index 093bb77..48aad37 100644
  #if HAVE_SYS_SELECT_H
  #include <sys/select.h>
  #elif __DJGPP__
--- 
-2.36.1
-

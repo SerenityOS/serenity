@@ -1,7 +1,7 @@
-From 4e0667f3f744b6e7a8ad73581747122d617ea069 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kevin Nobel <kevin@2sk.nl>
 Date: Tue, 5 Apr 2022 23:05:14 +0200
-Subject: [PATCH 3/6] Pass `setsockopt` argument as char*
+Subject: [PATCH] Pass `setsockopt` argument as char*
 
 ---
  src/network/core/os_abstraction.cpp | 2 +-
@@ -20,6 +20,3 @@ index 225c95d..2da1575 100644
  #endif
  }
  
--- 
-2.36.1
-

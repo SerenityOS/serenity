@@ -82,6 +82,10 @@ if [ "$CMD" = "help" ]; then
     exit 0
 fi
 
+if [ "$(id -u)" -eq 0 ]; then
+   die "Do not run serenity.sh as root, your Build directory will become root-owned"
+fi
+
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else

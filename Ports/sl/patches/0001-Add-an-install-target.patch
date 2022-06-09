@@ -1,4 +1,4 @@
-From 71f2cc48a3e66377763401054c663ca6a2a3f7ca Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Thu, 15 Apr 2021 15:43:18 +0200
 Subject: [PATCH] Add an install target
@@ -22,6 +22,3 @@ index c3005d2..04fcb9d 100644
 +	install sl ${DESTDIR}/usr/local/bin/sl
 +	mkdir -p ${DESTDIR}/usr/local/share/man/man1
 +	gzip -9 -c < sl.1 > ${DESTDIR}/usr/local/share/man/man1/sl.1.gz
--- 
-2.36.1
-

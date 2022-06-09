@@ -1,7 +1,7 @@
-From 452f2ace4ba87e7d2e07a46adf4abdfb8970317d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Sun, 4 Apr 2021 00:41:48 +0200
-Subject: [PATCH 4/5] Fix a header include path
+Subject: [PATCH] Fix a header include path
 
 ---
  src/FireBall.cpp | 4 ++--
@@ -45,6 +45,3 @@ index b812b49..f6abbb9 100644
 -#endif
 \ No newline at end of file
 +#endif
--- 
-2.36.1
-

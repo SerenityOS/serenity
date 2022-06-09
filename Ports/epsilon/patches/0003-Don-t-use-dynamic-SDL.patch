@@ -1,7 +1,7 @@
-From 5c104400d226a1531145b8e30e2055ef6a24d1e3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Joachim Le Fournis <joachimlf@pm.me>
 Date: Tue, 13 Jul 2021 21:17:44 +0200
-Subject: [PATCH 3/3] Don't use dynamic SDL
+Subject: [PATCH] Don't use dynamic SDL
 
 ---
  build/platform.simulator.mak        | 1 +
@@ -37,6 +37,3 @@ index cf7744b..5157f3c 100644
 +ifeq ($(SHOULD_USE_DYNAMIC_SDL),0)
  ion_src += $(sdl_src)
 +endif
--- 
-2.36.1
-

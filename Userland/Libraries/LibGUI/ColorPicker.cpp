@@ -238,6 +238,7 @@ void ColorPicker::build_ui()
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
+    ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<Button>();
     cancel_button.set_fixed_width(80);

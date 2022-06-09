@@ -1,7 +1,7 @@
-From 4c9a77a1174cdc049d7dc418c43842920bd52f52 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Tue, 12 Apr 2022 17:58:24 +0200
-Subject: [PATCH 1/4] Add SerenityOS to the mrsh build system
+Subject: [PATCH] Add SerenityOS to the mrsh build system
 
 ---
  configure            | 6 ++++--
@@ -41,6 +41,3 @@ index 0000000..33de4a1
 +		*;
 +};
 \ No newline at end of file
--- 
-2.32.0 (Apple Git-132)
-

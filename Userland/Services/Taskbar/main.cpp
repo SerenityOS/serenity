@@ -17,7 +17,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Process.h>
@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
 
-    GUI::ConnectionToWindowMangerServer::the();
+    GUI::ConnectionToWindowManagerServer::the();
     Desktop::Launcher::ensure_connection();
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));

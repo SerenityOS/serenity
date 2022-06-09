@@ -1,14 +1,17 @@
 # Patches for tuxracer on SerenityOS
 
-## `0001-Explicitly-link-in-SDL2.patch`
+## `0001-Fix-config-macro-reference-syntax.patch`
 
-Explicitly link in SDL2
+Fix config macro reference syntax
 
-Also pretend that isnan() works correctly.
 
-## `0002-Big-bag-of-random-changes-to-the-source.patch`
+## `0002-Disable-full-screen.patch`
 
-Big bag of random changes to the source
+Disable full screen
 
-FIXME: Split this up sensibly
+
+## `0003-Exit-event-loop-on-SDL_QUIT-event.patch`
+
+Exit event loop on SDL_QUIT event
+
 

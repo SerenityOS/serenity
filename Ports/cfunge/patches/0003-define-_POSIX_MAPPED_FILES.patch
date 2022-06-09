@@ -1,7 +1,7 @@
-From 2ef179368040355b7a99d3a55c9defdc162baa32 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tobias Christiansen <tobyase@serenityos.org>
 Date: Thu, 24 Mar 2022 15:41:48 +0100
-Subject: [PATCH 3/4] define _POSIX_MAPPED_FILES
+Subject: [PATCH] define _POSIX_MAPPED_FILES
 
 Serenity has a working mmap().
 ---
@@ -20,6 +20,3 @@ index 0b78647..dc1f830 100644
  #if !defined(_POSIX_MAPPED_FILES) || (_POSIX_MAPPED_FILES < 1)
  #  error "cfunge needs a working mmap(), which this system claims it lacks."
  #endif
--- 
-2.36.1
-

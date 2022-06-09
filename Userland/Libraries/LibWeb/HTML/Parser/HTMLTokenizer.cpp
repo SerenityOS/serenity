@@ -210,15 +210,18 @@ Optional<u32> HTMLTokenizer::next_code_point()
 
 void HTMLTokenizer::skip(size_t count)
 {
-    m_source_positions.append(m_source_positions.last());
+    if (!m_source_positions.is_empty())
+        m_source_positions.append(m_source_positions.last());
     for (size_t i = 0; i < count; ++i) {
         m_prev_utf8_iterator = m_utf8_iterator;
         auto code_point = *m_utf8_iterator;
-        if (code_point == '\n') {
-            m_source_positions.last().column = 0;
-            m_source_positions.last().line++;
-        } else {
-            m_source_positions.last().column++;
+        if (!m_source_positions.is_empty()) {
+            if (code_point == '\n') {
+                m_source_positions.last().column = 0;
+                m_source_positions.last().line++;
+            } else {
+                m_source_positions.last().column++;
+            }
         }
         ++m_utf8_iterator;
     }
@@ -245,7 +248,7 @@ HTMLToken::Position HTMLTokenizer::nth_last_position(size_t n)
 
 Optional<HTMLToken> HTMLTokenizer::next_token()
 {
-    {
+    if (!m_source_positions.is_empty()) {
         auto last_position = m_source_positions.last();
         m_source_positions.clear_with_capacity();
         m_source_positions.append(move(last_position));
@@ -1190,7 +1193,8 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                     m_current_token.add_attribute({});
-                    m_current_token.last_attribute().name_start_position = m_source_positions.last();
+                    if (!m_source_positions.is_empty())
+                        m_current_token.last_attribute().name_start_position = m_source_positions.last();
                     RECONSUME_IN(AttributeName);
                 }
             }
@@ -2867,8 +2871,10 @@ void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
 {
     auto diff = m_utf8_iterator - new_iterator;
     if (diff > 0) {
-        for (ssize_t i = 0; i < diff; ++i)
-            m_source_positions.take_last();
+        for (ssize_t i = 0; i < diff; ++i) {
+            if (!m_source_positions.is_empty())
+                m_source_positions.take_last();
+        }
     } else {
         // Going forwards...?
         TODO();

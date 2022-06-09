@@ -107,11 +107,12 @@ void GLContext::gl_delete_textures(GLsizei n, GLuint const* textures)
         if (name == 0)
             continue;
 
-        m_name_allocator.free(name);
-
         auto texture_object = m_allocated_textures.find(name);
         if (texture_object == m_allocated_textures.end() || texture_object->value.is_null())
             continue;
+
+        m_name_allocator.free(name);
+
         auto texture = texture_object->value;
 
         // Check all texture units

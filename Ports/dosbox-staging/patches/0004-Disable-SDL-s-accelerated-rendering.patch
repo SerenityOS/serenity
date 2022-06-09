@@ -1,7 +1,7 @@
-From 19c66fff43c31010e3cae00c4a4a6898c0a9a30a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Fri, 18 Jun 2021 15:06:37 +0200
-Subject: [PATCH 4/4] Disable SDL's accelerated rendering
+Subject: [PATCH] Disable SDL's accelerated rendering
 
 ---
  src/gui/sdlmain.cpp | 1 -
@@ -19,6 +19,3 @@ index 7039f27..d445ebd 100644
  		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
  		if (!sdl.renderer) {
  			LOG_MSG("%s\n", SDL_GetError());
--- 
-2.36.1
-

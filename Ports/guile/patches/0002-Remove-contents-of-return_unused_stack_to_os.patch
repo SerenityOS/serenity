@@ -1,7 +1,7 @@
-From fcd26f263a018d69cf62135f798a04d4c354d5f1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Peter Elliott <pelliott@ualberta.ca>
 Date: Wed, 18 May 2022 01:43:41 -0600
-Subject: [PATCH 2/2] Remove contents of return_unused_stack_to_os
+Subject: [PATCH] Remove contents of return_unused_stack_to_os
 
 guile attempts to madvise(2) away parts of the stack, but serenity only
 supports madvise(2) on entire mmaped regions.
@@ -44,6 +44,3 @@ index 6fd5c55..2eab110 100644
  }
  
  #define SLOT_MAP_CACHE_SIZE 32U
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From e9d588e7519a15003ded6b68ed7fa10dbe0f8f11 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Thu, 29 Apr 2021 07:36:37 +0200
-Subject: [PATCH 5/5] Remove global static initializers
+Subject: [PATCH] Remove global static initializers
 
 ---
  src/CFG.cpp | 16 ++++++++++++----
@@ -54,6 +54,3 @@ index 90595a5..20dd6ea 100644
  	return tSMBLOGO;
  }
  
--- 
-2.36.1
-

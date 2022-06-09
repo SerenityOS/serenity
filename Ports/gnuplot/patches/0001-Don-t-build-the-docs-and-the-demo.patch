@@ -1,4 +1,4 @@
-From f05fc83941deb37eac3ac9caa95376d107215f79 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Wed, 15 Apr 2020 14:23:25 +0100
 Subject: [PATCH] Don't build the docs and the demo
@@ -25,6 +25,3 @@ index 9241ce5..1e2f6c6 100644
  
  EXTRA_DIST = BUGS Copyright FAQ.pdf GNUmakefile INSTALL INSTALL.gnu \
  Makefile.maint PATCHLEVEL PGPKEYS README RELEASE_NOTES \
--- 
-2.36.1
-

@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/DoubleBuffer.h>
 
 namespace Kernel {

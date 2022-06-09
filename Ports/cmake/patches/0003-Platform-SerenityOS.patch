@@ -1,7 +1,7 @@
-From 049e918181ba913bf992723dd805fb8066aae83b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Wed, 12 Jan 2022 22:17:47 +0330
-Subject: [PATCH 3/6] Platform/SerenityOS
+Subject: [PATCH] Platform/SerenityOS
 
 This patch adds the SerenityOS platform config file to CMake.
 
@@ -45,6 +45,3 @@ index 00000000..952ff61a
 +unset(CMAKE_LIBRARY_ARCHITECTURE_REGEX)
 +
 +include(Platform/UnixPaths)
--- 
-2.36.1
-

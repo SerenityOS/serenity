@@ -1,7 +1,7 @@
-From 55a28f3dbf0ddcf24077281e38ba7bc7904308d6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 24 Feb 2022 03:47:50 +0330
-Subject: [PATCH 5/7] Explicitly link with pthread
+Subject: [PATCH] Explicitly link with pthread
 
 The cmakelists was using the wrong variable to link against pthread.
 ---
@@ -68,6 +68,3 @@ index 3c84220..5e15727 100644
 -TARGET_LINK_LIBRARIES(smashtest gc-lib)
 +TARGET_LINK_LIBRARIES(smashtest gc-lib ${LIBS})
  ADD_TEST(NAME smashtest COMMAND smashtest)
--- 
-2.36.1
-

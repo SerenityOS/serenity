@@ -1,7 +1,7 @@
-From f254a0f09c9382deb6d2eb7497b453896b9a662f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Tue, 12 Apr 2022 18:00:04 +0200
-Subject: [PATCH 2/4] Hardcode default path because `confstr` is missing
+Subject: [PATCH] Hardcode default path because `confstr` is missing
 
 ---
  shell/path.c | 6 ++++++
@@ -36,6 +36,3 @@ index 3c2bf65..ee2c4e9 100644
  	}
  
  	char *path = NULL;
--- 
-2.32.0 (Apple Git-132)
-

@@ -1,7 +1,7 @@
-From 2bbcdcb8ca63d8a9cf475b148f9f11f97df14c35 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Sat, 13 Mar 2021 22:11:07 +0100
-Subject: [PATCH 5/8] Use usleep() on serenity
+Subject: [PATCH] Use usleep() on serenity
 
 Co-Authored-By: Valtteri Koskivuori <vkoskiv@gmail.com>
 ---
@@ -30,6 +30,3 @@ index dd83497..3a4357f 100644
  	usleep(ms * 1000);
  #endif
  }
--- 
-2.36.1
-

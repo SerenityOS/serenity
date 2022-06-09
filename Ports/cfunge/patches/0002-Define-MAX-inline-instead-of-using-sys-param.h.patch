@@ -1,7 +1,7 @@
-From 8e430a265acf87063fff9b00b18dff91c4a6f073 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tobias Christiansen <tobyase@serenityos.org>
 Date: Thu, 24 Mar 2022 15:41:48 +0100
-Subject: [PATCH 2/4] Define MAX inline instead of using sys/param.h
+Subject: [PATCH] Define MAX inline instead of using sys/param.h
 
 ---
  lib/fungestring/funge_str-two-way.h | 2 +-
@@ -20,6 +20,3 @@ index 70295f4..a3e0888 100644
  
  /* We use the Two-Way string matching algorithm, which guarantees
     linear complexity with constant space.  Additionally, for long
--- 
-2.36.1
-

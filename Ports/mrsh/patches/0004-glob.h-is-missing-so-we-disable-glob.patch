@@ -1,7 +1,7 @@
-From 7d050176ada352b563e551041999d0783475ad13 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Wed, 4 May 2022 16:50:45 +0200
-Subject: [PATCH 4/4] `glob.h` is missing so we disable glob
+Subject: [PATCH] `glob.h` is missing so we disable glob
 
 ---
  shell/word.c | 6 ++++++
@@ -43,6 +43,3 @@ index df274b7..dd94965 100644
  	}
  
  	return true;
--- 
-2.32.0 (Apple Git-132)
-

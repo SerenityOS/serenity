@@ -6,7 +6,7 @@
  */
 
 #include "KeymapStatusWindow.h"
-#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
 #include <LibKeyboard/CharacterMap.h>

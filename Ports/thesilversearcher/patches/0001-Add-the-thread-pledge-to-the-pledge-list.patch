@@ -1,4 +1,4 @@
-From 8fe6ace7f911ecc50ec7e29eb9d3af38869a9905 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Raymond Lucke <ray@raylucke.com>
 Date: Sat, 14 May 2022 13:25:23 -0400
 Subject: [PATCH] Add the thread pledge to the pledge list
@@ -54,6 +54,3 @@ index e63985e..72f88b8 100644
          die("pledge: %s", strerror(errno));
      }
  #endif
--- 
-2.36.1
-

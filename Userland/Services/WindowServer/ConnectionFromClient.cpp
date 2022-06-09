@@ -170,7 +170,7 @@ void ConnectionFromClient::dismiss_menu(i32 menu_id)
 
 void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unused]] i32 submenu_id,
     String const& text, bool enabled, bool checkable, bool checked, bool is_default,
-    String const& shortcut)
+    String const& shortcut, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
@@ -183,6 +183,7 @@ void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe
         did_misbehave("UpdateMenuItem: Bad menu item identifier");
         return;
     }
+    menu_item->set_icon(icon.bitmap());
     menu_item->set_text(text);
     menu_item->set_shortcut_text(shortcut);
     menu_item->set_enabled(enabled);
@@ -806,6 +807,26 @@ Messages::WindowServer::GetSystemThemeResponse ConnectionFromClient::get_system_
 void ConnectionFromClient::apply_cursor_theme(String const& name)
 {
     WindowManager::the().apply_cursor_theme(name);
+}
+
+void ConnectionFromClient::set_cursor_highlight_radius(int radius)
+{
+    WindowManager::the().set_cursor_highlight_radius(radius);
+}
+
+Messages::WindowServer::GetCursorHighlightRadiusResponse ConnectionFromClient::get_cursor_highlight_radius()
+{
+    return WindowManager::the().cursor_highlight_radius();
+}
+
+void ConnectionFromClient::set_cursor_highlight_color(Gfx::Color const& color)
+{
+    WindowManager::the().set_cursor_highlight_color(color);
+}
+
+Messages::WindowServer::GetCursorHighlightColorResponse ConnectionFromClient::get_cursor_highlight_color()
+{
+    return WindowManager::the().cursor_highlight_color();
 }
 
 Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_theme()

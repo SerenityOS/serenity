@@ -1,7 +1,7 @@
-From e889bf88c3eb76ab6646f2e99fb029b63dac7379 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Larkin <45925460+larb0b@users.noreply.github.com>
 Date: Tue, 24 Sep 2019 02:56:39 -0400
-Subject: [PATCH 2/2] Remove NET_C from config
+Subject: [PATCH] Remove NET_C from config
 
 ---
  include/mbedtls/config.h | 2 +-
@@ -20,6 +20,3 @@ index 654f972..5b37f1f 100644
  
  /**
   * \def MBEDTLS_OID_C
--- 
-2.36.1
-

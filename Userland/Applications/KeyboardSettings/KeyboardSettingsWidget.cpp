@@ -21,6 +21,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -281,12 +282,6 @@ void KeyboardSettingsWidget::apply_settings()
 
 void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps, String const& active_keymap)
 {
-    pid_t child_pid;
-
     auto keymaps_string = String::join(',', keymaps);
-    char const* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), "-m", active_keymap.characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-        exit(1);
-    }
+    GUI::Process::spawn_or_show_error(window(), "/bin/keymap", Array { "-s", keymaps_string.characters(), "-m", active_keymap.characters() });
 }

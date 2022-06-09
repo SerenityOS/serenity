@@ -159,7 +159,6 @@ set(KERNEL_SOURCES
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IOAPIC.cpp
     Interrupts/IRQHandler.cpp
-    Interrupts/InterruptManagement.cpp
     Interrupts/PIC.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/SpuriousInterruptHandler.cpp
@@ -182,6 +181,7 @@ set(KERNEL_SOURCES
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/ScopedAddressSpaceSwitcher.cpp
+    Memory/SharedFramebufferVMObject.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
@@ -331,9 +331,10 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
@@ -401,6 +402,7 @@ else()
     set(RPI_SOURCES
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
+        Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/Timer.cpp
@@ -416,6 +418,8 @@ else()
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
+        Arch/aarch64/InterruptManagement.cpp
+        Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMU.cpp
@@ -449,6 +453,11 @@ else()
         Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
+
+        Interrupts/GenericInterruptHandler.cpp
+        Interrupts/IRQHandler.cpp
+        Interrupts/SharedIRQHandler.cpp
+        Interrupts/UnhandledInterruptHandler.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
@@ -512,7 +521,7 @@ endmacro()
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mcmodel=large -mno-red-zone)
     set_new_alignment(8)
-else()
+elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set_new_alignment(4)
 endif()
 

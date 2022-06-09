@@ -1,7 +1,7 @@
-From 4cf117000029c0620085bd273776dc704e6ebc91 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Sat, 17 Apr 2021 15:40:17 +0200
-Subject: [PATCH 5/6] Don't use the asm version of rdtsc
+Subject: [PATCH] Don't use the asm version of rdtsc
 
 ---
  src/cpu.cpp | 2 +-
@@ -20,6 +20,3 @@ index d95c704..762da79 100644
  uint64 ottd_rdtsc()
  {
  	uint32 high, low;
--- 
-2.36.1
-

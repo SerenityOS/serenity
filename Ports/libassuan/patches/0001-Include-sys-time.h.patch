@@ -1,4 +1,4 @@
-From f5ca6465464e4649a81fa3694e69e71efd3e5f46 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Gunnar Beutner <gbeutner@serenityos.org>
 Date: Wed, 14 Apr 2021 04:32:19 +0200
 Subject: [PATCH] Include sys/time.h
@@ -19,6 +19,3 @@ index 97b2312..39079bc 100644
  # include <sys/socket.h>
  # include <netinet/in.h>
  # include <arpa/inet.h>
--- 
-2.36.1
-

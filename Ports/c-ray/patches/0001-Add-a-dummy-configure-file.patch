@@ -1,7 +1,7 @@
-From a91deb390a4765985718c4821c0306d433c036f5 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Valtteri Koskivuori <vkoskiv@gmail.com>
 Date: Tue, 25 Feb 2020 22:03:47 +0200
-Subject: [PATCH 1/8] Add a dummy configure file
+Subject: [PATCH] Add a dummy configure file
 
 ---
  configure | 1 +
@@ -15,6 +15,3 @@ index 0000000..04bfb39
 +++ b/configure
 @@ -0,0 +1 @@
 +#nop
--- 
-2.36.1
-

@@ -1,7 +1,7 @@
-From 514ea84845d1cff0c274ac5e278c0a783d63032f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: circl <circl.lastname@gmail.com>
 Date: Sat, 19 Mar 2022 20:05:26 +0100
-Subject: [PATCH 1/2] Recognize Serenity as POSIX
+Subject: [PATCH] Recognize Serenity as POSIX
 
 ---
  src/lj_arch.h | 2 +-
@@ -20,6 +20,3 @@ index c8d7138..ba7be19 100644
  #define LUAJIT_OS	LUAJIT_OS_POSIX
  #elif defined(__CYGWIN__)
  #define LJ_TARGET_CYGWIN	1
--- 
-2.32.0
-

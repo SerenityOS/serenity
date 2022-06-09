@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
 #include <errno.h>
 #include <serenity.h>
@@ -183,20 +184,7 @@ bool Launcher::open_with_handler_name(const URL& url, String const& handler_name
 
 bool spawn(String executable, Vector<String> const& arguments)
 {
-    Vector<char const*> argv { executable.characters() };
-    for (auto& arg : arguments)
-        argv.append(arg.characters());
-    argv.append(nullptr);
-
-    pid_t child_pid;
-    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
-        perror("posix_spawn");
-        return false;
-    } else {
-        if (disown(child_pid) < 0)
-            perror("disown");
-    }
-    return true;
+    return !Core::Process::spawn(executable, arguments).is_error();
 }
 
 Handler Launcher::get_handler_for_executable(Handler::Type handler_type, String const& executable) const

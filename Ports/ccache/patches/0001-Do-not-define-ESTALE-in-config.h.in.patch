@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: SeekingBlues <seekingblues@gmail.com>
+Date: Fri, 3 Jun 2022 16:05:10 -0500
+Subject: [PATCH] Do not define ESTALE in config.h.in
+
+In ccache, `config.h` is included by the `-include` compiler option,
+which means that it is included before any libc headers. This doesn't
+cause any problems on systems that redefine this macro when libc headers
+are included, but on Serenity, it breaks our definition of the
+`ErrnoCode` enum.
+---
+ cmake/config.h.in | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/cmake/config.h.in b/cmake/config.h.in
+index 729a1d4..8aa07ca 100644
+--- a/cmake/config.h.in
++++ b/cmake/config.h.in
+@@ -205,10 +205,6 @@ typedef int pid_t;
+ #  define O_BINARY 0
+ #endif
+ 
+-#ifndef ESTALE
+-#  define ESTALE -1
+-#endif
+-
+ #define SYSCONFDIR "@CMAKE_INSTALL_FULL_SYSCONFDIR@"
+ 
+ #cmakedefine INODE_CACHE_SUPPORTED

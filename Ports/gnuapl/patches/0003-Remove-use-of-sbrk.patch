@@ -1,7 +1,7 @@
-From c7d2b841f46831b159ed715cc5f313129ba6fb10 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Tobias Christiansen <tobyase@serenityos.org>
 Date: Fri, 11 Mar 2022 19:01:35 +0100
-Subject: [PATCH 3/3] Remove use of sbrk()
+Subject: [PATCH] Remove use of sbrk()
 
 Again, for performance reporting the function `sbrk` is needed which we don't have. We just stub it out.
 ---
@@ -23,6 +23,3 @@ index 6e5292f..704d75c 100644
 +   return 0xFFFFFFFFULL;
  }
  
--- 
-2.36.1
-

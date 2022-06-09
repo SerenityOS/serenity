@@ -15,7 +15,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Stream.h>
-#include <LibGfx/Color.h>
 
 namespace Core {
 
@@ -48,7 +47,6 @@ public:
     void write_entry(String const& group, String const& key, String const& value);
     void write_num_entry(String const& group, String const& key, int value);
     void write_bool_entry(String const& group, String const& key, bool value);
-    void write_color_entry(String const& group, String const& key, Color value);
 
     void dump() const;
 

@@ -1,7 +1,7 @@
-From 1285f88fcd5a8eabf5536e5af8015777f2a64117 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Sun, 20 Feb 2022 00:44:08 -0800
-Subject: [PATCH 6/6] serenity: Implement mourn_inferior override for the
+Subject: [PATCH] serenity: Implement mourn_inferior override for the
  serenity_nat_target
 
 We need to pass `WNOHANG` to our `waitpid(..)` call on SerenityOS,
@@ -46,6 +46,3 @@ index 9ae3b87..35d7ffc 100644
  private:
    bool m_attach_before_continue_called { false };
  };
--- 
-2.32.0
-

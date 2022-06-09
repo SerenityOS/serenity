@@ -142,7 +142,7 @@ static void build_identity_map(PageBumpAllocator& allocator)
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
     insert_identity_entries_for_physical_memory_range(allocator, level1_table, START_OF_NORMAL_MEMORY, END_OF_NORMAL_MEMORY, normal_memory_flags);
-    insert_identity_entries_for_physical_memory_range(allocator, level1_table, MMIO::the().peripheral_base_address(), MMIO::the().peripheral_end_address(), device_memory_flags);
+    insert_identity_entries_for_physical_memory_range(allocator, level1_table, RPi::MMIO::the().peripheral_base_address(), RPi::MMIO::the().peripheral_end_address(), device_memory_flags);
 }
 
 static void switch_to_page_table(u8* page_table)

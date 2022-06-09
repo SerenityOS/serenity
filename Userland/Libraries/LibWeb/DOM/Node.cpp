@@ -668,8 +668,9 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
         });
         copy = move(element_copy);
 
-    } else if (is<Document>(this)) {
-        // 3. Otherwise, let copy be a node that implements the same interfaces as node, and fulfills these additional requirements, switching on the interface node implements:
+    }
+    // 3. Otherwise, let copy be a node that implements the same interfaces as node, and fulfills these additional requirements, switching on the interface node implements:
+    else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
         auto document_copy = Document::create(document_->url());
@@ -720,6 +721,9 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
         copy = move(processing_instruction_copy);
     }
     // Otherwise, Do nothing.
+    else if (is<DocumentFragment>(this)) {
+        copy = adopt_ref(*new DocumentFragment(*document));
+    }
 
     // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
 

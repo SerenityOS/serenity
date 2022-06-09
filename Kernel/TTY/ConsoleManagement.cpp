@@ -84,9 +84,10 @@ void ConsoleManagement::switch_to(unsigned index)
     // if needed. This will ensure we clear the screen and also that WindowServer won't print anything
     // in between.
     if (m_active_console->is_graphical() && !was_graphical) {
+        m_active_console->set_active(true);
         GraphicsManagement::the().activate_graphical_mode();
-    }
-    if (!m_active_console->is_graphical() && was_graphical) {
+        return;
+    } else if (!m_active_console->is_graphical() && was_graphical) {
         GraphicsManagement::the().deactivate_graphical_mode();
     }
     m_active_console->set_active(true);

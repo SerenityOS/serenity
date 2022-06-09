@@ -1,4 +1,4 @@
-From a8e2b31abe3f56f21b4835af00620ce29ce6becb Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Mon, 8 Mar 2021 13:15:35 +0100
 Subject: [PATCH] Skip building the playmus and playwav utilities
@@ -60,6 +60,3 @@ index 2ff24b2..0e120a1 100644
  
  clean:
  	rm -rf $(objects)
--- 
-2.36.1
-

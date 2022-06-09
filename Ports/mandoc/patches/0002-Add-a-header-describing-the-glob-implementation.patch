@@ -1,7 +1,7 @@
-From 05cf3e8e7e355ec1ae1890cff0ed3a86d7bd5d57 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Callahan <bcallah@openbsd.org>
 Date: Sat, 25 Jan 2020 21:20:39 -0500
-Subject: [PATCH 2/9] Add a header describing the glob implementation
+Subject: [PATCH] Add a header describing the glob implementation
 
 ---
  glob.h | 115 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -129,6 +129,3 @@ index 0000000..c304b69
 +__END_DECLS
 +
 +#endif /* !_GLOB_H_ */
--- 
-2.36.1
-

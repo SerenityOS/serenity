@@ -687,6 +687,17 @@ ErrorOr<off_t> lseek(int fd, off_t offset, int whence)
     return rc;
 }
 
+ErrorOr<void> endgrent()
+{
+    int old_errno = 0;
+    swap(old_errno, errno);
+    ::endgrent();
+    if (errno != 0)
+        return Error::from_syscall("endgrent", -errno);
+    errno = old_errno;
+    return {};
+}
+
 ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options)
 {
     int wstatus;

@@ -1,7 +1,7 @@
-From 8494fc6dbd6abc799a2eb02933103361ea0202b0 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: gouchi <gouchi@free.fr>
 Date: Sat, 7 May 2022 18:21:50 +0200
-Subject: [PATCH 5/6] Use SDL software instead of hardware rendering
+Subject: [PATCH] Use SDL software instead of hardware rendering
 
 ---
  gfx/drivers/sdl2_gfx.c | 2 +-
@@ -20,6 +20,3 @@ index 4dbe33f..dd67b4a 100644
  
     if (vid->video.vsync)
        flags |= SDL_RENDERER_PRESENTVSYNC;
--- 
-2.36.0
-

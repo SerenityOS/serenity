@@ -1,7 +1,7 @@
-From bad2922ad4cbc8c74765d50da61371925b1b80d7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Date: Tue, 20 Apr 2021 18:42:04 +0300
-Subject: [PATCH 1/2] Use manual include & library paths for ncurses
+Subject: [PATCH] Use manual include & library paths for ncurses
 
 Co-Authored-By: Panagiotis Vasilopoulos <hello@alwayslivid.com>
 ---
@@ -35,6 +35,3 @@ index 6c50d7b..6ce5f9f 100644
  
  add_executable(cmatrix cmatrix.c)
  
--- 
-2.36.1
-

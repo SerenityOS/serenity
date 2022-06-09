@@ -1,4 +1,4 @@
-From 673aea20b5917dd7e295f795eb0dd730598c9b0a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Sun, 2 Jan 2022 00:27:17 +1100
 Subject: [PATCH] Build: Add `__STRINGS_H_COMPAT_HACK` macro

@@ -43,11 +43,12 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", address);
     auto bar0_space_size = PCI::get_BAR_space_size(address, 0);
     VERIFY(bar0_space_size == 0x80000);
+    auto bar2_space_size = PCI::get_BAR_space_size(address, 2);
     dmesgln("Intel Native Graphics Adapter @ {}, MMIO @ {}, space size is {:x} bytes", address, PhysicalAddress(PCI::get_BAR0(address)), bar0_space_size);
     dmesgln("Intel Native Graphics Adapter @ {}, framebuffer @ {}", address, PhysicalAddress(PCI::get_BAR2(address)));
     PCI::enable_bus_mastering(address);
 
-    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
+    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
     return {};
 }
 
