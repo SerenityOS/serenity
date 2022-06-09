@@ -73,6 +73,6 @@ i32 iso_year(Object& temporal_object);
 u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
 u8 iso_day(Object& temporal_object);
-ThrowCompletionOr<Object*> default_merge_fields(GlobalObject&, Object const& fields, Object const& additional_fields);
+ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject&, Object const& fields, Object const& additional_fields);
 
 }
