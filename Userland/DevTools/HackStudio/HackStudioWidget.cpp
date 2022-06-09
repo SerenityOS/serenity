@@ -451,6 +451,7 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
 
 NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu()
 {
+    m_new_file_actions.append(create_new_file_action("Ja&kt Source File", "/res/icons/16x16/filetype-jakt.png", "jakt"));
     m_new_file_actions.append(create_new_file_action("&C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
     m_new_file_actions.append(create_new_file_action("C++ &Header File", "/res/icons/16x16/filetype-header.png", "h"));
     m_new_file_actions.append(create_new_file_action("&GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
