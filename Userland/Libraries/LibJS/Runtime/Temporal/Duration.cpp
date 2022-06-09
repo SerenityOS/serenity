@@ -1578,33 +1578,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     return create_duration_record(adjusted_date_duration.years, adjusted_date_duration.months, adjusted_date_duration.weeks, adjusted_date_duration.days, adjusted_time_duration.hours, adjusted_time_duration.minutes, adjusted_time_duration.seconds, adjusted_time_duration.milliseconds, adjusted_time_duration.microseconds, adjusted_time_duration.nanoseconds);
 }
 
-// 7.5.27 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ), https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
-ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
-
-    // 2. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
-        // a. Let prop be the Property Name value of the current row.
-
-        // b. Let value be duration's field whose name is the Field Name value of the current row.
-        auto value = duration.*field;
-
-        // If value is not 0 and disallowedFields contains prop, then
-        if (value != 0 && disallowed_fields.contains_slow(property.as_string())) {
-            // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, property.as_string(), value);
-        }
-    }
-
-    // 3. Return duration.
-    return duration;
-}
-
-// 7.5.28 TemporalDurationToString ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring
+// 7.5.27 TemporalDurationToString ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring
 String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision)
 {
     if (precision.has<StringView>())
@@ -1742,7 +1716,7 @@ String temporal_duration_to_string(double years, double months, double weeks, do
     return result.to_string();
 }
 
-// 7.5.29 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration
+// 7.5.28 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration
 ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(GlobalObject& global_object, ArithmeticOperation operation, Duration const& duration, Value other_value, Value options_value)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
