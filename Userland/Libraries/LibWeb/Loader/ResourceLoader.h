@@ -23,7 +23,10 @@ namespace Web {
 #    define CPU_STRING "x86_64"
 #endif
 
-constexpr auto default_user_agent = "Mozilla/5.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";
+#define APP_VERSION "5.0"
+
+constexpr auto app_version = APP_VERSION;
+constexpr auto default_user_agent = "Mozilla/" APP_VERSION " (SerenityOS; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";
 
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
 public:
