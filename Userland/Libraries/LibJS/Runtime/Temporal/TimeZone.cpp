@@ -262,64 +262,74 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(offsetString) is String.
+    // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), TimeZoneNumericUTCOffset).
+    auto parse_result = parse_iso8601(Production::TimeZoneNumericUTCOffset, offset_string);
 
-    // 2. If offsetString does not satisfy the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
-    // a. Throw a RangeError exception.
-    // 3. Let sign, hours, minutes, seconds, and fraction be the parts of offsetString produced respectively by the TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, and TimeZoneUTCOffsetFraction productions, or undefined if not present.
-    StringView sign_part;
-    StringView hours_part;
-    Optional<StringView> minutes_part;
-    Optional<StringView> seconds_part;
-    Optional<StringView> fraction_part;
-    auto success = parse_time_zone_numeric_utc_offset_syntax(offset_string, sign_part, hours_part, minutes_part, seconds_part, fraction_part);
-    if (!success)
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFormat, "TimeZone offset");
 
-    // 4. Assert: sign is not undefined.
-    // 5. Assert: hours is not undefined.
+    // 3. Let each of sign, hours, minutes, seconds, and fSeconds be the source text matched by the respective TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, and TimeZoneUTCOffsetFraction Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    auto sign = parse_result->time_zone_utc_offset_sign;
+    auto hours = parse_result->time_zone_utc_offset_hour;
+    auto minutes = parse_result->time_zone_utc_offset_minute;
+    auto seconds = parse_result->time_zone_utc_offset_second;
+    auto f_seconds = parse_result->time_zone_utc_offset_fraction;
 
-    double sign;
-    // 6. If sign is the code unit 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
-    if (sign_part.is_one_of("-", "\xE2\x88\x92")) {
-        // a. Set sign to -1.
-        sign = -1;
+    // 4. Assert: sign is not empty.
+    VERIFY(sign.has_value());
+
+    i8 factor;
+
+    // 5. If sign contains the code point U+002D (HYPHEN-MINUS) or U+2212 (MINUS SIGN), then
+    if (sign->is_one_of("-", "\xE2\x88\x92")) {
+        // a. Let factor be -1.
+        factor = -1;
     }
-    // 7. Else,
+    // 6. Else,
     else {
-        // a. Set sign to 1.
-        sign = 1;
+        // a. Let factor be 1.
+        factor = 1;
     }
 
-    // 8. Set hours to ! ToIntegerOrInfinity(hours).
-    auto hours = *hours_part.to_uint<u8>();
+    // 7. Assert: hours is not empty.
+    VERIFY(hours.has_value());
 
-    // 9. Set minutes to ! ToIntegerOrInfinity(minutes).
-    auto minutes = *minutes_part.value_or("0"sv).to_uint<u8>();
+    // 8. Let hoursMV be ! ToIntegerOrInfinity(CodePointsToString(hours)).
+    auto hours_mv = *hours->to_uint<u8>();
 
-    // 10. Set seconds to ! ToIntegerOrInfinity(seconds).
-    auto seconds = *seconds_part.value_or("0"sv).to_uint<u8>();
+    // 9. Let minutesMV be ! ToIntegerOrInfinity(CodePointsToString(minutes)).
+    auto minutes_mv = *minutes.value_or("0"sv).to_uint<u8>();
 
-    i32 nanoseconds;
-    // 11. If fraction is not undefined, then
-    if (fraction_part.has_value()) {
-        // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
-        auto fraction = String::formatted("{}000000000", *fraction_part);
+    // 10. Let secondsMV be ! ToIntegerOrInfinity(CodePointsToString(seconds)).
+    auto seconds_mv = *seconds.value_or("0"sv).to_uint<u8>();
 
-        // b. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
-        // NOTE: parse_time_zone_numeric_utc_offset_syntax(), which we use to capture TimeZoneUTCOffsetFraction, doesn't include the decimal separator.
+    u32 nanoseconds_mv;
 
-        // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-        nanoseconds = *fraction.substring(0, 9).to_int<i32>();
+    // 11. If fSeconds is not empty, then
+    if (f_seconds.has_value()) {
+        // a. Let fSecondsDigits be the substring of CodePointsToString(fSeconds) from 1.
+        auto f_seconds_digits = f_seconds->substring_view(1);
+
+        // b. Let fSecondsDigitsExtended be the string-concatenation of fSecondsDigits and "000000000".
+        auto f_seconds_digits_extended = String::formatted("{}000000000", f_seconds_digits);
+
+        // c. Let nanosecondsDigits be the substring of fSecondsDigitsExtended from 0 to 9.
+        auto nanoseconds_digits = f_seconds_digits_extended.substring_view(0, 9);
+
+        // d. Let nanosecondsMV be ! ToIntegerOrInfinity(nanosecondsDigits).
+        nanoseconds_mv = *nanoseconds_digits.to_uint<u32>();
     }
     // 12. Else,
     else {
-        // a. Let nanoseconds be 0.
-        nanoseconds = 0;
+        // a. Let nanosecondsMV be 0.
+        nanoseconds_mv = 0;
     }
-    // 13. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
-    // NOTE: Decimal point in 10^9 is important, otherwise it's all integers and the result overflows!
-    return sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
+
+    // 13. Return factor × (((hoursMV × 60 + minutesMV) × 60 + secondsMV) × 10^9 + nanosecondsMV).
+    // NOTE: Using scientific notation (1e9) ensures the result of this expression is a double,
+    //       which is important - otherwise it's all integers and the result overflows!
+    return factor * (((hours_mv * 60 + minutes_mv) * 60 + seconds_mv) * 1e9 + nanoseconds_mv);
 }
 
 // 11.6.8 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
