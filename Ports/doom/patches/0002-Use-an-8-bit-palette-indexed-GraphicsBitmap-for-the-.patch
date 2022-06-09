@@ -1,0 +1,257 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <awesomekling@gmail.com>
+Date: Sat, 14 Sep 2019 11:22:44 +0200
+Subject: [PATCH] Use an 8-bit palette-indexed GraphicsBitmap for the game
+ screen buffer
+
+This allows us to use the optimized upscaling code in Serenity instead
+of the non-optimized code in DOOM.
+
+Remove an unnecessary extra screen buffer copy
+
+We can just draw the game directly into the DG_ScreenBuffer and save
+ourselves a 64000-byte memcpy() per rendered frame.
+---
+ doomgeneric/doomgeneric.c |   2 +-
+ doomgeneric/doomgeneric.h |   3 ++
+ doomgeneric/i_video.c     | 101 +++-----------------------------------
+ doomgeneric/i_video.h     |   7 +++
+ 4 files changed, 18 insertions(+), 95 deletions(-)
+
+diff --git a/doomgeneric/doomgeneric.c b/doomgeneric/doomgeneric.c
+index 25675ab..141f301 100644
+--- a/doomgeneric/doomgeneric.c
++++ b/doomgeneric/doomgeneric.c
+@@ -5,7 +5,7 @@ uint32_t* DG_ScreenBuffer = 0;
+ 
+ void dg_Create()
+ {
+-	DG_ScreenBuffer = malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY * 4);
++    DG_ScreenBuffer = malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY);
+ 
+ 	DG_Init();
+ }
+diff --git a/doomgeneric/doomgeneric.h b/doomgeneric/doomgeneric.h
+index 468fbbf..19d3e92 100644
+--- a/doomgeneric/doomgeneric.h
++++ b/doomgeneric/doomgeneric.h
+@@ -8,6 +8,8 @@
+ 
+ #ifdef __cplusplus
+ extern "C" {
++
++#include "i_video.h"
+ #endif
+ 
+ extern uint32_t* DG_ScreenBuffer;
+@@ -19,6 +21,7 @@ void DG_SleepMs(uint32_t ms);
+ uint32_t DG_GetTicksMs();
+ int DG_GetKey(int* pressed, unsigned char* key);
+ void DG_SetWindowTitle(const char * title);
++void DG_SetPalette(const struct color*);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/doomgeneric/i_video.c b/doomgeneric/i_video.c
+index cd4cd5b..bb20a63 100644
+--- a/doomgeneric/i_video.c
++++ b/doomgeneric/i_video.c
+@@ -47,8 +47,6 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
+ 
+ #include <sys/types.h>
+ 
+-//#define CMAP256
+-
+ struct FB_BitField
+ {
+ 	uint32_t offset;			/* beginning of bitfield	*/
+@@ -75,13 +73,6 @@ static struct FB_ScreenInfo s_Fb;
+ int fb_scaling = 1;
+ int usemouse = 0;
+ 
+-struct color {
+-    uint32_t b:8;
+-    uint32_t g:8;
+-    uint32_t r:8;
+-    uint32_t a:8;
+-};
+-
+ static struct color colors[256];
+ 
+ void I_GetEvent(void);
+@@ -89,7 +80,6 @@ void I_GetEvent(void);
+ // The screen buffer; this is modified to draw things to the screen
+ 
+ byte *I_VideoBuffer = NULL;
+-byte *I_VideoBuffer_FB = NULL;
+ 
+ // If true, game is running as a screensaver
+ 
+@@ -127,54 +117,6 @@ typedef struct
+ 
+ static uint16_t rgb565_palette[256];
+ 
+-void cmap_to_rgb565(uint16_t * out, uint8_t * in, int in_pixels)
+-{
+-    int i, j;
+-    struct color c;
+-    uint16_t r, g, b;
+-
+-    for (i = 0; i < in_pixels; i++)
+-    {
+-        c = colors[*in]; 
+-        r = ((uint16_t)(c.r >> 3)) << 11;
+-        g = ((uint16_t)(c.g >> 2)) << 5;
+-        b = ((uint16_t)(c.b >> 3)) << 0;
+-        *out = (r | g | b);
+-
+-        in++;
+-        for (j = 0; j < fb_scaling; j++) {
+-            out++;
+-        }
+-    }
+-}
+-
+-void cmap_to_fb(uint8_t * out, uint8_t * in, int in_pixels)
+-{
+-    int i, j, k;
+-    struct color c;
+-    uint32_t pix;
+-    uint16_t r, g, b;
+-
+-    for (i = 0; i < in_pixels; i++)
+-    {
+-        c = colors[*in];  /* R:8 G:8 B:8 format! */
+-        r = (uint16_t)(c.r >> (8 - s_Fb.red.length));
+-        g = (uint16_t)(c.g >> (8 - s_Fb.green.length));
+-        b = (uint16_t)(c.b >> (8 - s_Fb.blue.length));
+-        pix = r << s_Fb.red.offset;
+-        pix |= g << s_Fb.green.offset;
+-        pix |= b << s_Fb.blue.offset;
+-
+-        for (k = 0; k < fb_scaling; k++) {
+-            for (j = 0; j < s_Fb.bits_per_pixel/8; j++) {
+-                *out = (pix >> (j*8));
+-                out++;
+-            }
+-        }
+-        in++;
+-    }
+-}
+-
+ void I_InitGraphics (void)
+ {
+     int i;
+@@ -184,7 +126,7 @@ void I_InitGraphics (void)
+ 	s_Fb.yres = DOOMGENERIC_RESY;
+ 	s_Fb.xres_virtual = s_Fb.xres;
+ 	s_Fb.yres_virtual = s_Fb.yres;
+-	s_Fb.bits_per_pixel = 32;
++    s_Fb.bits_per_pixel = 8;
+ 
+ 	s_Fb.blue.length = 8;
+ 	s_Fb.green.length = 8;
+@@ -221,7 +163,6 @@ void I_InitGraphics (void)
+ 
+     /* Allocate screen to draw to */
+ 	I_VideoBuffer = (byte*)Z_Malloc (SCREENWIDTH * SCREENHEIGHT, PU_STATIC, NULL);  // For DOOM to draw on
+-	I_VideoBuffer_FB = (byte*)malloc(s_Fb.xres * s_Fb.yres * (s_Fb.bits_per_pixel/8));     // For a single write() syscall to fbdev
+ 
+ 	screenvisible = true;
+ 
+@@ -232,7 +173,6 @@ void I_InitGraphics (void)
+ void I_ShutdownGraphics (void)
+ {
+ 	Z_Free (I_VideoBuffer);
+-	free(I_VideoBuffer_FB);
+ }
+ 
+ void I_StartFrame (void)
+@@ -270,7 +210,7 @@ void I_FinishUpdate (void)
+ 
+     /* DRAW SCREEN */
+     line_in  = (unsigned char *) I_VideoBuffer;
+-    line_out = (unsigned char *) I_VideoBuffer_FB;
++    line_out = (unsigned char *) DG_ScreenBuffer;
+ 
+     y = SCREENHEIGHT;
+ 
+@@ -279,24 +219,13 @@ void I_FinishUpdate (void)
+         int i;
+         for (i = 0; i < fb_scaling; i++) {
+             line_out += x_offset;
+-#ifdef CMAP256
+-            for (fb_scaling == 1) {
+-                memcpy(line_out, line_in, SCREENWIDTH); /* fb_width is bigger than Doom SCREENWIDTH... */
+-            } else {
+-                //XXX FIXME fb_scaling support!
+-            }
+-#else
+-            //cmap_to_rgb565((void*)line_out, (void*)line_in, SCREENWIDTH);
+-            cmap_to_fb((void*)line_out, (void*)line_in, SCREENWIDTH);
+-#endif
++            memcpy(line_out, line_in, SCREENWIDTH);
+             line_out += (SCREENWIDTH * fb_scaling * (s_Fb.bits_per_pixel/8)) + x_offset_end;
+         }
+         line_in += SCREENWIDTH;
+     }
+ 
+-	memcpy(DG_ScreenBuffer, I_VideoBuffer_FB, (SCREENHEIGHT * fb_scaling * (s_Fb.bits_per_pixel / 8)) * s_Fb.xres);
+-
+-	DG_DrawFrame();
++    DG_DrawFrame();
+ }
+ 
+ //
+@@ -317,30 +246,14 @@ void I_ReadScreen (byte* scr)
+ 
+ void I_SetPalette (byte* palette)
+ {
+-	int i;
+-	//col_t* c;
+-
+-	//for (i = 0; i < 256; i++)
+-	//{
+-	//	c = (col_t*)palette;
+-
+-	//	rgb565_palette[i] = GFX_RGB565(gammatable[usegamma][c->r],
+-	//								   gammatable[usegamma][c->g],
+-	//								   gammatable[usegamma][c->b]);
+-
+-	//	palette += 3;
+-	//}
+-    
+-
+-    /* performance boost:
+-     * map to the right pixel format over here! */
+-
+-    for (i=0; i<256; ++i ) {
++    for (int i = 0; i < 256; ++i) {
+         colors[i].a = 0;
+         colors[i].r = gammatable[usegamma][*palette++];
+         colors[i].g = gammatable[usegamma][*palette++];
+         colors[i].b = gammatable[usegamma][*palette++];
+     }
++
++    DG_SetPalette(colors);
+ }
+ 
+ // Given an RGB value, find the closest matching palette index.
+diff --git a/doomgeneric/i_video.h b/doomgeneric/i_video.h
+index 3c7db19..6c96eb1 100644
+--- a/doomgeneric/i_video.h
++++ b/doomgeneric/i_video.h
+@@ -89,6 +89,13 @@ typedef struct
+     boolean poor_quality;
+ } screen_mode_t;
+ 
++struct color {
++    uint32_t b:8;
++    uint32_t g:8;
++    uint32_t r:8;
++    uint32_t a:8;
++};
++
+ typedef boolean (*grabmouse_callback_t)(void);
+ 
+ // Called by D_DoomMain,

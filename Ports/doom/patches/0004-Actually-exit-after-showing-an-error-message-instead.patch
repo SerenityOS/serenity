@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <awesomekling@gmail.com>
+Date: Sat, 4 Apr 2020 11:37:02 +0200
+Subject: [PATCH] Actually exit after showing an error message (instead of
+ infinite loop)
+
+Fixes SerenityOS/serenity #1527.
+---
+ doomgeneric/i_system.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/doomgeneric/i_system.c b/doomgeneric/i_system.c
+index 5d00091..091e4ca 100644
+--- a/doomgeneric/i_system.c
++++ b/doomgeneric/i_system.c
+@@ -257,11 +257,7 @@ void I_Quit (void)
+         entry = entry->next;
+     }
+ 
+-#if ORIGCODE
+-    SDL_Quit();
+-
+     exit(0);
+-#endif
+ }
+ 
+ #if !defined(_WIN32) && !defined(__MACOSX__)
+@@ -366,9 +362,7 @@ void I_Error (char *error, ...)
+     if (already_quitting)
+     {
+         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
+-#if ORIGCODE
+         exit(-1);
+-#endif
+     }
+     else
+     {
+@@ -454,16 +448,7 @@ void I_Error (char *error, ...)
+     }
+ #endif
+ 
+-    // abort();
+-#if ORIGCODE
+-    SDL_Quit();
+-
+     exit(-1);
+-#else
+-    while (true)
+-    {
+-    }
+-#endif
+ }
+ 
+ //

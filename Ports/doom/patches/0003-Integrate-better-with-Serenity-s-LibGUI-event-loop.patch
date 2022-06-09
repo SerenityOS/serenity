@@ -1,0 +1,73 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <awesomekling@gmail.com>
+Date: Sat, 14 Sep 2019 11:45:34 +0200
+Subject: [PATCH] Integrate better with Serenity's LibGUI event loop
+
+Let the DOOM event loop drive the Serenity event loop, and let DOOM's
+I_FinishUpdate drive repaints.
+
+The one weird case is "screen wipes", where we have to manually pump
+the event loop a little extra, to make sure the wipe effect shows up
+on screen.
+
+This patch makes the game way more fluid than before. :^)
+---
+ doomgeneric/d_main.c                 |  6 ++++++
+ doomgeneric/doomgeneric_serenity.cpp | 10 +++++-----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/doomgeneric/d_main.c b/doomgeneric/d_main.c
+index c7cf977..e0a7e6a 100644
+--- a/doomgeneric/d_main.c
++++ b/doomgeneric/d_main.c
+@@ -324,7 +324,9 @@ void D_Display (void)
+ 			       , 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
+ 	I_UpdateNoBlit ();
+ 	M_Drawer ();                            // menu is drawn even on top of wipes
++    DG_PumpEventLoop();
+ 	I_FinishUpdate ();                      // page flip or blit buffer
++    DG_PumpEventLoop();
+     } while (!done);
+ }
+ 
+@@ -441,11 +443,15 @@ void D_DoomLoop (void)
+ 
+     while (1)
+     {
++        DG_PumpEventLoop();
++
+ 		// frame syncronous IO operations
+ 		I_StartFrame ();
+ 
+ 		TryRunTics (); // will run at least one tic
+ 
++        DG_PumpEventLoop();
++
+ 		S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
+ 
+ 		// Update display, next frame, with current state.
+diff --git a/doomgeneric/doomgeneric_serenity.cpp b/doomgeneric/doomgeneric_serenity.cpp
+index 4e287ca..ec895bc 100644
+--- a/doomgeneric/doomgeneric_serenity.cpp
++++ b/doomgeneric/doomgeneric_serenity.cpp
+@@ -146,15 +146,15 @@ extern "C" void DG_Init()
+     g_doom_widget = DoomWidget::construct();
+     g_window->set_main_widget(g_doom_widget);
+ 
+-    new CTimer(33, [] {
+-        g_doom_widget->update();
+-    });
+-
+     g_window->show();
+ }
+ 
+-
+ extern "C" void DG_DrawFrame()
++{
++    g_doom_widget->update();
++}
++
++extern "C" void DG_PumpEventLoop()
+ {
+     Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
+ }
