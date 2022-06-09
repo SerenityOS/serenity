@@ -356,8 +356,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 7. Let largestUnitPresent be true.
     bool largest_unit_present = true;
 
-    // 8. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « », undefined).
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *round_to, {}, {}));
+    // 8. Let smallestUnit be ? GetTemporalUnit(roundTo, "smallestUnit", datetime, undefined).
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *round_to, vm.names.smallestUnit, UnitGroup::DateTime, Optional<StringView> {}));
 
     // 9. If smallestUnit is undefined, then
     if (!smallest_unit.has_value()) {
@@ -374,8 +374,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 11. Set defaultLargestUnit to ! LargerOfTwoTemporalUnits(defaultLargestUnit, smallestUnit).
     default_largest_unit = larger_of_two_temporal_units(default_largest_unit, *smallest_unit);
 
-    // 12. Let largestUnit be ? ToLargestTemporalUnit(roundTo, « », undefined).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *round_to, {}, {}));
+    // 12. Let largestUnit be ? GetTemporalUnit(roundTo, "largestUnit", datetime, undefined, « "auto" »).
+    auto largest_unit = TRY(get_temporal_unit(global_object, *round_to, vm.names.largestUnit, UnitGroup::DateTime, Optional<StringView> {}, { "auto"sv }));
 
     // 13. If largestUnit is undefined, then
     if (!largest_unit.has_value()) {
@@ -397,8 +397,9 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingUnits);
     }
 
-    // 16. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 16. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
 
     // 17. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"sv));
@@ -473,11 +474,11 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     // 6. Let relativeTo be ? ToRelativeTemporalObject(totalOf).
     auto relative_to = TRY(to_relative_temporal_object(global_object, *total_of));
 
-    // 7. Let unit be ? ToTemporalDurationTotalUnit(totalOf).
-    auto unit = TRY(to_temporal_duration_total_unit(global_object, *total_of));
+    // 7. Let unit be ? GetTemporalUnit(totalOf, "unit", datetime, required).
+    auto unit = TRY(get_temporal_unit(global_object, *total_of, vm.names.unit, UnitGroup::DateTime, TemporalUnitRequired {}));
 
     // 8. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], unit, relativeTo).
-    auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), unit, relative_to));
+    auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), *unit, relative_to));
 
     // 9. Let intermediate be undefined.
     ZonedDateTime* intermediate = nullptr;
@@ -489,10 +490,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     }
 
     // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
-    auto balance_result = TRY(balance_duration(global_object, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from(duration->nanoseconds()), unit, intermediate));
+    auto balance_result = TRY(balance_duration(global_object, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from(duration->nanoseconds()), *unit, intermediate));
 
     // 12. Let roundRecord be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
-    auto round_record = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    auto round_record = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, *unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
 
     // 13. Let roundResult be roundRecord.[[DurationRecord]].
     auto& round_result = round_record.duration_record;

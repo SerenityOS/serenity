@@ -389,8 +389,12 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 {
     auto& vm = global_object.vm();
 
-    // Let smallestUnit be ? ToSmallestTemporalUnit(normalizedOptions, « "year", "month", "week", "day", "hour" », undefined).
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, normalized_options, { "year"sv, "month"sv, "week"sv, "day"sv, "hour"sv }, {}));
+    // 1. Let smallestUnit be ? GetTemporalUnit(normalizedOptions, "smallestUnit", time, undefined).
+    auto smallest_unit = TRY(get_temporal_unit(global_object, normalized_options, vm.names.smallestUnit, UnitGroup::Time, Optional<StringView> {}));
+
+    // 2. If smallestUnit is "hour", throw a RangeError exception.
+    if (smallest_unit == "hour"sv)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
 
     // 2. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
@@ -462,121 +466,117 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
 }
 
-// https://tc39.es/proposal-temporal/#table-temporal-singular-and-plural-units
-static HashMap<StringView, StringView> plural_to_singular_units = {
-    { "years"sv, "year"sv },
-    { "months"sv, "month"sv },
-    { "weeks"sv, "week"sv },
-    { "days"sv, "day"sv },
-    { "hours"sv, "hour"sv },
-    { "minutes"sv, "minute"sv },
-    { "seconds"sv, "second"sv },
-    { "milliseconds"sv, "millisecond"sv },
-    { "microseconds"sv, "microsecond"sv },
-    { "nanoseconds"sv, "nanosecond"sv }
+struct TemporalUnit {
+    StringView singular;
+    StringView plural;
+    UnitGroup category;
 };
 
-// 13.16 ToLargestTemporalUnit ( normalizedOptions, disallowedUnits, fallback [ , autoValue ] ), https://tc39.es/proposal-temporal/#sec-temporal-tolargesttemporalunit
-ThrowCompletionOr<Optional<String>> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback, Optional<String> auto_value)
+// https://tc39.es/proposal-temporal/#table-temporal-units
+static Vector<TemporalUnit> temporal_units = {
+    { "year"sv, "years"sv, UnitGroup::Date },
+    { "month"sv, "months"sv, UnitGroup::Date },
+    { "week"sv, "weeks"sv, UnitGroup::Date },
+    { "day"sv, "days"sv, UnitGroup::Date },
+    { "hour"sv, "hours"sv, UnitGroup::Time },
+    { "minute"sv, "minutes"sv, UnitGroup::Time },
+    { "second"sv, "seconds"sv, UnitGroup::Time },
+    { "millisecond"sv, "milliseconds"sv, UnitGroup::Time },
+    { "microsecond"sv, "microseconds"sv, UnitGroup::Time },
+    { "nanosecond"sv, "nanoseconds"sv, UnitGroup::Time }
+};
+
+// 13.16 GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues ] ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalunit
+ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_object, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, Variant<TemporalUnitRequired, Optional<StringView>> const& default_, Vector<StringView> const& extra_values)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: disallowedUnits does not contain fallback.
-    // 2. Assert: disallowedUnits does not contain "auto".
-    // 3. Assert: autoValue is not present or fallback is "auto".
-    VERIFY(!auto_value.has_value() || fallback == "auto"sv);
-    // 4. Assert: autoValue is not present or disallowedUnits does not contain autoValue.
+    // 1. Let singularNames be a new empty List.
+    Vector<StringView> singular_names;
 
-    // 5. Let largestUnit be ? GetOption(normalizedOptions, "largestUnit", « String », « "auto", "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto largest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
+    // 2. For each row of Table 13, except the header row, in table order, do
+    for (auto const& row : temporal_units) {
+        // a. Let unit be the value in the Singular column of the row.
+        auto unit = row.singular;
 
-    // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
-    if (largest_unit_value.is_undefined())
-        return Optional<String> {};
-    VERIFY(largest_unit_value.is_string());
-    auto largest_unit = largest_unit_value.as_string().string();
-
-    // 6. If largestUnit is "auto" and autoValue is present, then
-    if (largest_unit == "auto"sv && auto_value.has_value()) {
-        // a. Return autoValue.
-        return *auto_value;
+        // b. If the Category column of the row is date and unitGroup is date or datetime, append unit to singularNames.
+        if (row.category == UnitGroup::Date && (unit_group == UnitGroup::Date || unit_group == UnitGroup::DateTime))
+            singular_names.append(unit);
+        // c. Else if the Category column of the row is time and unitGroup is time or datetime, append unit to singularNames.
+        else if (row.category == UnitGroup::Time && (unit_group == UnitGroup::Time || unit_group == UnitGroup::DateTime))
+            singular_names.append(unit);
     }
 
-    // 7. If largestUnit is in the Plural column of Table 12, then
-    if (auto singular_unit = plural_to_singular_units.get(largest_unit); singular_unit.has_value()) {
-        // a. Set largestUnit to the corresponding Singular value of the same row.
-        largest_unit = singular_unit.value();
+    // 3. If extraValues is present, then
+    if (!extra_values.is_empty()) {
+        // a. Set singularNames to the list-concatenation of singularNames and extraValues.
+        singular_names.extend(extra_values);
     }
 
-    // 8. If disallowedUnits contains largestUnit, then
-    if (disallowed_units.contains_slow(largest_unit)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, largest_unit, vm.names.largestUnit.as_string());
+    Value default_value;
+
+    // 4. If default is required, then
+    if (default_.has<TemporalUnitRequired>()) {
+        // a. Let defaultValue be undefined.
+        default_value = js_undefined();
+    }
+    // 5. Else,
+    else {
+        auto default_string = default_.get<Optional<StringView>>();
+
+        // a. Let defaultValue be default.
+        default_value = default_string.has_value() ? js_string(vm, *default_string) : js_undefined();
+
+        // b. If defaultValue is not undefined and singularNames does not contain defaultValue, then
+        if (default_string.has_value() && !singular_names.contains_slow(*default_string)) {
+            // i. Append defaultValue to singularNames.
+            singular_names.append(*default_string);
+        }
     }
 
-    // 9. Return largestUnit.
-    return largest_unit;
+    // 6. Let allowedValues be a copy of singularNames.
+    auto allowed_values = singular_names;
+
+    // 7. For each element singularName of singularNames, do
+    for (auto const& singular_name : singular_names) {
+        for (auto const& row : temporal_units) {
+            // a. If singularName is listed in the Singular column of Table 13, then
+            if (singular_name == row.singular) {
+                // i. Let pluralName be the value in the Plural column of the corresponding row.
+                auto plural_name = row.plural;
+
+                // ii. Append pluralName to allowedValues.
+                allowed_values.append(plural_name);
+            }
+        }
+    }
+
+    // 8. NOTE: For each singular Temporal unit name that is contained within allowedValues, the corresponding plural name is also contained within it.
+
+    // 9. Let value be ? GetOption(normalizedOptions, key, « String », allowedValues, defaultValue).
+    auto option_value = TRY(get_option(global_object, normalized_options, key, { OptionType::String }, allowed_values, default_value));
+
+    // 10. If value is undefined and default is required, throw a RangeError exception.
+    if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IsUndefined, String::formatted("{} option value", key.as_string()));
+
+    Optional<String> value = option_value.is_undefined()
+        ? Optional<String> {}
+        : option_value.as_string().string();
+
+    // 11. If value is listed in the Plural column of Table 13, then
+    for (auto const& row : temporal_units) {
+        if (row.plural == value) {
+            // a. Set value to the value in the Singular column of the corresponding row.
+            value = row.singular;
+        }
+    }
+
+    // 12. Return value.
+    return value;
 }
 
-// 13.17 ToSmallestTemporalUnit ( normalizedOptions, disallowedUnits, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-tosmallesttemporalunit
-ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Assert: disallowedUnits does not contain fallback.
-
-    // 2. Let smallestUnit be ? GetOption(normalizedOptions, "smallestUnit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto smallest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.smallestUnit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
-
-    // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
-    if (smallest_unit_value.is_undefined())
-        return Optional<String> {};
-    VERIFY(smallest_unit_value.is_string());
-    auto smallest_unit = smallest_unit_value.as_string().string();
-
-    // 3. If smallestUnit is in the Plural column of Table 12, then
-    if (auto singular_unit = plural_to_singular_units.get(smallest_unit); singular_unit.has_value()) {
-        // a. Set smallestUnit to the corresponding Singular value of the same row.
-        smallest_unit = singular_unit.value();
-    }
-
-    // 4. If disallowedUnits contains smallestUnit, then
-    if (disallowed_units.contains_slow(smallest_unit)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, vm.names.smallestUnit.as_string());
-    }
-
-    // 5. Return smallestUnit.
-    return smallest_unit;
-}
-
-// 13.18 ToTemporalDurationTotalUnit ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationtotalunit
-ThrowCompletionOr<String> to_temporal_duration_total_unit(GlobalObject& global_object, Object const& normalized_options)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Let unit be ? GetOption(normalizedOptions, "unit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », undefined).
-    auto unit_value = TRY(get_option(global_object, normalized_options, vm.names.unit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_undefined()));
-
-    // 2. If unit is undefined, then
-    if (unit_value.is_undefined()) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IsUndefined, "unit option value"sv);
-    }
-
-    auto unit = unit_value.as_string().string();
-
-    // 3. If unit is in the Plural column of Table 12, then
-    if (auto singular_unit = plural_to_singular_units.get(unit); singular_unit.has_value()) {
-        // a. Set unit to the corresponding Singular value of the same row.
-        unit = *singular_unit;
-    }
-
-    // 4. Return unit.
-    return unit;
-}
-
-// 13.20 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
+// 13.17 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -746,95 +746,28 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
     return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
-// 13.21 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange
-ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject& global_object, StringView largest_unit, StringView smallest_unit)
-{
-    auto& vm = global_object.vm();
-
-    // 1. If smallestUnit is "year" and largestUnit is not "year", then
-    if (smallest_unit == "year"sv && largest_unit != "year"sv) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 2. If smallestUnit is "month" and largestUnit is not "year" or "month", then
-    if (smallest_unit == "month"sv && !largest_unit.is_one_of("year"sv, "month"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 3. If smallestUnit is "week" and largestUnit is not one of "year", "month", or "week", then
-    if (smallest_unit == "week"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 4. If smallestUnit is "day" and largestUnit is not one of "year", "month", "week", or "day", then
-    if (smallest_unit == "day"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 5. If smallestUnit is "hour" and largestUnit is not one of "year", "month", "week", "day", or "hour", then
-    if (smallest_unit == "hour"sv && !largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv, "hour"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 6. If smallestUnit is "minute" and largestUnit is "second", "millisecond", "microsecond", or "nanosecond", then
-    if (smallest_unit == "minute"sv && largest_unit.is_one_of("second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 7. If smallestUnit is "second" and largestUnit is "millisecond", "microsecond", or "nanosecond", then
-    if (smallest_unit == "second"sv && largest_unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 8. If smallestUnit is "millisecond" and largestUnit is "microsecond" or "nanosecond", then
-    if (smallest_unit == "millisecond"sv && largest_unit.is_one_of("microsecond"sv, "nanosecond"sv)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-    // 9. If smallestUnit is "microsecond" and largestUnit is "nanosecond", then
-    if (smallest_unit == "microsecond"sv && largest_unit == "nanosecond"sv) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, smallest_unit, largest_unit);
-    }
-
-    return {};
-}
-
-// 13.22 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
+// 13.18 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
 StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 {
-    // 1. If either u1 or u2 is "year", return "year".
-    if (unit1 == "year"sv || unit2 == "year"sv)
-        return "year"sv;
-    // 2. If either u1 or u2 is "month", return "month".
-    if (unit1 == "month"sv || unit2 == "month"sv)
-        return "month"sv;
-    // 3. If either u1 or u2 is "week", return "week".
-    if (unit1 == "week"sv || unit2 == "week"sv)
-        return "week"sv;
-    // 4. If either u1 or u2 is "day", return "day".
-    if (unit1 == "day"sv || unit2 == "day"sv)
-        return "day"sv;
-    // 5. If either u1 or u2 is "hour", return "hour".
-    if (unit1 == "hour"sv || unit2 == "hour"sv)
-        return "hour"sv;
-    // 6. If either u1 or u2 is "minute", return "minute".
-    if (unit1 == "minute"sv || unit2 == "minute"sv)
-        return "minute"sv;
-    // 7. If either u1 or u2 is "second", return "second".
-    if (unit1 == "second"sv || unit2 == "second"sv)
-        return "second"sv;
-    // 8. If either u1 or u2 is "millisecond", return "millisecond".
-    if (unit1 == "millisecond"sv || unit2 == "millisecond"sv)
-        return "millisecond"sv;
-    // 9. If either u1 or u2 is "microsecond", return "microsecond".
-    if (unit1 == "microsecond"sv || unit2 == "microsecond"sv)
-        return "microsecond"sv;
-    // 10. Return "nanosecond".
-    return "nanosecond"sv;
+    // 1. Assert: Both u1 and u2 are listed in the Singular column of Table 13.
+
+    // 2. For each row of Table 13, except the header row, in table order, do
+    for (auto const& row : temporal_units) {
+        // a. Let unit be the value in the Singular column of the row.
+        auto unit = row.singular;
+
+        // b. If SameValue(u1, unit) is true, return unit.
+        if (unit1 == unit)
+            return unit;
+
+        // c. If SameValue(u2, unit) is true, return unit.
+        if (unit2 == unit)
+            return unit;
+    }
+    VERIFY_NOT_REACHED();
 }
 
-// 13.23 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
+// 13.19 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
 ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object, Object const* options, String largest_unit)
 {
     auto& vm = global_object.vm();
@@ -867,7 +800,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object
     return merged;
 }
 
-// 13.24 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
+// 13.20 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
 {
     // 1. If unit is "year", "month", "week", or "day", then
@@ -895,7 +828,7 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
     return 1000;
 }
 
-// 13.25 RejectObjectWithCalendarOrTimeZone ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejectobjectwithcalendarortimezone
+// 13.21 RejectObjectWithCalendarOrTimeZone ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejectobjectwithcalendarortimezone
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& global_object, Object& object)
 {
     auto& vm = global_object.vm();
@@ -929,7 +862,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
     return {};
 }
 
-// 13.26 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
+// 13.22 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: second, millisecond, microsecond and nanosecond are integers.
@@ -979,7 +912,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     return String::formatted("{}.{}", seconds_string, fraction_string);
 }
 
-// 13.28 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
+// 13.24 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative)
 {
     // 1. If isNegative is true, return the specification type in the third column of Table 14 where the first column is roundingMode and the second column is "negative".
@@ -1033,7 +966,7 @@ UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool i
 // it uses mathematical values which can be arbitrarily (but not infinitely) large.
 // Incidentally V8's Temporal implementation does the same :^)
 
-// 13.29 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+// 13.25 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
 double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
     // 1. If x is equal to r1, return r1.
@@ -1093,7 +1026,7 @@ double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<Uns
     return r2;
 }
 
-// 13.29 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+// 13.25 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
 Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const& x, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode, Crypto::UnsignedBigInteger const& increment)
 {
     // 1. If x is equal to r1, return r1.
@@ -1153,7 +1086,7 @@ Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResu
     return r2;
 }
 
-// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.26 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 double round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 {
     VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
@@ -1199,7 +1132,7 @@ double round_number_to_increment(double x, u64 increment, StringView rounding_mo
     return rounded * static_cast<double>(increment);
 }
 
-// 13.30 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.26 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
 {
     VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
@@ -1254,7 +1187,7 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
     return rounded.multiplied_by(increment_big_int);
 }
 
-// 13.32 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
+// 13.28 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, ParseResult const& parse_result)
 {
     auto& vm = global_object.vm();
@@ -1401,7 +1334,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .calendar = move(calendar_val) };
 }
 
-// 13.33 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
+// 13.29 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1433,7 +1366,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     return TemporalInstant { .year = result.year, .month = result.month, .day = result.day, .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .time_zone_offset = move(offset_string) };
 }
 
-// 13.34 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
+// 13.30 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1455,7 +1388,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = move(time_zone_result) };
 }
 
-// 13.35 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
+// 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1480,7 +1413,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     return id.value();
 }
 
-// 13.36 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
+// 13.32 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, String const& iso_string)
 {
     // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
@@ -1490,7 +1423,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
     return TemporalDate { .year = parts.year, .month = parts.month, .day = parts.day, .calendar = move(parts.calendar) };
 }
 
-// 13.37 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
+// 13.33 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1510,7 +1443,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
     return parse_iso_date_time(global_object, *parse_result);
 }
 
-// 13.38 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
+// 13.34 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1650,7 +1583,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     return create_duration_record(global_object, years * factor, months * factor, weeks * factor, days * factor, hours * factor, floor(minutes) * factor, floor(seconds) * factor, floor(milliseconds) * factor, floor(microseconds) * factor, floor(nanoseconds) * factor);
 }
 
-// 13.39 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
+// 13.35 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1682,7 +1615,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
     return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.40 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
+// 13.36 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1727,7 +1660,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset_string = move(offset_string), .name = move(time_zone) } };
 }
 
-// 13.41 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
+// 13.37 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1750,7 +1683,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
-// 13.42 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
+// 13.38 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1789,7 +1722,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
 }
 
-// 13.43 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
+// 13.39 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1812,7 +1745,7 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.44 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
+// 13.40 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
 ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
@@ -1830,7 +1763,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
     return integer;
 }
 
-// 13.47 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
@@ -1879,7 +1812,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     return result;
 }
 
-// 13.48 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
+// 13.44 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
 ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
 {
     auto& vm = global_object.vm();
@@ -1924,5 +1857,4 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
     // 5. Return result.
     return result;
 }
-
 }
