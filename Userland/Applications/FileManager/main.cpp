@@ -526,8 +526,11 @@ ErrorOr<int> run_in_desktop_mode()
 
 ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& entry_focused_on_init)
 {
+    auto icon = GUI::FileIconProvider::icon_for_path(initial_location);
+    auto* bitmap = icon.bitmap_for_size(16);
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("File Manager");
+    window->set_icon(bitmap);
+    window->set_title(String::formatted("{} - File Manager", initial_location));
 
     auto left = Config::read_i32("FileManager", "Window", "Left", 150);
     auto top = Config::read_i32("FileManager", "Window", "Top", 75);
