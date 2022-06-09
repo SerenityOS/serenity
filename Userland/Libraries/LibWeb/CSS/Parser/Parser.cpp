@@ -3012,9 +3012,142 @@ RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& componen
     return {};
 }
 
+Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const& component_values)
+{
+    Token params[4];
+    bool legacy_syntax = false;
+    auto tokens = TokenStream { component_values };
+
+    tokens.skip_whitespace();
+    auto& component1 = tokens.next_token();
+
+    if (!component1.is(Token::Type::Number)
+        && !component1.is(Token::Type::Percentage)
+        && !component1.is(Token::Type::Dimension))
+        return {};
+    params[0] = component1.token();
+
+    tokens.skip_whitespace();
+    if (tokens.peek_token().is(Token::Type::Comma)) {
+        legacy_syntax = true;
+        tokens.next_token();
+    }
+
+    tokens.skip_whitespace();
+    auto& component2 = tokens.next_token();
+    if (!component2.is(Token::Type::Number) && !component2.is(Token::Type::Percentage))
+        return {};
+    params[1] = component2.token();
+
+    tokens.skip_whitespace();
+    if (legacy_syntax && !tokens.next_token().is(Token::Type::Comma))
+        return {};
+
+    tokens.skip_whitespace();
+    auto& component3 = tokens.next_token();
+    if (!component3.is(Token::Type::Number) && !component3.is(Token::Type::Percentage))
+        return {};
+    params[2] = component3.token();
+
+    tokens.skip_whitespace();
+    auto& alpha_separator = tokens.peek_token();
+    bool has_comma = alpha_separator.is(Token::Type::Comma);
+    bool has_slash = alpha_separator.is(Token::Type::Delim) && alpha_separator.token().delim() == '/';
+    if (legacy_syntax ? has_comma : has_slash) {
+        tokens.next_token();
+
+        tokens.skip_whitespace();
+        auto& component4 = tokens.next_token();
+        if (!component4.is(Token::Type::Number) && !component4.is(Token::Type::Percentage))
+            return {};
+        params[3] = component4.token();
+    }
+
+    tokens.skip_whitespace();
+    if (tokens.has_next_token())
+        return {};
+
+    if (function_name.equals_ignoring_case("rgb"sv)
+        || function_name.equals_ignoring_case("rgba"sv)) {
+
+        // https://www.w3.org/TR/css-color-4/#rgb-functions
+
+        u8 a_val = 255;
+        if (params[3].is(Token::Type::Number))
+            a_val = clamp(lroundf(params[3].number_value() * 255.0f), 0, 255);
+        else if (params[3].is(Token::Type::Percentage))
+            a_val = clamp(lroundf(params[3].percentage() * 2.55f), 0, 255);
+
+        if (params[0].is(Token::Type::Number)
+            && params[1].is(Token::Type::Number)
+            && params[2].is(Token::Type::Number)) {
+
+            u8 r_val = clamp(llround(params[0].number_value()), 0, 255);
+            u8 g_val = clamp(llround(params[1].number_value()), 0, 255);
+            u8 b_val = clamp(llround(params[2].number_value()), 0, 255);
+
+            return Color(r_val, g_val, b_val, a_val);
+        }
+
+        if (params[0].is(Token::Type::Percentage)
+            && params[1].is(Token::Type::Percentage)
+            && params[2].is(Token::Type::Percentage)) {
+
+            u8 r_val = lroundf(clamp(params[0].percentage() * 2.55f, 0, 255));
+            u8 g_val = lroundf(clamp(params[1].percentage() * 2.55f, 0, 255));
+            u8 b_val = lroundf(clamp(params[2].percentage() * 2.55f, 0, 255));
+
+            return Color(r_val, g_val, b_val, a_val);
+        }
+    } else if (function_name.equals_ignoring_case("hsl"sv)
+        || function_name.equals_ignoring_case("hsla"sv)) {
+
+        // https://www.w3.org/TR/css-color-4/#the-hsl-notation
+
+        float a_val = 1.0f;
+        if (params[3].is(Token::Type::Number))
+            a_val = params[3].number_value();
+        else if (params[3].is(Token::Type::Percentage))
+            a_val = params[3].percentage() / 100.0f;
+
+        if (params[0].is(Token::Type::Dimension)
+            && params[1].is(Token::Type::Percentage)
+            && params[2].is(Token::Type::Percentage)) {
+
+            float numeric_value = params[0].dimension_value();
+            auto unit_string = params[0].dimension_unit();
+            auto angle_type = Angle::unit_from_name(unit_string);
+
+            if (!angle_type.has_value())
+                return {};
+
+            auto angle = Angle { numeric_value, angle_type.release_value() };
+
+            float h_val = fmodf(angle.to_degrees(), 360.0f);
+            float s_val = params[1].percentage() / 100.0f;
+            float l_val = params[2].percentage() / 100.0f;
+
+            return Color::from_hsla(h_val, s_val, l_val, a_val);
+        }
+
+        if (params[0].is(Token::Type::Number)
+            && params[1].is(Token::Type::Percentage)
+            && params[2].is(Token::Type::Percentage)) {
+
+            float h_val = fmodf(params[0].number_value(), 360.0f);
+            float s_val = params[1].percentage() / 100.0f;
+            float l_val = params[2].percentage() / 100.0f;
+
+            return Color::from_hsla(h_val, s_val, l_val, a_val);
+        }
+    }
+
+    return {};
+}
+
 Optional<Color> Parser::parse_color(ComponentValue const& component_value)
 {
-    // https://www.w3.org/TR/css-color-3/
+    // https://www.w3.org/TR/css-color-4/
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
 
@@ -3032,130 +3165,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
         auto& function = component_value.function();
         auto& values = function.values();
 
-        Vector<Token> params;
-        for (size_t i = 0; i < values.size(); ++i) {
-            auto& value = values.at(i);
-            if (value.is(Token::Type::Whitespace))
-                continue;
-
-            if (value.is(Token::Type::Percentage) || value.is(Token::Type::Number)) {
-                params.append(value.token());
-                // Eat following comma and whitespace
-                while ((i + 1) < values.size()) {
-                    auto& next = values.at(i + 1);
-                    if (next.is(Token::Type::Whitespace))
-                        i++;
-                    else if (next.is(Token::Type::Comma))
-                        break;
-
-                    return {};
-                }
-            }
-        }
-
-        if (function.name().equals_ignoring_case("rgb")) {
-            if (params.size() != 3)
-                return {};
-
-            auto r_val = params[0];
-            auto g_val = params[1];
-            auto b_val = params[2];
-
-            if (r_val.is(Token::Type::Number) && r_val.number().is_integer()
-                && g_val.is(Token::Type::Number) && g_val.number().is_integer()
-                && b_val.is(Token::Type::Number) && b_val.number().is_integer()) {
-
-                auto r = r_val.to_integer();
-                auto g = g_val.to_integer();
-                auto b = b_val.to_integer();
-                if (AK::is_within_range<u8>(r) && AK::is_within_range<u8>(g) && AK::is_within_range<u8>(b))
-                    return Color(r, g, b);
-
-            } else if (r_val.is(Token::Type::Percentage)
-                && g_val.is(Token::Type::Percentage)
-                && b_val.is(Token::Type::Percentage)) {
-
-                u8 r = clamp(lroundf(r_val.percentage() * 2.55f), 0, 255);
-                u8 g = clamp(lroundf(g_val.percentage() * 2.55f), 0, 255);
-                u8 b = clamp(lroundf(b_val.percentage() * 2.55f), 0, 255);
-                return Color(r, g, b);
-            }
-        } else if (function.name().equals_ignoring_case("rgba")) {
-            if (params.size() != 4)
-                return {};
-
-            auto r_val = params[0];
-            auto g_val = params[1];
-            auto b_val = params[2];
-            auto a_val = params[3];
-
-            if (r_val.is(Token::Type::Number) && r_val.number().is_integer()
-                && g_val.is(Token::Type::Number) && g_val.number().is_integer()
-                && b_val.is(Token::Type::Number) && b_val.number().is_integer()
-                && a_val.is(Token::Type::Number)) {
-
-                auto r = r_val.to_integer();
-                auto g = g_val.to_integer();
-                auto b = b_val.to_integer();
-                auto a = clamp(lroundf(a_val.number_value() * 255.0f), 0, 255);
-                if (AK::is_within_range<u8>(r) && AK::is_within_range<u8>(g) && AK::is_within_range<u8>(b))
-                    return Color(r, g, b, a);
-
-            } else if (r_val.is(Token::Type::Percentage)
-                && g_val.is(Token::Type::Percentage)
-                && b_val.is(Token::Type::Percentage)
-                && a_val.is(Token::Type::Number)) {
-
-                auto r = r_val.percentage();
-                auto g = g_val.percentage();
-                auto b = b_val.percentage();
-                auto a = a_val.number_value();
-
-                u8 r_255 = clamp(lroundf(r * 2.55f), 0, 255);
-                u8 g_255 = clamp(lroundf(g * 2.55f), 0, 255);
-                u8 b_255 = clamp(lroundf(b * 2.55f), 0, 255);
-                u8 a_255 = clamp(lroundf(a * 255.0f), 0, 255);
-                return Color(r_255, g_255, b_255, a_255);
-            }
-        } else if (function.name().equals_ignoring_case("hsl")) {
-            if (params.size() != 3)
-                return {};
-
-            auto h_val = params[0];
-            auto s_val = params[1];
-            auto l_val = params[2];
-
-            if (h_val.is(Token::Type::Number)
-                && s_val.is(Token::Type::Percentage)
-                && l_val.is(Token::Type::Percentage)) {
-
-                auto h = h_val.number_value();
-                auto s = s_val.percentage() / 100.0f;
-                auto l = l_val.percentage() / 100.0f;
-                return Color::from_hsl(h, s, l);
-            }
-        } else if (function.name().equals_ignoring_case("hsla")) {
-            if (params.size() != 4)
-                return {};
-
-            auto h_val = params[0];
-            auto s_val = params[1];
-            auto l_val = params[2];
-            auto a_val = params[3];
-
-            if (h_val.is(Token::Type::Number)
-                && s_val.is(Token::Type::Percentage)
-                && l_val.is(Token::Type::Percentage)
-                && a_val.is(Token::Type::Number)) {
-
-                auto h = h_val.number_value();
-                auto s = s_val.percentage() / 100.0f;
-                auto l = l_val.percentage() / 100.0f;
-                auto a = a_val.number_value();
-                return Color::from_hsla(h, s, l, a);
-            }
-        }
-        return {};
+        return parse_rgb_or_hsl_color(function.name(), values);
     }
 
     // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
