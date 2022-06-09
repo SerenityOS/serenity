@@ -286,6 +286,8 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
 // 8.5.10 DifferenceTemporalInstant ( operation, instant, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant
 ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject& global_object, DifferenceOperation operation, Instant const& instant, Value other_value, Value options_value)
 {
+    auto& vm = global_object.vm();
+
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
 
@@ -295,42 +297,47 @@ ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject& global_ob
     // 3. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, options_value));
 
-    // 4. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
+    // 4. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", time, "nanosecond").
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::Time, { "nanosecond"sv }));
 
     // 5. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
-    // 6. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, default_largest_unit));
+    // 6. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", time, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::Time, { "auto"sv }));
 
-    // 7. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 7. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
+    if (largest_unit == "auto"sv)
+        largest_unit = default_largest_unit;
 
-    // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    // 8. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+
+    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 9. If operation is since, then
+    // 10. If operation is since, then
     if (operation == DifferenceOperation::Since) {
         // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
         rounding_mode = negate_temporal_rounding_mode(rounding_mode);
     }
 
-    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
 
-    // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
+    // 13. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto* rounded_ns = difference_instant(global_object, instant.nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
-    // 13. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 2 × nsMaxInstant.
+    // 14. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 2 × nsMaxInstant.
 
-    // 14. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
+    // 15. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
     auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), *largest_unit));
 
-    // 15. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+    // 16. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 

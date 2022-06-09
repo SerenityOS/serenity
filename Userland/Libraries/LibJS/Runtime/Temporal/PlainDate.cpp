@@ -510,20 +510,22 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
     // 4. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, options_value));
 
-    // 5. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
-    auto disallowed_units = Vector<StringView> { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
+    // 5. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", date, "day").
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::Date, { "day"sv }));
 
-    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
-
-    // 7. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
-    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
+    // 7. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", date, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::Date, { "auto"sv }));
 
-    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 8. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
+    if (largest_unit == "auto"sv)
+        largest_unit = default_largest_unit;
+
+    // 9. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));

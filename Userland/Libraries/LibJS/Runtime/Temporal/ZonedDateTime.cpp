@@ -557,34 +557,39 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
     // 4. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, options_value));
 
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));
+    // 5. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", datetime, "nanosecond").
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::DateTime, { "nanosecond"sv }));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("hour", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("hour"sv, *smallest_unit);
 
-    // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
+    // 7. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", datetime, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::DateTime, { "auto"sv }));
 
-    // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 8. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
+    if (largest_unit == "auto"sv)
+        largest_unit = default_largest_unit;
 
-    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    // 9. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+
+    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 10. If operation is since, then
+    // 11. If operation is since, then
     if (operation == DifferenceOperation::Since) {
         // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
         rounding_mode = negate_temporal_rounding_mode(rounding_mode);
     }
 
-    // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    // 12. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
 
-    // 13. If largestUnit is not one of "year", "month", "week", or "day", then
+    // 14. If largestUnit is not one of "year", "month", "week", or "day", then
     if (!largest_unit->is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let differenceNs be ! DifferenceInstant(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
         auto* difference_ns = difference_instant(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
@@ -598,25 +603,25 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
         return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, sign * balance_result.hours, sign * balance_result.minutes, sign * balance_result.seconds, sign * balance_result.milliseconds, sign * balance_result.microseconds, sign * balance_result.nanoseconds));
     }
 
-    // 14. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, then
+    // 15. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, then
     if (!TRY(time_zone_equals(global_object, zoned_date_time.time_zone(), other->time_zone()))) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentTimeZones);
     }
 
-    // 15. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    // 16. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
 
-    // 16. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], largestUnit, untilOptions).
+    // 17. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], largestUnit, untilOptions).
     auto difference = TRY(difference_zoned_date_time(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), zoned_date_time.time_zone(), zoned_date_time.calendar(), *largest_unit, until_options));
 
-    // 17. Let roundResult be (? RoundDuration(difference.[[Years]], difference.[[Months]], difference.[[Weeks]], difference.[[Days]], difference.[[Hours]], difference.[[Minutes]], difference.[[Seconds]], difference.[[Milliseconds]], difference.[[Microseconds]], difference.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, zonedDateTime)).[[DurationRecord]].
+    // 18. Let roundResult be (? RoundDuration(difference.[[Years]], difference.[[Months]], difference.[[Weeks]], difference.[[Days]], difference.[[Hours]], difference.[[Minutes]], difference.[[Seconds]], difference.[[Milliseconds]], difference.[[Microseconds]], difference.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, zonedDateTime)).[[DurationRecord]].
     auto round_result = TRY(round_duration(global_object, difference.years, difference.months, difference.weeks, difference.days, difference.hours, difference.minutes, difference.seconds, difference.milliseconds, difference.microseconds, difference.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, &zoned_date_time)).duration_record;
 
-    // 18. Let result be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, zonedDateTime).
+    // 19. Let result be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, zonedDateTime).
     auto result = TRY(adjust_rounded_duration_days(global_object, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, &zoned_date_time));
 
-    // 19. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+    // 20. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(global_object, sign * result.years, sign * result.months, sign * result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 
