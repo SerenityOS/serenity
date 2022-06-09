@@ -577,8 +577,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
     // 5. Set additionalFields to ? ToObject(additionalFields).
     auto* additional_fields = TRY(vm.argument(1).to_object(global_object));
 
-    // 6. Return ? DefaultMergeFields(fields, additionalFields).
-    return TRY(default_merge_fields(global_object, *fields, *additional_fields));
+    // 6. Return ? DefaultMergeCalendarFields(fields, additionalFields).
+    return TRY(default_merge_calendar_fields(global_object, *fields, *additional_fields));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring

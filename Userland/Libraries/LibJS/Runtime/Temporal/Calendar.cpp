@@ -132,8 +132,8 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 
     // 2. If mergeFields is undefined, then
     if (!merge_fields) {
-        // a. Return ? DefaultMergeFields(fields, additionalFields).
-        return TRY(default_merge_fields(global_object, fields, additional_fields));
+        // a. Return ? DefaultMergeCalendarFields(fields, additionalFields).
+        return TRY(default_merge_calendar_fields(global_object, fields, additional_fields));
     }
 
     // 3. Let result be ? Call(mergeFields, calendar, « fields, additionalFields »).
@@ -910,8 +910,8 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.40 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
-ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
+// 12.2.40 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
+ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();
 
