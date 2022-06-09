@@ -33,6 +33,8 @@ private:
 
     void spawn(int socket_fd = -1);
 
+    ErrorOr<void> determine_account(int fd);
+
     /// SocketDescriptor describes the details of a single socket that was
     /// requested by a service.
     struct SocketDescriptor {

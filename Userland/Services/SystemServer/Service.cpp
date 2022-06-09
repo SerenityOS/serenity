@@ -98,6 +98,8 @@ void Service::handle_socket_connection()
         }
 
         int accepted_fd = maybe_accepted_fd.release_value();
+        // FIXME: Propagate errors
+        MUST(determine_account(accepted_fd));
         spawn(accepted_fd);
         close(accepted_fd);
     } else {
@@ -400,4 +402,17 @@ bool Service::is_enabled() const
 {
     extern String g_system_mode;
     return m_system_modes.contains_slow(g_system_mode);
+}
+
+ErrorOr<void> Service::determine_account(int fd)
+{
+    struct ucred creds = {};
+    socklen_t creds_size = sizeof(creds);
+    TRY(Core::System::getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
+
+    auto const directory_name = String::formatted("/proc/{}/", creds.pid);
+    auto const stat = TRY(Core::System::stat(directory_name.characters()));
+
+    m_account = TRY(Core::Account::from_uid(stat.st_uid));
+    return {};
 }
