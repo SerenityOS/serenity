@@ -7,13 +7,14 @@ For whatever reason, our progress count for HTTP downloads stays at 0.
 This results in the engine calculating a NaN progress value many times
 each frame, which results in a significant performance hit.
 ---
- xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c | 2 +-
+ engine/common/net_ws.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
---- a/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
-+++ b/xash3d-fwgs-5402e1a2597c40c603bd0f2b1a9cd6a16506ec84/engine/common/net_ws.c
-@@ -2280,7 +2280,7 @@
+diff --git a/engine/common/net_ws.c b/engine/common/net_ws.c
+index ef403b3..8b491ba 100644
+--- a/engine/common/net_ws.c
++++ b/engine/common/net_ws.c
+@@ -2280,7 +2280,7 @@ void HTTP_Run( void )
  	}
  
  	// update progress

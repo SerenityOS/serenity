@@ -6,14 +6,14 @@ Subject: [PATCH] Build: Add SerenityOS to list of compatible systems
 This is required by the build system to spit out a library with
 the correct name/platform.
 ---
- hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/public/build.h                     | 4 ++++
- hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/scripts/waifulib/library_naming.py | 3 +++
+ public/build.h                     | 4 ++++
+ scripts/waifulib/library_naming.py | 3 +++
  2 files changed, 7 insertions(+)
 
-diff --git a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/public/build.h b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/public/build.h
-index 3692cf175..5b6bcc362 100644
---- a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/public/build.h
-+++ b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/public/build.h
+diff --git a/public/build.h b/public/build.h
+index 3692cf1..5b6bcc3 100644
+--- a/public/build.h
++++ b/public/build.h
 @@ -75,6 +75,7 @@ For more information, please refer to <http://unlicense.org/>
  #undef XASH_RISCV_DOUBLEFP
  #undef XASH_RISCV_SINGLEFP
@@ -32,11 +32,11 @@ index 3692cf175..5b6bcc362 100644
  #else
  #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
  #endif
-diff --git a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/scripts/waifulib/library_naming.py b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/scripts/waifulib/library_naming.py
-index a3929067f..44ade2fd2 100644
---- a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/scripts/waifulib/library_naming.py
-+++ b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/scripts/waifulib/library_naming.py
-@@ -57,6 +57,7 @@
+diff --git a/scripts/waifulib/library_naming.py b/scripts/waifulib/library_naming.py
+index a392906..44ade2f 100644
+--- a/scripts/waifulib/library_naming.py
++++ b/scripts/waifulib/library_naming.py
+@@ -57,6 +57,7 @@ DEFINES = [
  'XASH_RISCV_DOUBLEFP',
  'XASH_RISCV_SINGLEFP',
  'XASH_RISCV_SOFTFP',

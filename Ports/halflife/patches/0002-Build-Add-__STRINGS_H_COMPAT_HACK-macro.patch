@@ -6,13 +6,13 @@ Subject: [PATCH] Build: Add `__STRINGS_H_COMPAT_HACK` macro
 This bypasses a bunch of `str[n]cmpcase` errors that occur due to weird
 LibC compatibility problems.
 ---
- hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/wscript | 2 +-
+ wscript | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/wscript b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/wscript
-index 336e8d34f..684c575a5 100644
---- a/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/wscript
-+++ b/hlsdk-xash3d-808be9442f60b4388f68fcef8b2659d0cd6db17b/wscript
+diff --git a/wscript b/wscript
+index 336e8d3..684c575 100644
+--- a/wscript
++++ b/wscript
 @@ -171,7 +171,7 @@ def configure(conf):
  	elif conf.env.COMPILER_CC == 'owcc':
  		pass
