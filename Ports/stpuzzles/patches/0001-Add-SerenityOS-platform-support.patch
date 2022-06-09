@@ -17,7 +17,7 @@ Co-Authored-By: Egor Ananyin <ananinegor@gmail.com>
  create mode 100644 serenity.cpp
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4b103a3..fdad941 100644
+index 9e8d96f..1dfc66d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,14 +1,14 @@
@@ -133,7 +133,7 @@ index 0000000..7eca457
 +function(build_platform_extras)
 +endfunction()
 diff --git a/cmake/setup.cmake b/cmake/setup.cmake
-index 26eb74d..e85a437 100644
+index e8e0309..86b82b4 100644
 --- a/cmake/setup.cmake
 +++ b/cmake/setup.cmake
 @@ -22,6 +22,8 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "NestedVM")
@@ -146,7 +146,7 @@ index 26eb74d..e85a437 100644
    include(cmake/platforms/unix.cmake)
  endif()
 diff --git a/puzzles.h b/puzzles.h
-index fd3f67f..337bd57 100644
+index f0a7e99..7bcc1e7 100644
 --- a/puzzles.h
 +++ b/puzzles.h
 @@ -5,6 +5,10 @@
@@ -171,7 +171,7 @@ index fd3f67f..337bd57 100644
  #endif /* PUZZLES_PUZZLES_H */
 diff --git a/serenity.cpp b/serenity.cpp
 new file mode 100644
-index 0000000..52bf74c
+index 0000000..23fa1b2
 --- /dev/null
 +++ b/serenity.cpp
 @@ -0,0 +1,532 @@
@@ -198,7 +198,7 @@ index 0000000..52bf74c
 +void draw_rect(void *handle, int x, int y, int w, int h, int colour);
 +void draw_line(void *handle, int x1, int y1, int x2, int y2,
 +            int colour);
-+void draw_polygon(void *handle, int *coords, int npoints,
++void draw_polygon(void *handle, const int *coords, int npoints,
 +            int fillcolour, int outlinecolour);
 +void draw_circle(void *handle, int cx, int cy, int radius,
 +        int fillcolour, int outlinecolour);
@@ -340,7 +340,7 @@ index 0000000..52bf74c
 +        m_painter->draw_text(rect, text_view, Gfx::TextAlignment::Center, get_color(colour));
 +    }
 +
-+    void draw_polygon(int *coords, int npoints,
++    void draw_polygon(const int *coords, int npoints,
 +            int fillcolour, int outlinecolour) {
 +        VERIFY(outlinecolour != -1);
 +        Gfx::Path polygon;
@@ -556,7 +556,7 @@ index 0000000..52bf74c
 +    ((Frontend*)handle)->draw_line(x1, y1, x2, y2, colour);
 +}
 +
-+void draw_polygon(void *handle, int *coords, int npoints,
++void draw_polygon(void *handle, const int *coords, int npoints,
 +            int fillcolour, int outlinecolour) {
 +    ((Frontend*)handle)->draw_polygon(coords, npoints, fillcolour, outlinecolour);
 +}
