@@ -63,6 +63,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     constants_menu.add_action(GUI::Action::create("&Euler's Constant", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/eulers.png")), [&](auto&) {
         widget->set_entry(KeypadValue { 27182818284, 10 });
     }));
+    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png")), [&](auto&) {
+        widget->set_entry(KeypadValue { 16180339887, 10 });
+    }));
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
