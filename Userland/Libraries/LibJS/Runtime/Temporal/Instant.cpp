@@ -337,16 +337,34 @@ ThrowCompletionOr<Duration*> difference_temporal_instant(GlobalObject& global_ob
 // 8.5.11 AddDurationToOrSubtractDurationFromInstant ( operation, instant, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfrominstant
 ThrowCompletionOr<Instant*> add_duration_to_or_subtract_duration_from_instant(GlobalObject& global_object, ArithmeticOperation operation, Instant const& instant, Value temporal_duration_like)
 {
+    auto& vm = global_object.vm();
+
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
 
-    // 2. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
+    // 2. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
 
-    // 3. Let ns be ? AddInstant(instant.[[Nanoseconds]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]]).
+    // 3. If duration.[[Days]] is not 0, throw a RangeError exception.
+    if (duration.days != 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "days", duration.days);
+
+    // 4. If duration.[[Months]] is not 0, throw a RangeError exception.
+    if (duration.months != 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "months", duration.months);
+
+    // 5. If duration.[[Weeks]] is not 0, throw a RangeError exception.
+    if (duration.weeks != 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "weeks", duration.weeks);
+
+    // 6. If duration.[[Years]] is not 0, throw a RangeError exception.
+    if (duration.years != 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "years", duration.years);
+
+    // 7. Let ns be ? AddInstant(instant.[[Nanoseconds]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]]).
     auto* ns = TRY(add_instant(global_object, instant.nanoseconds(), sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds));
 
-    // 4. Return ! CreateTemporalInstant(ns).
+    // 8. Return ! CreateTemporalInstant(ns).
     return MUST(create_temporal_instant(global_object, *ns));
 }
 
