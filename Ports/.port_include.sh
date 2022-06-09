@@ -407,10 +407,10 @@ func_defined patch_internal || patch_internal() {
     # patch if it was not yet patched (applying patches multiple times doesn't work!)
     if [ -z "${IN_SERENITY_PORT_DEV:-}" ] && [ -d patches ]; then
         for filepath in patches/*.patch; do
-            filename=$(basename $filepath)
-            if [ ! -f "$workdir"/.${filename}_applied ]; then
-                run patch -p"$patchlevel" < "$filepath"
-                run touch .${filename}_applied
+            filename="$(basename \"${filepath}\")"
+            if [ ! -f "${workdir}/.${filename}_applied" ]; then
+                run git apply --directory="Ports/${port}/${workdir}" -vp"${patchlevel}" < "${filepath}"
+                run touch ".${filename}_applied"
             fi
         done
     fi
