@@ -16,6 +16,7 @@
 #include <LibGfx/StylePainter.h>
 
 REGISTER_WIDGET(GUI, Button)
+REGISTER_WIDGET(GUI, DialogButton)
 
 namespace GUI {
 
