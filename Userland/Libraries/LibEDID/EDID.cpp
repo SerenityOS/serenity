@@ -10,7 +10,7 @@
 
 #ifndef KERNEL
 #    include <AK/ScopeGuard.h>
-#    include <Kernel/API/FB.h>
+#    include <Kernel/API/Graphics.h>
 #    include <fcntl.h>
 #    include <unistd.h>
 
