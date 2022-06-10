@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (auto user_id = user_str.to_uint(); user_id.has_value())
             account = TRY(Core::Account::from_uid(user_id.value(), Core::Account::Read::PasswdOnly));
         else
-            account = TRY(Core::Account::from_name(user_str.characters(), Core::Account::Read::PasswdOnly));
+            account = TRY(Core::Account::from_name(user_str, Core::Account::Read::PasswdOnly));
     } else {
         account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
     }

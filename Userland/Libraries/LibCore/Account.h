@@ -32,11 +32,9 @@ public:
         PasswdOnly
     };
 
-    // FIXME: Convert the methods below to take StringViews instead.
-
     static String parse_path_with_uid(StringView general_path, Optional<uid_t> force_uid = {});
     static ErrorOr<Account> self(Read options = Read::All);
-    static ErrorOr<Account> from_name(char const* username, Read options = Read::All);
+    static ErrorOr<Account> from_name(StringView username, Read options = Read::All);
     static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);
 
     bool authenticate(SecretString const& password) const;
@@ -51,11 +49,11 @@ public:
     // You must call sync to apply changes.
     void set_password(SecretString const& password);
     void set_password_enabled(bool enabled);
-    void set_home_directory(char const* home_directory) { m_home_directory = home_directory; }
+    void set_home_directory(StringView home_directory) { m_home_directory = home_directory; }
     void set_uid(uid_t uid) { m_uid = uid; }
     void set_gid(gid_t gid) { m_gid = gid; }
-    void set_shell(char const* shell) { m_shell = shell; }
-    void set_gecos(char const* gecos) { m_gecos = gecos; }
+    void set_shell(StringView shell) { m_shell = shell; }
+    void set_gecos(StringView gecos) { m_gecos = gecos; }
     void delete_password();
 
     // A null password means that this account was missing from /etc/shadow.

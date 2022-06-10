@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // target_account is the account we are changing the password of.
     auto target_account = TRY(!username.is_empty()
-            ? Core::Account::from_name(username.characters())
+            ? Core::Account::from_name(username)
             : Core::Account::from_uid(current_uid));
 
     setpwent();

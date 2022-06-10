@@ -98,9 +98,9 @@ ErrorOr<Account> Account::self([[maybe_unused]] Read options)
     return Account(*pwd, spwd, extra_gids);
 }
 
-ErrorOr<Account> Account::from_name(char const* username, [[maybe_unused]] Read options)
+ErrorOr<Account> Account::from_name(StringView username, [[maybe_unused]] Read options)
 {
-    auto pwd = TRY(Core::System::getpwnam({ username, strlen(username) }));
+    auto pwd = TRY(Core::System::getpwnam(username));
     if (!pwd.has_value())
         return Error::from_string_literal("No such user");
 

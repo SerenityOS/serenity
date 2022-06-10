@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!TRY(Core::System::isatty(STDIN_FILENO)))
         return Error::from_string_literal("Standard input is not a terminal");
 
-    char const* user = nullptr;
+    StringView user;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (geteuid() != 0)
         return Error::from_string_literal("Not running as root :(");
 
-    auto account = TRY(user ? Core::Account::from_name(user) : Core::Account::from_uid(0));
+    auto account = TRY(user.is_empty() ? Core::Account::from_uid(0) : Core::Account::from_name(user));
 
     TRY(Core::System::pledge("stdio tty exec id"));
 
@@ -51,7 +51,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
 
-    execl(account.shell().characters(), account.shell().characters(), nullptr);
-    perror("execl");
+    TRY(Core::System::exec(account.shell(), Array<StringView, 1> { account.shell().view() }, Core::System::SearchInPath::No));
     return 1;
 }
