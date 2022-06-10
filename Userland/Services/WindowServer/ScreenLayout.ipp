@@ -5,7 +5,7 @@
  */
 
 #include <AK/ScopeGuard.h>
-#include <Kernel/API/FB.h>
+#include <Kernel/API/Graphics.h>
 #include <Services/WindowServer/ScreenLayout.h>
 #include <errno.h>
 #include <fcntl.h>
