@@ -235,7 +235,6 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
 {
     TRY(Process::current().require_promise(Pledge::video));
 
-    // TODO: We really should have ioctls for destroying resources as well
     switch (request) {
     case GRAPHICS_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
