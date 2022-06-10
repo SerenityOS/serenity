@@ -232,16 +232,14 @@ void ColorPicker::build_ui()
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
 
-    auto& ok_button = button_container.add<Button>();
-    ok_button.set_fixed_width(80);
+    auto& ok_button = button_container.add<DialogButton>();
     ok_button.set_text("OK");
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
-    auto& cancel_button = button_container.add<Button>();
-    cancel_button.set_fixed_width(80);
+    auto& cancel_button = button_container.add<DialogButton>();
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

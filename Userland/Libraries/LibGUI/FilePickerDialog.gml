@@ -69,10 +69,9 @@
                     fixed_width: 20
                 }
 
-                @GUI::Button {
+                @GUI::DialogButton {
                     name: "ok_button"
                     text: "OK"
-                    fixed_width: 75
                 }
             }
 
@@ -82,10 +81,9 @@
 
                 @GUI::Layout::Spacer {}
 
-                @GUI::Button {
+                @GUI::DialogButton {
                     name: "cancel_button"
                     text: "Cancel"
-                    fixed_width: 75
                 }
             }
         }
