@@ -21,5 +21,6 @@ build() {
 }
 
 install() {
+    export DESTDIR="${SERENITY_INSTALL_ROOT}"
     run meson install -C _build
 }
