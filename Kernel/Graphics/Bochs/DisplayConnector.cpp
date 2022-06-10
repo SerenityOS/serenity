@@ -14,13 +14,16 @@
 
 namespace Kernel {
 
-NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
     auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->initialize_edid_for_generic_monitor());
+    if (virtual_box_hardware)
+        MUST(connector->initialize_edid_for_generic_monitor(Array<u8, 3> { 'V', 'B', 'X' }));
+    else
+        MUST(connector->initialize_edid_for_generic_monitor({}));
     return connector;
 }
 

@@ -112,11 +112,21 @@ void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode m
     }
 }
 
-ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor()
+ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor(Optional<Array<u8, 3>> possible_manufacturer_id_string)
 {
+    u8 raw_manufacturer_id[2] = { 0x0, 0x0 };
+    if (possible_manufacturer_id_string.has_value()) {
+        Array<u8, 3> manufacturer_id_string = possible_manufacturer_id_string.release_value();
+        u8 byte1 = (((static_cast<u8>(manufacturer_id_string[0]) - '@') & 0x1f) << 2) | (((static_cast<u8>(manufacturer_id_string[1]) - '@') >> 3) & 3);
+        u8 byte2 = ((static_cast<u8>(manufacturer_id_string[2]) - '@') & 0x1f) | (((static_cast<u8>(manufacturer_id_string[1]) - '@') << 5) & 0xe0);
+        Array<u8, 2> manufacturer_id_string_packed_bytes = { byte1, byte2 };
+        raw_manufacturer_id[0] = manufacturer_id_string_packed_bytes[1];
+        raw_manufacturer_id[1] = manufacturer_id_string_packed_bytes[0];
+    }
+
     Array<u8, 128> virtual_monitor_edid = {
         0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, /* header */
-        0x0, 0x0,                                       /* manufacturer */
+        raw_manufacturer_id[1], raw_manufacturer_id[0], /* manufacturer */
         0x00, 0x00,                                     /* product code */
         0x00, 0x00, 0x00, 0x00,                         /* serial number goes here */
         0x01,                                           /* week of manufacture */

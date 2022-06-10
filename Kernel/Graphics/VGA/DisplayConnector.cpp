@@ -19,7 +19,7 @@ NonnullRefPtr<GenericDisplayConnector> GenericDisplayConnector::must_create_with
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->initialize_edid_for_generic_monitor());
+    MUST(connector->initialize_edid_for_generic_monitor({}));
     return connector;
 }
 

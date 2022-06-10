@@ -112,7 +112,7 @@ protected:
     virtual ErrorOr<void> flush_first_surface() = 0;
     virtual ErrorOr<void> flush_rectangle(size_t buffer_index, FBRect const& rect);
 
-    ErrorOr<void> initialize_edid_for_generic_monitor();
+    ErrorOr<void> initialize_edid_for_generic_monitor(Optional<Array<u8, 3>> manufacturer_id_string);
 
     mutable Spinlock m_control_lock;
     mutable Mutex m_flushing_lock;
