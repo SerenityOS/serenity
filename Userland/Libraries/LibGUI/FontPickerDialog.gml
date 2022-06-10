@@ -73,16 +73,14 @@
 
         @GUI::Widget {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "ok_button"
             text: "OK"
-            fixed_width: 80
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            fixed_width: 80
         }
     }
 }

@@ -79,8 +79,7 @@ AboutDialog::AboutDialog(StringView name, Gfx::Bitmap const* icon, Window* paren
     button_container.set_fixed_height(22);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
-    auto& ok_button = button_container.add<Button>("OK");
-    ok_button.set_fixed_width(80);
+    auto& ok_button = button_container.add<DialogButton>("OK");
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };

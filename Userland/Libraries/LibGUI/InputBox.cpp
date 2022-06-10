@@ -82,7 +82,7 @@ void InputBox::build(InputType input_type)
     button_container_inner.layout()->set_margins({ 4, 0, 4, 4 });
     button_container_inner.layout()->add_spacer();
 
-    m_ok_button = button_container_inner.add<Button>();
+    m_ok_button = button_container_inner.add<DialogButton>();
     m_ok_button->set_text("OK");
     m_ok_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: OK button clicked");
@@ -91,7 +91,7 @@ void InputBox::build(InputType input_type)
     };
     m_ok_button->set_default(true);
 
-    m_cancel_button = button_container_inner.add<Button>();
+    m_cancel_button = button_container_inner.add<DialogButton>();
     m_cancel_button->set_text("Cancel");
     m_cancel_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: Cancel button clicked");
