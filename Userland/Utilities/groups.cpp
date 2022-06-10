@@ -47,8 +47,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         print_account_gids(account);
     }
 
-    for (auto username : usernames) {
-        auto result = Core::Account::from_name(username.characters(), Core::Account::Read::PasswdOnly);
+    for (auto const& username : usernames) {
+        auto result = Core::Account::from_name(username, Core::Account::Read::PasswdOnly);
         if (result.is_error()) {
             warnln("{} '{}'", result.error(), username);
             continue;

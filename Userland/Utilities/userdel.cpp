@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
 
-    char const* username = nullptr;
+    StringView username;
     bool remove_home = false;
 
     Core::ArgsParser args_parser;

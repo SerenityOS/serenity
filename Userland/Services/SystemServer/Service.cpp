@@ -299,7 +299,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
     m_user = config.read_entry(name, "User");
     if (!m_user.is_null()) {
-        auto result = Core::Account::from_name(m_user.characters(), Core::Account::Read::PasswdOnly);
+        auto result = Core::Account::from_name(m_user, Core::Account::Read::PasswdOnly);
         if (result.is_error())
             warnln("Failed to resolve user {}: {}", m_user, result.error());
         else
