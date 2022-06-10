@@ -457,6 +457,7 @@ private:
     String m_version;
 #endif
     char m_legacy_manufacturer_id[4] {};
+    bool m_legacy_manufacturer_id_valid { false };
 };
 
 }
