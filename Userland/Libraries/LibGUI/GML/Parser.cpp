@@ -57,14 +57,14 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
                 // It's a child object.
 
                 while (!pending_comments.is_empty())
-                    TRY(object->add_sub_object_child(pending_comments.take_last()));
+                    TRY(object->add_sub_object_child(pending_comments.take_first()));
 
                 TRY(object->add_sub_object_child(TRY(parse_gml_object(tokens))));
             } else if (peek() == Token::Type::Identifier) {
                 // It's a property.
 
                 while (!pending_comments.is_empty())
-                    TRY(object->add_property_child(pending_comments.take_last()));
+                    TRY(object->add_property_child(pending_comments.take_first()));
 
                 auto property_name = tokens.dequeue();
 
