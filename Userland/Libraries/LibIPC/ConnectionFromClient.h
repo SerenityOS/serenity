@@ -52,9 +52,9 @@ public:
         this->shutdown();
     }
 
-    void shutdown_with_error(Error const& error)
+    virtual void shutdown_with_error(Error const& error) override
     {
-        dbgln("{} (id={}) had error ({}), disconnecting.", *this, m_client_id, error);
+        dbgln("{} (id={}) had an error ({}), disconnecting.", *this, m_client_id, error);
         this->shutdown();
     }
 
