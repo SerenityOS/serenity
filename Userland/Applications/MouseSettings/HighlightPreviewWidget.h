@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractThemePreview.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/CursorParams.h>
 
 namespace MouseSettings {
 
@@ -36,7 +38,10 @@ private:
     ErrorOr<void> reload_cursor();
 
     RefPtr<Gfx::Bitmap> m_cursor_bitmap;
+    Gfx::CursorParams m_cursor_params;
+    RefPtr<Core::Timer> m_frame_timer;
 
+    int m_cursor_frame { 0 };
     int m_radius { 0 };
     Gfx::Color m_color;
 };
