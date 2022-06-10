@@ -347,7 +347,7 @@ String URL::serialize_origin() const
     builder.append("://"sv);
     builder.append(m_host);
     if (m_port.has_value())
-        builder.append(":{}", *m_port);
+        builder.appendff(":{}", *m_port);
     return builder.build();
 }
 
