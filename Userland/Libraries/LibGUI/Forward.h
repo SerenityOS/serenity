@@ -23,6 +23,7 @@ class CheckBox;
 class ComboBox;
 class Command;
 class CommandPalette;
+class DialogButton;
 class DragEvent;
 class DropEvent;
 class EditingEngine;

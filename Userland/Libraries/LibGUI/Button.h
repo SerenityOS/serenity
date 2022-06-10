@@ -76,4 +76,16 @@ private:
     bool m_mimic_pressed { false };
 };
 
+class DialogButton final : public Button {
+    C_OBJECT(DialogButton);
+
+public:
+    virtual ~DialogButton() override {};
+    explicit DialogButton(String text = {})
+        : Button(move(text))
+    {
+        set_fixed_width(80);
+    }
+};
+
 }
