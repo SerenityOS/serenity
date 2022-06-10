@@ -232,6 +232,8 @@ String Selector::SimpleSelector::serialize() const
             break;
         case Selector::SimpleSelector::PseudoClass::Type::NthChild:
         case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
+        case Selector::SimpleSelector::PseudoClass::Type::NthOfType:
+        case Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
         case Selector::SimpleSelector::PseudoClass::Type::Not:
         case Selector::SimpleSelector::PseudoClass::Type::Is:
         case Selector::SimpleSelector::PseudoClass::Type::Where:
@@ -241,7 +243,9 @@ String Selector::SimpleSelector::serialize() const
             s.append(pseudo_class_name(pseudo_class.type));
             s.append('(');
             if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthChild
-                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild) {
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthOfType
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastOfType) {
                 // The result of serializing the value using the rules to serialize an <an+b> value.
                 s.append(pseudo_class.nth_child_pattern.serialize());
             } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not
