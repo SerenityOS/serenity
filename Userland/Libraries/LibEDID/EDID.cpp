@@ -332,10 +332,13 @@ ErrorOr<void> Parser::parse()
     }
 
     u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
+    if (packed_id == 0x0)
+        return {};
     m_legacy_manufacturer_id[0] = (char)((u16)'A' + ((packed_id >> 10) & 0x1f) - 1);
     m_legacy_manufacturer_id[1] = (char)((u16)'A' + ((packed_id >> 5) & 0x1f) - 1);
     m_legacy_manufacturer_id[2] = (char)((u16)'A' + (packed_id & 0x1f) - 1);
     m_legacy_manufacturer_id[3] = '\0';
+    m_legacy_manufacturer_id_valid = true;
 
     return {};
 }
@@ -420,6 +423,8 @@ StringView Parser::legacy_manufacturer_id() const
 #ifndef KERNEL
 String Parser::manufacturer_name() const
 {
+    if (!m_legacy_manufacturer_id_valid)
+        return "Unknown";
     auto manufacturer_id = legacy_manufacturer_id();
 #    ifdef ENABLE_PNP_IDS_DATA
     if (auto pnp_id_data = PnpIDs::find_by_manufacturer_id(manufacturer_id); pnp_id_data.has_value())
