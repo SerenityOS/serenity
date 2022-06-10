@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         String error_msg;
 
         auto add_unconfigured_display_connector_devices = [&]() {
-            // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
+            // Enumerate the /dev/gpu/connectorX devices and try to set up any ones we find that we haven't already used
             Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
             while (di.has_next()) {
                 auto path = di.next_path();
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
                     continue;
                 if (!screen_layout.try_auto_add_display_connector(full_path))
-                    dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
+                    dbgln("Could not auto-add display connector device {} to screen layout", full_path);
             }
         };
 
@@ -130,7 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::unveil("/tmp", ""));
 
-    // NOTE: Because we dynamically need to be able to open new /dev/fb*
+    // NOTE: Because we dynamically need to be able to open new /dev/gpu/connector*
     // devices we can't really unveil all of /dev unless we have some
     // other mechanism that can hand us file descriptors for these.
 
