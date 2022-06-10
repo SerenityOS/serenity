@@ -34,9 +34,9 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 +
- src/video/serenity/SDL_serenityvideo.cpp      | 717 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 720 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        |  98 +++
- 20 files changed, 1411 insertions(+), 29 deletions(-)
+ 20 files changed, 1414 insertions(+), 29 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -879,10 +879,10 @@ index 0000000..039f036
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000..30fcadb
+index 0000000..494766f
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,717 @@
+@@ -0,0 +1,720 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1395,6 +1395,9 @@ index 0000000..30fcadb
 +        if (SDL_SendQuit())
 +            return GUI::Window::CloseRequestDecision::Close;
 +        return GUI::Window::CloseRequestDecision::StayOpen;
++    };
++    w->window()->on_active_input_change = [window](bool is_active_input) {
++        SDL_SetKeyboardFocus(is_active_input ? window : nullptr);
 +    };
 +    SERENITY_PumpEvents(_this);
 +
