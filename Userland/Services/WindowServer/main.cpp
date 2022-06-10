@@ -9,6 +9,7 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
+#include <Kernel/API/Graphics.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -68,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         WindowServer::ScreenLayout screen_layout;
         String error_msg;
 
-        auto add_unconfigured_display_connector_devices = [&]() {
+        auto add_unconfigured_display_connector_devices = [&]() -> ErrorOr<void> {
             // Enumerate the /dev/gpu/connectorX devices and try to set up any ones we find that we haven't already used
             Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
             while (di.has_next()) {
@@ -78,18 +79,23 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 auto full_path = String::formatted("/dev/gpu/{}", path);
                 if (!Core::File::is_device(full_path))
                     continue;
+                auto display_connector_fd = TRY(Core::System::open(full_path, O_RDWR | O_CLOEXEC));
+                if (int rc = graphics_connector_set_responsible(display_connector_fd); rc != 0)
+                    return Error::from_syscall("graphics_connector_set_responsible"sv, rc);
+                TRY(Core::System::close(display_connector_fd));
                 if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
                     continue;
                 if (!screen_layout.try_auto_add_display_connector(full_path))
                     dbgln("Could not auto-add display connector device {} to screen layout", full_path);
             }
+            return {};
         };
 
-        auto apply_and_generate_generic_screen_layout = [&]() {
+        auto apply_and_generate_generic_screen_layout = [&]() -> ErrorOr<bool> {
             screen_layout = {};
             fb_devices_configured = {};
 
-            add_unconfigured_display_connector_devices();
+            TRY(add_unconfigured_display_connector_devices());
             if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
                 dbgln("Failed to apply generated fallback screen layout: {}", error_msg);
                 return false;
@@ -104,17 +110,15 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 if (screen_info.mode == WindowServer::ScreenLayout::Screen::Mode::Device)
                     fb_devices_configured.set(screen_info.device.value());
 
-            add_unconfigured_display_connector_devices();
+            TRY(add_unconfigured_display_connector_devices());
 
             if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
                 dbgln("Error applying screen layout: {}", error_msg);
-                if (!apply_and_generate_generic_screen_layout())
-                    return 1;
+                TRY(apply_and_generate_generic_screen_layout());
             }
         } else {
             dbgln("Error loading screen configuration: {}", error_msg);
-            if (!apply_and_generate_generic_screen_layout())
-                return 1;
+            TRY(apply_and_generate_generic_screen_layout());
         }
     }
 

@@ -231,11 +231,81 @@ ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
     return ByteBuffer::copy(m_edid_bytes, sizeof(m_edid_bytes));
 }
 
+struct GraphicsIOCtlChecker {
+    unsigned ioctl_number;
+    StringView name;
+    bool requires_ownership { false };
+};
+
+static constexpr GraphicsIOCtlChecker s_checkers[] = {
+    { GRAPHICS_IOCTL_GET_PROPERTIES, "GRAPHICS_IOCTL_GET_PROPERTIES"sv, false },
+    { GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER"sv, true },
+    { GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER"sv, false },
+    { GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS, "GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS"sv, true },
+    { GRAPHICS_IOCTL_FLUSH_HEAD, "GRAPHICS_IOCTL_FLUSH_HEAD"sv, true },
+    { GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING"sv, true },
+    { GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING"sv, false },
+    { GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING"sv, true },
+    { GRAPHICS_IOCTL_SET_RESPONSIBLE, "GRAPHICS_IOCTL_SET_RESPONSIBLE"sv, false },
+    { GRAPHICS_IOCTL_UNSET_RESPONSIBLE, "GRAPHICS_IOCTL_UNSET_RESPONSIBLE"sv, true },
+};
+
+static StringView ioctl_to_stringview(unsigned request)
+{
+    for (auto& checker : s_checkers) {
+        if (checker.ioctl_number == request)
+            return checker.name;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+bool DisplayConnector::ioctl_requires_ownership(unsigned request) const
+{
+    for (auto& checker : s_checkers) {
+        if (checker.ioctl_number == request)
+            return checker.requires_ownership;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     TRY(Process::current().require_promise(Pledge::video));
 
+    // Note: We only allow to set responsibility on a DisplayConnector,
+    // get the current ModeSetting or the hardware framebuffer properties without the
+    // need of having an established responsibility on a DisplayConnector.
+    if (ioctl_requires_ownership(request)) {
+        auto process = m_responsible_process.strong_ref();
+        if (!process || process.ptr() != &Process::current()) {
+            dbgln("DisplayConnector::ioctl: {} requires ownership over the device", ioctl_to_stringview(request));
+            return Error::from_errno(EPERM);
+        }
+    }
+
     switch (request) {
+    case GRAPHICS_IOCTL_SET_RESPONSIBLE: {
+        SpinlockLocker locker(m_responsible_process_lock);
+        auto process = m_responsible_process.strong_ref();
+        // Note: If there's already a process being responsible, just return an error.
+        // We could technically return 0 if the the requesting process is already
+        // was set to be responsible for this DisplayConnector, but it servicing no
+        // no good purpose and should be considered a bug if this happens anyway.
+        if (process)
+            return Error::from_errno(EPERM);
+        m_responsible_process = Process::current();
+        return {};
+    }
+    case GRAPHICS_IOCTL_UNSET_RESPONSIBLE: {
+        SpinlockLocker locker(m_responsible_process_lock);
+        auto process = m_responsible_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (process.ptr() != &Process::current())
+            return Error::from_errno(EPERM);
+        m_responsible_process.clear();
+        return {};
+    }
     case GRAPHICS_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
         GraphicsConnectorProperties properties {};
