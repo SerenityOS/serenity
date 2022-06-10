@@ -24,7 +24,7 @@ class BochsDisplayConnector
 public:
     TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
 
     virtual IndexID index_id() const;
 

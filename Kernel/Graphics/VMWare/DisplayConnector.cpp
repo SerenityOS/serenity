@@ -16,7 +16,7 @@ NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWare
 {
     auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
     MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->initialize_edid_for_generic_monitor());
+    MUST(connector->initialize_edid_for_generic_monitor(Array<u8, 3> { 'V', 'M', 'W' }));
     return connector;
 }
 

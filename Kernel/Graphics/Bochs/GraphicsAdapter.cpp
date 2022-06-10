@@ -43,10 +43,10 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
     // Note: Bochs (the real bochs graphics adapter in the Bochs emulator) uses revision ID of 0x0
     // and doesn't support memory-mapped IO registers.
+    bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
     auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), 0);
-    if (pci_device_identifier.revision_id().value() == 0x0
-        || (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef)) {
-        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size);
+    if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
+        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, virtual_box_hardware);
     } else {
         auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)));
         VERIFY(registers_mapping.region);
