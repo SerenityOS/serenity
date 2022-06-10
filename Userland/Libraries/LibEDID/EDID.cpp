@@ -201,20 +201,20 @@ ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
 }
 
 #ifndef KERNEL
-ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
+ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd, size_t head)
 {
     RawBytes edid_bytes;
     GraphicsHeadEDID edid_info {};
     edid_info.head_index = head;
     edid_info.bytes = &edid_bytes[0];
     edid_info.bytes_size = sizeof(edid_bytes);
-    if (graphics_connector_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+    if (graphics_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
         int err = errno;
         if (err == EOVERFLOW) {
             // We need a bigger buffer with at least bytes_size bytes
             auto edid_byte_buffer = TRY(ByteBuffer::create_zeroed(edid_info.bytes_size));
             edid_info.bytes = edid_byte_buffer.data();
-            if (graphics_connector_get_head_edid(framebuffer_fd, &edid_info) < 0) {
+            if (graphics_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
                 err = errno;
                 return Error::from_errno(err);
             }
@@ -229,17 +229,17 @@ ErrorOr<Parser> Parser::from_framebuffer_device(int framebuffer_fd, size_t head)
     return from_bytes(move(edid_byte_buffer));
 }
 
-ErrorOr<Parser> Parser::from_framebuffer_device(String const& framebuffer_device, size_t head)
+ErrorOr<Parser> Parser::from_display_connector_device(String const& display_connector_device, size_t head)
 {
-    int framebuffer_fd = open(framebuffer_device.characters(), O_RDWR | O_CLOEXEC);
-    if (framebuffer_fd < 0) {
+    int display_connector_fd = open(display_connector_device.characters(), O_RDWR | O_CLOEXEC);
+    if (display_connector_fd < 0) {
         int err = errno;
         return Error::from_errno(err);
     }
     ScopeGuard fd_guard([&] {
-        close(framebuffer_fd);
+        close(display_connector_fd);
     });
-    return from_framebuffer_device(framebuffer_fd, head);
+    return from_display_connector_device(display_connector_fd, head);
 }
 #endif
 

@@ -208,13 +208,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
             create_devtmpfs_char_device(String::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
             break;
         }
-        case 29: {
-            if (is_block_device) {
-                create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
-                break;
-            }
-            break;
-        }
         case 229: {
             if (!is_block_device) {
                 create_devtmpfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
@@ -401,7 +394,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
 
     auto phys_group = TRY(Core::System::getgrnam("phys"sv));
     VERIFY(phys_group.has_value());
-    // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
+    // FIXME: Try to find a way to not hardcode the major number of display connector device nodes.
     TRY(chown_all_matching_device_nodes(phys_group.value(), 29));
 
     auto const filter_chown_ENOENT = [](ErrorOr<void> result) -> ErrorOr<void> {
