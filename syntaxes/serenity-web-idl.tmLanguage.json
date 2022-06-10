@@ -1,0 +1,1231 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "source.serenity-idl",
+  "name": "Web IDL (SerenityOS)",
+  "helpers": {
+    "identifier": "[_-]?[A-Za-z][0-9A-Z_a-z-]*",
+    "type-with-extended-attribute": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??))"
+  },
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#definition"
+    },
+    {
+      "include": "#import-extension"
+    },
+    {
+      "include": "#extended-attribute-list"
+    }
+  ],
+  "comment": "https://webidl.spec.whatwg.org/#idl",
+  "repository": {
+    "comment": {
+      "name": "meta.comment.idl",
+      "patterns": [
+        {
+          "match": "//.*$",
+          "name": "comment.line.idl"
+        },
+        {
+          "match": "/\\*(.|\n)*?\\*/",
+          "name": "comment.block.idl"
+        }
+      ]
+    },
+    "import-extension": {
+      "comment": "This is serenity specific",
+      "match": "^((#)import)\\s+((<)(.*?)(>))$",
+      "captures": {
+        "1": {
+          "name": "keyword.control.directive.import.idl"
+        },
+        "2": {
+          "name": "punctuation.hash.idl"
+        },
+        "3": {
+          "name": "string.quoted.other.lt-gt.include.idl"
+        },
+        "4": {
+          "name": "punctuation.definition.string.begin.idl"
+        },
+        "6": {
+          "name": "punctuation.definition.string.end.idl"
+        }
+      }
+    },
+    "definition": {
+      "name": "meta.definition.idl",
+      "patterns": [
+        {
+          "name": "meta.definition.callback.idl",
+          "begin": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(callback)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s*(=)\\s*(\\g<Type>)\\s*(\\()",
+          "beginCaptures": {
+            "4": {
+              "name": "storage.type.callback.idl"
+            },
+            "5": {
+              "name": "entity.name.class.idl"
+            },
+            "6": {
+              "name": "keyword.operator.assignment.idl"
+            },
+            "7": {
+              "patterns": [
+                {
+                  "include": "#type"
+                }
+              ]
+            },
+            "8": {
+              "name": "punctuation.begin.bracket.round.idl"
+            }
+          },
+          "contentName": "meta.definition.callback.body.idl",
+          "patterns": [
+            {
+              "include": "#argument-list"
+            }
+          ],
+          "end": "(\\))(;)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.end.bracket.round.idl"
+            },
+            "2": {
+              "name": "punctuation.terminator.idl"
+            }
+          }
+        },
+        {
+          "name": "meta.definition.callback.interface.idl",
+          "begin": "\\b(callback)\\s+(interface)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s*(\\{)",
+          "beginCaptures": {
+            "1": {
+              "name": "storage.type.callback.idl"
+            },
+            "2": {
+              "name": "storage.type.interface.idl"
+            },
+            "3": {
+              "name": "entity.name.class.idl"
+            },
+            "4": {
+              "name": "punctuation.begin.curly-bracket.idl"
+            }
+          },
+          "contentName": "meta.definition.callback.interface.body.idl",
+          "patterns": [
+            {
+              "include": "#const"
+            },
+            {
+              "comment": "FIXME: Technically only regular operations are allowed",
+              "include": "#operation"
+            }
+          ],
+          "end": "(\\})(;)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.end.curly-bracket.idl"
+            },
+            "2": {
+              "name": "punctuation.terminator.idl"
+            }
+          }
+        },
+        {
+          "include": "#interface"
+        },
+        {
+          "include": "#dictionary"
+        },
+        {
+          "include": "#enum"
+        },
+        {
+          "include": "#typedef"
+        },
+        {
+          "include": "#includes-statement"
+        }
+      ]
+    },
+    "interface": {
+      "comment": "FIXME: This also includes partial interfaces and mixins, although these might have other member restrains",
+      "name": "meta.definition.interface.idl",
+      "begin": "(?:(partial)\\s+)?(interface)\\s+(?:(mixin)\\s+)?([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(:)\\s*([_-]?[A-Za-z][0-9A-Z_a-z-]*))?\\s*(\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier.specifier.partial.idl"
+        },
+        "2": {
+          "name": "storage.type.interface.idl"
+        },
+        "3": {
+          "name": "storage.modifier.specifier.mixin.idl"
+        },
+        "4": {
+          "name": "entity.name.type.interface.idl"
+        },
+        "5": {
+          "name": "punctuation.separator.colon.inheritance.idl"
+        },
+        "6": {
+          "name": "entity.name.type.inherited-interface.idl"
+        },
+        "7": {
+          "name": "punctuation.definition.brace.start.idl"
+        }
+      },
+      "contentName": "meta.definition.interface.body.idl",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#interface-members"
+        }
+      ],
+      "end": "(\\})(;)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.brace.end.idl"
+        },
+        "2": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "dictionary": {
+      "name": "meta.definition.dictionary.idl",
+      "begin": "\\b(?:(partial)\\s+)?(dictionary)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s*(?:(:)\\s*([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s*)?(\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.modifier.specifier.partial.idl"
+        },
+        "2": {
+          "name": "storage.type.dictionary.idl"
+        },
+        "3": {
+          "name": "entity.name.type.dictionary.idl"
+        },
+        "4": {
+          "name": "punctuation.separator.colon.inheritance.idl"
+        },
+        "5": {
+          "name": "entity.name.type.inherited-dictionary.idl"
+        },
+        "6": {
+          "name": "punctuation.begin.brace.round.idl"
+        }
+      },
+      "contentName": "meta.definition.dictionary.body.idl",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(?:(required)\\s+)?(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*([^;]+))?(;)",
+          "captures": {
+            "4": {
+              "name": "storage.modifier.specifier.required.idl"
+            },
+            "5": {
+              "patterns": [
+                {
+                  "include": "#type-with-extended-attributes"
+                }
+              ]
+            },
+            "6": {
+              "name": "entity.name.idl"
+            },
+            "7": {
+              "name": "keyword.operator.assignment.idl"
+            },
+            "8": {
+              "patterns": [
+                {
+                  "include": "#default"
+                }
+              ]
+            },
+            "9": {
+              "name": "punctuation.terminator.idl"
+            }
+          }
+        }
+      ],
+      "end": "(\\})(;)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.end.curly-bracket.idl"
+        },
+        "2": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "enum": {
+      "name": "meta.definition.enum.idl",
+      "begin": "\\b(enum)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s+(\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.type.enum.idl"
+        },
+        "2": {
+          "name": "entity.name.type.enum.idl"
+        },
+        "3": {
+          "name": "punctuation.begin.curly-bracket.idl"
+        }
+      },
+      "contentName": "meta.definition.enum.body.idl",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "name": "string.double.idl",
+          "match": "(\")[^\"]*(\")",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.string.begin.idl"
+            },
+            "2": {
+              "name": "punctuation.definition.string.end.idl"
+            }
+          }
+        },
+        {
+          "name": "punctuation.separator.delimiter.comma.idl",
+          "match": ","
+        }
+      ],
+      "end": "(\\})(;)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.end.curly-bracket.idl"
+        },
+        "2": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "typedef": {
+      "name": "meta.definition.typedef.idl",
+      "match": "\\b(typedef)\\s+(.*)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(;)",
+      "captures": {
+        "1": {
+          "name": "keyword.other.typedef.idl"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "3": {
+          "name": "entity.name.type.typedef.idl"
+        },
+        "4": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "includes-statement": {
+      "name": "meta.include-statement",
+      "match": "\\b([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s+(includes)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(;)",
+      "captures": {
+        "1": {
+          "name": "entity.name.type.idl"
+        },
+        "2": {
+          "name": "keyword.other.typedef.idl"
+        },
+        "3": {
+          "name": "entity.name.type.idl"
+        },
+        "4": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "extended-attribute-list": {
+      "begin": "(\\[)",
+      "end": "(\\])",
+      "name": "meta.extended-attribute-list.idl",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.brackets.attribute.begin.idl"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#extended-attribute"
+        }
+      ],
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.brackets.attribute.end.idl"
+        }
+      }
+    },
+    "extended-attribute": {
+      "comment": "FIXME: This is incomplete and probably not spec-compliant.",
+      "patterns": [
+        {
+          "name": "meta.name.attribute.idl",
+          "begin": "\\b(\\w+)\\s*(=)",
+          "end": "(,)|(?=\\])",
+          "beginCaptures": {
+            "1": { "name": "variable.parameter.attribute.idl" },
+            "2": { "name": "keyword.assignment.idl" },
+            "3": { "name": "constant.other.attribute.idl" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.separator.delimiter.comma.idl" }
+          },
+          "patterns": [{ "include": "#extended-attribute-values" }]
+        },
+        {
+          "match": "\\b\\w+\\b",
+          "name": "variable.parameter.attribute.idl"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.delimiter.comma.idl"
+        }
+      ]
+    },
+    "extended-attribute-values": {
+      "patterns": [
+        {
+          "name": "constant.other.attribute.tuple.idl",
+          "begin": "\\(",
+          "end": "\\)",
+          "beginCaptures": { "0": { "name": "punctuation.bracket.begin.idl" } },
+          "endCaptures": { "0": { "name": "punctuation.bracket.end.idl" } },
+          "patterns": [
+            {
+              "include": "#extended-attribute-values"
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.delimiter.comma.idl"
+            }
+          ]
+        },
+        {
+          "match": "\\b\\w+\\b",
+          "name": "constant.other.attribute.idl"
+        }
+      ]
+    },
+    "interface-members": {
+      "patterns": [
+        {
+          "comment": "https://webidl.spec.whatwg.org/#prod-Constructor",
+          "begin": "\\b(constructor)\\s*(\\()",
+          "beginCaptures": {
+            "1": {
+              "comment": "FIXME: Maybe use an entity",
+              "name": "keyword.other.constructor.idl"
+            },
+            "2": {
+              "name": "punctuation.definition.parameters.begin.idl"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#argument-list"
+            }
+          ],
+          "end": "(\\))(;)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.end.idl"
+            },
+            "2": {
+              "name": "punctuation.terminator.idl"
+            }
+          }
+        },
+        {
+          "include": "#extended-attribute-list"
+        },
+        {
+          "include": "#const"
+        },
+        {
+          "include": "#stringifier"
+        },
+        {
+          "include": "#static-member"
+        },
+        {
+          "include": "#iterable"
+        },
+        {
+          "include": "#iterable"
+        },
+        {
+          "include": "#async-iterable"
+        },
+        {
+          "include": "#readonly-member"
+        },
+        {
+          "include": "#maplike"
+        },
+        {
+          "include": "#setlike"
+        },
+        {
+          "match": "\\b(attribute.*)(;)",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#attribute-rest"
+                }
+              ]
+            },
+            "2": {
+              "name": "punctuation.terminator.idl"
+            }
+          }
+        },
+        {
+          "include": "#inherit-attribute"
+        },
+        {
+          "comment": "This has to be last otherwise it may mess with Types",
+          "include": "#operation"
+        }
+      ]
+    },
+    "const": {
+      "match": "\\b(const)\\s+(.*)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)\\s*(=)\\s*(.*);",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.specifier.const.idl"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#primitive-type"
+            },
+            {
+              "match": "\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*\\b",
+              "name": "storage.type.idl"
+            }
+          ]
+        },
+        "3": {
+          "name": "variable.name.idl"
+        },
+        "4": {
+          "name": "keyword.operator.assignment.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#const-value"
+            }
+          ]
+        }
+      }
+    },
+    "const-value": {
+      "name": "meta.literal",
+      "patterns": [
+        {
+          "match": "true|false",
+          "name": "constant.language.$0.idl"
+        },
+        {
+          "match": "(-?(([0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+))|-?Infinity|NaN",
+          "comment": "FIXME: Be more accurate here",
+          "name": "constant.numeric.float.idl"
+        },
+        {
+          "match": "-?([1-9][0-9]*|0[Xx][0-9A-Fa-f]+|0[0-7]*)",
+          "name": "constant.numeric.integer.idl"
+        }
+      ]
+    },
+    "operation": {
+      "name": "meta.definition.operation.idl",
+      "begin": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:\\b(setter|getter|deleter)\\s+)?(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)?\\s*(\\()",
+      "beginCaptures": {
+        "4": {
+          "name": "storage.modifier.specifier.$1.idl"
+        },
+        "5": {
+          "name": "meta.return-type.operation.idl",
+          "patterns": [
+            {
+              "include": "#type"
+            }
+          ]
+        },
+        "6": {
+          "name": "entity.name.function.idl"
+        },
+        "7": {
+          "name": "punctuation.section.parameters.begin.bracket.round.idl"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#argument-list"
+        }
+      ],
+      "contentName": "meta.definition.operation.arguments.idl",
+      "end": "(\\))(;)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.section.parameters.end.bracket.round.idl"
+        },
+        "2": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "stringifier": {
+      "name": "meta.stringifier.idl",
+      "match": "\\b(stringifier)\\s*(?:\\b(readonly)\\s+)?(\\b(attribute\\s+.*))?(;)",
+      "captures": {
+        "1": {
+          "name": "storage.type.stringifier.idl"
+        },
+        "2": {
+          "name": "storage.modifier.specifier.readonly.idl"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#attribute-rest"
+            }
+          ]
+        },
+        "5": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "static-member": {
+      "name": "meta.static-member.idl",
+      "match": "\\b(static)\\s+(?:(?:(readonly)\\s+)?(attribute .*)(;)|(.*\\(.*\\);))",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.specifier.static.idl"
+        },
+        "2": {
+          "name": "storage.modifier.specifier.readonly.idl"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#attribute-rest"
+            }
+          ]
+        },
+        "4": {
+          "name": "punctuation.terminator.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#operation"
+            }
+          ]
+        }
+      }
+    },
+    "iterable": {
+      "name": "meta.iterable.idl",
+      "match": "\\b(iterable)(<)(.*?)(?:(,)\\s*(.+))?(>)(;)",
+      "captures": {
+        "1": {
+          "name": "storage.type.iterable.idl"
+        },
+        "2": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "4": {
+          "name": "punctuation.separator.delimiter.comma.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "6": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "7": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "async-iterable": {
+      "name": "meta.iterable.async.idl",
+      "match": "\\b(async)\\s+(iterable)(<)(.*?)(?:(,)(.+))?(>)(?:(\\()(.*?)(\\)))?(;)",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.specifier.async.idl"
+        },
+        "2": {
+          "name": "storage.modifier.specifier.iterable.idl"
+        },
+        "3": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "5": {
+          "name": "punctuation.separator.delimiter.comma.idl"
+        },
+        "6": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "7": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "8": {
+          "patterns": [
+            {
+              "include": "#argument-list"
+            }
+          ]
+        },
+        "9": {
+          "name": "punctuation.section.angle-brackets.end.template.idl"
+        },
+        "10": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "readonly-member": {
+      "match": "\\b(readonly)\\s+(?:(setlike.*;)|(maplike.*;)|(attribute.*)(;))",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.specifier.readonly.idl"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#setlike"
+            }
+          ]
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#maplike"
+            }
+          ]
+        },
+        "4": {
+          "patterns": [
+            {
+              "include": "#attribute-rest"
+            }
+          ]
+        },
+        "5": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "maplike": {
+      "name": "meta.maplike.idl",
+      "match": "\\b(maplike)(<)(.*)(,)(.*)(>)(;)",
+      "captures": {
+        "1": {
+          "name": "storage.type.maplike.idl"
+        },
+        "2": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "4": {
+          "name": "punctuation.separator.delimiter.comma.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "6": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "7": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "setlike": {
+      "name": "meta.setlike.idl",
+      "match": "\\b(setlike)(<)(.*)(>)(;)",
+      "captures": {
+        "1": {
+          "name": "storage.type.setlike.idl"
+        },
+        "2": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "3": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "4": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "5": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "inherit-attribute": {
+      "match": "\\b(inherit)\\s+(.+)(;)",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.specifier.inherit.idl"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#attribute-rest"
+            }
+          ]
+        },
+        "3": {
+          "name": "punctuation.terminator.idl"
+        }
+      }
+    },
+    "attribute-rest": {
+      "comment": "https://webidl.spec.whatwg.org/#prod-AttributeRest",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(attribute)\\s+(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)",
+      "captures": {
+        "4": {
+          "name": "storage.type.attribute.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "6": {
+          "name": "entity.name.attribute.idl"
+        }
+      }
+    },
+    "argument-list": {
+      "name": "meta.argument-list.idl",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(((?:optional\\s+)?\\g<TypeWithExtendedAttributes>(?:\\.\\.\\.)?\\s+[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:\\s*=\\s*[^,);]+)?))((?:,\\s*\\g<5>)*)",
+      "captures": {
+        "4": {
+          "patterns": [
+            {
+              "include": "#argument"
+            }
+          ]
+        },
+        "comment": "5 is a duplicate of 4, oniguruma (The regex engine) seems to clobber it, when back referencing the impl, though",
+        "6": {
+          "patterns": [
+            {
+              "name": "meta.arguments",
+              "match": "(,)\\s*(.*)",
+              "captures": {
+                "1": {
+                  "name": "punctuation.separator.delimiter.comma.idl"
+                },
+                "2": {
+                  "patterns": [
+                    {
+                      "comment": "NOTE: This technically should be 'arguments', but the logic for that one is identical to this ones",
+                      "include": "#argument-list"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "argument": {
+      "name": "meta.argument.idl",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:(optional)\\s+(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*(.*))?)|(?:(\\g<TypeWithExtendedAttributes>)(\\.\\.\\.)?\\s+(([_-]?[A-Za-z][0-9A-Z_a-z-]*)))",
+      "captures": {
+        "4": {
+          "name": "storage.modifier.specifier.optional.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "6": {
+          "name": "variable.parameter.idl"
+        },
+        "7": {
+          "name": "keyword.operator.assignment.idl"
+        },
+        "8": {
+          "patterns": [
+            {
+              "include": "#default"
+            }
+          ]
+        },
+        "9": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "10": {
+          "name": "punctuation.ellipsis.idl"
+        },
+        "11": {
+          "name": "variable.parameter.idl"
+        }
+      }
+    },
+    "default": {
+      "patterns": [
+        {
+          "include": "#const-value"
+        },
+        {
+          "name": "string.double.idl",
+          "match": "(\")[^\"]*(\")",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.string.begin.idl"
+            },
+            "2": {
+              "name": "punctuation.definition.string.end.idl"
+            }
+          }
+        },
+        {
+          "match": "(\\{)\\s*(\\})",
+          "captures": {
+            "1": {
+              "name": "punctuation.curly-bracket.begin.idl"
+            },
+            "2": {
+              "name": "punctuation.curly-bracket.end.idl"
+            }
+          }
+        },
+        {
+          "match": "(\\[)\\s*(\\])",
+          "captures": {
+            "1": {
+              "name": "punctuation.square-bracket.begin.idl"
+            },
+            "2": {
+              "name": "punctuation.square-bracket.end.idl"
+            }
+          }
+        },
+        {
+          "match": "null|undefined",
+          "name": "constant.language.$0.idl"
+        }
+      ]
+    },
+    "type-with-extended-attributes": {
+      "name": "meta.type-with-extended-attributes",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:(\\g<ExtendedAttributes>)\\s*)?(\\g<Type>)",
+      "captures": {
+        "4": {
+          "patterns": [
+            {
+              "include": "#extended-attribute-list"
+            }
+          ]
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type"
+            }
+          ]
+        }
+      }
+    },
+    "type": {
+      "name": "meta.type.idl",
+      "patterns": [
+        {
+          "include": "#union-type"
+        },
+        {
+          "include": "#single-type"
+        }
+      ]
+    },
+    "union-type": {
+      "name": "meta.union.idl",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(\\()(\\g<TypeWithExtendedAttributes>)((?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+)(\\))(\\?)?",
+      "captures": {
+        "4": {
+          "name": "punctuation.begin.bracket.round.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "6": {
+          "patterns": [
+            {
+              "include": "#union-type-member"
+            }
+          ]
+        },
+        "7": {
+          "name": "punctuation.end.bracket.round.idl"
+        },
+        "8": {
+          "name": "keyword.operator.nullable.idl"
+        }
+      },
+      "contentName": "meta.union-type.idl",
+      "patterns": [
+        {
+          "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(\\g<TypeWithExtendedAttributes>)\\s+(or\\s+.*)",
+          "captures": {
+            "1": {
+              "patterns": [
+                {
+                  "include": "#type-with-extended-attributes"
+                }
+              ]
+            },
+            "2": {
+              "patterns": [
+                {
+                  "include": "#union-type-member"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "union-type-member": {
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(or)\\s+(\\g<TypeWithExtendedAttributes>)",
+      "captures": {
+        "4": {
+          "name": "keyword.control.or.idl"
+        },
+        "5": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        }
+      }
+    },
+    "single-type": {
+      "patterns": [
+        {
+          "include": "#promise-type"
+        },
+        {
+          "match": "\\bany\\b",
+          "name": "storage.type.built-in.any.idl"
+        },
+        {
+          "include": "#distinguishable-type"
+        }
+      ]
+    },
+    "distinguishable-type": {
+      "comment": "https://webidl.spec.whatwg.org/#prod-DistinguishableType",
+      "match": "([^?]*)(\\?)?",
+      "name": "meta.distinguishable-type.idl",
+      "captures": {
+        "1": {
+          "patterns": [
+            {
+              "include": "#record-type"
+            },
+            {
+              "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(sequence|FrozenArray|ObservableArray)(<)(\\g<TypeWithExtendedAttributes>)(>)",
+              "captures": {
+                "4": {
+                  "name": "storage.type.built-in.$1.idl"
+                },
+                "5": {
+                  "name": "punctuation.section.angle-brackets.begin.template.idl"
+                },
+                "6": {
+                  "patterns": [
+                    {
+                      "include": "#type-with-extended-attributes"
+                    }
+                  ]
+                },
+                "7": {
+                  "name": "punctuation.section.angle-brackets.end.template.idl"
+                }
+              }
+            },
+            {
+              "include": "#primitive-type"
+            },
+            {
+              "include": "#string-type"
+            },
+            {
+              "match": "\\b(?:object|symbol|undefined)\\b",
+              "name": "storage.type.built-in.$0.idl"
+            },
+            {
+              "comment": "https://webidl.spec.whatwg.org/#prod-identifier",
+              "match": "\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*\\b",
+              "name": "storage.type.identifier.idl"
+            }
+          ]
+        },
+        "2": {
+          "name": "keyword.operator.nullable.idl"
+        }
+      }
+    },
+    "primitive-type": {
+      "patterns": [
+        {
+          "name": "storage.type.built-in.primitive.idl",
+          "match": "boolean|byte|octet|bigint"
+        },
+        {
+          "comment": "https://webidl.spec.whatwg.org/#prod-UnsignedIntegerType https://webidl.spec.whatwg.org/#prod-IntegerType",
+          "name": "storage.type.built-in.primitive.idl",
+          "match": "(unsigned\\s+)?(long(\\s+long)?|short)"
+        },
+        {
+          "name": "storage.type.built-in.primitive.idl",
+          "comment": "https://webidl.spec.whatwg.org/#prod-UnrestrictedFloatType https://webidl.spec.whatwg.org/#prod-FloatType",
+          "match": "(unrestricted\\s+)?(float|double)"
+        }
+      ]
+    },
+    "string-type": {
+      "comment": "https://webidl.spec.whatwg.org/#prod-StringType",
+      "match": "\\b(?:ByteString|DOMString|USVString)\\b",
+      "name": "storage.type.built-in.string.$0.idl"
+    },
+    "promise-type": {
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(Promise)(<)(\\g<TypeWithExtendedAttributes>)(>)",
+      "captures": {
+        "4": {
+          "name": "storage.type.built-in.promise.idl"
+        },
+        "5": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "6": {
+          "patterns": [
+            {
+              "include": "#type"
+            }
+          ]
+        },
+        "7": {
+          "name": "punctuation.section.angle-brackets.end.template.idl"
+        }
+      }
+    },
+    "record-type": {
+      "name": "meta.type.record.idl",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(record)(<)(\\g<TypeWithExtendedAttributes>),\\s*(\\g<TypeWithExtendedAttributes>)(>)",
+      "captures": {
+        "4": {
+          "name": "storage.type.built-in.record.idl"
+        },
+        "5": {
+          "name": "punctuation.section.angle-brackets.begin.template.idl"
+        },
+        "6": {
+          "patterns": [
+            {
+              "include": "#string-type"
+            },
+            {
+              "name": "invalid.illegal.type.idl",
+              "match": ".*"
+            }
+          ]
+        },
+        "7": {
+          "patterns": [
+            {
+              "include": "#type-with-extended-attributes"
+            }
+          ]
+        },
+        "8": {
+          "name": "punctuation.section.angle-brackets.end.template.idl"
+        }
+      }
+    },
+    "buffer-related-type": {
+      "match": "\\b(ArrayBuffer|DataView|Int8Array|Int16Array|Int32Array|Uint8Array|Uint16Array|Uint32Array|Uint8ClampedArray|BigInt64Array|BigUint64Array|Float32Array|Float64Array)\\b",
+      "name": "storage.type.built-in.buffer-related.$0.idl"
+    }
+  }
+}
