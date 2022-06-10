@@ -61,11 +61,21 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<ResourceLoaderConnector> connector)
 
 void ResourceLoader::prefetch_dns(AK::URL const& url)
 {
+    if (ContentFilter::the().is_filtered(url)) {
+        dbgln("ResourceLoader: Refusing to prefetch DNS for '{}': \033[31;1mURL was filtered\033[0m", url);
+        return;
+    }
+
     m_connector->prefetch_dns(url);
 }
 
 void ResourceLoader::preconnect(AK::URL const& url)
 {
+    if (ContentFilter::the().is_filtered(url)) {
+        dbgln("ResourceLoader: Refusing to pre-connect to '{}': \033[31;1mURL was filtered\033[0m", url);
+        return;
+    }
+
     m_connector->preconnect(url);
 }
 
