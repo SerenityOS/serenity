@@ -148,6 +148,8 @@ private:
     virtual void will_be_destroyed() override;
     virtual void after_inserting() override;
 
+    bool ioctl_requires_ownership(unsigned request) const;
+
     OwnPtr<Memory::Region> m_framebuffer_region;
     OwnPtr<Memory::Region> m_fake_writes_framebuffer_region;
     u8* m_framebuffer_data {};
@@ -161,6 +163,9 @@ protected:
 
 private:
     RefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;
+
+    WeakPtr<Process> m_responsible_process;
+    Spinlock m_responsible_process_lock;
 
     IntrusiveListNode<DisplayConnector, RefPtr<DisplayConnector>> m_list_node;
 };

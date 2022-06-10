@@ -50,6 +50,16 @@ ALWAYS_INLINE int graphics_connector_get_head_edid(int fd, GraphicsHeadEDID* inf
     return 0;
 }
 
+ALWAYS_INLINE int graphics_connector_set_responsible(int fd)
+{
+    return ioctl(fd, GRAPHICS_IOCTL_SET_RESPONSIBLE, nullptr);
+}
+
+ALWAYS_INLINE int graphics_connector_unset_responsible(int fd)
+{
+    return ioctl(fd, GRAPHICS_IOCTL_UNSET_RESPONSIBLE, nullptr);
+}
+
 ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, GraphicsHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
