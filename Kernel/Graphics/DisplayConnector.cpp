@@ -155,6 +155,14 @@ ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor()
         0x00, /* number of extensions */
         0x00  /* checksum goes here */
     };
+    // Note: Fix checksum to avoid warnings about checksum mismatch.
+    size_t checksum = 0;
+    // Note: Read all 127 bytes to add them to the checksum. Byte 128 is zeroed so
+    // we could technically add it to the sum result, but it could lead to an error if it contained
+    // a non-zero value, so we are not using it.
+    for (size_t index = 0; index < sizeof(virtual_monitor_edid) - 1; index++)
+        checksum += virtual_monitor_edid[index];
+    virtual_monitor_edid[127] = 0x100 - checksum;
     set_edid_bytes(virtual_monitor_edid);
     return {};
 }
