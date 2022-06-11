@@ -69,7 +69,7 @@ Register Generator::allocate_register()
 
 Label Generator::nearest_continuable_scope() const
 {
-    return m_continuable_scopes.last();
+    return m_continuable_scopes.last().bytecode_target;
 }
 
 void Generator::begin_variable_scope(BindingMode mode, SurroundingScopeKind kind)
@@ -99,9 +99,9 @@ void Generator::end_variable_scope()
     }
 }
 
-void Generator::begin_continuable_scope(Label continue_target)
+void Generator::begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set)
 {
-    m_continuable_scopes.append(continue_target);
+    m_continuable_scopes.append({ continue_target, language_label_set });
     start_boundary(BlockBoundaryType::Continue);
 }
 
@@ -110,13 +110,15 @@ void Generator::end_continuable_scope()
     m_continuable_scopes.take_last();
     end_boundary(BlockBoundaryType::Continue);
 }
+
 Label Generator::nearest_breakable_scope() const
 {
-    return m_breakable_scopes.last();
+    return m_breakable_scopes.last().bytecode_target;
 }
-void Generator::begin_breakable_scope(Label breakable_target)
+
+void Generator::begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set)
 {
-    m_breakable_scopes.append(breakable_target);
+    m_breakable_scopes.append({ breakable_target, language_label_set });
     start_boundary(BlockBoundaryType::Break);
 }
 
@@ -244,6 +246,60 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
 
     // NOTE: The rest of the steps are handled by Delete{Variable,ByValue,Id}.
     return {};
+}
+
+Label Generator::perform_needed_unwinds_for_labelled_break_and_return_target_block(FlyString const& break_label)
+{
+    size_t current_boundary = m_boundaries.size();
+    for (auto& breakable_scope : m_breakable_scopes.in_reverse()) {
+        for (; current_boundary > 0; --current_boundary) {
+            auto boundary = m_boundaries[current_boundary - 1];
+            if (boundary == BlockBoundaryType::Unwind) {
+                emit<Bytecode::Op::LeaveUnwindContext>();
+            } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            } else if (boundary == BlockBoundaryType::LeaveVariableEnvironment) {
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
+            } else if (boundary == BlockBoundaryType::Break) {
+                // Make sure we don't process this boundary twice if the current breakable scope doesn't contain the target label.
+                --current_boundary;
+                break;
+            }
+        }
+
+        if (breakable_scope.language_label_set.contains_slow(break_label))
+            return breakable_scope.bytecode_target;
+    }
+
+    // We must have a breakable scope available that contains the label, as this should be enforced by the parser.
+    VERIFY_NOT_REACHED();
+}
+
+Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_block(FlyString const& continue_label)
+{
+    size_t current_boundary = m_boundaries.size();
+    for (auto& continuable_scope : m_continuable_scopes.in_reverse()) {
+        for (; current_boundary > 0; --current_boundary) {
+            auto boundary = m_boundaries[current_boundary - 1];
+            if (boundary == BlockBoundaryType::Unwind) {
+                emit<Bytecode::Op::LeaveUnwindContext>();
+            } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            } else if (boundary == BlockBoundaryType::LeaveVariableEnvironment) {
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
+            } else if (boundary == BlockBoundaryType::Continue) {
+                // Make sure we don't process this boundary twice if the current continuable scope doesn't contain the target label.
+                --current_boundary;
+                break;
+            }
+        }
+
+        if (continuable_scope.language_label_set.contains_slow(continue_label))
+            return continuable_scope.bytecode_target;
+    }
+
+    // We must have a continuable scope available that contains the label, as this should be enforced by the parser.
+    VERIFY_NOT_REACHED();
 }
 
 String CodeGenerationError::to_string()
