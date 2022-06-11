@@ -436,7 +436,9 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
     if (m_op == UnaryOp::Delete)
         return generator.emit_delete_reference(m_lhs);
 
-    TRY(m_lhs->generate_bytecode(generator));
+    // Typeof needs some special handling for when the LHS is an Identifier. Namely, it shouldn't throw on unresolvable references, but instead return "undefined".
+    if (m_op != UnaryOp::Typeof)
+        TRY(m_lhs->generate_bytecode(generator));
 
     switch (m_op) {
     case UnaryOp::BitwiseNot:
@@ -452,6 +454,13 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::UnaryMinus>();
         break;
     case UnaryOp::Typeof:
+        if (is<Identifier>(*m_lhs)) {
+            auto& identifier = static_cast<Identifier const&>(*m_lhs);
+            generator.emit<Bytecode::Op::TypeofVariable>(generator.intern_identifier(identifier.string()));
+            break;
+        }
+
+        TRY(m_lhs->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Typeof>();
         break;
     case UnaryOp::Void:

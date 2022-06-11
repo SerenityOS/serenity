@@ -764,6 +764,29 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     return {};
 }
 
+// 13.5.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation
+ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    // 1. Let val be the result of evaluating UnaryExpression.
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(interpreter.vm().resolve_binding(string));
+
+    // 2. If val is a Reference Record, then
+    //    a. If IsUnresolvableReference(val) is true, return "undefined".
+    if (reference.is_unresolvable()) {
+        interpreter.accumulator() = js_string(interpreter.vm(), "undefined"sv);
+        return {};
+    }
+
+    // 3. Set val to ? GetValue(val).
+    auto value = TRY(reference.get_value(interpreter.global_object()));
+
+    // 4. NOTE: This step is replaced in section B.3.6.3.
+    // 5. Return a String according to Table 41.
+    interpreter.accumulator() = js_string(interpreter.vm(), value.typeof());
+    return {};
+}
+
 String Load::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -1074,6 +1097,11 @@ String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetNewTarget"sv;
+}
+
+String TypeofVariable::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 }
