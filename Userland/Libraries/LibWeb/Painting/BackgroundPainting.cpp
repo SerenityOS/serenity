@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
@@ -41,7 +42,9 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     if (background_layers && !background_layers->is_empty())
         color_rect = get_box(background_layers->last().clip);
     // FIXME: Support elliptical corners
-    painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(), background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    aa_painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(),
+        background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
 
     if (!background_layers)
         return;
