@@ -52,6 +52,7 @@ host_env() {
     export READELF="${HOST_READELF}"
     export OBJCOPY="${HOST_OBJCOPY}"
     export STRIP="${HOST_STRIP}"
+    export CXXFILT="${HOST_CXXFILT}"
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
