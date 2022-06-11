@@ -25,14 +25,20 @@ export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}clang"
     export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin"
-    export CC="clang --target=${SERENITY_ARCH}-pc-serenity --sysroot=${SERENITY_BUILD_DIR}/Root"
-    export CXX="clang++ --target=${SERENITY_ARCH}-pc-serenity --sysroot=${SERENITY_BUILD_DIR}/Root"
+    export CC="${SERENITY_ARCH}-pc-serenity-clang"
+    export CXX="${SERENITY_ARCH}-pc-serenity-clang++"
     export AR="llvm-ar"
     export RANLIB="llvm-ranlib"
     export READELF="llvm-readelf"
     export OBJCOPY="llvm-objcopy"
     export STRIP="llvm-strip"
     export CXXFILT="llvm-cxxfilt"
+    # FIXME: Remove after next toolchain update (symlinks already in BuildClang.sh)
+    if [ ! -f "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang" ]; then
+        ln -s clang "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang"
+        ln -s clang++ "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang++"
+        echo "--sysroot=${SERENITY_BUILD_DIR}/Root" > "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity.cfg"
+    fi
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
     export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin"
