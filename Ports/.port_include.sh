@@ -25,7 +25,7 @@ target_env
 DESTDIR="${SERENITY_INSTALL_ROOT}"
 
 enable_ccache() {
-    if command -v ccache &>/dev/null; then
+    if [ "${USE_CCACHE:-true}" = "true" ] && command -v ccache &>/dev/null; then
         ccache_tooldir="${SERENITY_BUILD_DIR}/ccache"
         mkdir -p "$ccache_tooldir"
         if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
