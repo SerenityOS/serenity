@@ -910,6 +910,22 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class TypeofVariable final : public Instruction {
+public:
+    explicit TypeofVariable(IdentifierTableIndex identifier)
+        : Instruction(Type::TypeofVariable)
+        , m_identifier(identifier)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+};
+
 }
 
 namespace JS::Bytecode {
