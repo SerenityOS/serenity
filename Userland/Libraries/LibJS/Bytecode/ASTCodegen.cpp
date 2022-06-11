@@ -1363,6 +1363,8 @@ Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecod
 {
     if (m_argument)
         TRY(m_argument->generate_bytecode(generator));
+    else
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
 
     if (generator.is_in_generator_or_async_function()) {
         generator.perform_needed_unwinds<Bytecode::Op::Yield>();
