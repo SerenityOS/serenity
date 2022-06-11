@@ -499,13 +499,39 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
     m_underlying_painter.fill_rect(left_rect, color);
     m_underlying_painter.fill_rect(inner, color);
 
-    // FIXME: Don't draw a whole circle each time
+    enum class CornerClip {
+        TopLeft,
+        BottomLeft,
+        TopRight,
+        BottomRight
+    };
+
+    auto fill_corner = [&](auto const& point, int radius, CornerClip clip) {
+        PainterStateSaver save { m_underlying_painter };
+        auto corner_clip = IntRect::from_two_points(point, [&] {
+            switch (clip) {
+            case CornerClip::TopLeft:
+                return point.translated(-radius, -radius);
+            case CornerClip::BottomLeft:
+                return point.translated(-radius, radius);
+            case CornerClip::TopRight:
+                return point.translated(radius, -radius);
+            case CornerClip::BottomRight:
+                return point.translated(radius, radius);
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }());
+        m_underlying_painter.add_clip_rect(corner_clip);
+        fill_circle(point, radius, color);
+    };
+
     if (top_left_radius)
-        fill_circle(top_left_corner, top_left_radius, color);
+        fill_corner(top_left_corner, top_left_radius, CornerClip::TopLeft);
     if (top_right_radius)
-        fill_circle(top_right_corner, top_right_radius, color);
+        fill_corner(top_right_corner, top_right_radius, CornerClip::TopRight);
     if (bottom_left_radius)
-        fill_circle(bottom_left_corner, bottom_left_radius, color);
+        fill_corner(bottom_left_corner, bottom_left_radius, CornerClip::BottomLeft);
     if (bottom_right_radius)
-        fill_circle(bottom_right_corner, bottom_right_radius, color);
+        fill_corner(bottom_right_corner, bottom_right_radius, CornerClip::BottomRight);
 }
