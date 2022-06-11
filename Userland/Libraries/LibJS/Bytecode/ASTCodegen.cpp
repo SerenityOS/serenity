@@ -1010,7 +1010,23 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
 
 Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    bool has_name = !name().is_empty();
+    Optional<Bytecode::IdentifierTableIndex> name_identifier;
+
+    if (has_name) {
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical);
+
+        name_identifier = generator.intern_identifier(name());
+        generator.emit<Bytecode::Op::CreateVariable>(*name_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+    }
+
     generator.emit<Bytecode::Op::NewFunction>(*this);
+
+    if (has_name) {
+        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+        generator.end_variable_scope();
+    }
+
     return {};
 }
 
