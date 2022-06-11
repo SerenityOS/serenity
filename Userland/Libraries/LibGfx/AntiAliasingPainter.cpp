@@ -454,11 +454,11 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
     };
     IntPoint bottom_left_corner {
         a_rect.x() + bottom_left_radius,
-        a_rect.y() + a_rect.height() - bottom_right_radius
+        a_rect.y() + a_rect.height() - bottom_left_radius
     };
     IntPoint bottom_right_corner {
-        a_rect.x() + a_rect.width() - bottom_left_radius,
-        a_rect.y() + a_rect.height() - bottom_left_radius
+        a_rect.x() + a_rect.width() - bottom_right_radius,
+        a_rect.y() + a_rect.height() - bottom_right_radius
     };
 
     IntRect top_rect {
