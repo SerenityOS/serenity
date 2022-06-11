@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <andrewdkaster@gmail.com>
+Date: Sun, 12 Jun 2022 23:13:56 -0600
+Subject: [PATCH] make: Build with c++20 when targeting serenity
+
+---
+ make/autoconf/flags-cflags.m4                 | 8 ++++++--
+ src/hotspot/share/utilities/chunkedList.hpp   | 2 +-
+ src/hotspot/share/utilities/events.hpp        | 2 +-
+ src/hotspot/share/utilities/growableArray.hpp | 2 +-
+ src/hotspot/share/utilities/linkedlist.hpp    | 2 +-
+ 5 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
+index 62e53a1c4..9239dfb43 100644
+--- a/make/autoconf/flags-cflags.m4
++++ b/make/autoconf/flags-cflags.m4
+@@ -154,7 +154,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
+       WARNINGS_ENABLE_ALL_CFLAGS="-Wall -Wextra -Wformat=2 $WARNINGS_ENABLE_ADDITIONAL"
+       WARNINGS_ENABLE_ALL_CXXFLAGS="$WARNINGS_ENABLE_ALL_CFLAGS $WARNINGS_ENABLE_ADDITIONAL_CXX"
+ 
+-      DISABLED_WARNINGS="unused-parameter unused"
++      DISABLED_WARNINGS="unused-parameter unused address stringop-overflow stringop-truncation format-truncation use-after-free"
++      DISABLED_WARNINGS_CXX="volatile deprecated-enum-enum-conversion deprecated-enum-float-conversion"
+       ;;
+ 
+     clang)
+@@ -166,7 +167,7 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
+           -Wunused-function -Wundef -Wunused-value -Woverloaded-virtual"
+       WARNINGS_ENABLE_ALL="-Wall -Wextra -Wformat=2 $WARNINGS_ENABLE_ADDITIONAL"
+ 
+-      DISABLED_WARNINGS="unknown-warning-option unused-parameter unused"
++      DISABLED_WARNINGS="unknown-warning-option unused-parameter unused deprecated-volatile deprecated-anon-enum-enum-conversion deprecated-enum-float-conversion ambiguous-reversed-operator"
+ 
+       ;;
+ 
+@@ -529,6 +530,9 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
+   else
+     AC_MSG_ERROR([Don't know how to enable C++14 for this toolchain])
+   fi
++  if test "x$OPENJDK_TARGET_OS" = xserenity; then
++    LANGSTD_CXXFLAGS="-std=c++20"
++  fi
+   TOOLCHAIN_CFLAGS_JDK_CXXONLY="$TOOLCHAIN_CFLAGS_JDK_CXXONLY $LANGSTD_CXXFLAGS"
+   TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM $LANGSTD_CXXFLAGS"
+   ADLC_LANGSTD_CXXFLAGS="$LANGSTD_CXXFLAGS"
+diff --git a/src/hotspot/share/utilities/chunkedList.hpp b/src/hotspot/share/utilities/chunkedList.hpp
+index 1a899ee2b..13f05cd3a 100644
+--- a/src/hotspot/share/utilities/chunkedList.hpp
++++ b/src/hotspot/share/utilities/chunkedList.hpp
+@@ -44,7 +44,7 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
+   }
+ 
+  public:
+-  ChunkedList<T, F>() : _top(_values), _next_used(NULL), _next_free(NULL) {}
++  ChunkedList() : _top(_values), _next_used(NULL), _next_free(NULL) {}
+ 
+   bool is_full() const {
+     return _top == end();
+diff --git a/src/hotspot/share/utilities/events.hpp b/src/hotspot/share/utilities/events.hpp
+index b5d67bd6a..3cf3b399f 100644
+--- a/src/hotspot/share/utilities/events.hpp
++++ b/src/hotspot/share/utilities/events.hpp
+@@ -99,7 +99,7 @@ template <class T> class EventLogBase : public EventLog {
+   EventRecord<T>* _records;
+ 
+  public:
+-  EventLogBase<T>(const char* name, const char* handle, int length = LogEventsBufferEntries):
++  EventLogBase(const char* name, const char* handle, int length = LogEventsBufferEntries):
+     _mutex(Mutex::event, name, true, Mutex::_safepoint_check_never),
+     _name(name),
+     _handle(handle),
+diff --git a/src/hotspot/share/utilities/growableArray.hpp b/src/hotspot/share/utilities/growableArray.hpp
+index b75283843..67074b86f 100644
+--- a/src/hotspot/share/utilities/growableArray.hpp
++++ b/src/hotspot/share/utilities/growableArray.hpp
+@@ -118,7 +118,7 @@ class GrowableArrayView : public GrowableArrayBase {
+ protected:
+   E* _data; // data array
+ 
+-  GrowableArrayView<E>(E* data, int initial_max, int initial_len) :
++  GrowableArrayView(E* data, int initial_max, int initial_len) :
+       GrowableArrayBase(initial_max, initial_len), _data(data) {}
+ 
+   ~GrowableArrayView() {}
+diff --git a/src/hotspot/share/utilities/linkedlist.hpp b/src/hotspot/share/utilities/linkedlist.hpp
+index 16ee6a844..2c5ffe6cb 100644
+--- a/src/hotspot/share/utilities/linkedlist.hpp
++++ b/src/hotspot/share/utilities/linkedlist.hpp
+@@ -82,7 +82,7 @@ template <class E> class LinkedListNode : public ResourceObj {
+ template <class E> class LinkedList : public ResourceObj {
+  protected:
+   LinkedListNode<E>*    _head;
+-  NONCOPYABLE(LinkedList<E>);
++  NONCOPYABLE(LinkedList);
+ 
+  public:
+   LinkedList() : _head(NULL) { }
