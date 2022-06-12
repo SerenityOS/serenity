@@ -123,7 +123,7 @@ void NotificationWindow::enter_event(Core::Event&)
 void NotificationWindow::leave_event(Core::Event&)
 {
     m_hovering = false;
-    m_text_label->set_fixed_height(-1);
+    m_text_label->set_preferred_height(GUI::SpecialDimension::Grow);
     set_height(40);
 }
 
