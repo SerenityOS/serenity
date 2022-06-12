@@ -178,7 +178,7 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     Gfx::Font const& font = Gfx::FontDatabase::default_font();
     int const frame_width = frame_thickness();
     int const ideal_width = m_time_width;
-    int const widget_width = max_width();
+    int const widget_width = max_width().as_int();
     int const translation_x = (widget_width - ideal_width) / 2 - frame_width;
 
     painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_text, font, Gfx::TextAlignment::CenterLeft, palette().window_text());

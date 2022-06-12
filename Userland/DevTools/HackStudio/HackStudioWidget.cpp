@@ -945,7 +945,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
 
 void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 {
-    if (m_action_tab_widget->min_height() < 200)
+    if (m_action_tab_widget->effective_min_size().height().as_int() < 200)
         m_action_tab_widget->set_fixed_height(200);
     m_action_tab_widget->set_active_widget(&widget);
 }

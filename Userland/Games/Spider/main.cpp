@@ -268,7 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
 
     window->set_resizable(false);
-    window->resize(Spider::Game::width, Spider::Game::height + statusbar.max_height());
+    window->resize(Spider::Game::width, Spider::Game::height + statusbar.max_height().as_int());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
 

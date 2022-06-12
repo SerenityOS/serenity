@@ -206,7 +206,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window)));
 
     window->set_resizable(false);
-    window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height());
+    window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height().as_int());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
 
