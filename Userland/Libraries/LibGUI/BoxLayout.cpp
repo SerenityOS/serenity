@@ -191,11 +191,7 @@ void BoxLayout::run(Widget& widget)
     int current_x = margins().left() + content_rect.x();
     int current_y = margins().top() + content_rect.y();
 
-    auto widget_rect_with_margins_subtracted = content_rect;
-    widget_rect_with_margins_subtracted.take_from_left(margins().left());
-    widget_rect_with_margins_subtracted.take_from_top(margins().top());
-    widget_rect_with_margins_subtracted.take_from_right(margins().right());
-    widget_rect_with_margins_subtracted.take_from_bottom(margins().bottom());
+    auto widget_rect_with_margins_subtracted = margins().applied_to(content_rect);
 
     for (auto& item : items) {
         Gfx::IntRect rect { current_x, current_y, 0, 0 };
@@ -204,10 +200,6 @@ void BoxLayout::run(Widget& widget)
 
         if (item.widget) {
             int secondary = widget.content_size().secondary_size_for_orientation(orientation());
-            if (orientation() == Gfx::Orientation::Horizontal)
-                secondary -= margins().top() + margins().bottom();
-            else
-                secondary -= margins().left() + margins().right();
 
             int min_secondary = item.widget->min_size().secondary_size_for_orientation(orientation());
             int max_secondary = item.widget->max_size().secondary_size_for_orientation(orientation());
@@ -215,6 +207,7 @@ void BoxLayout::run(Widget& widget)
                 secondary = max(secondary, min_secondary);
             if (max_secondary >= 0)
                 secondary = min(secondary, max_secondary);
+            secondary -= margins().secondary_total_for_orientation(orientation());
 
             rect.set_secondary_size_for_orientation(orientation(), secondary);
 
