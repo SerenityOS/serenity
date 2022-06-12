@@ -36,9 +36,9 @@ UISize BoxLayout::preferred_size() const
         if (!entry.widget || !entry.widget->is_visible())
             continue;
 
-        UISize min_size = entry.widget->min_size();
+        UISize min_size = entry.widget->effective_min_size();
         UISize max_size = entry.widget->max_size();
-        UISize preferred_size = entry.widget->preferred_size();
+        UISize preferred_size = entry.widget->effective_preferred_size();
 
         if (result_primary != SpecialDimension::Grow) {
             UIDimension item_primary_size = clamp(
@@ -98,7 +98,7 @@ UISize BoxLayout::min_size() const
         if (!entry.widget || !entry.widget->is_visible())
             continue;
 
-        UISize min_size = entry.widget->min_size();
+        UISize min_size = entry.widget->effective_min_size();
 
         {
             UIDimension primary_min_size = min_size.primary_size_for_orientation(orientation());
