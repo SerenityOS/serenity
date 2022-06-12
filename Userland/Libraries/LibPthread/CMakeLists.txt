@@ -1,11 +1,4 @@
-set(SOURCES
-    forward.cpp
-    pthread.cpp
-    pthread_cond.cpp
-    pthread_once.cpp
-    semaphore.cpp
-)
-
-serenity_libc(LibPthread pthread)
-target_link_libraries(LibPthread LibC LibSystem)
-target_include_directories(LibPthread PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# Provide a dummy target and a linker script that tells everything to link against LibC instead.
+add_library(LibPthread INTERFACE)
+target_link_libraries(LibPthread INTERFACE LibC)
+file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
