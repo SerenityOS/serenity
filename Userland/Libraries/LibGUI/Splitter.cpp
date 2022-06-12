@@ -8,6 +8,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/UIDimensions.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
@@ -190,6 +191,7 @@ void Splitter::recompute_grabbables()
         set_hovered_grabbable(&m_grabbables[old_hovered_index.value()]);
 }
 
+// FIXME: Respect the child widgets min and max sizes
 void Splitter::mousemove_event(MouseEvent& event)
 {
     auto* grabbable = grabbable_at(event.position());
@@ -222,11 +224,27 @@ void Splitter::mousemove_event(MouseEvent& event)
     }
 
     if (m_orientation == Orientation::Horizontal) {
-        m_first_resizee->set_fixed_width(fixed_resizee() == FixedResizee::First ? new_first_resizee_size.width() : -1);
-        m_second_resizee->set_fixed_width(fixed_resizee() == FixedResizee::Second ? new_second_resizee_size.width() : -1);
+        if (fixed_resizee() == FixedResizee::First) {
+            m_first_resizee->set_fixed_width(new_first_resizee_size.width());
+            m_second_resizee->set_min_width(SpecialDimension::Shrink);
+            m_second_resizee->set_max_width(SpecialDimension::Grow);
+        } else {
+            VERIFY(fixed_resizee() == FixedResizee::Second);
+            m_second_resizee->set_fixed_width(new_second_resizee_size.width());
+            m_first_resizee->set_min_width(SpecialDimension::Shrink);
+            m_first_resizee->set_max_width(SpecialDimension::Grow);
+        }
     } else {
-        m_first_resizee->set_fixed_height(fixed_resizee() == FixedResizee::First ? new_first_resizee_size.height() : -1);
-        m_second_resizee->set_fixed_height(fixed_resizee() == FixedResizee::Second ? new_second_resizee_size.height() : -1);
+        if (fixed_resizee() == FixedResizee::First) {
+            m_first_resizee->set_fixed_height(new_first_resizee_size.height());
+            m_second_resizee->set_min_height(SpecialDimension::Shrink);
+            m_second_resizee->set_max_height(SpecialDimension::Grow);
+        } else {
+            VERIFY(fixed_resizee() == FixedResizee::Second);
+            m_second_resizee->set_fixed_height(new_second_resizee_size.height());
+            m_first_resizee->set_min_height(SpecialDimension::Shrink);
+            m_first_resizee->set_max_height(SpecialDimension::Grow);
+        }
     }
 
     invalidate_layout();
@@ -248,13 +266,13 @@ void Splitter::custom_layout()
     if (m_last_child_count > child_widgets.size()) {
         bool has_child_to_fill_space = false;
         for (auto& child : child_widgets) {
-            if (child.max_size() == Gfx::IntSize { -1, -1 }) {
+            if (child.max_size().primary_size_for_orientation(m_orientation).is_grow()) {
                 has_child_to_fill_space = true;
                 break;
             }
         }
         if (!has_child_to_fill_space)
-            child_widgets.last().set_fixed_size({ -1, -1 });
+            child_widgets.last().set_preferred_size(SpecialDimension::Grow);
     }
 }
 
