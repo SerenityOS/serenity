@@ -23,74 +23,66 @@ BoxLayout::BoxLayout(Orientation orientation)
         "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);
 }
 
-Gfx::IntSize BoxLayout::preferred_size() const
+UISize BoxLayout::preferred_size() const
 {
-    Gfx::IntSize size;
-    size.set_primary_size_for_orientation(orientation(), preferred_primary_size());
-    size.set_secondary_size_for_orientation(orientation(), preferred_secondary_size());
-    return size;
-}
+    VERIFY(m_owner);
 
-int BoxLayout::preferred_primary_size() const
-{
-    auto widget = verify_cast<GUI::Widget>(parent());
-    int size = 0;
+    UIDimension result_primary { 0 };
+    UIDimension result_secondary { 0 };
 
+    bool first_item { true };
     for (auto& entry : m_entries) {
         if (!entry.widget || !entry.widget->is_visible())
             continue;
-        int preferred_primary_size = -1;
-        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
-            preferred_primary_size = entry.widget->layout()->preferred_size().primary_size_for_orientation(orientation());
+
+        UISize min_size = entry.widget->min_size();
+        UISize max_size = entry.widget->max_size();
+        UISize preferred_size = entry.widget->preferred_size();
+
+        if (result_primary != SpecialDimension::Grow) {
+            UIDimension item_primary_size = clamp(
+                preferred_size.primary_size_for_orientation(orientation()),
+                min_size.primary_size_for_orientation(orientation()),
+                max_size.primary_size_for_orientation(orientation()));
+
+            if (item_primary_size.is_int())
+                result_primary.add_if_int(item_primary_size.as_int());
+
+            if (item_primary_size.is_grow())
+                result_primary = SpecialDimension::Grow;
+
+            if (!first_item)
+                result_primary.add_if_int(spacing());
         }
-        int item_size = max(0, preferred_primary_size);
-        int min_size = entry.widget->min_size().primary_size_for_orientation(orientation());
-        if (min_size != -1)
-            item_size = max(min_size, item_size);
-        int max_size = entry.widget->max_size().primary_size_for_orientation(orientation());
-        if (max_size != -1)
-            item_size = min(max_size, item_size);
-        size += item_size + spacing();
-    }
-    if (size > 0)
-        size -= spacing();
 
-    auto content_margins = widget->content_margins();
-    if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
-    else
-        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
+        {
+            UIDimension secondary_preferred_size = preferred_size.secondary_size_for_orientation(orientation());
 
-    if (!size)
-        return -1;
-    return size;
-}
+            if (secondary_preferred_size == SpecialDimension::OpportunisticGrow)
+                secondary_preferred_size = 0;
 
-int BoxLayout::preferred_secondary_size() const
-{
-    auto widget = verify_cast<GUI::Widget>(parent());
-    int size = 0;
-    for (auto& entry : m_entries) {
-        if (!entry.widget || !entry.widget->is_visible())
-            continue;
-        int min_size = entry.widget->min_size().secondary_size_for_orientation(orientation());
-        int preferred_secondary_size = -1;
-        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
-            preferred_secondary_size = entry.widget->layout()->preferred_size().secondary_size_for_orientation(orientation());
-            size = max(size, preferred_secondary_size);
+            UIDimension item_secondary_size = clamp(
+                secondary_preferred_size,
+                min_size.secondary_size_for_orientation(orientation()),
+                max_size.secondary_size_for_orientation(orientation()));
+
+            result_secondary = max(item_secondary_size, result_secondary);
         }
-        size = max(min_size, size);
+
+        first_item = false;
     }
 
-    auto content_margins = widget->content_margins();
-    if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
-    else
-        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
+    result_primary.add_if_int(
+        margins().primary_total_for_orientation(orientation())
+        + m_owner->content_margins().primary_total_for_orientation(orientation()));
 
-    if (!size)
-        return -1;
-    return size;
+    result_secondary.add_if_int(
+        margins().secondary_total_for_orientation(orientation())
+        + m_owner->content_margins().secondary_total_for_orientation(orientation()));
+
+    if (orientation() == Gfx::Orientation::Horizontal)
+        return { result_primary, result_secondary };
+    return { result_secondary, result_primary };
 }
 
 UISize BoxLayout::min_size() const
