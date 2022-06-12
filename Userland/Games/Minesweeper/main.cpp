@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     container->layout()->add_spacer();
 
     auto field = TRY(widget->try_add<Field>(flag_label, time_label, face_button, [&](auto size) {
-        size.set_height(size.height() + container->min_size().height());
+        size.set_height(size.height() + container->min_size().height().as_int());
         window->resize(size);
     }));
 

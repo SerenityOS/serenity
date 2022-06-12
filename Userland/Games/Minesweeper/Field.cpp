@@ -518,7 +518,7 @@ void Field::set_field_size(Difficulty difficulty, size_t rows, size_t columns, s
     m_mine_count = mine_count;
     set_fixed_size(frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size());
     reset();
-    m_on_size_changed(min_size());
+    m_on_size_changed(Gfx::IntSize(min_size()));
 }
 
 void Field::set_single_chording(bool enabled)

@@ -23,7 +23,7 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     update_widget_sizes();
     update_widget_positions();
 
-    int initial_height = min(300, timeline_view.height() + horizontal_scrollbar().max_height() + frame_thickness() * 2);
+    int initial_height = min(300, timeline_view.height() + 16 + frame_thickness() * 2);
     set_fixed_height(initial_height);
 
     m_timeline_view->on_scale_change = [this] {
@@ -48,16 +48,16 @@ void TimelineContainer::update_widget_sizes()
 {
     {
         m_timeline_view->do_layout();
-        auto preferred_size = m_timeline_view->layout()->preferred_size();
-        m_timeline_view->resize(preferred_size);
-        set_content_size(preferred_size);
+        auto preferred_size = m_timeline_view->effective_preferred_size();
+        m_timeline_view->resize(Gfx::IntSize(preferred_size));
+        set_content_size(Gfx::IntSize(preferred_size));
     }
 
     {
         m_header_container->do_layout();
-        auto preferred_size = m_header_container->layout()->preferred_size();
-        m_header_container->resize(preferred_size);
-        set_size_occupied_by_fixed_elements({ preferred_size.width(), 0 });
+        auto preferred_size = m_header_container->effective_preferred_size();
+        m_header_container->resize(Gfx::IntSize(preferred_size));
+        set_size_occupied_by_fixed_elements({ preferred_size.width().as_int(), 0 });
     }
 }
 
