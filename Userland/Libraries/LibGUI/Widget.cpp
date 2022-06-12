@@ -780,16 +780,18 @@ void Widget::set_font_fixed_width(bool fixed_width)
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->slope()));
 }
 
-void Widget::set_min_size(Gfx::IntSize const& size)
+void Widget::set_min_size(UISize const& size)
 {
+    VERIFY(size.width().is_one_of(SpecialDimension::Regular, SpecialDimension::Shrink));
     if (m_min_size == size)
         return;
     m_min_size = size;
     invalidate_layout();
 }
 
-void Widget::set_max_size(Gfx::IntSize const& size)
+void Widget::set_max_size(UISize const& size)
 {
+    VERIFY(size.width().is_one_of(SpecialDimension::Regular, SpecialDimension::Grow));
     if (m_max_size == size)
         return;
     m_max_size = size;
