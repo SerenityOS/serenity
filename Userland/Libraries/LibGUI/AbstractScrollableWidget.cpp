@@ -75,8 +75,8 @@ void AbstractScrollableWidget::mousewheel_event(MouseEvent& event)
 void AbstractScrollableWidget::custom_layout()
 {
     auto inner_rect = frame_inner_rect_for_size(size());
-    int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? int(m_horizontal_scrollbar->min_height()) : 0;
-    int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? int(m_vertical_scrollbar->min_width()) : 0;
+    int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->effective_min_size().height().as_int() : 0;
+    int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->effective_min_size().width().as_int() : 0;
 
     {
         int vertical_scrollbar_width = m_vertical_scrollbar->effective_min_size().width().as_int();

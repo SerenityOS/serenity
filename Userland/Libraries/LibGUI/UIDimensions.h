@@ -42,12 +42,6 @@ public:
     {
     }
 
-    // This is a temporary hack to get this compiling
-    operator int() const
-    {
-        return m_value;
-    }
-
     [[nodiscard]] inline bool is_special_value() const
     {
         return m_value < 0;
@@ -154,11 +148,6 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    operator AK::JsonValue() const
-    {
-        return this->as_json_value();
-    }
-
     [[nodiscard]] static Optional<UIDimension> construct_from_json_value(AK::JsonValue const value)
     {
         if (value.is_string()) {
@@ -179,12 +168,6 @@ public:
                 return {};
             return UIDimension(value_int);
         }
-    }
-
-    // FIXME: Remove these following methods when the move to the new layout system is completed
-    [[nodiscard]] inline bool operator==(int other) const
-    {
-        return m_value == other;
     }
 
 private:
@@ -235,7 +218,7 @@ public:
         return (width() == to_match || height() == to_match);
     }
 
-    operator Gfx::IntSize() const
+    explicit operator Gfx::IntSize() const
     {
         return Gfx::IntSize(width().as_int(), height().as_int());
     }
