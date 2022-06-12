@@ -33,7 +33,7 @@ int pthread_attr_destroy(pthread_attr_t*);
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
 
-#define PTHREAD_CANCELED (-1)
+#define PTHREAD_CANCELED ((void*)-1)
 
 int pthread_attr_getdetachstate(pthread_attr_t const*, int*);
 int pthread_attr_setdetachstate(pthread_attr_t*, int);
