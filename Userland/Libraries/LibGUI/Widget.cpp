@@ -1193,12 +1193,11 @@ bool Widget::has_focus_within() const
     return window->focused_widget() == &effective_focus_widget || is_ancestor_of(*window->focused_widget());
 }
 
-void Widget::set_shrink_to_fit(bool b)
+void Widget::set_shrink_to_fit(bool shrink_to_fit)
 {
-    if (m_shrink_to_fit == b)
-        return;
-    m_shrink_to_fit = b;
-    invalidate_layout();
+    // This function is deprecated, and soon to be removed, it is only still here to ease the transition to UIDimensions
+    if (shrink_to_fit)
+        set_preferred_size(SpecialDimension::Fit);
 }
 
 bool Widget::has_pending_drop() const
