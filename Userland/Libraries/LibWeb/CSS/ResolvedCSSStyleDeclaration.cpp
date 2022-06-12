@@ -284,14 +284,22 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return BorderRadiusShorthandStyleValue::create(top_left_radius.release_nonnull(), top_right_radius.release_nonnull(), bottom_right_radius.release_nonnull(), bottom_left_radius.release_nonnull());
     }
     // FIXME: The two radius components are not yet stored, as we currently don't actually render them.
-    case CSS::PropertyID::BorderBottomLeftRadius:
-        return BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_left_radius(), layout_node.computed_values().border_bottom_left_radius());
-    case CSS::PropertyID::BorderBottomRightRadius:
-        return BorderRadiusStyleValue::create(layout_node.computed_values().border_bottom_right_radius(), layout_node.computed_values().border_bottom_right_radius());
-    case CSS::PropertyID::BorderTopLeftRadius:
-        return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_left_radius(), layout_node.computed_values().border_top_left_radius());
-    case CSS::PropertyID::BorderTopRightRadius:
-        return BorderRadiusStyleValue::create(layout_node.computed_values().border_top_right_radius(), layout_node.computed_values().border_top_right_radius());
+    case CSS::PropertyID::BorderBottomLeftRadius: {
+        auto const& border_radius = layout_node.computed_values().border_bottom_left_radius();
+        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
+    }
+    case CSS::PropertyID::BorderBottomRightRadius: {
+        auto const& border_radius = layout_node.computed_values().border_bottom_right_radius();
+        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
+    }
+    case CSS::PropertyID::BorderTopLeftRadius: {
+        auto const& border_radius = layout_node.computed_values().border_top_left_radius();
+        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
+    }
+    case CSS::PropertyID::BorderTopRightRadius: {
+        auto const& border_radius = layout_node.computed_values().border_top_right_radius();
+        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
+    }
     case CSS::PropertyID::BorderTopWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
     case CSS::PropertyID::BorderRightWidth:

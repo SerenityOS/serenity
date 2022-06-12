@@ -178,7 +178,7 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
+    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
@@ -210,7 +210,7 @@ void PaintableBox::paint_background(PaintContext& context) const
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = absolute_border_box_rect();
 
-    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radius_data());
+    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radii_data());
 }
 
 void PaintableBox::paint_box_shadow(PaintContext& context) const
@@ -233,9 +233,9 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }
 
-BorderRadiusData PaintableBox::normalized_border_radius_data() const
+BorderRadiiData PaintableBox::normalized_border_radii_data() const
 {
-    return Painting::normalized_border_radius_data(layout_box(), absolute_border_box_rect(),
+    return Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
