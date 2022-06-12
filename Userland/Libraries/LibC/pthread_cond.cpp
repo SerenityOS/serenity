@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/Types.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -87,6 +88,8 @@ int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_cond_timedwait.html
 int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
 {
+    __pthread_maybe_cancel();
+
     // Save the mutex this condition variable is associated with. We don't (yet)
     // support changing this mutex once set.
     pthread_mutex_t* old_mutex = AK::atomic_exchange(&cond->mutex, mutex, AK::memory_order_relaxed);

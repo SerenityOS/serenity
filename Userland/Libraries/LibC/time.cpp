@@ -11,6 +11,7 @@
 #include <Kernel/API/TimePage.h>
 #include <LibTimeZone/TimeZone.h>
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -458,6 +459,8 @@ int clock_settime(clockid_t clock_id, struct timespec* ts)
 
 int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep)
 {
+    __pthread_maybe_cancel();
+
     Syscall::SC_clock_nanosleep_params params { clock_id, flags, requested_sleep, remaining_sleep };
     int rc = syscall(SC_clock_nanosleep, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);

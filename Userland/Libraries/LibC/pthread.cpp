@@ -192,6 +192,8 @@ void pthread_cleanup_pop(int execute)
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_join.html
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_join_thread, thread, exit_value_ptr);
     __RETURN_PTHREAD_ERROR(rc);
 }
