@@ -204,7 +204,7 @@ index 0000000..088e883
 +
 +# Windowed x resolution scale and y resolution scale
 +# (Real x res: base_size * xscale * aspect_ratio, real y res: base_size * yscale)
-+# video_scale = 3.0
++video_scale = 2.0
 +
 +# Percentage of opacity to use for the window (100 is completely opaque).
 +# video_window_opacity = 100

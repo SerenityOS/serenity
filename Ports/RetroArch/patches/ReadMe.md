@@ -31,6 +31,7 @@ Set default options for SerenityOS
 
 Set libretro cores path to `/usr/lib/libretro`
 Set video and audio driver to sdl2
+Set video scale to 2
 Disable vsync
 The libretro core won't keep running in the background when we are in the menu.
 Don't pause gameplay when window focus is lost
