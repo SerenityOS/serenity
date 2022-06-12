@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
@@ -107,6 +108,28 @@ public:
     UIDimension preferred_height() const { return m_preferred_size.height(); }
     void set_preferred_width(UIDimension width) { set_preferred_size(width, preferred_height()); }
     void set_preferred_height(UIDimension height) { set_preferred_size(preferred_width(), height); }
+
+    virtual Optional<UISize> calculated_preferred_size() const;
+    virtual Optional<UISize> calculated_min_size() const;
+
+    UISize effective_preferred_size() const
+    {
+        auto effective_preferred_size = preferred_size();
+        if (effective_preferred_size.either_is(SpecialDimension::Shrink))
+            effective_preferred_size.replace_component_if_matching_with(SpecialDimension::Shrink, effective_min_size());
+        if (effective_preferred_size.either_is(SpecialDimension::Fit) && calculated_preferred_size().has_value())
+            effective_preferred_size.replace_component_if_matching_with(SpecialDimension::Fit, calculated_preferred_size().value());
+        return effective_preferred_size;
+    }
+
+    UISize effective_min_size() const
+    {
+        auto effective_min_size = min_size();
+        if (effective_min_size.either_is(SpecialDimension::Shrink) && calculated_min_size().has_value())
+            effective_min_size.replace_component_if_matching_with(SpecialDimension::Shrink, calculated_min_size().value());
+        return effective_min_size;
+    }
+
     void set_fixed_size(UISize const& size)
     {
         VERIFY(size.has_only_int_values());

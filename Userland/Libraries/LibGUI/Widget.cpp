@@ -809,6 +809,24 @@ void Widget::set_preferred_size(UISize const& size)
     invalidate_layout();
 }
 
+Optional<UISize> Widget::calculated_preferred_size() const
+{
+    if (layout())
+        return { layout()->preferred_size() };
+    return {};
+}
+
+Optional<UISize> Widget::calculated_min_size() const
+{
+    if (layout())
+        return { layout()->min_size() };
+    // Fall back to at least displaying the margins, so the Widget is not 0 size.
+    auto m = content_margins();
+    if (!m.is_null())
+        return UISize { m.left() + m.right(), m.top() + m.bottom() };
+    return {};
+}
+
 void Widget::invalidate_layout()
 {
     if (window())
