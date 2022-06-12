@@ -49,7 +49,7 @@ public:
     void remove_widget(Widget&);
 
     virtual void run(Widget&) = 0;
-    virtual Gfx::IntSize preferred_size() const = 0;
+    virtual UISize preferred_size() const = 0;
     virtual UISize min_size() const = 0;
 
     void notify_adopted(Badge<Widget>, Widget&);
