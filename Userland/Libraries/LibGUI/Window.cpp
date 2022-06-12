@@ -723,10 +723,9 @@ void Window::set_main_widget(Widget* widget)
     if (m_main_widget) {
         add_child(*widget);
         auto new_window_rect = rect();
-        if (m_main_widget->min_width() >= 0)
-            new_window_rect.set_width(max(new_window_rect.width(), m_main_widget->min_width()));
-        if (m_main_widget->min_height() >= 0)
-            new_window_rect.set_height(max(new_window_rect.height(), m_main_widget->min_height()));
+        auto new_widget_min_size = m_main_widget->effective_min_size();
+        new_window_rect.set_width(max(new_window_rect.width(), MUST(new_widget_min_size.width().shrink_value())));
+        new_window_rect.set_height(max(new_window_rect.height(), MUST(new_widget_min_size.height().shrink_value())));
         set_rect(new_window_rect);
         m_main_widget->set_relative_rect({ {}, new_window_rect.size() });
         m_main_widget->set_window(this);
