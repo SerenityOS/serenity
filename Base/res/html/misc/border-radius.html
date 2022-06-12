@@ -139,6 +139,39 @@
             border: 1px solid black;
             border-radius: 500px;
         }
+
+        .rect {
+            width: 300px;
+            height: 100px;
+            background-color: red;
+        }
+
+        .rect-1 {
+            border-radius: 50%;
+        }
+
+        .rect-2 {
+            border-radius: 50% 20% / 10% 40%;
+            width: 280px;
+            height: 215px;
+            background-color: #5b6dcd;
+        }
+
+        .rect-3 {
+            border-top-left-radius: 50%;
+        }
+
+        .rect-4 {
+            border-top-right-radius: 50%;
+        }
+
+        .rect-5 {
+            border-bottom-left-radius: 50%;
+        }
+
+        .rect-6 {
+            border-bottom-right-radius: 50%;
+        }
     </style>
 </head>
 
@@ -171,6 +204,27 @@
     <br>
     <em>bottom-left 10px</em>
     <div class="box box-13"></div>
+    <br>
+    <br>
+
+    <p>These boxes have elliptical borders</p>
+    <em>All round 50%</em>
+    <div class="rect rect-1"></div>
+    <br>
+    <em>All round -- MDN example</em>
+    <div class="rect rect-2"></div>
+    <br>
+    <em>top-left 50%</em>
+    <div class="rect rect-3"></div>
+    <br>
+    <em>top-right 50%</em>
+    <div class="rect rect-4"></div>
+    <br>
+    <em>bottom-left 50%</em>
+    <div class="rect rect-5"></div>
+    <br>
+    <em>bottom-right 50%</em>
+    <div class="rect rect-6"></div>
     <br>
     <br>
 
