@@ -78,17 +78,23 @@ void AbstractScrollableWidget::custom_layout()
     int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? int(m_horizontal_scrollbar->min_height()) : 0;
     int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? int(m_vertical_scrollbar->min_width()) : 0;
 
-    m_vertical_scrollbar->set_relative_rect(
-        inner_rect.right() + 1 - m_vertical_scrollbar->min_width(),
-        inner_rect.top(),
-        m_vertical_scrollbar->min_width(),
-        inner_rect.height() - height_wanted_by_horizontal_scrollbar);
+    {
+        int vertical_scrollbar_width = m_vertical_scrollbar->effective_min_size().width().as_int();
+        m_vertical_scrollbar->set_relative_rect(
+            inner_rect.right() + 1 - vertical_scrollbar_width,
+            inner_rect.top(),
+            vertical_scrollbar_width,
+            inner_rect.height() - height_wanted_by_horizontal_scrollbar);
+    }
 
-    m_horizontal_scrollbar->set_relative_rect(
-        inner_rect.left(),
-        inner_rect.bottom() + 1 - m_horizontal_scrollbar->min_height(),
-        inner_rect.width() - width_wanted_by_vertical_scrollbar,
-        m_horizontal_scrollbar->min_height());
+    {
+        int horizontal_scrollbar_height = m_horizontal_scrollbar->effective_min_size().height().as_int();
+        m_horizontal_scrollbar->set_relative_rect(
+            inner_rect.left(),
+            inner_rect.bottom() + 1 - horizontal_scrollbar_height,
+            inner_rect.width() - width_wanted_by_vertical_scrollbar,
+            horizontal_scrollbar_height);
+    }
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
@@ -106,8 +112,8 @@ void AbstractScrollableWidget::resize_event(ResizeEvent& event)
 Gfx::IntSize AbstractScrollableWidget::available_size() const
 {
     auto inner_size = Widget::content_size();
-    unsigned available_width = max(inner_size.width() - m_size_occupied_by_fixed_elements.width(), 0);
-    unsigned available_height = max(inner_size.height() - m_size_occupied_by_fixed_elements.height(), 0);
+    int available_width = max(inner_size.width() - m_size_occupied_by_fixed_elements.width(), 0);
+    int available_height = max(inner_size.height() - m_size_occupied_by_fixed_elements.height(), 0);
     return { available_width, available_height };
 }
 
