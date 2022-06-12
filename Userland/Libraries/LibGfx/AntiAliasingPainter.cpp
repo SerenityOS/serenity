@@ -438,52 +438,61 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
 
 void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
 {
-    if (!top_left_radius && !top_right_radius && !bottom_right_radius && !bottom_left_radius)
+    fill_rect_with_rounded_corners(a_rect, color,
+        { top_left_radius, top_left_radius },
+        { top_right_radius, top_right_radius },
+        { bottom_right_radius, bottom_right_radius },
+        { bottom_left_radius, bottom_left_radius });
+}
+
+void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left)
+{
+    if (!top_left && !top_right && !bottom_right && !bottom_left)
         return m_underlying_painter.fill_rect(a_rect, color);
 
     if (color.alpha() == 0)
         return;
 
     IntPoint top_left_corner {
-        a_rect.x() + top_left_radius,
-        a_rect.y() + top_left_radius,
+        a_rect.x() + top_left.horizontal_radius,
+        a_rect.y() + top_left.vertical_radius,
     };
     IntPoint top_right_corner {
-        a_rect.x() + a_rect.width() - top_right_radius,
-        a_rect.y() + top_right_radius,
+        a_rect.x() + a_rect.width() - top_right.horizontal_radius,
+        a_rect.y() + top_right.vertical_radius,
     };
     IntPoint bottom_left_corner {
-        a_rect.x() + bottom_left_radius,
-        a_rect.y() + a_rect.height() - bottom_left_radius
+        a_rect.x() + bottom_left.horizontal_radius,
+        a_rect.y() + a_rect.height() - bottom_left.vertical_radius
     };
     IntPoint bottom_right_corner {
-        a_rect.x() + a_rect.width() - bottom_right_radius,
-        a_rect.y() + a_rect.height() - bottom_right_radius
+        a_rect.x() + a_rect.width() - bottom_right.horizontal_radius,
+        a_rect.y() + a_rect.height() - bottom_right.vertical_radius
     };
 
     IntRect top_rect {
-        a_rect.x() + top_left_radius,
+        a_rect.x() + top_left.horizontal_radius,
         a_rect.y(),
-        a_rect.width() - top_left_radius - top_right_radius,
-        top_left_radius
+        a_rect.width() - top_left.horizontal_radius - top_right.horizontal_radius,
+        top_left.vertical_radius
     };
     IntRect right_rect {
-        a_rect.x() + a_rect.width() - top_right_radius,
-        a_rect.y() + top_right_radius,
-        top_right_radius,
-        a_rect.height() - top_right_radius - bottom_right_radius
+        a_rect.x() + a_rect.width() - top_right.horizontal_radius,
+        a_rect.y() + top_right.vertical_radius,
+        top_right.horizontal_radius,
+        a_rect.height() - top_right.vertical_radius - bottom_right.vertical_radius
     };
     IntRect bottom_rect {
-        a_rect.x() + bottom_left_radius,
-        a_rect.y() + a_rect.height() - bottom_right_radius,
-        a_rect.width() - bottom_left_radius - bottom_right_radius,
-        bottom_right_radius
+        a_rect.x() + bottom_left.horizontal_radius,
+        a_rect.y() + a_rect.height() - bottom_right.vertical_radius,
+        a_rect.width() - bottom_left.horizontal_radius - bottom_right.horizontal_radius,
+        bottom_right.vertical_radius
     };
     IntRect left_rect {
         a_rect.x(),
-        a_rect.y() + top_left_radius,
-        bottom_left_radius,
-        a_rect.height() - top_left_radius - bottom_left_radius
+        a_rect.y() + top_left.vertical_radius,
+        bottom_left.horizontal_radius,
+        a_rect.height() - top_left.vertical_radius - bottom_left.vertical_radius
     };
 
     IntRect inner = {
@@ -499,39 +508,19 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
     m_underlying_painter.fill_rect(left_rect, color);
     m_underlying_painter.fill_rect(inner, color);
 
-    enum class CornerClip {
-        TopLeft,
-        BottomLeft,
-        TopRight,
-        BottomRight
-    };
-
-    auto fill_corner = [&](auto const& point, int radius, CornerClip clip) {
+    auto fill_corner = [&](auto const& ellipse_center, auto const& corner_point, CornerRadius const& corner) {
         PainterStateSaver save { m_underlying_painter };
-        auto corner_clip = IntRect::from_two_points(point, [&] {
-            switch (clip) {
-            case CornerClip::TopLeft:
-                return point.translated(-radius, -radius);
-            case CornerClip::BottomLeft:
-                return point.translated(-radius, radius);
-            case CornerClip::TopRight:
-                return point.translated(radius, -radius);
-            case CornerClip::BottomRight:
-                return point.translated(radius, radius);
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        }());
-        m_underlying_painter.add_clip_rect(corner_clip);
-        fill_circle(point, radius, color);
+        m_underlying_painter.add_clip_rect(IntRect::from_two_points(ellipse_center, corner_point));
+        fill_ellipse(IntRect::centered_at(ellipse_center, { corner.horizontal_radius * 2, corner.vertical_radius * 2 }), color);
     };
 
-    if (top_left_radius)
-        fill_corner(top_left_corner, top_left_radius, CornerClip::TopLeft);
-    if (top_right_radius)
-        fill_corner(top_right_corner, top_right_radius, CornerClip::TopRight);
-    if (bottom_left_radius)
-        fill_corner(bottom_left_corner, bottom_left_radius, CornerClip::BottomLeft);
-    if (bottom_right_radius)
-        fill_corner(bottom_right_corner, bottom_right_radius, CornerClip::BottomRight);
+    auto bounding_rect = a_rect.inflated(0, 1, 1, 0);
+    if (top_left)
+        fill_corner(top_left_corner, bounding_rect.top_left(), top_left);
+    if (top_right)
+        fill_corner(top_right_corner, bounding_rect.top_right(), top_right);
+    if (bottom_left)
+        fill_corner(bottom_left_corner, bounding_rect.bottom_left(), bottom_left);
+    if (bottom_right)
+        fill_corner(bottom_right_corner, bounding_rect.bottom_right(), bottom_right);
 }
