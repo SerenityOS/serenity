@@ -38,6 +38,9 @@ static constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the d
 __thread void* s_stack_location;
 __thread size_t s_stack_size;
 
+__thread int s_thread_cancel_state = PTHREAD_CANCEL_ENABLE;
+__thread int s_thread_cancel_type = PTHREAD_CANCEL_DEFERRED;
+
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
 
@@ -502,22 +505,22 @@ int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setcancelstate.html
 int pthread_setcancelstate(int state, int* oldstate)
 {
-    if (oldstate)
-        *oldstate = PTHREAD_CANCEL_DISABLE;
-    dbgln("FIXME: Implement pthread_setcancelstate({}, ...)", state);
-    if (state != PTHREAD_CANCEL_DISABLE)
+    if (state != PTHREAD_CANCEL_ENABLE && state != PTHREAD_CANCEL_DISABLE)
         return EINVAL;
+    if (oldstate)
+        *oldstate = s_thread_cancel_state;
+    s_thread_cancel_state = state;
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setcanceltype.html
 int pthread_setcanceltype(int type, int* oldtype)
 {
-    if (oldtype)
-        *oldtype = PTHREAD_CANCEL_DEFERRED;
-    dbgln("FIXME: Implement pthread_setcanceltype({}, ...)", type);
-    if (type != PTHREAD_CANCEL_DEFERRED)
+    if (type != PTHREAD_CANCEL_DEFERRED && type != PTHREAD_CANCEL_ASYNCHRONOUS)
         return EINVAL;
+    if (oldtype)
+        *oldtype = s_thread_cancel_type;
+    s_thread_cancel_type = type;
     return 0;
 }
 
