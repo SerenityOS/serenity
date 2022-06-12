@@ -312,8 +312,9 @@ public:
     bool load_from_gml(StringView);
     bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
 
+    // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);
-    bool is_shrink_to_fit() const { return m_shrink_to_fit; }
+    bool is_shrink_to_fit() const { return preferred_width().is_shrink() || preferred_height().is_shrink(); }
 
     bool has_pending_drop() const;
 
@@ -402,7 +403,6 @@ private:
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
     bool m_accepts_command_palette { true };
-    bool m_shrink_to_fit { false };
     bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
