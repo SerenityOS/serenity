@@ -93,6 +93,56 @@ int BoxLayout::preferred_secondary_size() const
     return size;
 }
 
+UISize BoxLayout::min_size() const
+{
+    VERIFY(m_owner);
+
+    UIDimension result_primary { 0 };
+    UIDimension result_secondary { 0 };
+
+    bool first_item { true };
+    for (auto& entry : m_entries) {
+        if (!entry.widget || !entry.widget->is_visible())
+            continue;
+
+        UISize min_size = entry.widget->min_size();
+
+        {
+            UIDimension primary_min_size = min_size.primary_size_for_orientation(orientation());
+
+            VERIFY(primary_min_size.is_one_of(SpecialDimension::Shrink, SpecialDimension::Regular));
+
+            if (primary_min_size.is_int())
+                result_primary.add_if_int(primary_min_size.as_int());
+
+            if (!first_item)
+                result_primary.add_if_int(spacing());
+        }
+
+        {
+            UIDimension secondary_min_size = min_size.secondary_size_for_orientation(orientation());
+
+            VERIFY(secondary_min_size.is_one_of(SpecialDimension::Shrink, SpecialDimension::Regular));
+
+            result_secondary = max(result_secondary, secondary_min_size);
+        }
+
+        first_item = false;
+    }
+
+    result_primary.add_if_int(
+        margins().primary_total_for_orientation(orientation())
+        + m_owner->content_margins().primary_total_for_orientation(orientation()));
+
+    result_secondary.add_if_int(
+        margins().secondary_total_for_orientation(orientation())
+        + m_owner->content_margins().secondary_total_for_orientation(orientation()));
+
+    if (orientation() == Gfx::Orientation::Horizontal)
+        return { result_primary, result_secondary };
+    return { result_secondary, result_primary };
+}
+
 void BoxLayout::run(Widget& widget)
 {
     if (m_entries.is_empty())
