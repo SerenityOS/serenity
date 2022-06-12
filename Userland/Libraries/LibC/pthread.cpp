@@ -12,6 +12,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
+#include <bits/pthread_cancel.h>
 #include <bits/pthread_integration.h>
 #include <errno.h>
 #include <limits.h>
@@ -50,6 +51,8 @@ struct CleanupHandler {
 };
 
 static thread_local SinglyLinkedList<CleanupHandler> cleanup_handlers;
+
+static __thread bool pending_cancellation = false;
 
 extern "C" {
 
@@ -152,6 +155,21 @@ void pthread_exit(void* value_ptr)
     }
 
     pthread_exit_without_cleanup_handlers(value_ptr);
+}
+
+void __pthread_maybe_cancel()
+{
+    // Check if we have cancellations enabled.
+    if (s_thread_cancel_state != PTHREAD_CANCEL_ENABLE)
+        return;
+
+    // Check if a cancellation request is pending.
+    if (!pending_cancellation)
+        return;
+
+    // Exit the thread via `pthread_exit`. This handles passing the
+    // return value and calling the cleanup handlers for us.
+    pthread_exit(PTHREAD_CANCELED);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
@@ -481,11 +499,35 @@ int pthread_setschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] in
     return 0;
 }
 
+static void pthread_cancel_signal_handler(int signal)
+{
+    // SIGCANCEL is a custom signal that is beyond the usual range of signal numbers.
+    // Let's make sure we know about it in case we still end up in here, but the signal
+    // number is being mangled.
+    VERIFY(signal == SIGCANCEL);
+
+    // Note: We don't handle PTHREAD_CANCEL_ASYNCHRONOUS any different from PTHREAD_CANCEL_DEFERRED,
+    // since ASYNCHRONOUS just means that the thread can be cancelled at any time (instead of just
+    // at the next cancellation point) and it seems to be generally discouraged to use it at all.
+    pending_cancellation = true;
+}
+
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cancel.html
 // NOTE: libgcc expects this function to exist in libpthread, even if it is not implemented.
-int pthread_cancel(pthread_t)
+int pthread_cancel(pthread_t thread)
 {
-    TODO();
+    // Set up our signal handler, which listens on SIGCANCEL and flips the cancellation indicator.
+    // Note that signal handlers are shared across the whole process, so we can just set that up at any time.
+    static bool set_up_cancel_handler = false;
+
+    if (!set_up_cancel_handler) {
+        struct sigaction act = {};
+        act.sa_handler = pthread_cancel_signal_handler;
+        sigaction(SIGCANCEL, &act, nullptr);
+        set_up_cancel_handler = true;
+    }
+
+    return pthread_kill(thread, SIGCANCEL);
 }
 
 int pthread_setname_np(pthread_t thread, char const* name)

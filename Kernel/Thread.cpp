@@ -871,6 +871,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
     case SIGIO:
     case SIGPROF:
     case SIGTERM:
+    case SIGCANCEL:
         return DefaultSignalAction::Terminate;
     case SIGCHLD:
     case SIGURG:
