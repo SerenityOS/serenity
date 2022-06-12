@@ -14,6 +14,7 @@ set(TEST_SOURCES
     TestMemalign.cpp
     TestMemmem.cpp
     TestMkDir.cpp
+    TestPthreadCancel.cpp
     TestPthreadCleanup.cpp
     TestPthreadSpinLocks.cpp
     TestPthreadRWLocks.cpp
