@@ -15,7 +15,7 @@
 namespace Web::Painting {
 
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
     auto& painter = context.painter();
 
@@ -41,10 +41,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     auto color_rect = border_rect;
     if (background_layers && !background_layers->is_empty())
         color_rect = get_box(background_layers->last().clip);
-    // FIXME: Support elliptical corners
+
     Gfx::AntiAliasingPainter aa_painter { painter };
     aa_painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(),
-        background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
+        background_color, border_radii.top_left.horizontal_radius, border_radii.top_right.horizontal_radius, border_radii.bottom_right.horizontal_radius, border_radii.bottom_left.horizontal_radius);
 
     if (!background_layers)
         return;

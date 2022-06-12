@@ -11,37 +11,55 @@
 
 namespace Web::Painting {
 
-BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::LengthPercentage top_left_radius, CSS::LengthPercentage top_right_radius, CSS::LengthPercentage bottom_right_radius, CSS::LengthPercentage bottom_left_radius)
+BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
 {
-    // FIXME: Some values should be relative to the height() if specified, but which?
-    //        Spec just says "Refer to corresponding dimension of the border box."
-    //        For now, all relative values are relative to the width.
     auto width_length = CSS::Length::make_px(rect.width());
-    auto bottom_left_radius_px = bottom_left_radius.resolved(node, width_length).to_px(node);
-    auto bottom_right_radius_px = bottom_right_radius.resolved(node, width_length).to_px(node);
-    auto top_left_radius_px = top_left_radius.resolved(node, width_length).to_px(node);
-    auto top_right_radius_px = top_right_radius.resolved(node, width_length).to_px(node);
+    auto height_length = CSS::Length::make_px(rect.height());
+
+    BorderRadiusData bottom_left_radius_px {
+        bottom_left_radius.horizontal_radius.resolved(node, width_length).to_px(node),
+        bottom_left_radius.vertical_radius.resolved(node, height_length).to_px(node)
+    };
+
+    BorderRadiusData bottom_right_radius_px {
+        bottom_right_radius.horizontal_radius.resolved(node, width_length).to_px(node),
+        bottom_right_radius.vertical_radius.resolved(node, height_length).to_px(node)
+    };
+
+    BorderRadiusData top_left_radius_px {
+        top_left_radius.horizontal_radius.resolved(node, width_length).to_px(node),
+        top_left_radius.vertical_radius.resolved(node, height_length).to_px(node)
+    };
+
+    BorderRadiusData top_right_radius_px {
+        top_right_radius.horizontal_radius.resolved(node, width_length).to_px(node),
+        top_right_radius.vertical_radius.resolved(node, height_length).to_px(node)
+    };
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     auto f = 1.0f;
     auto width_reciprocal = 1.0f / rect.width();
     auto height_reciprocal = 1.0f / rect.height();
-    f = max(f, width_reciprocal * (top_left_radius_px + top_right_radius_px));
-    f = max(f, height_reciprocal * (top_right_radius_px + bottom_right_radius_px));
-    f = max(f, width_reciprocal * (bottom_left_radius_px + bottom_right_radius_px));
-    f = max(f, height_reciprocal * (top_left_radius_px + bottom_left_radius_px));
+    f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
+    f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
+    f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
+    f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
 
     f = 1.0f / f;
 
-    top_left_radius_px = (int)(top_left_radius_px * f);
-    top_right_radius_px = (int)(top_right_radius_px * f);
-    bottom_right_radius_px = (int)(bottom_right_radius_px * f);
-    bottom_left_radius_px = (int)(bottom_left_radius_px * f);
+    top_left_radius_px.horizontal_radius *= f;
+    top_left_radius_px.vertical_radius *= f;
+    top_right_radius_px.horizontal_radius *= f;
+    top_right_radius_px.vertical_radius *= f;
+    bottom_right_radius_px.horizontal_radius *= f;
+    bottom_right_radius_px.vertical_radius *= f;
+    bottom_left_radius_px.horizontal_radius *= f;
+    bottom_left_radius_px.vertical_radius *= f;
 
-    return BorderRadiusData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
+    return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
 
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& a_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
+void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& a_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     auto rect = a_rect.to_rounded<float>();
 
@@ -132,10 +150,10 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
     float p1_step = 0;
     float p2_step = 0;
 
-    bool has_top_left_radius = border_radius_data.top_left > 0;
-    bool has_top_right_radius = border_radius_data.top_right > 0;
-    bool has_bottom_left_radius = border_radius_data.bottom_left > 0;
-    bool has_bottom_right_radius = border_radius_data.bottom_right > 0;
+    bool has_top_left_radius = border_radii_data.top_left.horizontal_radius > 0;
+    bool has_top_right_radius = border_radii_data.top_right.horizontal_radius > 0;
+    bool has_bottom_left_radius = border_radii_data.bottom_left.horizontal_radius > 0;
+    bool has_bottom_right_radius = border_radii_data.bottom_right.horizontal_radius > 0;
 
     switch (edge) {
     case BorderEdge::Top:
@@ -177,16 +195,15 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
     }
 }
 
-void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
+void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     auto const border_rect = bordered_rect;
 
-    auto const top_left_radius = border_radius_data.top_left;
-    auto const top_right_radius = border_radius_data.top_right;
-    auto const bottom_right_radius = border_radius_data.bottom_right;
-    auto const bottom_left_radius = border_radius_data.bottom_left;
-
     // FIXME: Support elliptical border radii.
+    auto const top_left_radius = border_radii_data.top_left.horizontal_radius;
+    auto const top_right_radius = border_radii_data.top_right.horizontal_radius;
+    auto const bottom_right_radius = border_radii_data.bottom_right.horizontal_radius;
+    auto const bottom_left_radius = border_radii_data.bottom_left.horizontal_radius;
 
     Gfx::FloatRect top_border_rect = {
         border_rect.x() + top_left_radius,
@@ -213,10 +230,10 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
         border_rect.height() - top_left_radius - bottom_left_radius
     };
 
-    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radius_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radii_data, borders_data);
 
     // Draws a quarter circle clockwise
     auto draw_quarter_circle = [&](Gfx::FloatPoint const& from, Gfx::FloatPoint const& to, Gfx::Color color, int thickness) {

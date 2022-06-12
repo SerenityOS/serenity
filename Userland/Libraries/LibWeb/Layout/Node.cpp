@@ -368,21 +368,33 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = computed_style.property(CSS::PropertyID::BorderBottomLeftRadius);
-    if (border_bottom_left_radius->is_border_radius())
-        computed_values.set_border_bottom_left_radius(border_bottom_left_radius->as_border_radius().horizontal_radius());
-
+    if (border_bottom_left_radius->is_border_radius()) {
+        computed_values.set_border_bottom_left_radius(
+            CSS::BorderRadiusData {
+                border_bottom_left_radius->as_border_radius().horizontal_radius(),
+                border_bottom_left_radius->as_border_radius().vertical_radius() });
+    }
     auto border_bottom_right_radius = computed_style.property(CSS::PropertyID::BorderBottomRightRadius);
-    if (border_bottom_right_radius->is_border_radius())
-        computed_values.set_border_bottom_right_radius(border_bottom_right_radius->as_border_radius().horizontal_radius());
-
+    if (border_bottom_right_radius->is_border_radius()) {
+        computed_values.set_border_bottom_right_radius(
+            CSS::BorderRadiusData {
+                border_bottom_right_radius->as_border_radius().horizontal_radius(),
+                border_bottom_right_radius->as_border_radius().vertical_radius() });
+    }
     auto border_top_left_radius = computed_style.property(CSS::PropertyID::BorderTopLeftRadius);
-    if (border_top_left_radius->is_border_radius())
-        computed_values.set_border_top_left_radius(border_top_left_radius->as_border_radius().horizontal_radius());
-
+    if (border_top_left_radius->is_border_radius()) {
+        computed_values.set_border_top_left_radius(
+            CSS::BorderRadiusData {
+                border_top_left_radius->as_border_radius().horizontal_radius(),
+                border_top_left_radius->as_border_radius().vertical_radius() });
+    }
     auto border_top_right_radius = computed_style.property(CSS::PropertyID::BorderTopRightRadius);
-    if (border_top_right_radius->is_border_radius())
-        computed_values.set_border_top_right_radius(border_top_right_radius->as_border_radius().horizontal_radius());
-
+    if (border_top_right_radius->is_border_radius()) {
+        computed_values.set_border_top_right_radius(
+            CSS::BorderRadiusData {
+                border_top_right_radius->as_border_radius().horizontal_radius(),
+                border_top_right_radius->as_border_radius().vertical_radius() });
+    }
     computed_values.set_display(computed_style.display());
 
     auto flex_direction = computed_style.flex_direction();
