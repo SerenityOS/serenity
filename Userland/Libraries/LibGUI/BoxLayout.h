@@ -23,6 +23,7 @@ public:
 
     virtual void run(Widget&) override;
     virtual Gfx::IntSize preferred_size() const override;
+    virtual UISize min_size() const override;
 
 protected:
     explicit BoxLayout(Gfx::Orientation);
