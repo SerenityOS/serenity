@@ -27,7 +27,7 @@ public:
     void set_tooltip(String const& tooltip)
     {
         m_label->set_text(Gfx::parse_ampersand_string(tooltip));
-        int tooltip_width = m_label->min_width() + 10;
+        int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
         int line_count = m_label->text().count("\n");
         int glyph_height = m_label->font().glyph_height();
         int tooltip_height = glyph_height * (1 + line_count) + ((glyph_height + 1) / 2) * line_count + 8;
