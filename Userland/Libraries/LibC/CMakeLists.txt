@@ -27,8 +27,10 @@ set(LIBC_SOURCES
     netdb.cpp
     poll.cpp
     priority.cpp
-    pthread_forward.cpp
+    pthread.cpp
+    pthread_cond.cpp
     pthread_integration.cpp
+    pthread_once.cpp
     pthread_tls.cpp
     pty.cpp
     pwd.cpp
@@ -38,6 +40,7 @@ set(LIBC_SOURCES
     scanf.cpp
     sched.cpp
     search.cpp
+    semaphore.cpp
     serenity.cpp
     shadow.cpp
     signal.cpp
