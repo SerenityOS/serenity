@@ -42,9 +42,16 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     if (background_layers && !background_layers->is_empty())
         color_rect = get_box(background_layers->last().clip);
 
+    auto border_radius_to_corner = [&](BorderRadiusData const& border_radius) {
+        return Gfx::AntiAliasingPainter::CornerRadius {
+            static_cast<int>(border_radius.horizontal_radius),
+            static_cast<int>(border_radius.vertical_radius)
+        };
+    };
+
     Gfx::AntiAliasingPainter aa_painter { painter };
     aa_painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(),
-        background_color, border_radii.top_left.horizontal_radius, border_radii.top_right.horizontal_radius, border_radii.bottom_right.horizontal_radius, border_radii.bottom_left.horizontal_radius);
+        background_color, border_radius_to_corner(border_radii.top_left), border_radius_to_corner(border_radii.top_right), border_radius_to_corner(border_radii.bottom_right), border_radius_to_corner(border_radii.bottom_left));
 
     if (!background_layers)
         return;
