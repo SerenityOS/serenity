@@ -51,12 +51,15 @@ Widget::Widget()
 
     REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_UI_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_UI_SIZE_PROPERTY("preferred_size", preferred_size, set_preferred_size);
     REGISTER_INT_PROPERTY("width", width, set_width);
     REGISTER_UI_DIMENSION_PROPERTY("min_width", min_width, set_min_width);
     REGISTER_UI_DIMENSION_PROPERTY("max_width", max_width, set_max_width);
+    REGISTER_UI_DIMENSION_PROPERTY("preferred_width", preferred_width, set_preferred_width);
     REGISTER_INT_PROPERTY("height", height, set_height);
     REGISTER_UI_DIMENSION_PROPERTY("min_height", min_height, set_min_height);
     REGISTER_UI_DIMENSION_PROPERTY("max_height", max_height, set_max_height);
+    REGISTER_UI_DIMENSION_PROPERTY("preferred_height", preferred_height, set_preferred_height);
 
     REGISTER_INT_PROPERTY("fixed_width", dummy_fixed_width, set_fixed_width);
     REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
@@ -795,6 +798,14 @@ void Widget::set_max_size(UISize const& size)
     if (m_max_size == size)
         return;
     m_max_size = size;
+    invalidate_layout();
+}
+
+void Widget::set_preferred_size(UISize const& size)
+{
+    if (m_preferred_size == size)
+        return;
+    m_preferred_size = size;
     invalidate_layout();
 }
 

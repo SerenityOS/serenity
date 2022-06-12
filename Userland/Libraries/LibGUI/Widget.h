@@ -99,6 +99,14 @@ public:
     void set_max_width(UIDimension width) { set_max_size(width, max_height()); }
     void set_max_height(UIDimension height) { set_max_size(max_width(), height); }
 
+    UISize preferred_size() const { return m_preferred_size; }
+    void set_preferred_size(UISize const&);
+    void set_preferred_size(UIDimension width, UIDimension height) { set_preferred_size({ width, height }); }
+
+    UIDimension preferred_width() const { return m_preferred_size.width(); }
+    UIDimension preferred_height() const { return m_preferred_size.height(); }
+    void set_preferred_width(UIDimension width) { set_preferred_size(width, preferred_height()); }
+    void set_preferred_height(UIDimension height) { set_preferred_size(preferred_width(), height); }
     void set_fixed_size(UISize const& size)
     {
         VERIFY(size.has_only_int_values());
@@ -383,6 +391,7 @@ private:
 
     UISize m_min_size { SpecialDimension::Shrink };
     UISize m_max_size { SpecialDimension::Grow };
+    UISize m_preferred_size { SpecialDimension::Grow };
     Margins m_grabbable_margins;
 
     bool m_fill_with_background_color { false };
