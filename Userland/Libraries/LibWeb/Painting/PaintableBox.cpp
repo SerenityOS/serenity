@@ -178,7 +178,7 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
+    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(Painting::RelativeToWidthOnly::Yes), borders_data);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
@@ -233,13 +233,14 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }
 
-BorderRadiiData PaintableBox::normalized_border_radii_data() const
+BorderRadiiData PaintableBox::normalized_border_radii_data(Painting::RelativeToWidthOnly relative_to_width_only) const
 {
     return Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
-        computed_values().border_bottom_left_radius());
+        computed_values().border_bottom_left_radius(),
+        relative_to_width_only);
 }
 
 void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const

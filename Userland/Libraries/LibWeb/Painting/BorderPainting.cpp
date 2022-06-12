@@ -11,30 +11,41 @@
 
 namespace Web::Painting {
 
-BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
+BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius, RelativeToWidthOnly relative_to_width_only)
 {
+    BorderRadiusData bottom_left_radius_px {};
+    BorderRadiusData bottom_right_radius_px {};
+    BorderRadiusData top_left_radius_px {};
+    BorderRadiusData top_right_radius_px {};
+
     auto width_length = CSS::Length::make_px(rect.width());
-    auto height_length = CSS::Length::make_px(rect.height());
+    bottom_left_radius_px.horizontal_radius = bottom_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    bottom_right_radius_px.horizontal_radius = bottom_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    top_left_radius_px.horizontal_radius = top_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    top_right_radius_px.horizontal_radius = top_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
 
-    BorderRadiusData bottom_left_radius_px {
-        bottom_left_radius.horizontal_radius.resolved(node, width_length).to_px(node),
-        bottom_left_radius.vertical_radius.resolved(node, height_length).to_px(node)
-    };
-
-    BorderRadiusData bottom_right_radius_px {
-        bottom_right_radius.horizontal_radius.resolved(node, width_length).to_px(node),
-        bottom_right_radius.vertical_radius.resolved(node, height_length).to_px(node)
-    };
-
-    BorderRadiusData top_left_radius_px {
-        top_left_radius.horizontal_radius.resolved(node, width_length).to_px(node),
-        top_left_radius.vertical_radius.resolved(node, height_length).to_px(node)
-    };
-
-    BorderRadiusData top_right_radius_px {
-        top_right_radius.horizontal_radius.resolved(node, width_length).to_px(node),
-        top_right_radius.vertical_radius.resolved(node, height_length).to_px(node)
-    };
+    // FIXME: Remove `relative_to_width_only = Yes' flag, this only exists to
+    // avoid overlapping curves for (outline) borders, which do not yet
+    // support elliptical corners.
+    switch (relative_to_width_only) {
+    case RelativeToWidthOnly::No: {
+        // Normal correct rendering:
+        auto height_length = CSS::Length::make_px(rect.height());
+        bottom_left_radius_px.vertical_radius = bottom_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
+        bottom_right_radius_px.vertical_radius = bottom_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
+        top_left_radius_px.vertical_radius = top_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
+        top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
+        break;
+    }
+    case RelativeToWidthOnly::Yes:
+        bottom_left_radius_px.vertical_radius = bottom_left_radius_px.horizontal_radius;
+        bottom_right_radius_px.vertical_radius = bottom_right_radius_px.horizontal_radius;
+        top_left_radius_px.vertical_radius = top_left_radius_px.horizontal_radius;
+        top_right_radius_px.vertical_radius = top_right_radius_px.horizontal_radius;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     auto f = 1.0f;
