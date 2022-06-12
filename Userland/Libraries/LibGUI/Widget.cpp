@@ -49,14 +49,14 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
     REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
-    REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
-    REGISTER_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
+    REGISTER_UI_SIZE_PROPERTY("max_size", max_size, set_max_size);
     REGISTER_INT_PROPERTY("width", width, set_width);
-    REGISTER_INT_PROPERTY("min_width", min_width, set_min_width);
-    REGISTER_INT_PROPERTY("max_width", max_width, set_max_width);
-    REGISTER_INT_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_UI_DIMENSION_PROPERTY("min_width", min_width, set_min_width);
+    REGISTER_UI_DIMENSION_PROPERTY("max_width", max_width, set_max_width);
     REGISTER_INT_PROPERTY("height", height, set_height);
-    REGISTER_INT_PROPERTY("max_height", max_height, set_max_height);
+    REGISTER_UI_DIMENSION_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_UI_DIMENSION_PROPERTY("max_height", max_height, set_max_height);
 
     REGISTER_INT_PROPERTY("fixed_width", dummy_fixed_width, set_fixed_width);
     REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
