@@ -23,7 +23,12 @@ struct BorderRadiiData {
     BorderRadiusData bottom_left;
 };
 
-BorderRadiiData normalized_border_radii_data(Layout::Node const&, Gfx::FloatRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius);
+enum class RelativeToWidthOnly {
+    Yes,
+    No
+};
+
+BorderRadiiData normalized_border_radii_data(Layout::Node const&, Gfx::FloatRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius, RelativeToWidthOnly relative_to_width_only = RelativeToWidthOnly::No);
 
 enum class BorderEdge {
     Top,

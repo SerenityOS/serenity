@@ -106,7 +106,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             }
 
             auto bordered_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius, Painting::RelativeToWidthOnly::Yes);
 
             Painting::paint_all_borders(context, bordered_rect, border_radii_data, borders_data);
 

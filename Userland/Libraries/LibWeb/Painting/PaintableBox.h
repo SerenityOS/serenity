@@ -130,7 +130,7 @@ protected:
     virtual Gfx::FloatRect compute_absolute_rect() const;
 
 private:
-    Painting::BorderRadiiData normalized_border_radii_data() const;
+    Painting::BorderRadiiData normalized_border_radii_data(Painting::RelativeToWidthOnly relative_to_width_only = Painting::RelativeToWidthOnly::No) const;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
