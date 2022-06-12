@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <alloca.h>
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <bits/pthread_integration.h>
 #include <dirent.h>
 #include <errno.h>
@@ -374,6 +375,8 @@ pid_t getpgrp()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/read.html
 ssize_t read(int fd, void* buf, size_t count)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_read, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -381,6 +384,8 @@ ssize_t read(int fd, void* buf, size_t count)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pread.html
 ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_pread, fd, buf, count, &offset);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -388,6 +393,8 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/write.html
 ssize_t write(int fd, void const* buf, size_t count)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_write, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -395,6 +402,8 @@ ssize_t write(int fd, void const* buf, size_t count)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pwrite.html
 ssize_t pwrite(int fd, void const* buf, size_t count, off_t offset)
 {
+    __pthread_maybe_cancel();
+
     // FIXME: This is not thread safe and should be implemented in the kernel instead.
     off_t old_offset = lseek(fd, 0, SEEK_CUR);
     lseek(fd, offset, SEEK_SET);
@@ -484,6 +493,8 @@ char* ttyname(int fd)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/close.html
 int close(int fd)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_close, fd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -891,6 +902,8 @@ int sysbeep()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fsync.html
 int fsync(int fd)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_fsync, fd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

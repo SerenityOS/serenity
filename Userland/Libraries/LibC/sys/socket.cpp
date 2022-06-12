@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,6 +39,8 @@ int listen(int sockfd, int backlog)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/accept.html
 int accept(int sockfd, sockaddr* addr, socklen_t* addrlen)
 {
+    __pthread_maybe_cancel();
+
     return accept4(sockfd, addr, addrlen, 0);
 }
 
@@ -51,6 +54,8 @@ int accept4(int sockfd, sockaddr* addr, socklen_t* addrlen, int flags)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/connect.html
 int connect(int sockfd, sockaddr const* addr, socklen_t addrlen)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_connect, sockfd, addr, addrlen);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -65,6 +70,8 @@ int shutdown(int sockfd, int how)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendmsg.html
 ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_sendmsg, sockfd, msg, flags);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -86,6 +93,8 @@ ssize_t send(int sockfd, void const* data, size_t data_length, int flags)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/recvmsg.html
 ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_recvmsg, sockfd, msg, flags);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -93,6 +102,8 @@ ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/recvfrom.html
 ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, struct sockaddr* addr, socklen_t* addr_length)
 {
+    __pthread_maybe_cancel();
+
     if (!addr_length && addr) {
         errno = EINVAL;
         return -1;

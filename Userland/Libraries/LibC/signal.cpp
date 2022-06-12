@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -175,6 +176,8 @@ void siglongjmp(jmp_buf env, int val)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html
 int sigsuspend(sigset_t const* set)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(SC_sigsuspend, set);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -182,6 +185,8 @@ int sigsuspend(sigset_t const* set)
 // https://pubs.opengroup.org/onlinepubs/009604499/functions/sigwait.html
 int sigwait(sigset_t const* set, int* sig)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(Syscall::SC_sigtimedwait, set, nullptr, nullptr);
     VERIFY(rc != 0);
     if (rc < 0)
@@ -199,6 +204,8 @@ int sigwaitinfo(sigset_t const* set, siginfo_t* info)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigtimedwait.html
 int sigtimedwait(sigset_t const* set, siginfo_t* info, struct timespec const* timeout)
 {
+    __pthread_maybe_cancel();
+
     int rc = syscall(Syscall::SC_sigtimedwait, set, info, timeout);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

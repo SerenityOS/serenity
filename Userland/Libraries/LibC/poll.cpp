@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <poll.h>
 #include <sys/time.h>
@@ -14,6 +15,8 @@ extern "C" {
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/poll.html
 int poll(pollfd* fds, nfds_t nfds, int timeout_ms)
 {
+    __pthread_maybe_cancel();
+
     timespec timeout;
     timespec* timeout_ts = &timeout;
     if (timeout_ms < 0)

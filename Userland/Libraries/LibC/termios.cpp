@@ -5,6 +5,7 @@
  */
 
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <termios.h>
@@ -51,6 +52,8 @@ int tcflush(int fd, int queue_selector)
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/tcdrain.html
 int tcdrain([[maybe_unused]] int fd)
 {
+    __pthread_maybe_cancel();
+
     // FIXME: Implement this for real.
     return 0;
 }

@@ -12,6 +12,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -310,6 +311,8 @@ int sem_wait(sem_t* sem)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_timedwait.html
 int sem_timedwait(sem_t* sem, const struct timespec* abstime)
 {
+    __pthread_maybe_cancel();
+
     if (sem->magic != SEM_MAGIC) {
         errno = EINVAL;
         return -1;

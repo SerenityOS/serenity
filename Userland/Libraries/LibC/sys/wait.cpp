@@ -5,6 +5,7 @@
  */
 
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <syscall.h>
@@ -21,6 +22,8 @@ pid_t wait(int* wstatus)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
+    __pthread_maybe_cancel();
+
     siginfo_t siginfo;
     idtype_t idtype;
     id_t id;
@@ -78,6 +81,8 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitid.html
 int waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options)
 {
+    __pthread_maybe_cancel();
+
     Syscall::SC_waitid_params params { idtype, id, infop, options };
     int rc = syscall(SC_waitid, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
