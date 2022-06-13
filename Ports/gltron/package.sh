@@ -5,7 +5,7 @@ use_fresh_config_sub=true
 version="0.70"
 files="http://mirror.sobukus.de/files/grimoire/games-arcade-2d/gltron-${version}-source.tar.gz gltron-${version}-source.tar.gz e0c8ebb41a18a1f8d7302a9c2cb466f5b1dd63e9a9966c769075e6b6bdad8bb0"
 auth_type=sha256
-depends=("libpng" "SDL_sound" "SDL2" "zlib")
+depends=("libpng" "SDL2_sound" "SDL2" "zlib")
 configopts=(
     "--disable-warn"
 )
