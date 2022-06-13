@@ -314,6 +314,16 @@ ErrorOr<void> Process::procfs_get_current_work_directory_link(KBufferBuilder& bu
     return builder.append(TRY(const_cast<Process&>(*this).current_directory()->try_serialize_absolute_path())->view());
 }
 
+ErrorOr<void> Process::procfs_get_command_line(KBufferBuilder& builder) const
+{
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
+    for (auto const& arg : arguments()) {
+        TRY(array.add(arg.view()));
+    }
+    TRY(array.finish());
+    return {};
+}
+
 mode_t Process::binary_link_required_mode() const
 {
     if (!executable())
