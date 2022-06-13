@@ -27,7 +27,10 @@ static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}";
 
 static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
-    return AK::StringUtils::convert_to_uint_from_hex(String(buf.slice(2, buf.size() - 2).bytes())).release_value();
+    // FIXME: Propagate errors.
+    return AK::StringUtils::convert_to_uint_from_hex(
+        String(MUST(buf.slice(2, buf.size() - 2)).bytes()))
+        .release_value();
 }
 
 static u32 convert_sysfs_value_to_uint(String const& value)

@@ -64,7 +64,8 @@ ByteBuffer Job::receive(size_t size)
 {
     ByteBuffer buffer = ByteBuffer::create_uninitialized(size).release_value_but_fixme_should_propagate_errors();
     auto nread = MUST(m_socket->read(buffer)).size();
-    return buffer.slice(0, nread);
+    // FIXME: Propagate errors.
+    return MUST(buffer.slice(0, nread));
 }
 
 bool Job::can_read() const
@@ -101,7 +102,8 @@ void Job::flush_received_buffers()
             continue;
         }
         VERIFY(written < payload.size());
-        payload = payload.slice(written, payload.size() - written);
+        // FIXME: Propagate errors.
+        payload = MUST(payload.slice(written, payload.size() - written));
         return;
     }
 }

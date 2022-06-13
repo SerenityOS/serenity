@@ -27,8 +27,8 @@ ErrorOr<Bytes> TLSv12::read(Bytes bytes)
         return Bytes {};
     }
 
-    m_context.application_buffer.span().slice(0, size_to_read).copy_to(bytes);
-    m_context.application_buffer = m_context.application_buffer.slice(size_to_read, m_context.application_buffer.size() - size_to_read);
+    TRY(m_context.application_buffer.slice(0, size_to_read)).span().copy_to(bytes);
+    m_context.application_buffer = TRY(m_context.application_buffer.slice(size_to_read, m_context.application_buffer.size() - size_to_read));
     return Bytes { bytes.data(), size_to_read };
 }
 
@@ -47,7 +47,8 @@ String TLSv12::read_line(size_t max_size)
         return {};
 
     String line { bit_cast<char const*>(start), offset, Chomp };
-    m_context.application_buffer = m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1);
+    // FIXME: Propagate errors.
+    m_context.application_buffer = MUST(m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1));
 
     return line;
 }
