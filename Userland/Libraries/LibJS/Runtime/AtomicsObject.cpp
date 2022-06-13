@@ -246,7 +246,8 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     // 14. Else,
 
     // a. Let rawBytesRead be a List of length elementSize whose elements are the sequence of elementSize bytes starting with block[indexedPosition].
-    auto raw_bytes_read = block.slice(indexed_position, sizeof(T));
+    // FIXME: Propagate errors.
+    auto raw_bytes_read = MUST(block.slice(indexed_position, sizeof(T)));
 
     // b. If ByteListEqual(rawBytesRead, expectedBytes) is true, then
     //    i. Store the individual bytes of replacementBytes into block, starting at block[indexedPosition].

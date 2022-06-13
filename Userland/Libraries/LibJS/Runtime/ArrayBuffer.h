@@ -130,7 +130,8 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 
     // FIXME: Check for shared buffer
 
-    auto raw_value = buffer_impl().slice(byte_index, element_size);
+    // FIXME: Propagate errors.
+    auto raw_value = MUST(buffer_impl().slice(byte_index, element_size));
     return raw_bytes_to_numeric<T>(global_object(), move(raw_value), is_little_endian);
 }
 
@@ -218,7 +219,8 @@ Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWrit
 
     // FIXME: Check for shared buffer
 
-    auto raw_bytes_read = buffer_impl().slice(byte_index, sizeof(T));
+    // FIXME: Propagate errors.
+    auto raw_bytes_read = MUST(buffer_impl().slice(byte_index, sizeof(T)));
     auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
     raw_bytes_modified.span().copy_to(buffer_impl().span().slice(byte_index));
 
