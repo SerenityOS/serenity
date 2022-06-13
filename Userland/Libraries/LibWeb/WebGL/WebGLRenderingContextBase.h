@@ -46,6 +46,8 @@ public:
 
     void front_face(GLenum mode);
 
+    GLenum get_error();
+
     void polygon_offset(GLfloat factor, GLfloat units);
 
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -81,7 +83,10 @@ private:
     // - clear, drawArrays, or drawElements has been called while the drawing buffer is the currently bound framebuffer
     bool m_should_present { true };
 
+    GLenum m_error { GL_NO_ERROR };
+
     void needs_to_present();
+    void set_error(GLenum error);
 };
 
 }

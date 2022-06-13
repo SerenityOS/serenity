@@ -41,6 +41,8 @@ interface mixin WebGLRenderingContextBase {
 
     undefined frontFace(GLenum mode);
 
+    GLenum getError();
+
     undefined polygonOffset(GLfloat factor, GLfloat units);
 
     undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);

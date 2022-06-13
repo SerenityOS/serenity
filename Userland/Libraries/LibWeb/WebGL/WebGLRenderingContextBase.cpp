@@ -21,6 +21,13 @@ WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::HTMLCanvasElement& ca
 
 WebGLRenderingContextBase::~WebGLRenderingContextBase() = default;
 
+#define RETURN_WITH_WEBGL_ERROR_IF(condition, error)                         \
+    if (condition) {                                                         \
+        dbgln_if(WEBGL_CONTEXT_DEBUG, "{}(): error {:#x}", __func__, error); \
+        set_error(error);                                                    \
+        return;                                                              \
+    }
+
 void WebGLRenderingContextBase::present()
 {
     if (!m_should_present)
@@ -69,6 +76,15 @@ void WebGLRenderingContextBase::needs_to_present()
     if (!m_canvas_element->layout_node())
         return;
     m_canvas_element->layout_node()->set_needs_display();
+}
+
+void WebGLRenderingContextBase::set_error(GLenum error)
+{
+    auto context_error = m_context->gl_get_error();
+    if (context_error != GL_NO_ERROR)
+        m_error = context_error;
+    else
+        m_error = error;
 }
 
 bool WebGLRenderingContextBase::is_context_lost() const
@@ -208,6 +224,22 @@ void WebGLRenderingContextBase::front_face(GLenum mode)
 
     dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::front_face(mode=0x{:08x})", mode);
     m_context->gl_front_face(mode);
+}
+
+GLenum WebGLRenderingContextBase::get_error()
+{
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::get_error()");
+
+    // "If the context's webgl context lost flag is set, returns CONTEXT_LOST_WEBGL the first time this method is called. Afterward, returns NO_ERROR until the context has been restored."
+    // FIXME: The plan here is to make the context lost handler unconditionally set m_error to CONTEXT_LOST_WEBGL, which we currently do not have.
+    //        The idea for the unconditional set is that any potentially error generating functions will not execute when the context is lost.
+    if (m_error != GL_NO_ERROR || m_context_lost) {
+        auto last_error = m_error;
+        m_error = GL_NO_ERROR;
+        return last_error;
+    }
+
+    return m_context->gl_get_error();
 }
 
 void WebGLRenderingContextBase::polygon_offset(GLfloat factor, GLfloat units)
