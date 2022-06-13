@@ -360,4 +360,10 @@ describe("ability to work with generic non-array objects", () => {
         expect(result).toEqual(["foo", "hello", "friends", "baz", undefined]);
         expect(result).not.toBe(o);
     });
+
+    test("with", () => {
+        const result = Array.prototype.with.call(o, 2, "hello");
+        expect(result).toEqual(["foo", "bar", "hello", "baz", undefined]);
+        expect(result).not.toBe(o);
+    });
 });
