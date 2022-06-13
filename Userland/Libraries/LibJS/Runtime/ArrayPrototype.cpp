@@ -901,54 +901,13 @@ ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionOb
         auto x = left[left_index];
         auto y = right[right_index];
 
-        double comparison_result;
-
-        if (x.is_undefined() && y.is_undefined()) {
-            comparison_result = 0;
-        } else if (x.is_undefined()) {
-            comparison_result = 1;
-        } else if (y.is_undefined()) {
-            comparison_result = -1;
-        } else if (compare_func) {
-            auto call_result = TRY(call(global_object, *compare_func, js_undefined(), left[left_index], right[right_index]));
-            auto number = TRY(call_result.to_number(global_object));
-            if (number.is_nan())
-                comparison_result = 0;
-            else
-                comparison_result = number.as_double();
-        } else {
-            // FIXME: It would probably be much better to be smarter about this and implement
-            // the Abstract Relational Comparison in line once iterating over code points, rather
-            // than calling it twice after creating two primitive strings.
-
-            auto x_string = TRY(x.to_primitive_string(global_object));
-
-            auto y_string = TRY(y.to_primitive_string(global_object));
-
-            auto x_string_value = Value(x_string);
-            auto y_string_value = Value(y_string);
-
-            // Because they are called with primitive strings, these is_less_than calls
-            // should never result in a VM exception.
-            auto x_lt_y_relation = MUST(is_less_than(global_object, true, x_string_value, y_string_value));
-            VERIFY(x_lt_y_relation != TriState::Unknown);
-            auto y_lt_x_relation = MUST(is_less_than(global_object, true, y_string_value, x_string_value));
-            VERIFY(y_lt_x_relation != TriState::Unknown);
-
-            if (x_lt_y_relation == TriState::True) {
-                comparison_result = -1;
-            } else if (y_lt_x_relation == TriState::True) {
-                comparison_result = 1;
-            } else {
-                comparison_result = 0;
-            }
-        }
+        double comparison_result = TRY(compare_array_elements(global_object, x, y, compare_func));
 
         if (comparison_result <= 0) {
-            arr_to_sort.append(left[left_index]);
+            arr_to_sort.append(x);
             left_index++;
         } else {
-            arr_to_sort.append(right[right_index]);
+            arr_to_sort.append(y);
             right_index++;
         }
     }
