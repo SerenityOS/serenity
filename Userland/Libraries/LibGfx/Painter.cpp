@@ -477,8 +477,8 @@ void Painter::fill_ellipse(IntRect const& a_rect, Color color)
     VERIFY(m_target->rect().contains(rect));
 
     for (int i = 1; i < a_rect.height(); i++) {
-        double y = a_rect.height() * 0.5 - i;
-        double x = a_rect.width() * sqrt(0.25 - y * y / a_rect.height() / a_rect.height());
+        float y = a_rect.height() * 0.5 - i;
+        float x = a_rect.width() * AK::sqrt(0.25f - y * y / a_rect.height() / a_rect.height());
         draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
     }
 }
@@ -491,18 +491,16 @@ void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int th
         return;
 
     constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
-    double increment = M_PI / number_samples;
+    float increment = AK::Pi<float> / number_samples;
 
-    auto ellipse_x = [&](double theta) -> int {
-        return (AK::cos(theta) * rect.width() / AK::sqrt(2.)) + rect.center().x();
+    auto ellipse_xy = [&rect](float theta) -> IntPoint {
+        float s, c;
+        AK::sincos(theta, s, c);
+        return IntPoint { (c * rect.width() * AK::Sqrt1_2<float>), (s * rect.height() * AK::Sqrt1_2<float>)} + rect.center();
     };
 
-    auto ellipse_y = [&](double theta) -> int {
-        return (AK::sin(theta) * rect.height() / AK::sqrt(2.)) + rect.center().y();
-    };
-
-    for (auto theta = 0.0; theta < 2 * M_PI; theta += increment) {
-        draw_line({ ellipse_x(theta), ellipse_y(theta) }, { ellipse_x(theta + increment), ellipse_y(theta + increment) }, color, thickness);
+    for (auto theta = 0.f; theta < 2 * AK::Pi<float>; theta += increment) {
+        draw_line(ellipse_xy(theta), ellipse_xy(theta + increment), color, thickness);
     }
 }
 
@@ -2112,13 +2110,13 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, Floa
 
     // The segments are at most 1 long
     auto largest_radius = max(a, b);
-    double theta_step = atan(1 / (double)largest_radius);
+    float theta_step = AK::atan2(1.f, (float)largest_radius);
 
     FloatPoint current_point = relative_start;
     FloatPoint next_point = { 0, 0 };
 
-    auto sin_x_axis = AK::sin(x_axis_rotation);
-    auto cos_x_axis = AK::cos(x_axis_rotation);
+    float sin_x_axis, cos_x_axis;
+    AK::sincos(x_axis_rotation, sin_x_axis, cos_x_axis);
     auto rotate_point = [sin_x_axis, cos_x_axis](FloatPoint& p) {
         auto original_x = p.x();
         auto original_y = p.y();
@@ -2127,9 +2125,11 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, Floa
         p.set_y(original_x * sin_x_axis + original_y * cos_x_axis);
     };
 
-    for (double theta = theta_1; theta <= ((double)theta_1 + (double)theta_delta); theta += theta_step) {
-        next_point.set_x(a * AK::cos<float>(theta));
-        next_point.set_y(b * AK::sin<float>(theta));
+    for (float theta = theta_1; theta <= theta_1 + theta_delta; theta += theta_step) {
+        float s, c;
+        AK::sincos(theta, s, c);
+        next_point.set_x(a * c);
+        next_point.set_y(b * s);
         rotate_point(next_point);
 
         callback(current_point + center, next_point + center);
