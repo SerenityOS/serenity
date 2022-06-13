@@ -445,10 +445,14 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         { bottom_left_radius, bottom_left_radius });
 }
 
-void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left)
+void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode)
 {
-    if (!top_left && !top_right && !bottom_right && !bottom_left)
-        return m_underlying_painter.fill_rect(a_rect, color);
+    if (!top_left && !top_right && !bottom_right && !bottom_left) {
+        if (blend_mode == BlendMode::Normal)
+            return m_underlying_painter.fill_rect(a_rect, color);
+        else if (blend_mode == BlendMode::AlphaSubtract)
+            return m_underlying_painter.clear_rect(a_rect, Color());
+    }
 
     if (color.alpha() == 0)
         return;
@@ -472,7 +476,7 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
 
     // All corners are centered at the same point, so this can be painted as a single ellipse.
     if (top_left_corner == top_right_corner && top_right_corner == bottom_left_corner && bottom_left_corner == bottom_right_corner)
-        return fill_ellipse(a_rect, color);
+        return fill_ellipse(a_rect, color, blend_mode);
 
     IntRect top_rect {
         a_rect.x() + top_left.horizontal_radius,
@@ -506,16 +510,24 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         a_rect.height() - top_rect.height() - bottom_rect.height()
     };
 
-    m_underlying_painter.fill_rect(top_rect, color);
-    m_underlying_painter.fill_rect(right_rect, color);
-    m_underlying_painter.fill_rect(bottom_rect, color);
-    m_underlying_painter.fill_rect(left_rect, color);
-    m_underlying_painter.fill_rect(inner, color);
+    if (blend_mode == BlendMode::Normal) {
+        m_underlying_painter.fill_rect(top_rect, color);
+        m_underlying_painter.fill_rect(right_rect, color);
+        m_underlying_painter.fill_rect(bottom_rect, color);
+        m_underlying_painter.fill_rect(left_rect, color);
+        m_underlying_painter.fill_rect(inner, color);
+    } else if (blend_mode == BlendMode::AlphaSubtract) {
+        m_underlying_painter.clear_rect(top_rect, Gfx::Color());
+        m_underlying_painter.clear_rect(right_rect, Gfx::Color());
+        m_underlying_painter.clear_rect(bottom_rect, Gfx::Color());
+        m_underlying_painter.clear_rect(left_rect, Gfx::Color());
+        m_underlying_painter.clear_rect(inner, Gfx::Color());
+    }
 
     auto fill_corner = [&](auto const& ellipse_center, auto const& corner_point, CornerRadius const& corner) {
         PainterStateSaver save { m_underlying_painter };
         m_underlying_painter.add_clip_rect(IntRect::from_two_points(ellipse_center, corner_point));
-        fill_ellipse(IntRect::centered_at(ellipse_center, { corner.horizontal_radius * 2, corner.vertical_radius * 2 }), color);
+        fill_ellipse(IntRect::centered_at(ellipse_center, { corner.horizontal_radius * 2, corner.vertical_radius * 2 }), color, blend_mode);
     };
 
     auto bounding_rect = a_rect.inflated(0, 1, 1, 0);
