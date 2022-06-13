@@ -470,6 +470,10 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         a_rect.y() + a_rect.height() - bottom_right.vertical_radius
     };
 
+    // All corners are centered at the same point, so this can be painted as a single ellipse.
+    if (top_left_corner == top_right_corner && top_right_corner == bottom_left_corner && bottom_left_corner == bottom_right_corner)
+        return fill_ellipse(a_rect, color);
+
     IntRect top_rect {
         a_rect.x() + top_left.horizontal_radius,
         a_rect.y(),
