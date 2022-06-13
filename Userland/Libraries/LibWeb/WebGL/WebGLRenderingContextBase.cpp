@@ -199,6 +199,19 @@ void WebGLRenderingContextBase::depth_mask(GLboolean mask)
     m_context->gl_depth_mask(mask);
 }
 
+void WebGLRenderingContextBase::depth_range(GLclampf z_near, GLclampf z_far)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::depth_range(z_near={}, z_far={})", z_near, z_far);
+
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#VIEWPORT_DEPTH_RANGE
+    // "The WebGL API does not support depth ranges with where the near plane is mapped to a value greater than that of the far plane. A call to depthRange will generate an INVALID_OPERATION error if zNear is greater than zFar."
+    RETURN_WITH_WEBGL_ERROR_IF(z_near > z_far, GL_INVALID_OPERATION);
+    m_context->gl_depth_range(z_near, z_far);
+}
+
 void WebGLRenderingContextBase::finish()
 {
     if (m_context_lost)

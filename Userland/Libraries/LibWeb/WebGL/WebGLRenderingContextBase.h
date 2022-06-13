@@ -40,6 +40,7 @@ public:
 
     void depth_func(GLenum func);
     void depth_mask(GLboolean mask);
+    void depth_range(GLclampf z_near, GLclampf z_far);
 
     void finish();
     void flush();
