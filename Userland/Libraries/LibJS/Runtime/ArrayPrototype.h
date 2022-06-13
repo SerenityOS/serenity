@@ -57,6 +57,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(group);
     JS_DECLARE_NATIVE_FUNCTION(group_to_map);
     JS_DECLARE_NATIVE_FUNCTION(to_reversed);
+    JS_DECLARE_NATIVE_FUNCTION(to_sorted);
 };
 
 ThrowCompletionOr<void> array_merge_sort(GlobalObject&, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort);

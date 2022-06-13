@@ -76,6 +76,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.group, group, 1, attr);
     define_native_function(vm.names.groupToMap, group_to_map, 1, attr);
     define_native_function(vm.names.toReversed, to_reversed, 0, attr);
+    define_native_function(vm.names.toSorted, to_sorted, 1, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -103,6 +104,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.toReversed, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toSorted, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
@@ -1815,6 +1817,46 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
     }
 
     // 6. Return A.
+    return array;
+}
+
+// 1.1.1.5 Array.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSorted
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
+{
+    auto comparefn = vm.argument(0);
+
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
+    if (!comparefn.is_undefined() && !comparefn.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn);
+
+    // 2. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 3. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 4. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 5. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
+    Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
+        // a. Return ? CompareArrayElements(x, y, comparefn).
+        return TRY(compare_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
+    };
+
+    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
+    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, false));
+
+    // 7. Let j be 0.
+    // 8. Repeat, while j < len,
+    for (size_t j = 0; j < length; ++j) {
+        // a. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(j)), sortedList[j]).
+        MUST(array->create_data_property_or_throw(j, sorted_list[j]));
+
+        // b. Set j to j + 1.
+    }
+
+    // 9. Return A.
     return array;
 }
 
