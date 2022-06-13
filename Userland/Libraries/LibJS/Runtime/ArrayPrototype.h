@@ -58,6 +58,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(group_to_map);
 };
 
-ThrowCompletionOr<void> array_merge_sort(VM&, GlobalObject&, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort);
+ThrowCompletionOr<void> array_merge_sort(GlobalObject&, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort);
 
 }
