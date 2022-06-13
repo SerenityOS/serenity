@@ -75,6 +75,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
     define_native_function(vm.names.group, group, 1, attr);
     define_native_function(vm.names.groupToMap, group_to_map, 1, attr);
+    define_native_function(vm.names.toReversed, to_reversed, 0, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -85,6 +86,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // 23.1.3.35 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With find from last proposal, https://tc39.es/proposal-array-find-from-last/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
+    // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
@@ -100,6 +102,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.groupToMap, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toReversed, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
@@ -1779,6 +1782,40 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 
     // 9. Return map.
     return map;
+}
+
+// 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
+{
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 4. Let k be 0.
+    // 5. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let from be ! ToString(𝔽(len - k - 1)).
+        auto from = PropertyKey { length - k - 1 };
+
+        // b. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        // c. Let fromValue be ? Get(O, from).
+        auto from_value = TRY(object->get(from));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pk, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set k to k + 1.
+    }
+
+    // 6. Return A.
+    return array;
 }
 
 }

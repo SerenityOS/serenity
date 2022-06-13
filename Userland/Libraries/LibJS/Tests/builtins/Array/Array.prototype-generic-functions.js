@@ -252,6 +252,7 @@ describe("ability to work with generic non-array objects", () => {
     });
 
     test("reverse", () => {
+        const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
         expect(Array.prototype.reverse.call(o)).toEqual({
             length: 5,
             4: "foo",
@@ -340,5 +341,11 @@ describe("ability to work with generic non-array objects", () => {
 
         const trueResult = result.get(trueObject);
         expect(trueResult).toEqual(["bar", "baz"]);
+    });
+
+    test("toReversed", () => {
+        const result = Array.prototype.toReversed.call(o);
+        expect(result).toEqual([undefined, "baz", undefined, "bar", "foo"]);
+        expect(result).not.toBe(o);
     });
 });
