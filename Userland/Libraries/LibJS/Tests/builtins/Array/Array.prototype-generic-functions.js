@@ -305,10 +305,10 @@ describe("ability to work with generic non-array objects", () => {
         ]);
     });
 
-    test("groupBy", () => {
+    test("group", () => {
         const visited = [];
         const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
-        const result = Array.prototype.groupBy.call(o, (value, _, object) => {
+        const result = Array.prototype.group.call(o, (value, _, object) => {
             expect(object).toBe(o);
             visited.push(value);
             return value !== undefined ? value.startsWith("b") : false;
@@ -318,12 +318,12 @@ describe("ability to work with generic non-array objects", () => {
         expect(result.true).toEqual(["bar", "baz"]);
     });
 
-    test("groupByToMap", () => {
+    test("groupToMap", () => {
         const visited = [];
         const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
         const falseObject = { false: false };
         const trueObject = { true: true };
-        const result = Array.prototype.groupByToMap.call(o, (value, _, object) => {
+        const result = Array.prototype.groupToMap.call(o, (value, _, object) => {
             expect(object).toBe(o);
             visited.push(value);
             return value !== undefined

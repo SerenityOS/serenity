@@ -1,25 +1,25 @@
 test("length is 1", () => {
-    expect(Array.prototype.groupBy).toHaveLength(1);
+    expect(Array.prototype.group).toHaveLength(1);
 });
 
 describe("errors", () => {
     test("callback must be a function", () => {
         expect(() => {
-            [].groupBy(undefined);
+            [].group(undefined);
         }).toThrowWithMessage(TypeError, "undefined is not a function");
     });
 
     test("null or undefined this value", () => {
         expect(() => {
-            Array.prototype.groupBy.call();
+            Array.prototype.group.call();
         }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
 
         expect(() => {
-            Array.prototype.groupBy.call(undefined);
+            Array.prototype.group.call(undefined);
         }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
 
         expect(() => {
-            Array.prototype.groupBy.call(null);
+            Array.prototype.group.call(null);
         }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
     });
 });
@@ -29,7 +29,7 @@ describe("normal behavior", () => {
         const array = [1, 2, 3, 4, 5, 6];
         const visited = [];
 
-        const firstResult = array.groupBy(value => {
+        const firstResult = array.group(value => {
             visited.push(value);
             return value % 2 === 0;
         });
@@ -43,7 +43,7 @@ describe("normal behavior", () => {
         expect(firstKeys[0]).toBe("false");
         expect(firstKeys[1]).toBe("true");
 
-        const secondResult = array.groupBy((_, index) => {
+        const secondResult = array.group((_, index) => {
             return index < array.length / 2;
         });
 
@@ -56,7 +56,7 @@ describe("normal behavior", () => {
         expect(secondKeys[1]).toBe("false");
 
         const thisArg = [7, 8, 9, 10, 11, 12];
-        const thirdResult = array.groupBy(function (_, __, arrayVisited) {
+        const thirdResult = array.group(function (_, __, arrayVisited) {
             expect(arrayVisited).toBe(array);
             expect(this).toBe(thisArg);
         }, thisArg);
@@ -71,19 +71,19 @@ describe("normal behavior", () => {
     });
 
     test("is unscopable", () => {
-        expect(Array.prototype[Symbol.unscopables].groupBy).toBeTrue();
+        expect(Array.prototype[Symbol.unscopables].group).toBeTrue();
         const array = [];
         with (array) {
             expect(() => {
-                groupBy;
-            }).toThrowWithMessage(ReferenceError, "'groupBy' is not defined");
+                group;
+            }).toThrowWithMessage(ReferenceError, "'group' is not defined");
         }
     });
 
     test("never calls callback with empty array", () => {
         var callbackCalled = 0;
         expect(
-            [].groupBy(() => {
+            [].group(() => {
                 callbackCalled++;
             })
         ).toEqual({});
@@ -92,7 +92,7 @@ describe("normal behavior", () => {
 
     test("calls callback once for every item", () => {
         var callbackCalled = 0;
-        const result = [1, 2, 3].groupBy(() => {
+        const result = [1, 2, 3].group(() => {
             callbackCalled++;
         });
         expect(result.undefined).toEqual([1, 2, 3]);

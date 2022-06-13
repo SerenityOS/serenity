@@ -54,8 +54,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(keys);
     JS_DECLARE_NATIVE_FUNCTION(entries);
     JS_DECLARE_NATIVE_FUNCTION(copy_within);
-    JS_DECLARE_NATIVE_FUNCTION(group_by);
-    JS_DECLARE_NATIVE_FUNCTION(group_by_to_map);
+    JS_DECLARE_NATIVE_FUNCTION(group);
+    JS_DECLARE_NATIVE_FUNCTION(group_to_map);
 };
 
 }

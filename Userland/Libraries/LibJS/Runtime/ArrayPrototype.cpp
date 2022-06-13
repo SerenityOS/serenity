@@ -73,8 +73,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
-    define_native_function(vm.names.groupBy, group_by, 1, attr);
-    define_native_function(vm.names.groupByToMap, group_by_to_map, 1, attr);
+    define_native_function(vm.names.group, group, 1, attr);
+    define_native_function(vm.names.groupToMap, group_to_map, 1, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -96,8 +96,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true)));
-    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupBy, Value(true)));
-    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupByToMap, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.group, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupToMap, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
@@ -1673,7 +1673,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
 {
     // 1. For each Record { [[Key]], [[Elements]] } g of groups, do
     //      a. If SameValue(g.[[Key]], key) is true, then
-    //      NOTE: This is performed in KeyedGroupTraits::equals for groupByToMap and Traits<JS::PropertyKey>::equals for groupBy.
+    //      NOTE: This is performed in KeyedGroupTraits::equals for groupToMap and Traits<JS::PropertyKey>::equals for group.
     auto existing_elements_iterator = groups.find(key);
     if (existing_elements_iterator != groups.end()) {
         // i. Assert: exactly one element of groups meets this criteria.
@@ -1695,8 +1695,9 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
-// 2.1 Array.prototype.groupBy ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
+// FIXME: Spec has incorrect function ID
+// 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1749,8 +1750,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
     return object;
 }
 
-// 2.2 Array.prototype.groupByToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
+// FIXME: Spec has incorrect function ID
+// 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
