@@ -242,6 +242,19 @@ GLenum WebGLRenderingContextBase::get_error()
     return m_context->gl_get_error();
 }
 
+void WebGLRenderingContextBase::line_width(GLfloat width)
+{
+    if (m_context_lost)
+        return;
+
+    dbgln_if(WEBGL_CONTEXT_DEBUG, "WebGLRenderingContextBase::line_width(width={})", width);
+
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#NAN_LINE_WIDTH
+    // "In the WebGL API, if the width parameter passed to lineWidth is set to NaN, an INVALID_VALUE error is generated and the line width is not changed."
+    RETURN_WITH_WEBGL_ERROR_IF(isnan(width), GL_INVALID_VALUE);
+    m_context->gl_line_width(width);
+}
+
 void WebGLRenderingContextBase::polygon_offset(GLfloat factor, GLfloat units)
 {
     if (m_context_lost)
