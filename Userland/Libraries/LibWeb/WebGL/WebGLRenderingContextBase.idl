@@ -43,6 +43,7 @@ interface mixin WebGLRenderingContextBase {
 
     GLenum getError();
 
+    undefined lineWidth(GLfloat width);
     undefined polygonOffset(GLfloat factor, GLfloat units);
 
     undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);

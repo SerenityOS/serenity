@@ -48,6 +48,7 @@ public:
 
     GLenum get_error();
 
+    void line_width(GLfloat width);
     void polygon_offset(GLfloat factor, GLfloat units);
 
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
