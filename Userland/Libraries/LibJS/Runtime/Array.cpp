@@ -183,15 +183,14 @@ ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Va
     auto* y_string = js_string(vm, TRY(y.to_string(global_object)));
 
     // 7. Let xSmaller be ! IsLessThan(xString, yString, true).
-    // FIXME: Update order of parameters in our is_less_than() impl.
-    auto x_smaller = MUST(is_less_than(global_object, true, x_string, y_string));
+    auto x_smaller = MUST(is_less_than(global_object, x_string, y_string, true));
 
     // 8. If xSmaller is true, return -1𝔽.
     if (x_smaller == TriState::True)
         return -1;
 
     // 9. Let ySmaller be ! IsLessThan(yString, xString, true).
-    auto y_smaller = MUST(is_less_than(global_object, true, y_string, x_string));
+    auto y_smaller = MUST(is_less_than(global_object, y_string, x_string, true));
 
     // 10. If ySmaller is true, return 1𝔽.
     if (y_smaller == TriState::True)
