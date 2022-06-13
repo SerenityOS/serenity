@@ -1695,8 +1695,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
-// FIXME: Spec has incorrect function ID
-// 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
+// 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.group
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 {
     auto callback_function = vm.argument(0);
@@ -1750,8 +1749,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
     return object;
 }
 
-// FIXME: Spec has incorrect function ID
-// 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
+// 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.grouptomap
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 {
     auto callback_function = vm.argument(0);
