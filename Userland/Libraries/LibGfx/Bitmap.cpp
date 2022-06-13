@@ -107,13 +107,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int s
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
-        highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append('/');
-        highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendff("-{}x.", scale_factor);
-        highdpi_icon_path.append(lexical_path.extension());
+        TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
 
-        auto highdpi_icon_string = highdpi_icon_path.to_string();
+        auto highdpi_icon_string = highdpi_icon_path.string_view();
         auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
 
         auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
