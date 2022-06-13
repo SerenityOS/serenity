@@ -35,6 +35,7 @@ interface mixin WebGLRenderingContextBase {
 
     undefined depthFunc(GLenum func);
     undefined depthMask(GLboolean flag);
+    undefined depthRange(GLclampf zNear, GLclampf zFar);
 
     undefined finish();
     undefined flush();
