@@ -867,7 +867,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
+ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance

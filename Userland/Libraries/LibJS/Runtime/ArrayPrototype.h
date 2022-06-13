@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,5 +57,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(group);
     JS_DECLARE_NATIVE_FUNCTION(group_to_map);
 };
+
+ThrowCompletionOr<void> array_merge_sort(VM&, GlobalObject&, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort);
 
 }
