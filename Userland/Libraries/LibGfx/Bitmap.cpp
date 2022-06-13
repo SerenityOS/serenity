@@ -102,7 +102,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
@@ -129,7 +129,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
     return try_load_from_fd_and_close(fd, path);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
 {
     auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
