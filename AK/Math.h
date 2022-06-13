@@ -23,6 +23,10 @@ template<FloatingPoint T>
 constexpr T Pi = 3.141592653589793238462643383279502884L;
 template<FloatingPoint T>
 constexpr T E = 2.718281828459045235360287471352662498L;
+template<FloatingPoint T>
+constexpr T Sqrt2 = 1.414213562373095048801688724209698079L;
+template<FloatingPoint T>
+constexpr T Sqrt1_2 = 0.707106781186547524400844362104849039L;
 
 namespace Details {
 template<size_t>
