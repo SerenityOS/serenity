@@ -487,6 +487,7 @@ namespace JS {
     P(toPrecision)                           \
     P(toReversed)                            \
     P(toSorted)                              \
+    P(toSpliced)                             \
     P(toString)                              \
     P(total)                                 \
     P(toTemporalInstant)                     \

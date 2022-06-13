@@ -77,6 +77,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.groupToMap, group_to_map, 1, attr);
     define_native_function(vm.names.toReversed, to_reversed, 0, attr);
     define_native_function(vm.names.toSorted, to_sorted, 1, attr);
+    define_native_function(vm.names.toSpliced, to_spliced, 2, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -105,6 +106,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.toReversed, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.toSorted, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toSpliced, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
@@ -1857,6 +1859,135 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
     }
 
     // 9. Return A.
+    return array;
+}
+
+// 1.1.1.6 Array.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSpliced
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
+{
+    auto start = vm.argument(0);
+    auto delete_count = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let relativeStart be ? ToIntegerOrInfinity(start).
+    auto relative_start = TRY(start.to_integer_or_infinity(global_object));
+
+    size_t actual_start;
+
+    // 4. If relativeStart is -∞, let actualStart be 0.
+    if (Value(relative_start).is_negative_infinity())
+        actual_start = 0;
+    // 5. Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
+    else if (relative_start < 0)
+        actual_start = static_cast<size_t>(max(static_cast<double>(length) + relative_start, 0));
+    // 6. Else, let actualStart be min(relativeStart, len).
+    else
+        actual_start = static_cast<size_t>(min(relative_start, static_cast<double>(length)));
+
+    // Sanity check
+    VERIFY(actual_start <= length);
+
+    // 7. Let insertCount be the number of elements in items.
+    auto insert_count = vm.argument_count() >= 2 ? vm.argument_count() - 2 : 0;
+
+    size_t actual_delete_count;
+
+    // 8. If start is not present, then
+    if (vm.argument_count() == 0) {
+        // a. Let actualDeleteCount be 0.
+        actual_delete_count = 0;
+    }
+    // 9. Else if deleteCount is not present, then
+    else if (vm.argument_count() == 1) {
+        // a. Let actualDeleteCount be len - actualStart.
+        actual_delete_count = length - actual_start;
+    }
+    // 10. Else,
+    else {
+        // a. Let dc be ? ToIntegerOrInfinity(deleteCount).
+        auto dc = TRY(delete_count.to_integer_or_infinity(global_object));
+
+        // b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
+        actual_delete_count = static_cast<size_t>(clamp(dc, 0, static_cast<double>(length - actual_start)));
+    }
+
+    // Sanity check
+    VERIFY(actual_delete_count <= (length - actual_start));
+
+    // 11. Let newLen be len + insertCount - actualDeleteCount.
+    auto new_length_double = static_cast<double>(length) + static_cast<double>(insert_count) - static_cast<double>(actual_delete_count);
+
+    // 12. If newLen > 2^53 - 1, throw a TypeError exception.
+    if (new_length_double > MAX_ARRAY_LIKE_INDEX)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+
+    auto new_length = static_cast<size_t>(new_length_double);
+
+    // 13. Let A be ? ArrayCreate(𝔽(newLen)).
+    auto* array = TRY(Array::create(global_object, new_length));
+
+    // 14. Let i be 0.
+    size_t i = 0;
+
+    // 15. Let r be actualStart + actualDeleteCount.
+    auto r = actual_start + actual_delete_count;
+
+    // 16. Repeat, while i < actualStart,
+    while (i < actual_start) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let iValue be ? Get(O, Pi).
+        auto i_value = TRY(object->get(property_key));
+
+        // c. Perform ! CreateDataPropertyOrThrow(A, Pi, iValue).
+        MUST(array->create_data_property_or_throw(property_key, i_value));
+
+        // d. Set i to i + 1.
+        ++i;
+    }
+
+    // 17. For each element E of items, do
+    for (size_t element_index = 2; element_index < vm.argument_count(); ++element_index) {
+        auto element = vm.argument(element_index);
+
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Perform ! CreateDataPropertyOrThrow(A, Pi, E).
+        MUST(array->create_data_property_or_throw(property_key, element));
+
+        // c. Set i to i + 1.
+        ++i;
+    }
+
+    // 18. Repeat, while i < newLen,
+    while (i < new_length) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let from be ! ToString(𝔽(r)).
+        auto from = PropertyKey { r };
+
+        // c. Let fromValue be ? Get(O, from).
+        auto from_value = TRY(object->get(from));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pi, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set i to i + 1.
+        ++i;
+
+        // f. Set r to r + 1.
+        ++r;
+    }
+
+    // 19. Return A.
     return array;
 }
 

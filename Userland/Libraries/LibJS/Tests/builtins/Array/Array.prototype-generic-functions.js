@@ -354,4 +354,10 @@ describe("ability to work with generic non-array objects", () => {
         expect(result).toEqual(["bar", "baz", "foo", undefined, undefined]);
         expect(result).not.toBe(o);
     });
+
+    test("toSpliced", () => {
+        const result = Array.prototype.toSpliced.call(o, 1, 2, "hello", "friends");
+        expect(result).toEqual(["foo", "hello", "friends", "baz", undefined]);
+        expect(result).not.toBe(o);
+    });
 });
