@@ -8,9 +8,11 @@
 #include <AK/Function.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
 
@@ -197,6 +199,56 @@ ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Va
 
     // 11. Return +0𝔽.
     return 0;
+}
+
+// 1.1.1.3 SortIndexedProperties ( obj, len, SortCompare, skipHoles ), https://tc39.es/proposal-change-array-by-copy/#sec-sortindexedproperties
+ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(GlobalObject& global_object, Object const& object, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes)
+{
+    // 1. Let items be a new empty List.
+    auto items = MarkedVector<Value> { global_object.heap() };
+
+    // 2. Let k be 0.
+    // 3. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        bool k_read;
+
+        // b. If skipHoles is true, then
+        if (skip_holes) {
+            // i. Let kRead be ? HasProperty(obj, Pk).
+            k_read = TRY(object.has_property(property_key));
+        }
+        // c. Else,
+        else {
+            // i. Let kRead be true.
+            k_read = true;
+        }
+
+        // d. If kRead is true, then
+        if (k_read) {
+            // i. Let kValue be ? Get(obj, Pk).
+            auto k_value = TRY(object.get(property_key));
+
+            // ii. Append kValue to items.
+            items.append(k_value);
+        }
+
+        // e. Set k to k + 1.
+    }
+
+    // 4. Sort items using an implementation-defined sequence of calls to SortCompare. If any such call returns an abrupt completion, stop before performing any further calls to SortCompare or steps in this algorithm and return that Completion Record.
+    // FIXME: Support AK::Function in array_merge_sort() to avoid having to create a NativeFunction.
+    auto* native_comparefn = NativeFunction::create(global_object, "", [&](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+        auto x = vm.argument(0);
+        auto y = vm.argument(1);
+        return TRY(sort_compare(x, y));
+    });
+    TRY(array_merge_sort(global_object, native_comparefn, items));
+
+    // 5. Return items.
+    return items;
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property
