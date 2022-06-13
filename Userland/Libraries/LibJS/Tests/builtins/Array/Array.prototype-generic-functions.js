@@ -348,4 +348,10 @@ describe("ability to work with generic non-array objects", () => {
         expect(result).toEqual([undefined, "baz", undefined, "bar", "foo"]);
         expect(result).not.toBe(o);
     });
+
+    test("toSorted", () => {
+        const result = Array.prototype.toSorted.call(o);
+        expect(result).toEqual(["bar", "baz", "foo", undefined, undefined]);
+        expect(result).not.toBe(o);
+    });
 });

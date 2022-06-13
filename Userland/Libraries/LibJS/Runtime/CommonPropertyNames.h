@@ -486,6 +486,7 @@ namespace JS {
     P(toPlainYearMonth)                      \
     P(toPrecision)                           \
     P(toReversed)                            \
+    P(toSorted)                              \
     P(toString)                              \
     P(total)                                 \
     P(toTemporalInstant)                     \
