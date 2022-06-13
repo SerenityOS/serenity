@@ -429,7 +429,7 @@ bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
-ThrowCompletionOr<TriState> is_less_than(GlobalObject&, bool left_first, Value lhs, Value rhs);
+ThrowCompletionOr<TriState> is_less_than(GlobalObject&, Value lhs, Value rhs, bool left_first);
 
 double to_integer_or_infinity(double);
 
