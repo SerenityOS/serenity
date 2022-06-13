@@ -6,6 +6,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
@@ -140,6 +141,62 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 
     // 19. Return true.
     return true;
+}
+
+// 1.1.1.2 CompareArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparearrayelements
+ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If x and y are both undefined, return +0𝔽.
+    if (x.is_undefined() && y.is_undefined())
+        return 0;
+
+    // 2. If x is undefined, return 1𝔽.
+    if (x.is_undefined())
+        return 1;
+
+    // 3. If y is undefined, return -1𝔽.
+    if (y.is_undefined())
+        return -1;
+
+    // 4. If comparefn is not undefined, then
+    if (comparefn != nullptr) {
+        // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
+        auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
+        auto value_number = TRY(value.to_number(global_object));
+
+        // b. If v is NaN, return +0𝔽.
+        if (value_number.is_nan())
+            return 0;
+
+        // c. Return v.
+        return value_number.as_double();
+    }
+
+    // 5. Let xString be ? ToString(x).
+    auto* x_string = js_string(vm, TRY(x.to_string(global_object)));
+
+    // 6. Let yString be ? ToString(y).
+    auto* y_string = js_string(vm, TRY(y.to_string(global_object)));
+
+    // 7. Let xSmaller be ! IsLessThan(xString, yString, true).
+    // FIXME: Update order of parameters in our is_less_than() impl.
+    auto x_smaller = MUST(is_less_than(global_object, true, x_string, y_string));
+
+    // 8. If xSmaller is true, return -1𝔽.
+    if (x_smaller == TriState::True)
+        return -1;
+
+    // 9. Let ySmaller be ! IsLessThan(yString, xString, true).
+    auto y_smaller = MUST(is_less_than(global_object, true, y_string, x_string));
+
+    // 10. If ySmaller is true, return 1𝔽.
+    if (y_smaller == TriState::True)
+        return 1;
+
+    // 11. Return +0𝔽.
+    return 0;
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property
