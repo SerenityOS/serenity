@@ -78,6 +78,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toReversed, to_reversed, 0, attr);
     define_native_function(vm.names.toSorted, to_sorted, 1, attr);
     define_native_function(vm.names.toSpliced, to_spliced, 2, attr);
+    define_native_function(vm.names.with, with, 2, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -1988,6 +1989,62 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     }
 
     // 19. Return A.
+    return array;
+}
+
+// 1.1.1.7 Array.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
+{
+    auto index = vm.argument(0);
+    auto value = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
+    auto relative_index = TRY(index.to_integer_or_infinity(global_object));
+
+    double actual_index;
+
+    // 4. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
+    if (relative_index >= 0)
+        actual_index = relative_index;
+    // 5. Else, let actualIndex be len + relativeIndex.
+    else
+        actual_index = static_cast<double>(length) + relative_index;
+
+    // 6. If actualIndex ≥ len or actualIndex < 0, throw a RangeError exception.
+    if (actual_index >= static_cast<double>(length) || actual_index < 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, actual_index, length);
+
+    // 7. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 8. Let k be 0.
+    // 9. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        Value from_value;
+
+        // b. If k is actualIndex, let fromValue be value.
+        if (k == static_cast<size_t>(actual_index))
+            from_value = value;
+        // c. Else, let fromValue be ? Get(O, Pk).
+        else
+            from_value = TRY(object->get(property_key));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pk, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set k to k + 1.
+    }
+
+    // 10. Return A.
     return array;
 }
 
