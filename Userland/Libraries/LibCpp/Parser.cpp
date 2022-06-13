@@ -1017,7 +1017,7 @@ Vector<CodeComprehension::TodoEntry> Parser::get_todo_entries() const
     Vector<CodeComprehension::TodoEntry> ret;
     for (auto& token : m_tokens) {
         if (token.type() == Token::Type::Comment) {
-            if (token.text().contains("TODO")) {
+            if (token.text().contains("TODO") || token.text().contains("FIXME")) {
                 ret.append({ token.text(), m_filename, token.start().line, token.start().column });
             }
         }
