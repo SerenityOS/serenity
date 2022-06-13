@@ -867,12 +867,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
+ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
     if (arr_to_sort.size() <= 1)
         return {};
+
+    auto& vm = global_object.vm();
 
     MarkedVector<Value> left(vm.heap());
     MarkedVector<Value> right(vm.heap());
@@ -888,8 +890,8 @@ ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, Fu
         }
     }
 
-    TRY(array_merge_sort(vm, global_object, compare_func, left));
-    TRY(array_merge_sort(vm, global_object, compare_func, right));
+    TRY(array_merge_sort(global_object, compare_func, left));
+    TRY(array_merge_sort(global_object, compare_func, right));
 
     arr_to_sort.clear();
 
@@ -990,7 +992,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // to be stable. FIXME: when initially scanning through the array, maintain a flag
     // for if an unstable sort would be indistinguishable from a stable sort (such as just
     // just strings or numbers), and in that case use quick sort instead for better performance.
-    TRY(array_merge_sort(vm, global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
+    TRY(array_merge_sort(global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
 
     for (size_t j = 0; j < items.size(); ++j)
         TRY(object->set(j, items[j], Object::ShouldThrowExceptions::Yes));
