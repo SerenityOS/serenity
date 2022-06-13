@@ -49,6 +49,11 @@ public:
         {
             return horizontal_radius > 0 && vertical_radius > 0;
         }
+
+        Gfx::IntRect as_rect() const
+        {
+            return { 0, 0, horizontal_radius, vertical_radius };
+        }
     };
 
     void fill_rect_with_rounded_corners(IntRect const&, Color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode = BlendMode::Normal);
