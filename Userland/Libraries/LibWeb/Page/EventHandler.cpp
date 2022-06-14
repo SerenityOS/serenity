@@ -491,6 +491,64 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
     return true;
 }
 
+bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
+{
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
+    if (!paint_root())
+        return false;
+
+    // TODO: Allow selecting element behind if one on top has pointer-events set to none.
+    RefPtr<Painting::Paintable> paintable;
+    if (m_mouse_event_tracking_layout_node) {
+        paintable = m_mouse_event_tracking_layout_node->paintable();
+    } else {
+        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
+        if (!result.has_value())
+            return false;
+        paintable = result->paintable;
+    }
+
+    auto pointer_events = paintable->computed_values().pointer_events();
+    // FIXME: Handle other values for pointer-events.
+    if (pointer_events == CSS::PointerEvents::None)
+        return false;
+
+    RefPtr<DOM::Node> node = paintable->mouse_event_target();
+    if (!node)
+        node = paintable->dom_node();
+
+    if (paintable->wants_mouse_events()) {
+        // FIXME: Handle double clicks.
+    }
+
+    if (!node)
+        return false;
+
+    if (is<HTML::HTMLIFrameElement>(*node)) {
+        if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
+            return nested_browsing_context->event_handler().handle_doubleclick(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), button, modifiers);
+        return false;
+    }
+
+    // Search for the first parent of the hit target that's an element.
+    // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
+    auto* layout_node = &paintable->layout_node();
+    while (layout_node && node && !node->is_element() && layout_node->parent()) {
+        layout_node = layout_node->parent();
+        node = layout_node->dom_node();
+    }
+    if (!node || !layout_node)
+        return false;
+
+    // FIXME: Dispatch 'dblclick' events.
+
+    // FIXME: Select word
+
+    return true;
+}
+
 bool EventHandler::focus_next_element()
 {
     if (!m_browsing_context.active_document())
