@@ -18,8 +18,6 @@
 
 namespace Kernel {
 
-static constexpr u32 mepoch = 476763780;
-
 class FileSystem : public RefCounted<FileSystem> {
     friend class Inode;
 

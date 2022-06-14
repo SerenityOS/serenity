@@ -138,7 +138,7 @@ InodeMetadata SysFSInode::metadata() const
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = m_associated_component->size();
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     return metadata;
 }
 
@@ -208,7 +208,7 @@ InodeMetadata SysFSDirectoryInode::metadata() const
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     return metadata;
 }
 ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
