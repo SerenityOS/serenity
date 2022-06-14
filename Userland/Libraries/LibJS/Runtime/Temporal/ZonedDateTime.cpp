@@ -363,8 +363,8 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
 
     // 3. If all of years, months, weeks, and days are 0, then
     if (years == 0 && months == 0 && weeks == 0 && days == 0) {
-        // a. Return ! AddInstant(epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-        return MUST(add_instant(global_object, epoch_nanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+        // a. Return ? AddInstant(epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+        return add_instant(global_object, epoch_nanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
     }
 
     // 4. Let instant be ! CreateTemporalInstant(epochNanoseconds).
@@ -388,8 +388,8 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
     // 10. Let intermediateInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, intermediateDateTime, "compatible").
     auto* intermediate_instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *intermediate_date_time, "compatible"sv));
 
-    // 11. Return ! AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-    return MUST(add_instant(global_object, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    // 11. Return ? AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    return add_instant(global_object, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 }
 
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
