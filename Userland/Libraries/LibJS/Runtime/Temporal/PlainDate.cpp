@@ -266,27 +266,30 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
         // t. Return ! CreateDateDurationRecord(years, months, 0, days).
         return create_date_duration_record(years, months, 0, days);
     }
-    // 2. If largestUnit is "day" or "week", then
+    // 2. Else,
     else {
-        // a. Let epochDays1 be MakeDay(𝔽(y1), 𝔽(m1 - 1), 𝔽(d1)).
+        // a. Assert: largestUnit is "day" or "week".
+        VERIFY(largest_unit.is_one_of("day"sv, "week"sv));
+
+        // b. Let epochDays1 be MakeDay(𝔽(y1), 𝔽(m1 - 1), 𝔽(d1)).
         auto epoch_days_1 = make_day(year1, month1 - 1, day1);
 
-        // b. Assert: epochDays1 is finite.
+        // c. Assert: epochDays1 is finite.
         VERIFY(isfinite(epoch_days_1));
 
-        // c. Let epochDays2 be MakeDay(𝔽(y2), 𝔽(m2 - 1), 𝔽(d2)).
+        // d. Let epochDays2 be MakeDay(𝔽(y2), 𝔽(m2 - 1), 𝔽(d2)).
         auto epoch_days_2 = make_day(year2, month2 - 1, day2);
 
-        // d. Assert: epochDays2 is finite.
+        // e. Assert: epochDays2 is finite.
         VERIFY(isfinite(epoch_days_2));
 
-        // e. Let days be ℝ(epochDays2) - ℝ(epochDays1).
+        // f. Let days be ℝ(epochDays2) - ℝ(epochDays1).
         auto days = epoch_days_2 - epoch_days_1;
 
-        // f. Let weeks be 0.
+        // g. Let weeks be 0.
         double weeks = 0;
 
-        // g. If largestUnit is "week", then
+        // h. If largestUnit is "week", then
         if (largest_unit == "week"sv) {
             // i. Set weeks to RoundTowardsZero(days / 7).
             weeks = trunc(days / 7);
@@ -295,10 +298,9 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             days = fmod(days, 7);
         }
 
-        // h. Return ! CreateDateDurationRecord(0, 0, weeks, days).
+        // i. Return ! CreateDateDurationRecord(0, 0, weeks, days).
         return create_date_duration_record(0, 0, weeks, days);
     }
-    VERIFY_NOT_REACHED();
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
@@ -326,27 +328,29 @@ ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, 
         // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
         return ISODateRecord { .year = y, .month = m, .day = d };
     }
-    // 2. If overflow is "constrain", then
-    else if (overflow == "constrain"sv) {
+    // 2. Else,
+    else {
+        // a. Assert: overflow is "constrain".
+        VERIFY(overflow == "constrain"sv);
+
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
         // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
         // ISO value for years: -273975 - 273975, which is a subset of this check.
         if (!AK::is_within_range<i32>(year))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-        // a. Set month to the result of clamping month between 1 and 12.
+        // b. Set month to the result of clamping month between 1 and 12.
         month = clamp(month, 1, 12);
 
-        // b. Let daysInMonth be ! ISODaysInMonth(year, month).
+        // c. Let daysInMonth be ! ISODaysInMonth(year, month).
         auto days_in_month = iso_days_in_month(static_cast<i32>(year), static_cast<u8>(month));
 
-        // c. Set day to the result of clamping day between 1 and daysInMonth.
+        // d. Set day to the result of clamping day between 1 and daysInMonth.
         day = clamp(day, 1, days_in_month);
 
-        // d. Return CreateISODateRecord(year, month, day).
+        // e. Return CreateISODateRecord(year, month, day).
         return create_iso_date_record(static_cast<i32>(year), static_cast<u8>(month), static_cast<u8>(day));
     }
-    VERIFY_NOT_REACHED();
 }
 
 // 3.5.5 IsValidISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate
