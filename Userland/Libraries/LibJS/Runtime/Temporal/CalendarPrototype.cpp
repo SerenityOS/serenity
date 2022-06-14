@@ -510,7 +510,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
-    // 4. Let iteratorRecord be ? Getiterator(fields, sync).
+    // 4. Let iteratorRecord be ? GetIterator(fields, sync).
     auto iterator_record = TRY(get_iterator(global_object, fields, IteratorHint::Sync));
 
     // 5. Let fieldNames be a new empty List.
