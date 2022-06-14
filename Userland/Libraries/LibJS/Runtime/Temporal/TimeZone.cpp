@@ -454,21 +454,24 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
 
     // 4. If parseResult.[[Name]] is not undefined, then
     if (parse_result.name.has_value()) {
-        // a. If ParseText(StringToCodePoints(parseResult.[[Name]], TimeZoneNumericUTCOffset)) is not a List of errors, then
-        if (is_valid_time_zone_numeric_utc_offset_syntax(*parse_result.name)) {
-            // i. If parseResult.[[OffsetString]] is not undefined, and ! ParseTimeZoneOffsetString(parseResult.[[OffsetString]]) ≠ ! ParseTimeZoneOffsetString(parseResult.[[Name]]), throw a RangeError exception.
-            if (parse_result.offset_string.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset_string)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset_string, *parse_result.name);
+        // a. Let name be parseResult.[[Name]].
+        auto& name = *parse_result.name;
+
+        // b. If ParseText(StringToCodePoints(name, TimeZoneNumericUTCOffset)) is not a List of errors, then
+        if (is_valid_time_zone_numeric_utc_offset_syntax(name)) {
+            // i. If parseResult.[[OffsetString]] is not undefined, and ! ParseTimeZoneOffsetString(parseResult.[[OffsetString]]) ≠ ! ParseTimeZoneOffsetString(name), throw a RangeError exception.
+            if (parse_result.offset_string.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset_string)) != MUST(parse_time_zone_offset_string(global_object, name))))
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalTimeZoneOffsetStringMismatch, *parse_result.offset_string, name);
         }
-        // b. Else,
+        // c. Else,
         else {
-            // i. If IsValidTimeZoneName(parseResult.[[Name]]) is false, throw a RangeError exception.
-            if (!is_valid_time_zone_name(*parse_result.name))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *parse_result.name);
+            // i. If IsValidTimeZoneName(name) is false, throw a RangeError exception.
+            if (!is_valid_time_zone_name(name))
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, name);
         }
 
-        // c. Return ! CreateTemporalTimeZone(! CanonicalizeTimeZoneName(parseResult.[[Name]])).
-        return MUST(create_temporal_time_zone(global_object, canonicalize_time_zone_name(*parse_result.name)));
+        // c. Return ! CreateTemporalTimeZone(! CanonicalizeTimeZoneName(name)).
+        return MUST(create_temporal_time_zone(global_object, canonicalize_time_zone_name(name)));
     }
 
     // 5. If parseResult.[[Z]] is true, return ! CreateTemporalTimeZone("UTC").
