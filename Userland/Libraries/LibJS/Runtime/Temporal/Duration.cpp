@@ -757,8 +757,8 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
         }
     }
 
-    // 12. Return ! CreateDateDurationRecord(years, months, weeks, days).
-    return create_date_duration_record(years, months, weeks, days);
+    // 12. Return ? CreateDateDurationRecord(years, months, weeks, days).
+    return create_date_duration_record(global_object, years, months, weeks, days);
 }
 
 // 7.5.20 BalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-balancedurationrelative
