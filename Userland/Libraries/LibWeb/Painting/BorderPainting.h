@@ -56,7 +56,7 @@ struct BordersData {
     CSS::BorderData bottom;
     CSS::BorderData left;
 };
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BordersData const& borders_data);
+void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data);
 void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const&);
 
 }
