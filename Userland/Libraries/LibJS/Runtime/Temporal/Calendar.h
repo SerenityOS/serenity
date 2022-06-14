@@ -74,5 +74,6 @@ u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
 u8 iso_day(Object& temporal_object);
 ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject&, Object const& fields, Object const& additional_fields);
+Vector<String> calendar_merge_field_names(Vector<String> const& receiver_field_names, Vector<String> const& input_field_names);
 
 }
