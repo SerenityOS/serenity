@@ -504,8 +504,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
     // 10. Let today be ? CreateTemporalDateTime(year, month, day, 0, 0, 0, 0, 0, 0, isoCalendar).
     auto* today = TRY(create_temporal_date_time(global_object, year, month, day, 0, 0, 0, 0, 0, 0, *iso_calendar));
 
-    // 11. Let tomorrowFields be ? AddISODate(year, month, day, 0, 0, 0, 1, "reject").
-    auto tomorrow_fields = TRY(add_iso_date(global_object, year, month, day, 0, 0, 0, 1, "reject"sv));
+    // 11. Let tomorrowFields be BalanceISODate(year, month, day + 1).
+    auto tomorrow_fields = balance_iso_date(year, month, day + 1);
 
     // 12. Let tomorrow be ? CreateTemporalDateTime(tomorrowFields.[[Year]], tomorrowFields.[[Month]], tomorrowFields.[[Day]], 0, 0, 0, 0, 0, 0, isoCalendar).
     auto* tomorrow = TRY(create_temporal_date_time(global_object, tomorrow_fields.year, tomorrow_fields.month, tomorrow_fields.day, 0, 0, 0, 0, 0, 0, *iso_calendar));
