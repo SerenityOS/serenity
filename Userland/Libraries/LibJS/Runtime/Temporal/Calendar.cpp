@@ -46,13 +46,18 @@ bool is_builtin_calendar(String const& identifier)
 }
 
 // 12.1.2 AvailableCalendars ( ), https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars
-// NOTE: This is the minimum AvailableCalendars implementation for engines without ECMA-402.
-// NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.
 Span<StringView const> available_calendars()
 {
-    // 1. Return « "iso8601" ».
-    static constexpr AK::Array values { "iso8601"sv };
-    return values.span();
+    // 1. Let calendars be the List of String values representing calendar types supported by the implementation.
+    // NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.
+    static constexpr AK::Array calendars { "iso8601"sv };
+
+    // 2. Assert: calendars contains "iso8601".
+    // 3. Assert: calendars does not contain any element that does not identify a calendar type in the Unicode Common Locale Data Repository (CLDR).
+    // 4. Sort calendars in order as if an Array of the same values had been sorted using %Array.prototype.sort% with undefined as comparefn.
+
+    // 5. Return calendars.
+    return calendars.span();
 }
 
 // 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
