@@ -204,7 +204,7 @@ ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_objec
     // 1. Let number be ? ToNumber(argument).
     auto number = TRY(argument.to_number(global_object));
 
-    // 2. If number is NaN, +0𝔽, or -0𝔽 return 0.
+    // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return 0;
 

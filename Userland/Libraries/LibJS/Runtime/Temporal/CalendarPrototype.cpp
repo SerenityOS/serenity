@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     auto temporal_date_like = vm.argument(0);
-    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
@@ -260,7 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalAmbiguousMonthOfPlainMonthDay);
     }
 
-    // 5. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // 5. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
@@ -417,7 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     auto temporal_date_like = vm.argument(0);
-    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slots, then
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slots, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
@@ -439,7 +439,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     auto temporal_date_like = vm.argument(0);
-    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
@@ -461,7 +461,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     auto temporal_date_like = vm.argument(0);
-    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Perform ? ToTemporalDate(temporalDateLike).
         (void)TRY(to_temporal_date(global_object, temporal_date_like));
@@ -483,7 +483,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     auto temporal_date_like = vm.argument(0);
-    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));

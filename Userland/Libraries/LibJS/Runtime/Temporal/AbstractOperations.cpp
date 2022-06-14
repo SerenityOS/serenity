@@ -835,7 +835,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
 // 13.21 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
-    // 1. Assert: second, millisecond, microsecond and nanosecond are integers.
+    // 1. Assert: second, millisecond, microsecond, and nanosecond are integers.
 
     // Non-standard sanity check
     if (precision.has<StringView>())
