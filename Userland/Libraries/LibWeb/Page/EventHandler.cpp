@@ -545,7 +545,45 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     auto offset = compute_mouse_event_offset(position, *layout_node);
     node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
 
-    // FIXME: Select word
+    // NOTE: Dispatching an event may have disturbed the world.
+    if (!paint_root() || paint_root() != node->document().paint_box())
+        return true;
+
+    if (button == GUI::MouseButton::Primary) {
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
+            auto paintable = result->paintable;
+            if (!paintable->dom_node())
+                return true;
+
+            auto const& layout_node = paintable->layout_node();
+            if (!layout_node.is_text_node())
+                return true;
+            auto const& text_for_rendering = verify_cast<Layout::TextNode>(layout_node).text_for_rendering();
+
+            int first_word_break_before = [&] {
+                // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
+                // This also helps us dealing with cases where index is equal to the string length.
+                for (int i = result->index_in_node - 1; i >= 0; --i) {
+                    if (is_ascii_space(text_for_rendering[i])) {
+                        // Don't include the space in the selection
+                        return i + 1;
+                    }
+                }
+                return 0;
+            }();
+
+            int first_word_break_after = [&] {
+                for (size_t i = result->index_in_node; i < text_for_rendering.length(); ++i) {
+                    if (is_ascii_space(text_for_rendering[i]))
+                        return i;
+                }
+                return text_for_rendering.length();
+            }();
+
+            m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), first_word_break_after));
+            layout_root()->set_selection({ { paintable->layout_node(), first_word_break_before }, { paintable->layout_node(), first_word_break_after } });
+        }
+    }
 
     return true;
 }
