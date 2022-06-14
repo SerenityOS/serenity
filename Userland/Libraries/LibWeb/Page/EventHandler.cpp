@@ -542,7 +542,8 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     if (!node || !layout_node)
         return false;
 
-    // FIXME: Dispatch 'dblclick' events.
+    auto offset = compute_mouse_event_offset(position, *layout_node);
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
 
     // FIXME: Select word
 
