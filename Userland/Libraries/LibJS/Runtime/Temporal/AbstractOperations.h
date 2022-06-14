@@ -126,7 +126,7 @@ struct PrepareTemporalFieldsPartial { };
 
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
-ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
+ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, OptionType type, Vector<StringView> const& values, Value fallback);
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
