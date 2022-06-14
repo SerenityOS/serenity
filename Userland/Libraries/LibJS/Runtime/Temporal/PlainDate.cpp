@@ -234,27 +234,26 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
         }
 
-        // o. Let days be 0.
-        double days = 0;
+        double days;
 
-        // p. If mid.[[Month]] = end.[[Month]], then
+        // o. If mid.[[Month]] = end.[[Month]], then
         if (mid.month == end.month) {
             // i. Assert: mid.[[Year]] = end.[[Year]].
             VERIFY(mid.year == end.year);
 
-            // ii. Set days to end.[[Day]] - mid.[[Day]].
+            // ii. Let days be end.[[Day]] - mid.[[Day]].
             days = end.day - mid.day;
         }
-        // q. Else if sign < 0, set days to -mid.[[Day]] - (! ISODaysInMonth(end.[[Year]], end.[[Month]]) - end.[[Day]]).
+        // p. Else if sign < 0, let days be -mid.[[Day]] - (! ISODaysInMonth(end.[[Year]], end.[[Month]]) - end.[[Day]]).
         else if (sign < 0) {
             days = -mid.day - (iso_days_in_month(end.year, end.month) - end.day);
         }
-        // r. Else, set days to end.[[Day]] + (! ISODaysInMonth(mid.[[Year]], mid.[[Month]]) - mid.[[Day]]).
+        // q. Else, let days be end.[[Day]] + (! ISODaysInMonth(mid.[[Year]], mid.[[Month]]) - mid.[[Day]]).
         else {
             days = end.day + (iso_days_in_month(mid.year, mid.month) - mid.day);
         }
 
-        // s. If largestUnit is "month", then
+        // r. If largestUnit is "month", then
         if (largest_unit == "month"sv) {
             // i. Set months to months + years × 12.
             months += years * 12;
@@ -263,7 +262,7 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             years = 0;
         }
 
-        // t. Return ! CreateDateDurationRecord(years, months, 0, days).
+        // s. Return ! CreateDateDurationRecord(years, months, 0, days).
         return create_date_duration_record(years, months, 0, days);
     }
     // 2. Else,
