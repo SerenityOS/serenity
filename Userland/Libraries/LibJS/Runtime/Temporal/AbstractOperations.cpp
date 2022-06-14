@@ -99,41 +99,30 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Options");
 }
 
-// 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+// 13.3 GetOption ( options, property, type, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, OptionType type, Vector<StringView> const& values, Value fallback)
 {
     VERIFY(property.is_string());
 
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(options) is Object.
-    // 2. Assert: Each element of types is Boolean, String, or Number.
 
-    // 3. Let value be ? Get(options, property).
+    // 2. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
-    // 4. If value is undefined, return fallback.
+    // 3. If value is undefined, return fallback.
     if (value.is_undefined())
         return fallback;
 
-    OptionType type;
-    // 5. If types contains Type(value), then
-    if (auto value_type = to_option_type(value); value_type.has_value() && types.contains_slow(*value_type)) {
-        // a. Let type be Type(value).
-        type = *value_type;
-    }
-    // 6. Else,
-    else {
-        // a. Let type be the last element of types.
-        type = types.last();
-    }
+    // 4. Assert: type is "boolean" or "string" or "number".
 
-    // 7. If type is Boolean, then
+    // 5. If type is "boolean", then
     if (type == OptionType::Boolean) {
         // a. Set value to ToBoolean(value).
         value = Value(value.to_boolean());
     }
-    // 8. Else if type is Number, then
+    // 6. Else if type is "number", then
     else if (type == OptionType::Number) {
         // a. Set value to ? ToNumber(value).
         value = TRY(value.to_number(global_object));
@@ -142,21 +131,24 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
         if (value.is_nan())
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
     }
-    // 9. Else,
+    // 7. Else,
     else {
-        // a. Set value to ? ToString(value).
+        // a. Assert: type is "string".
+        VERIFY(type == OptionType::String);
+
+        // b. Set value to ? ToString(value).
         value = TRY(value.to_primitive_string(global_object));
     }
 
-    // 10. If values is not empty, then
+    // 8. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
     if (!values.is_empty()) {
+        // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        // a. If values does not contain value, throw a RangeError exception.
         if (!values.contains_slow(value.as_string().string()))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
     }
 
-    // 11. Return value.
+    // 9. Return value.
     return value;
 }
 
@@ -169,8 +161,8 @@ ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Obje
     if (options == nullptr)
         return "constrain"sv;
 
-    // 2. Return ? GetOption(options, "overflow", « String », « "constrain", "reject" », "constrain").
-    auto option = TRY(get_option(global_object, *options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
+    // 2. Return ? GetOption(options, "overflow", "string", « "constrain", "reject" », "constrain").
+    auto option = TRY(get_option(global_object, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -185,8 +177,8 @@ ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object
     if (options == nullptr)
         return "compatible"sv;
 
-    // 2. Return ? GetOption(options, "disambiguation", « String », « "compatible", "earlier", "later", "reject" », "compatible").
-    auto option = TRY(get_option(global_object, *options, vm.names.disambiguation, { OptionType::String }, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
+    // 2. Return ? GetOption(options, "disambiguation", "string", « "compatible", "earlier", "later", "reject" », "compatible").
+    auto option = TRY(get_option(global_object, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -197,8 +189,8 @@ ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object,
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "roundingMode", « String », « "ceil", "floor", "trunc", "halfExpand" », fallback).
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
+    // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "trunc", "halfExpand" », fallback).
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.roundingMode, OptionType::String, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -228,8 +220,8 @@ ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object
     if (options == nullptr)
         return fallback;
 
-    // 2. Return ? GetOption(options, "offset", « String », « "prefer", "use", "ignore", "reject" », fallback).
-    auto option = TRY(get_option(global_object, *options, vm.names.offset, { OptionType::String }, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
+    // 2. Return ? GetOption(options, "offset", "string", « "prefer", "use", "ignore", "reject" », fallback).
+    auto option = TRY(get_option(global_object, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -240,8 +232,8 @@ ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, O
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "calendarName", « String », « "auto", "always", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "calendarName", "string", « "auto", "always", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -252,8 +244,8 @@ ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "timeZoneName", « String », « "auto", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.timeZoneName, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "timeZoneName", "string, « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -264,8 +256,8 @@ ThrowCompletionOr<String> to_show_offset_option(GlobalObject& global_object, Obj
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "offset", « String », « "auto", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "offset", "string", « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, OptionType::String, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -298,8 +290,8 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
         maximum = 1;
     }
 
-    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1𝔽).
-    auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
+    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", "number", undefined, 1𝔽).
+    auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, OptionType::Number, {}, Value(1)));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
@@ -536,8 +528,8 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
 
     // 8. NOTE: For each singular Temporal unit name that is contained within allowedValues, the corresponding plural name is also contained within it.
 
-    // 9. Let value be ? GetOption(normalizedOptions, key, « String », allowedValues, defaultValue).
-    auto option_value = TRY(get_option(global_object, normalized_options, key, { OptionType::String }, allowed_values, default_value));
+    // 9. Let value be ? GetOption(normalizedOptions, key, "string", allowedValues, defaultValue).
+    auto option_value = TRY(get_option(global_object, normalized_options, key, OptionType::String, allowed_values, default_value));
 
     // 10. If value is undefined and default is required, throw a RangeError exception.
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
