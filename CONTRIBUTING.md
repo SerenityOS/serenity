@@ -68,6 +68,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
 * Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
 * Engage in excessive "feng shui programming" by moving code around without quantifiable benefit.
+* Add jokes or other "funny" things to user-facing parts of the system.
 
 ## Pull Request Q&A
 
