@@ -613,7 +613,7 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
     }
 
     // 16. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
 
     // 17. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], largestUnit, untilOptions).
     auto difference = TRY(difference_zoned_date_time(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), zoned_date_time.time_zone(), zoned_date_time.calendar(), *largest_unit, *until_options));

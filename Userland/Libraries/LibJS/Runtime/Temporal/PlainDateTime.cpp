@@ -376,7 +376,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
     // 9. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, &options, date_largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, date_largest_unit));
 
     // 10. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
     auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
