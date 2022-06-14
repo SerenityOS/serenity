@@ -429,17 +429,32 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     // 7. Assert: smallestUnit is undefined.
     VERIFY(!smallest_unit.has_value());
 
-    // 8. Let fractionalDigitCount be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
-    auto fractional_digit_count_variant = TRY(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
+    // 8. Let fractionalDigitsVal be ? Get(normalizedOptions, "fractionalSecondDigits").
+    auto fractional_digits_value = TRY(normalized_options.get(vm.names.fractionalSecondDigits));
 
-    // 9. If fractionalDigitCount is "auto", then
-    if (fractional_digit_count_variant.has<String>()) {
-        VERIFY(fractional_digit_count_variant.get<String>() == "auto"sv);
-        // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
+    // 10. If Type(fractionalDigitsVal) is not Number, then
+    if (!fractional_digits_value.is_number()) {
+        // a. If fractionalDigitsVal is not undefined, then
+        if (!fractional_digits_value.is_undefined()) {
+            // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
+            if (TRY(fractional_digits_value.to_string(global_object)) != "auto"sv)
+                return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+        }
+
+        // b. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = "auto"sv, .unit = "nanosecond"sv, .increment = 1 };
     }
 
-    auto fractional_digit_count = fractional_digit_count_variant.get<u8>();
+    // 11. If fractionalDigitsVal is NaN, +∞𝔽, or -∞𝔽, throw a RangeError exception.
+    if (fractional_digits_value.is_nan() || fractional_digits_value.is_infinity())
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+
+    // 12. If ℝ(fractionalDigitsVal) < 0 or ℝ(fractionalDigitsVal) > 9, throw a RangeError exception.
+    if (fractional_digits_value.as_double() < 0 || fractional_digits_value.as_double() > 9)
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+
+    // 13. Let fractionalDigitCount be floor(ℝ(fractionalDigitsVal)).
+    auto fractional_digit_count = static_cast<u8>(floor(fractional_digits_value.as_double()));
 
     // 10. If fractionalDigitCount is 0, then
     if (fractional_digit_count == 0) {
