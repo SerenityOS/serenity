@@ -738,33 +738,25 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_objec
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> { "year"sv, "day"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
 
-    // 5. If year is undefined, throw a TypeError exception.
-    if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
-
-    // 6. Assert: Type(year) is Number.
+    // 5. Assert: Type(year) is Number.
     VERIFY(year.is_number());
 
-    // 7. Let month be ? ResolveISOMonth(fields).
+    // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 8. Let day be ! Get(fields, "day").
+    // 7. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
 
-    // 9. If day is undefined, throw a TypeError exception.
-    if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
-
-    // 10. Assert: Type(day) is Number.
+    // 8. Assert: Type(day) is Number.
     VERIFY(day.is_number());
 
-    // 11. Return ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
+    // 9. Return ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
@@ -807,8 +799,8 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "day"sv }));
 
     // 4. Let month be ! Get(fields, "month").
     auto month_value = MUST(prepared_fields->get(vm.names.month));
@@ -831,19 +823,15 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 9. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
 
-    // 10. If day is undefined, throw a TypeError exception.
-    if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
-
-    // 11. Assert: Type(day) is Number.
+    // 10. Assert: Type(day) is Number.
     VERIFY(day.is_number());
 
-    // 12. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
+    // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
 
     Optional<ISODateRecord> result;
 
-    // 13. If monthCode is undefined, then
+    // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. Assert: Type(year) is Number.
         VERIFY(year.is_number());
@@ -851,13 +839,13 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
         // b. Let result be ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
         result = TRY(regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow));
     }
-    // 14. Else,
+    // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, ℝ(day), overflow).
         result = TRY(regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow));
     }
 
-    // 15. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
+    // 14. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
