@@ -245,7 +245,6 @@
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
     M(TemporalInvalidPlainMonthDay, "Invalid plain month day")                                                                          \
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
-    M(TemporalInvalidPlainTimeLikeObject, "Invalid plain time-like object")                                                             \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \

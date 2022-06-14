@@ -336,43 +336,39 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, 
 }
 
 // 4.5.8 ToTemporalTimeRecord ( temporalTimeLike [ , completeness ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
-ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like, ToTemporalTimeRecordCompleteness completeness)
+ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like, ToTemporalTimeRecordCompleteness completeness)
 {
     auto& vm = global_object.vm();
 
     // 1. If completeness is not present, set completeness to complete.
 
-    // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
-    auto result = UnregulatedTemporalTime {};
+    // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
+    auto* partial = TRY(prepare_temporal_fields(global_object, temporal_time_like, { "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "nanosecond"sv, "second"sv }, PrepareTemporalFieldsPartial {}));
 
-    // 3. Let any be false.
-    auto any = false;
+    // 3. Let result be a new TemporalTimeLike Record with each field set to undefined.
+    auto result = TemporalTimeLikeRecord {};
 
-    // 4. For each row of Table 3, except the header row, in table order, do
-    for (auto& [internal_slot, property] : temporal_time_like_properties<UnregulatedTemporalTime, Optional<double>>(vm)) {
-        // a. Let property be the Property value of the current row.
+    // 4. For each row of Table 4, except the header row, in table order, do
+    for (auto& [field, property_name] : temporal_time_like_record_fields<TemporalTimeLikeRecord, Optional<double>>(vm)) {
+        // a. Let field be the Field Name value of the current row.
+        // b. Let propertyName be the Property Name value of the current row.
 
-        // b. Let value be ? Get(temporalTimeLike, property).
-        auto value = TRY(temporal_time_like.get(property));
+        // c. Let valueDesc be OrdinaryGetOwnProperty(partial, propertyName).
+        auto value_descriptor = MUST(partial->Object::internal_get_own_property(property_name));
 
-        // c. If value is not undefined, set any to true.
-        if (!value.is_undefined())
-            any = true;
+        // d. If valueDesc is not undefined, then
+        if (value_descriptor.has_value()) {
+            // i. Assert: valueDesc is a data Property Descriptor.
+            VERIFY(value_descriptor->is_data_descriptor());
 
-        // d. If value is not undefined or completeness is complete, then
-        if (!value.is_undefined() || completeness == ToTemporalTimeRecordCompleteness::Complete) {
-            // i. Set value to ? ToIntegerThrowOnInfinity(value).
-            auto value_number = TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
-
-            // ii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
-            result.*internal_slot = value_number;
+            // ii. Set the field of result whose name is field to valueDesc.[[Value]].
+            result.*field = value_descriptor->value->as_double();
         }
-    }
-
-    // 5. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
+        // e. Else if completeness is complete, then
+        else if (completeness == ToTemporalTimeRecordCompleteness::Complete) {
+            // i. Set the field of result whose name is field to 0.
+            result.*field = 0;
+        }
     }
 
     // 6. Return result.
