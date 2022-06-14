@@ -79,6 +79,11 @@ bool Page::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, uns
     return top_level_browsing_context().event_handler().handle_mousemove(position, buttons, modifiers);
 }
 
+bool Page::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
+{
+    return top_level_browsing_context().event_handler().handle_doubleclick(position, button, modifiers);
+}
+
 bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
     return focused_context().event_handler().handle_keydown(key, modifiers, code_point);

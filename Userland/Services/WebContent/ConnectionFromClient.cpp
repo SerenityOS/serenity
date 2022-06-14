@@ -163,6 +163,11 @@ void ConnectionFromClient::mouse_wheel(Gfx::IntPoint const& position, unsigned i
     page().handle_mousewheel(position, button, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
+void ConnectionFromClient::doubleclick(Gfx::IntPoint const& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
+{
+    page().handle_doubleclick(position, button, modifiers);
+}
+
 void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_point)
 {
     page().handle_keydown((KeyCode)key, modifiers, code_point);

@@ -123,6 +123,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void theme_change_event(GUI::ThemeChangeEvent&) override;
