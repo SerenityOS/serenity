@@ -572,14 +572,14 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
     auto* calendar = TRY(typed_this_object(global_object));
 
-    // 3. Assert: calendar.[[Identifier]] is "iso8601".
-    VERIFY(calendar->identifier() == "iso8601"sv);
-
-    // 4. Set fields to ? ToObject(fields).
+    // 3. Set fields to ? ToObject(fields).
     auto* fields = TRY(vm.argument(0).to_object(global_object));
 
-    // 5. Set additionalFields to ? ToObject(additionalFields).
+    // 4. Set additionalFields to ? ToObject(additionalFields).
     auto* additional_fields = TRY(vm.argument(1).to_object(global_object));
+
+    // 5. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 6. Return ? DefaultMergeCalendarFields(fields, additionalFields).
     return TRY(default_merge_calendar_fields(global_object, *fields, *additional_fields));
