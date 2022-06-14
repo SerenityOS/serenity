@@ -176,7 +176,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     // 2. Set year to year + floor((month - 1) / 12).
     year += floor((month - 1) / 12);
 
-    // 3. Set month to (month - 1) modulo 12 + 1.
+    // 3. Set month to ((month - 1) modulo 12) + 1.
     month = modulo(month - 1, 12) + 1;
 
     // 4. Return the Record { [[Year]]: year, [[Month]]: month }.
