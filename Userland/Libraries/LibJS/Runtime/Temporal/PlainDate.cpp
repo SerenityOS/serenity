@@ -310,8 +310,31 @@ ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, 
 
     VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
 
-    // 1. If overflow is "reject", then
-    if (overflow == "reject"sv) {
+    // 1. If overflow is "constrain", then
+    if (overflow == "constrain"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
+        // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
+        // ISO value for years: -273975 - 273975, which is a subset of this check.
+        if (!AK::is_within_range<i32>(year))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+
+        // a. Set month to the result of clamping month between 1 and 12.
+        month = clamp(month, 1, 12);
+
+        // b. Let daysInMonth be ! ISODaysInMonth(year, month).
+        auto days_in_month = iso_days_in_month(static_cast<i32>(year), static_cast<u8>(month));
+
+        // c. Set day to the result of clamping day between 1 and daysInMonth.
+        day = clamp(day, 1, days_in_month);
+
+        // d. Return CreateISODateRecord(year, month, day).
+        return create_iso_date_record(static_cast<i32>(year), static_cast<u8>(month), static_cast<u8>(day));
+    }
+    // 2. Else,
+    else {
+        // a. Assert: overflow is "reject".
+        VERIFY(overflow == "reject"sv);
+
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behavior as the call to IsValidISODate will immediately check that these values are valid ISO
         // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
@@ -321,35 +344,12 @@ ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, 
         auto y = static_cast<i32>(year);
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
-        // a. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
+        // b. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (!is_valid_iso_date(y, m, d))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-        // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+        // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
         return ISODateRecord { .year = y, .month = m, .day = d };
-    }
-    // 2. Else,
-    else {
-        // a. Assert: overflow is "constrain".
-        VERIFY(overflow == "constrain"sv);
-
-        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
-        // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
-        // ISO value for years: -273975 - 273975, which is a subset of this check.
-        if (!AK::is_within_range<i32>(year))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
-
-        // b. Set month to the result of clamping month between 1 and 12.
-        month = clamp(month, 1, 12);
-
-        // c. Let daysInMonth be ! ISODaysInMonth(year, month).
-        auto days_in_month = iso_days_in_month(static_cast<i32>(year), static_cast<u8>(month));
-
-        // d. Set day to the result of clamping day between 1 and daysInMonth.
-        day = clamp(day, 1, days_in_month);
-
-        // e. Return CreateISODateRecord(year, month, day).
-        return create_iso_date_record(static_cast<i32>(year), static_cast<u8>(month), static_cast<u8>(day));
     }
 }
 
