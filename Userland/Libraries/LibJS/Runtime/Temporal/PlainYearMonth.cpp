@@ -323,7 +323,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
     auto* this_date = TRY(calendar_date_from_fields(global_object, calendar, *this_fields));
 
     // 22. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
 
     // 23. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* duration = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));

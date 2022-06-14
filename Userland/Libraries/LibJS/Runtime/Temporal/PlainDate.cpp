@@ -540,7 +540,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, largest_unit.release_value()));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, largest_unit.release_value()));
 
     // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* duration = TRY(calendar_date_until(global_object, temporal_date.calendar(), &temporal_date, other, *until_options));

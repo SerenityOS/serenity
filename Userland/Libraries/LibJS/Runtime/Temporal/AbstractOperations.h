@@ -144,7 +144,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject&, Object const& normalized_options, PropertyKey const&, UnitGroup, Variant<TemporalUnitRequired, Optional<StringView>> const& default_, Vector<StringView> const& extra_values = {});
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject&, Object const& options);
 StringView larger_of_two_temporal_units(StringView, StringView);
-ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object const* options, String largest_unit);
+ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object const& options, String largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
