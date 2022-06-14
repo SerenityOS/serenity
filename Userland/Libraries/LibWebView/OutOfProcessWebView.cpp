@@ -184,6 +184,11 @@ void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
     client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
 }
 
+void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
+{
+    client().async_doubleclick(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+}
+
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     GUI::AbstractScrollableWidget::theme_change_event(event);
