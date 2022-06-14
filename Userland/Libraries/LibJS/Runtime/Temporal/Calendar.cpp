@@ -707,7 +707,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     if (number_part_integer < 1 || number_part_integer > 12)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
 
-    // 11. If month is not undefined, and month ≠ numberPart, then
+    // 11. If month is not undefined and month ≠ numberPart, then
     if (!month.is_undefined() && month.as_double() != number_part_integer) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);

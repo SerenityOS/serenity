@@ -48,7 +48,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
     // 2. Let dateTime be ? CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar).
     auto* date_time = TRY(create_temporal_date_time(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar));
 
-    // 3. If offsetBehaviour is wall, or offsetOption is "ignore", then
+    // 3. If offsetBehaviour is wall or offsetOption is "ignore", then
     if (offset_behavior == OffsetBehavior::Wall || offset_option == "ignore"sv) {
         // a. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
         auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));
@@ -57,7 +57,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
         return &instant->nanoseconds();
     }
 
-    // 4. If offsetBehaviour is exact, or offsetOption is "use", then
+    // 4. If offsetBehaviour is exact or offsetOption is "use", then
     if (offset_behavior == OffsetBehavior::Exact || offset_option == "use"sv) {
         // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
