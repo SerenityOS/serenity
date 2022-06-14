@@ -801,8 +801,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_time)
 
     // 3. If plainTimeLike is undefined, then
     if (vm.argument(0).is_undefined()) {
-        // a. Let plainTime be ? CreateTemporalTime(0, 0, 0, 0, 0, 0).
-        plain_time = TRY(create_temporal_time(global_object, 0, 0, 0, 0, 0, 0));
+        // a. Let plainTime be ! CreateTemporalTime(0, 0, 0, 0, 0, 0).
+        plain_time = MUST(create_temporal_time(global_object, 0, 0, 0, 0, 0, 0));
     }
     // 4. Else,
     else {
@@ -1201,8 +1201,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
     // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
     auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
 
-    // 7. Return ? CreateTemporalTime(temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]]).
-    return TRY(create_temporal_time(global_object, temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond()));
+    // 7. Return ! CreateTemporalTime(temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]]).
+    return MUST(create_temporal_time(global_object, temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond()));
 }
 
 // 6.3.49 Temporal.ZonedDateTime.prototype.toPlainDateTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime
