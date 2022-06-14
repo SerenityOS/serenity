@@ -103,8 +103,11 @@ ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_obj
         if (!AK::is_within_range<i32>(year))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
-        // a. Return ! ConstrainISOYearMonth(year, month).
-        return constrain_iso_year_month(year, month);
+        // a. Set month to the result of clamping month between 1 and 12.
+        month = clamp(month, 1, 12);
+
+        // b. Return the Record { [[Year]]: year, [[Month]]: month }.
+        return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
     }
     // 4. Else,
     else {
@@ -183,21 +186,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
 }
 
-// 9.5.6 ConstrainISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-constrainisoyearmonth
-ISOYearMonth constrain_iso_year_month(double year, double month)
-{
-    // 1. Assert: year and month are integers.
-    VERIFY(year == trunc(year) && month == trunc(month));
-
-    // 2. Set month to the result of clamping month between 1 and 12.
-    month = clamp(month, 1, 12);
-
-    // 3. Return the Record { [[Year]]: year, [[Month]]: month }.
-    // NOTE: `year` is known to be in the i32 range.
-    return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
-}
-
-// 9.5.7 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
+// 9.5.6 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
@@ -228,7 +217,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
     return object;
 }
 
-// 9.5.8 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
+// 9.5.7 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
 ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_object, PlainYearMonth& year_month, StringView show_calendar)
 {
     // 1. Assert: Type(yearMonth) is Object.
@@ -257,7 +246,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
     return String::formatted("{}{}", result, calendar_string);
 }
 
-// 9.5.9 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
+// 9.5.8 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
 ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& global_object, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
 {
     auto& vm = global_object.vm();
@@ -351,7 +340,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
     return MUST(create_temporal_duration(global_object, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
-// 9.5.10 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
+// 9.5.9 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(GlobalObject& global_object, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& vm = global_object.vm();
