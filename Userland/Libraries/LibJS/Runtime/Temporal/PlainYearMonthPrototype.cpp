@@ -217,20 +217,20 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::with)
     // 6. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
     auto field_names = TRY(calendar_fields(global_object, calendar, { "month"sv, "monthCode"sv, "year"sv }));
 
-    // 7. Let partialYearMonth be ? PreparePartialTemporalFields(temporalYearMonthLike, fieldNames).
-    auto* partial_year_month = TRY(prepare_partial_temporal_fields(global_object, temporal_year_month_like.as_object(), field_names));
+    // 7. Let partialYearMonth be ? PrepareTemporalFields(temporalYearMonthLike, fieldNames, partial).
+    auto* partial_year_month = TRY(prepare_temporal_fields(global_object, temporal_year_month_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
 
     // 8. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 9. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, Vector<StringView> {}));
 
     // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialYearMonth).
     fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_year_month));
 
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
-    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, Vector<StringView> {}));
 
     // 12. Return ? CalendarYearMonthFromFields(calendar, fields, options).
     return TRY(calendar_year_month_from_fields(global_object, calendar, *fields, options));
@@ -387,13 +387,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     auto receiver_field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 6. Let fields be ? PrepareTemporalFields(yearMonth, receiverFieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, receiver_field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, receiver_field_names, Vector<StringView> {}));
 
     // 7. Let inputFieldNames be ? CalendarFields(calendar, « "day" »).
     auto input_field_names = TRY(calendar_fields(global_object, calendar, { "day"sv }));
 
     // 8. Let inputFields be ? PrepareTemporalFields(item, inputFieldNames, «»).
-    auto* input_fields = TRY(prepare_temporal_fields(global_object, item.as_object(), input_field_names, {}));
+    auto* input_fields = TRY(prepare_temporal_fields(global_object, item.as_object(), input_field_names, Vector<StringView> {}));
 
     // 9. Let mergedFields be ? CalendarMergeFields(calendar, fields, inputFields).
     auto* merged_fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *input_fields));
@@ -410,7 +410,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     }
 
     // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
-    merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, {}));
+    merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, Vector<StringView> {}));
 
     // 12. Let options be OrdinaryObjectCreate(null).
     auto* options = Object::create(global_object, nullptr);

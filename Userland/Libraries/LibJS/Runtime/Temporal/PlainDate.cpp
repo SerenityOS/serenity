@@ -124,7 +124,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
 
         // g. Return ? CalendarDateFromFields(calendar, fields, options).
         return calendar_date_from_fields(global_object, *calendar, *fields, options);

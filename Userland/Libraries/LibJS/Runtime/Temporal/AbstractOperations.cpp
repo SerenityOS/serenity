@@ -628,7 +628,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // e. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, Vector<StringView> {}));
 
         // f. Let dateOptions be OrdinaryObjectCreate(null).
         auto* date_options = Object::create(global_object, nullptr);
@@ -1764,61 +1764,13 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
 }
 
 // 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
+ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& vm = global_object.vm();
 
     // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
     VERIFY(result);
-
-    // 2. For each value property of fieldNames, do
-    for (auto& property : field_names) {
-        // a. Let value be ? Get(fields, property).
-        auto value = TRY(fields.get(property));
-
-        // b. If value is undefined, then
-        if (value.is_undefined()) {
-            // i. If requiredFields contains property, then
-            if (required_fields.contains_slow(property)) {
-                // 1. Throw a TypeError exception.
-                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
-            }
-            // ii. If property is in the Property column of Table 13, then
-            // NOTE: The other properties in the table are automatically handled as their default value is undefined
-            if (property.is_one_of("hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
-                // 1. Set value to the corresponding Default value of the same row.
-                value = Value(0);
-            }
-        }
-        // c. Else,
-        else {
-            // i. If property is in the Property column of Table 13 and there is a Conversion value in the same row, then
-            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
-            // 2. Set value to ? Conversion(value).
-            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
-                value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
-            else if (property.is_one_of("month"sv, "day"sv))
-                value = Value(TRY(to_positive_integer(global_object, value)));
-            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
-                value = TRY(value.to_primitive_string(global_object));
-        }
-
-        // d. Perform ! CreateDataPropertyOrThrow(result, property, value).
-        MUST(result->create_data_property_or_throw(property, value));
-    }
-
-    // 3. Return result.
-    return result;
-}
-
-// 13.44 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
-ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(global_object, global_object.object_prototype());
 
     // 2. Let any be false.
     auto any = false;
@@ -1833,7 +1785,7 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
             // i. Set any to true.
             any = true;
 
-            // ii. If property is in the Property column of Table 13, then
+            // ii. If property is in the Property column of Table 15 and there is a Conversion value in the same row, then
             // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
             // 2. Set value to ? Conversion(value).
             if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
@@ -1846,10 +1798,27 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
             MUST(result->create_data_property_or_throw(property, value));
         }
+        // c. Else if requiredFields is a List, then
+        else if (required_fields.has<Vector<StringView>>()) {
+            // i. If requiredFields contains property, then
+            if (required_fields.get<Vector<StringView>>().contains_slow(property)) {
+                // 1. Throw a TypeError exception.
+                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
+            }
+            // ii. If property is in the Property column of Table 13, then
+            // NOTE: The other properties in the table are automatically handled as their default value is undefined
+            if (property.is_one_of("hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+                // 1. Set value to the corresponding Default value of the same row.
+                value = Value(0);
+            }
+
+            // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
+            MUST(result->create_data_property_or_throw(property, value));
+        }
     }
 
-    // 4. If any is false, then
-    if (!any) {
+    // 4. If requiredFields is partial and any is false, then
+    if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
     }
@@ -1857,4 +1826,5 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
     // 5. Return result.
     return result;
 }
+
 }

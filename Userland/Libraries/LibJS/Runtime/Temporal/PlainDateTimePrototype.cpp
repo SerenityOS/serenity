@@ -377,20 +377,20 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
     auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
-    // 7. Let partialDateTime be ? PreparePartialTemporalFields(temporalDateTimeLike, fieldNames).
-    auto* partial_date_time = TRY(prepare_partial_temporal_fields(global_object, temporal_date_time_like.as_object(), field_names));
+    // 7. Let partialDateTime be ? PrepareTemporalFields(temporalDateTimeLike, fieldNames, partial).
+    auto* partial_date_time = TRY(prepare_temporal_fields(global_object, temporal_date_time_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
 
     // 8. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 9. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialDateTime).
     fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_date_time));
 
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
-    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, Vector<StringView> {}));
 
     // 12. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto result = TRY(interpret_temporal_date_time_fields(global_object, calendar, *fields, *options));
@@ -686,7 +686,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
     return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
@@ -706,7 +706,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
     return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));

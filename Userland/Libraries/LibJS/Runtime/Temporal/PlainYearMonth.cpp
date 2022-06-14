@@ -57,7 +57,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv }));
 
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
 
         // e. Return ? CalendarYearMonthFromFields(calendar, fields, options).
         return calendar_year_month_from_fields(global_object, *calendar, *fields, options);
@@ -316,7 +316,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
     auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 16. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
-    auto* other_fields = TRY(prepare_temporal_fields(global_object, *other, field_names, {}));
+    auto* other_fields = TRY(prepare_temporal_fields(global_object, *other, field_names, Vector<StringView> {}));
 
     // 17. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
@@ -325,7 +325,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
     auto* other_date = TRY(calendar_date_from_fields(global_object, calendar, *other_fields));
 
     // 19. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* this_fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, {}));
+    auto* this_fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, Vector<StringView> {}));
 
     // 20. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
@@ -384,7 +384,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 7. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, Vector<StringView> {}));
 
     // 8. Set sign to ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto sign = duration_sign(duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0);
@@ -433,7 +433,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* added_date = TRY(calendar_date_add(global_object, calendar, date, *duration_to_add, options));
 
     // 18. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
-    auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, {}));
+    auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, Vector<StringView> {}));
 
     // 19. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
     return calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy);
