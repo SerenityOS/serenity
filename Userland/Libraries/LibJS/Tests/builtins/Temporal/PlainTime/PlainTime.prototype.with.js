@@ -92,10 +92,16 @@ describe("errors", () => {
     test("argument is an invalid plain time-like object", () => {
         expect(() => {
             new Temporal.PlainTime().with({});
-        }).toThrowWithMessage(TypeError, "Invalid plain time-like object");
+        }).toThrowWithMessage(
+            TypeError,
+            "Object must have at least one of the following properties: hour, microsecond, millisecond, minute, nanosecond, second"
+        );
         expect(() => {
             new Temporal.PlainTime().with({ foo: 1, bar: 2 });
-        }).toThrowWithMessage(TypeError, "Invalid plain time-like object");
+        }).toThrowWithMessage(
+            TypeError,
+            "Object must have at least one of the following properties: hour, microsecond, millisecond, minute, nanosecond, second"
+        );
     });
 
     test("error when coercing property to number", () => {
