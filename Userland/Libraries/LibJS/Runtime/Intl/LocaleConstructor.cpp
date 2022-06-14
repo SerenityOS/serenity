@@ -30,7 +30,7 @@ static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& globa
 {
     auto& vm = global_object.vm();
 
-    auto option = TRY(get_option(global_object, options, property, Value::Type::String, values, Empty {}));
+    auto option = TRY(get_option(global_object, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
         return Optional<String> {};
 
@@ -312,7 +312,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     opt.kf = TRY(get_string_option(global_object, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto kn = TRY(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
+    auto kn = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.

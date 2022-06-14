@@ -26,7 +26,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     auto* options = TRY(coerce_options_to_object(global_object, options_value));
 
     // 3. Let usage be ? GetOption(options, "usage", "string", « "sort", "search" », "sort").
-    auto usage = TRY(get_option(global_object, *options, vm.names.usage, Value::Type::String, { "sort"sv, "search"sv }, "sort"sv));
+    auto usage = TRY(get_option(global_object, *options, vm.names.usage, OptionType::String, { "sort"sv, "search"sv }, "sort"sv));
 
     // 4. Set collator.[[Usage]] to usage.
     collator.set_usage(usage.as_string().string());
@@ -40,13 +40,13 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     LocaleOptions opt {};
 
     // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
     // 10. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
-    auto collation = TRY(get_option(global_object, *options, vm.names.collation, Value::Type::String, {}, Empty {}));
+    auto collation = TRY(get_option(global_object, *options, vm.names.collation, OptionType::String, {}, Empty {}));
 
     // 11. If collation is not undefined, then
     if (!collation.is_undefined()) {
@@ -59,7 +59,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     }
 
     // 13. Let numeric be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto numeric = TRY(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
+    auto numeric = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 14. If numeric is not undefined, then
     //     a. Let numeric be ! ToString(numeric).
@@ -69,7 +69,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
 
     // 16. Let caseFirst be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.
-    auto case_first = TRY(get_option(global_object, *options, vm.names.caseFirst, Value::Type::String, { "upper"sv, "lower"sv, "false"sv }, Empty {}));
+    auto case_first = TRY(get_option(global_object, *options, vm.names.caseFirst, OptionType::String, { "upper"sv, "lower"sv, "false"sv }, Empty {}));
     if (!case_first.is_undefined())
         opt.kf = case_first.as_string().string();
 
@@ -100,7 +100,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     }
 
     // 26. Let sensitivity be ? GetOption(options, "sensitivity", "string", « "base", "accent", "case", "variant" », undefined).
-    auto sensitivity = TRY(get_option(global_object, *options, vm.names.sensitivity, Value::Type::String, { "base"sv, "accent"sv, "case"sv, "variant"sv }, Empty {}));
+    auto sensitivity = TRY(get_option(global_object, *options, vm.names.sensitivity, OptionType::String, { "base"sv, "accent"sv, "case"sv, "variant"sv }, Empty {}));
 
     // 27. If sensitivity is undefined, then
     if (sensitivity.is_undefined()) {
@@ -122,7 +122,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     collator.set_sensitivity(sensitivity.as_string().string());
 
     // 29. Let ignorePunctuation be ? GetOption(options, "ignorePunctuation", "boolean", undefined, false).
-    auto ignore_punctuation = TRY(get_option(global_object, *options, vm.names.ignorePunctuation, Value::Type::Boolean, {}, false));
+    auto ignore_punctuation = TRY(get_option(global_object, *options, vm.names.ignorePunctuation, OptionType::Boolean, {}, false));
 
     // 30. Set collator.[[IgnorePunctuation]] to ignorePunctuation.
     collator.set_ignore_punctuation(ignore_punctuation.as_bool());
