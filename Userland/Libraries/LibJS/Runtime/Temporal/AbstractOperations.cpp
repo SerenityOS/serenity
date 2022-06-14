@@ -429,41 +429,41 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     // 7. Assert: smallestUnit is undefined.
     VERIFY(!smallest_unit.has_value());
 
-    // 8. Let digits be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
-    auto digits_variant = TRY(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
+    // 8. Let fractionalDigitCount be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
+    auto fractional_digit_count_variant = TRY(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
 
-    // 9. If digits is "auto", then
-    if (digits_variant.has<String>()) {
-        VERIFY(digits_variant.get<String>() == "auto"sv);
+    // 9. If fractionalDigitCount is "auto", then
+    if (fractional_digit_count_variant.has<String>()) {
+        VERIFY(fractional_digit_count_variant.get<String>() == "auto"sv);
         // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = "auto"sv, .unit = "nanosecond"sv, .increment = 1 };
     }
 
-    auto digits = digits_variant.get<u8>();
+    auto fractional_digit_count = fractional_digit_count_variant.get<u8>();
 
-    // 10. If digits is 0, then
-    if (digits == 0) {
+    // 10. If fractionalDigitCount is 0, then
+    if (fractional_digit_count == 0) {
         // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
     }
 
-    // 11. If digits is 1, 2, or 3, then
-    if (digits == 1 || digits == 2 || digits == 3) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
+    // 11. If fractionalDigitCount is 1, 2, or 3, then
+    if (fractional_digit_count == 1 || fractional_digit_count == 2 || fractional_digit_count == 3) {
+        // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - fractionalDigitCount) }.
+        return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - fractional_digit_count) };
     }
 
-    // 12. If digits is 4, 5, or 6, then
-    if (digits == 4 || digits == 5 || digits == 6) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
+    // 12. If fractionalDigitCount is 4, 5, or 6, then
+    if (fractional_digit_count == 4 || fractional_digit_count == 5 || fractional_digit_count == 6) {
+        // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - fractionalDigitCount) }.
+        return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - fractional_digit_count) };
     }
 
-    // 13. Assert: digits is 7, 8, or 9.
-    VERIFY(digits == 7 || digits == 8 || digits == 9);
+    // 13. Assert: fractionalDigitCount is 7, 8, or 9.
+    VERIFY(fractional_digit_count == 7 || fractional_digit_count == 8 || fractional_digit_count == 9);
 
-    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - digits) }.
-    return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
+    // 14. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - fractionalDigitCount) }.
+    return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - fractional_digit_count) };
 }
 
 struct TemporalUnit {
