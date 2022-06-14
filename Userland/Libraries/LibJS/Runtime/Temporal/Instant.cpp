@@ -118,7 +118,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 5. Let utc be GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
-    // 6. If ℝ(utc) < -8.64 × 10^21 or ℝ(utc) > 8.64 × 10^21, then
+    // 6. If ℝ(utc) < nsMinInstant or ℝ(utc) > nsMaxInstant, then
     if (utc->big_integer() < ns_min_instant || utc->big_integer() > ns_max_instant) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
