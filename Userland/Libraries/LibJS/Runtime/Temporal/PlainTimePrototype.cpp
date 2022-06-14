@@ -182,8 +182,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalTimeLike).
     TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_time_like));
 
-    // 5. Let partialTime be ? ToPartialTime(temporalTimeLike).
-    auto partial_time = TRY(to_partial_time(global_object, temporal_time_like));
+    // 5. Let partialTime be ? ToTemporalTimeRecord(temporalTimeLike, partial).
+    auto partial_time = TRY(to_temporal_time_record(global_object, temporal_time_like, ToTemporalTimeRecordCompleteness::Partial));
 
     // 6. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
