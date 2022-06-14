@@ -1012,9 +1012,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     // 16. Let startNs be instantStart.[[Nanoseconds]].
     auto& start_ns = instant_start->nanoseconds();
 
-    // 17. Let endNs be ? AddZonedDateTime(startNs, timeZone, zonedDateTime.[[Calendar]], 0, 0, 0, 1, 0, 0, 0, 0, 0, 0).
-    // TODO: Shouldn't `zonedDateTime.[[Calendar]]` be `calendar` for consistency?
-    auto* end_ns = TRY(add_zoned_date_time(global_object, start_ns, &time_zone, zoned_date_time->calendar(), 0, 0, 0, 1, 0, 0, 0, 0, 0, 0));
+    // 17. Let endNs be ? AddZonedDateTime(startNs, timeZone, calendar, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0).
+    auto* end_ns = TRY(add_zoned_date_time(global_object, start_ns, &time_zone, calendar, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0));
 
     // 18. Let dayLengthNs be ℝ(endNs - startNs).
     auto day_length_ns = end_ns->big_integer().minus(start_ns.big_integer()).to_double();
