@@ -398,16 +398,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     // 9. Let mergedFields be ? CalendarMergeFields(calendar, fields, inputFields).
     auto* merged_fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *input_fields));
 
-    // 10. Let mergedFieldNames be the List containing all the elements of receiverFieldNames followed by all the elements of inputFieldNames, with duplicate elements removed.
-    Vector<String> merged_field_names;
-    for (auto& field_name : receiver_field_names) {
-        if (!merged_field_names.contains_slow(field_name))
-            merged_field_names.append(move(field_name));
-    }
-    for (auto& field_name : input_field_names) {
-        if (!merged_field_names.contains_slow(field_name))
-            merged_field_names.append(move(field_name));
-    }
+    // 10. Let mergedFieldNames be CalendarMergeFieldNames(receiverFieldNames, inputFieldNames).
+    auto merged_field_names = calendar_merge_field_names(receiver_field_names, input_field_names);
 
     // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
     merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, Vector<StringView> {}));
