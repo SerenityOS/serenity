@@ -168,18 +168,18 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
         // a. Return ! ConstrainTime(hour, minute, second, millisecond, microsecond, nanosecond).
         return constrain_time(hour, minute, second, millisecond, microsecond, nanosecond);
     }
+    // 4. Else,
+    else {
+        // a. Assert: overflow is "reject".
+        VERIFY(overflow == "reject"sv);
 
-    // 4. If overflow is "reject", then
-    if (overflow == "reject"sv) {
-        // a. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+        // b. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
         if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
-        // b. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+        // c. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
         return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
     }
-
-    VERIFY_NOT_REACHED();
 }
 
 // 4.5.4 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
