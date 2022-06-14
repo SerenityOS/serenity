@@ -941,51 +941,51 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_ob
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto* merged = Object::create(global_object, global_object.object_prototype());
 
-    // 2. Let originalKeys be ? EnumerableOwnPropertyNames(fields, key).
-    auto original_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
+    auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
-    // 3. For each element nextKey of originalKeys, do
-    for (auto& next_key : original_keys) {
-        // a. If nextKey is not "month" or "monthCode", then
-        if (next_key.as_string().string() != vm.names.month.as_string() && next_key.as_string().string() != vm.names.monthCode.as_string()) {
-            auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+    // 3. For each element key of fieldsKeys, do
+    for (auto& key : fields_keys) {
+        // a. If key is not "month" or "monthCode", then
+        if (key.as_string().string() != vm.names.month.as_string() && key.as_string().string() != vm.names.monthCode.as_string()) {
+            auto property_key = MUST(PropertyKey::from_value(global_object, key));
 
-            // i. Let propValue be ? Get(fields, nextKey).
+            // i. Let propValue be ? Get(fields, key).
             auto prop_value = TRY(fields.get(property_key));
 
             // ii. If propValue is not undefined, then
             if (!prop_value.is_undefined()) {
-                // 1. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+                // 1. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
                 MUST(merged->create_data_property_or_throw(property_key, prop_value));
             }
         }
     }
 
-    // 4. Let newKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
-    auto new_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 4. Let additionalFieldsKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
+    auto additional_fields_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
     // IMPLEMENTATION DEFINED: This is an optimization, so we don't have to iterate new_keys three times (worst case), but only once.
-    bool new_keys_contains_month_or_month_code_property = false;
+    bool additional_fields_keys_contains_month_or_month_code_property = false;
 
-    // 5. For each element nextKey of newKeys, do
-    for (auto& next_key : new_keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+    // 5. For each element key of additionalFieldsKeys, do
+    for (auto& key : additional_fields_keys) {
+        auto property_key = MUST(PropertyKey::from_value(global_object, key));
 
-        // a. Let propValue be ? Get(additionalFields, nextKey).
+        // a. Let propValue be ? Get(additionalFields, key).
         auto prop_value = TRY(additional_fields.get(property_key));
 
         // b. If propValue is not undefined, then
         if (!prop_value.is_undefined()) {
-            // i. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+            // i. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
             MUST(merged->create_data_property_or_throw(property_key, prop_value));
         }
 
         // See comment above.
-        new_keys_contains_month_or_month_code_property |= next_key.as_string().string() == vm.names.month.as_string() || next_key.as_string().string() == vm.names.monthCode.as_string();
+        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().string() == vm.names.month.as_string() || key.as_string().string() == vm.names.monthCode.as_string();
     }
 
-    // 6. If newKeys does not contain either "month" or "monthCode", then
-    if (!new_keys_contains_month_or_month_code_property) {
+    // 6. If additionalFieldsKeys does not contain either "month" or "monthCode", then
+    if (!additional_fields_keys_contains_month_or_month_code_property) {
         // a. Let month be ? Get(fields, "month").
         auto month = TRY(fields.get(vm.names.month));
 

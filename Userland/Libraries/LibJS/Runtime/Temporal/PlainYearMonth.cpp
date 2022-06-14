@@ -409,12 +409,12 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 15. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
     auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
 
-    // 16. For each element nextEntry of entries, do
-    for (auto& next_entry : entries) {
-        auto key = MUST(next_entry.as_array().get_without_side_effects(0).to_property_key(global_object));
-        auto value = next_entry.as_array().get_without_side_effects(1);
+    // 16. For each element entry of entries, do
+    for (auto& entry : entries) {
+        auto key = MUST(entry.as_array().get_without_side_effects(0).to_property_key(global_object));
+        auto value = entry.as_array().get_without_side_effects(1);
 
-        // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, nextEntry[0], nextEntry[1]).
+        // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, entry[0], entry[1]).
         MUST(options_copy->create_data_property_or_throw(key, value));
     }
 
