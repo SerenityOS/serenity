@@ -148,7 +148,7 @@ StringView default_temporal_largest_unit(double years, double months, double wee
 ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(GlobalObject&, Value temporal_duration_like);
 ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target = nullptr);
 Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration);
-ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_to_value, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
+ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_to_value, double years, double months, double weeks, double days);
 Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift);
 ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
 ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);

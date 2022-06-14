@@ -380,8 +380,8 @@ Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration
     return MUST(create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()));
 }
 
-// 7.5.16 CalculateOffsetShift ( relativeTo, y, mon, w, d, h, min, s, ms, mus, ns ), https://tc39.es/proposal-temporal/#sec-temporal-calculateoffsetshift
-ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Value relative_to_value, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+// 7.5.16 CalculateOffsetShift ( relativeTo, y, mon, w, d ), https://tc39.es/proposal-temporal/#sec-temporal-calculateoffsetshift
+ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Value relative_to_value, double years, double months, double weeks, double days)
 {
     // 1. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, return 0.
     if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object()))
@@ -395,8 +395,8 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Va
     // 3. Let offsetBefore be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instant).
     auto offset_before = TRY(get_offset_nanoseconds_for(global_object, &relative_to.time_zone(), *instant));
 
-    // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, h, min, s, ms, mus, ns).
-    auto* after = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, 0, 0, 0, 0, 0, 0).
+    auto* after = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 5. Let instantAfter be ! CreateTemporalInstant(after).
     auto* instant_after = MUST(create_temporal_instant(global_object, *after));
