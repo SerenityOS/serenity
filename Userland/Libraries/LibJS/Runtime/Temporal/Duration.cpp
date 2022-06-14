@@ -177,8 +177,8 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
     // 3. Let result be a new Duration Record with each field set to 0.
     auto result = DurationRecord {};
 
-    // 4. Let partial be ? ToPartialDuration(temporalDurationLike).
-    auto partial = TRY(to_partial_duration(global_object, temporal_duration_like));
+    // 4. Let partial be ? ToTemporalPartialDurationRecord(temporalDurationLike).
+    auto partial = TRY(to_temporal_partial_duration_record(global_object, temporal_duration_like));
 
     auto duration_record_fields = temporal_duration_record_fields<DurationRecord, double>(vm);
     auto partial_duration_record_fields = temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm);
@@ -295,8 +295,8 @@ StringView default_temporal_largest_unit(double years, double months, double wee
     return "nanosecond"sv;
 }
 
-// 7.5.13 ToPartialDuration ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialduration
-ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& global_object, Value temporal_duration_like)
+// 7.5.13 ToTemporalPartialDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord
+ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(GlobalObject& global_object, Value temporal_duration_like)
 {
     auto& vm = global_object.vm();
 

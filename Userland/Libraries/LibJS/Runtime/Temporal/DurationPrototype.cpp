@@ -202,8 +202,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Let temporalDurationLike be ? ToPartialDuration(temporalDurationLike).
-    auto temporal_duration_like = TRY(to_partial_duration(global_object, vm.argument(0)));
+    // 3. Let temporalDurationLike be ? ToTemporalPartialDurationRecord(temporalDurationLike).
+    auto temporal_duration_like = TRY(to_temporal_partial_duration_record(global_object, vm.argument(0)));
 
     // 4. If temporalDurationLike.[[Years]] is not undefined, then
     //     a. Let years be temporalDurationLike.[[Years]].
