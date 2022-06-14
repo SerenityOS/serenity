@@ -107,7 +107,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&
     auto* temporal_date = TRY(calendar_date_from_fields(global_object, calendar, fields, &options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
-    auto time_result = TRY(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));
+    auto time_result = TRY(regulate_time(global_object, *unregulated_time_result.hour, *unregulated_time_result.minute, *unregulated_time_result.second, *unregulated_time_result.millisecond, *unregulated_time_result.microsecond, *unregulated_time_result.nanosecond, overflow));
 
     // 5. Return the Record { [[Year]]: temporalDate.[[ISOYear]], [[Month]]: temporalDate.[[ISOMonth]], [[Day]]: temporalDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return ISODateTime {

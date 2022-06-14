@@ -55,15 +55,6 @@ struct DaysAndTime {
 };
 
 struct UnregulatedTemporalTime {
-    double hour;
-    double minute;
-    double second;
-    double millisecond;
-    double microsecond;
-    double nanosecond;
-};
-
-struct PartialUnregulatedTemporalTime {
     Optional<double> hour;
     Optional<double> minute;
     Optional<double> second;
@@ -93,15 +84,19 @@ auto temporal_time_like_properties = [](VM& vm) {
     };
 };
 
+enum class ToTemporalTimeRecordCompleteness {
+    Partial,
+    Complete,
+};
+
 TimeDurationRecord difference_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
 ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject&, Value item, Optional<StringView> overflow = {});
-ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject&, Object& temporal_time_like);
 ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 DaysAndTime balance_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target = nullptr);
-ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&, Object const& temporal_time_like);
+ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&, Object const& temporal_time_like, ToTemporalTimeRecordCompleteness = ToTemporalTimeRecordCompleteness::Complete);
 String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
 DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
