@@ -145,7 +145,7 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject&, Val
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds);
-ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject&, Value temporal_duration_like);
+ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(GlobalObject&, Value temporal_duration_like);
 ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target = nullptr);
 Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration);
 ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_to_value, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
