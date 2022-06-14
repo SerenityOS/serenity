@@ -571,7 +571,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
     auto* options_object = TRY(coerce_options_to_object(global_object, options));
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     Vector<String> supported_locales;
 
@@ -603,49 +603,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
     return TRY(options.to_object(global_object));
 }
 
-// 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Span<StringView const> values, Fallback fallback)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Assert: Type(options) is Object.
-
-    // 2. Let value be ? Get(options, property).
-    auto value = TRY(options.get(property));
-
-    // 3. If value is undefined, return fallback.
-    if (value.is_undefined()) {
-        return fallback.visit(
-            [](Empty) { return js_undefined(); },
-            [](bool f) { return Value(f); },
-            [&vm](StringView f) { return Value(js_string(vm, f)); });
-    }
-
-    // 4. Assert: type is "boolean" or "string".
-    VERIFY((type == Value::Type::Boolean) || (type == Value::Type::String));
-
-    // 5. If type is "boolean", then
-    if (type == Value::Type::Boolean) {
-        // a. Set value to ToBoolean(value).
-        value = Value(value.to_boolean());
-    }
-    // 6. If type is "string", then
-    else {
-        // a. Set value to ? ToString(value).
-        value = TRY(value.to_primitive_string(global_object));
-    }
-
-    // 7. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
-    if (!values.is_empty()) {
-        // Note: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
-        VERIFY(value.is_string());
-        if (!values.contains_slow(value.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.to_string_without_side_effects(), property.as_string());
-    }
-
-    // 8. Return value.
-    return value;
-}
+// NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
 ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)

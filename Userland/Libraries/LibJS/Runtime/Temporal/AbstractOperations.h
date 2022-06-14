@@ -123,10 +123,13 @@ struct SecondsStringPrecision {
 
 struct TemporalUnitRequired { };
 struct PrepareTemporalFieldsPartial { };
+struct GetOptionRequired { };
+
+using OptionDefault = Variant<GetOptionRequired, Empty, bool, StringView, double>;
 
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
-ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, OptionType type, Vector<StringView> const& values, Value fallback);
+ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const&);
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
@@ -166,6 +169,12 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<double> to_positive_integer(GlobalObject&, Value argument);
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
+
+template<size_t Size>
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, OptionType type, StringView const (&values)[Size], OptionDefault const& default_)
+{
+    return get_option(global_object, options, property, type, Span<StringView const> { values }, default_);
+}
 
 // 13.40 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
 template<typename... Args>
