@@ -8,6 +8,7 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Path.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
@@ -55,7 +56,7 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::Floa
     return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
 
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BordersData const& borders_data)
+void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     auto const& border_data = [&] {
         switch (edge) {
@@ -96,8 +97,6 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         }
     };
 
-    auto [p1, p2] = points_for_edge(edge, rect);
-
     if (border_style == CSS::LineStyle::Inset) {
         auto top_left_color = Color::from_rgb(0x5a5a5a);
         auto bottom_right_color = Color::from_rgb(0x888888);
@@ -115,6 +114,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         gfx_line_style = Gfx::Painter::LineStyle::Dashed;
 
     if (gfx_line_style != Gfx::Painter::LineStyle::Solid) {
+        auto [p1, p2] = points_for_edge(edge, rect);
         switch (edge) {
         case BorderEdge::Top:
             p1.translate_by(int_width / 2, int_width / 2);
@@ -137,7 +137,71 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         return;
     }
 
-    context.painter().fill_rect(rect, color);
+    auto draw_horizontal_or_vertical_line = [&](auto p1, auto p2) {
+        // Note: Using fill_rect() here since draw_line() produces some overlapping pixels
+        // at the end of a line, which cause issues on borders with transparency.
+        p2.translate_by(1, 1);
+        context.painter().fill_rect(Gfx::IntRect::from_two_points(p1, p2), color);
+    };
+
+    auto draw_border = [&](auto const& border, auto const& radius, auto const& opposite_border, auto const& opposite_radius, auto p1_step_translate, auto p2_step_translate) {
+        auto [p1, p2] = points_for_edge(edge, rect);
+        auto current_p1 = p1.to_type<float>();
+        auto current_p2 = p2.to_type<float>();
+        auto p1_step = radius ? 0 : border.width / static_cast<float>(int_width);
+        auto p2_step = opposite_radius ? 0 : opposite_border.width / static_cast<float>(int_width);
+        for (int i = 0; i < int_width; ++i) {
+            draw_horizontal_or_vertical_line(current_p1.to_type<int>(), current_p2.to_type<int>());
+            p1_step_translate(current_p1, p1_step);
+            p2_step_translate(current_p2, p2_step);
+        }
+    };
+
+    // FIXME: There is some overlap where two borders (without border radii meet),
+    // which produces artifacts if the border color has some transparency.
+    // (this only happens if the angle between the two borders is not 45 degrees)
+    switch (edge) {
+    case BorderEdge::Top:
+        draw_border(
+            borders_data.left, border_radii_data.top_left, borders_data.right, border_radii_data.top_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(step, 1);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-step, 1);
+            });
+        break;
+    case BorderEdge::Right:
+        draw_border(
+            borders_data.top, border_radii_data.top_right, borders_data.bottom, border_radii_data.bottom_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(-1, step);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-1, -step);
+            });
+        break;
+    case BorderEdge::Bottom:
+        draw_border(
+            borders_data.left, border_radii_data.bottom_left, borders_data.right, border_radii_data.bottom_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(step, -1);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-step, -1);
+            });
+        break;
+    case BorderEdge::Left:
+        draw_border(
+            borders_data.top, border_radii_data.top_left, borders_data.bottom, border_radii_data.bottom_left,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(1, step);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(1, -step);
+            });
+        break;
+    }
 }
 
 void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
@@ -191,24 +255,27 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
         border_rect.height() - top_left.vertical_radius - bottom_left.vertical_radius
     };
 
-    // Avoid overlapping pixels on the edges.
-    if (!top_left)
-        top_border_rect.shrink(0, 0, 0, left_border_rect.width());
-    if (!top_right)
-        top_border_rect.shrink(0, right_border_rect.width(), 0, 0);
-    if (!bottom_left)
-        bottom_border_rect.shrink(0, 0, 0, left_border_rect.width());
-    if (!bottom_right)
-        bottom_border_rect.shrink(0, right_border_rect.width(), 0, 0);
+    // Avoid overlapping pixels on the edges, in the easy 45 degree corners case:
+    if (!top_left && top_border_rect.height() == left_border_rect.width())
+        top_border_rect.shrink(0, 0, 0, 1);
+    if (!top_right && top_border_rect.height() == right_border_rect.width())
+        top_border_rect.shrink(0, 1, 0, 0);
+    if (!bottom_left && bottom_border_rect.height() == left_border_rect.width())
+        bottom_border_rect.shrink(0, 0, 0, 1);
+    if (!bottom_right && bottom_border_rect.height() == right_border_rect.width())
+        bottom_border_rect.shrink(0, 1, 0, 0);
 
     auto border_color_no_alpha = borders_data.top.color;
     border_color_no_alpha.set_alpha(255);
 
     // Paint the strait line part of the border:
-    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radii_data, borders_data);
+
+    if (!top_left && !top_right && !bottom_left && !bottom_right)
+        return;
 
     // Cache the smallest possible bitmap to render just the corners for the border.
     auto expand_width = abs(int_width(borders_data.left.width) - int_width(borders_data.right.width));
