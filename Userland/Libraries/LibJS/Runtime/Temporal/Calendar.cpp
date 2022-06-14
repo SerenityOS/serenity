@@ -734,7 +734,7 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_objec
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> {}));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
@@ -774,7 +774,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, { "year"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "year"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
@@ -803,7 +803,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> {}));
 
     // 4. Let month be ! Get(fields, "month").
     auto month_value = MUST(prepared_fields->get(vm.names.month));

@@ -153,7 +153,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         field_names.append("offset");
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, { "timeZone"sv }));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> { "timeZone"sv }));
 
         // g. Let timeZone be ! Get(fields, "timeZone").
         auto time_zone_value = MUST(fields->get(vm.names.timeZone));

@@ -170,7 +170,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
 
         // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
         result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));

@@ -744,8 +744,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     // 7. Append "offset" to fieldNames.
     field_names.append("offset"sv);
 
-    // 8. Let partialZonedDateTime be ? PreparePartialTemporalFields(temporalZonedDateTimeLike, fieldNames).
-    auto* partial_zoned_date_time = TRY(prepare_partial_temporal_fields(global_object, temporal_zoned_date_time_like.as_object(), field_names));
+    // 8. Let partialZonedDateTime be ? PrepareTemporalFields(temporalZonedDateTimeLike, fieldNames, partial).
+    auto* partial_zoned_date_time = TRY(prepare_temporal_fields(global_object, temporal_zoned_date_time_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
 
     // 9. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -763,13 +763,13 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     field_names.append("timeZone"sv);
 
     // 14. Let fields be ? PrepareTemporalFields(zonedDateTime, fieldNames, « "timeZone", "offset" »).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *zoned_date_time, field_names, { "timeZone"sv, "offset"sv }));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *zoned_date_time, field_names, Vector<StringView> { "timeZone"sv, "offset"sv }));
 
     // 15. Set fields to ? CalendarMergeFields(calendar, fields, partialZonedDateTime).
     fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_zoned_date_time));
 
     // 16. Set fields to ? PrepareTemporalFields(fields, fieldNames, « "timeZone", "offset" »).
-    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, { "timeZone"sv, "offset"sv }));
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, Vector<StringView> { "timeZone"sv, "offset"sv }));
 
     // 17. Let offsetString be ! Get(fields, "offset").
     auto offset_string = MUST(fields->get(vm.names.offset));
@@ -1245,7 +1245,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date_time, field_names, Vector<StringView> {}));
 
     // 9. Return ? CalendarYearMonthFromFields(calendar, fields).
     return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
@@ -1274,7 +1274,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
 
     // 8. Let fields be ? PrepareTemporalFields(temporalDateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date_time, field_names, Vector<StringView> {}));
 
     // 9. Return ? CalendarMonthDayFromFields(calendar, fields).
     return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
