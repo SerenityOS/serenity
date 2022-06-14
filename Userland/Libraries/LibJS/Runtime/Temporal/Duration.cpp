@@ -1072,8 +1072,8 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         return create_duration_record(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
     }
 
-    // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit).
-    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit);
+    // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit, OrdinaryObjectCreate(null)).
+    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(global_object, nullptr));
 }
 
 // 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
