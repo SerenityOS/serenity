@@ -109,28 +109,28 @@ struct RoundedDuration {
     double remainder;
 };
 
-// Table 7: Properties of a TemporalDurationLike, https://tc39.es/proposal-temporal/#table-temporal-temporaldurationlike-properties
+// Table 8: Duration Record Fields, https://tc39.es/proposal-temporal/#table-temporal-duration-record-fields
 
 template<typename StructT, typename ValueT>
-struct TemporalDurationLikeProperty {
-    ValueT StructT::*field { nullptr };
-    PropertyKey property;
+struct TemporalDurationRecordField {
+    ValueT StructT::*field_name { nullptr };
+    PropertyKey property_name;
 };
 
 template<typename StructT, typename ValueT>
-auto temporal_duration_like_properties = [](VM& vm) {
-    using PropertyT = TemporalDurationLikeProperty<StructT, ValueT>;
-    return AK::Array<PropertyT, 10> {
-        PropertyT { &StructT::days, vm.names.days },
-        PropertyT { &StructT::hours, vm.names.hours },
-        PropertyT { &StructT::microseconds, vm.names.microseconds },
-        PropertyT { &StructT::milliseconds, vm.names.milliseconds },
-        PropertyT { &StructT::minutes, vm.names.minutes },
-        PropertyT { &StructT::months, vm.names.months },
-        PropertyT { &StructT::nanoseconds, vm.names.nanoseconds },
-        PropertyT { &StructT::seconds, vm.names.seconds },
-        PropertyT { &StructT::weeks, vm.names.weeks },
-        PropertyT { &StructT::years, vm.names.years },
+auto temporal_duration_record_fields = [](VM& vm) {
+    using FieldT = TemporalDurationRecordField<StructT, ValueT>;
+    return AK::Array {
+        FieldT { &StructT::days, vm.names.days },
+        FieldT { &StructT::hours, vm.names.hours },
+        FieldT { &StructT::microseconds, vm.names.microseconds },
+        FieldT { &StructT::milliseconds, vm.names.milliseconds },
+        FieldT { &StructT::minutes, vm.names.minutes },
+        FieldT { &StructT::months, vm.names.months },
+        FieldT { &StructT::nanoseconds, vm.names.nanoseconds },
+        FieldT { &StructT::seconds, vm.names.seconds },
+        FieldT { &StructT::weeks, vm.names.weeks },
+        FieldT { &StructT::years, vm.names.years },
     };
 };
 

@@ -174,50 +174,38 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
         return create_duration_record(duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
     }
 
-    // 3. Let result be a new Duration Record.
+    // 3. Let result be a new Duration Record with each field set to 0.
     auto result = DurationRecord {};
 
-    // 4. Let any be false.
-    auto any = false;
+    // 4. Let partial be ? ToPartialDuration(temporalDurationLike).
+    auto partial = TRY(to_partial_duration(global_object, temporal_duration_like));
 
-    // 5. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
-        // a. Let prop be the Property Name value of the current row.
+    auto duration_record_fields = temporal_duration_record_fields<DurationRecord, double>(vm);
+    auto partial_duration_record_fields = temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm);
 
-        // b. Let val be ? Get(temporalDurationLike, prop).
-        auto value = TRY(temporal_duration_like.as_object().get(property));
+    // 5. For each row of Table 8, except the header row, in table order, do
+    for (size_t i = 0; i < duration_record_fields.size(); ++i) {
+        // a. Let fieldName be the Field Name value of the current row.
+        auto field_name = duration_record_fields[i].field_name;
+        auto partial_field_name = partial_duration_record_fields[i].field_name;
 
-        // c. If val is undefined, then
-        if (value.is_undefined()) {
-            // i. Set result's field whose name is the Field Name value of the current row to 0.
-            result.*field = 0;
-        }
-        // d. Else,
-        else {
-            // i. Set any to true.
-            any = true;
+        // b. Let value be the value of the field of partial whose name is fieldName.
+        auto value = partial.*partial_field_name;
 
-            // ii. Let val be ? ToIntegerWithoutRounding(val).
-            auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
-
-            // iii. Set result's field whose name is the Field Name value of the current row to val.
-            result.*field = value_integer;
+        // c. If value is not undefined, then
+        if (value.has_value()) {
+            // i. Set the field of result whose name is fieldName to value.
+            result.*field_name = *value;
         }
     }
 
-    // 6. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
-    }
-
-    // 7. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
+    // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
     if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
     }
 
-    // 8. Return result.
+    // 7. Return result.
     return result;
 }
 
@@ -325,7 +313,7 @@ ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& globa
     auto any = false;
 
     // 4. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field, property] : temporal_duration_like_properties<PartialDurationRecord, Optional<double>>(vm)) {
+    for (auto& [field_name, property] : temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm)) {
         // a. Let property be the Property Name value of the current row.
 
         // b. Let value be ? Get(temporalDurationLike, property).
@@ -339,8 +327,9 @@ ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& globa
             // ii. Set value to ? ToIntegerWithoutRounding(value).
             auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
 
-            // iii. Set result's field whose name is the Field Name value of the current row to value.
-            result.*field = value_integer;
+            // iii. Let fieldName be the Field Name value of the current row.
+            // iv. Set the field of result whose name is fieldName to value.
+            result.*field_name = value_integer;
         }
     }
 
