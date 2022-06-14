@@ -321,33 +321,21 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
 // 13.13 ToTemporalDateTimeRoundingIncrement ( normalizedOptions, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetimeroundingincrement
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject& global_object, Object const& normalized_options, StringView smallest_unit)
 {
-    double maximum;
+    u16 maximum;
 
     // 1. If smallestUnit is "day", then
     if (smallest_unit == "day"sv) {
         // a. Let maximum be 1.
         maximum = 1;
     }
-    // 2. Else if smallestUnit is "hour", then
-    else if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
-    }
-    // 3. Else if smallestUnit is "minute" or "second", then
-    else if (smallest_unit.is_one_of("minute"sv, "second"sv)) {
-        // a. Let maximum be 60.
-        maximum = 60;
-    }
-    // 4. Else,
+    // 2. Else,
     else {
-        // a. Assert: smallestUnit is "millisecond", "microsecond", or "nanosecond".
-        VERIFY(smallest_unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv));
-
-        // b. Let maximum be 1000.
-        maximum = 1000;
+        // a. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+        // b. Assert: maximum is not undefined.
+        maximum = *maximum_temporal_duration_rounding_increment(smallest_unit);
     }
 
-    // 5. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
+    // 3. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
     return to_temporal_rounding_increment(global_object, normalized_options, maximum, false);
 }
 
