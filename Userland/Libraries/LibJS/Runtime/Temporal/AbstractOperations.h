@@ -127,8 +127,6 @@ struct PrepareTemporalFieldsPartial { };
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
 ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
-template<typename NumberType>
-ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
@@ -169,7 +167,7 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
 ThrowCompletionOr<double> to_positive_integer(GlobalObject&, Value argument);
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
 
-// 13.41 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
+// 13.40 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
 {
@@ -188,7 +186,7 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_obje
     return integer;
 }
 
-// 13.42 ToIntegerWithoutRounding ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithoutrounding
+// 13.41 ToIntegerWithoutRounding ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithoutrounding
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
 {
