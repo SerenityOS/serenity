@@ -235,8 +235,8 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
         increment_nanoseconds = increment;
     }
 
-    // 8. Return RoundNumberToIncrement(ℝ(ns), incrementNs, roundingMode).
-    return js_bigint(vm, round_number_to_increment(nanoseconds.big_integer(), increment_nanoseconds, rounding_mode));
+    // 8. Return RoundNumberToIncrementAsIfPositive(ℝ(ns), incrementNs, roundingMode).
+    return js_bigint(vm, round_number_to_increment_as_if_positive(nanoseconds.big_integer(), increment_nanoseconds, rounding_mode));
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring

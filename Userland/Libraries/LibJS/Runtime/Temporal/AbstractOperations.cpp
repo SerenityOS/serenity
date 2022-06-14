@@ -1153,7 +1153,41 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
     return rounded.multiplied_by(increment_big_int);
 }
 
-// 13.26 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
+// 13.26 RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrementasifpositive
+Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
+{
+    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+
+    // OPTIMIZATION: If the increment is 1 the number is always rounded
+    if (increment == 1)
+        return x;
+
+    auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
+
+    // 1. Let quotient be x / increment.
+    auto division_result = x.divided_by(increment_big_int);
+
+    // OPTIMIZATION: If there's no remainder the number is already rounded
+    if (division_result.remainder.unsigned_value().is_zero())
+        return x;
+
+    // 2. Let unsignedRoundingMode be GetUnsignedRoundingMode(roundingMode, false).
+    auto unsigned_rounding_mode = get_unsigned_rounding_mode(rounding_mode, false);
+
+    // 3. Let r1 be the largest integer such that r1 ≤ quotient.
+    auto r1 = division_result.quotient;
+
+    // 4. Let r2 be the smallest integer such that r2 > quotient.
+    auto r2 = division_result.quotient.plus("1"_bigint);
+
+    // 5. Let rounded be ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode).
+    auto rounded = apply_unsigned_rounding_mode(division_result, r1, r2, unsigned_rounding_mode, increment_big_int);
+
+    // 6. Return rounded × increment.
+    return rounded.multiplied_by(increment_big_int);
+}
+
+// 13.28 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, ParseResult const& parse_result)
 {
     auto& vm = global_object.vm();
@@ -1300,7 +1334,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .calendar = move(calendar_val) };
 }
 
-// 13.28 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
+// 13.29 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1332,7 +1366,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     return TemporalInstant { .year = result.year, .month = result.month, .day = result.day, .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .time_zone_offset = move(offset_string) };
 }
 
-// 13.29 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
+// 13.30 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1354,7 +1388,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = move(time_zone_result) };
 }
 
-// 13.30 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
+// 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1379,7 +1413,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     return id.value();
 }
 
-// 13.31 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
+// 13.32 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, String const& iso_string)
 {
     // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
@@ -1389,7 +1423,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
     return TemporalDate { .year = parts.year, .month = parts.month, .day = parts.day, .calendar = move(parts.calendar) };
 }
 
-// 13.32 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
+// 13.33 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1409,7 +1443,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
     return parse_iso_date_time(global_object, *parse_result);
 }
 
-// 13.33 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
+// 13.34 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1549,7 +1583,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     return create_duration_record(global_object, years * factor, months * factor, weeks * factor, days * factor, hours * factor, floor(minutes) * factor, floor(seconds) * factor, floor(milliseconds) * factor, floor(microseconds) * factor, floor(nanoseconds) * factor);
 }
 
-// 13.34 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
+// 13.35 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1581,7 +1615,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
     return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.35 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
+// 13.36 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1626,7 +1660,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset_string = move(offset_string), .name = move(time_zone) } };
 }
 
-// 13.36 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
+// 13.37 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1649,7 +1683,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
-// 13.37 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
+// 13.38 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1688,7 +1722,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
 }
 
-// 13.38 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
+// 13.39 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -1711,7 +1745,7 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
-// 13.39 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
+// 13.40 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
 ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
@@ -1729,7 +1763,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
     return integer;
 }
 
-// 13.42 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& vm = global_object.vm();

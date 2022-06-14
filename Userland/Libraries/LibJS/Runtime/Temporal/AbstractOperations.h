@@ -155,6 +155,7 @@ double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<Uns
 Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const&, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const&, Crypto::UnsignedBigInteger const& increment);
 double round_number_to_increment(double, u64 increment, StringView rounding_mode);
 Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
+Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, ParseResult const& parse_result);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject&, String const& iso_string);
