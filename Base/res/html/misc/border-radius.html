@@ -180,6 +180,29 @@
             border: 1px solid black;
             background-color: transparent;
         }
+
+        .nut {
+            width: 220px;
+            height: 180px;
+            background-size: 220px 180px;
+            border-radius: 70% 30% 30% 70% / 60% 40% 60% 40%;
+            background-image: url('old-computer.png');
+        }
+
+        .screenshot {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-image: url("serenity-screenshot.png");
+        }
+
+        .rounded-image {
+            background-image: url("90s-bg.png");
+            background-repeat: repeat;
+            border-radius: 20px;
+            width: 150px;
+            height: 100px;
+        }
     </style>
 </head>
 
@@ -236,6 +259,18 @@
     <br>
     <em>All round -- MDN example 2 -- outline</em>
     <div class="rect rect-7"></div>
+    <br>
+    <br>
+
+    <p>These boxes have (rectangular) background images, that are clipped by the border radius</p>
+    <em>In a nutshell</em>
+    <div class="nut"></div>
+    <br>
+    <em>In a circle</em>
+    <div class="screenshot"></div>
+    <br>
+    <em>Rounded</em>
+    <div class="rounded-image"></div>
     <br>
     <br>
 
