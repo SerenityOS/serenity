@@ -207,12 +207,12 @@ ErrorOr<size_t> AC97::write(size_t channel_index, UserOrKernelBuffer const& data
         m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_pages(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv, Memory::Region::Access::Write));
     }
 
-    auto remaining = length;
+    Checked<size_t> remaining = length;
     size_t offset = 0;
-    while (remaining > 0) {
-        TRY(write_single_buffer(data, offset, min(remaining, PAGE_SIZE)));
+    while (remaining > static_cast<size_t>(0)) {
+        TRY(write_single_buffer(data, offset, min(remaining.value(), PAGE_SIZE)));
         offset += PAGE_SIZE;
-        remaining -= PAGE_SIZE;
+        remaining.saturating_sub(PAGE_SIZE);
     }
 
     return length;
