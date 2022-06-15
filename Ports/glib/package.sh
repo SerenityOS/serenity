@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='glib'
-version='2.72.2'
-files="https://gitlab.gnome.org/GNOME/glib/-/archive/${version}/glib-${version}.tar.gz glib-${version}.tar.gz 256439eb4667cda778f12faa6c1726413153618336514d3633ac1e4404d627ea"
+version='2.73.0'
+files="https://gitlab.gnome.org/GNOME/glib/-/archive/${version}/glib-${version}.tar.gz glib-${version}.tar.gz 3f573319adbdf572d79255e8bae85c7e2902d1aa6177d2646605a00c0a607eca"
 auth_type='sha256'
 useconfigure='true'
 configopts=("--cross-file" "../cross_file-${SERENITY_ARCH}.txt")
