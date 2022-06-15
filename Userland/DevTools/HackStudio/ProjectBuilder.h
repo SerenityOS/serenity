@@ -47,6 +47,7 @@ private:
     static void for_each_library_dependencies(Function<void(String, Vector<StringView>)>);
     static ErrorOr<String> component_name(StringView cmake_file_path);
     static ErrorOr<void> verify_cmake_is_installed();
+    static ErrorOr<void> verify_make_is_installed();
 
     String m_project_root;
     Project const& m_project;

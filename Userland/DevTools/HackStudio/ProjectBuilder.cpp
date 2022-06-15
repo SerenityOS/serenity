@@ -40,6 +40,7 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
     }
 
     if (m_is_serenity == IsSerenityRepo::No) {
+        TRY(verify_make_is_installed());
         TRY(m_terminal->run_command("make"));
         return {};
     }
@@ -65,6 +66,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
     }
 
     if (m_is_serenity == IsSerenityRepo::No) {
+        TRY(verify_make_is_installed());
         TRY(m_terminal->run_command("make run"));
         return {};
     }
@@ -102,6 +104,7 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::build_serenity_component()
 {
+    TRY(verify_make_is_installed());
     TRY(m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes, "Make failed"sv));
     return {};
 }
@@ -253,6 +256,14 @@ ErrorOr<void> ProjectBuilder::verify_cmake_is_installed()
     if (!res.is_error() && res.value().exit_code == 0)
         return {};
     return Error::from_string_literal("CMake port is not installed"sv);
+}
+
+ErrorOr<void> ProjectBuilder::verify_make_is_installed()
+{
+    auto res = Core::command("make --version", {});
+    if (!res.is_error() && res.value().exit_code == 0)
+        return {};
+    return Error::from_string_literal("Make port is not installed"sv);
 }
 
 String ProjectBuilder::build_directory() const
