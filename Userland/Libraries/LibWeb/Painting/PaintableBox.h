@@ -129,9 +129,9 @@ protected:
 
     virtual Gfx::FloatRect compute_absolute_rect() const;
 
-private:
     Painting::BorderRadiiData normalized_border_radii_data() const;
 
+private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
