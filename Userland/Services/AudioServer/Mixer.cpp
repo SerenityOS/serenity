@@ -97,7 +97,7 @@ void Mixer::mix()
                 if (queue->is_muted())
                     continue;
                 sample.log_multiply(SAMPLE_HEADROOM);
-                sample.log_multiply(queue->volume());
+                sample.log_multiply(static_cast<float>(queue->volume()));
                 mixed_sample += sample;
             }
         }
@@ -115,14 +115,14 @@ void Mixer::mix()
                 if (m_main_volume < 0.01)
                     mixed_sample = Audio::Sample { 0 };
                 else
-                    mixed_sample.log_multiply(m_main_volume);
+                    mixed_sample.log_multiply(static_cast<float>(m_main_volume));
                 mixed_sample.clip();
 
                 LittleEndian<i16> out_sample;
-                out_sample = mixed_sample.left * NumericLimits<i16>::max();
+                out_sample = static_cast<i16>(mixed_sample.left * NumericLimits<i16>::max());
                 stream << out_sample;
 
-                out_sample = mixed_sample.right * NumericLimits<i16>::max();
+                out_sample = static_cast<i16>(mixed_sample.right * NumericLimits<i16>::max());
                 stream << out_sample;
             }
 
