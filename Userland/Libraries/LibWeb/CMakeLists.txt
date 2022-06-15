@@ -289,6 +289,7 @@ set(SOURCES
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
+    Painting/BorderRadiusCornerClipper.cpp
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
