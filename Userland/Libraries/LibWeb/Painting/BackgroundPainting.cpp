@@ -230,24 +230,104 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             image_rect.set_y(image_rect.y() - y_delta);
         }
 
-        // FIXME: Handle rounded corners
-        float initial_image_x = image_rect.x();
-        float image_y = image_rect.y();
-        while (image_y < clip_rect.bottom()) {
-            image_rect.set_y(image_y);
+        auto paint_image_background = [&] {
+            float initial_image_x = image_rect.x();
+            float image_y = image_rect.y();
+            while (image_y < clip_rect.bottom()) {
+                image_rect.set_y(image_y);
 
-            float image_x = initial_image_x;
-            while (image_x < clip_rect.right()) {
-                image_rect.set_x(image_x);
-                painter.draw_scaled_bitmap(image_rect.to_rounded<int>(), image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
-                if (!repeat_x)
+                float image_x = initial_image_x;
+                while (image_x < clip_rect.right()) {
+                    image_rect.set_x(image_x);
+                    painter.draw_scaled_bitmap(image_rect.to_rounded<int>(), image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                    if (!repeat_x)
+                        break;
+                    image_x += x_step;
+                }
+
+                if (!repeat_y)
                     break;
-                image_x += x_step;
+                image_y += y_step;
             }
+        };
 
-            if (!repeat_y)
-                break;
-            image_y += y_step;
+        if (border_radii.has_any_radius()) {
+            Gfx::IntRect int_border_rect = border_rect.to_rounded<int>();
+
+            auto top_left = border_radii.top_left.as_corner();
+            auto top_right = border_radii.top_right.as_corner();
+            auto bottom_right = border_radii.bottom_right.as_corner();
+            auto bottom_left = border_radii.bottom_left.as_corner();
+
+            Gfx::IntRect corner_rect {
+                0, 0,
+                max(
+                    top_left.horizontal_radius + top_right.horizontal_radius,
+                    bottom_left.horizontal_radius + bottom_right.horizontal_radius),
+                max(
+                    top_left.vertical_radius + bottom_left.vertical_radius,
+                    top_right.vertical_radius + bottom_right.vertical_radius)
+            };
+            auto corner_bitmap = get_cached_corner_bitmap(corner_rect);
+            if (!corner_bitmap)
+                return;
+            Gfx::Painter corner_painter { *corner_bitmap };
+
+            auto top_left_corner_page_location = int_border_rect.top_left();
+            auto top_right_corner_page_location = int_border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0);
+            auto bottom_right_corner_page_location = int_border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1);
+            auto bottom_left_corner_page_location = int_border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1);
+
+            Gfx::IntPoint top_left_bitmap_location { 0, 0 };
+            Gfx::IntPoint top_right_bitmap_location { corner_rect.width() - top_right.horizontal_radius, 0 };
+            Gfx::IntPoint bottom_right_bitmap_location { corner_rect.width() - bottom_right.horizontal_radius, corner_rect.height() - bottom_right.vertical_radius };
+            Gfx::IntPoint bottom_left_bitmap_location { 0, corner_rect.height() - bottom_left.vertical_radius };
+
+            auto copy_page_masked = [&](auto const& mask_src, auto const& page_location) {
+                for (int row = 0; row < mask_src.height(); ++row) {
+                    for (int col = 0; col < mask_src.width(); ++col) {
+                        auto corner_location = mask_src.location().translated(col, row);
+                        auto mask_pixel = corner_bitmap->get_pixel(corner_location);
+                        u8 mask_alpha = ~mask_pixel.alpha();
+                        auto final_pixel = Color();
+                        if (mask_alpha > 0) {
+                            auto page_pixel = painter.get_pixel(page_location.translated(col, row));
+                            if (page_pixel.has_value())
+                                final_pixel = page_pixel.value().with_alpha(mask_alpha);
+                        }
+                        corner_bitmap->set_pixel(corner_location, final_pixel);
+                    }
+                }
+            };
+
+            // Generate a mask for the corner:
+            Gfx::AntiAliasingPainter corner_aa_painter { corner_painter };
+            corner_aa_painter.fill_rect_with_rounded_corners(corner_rect, Color::NamedColor::Black, top_left, top_right, bottom_right, bottom_left);
+
+            // Copy the pixels under the corner mask (using the alpha of the mask):
+            if (top_left)
+                copy_page_masked(top_left.as_rect().translated(top_left_bitmap_location), top_left_corner_page_location);
+            if (top_right)
+                copy_page_masked(top_right.as_rect().translated(top_right_bitmap_location), top_right_corner_page_location);
+            if (bottom_right)
+                copy_page_masked(bottom_right.as_rect().translated(bottom_right_bitmap_location), bottom_right_corner_page_location);
+            if (bottom_left)
+                copy_page_masked(bottom_left.as_rect().translated(bottom_left_bitmap_location), bottom_left_corner_page_location);
+
+            // Paint the image background:
+            paint_image_background();
+
+            // Restore the corners:
+            if (top_left)
+                painter.blit(top_left_corner_page_location, *corner_bitmap, top_left.as_rect().translated(top_left_bitmap_location));
+            if (top_right)
+                painter.blit(top_right_corner_page_location, *corner_bitmap, top_right.as_rect().translated(top_right_bitmap_location));
+            if (bottom_right)
+                painter.blit(bottom_right_corner_page_location, *corner_bitmap, bottom_right.as_rect().translated(bottom_right_bitmap_location));
+            if (bottom_left)
+                painter.blit(bottom_left_corner_page_location, *corner_bitmap, bottom_left.as_rect().translated(bottom_left_bitmap_location));
+        } else {
+            paint_image_background();
         }
 
         painter.restore();
