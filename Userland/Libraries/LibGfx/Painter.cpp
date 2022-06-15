@@ -1205,37 +1205,37 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
     if (source.has_alpha_channel() || opacity != 1.0f) {
         switch (source.format()) {
         case BitmapFormat::BGRx8888:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::BGRA8888:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRA8888>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::BGRA8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed4:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed4>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed4>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed2:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed2>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed2>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed1:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed1>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed1>, opacity, scaling_mode);
             break;
         default:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
             break;
         }
     } else {
         switch (source.format()) {
         case BitmapFormat::BGRx8888:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
             break;
         default:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
             break;
         }
     }
@@ -1723,6 +1723,15 @@ void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
     } else {
         dst = Color::from_argb(dst).blend(color).value();
     }
+}
+
+Optional<Color> Painter::get_pixel(IntPoint const& p)
+{
+    auto point = p;
+    point.translate_by(state().translation);
+    if (!clip_rect().contains(point / scale()))
+        return {};
+    return Color::from_argb(m_target->scanline(point.y())[point.x()]);
 }
 
 ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
