@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/QuickSort.h>
 #include <Applications/DisplaySettings/ThemesSettingsGML.h>
 #include <LibCore/DirIterator.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Process.h>
@@ -53,6 +55,20 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     m_cursor_themes_button->set_icon(mouse_settings_icon);
     m_cursor_themes_button->on_click = [&](auto) {
         GUI::Process::spawn_or_show_error(window(), "/bin/MouseSettings", Array { "-t", "cursor-theme" });
+    };
+
+    GUI::Application::the()->on_theme_change = [&]() {
+        auto current_theme_name = current_system_theme();
+
+        size_t index = 0;
+        for (auto& theme_meta : m_themes) {
+            if (current_theme_name == theme_meta.name) {
+                m_themes_combo->set_selected_index(index, GUI::AllowCallback::No);
+                m_selected_theme = &m_themes.at(index);
+                m_theme_preview->set_theme(m_selected_theme->path);
+            }
+            ++index;
+        }
     };
 }
 
