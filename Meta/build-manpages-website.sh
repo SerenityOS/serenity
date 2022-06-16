@@ -106,6 +106,7 @@ pandoc -f gfm -t html5 -s \
 # Copy pre-made files
 cp Meta/Websites/man.serenityos.org/banner.png output/
 cp Base/usr/share/man/man7/LibDSP_classes.svg output/
+cp Base/usr/share/man/man1/*.png output/
 
 # Copy icons
 mkdir output/icons
