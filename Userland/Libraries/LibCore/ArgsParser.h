@@ -121,6 +121,18 @@ public:
             });
     }
 
+    template<typename T>
+    requires(IsOneOf<T, Optional<String>, Optional<StringView>>) void add_positional_argument(T& value, char const* help_string, char const* name, Required required = Required::Yes)
+    {
+        add_positional_argument_helper(help_string, name, required,
+            [&value](char const* s) {
+                if (!s)
+                    return false;
+                value = s;
+                return true;
+            });
+    }
+
     void add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
