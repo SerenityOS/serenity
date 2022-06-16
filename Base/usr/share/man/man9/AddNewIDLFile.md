@@ -1,4 +1,4 @@
-# Adding a new IDL file
+# Adding a new IDL file for LibWeb
 
 Serenity's build system does a lot of work of turning the IDL from a Web spec into code, but there are a few things you'll need to do yourself.
 
@@ -23,14 +23,14 @@ interface CSSRule {
 };
 ```
 
-3. If the IDL starts with `[Exposed=Window]`, add the following to [`LibWeb/Bindings/WindowObjectHelper.h`](../../Userland/Libraries/LibWeb/Bindings/WindowObjectHelper.h):
+3. If the IDL starts with `[Exposed=Window]`, add the following to [`LibWeb/Bindings/WindowObjectHelper.h`](../../../../../Userland/Libraries/LibWeb/Bindings/WindowObjectHelper.h):
     - `#include <LibWeb/Bindings/HTMLDetailsElementConstructor.h>` and
     - `#include <LibWeb/Bindings/HTMLDetailsElementPrototype.h>` to the includes list.
     - `ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)      \` to the macro at the bottom.
 
-4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
+4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../../../../Userland/Libraries/LibWeb/idl_files.cmake)
 
-5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
+5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../../../../Userland/Libraries/LibWeb/Forward.h):
     - `HTMLDetailsElement` in its namespace.
     - `HTMLDetailsElementWrapper` in the `Web::Bindings` namespace.
 
@@ -39,8 +39,8 @@ interface CSSRule {
    - It must have a public `using WrapperType = Bindings::HTMLDetailsElementWrapper;`
 
 7. Depending on what kind of thing your interface is, you may need to add it to the `WrapperFactory` of that kind:
-   - CSSRules: [`LibWeb/Bindings/CSSRuleWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/CSSRuleWrapperFactory.cpp)
-   - Events: [`LibWeb/Bindings/EventWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/EventWrapperFactory.cpp)
-   - Elements: [`LibWeb/Bindings/NodeWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/NodeWrapperFactory.cpp)
+   - CSSRules: [`LibWeb/Bindings/CSSRuleWrapperFactory.cpp`](../../../../../Userland/Libraries/LibWeb/Bindings/CSSRuleWrapperFactory.cpp)
+   - Events: [`LibWeb/Bindings/EventWrapperFactory.cpp`](../../../../../Userland/Libraries/LibWeb/Bindings/EventWrapperFactory.cpp)
+   - Elements: [`LibWeb/Bindings/NodeWrapperFactory.cpp`](../../../../../Userland/Libraries/LibWeb/Bindings/NodeWrapperFactory.cpp)
 
    Open the relevant wrapper factory file, and add `#include` directives and an `if` statement for your new type.

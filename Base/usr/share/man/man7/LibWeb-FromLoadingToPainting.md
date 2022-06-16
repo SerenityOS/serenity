@@ -1,4 +1,8 @@
-## LibWeb: From loading to painting
+## Name
+
+LibWeb: From loading to painting
+
+## Description
 
 **NOTE: This document is a work in progress!**
 
