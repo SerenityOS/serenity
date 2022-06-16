@@ -58,13 +58,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& constants_menu = window->add_menu("&Constants");
     constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/pi.png")), [&](auto&) {
-        widget->set_entry(KeypadValue { 31415926535, 10 });
+        widget->set_entry(KeypadValue { 3141592653, 9 });
     }));
     constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/eulers_number.png")), [&](auto&) {
-        widget->set_entry(KeypadValue { 27182818284, 10 });
+        widget->set_entry(KeypadValue { 2718281828, 9 });
     }));
     constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png")), [&](auto&) {
-        widget->set_entry(KeypadValue { 16180339887, 10 });
+        widget->set_entry(KeypadValue { 1618033988, 9 });
     }));
 
     auto& help_menu = window->add_menu("&Help");
