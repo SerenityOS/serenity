@@ -19,7 +19,7 @@ You can watch videos of the system being developed on YouTube:
 * [Andreas Kling's channel](https://youtube.com/andreaskling)
 * [Linus Groh's channel](https://youtube.com/linusgroh)
 
-**FAQ**: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
+**FAQ**: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/FAQ.md)
 
 ## Screenshot
 
