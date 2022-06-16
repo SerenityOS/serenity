@@ -59,7 +59,23 @@ public:
         return m_file->seek(offset, whence);
     }
 
-    bool discard_or_error(size_t count) override { return m_file->seek(count, SeekMode::FromCurrentPosition); }
+    bool discard_or_error(size_t count) override
+    {
+        if (m_file->seek(count, SeekMode::FromCurrentPosition))
+            return true;
+        if (m_file->error() != ESPIPE) {
+            set_fatal_error();
+            return false;
+        }
+        char buffer[256];
+        while (count > 0) {
+            auto size = min(count, sizeof(buffer));
+            if (!read_or_error({ buffer, size }))
+                return false;
+            count -= size;
+        }
+        return true;
+    }
 
     bool unreliable_eof() const override { return m_file->eof(); }
 
