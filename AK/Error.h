@@ -139,7 +139,7 @@ public:
     ErrorOr& operator=(ErrorOr&& other) = default;
     ErrorOr& operator=(ErrorOr const& other) = default;
 
-    ErrorType& error() { return m_error.value(); }
+    ErrorType const& error() const { return m_error.value(); }
     bool is_error() const { return m_error.has_value(); }
     ErrorType release_error() { return m_error.release_value(); }
     void release_value() { }
