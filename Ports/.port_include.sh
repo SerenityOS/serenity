@@ -727,6 +727,7 @@ do_dev() {
         pushd "$git_repo"
         if [ ! -d "$git_repo/.git" ]; then
             git init .
+            git config core.autocrlf false
             git add --all --force
             git commit -a -m 'Initial import'
         fi
@@ -809,14 +810,14 @@ do_dev() {
     )
 
     [ -d "$git_repo" ] && [ ! -d "$workdir" ] && {
-        git clone "$git_repo" "$workdir"
+        git clone --config core.autocrlf=false "$git_repo" "$workdir"
     }
 
     [ -d "$workdir/.git" ] || {
         >&2 echo "$workdir does not appear to be a git repository, if you did this manually, you're on your own"
         if prompt_yes_no "Otherwise, press 'y' to remove that directory and clone it again"; then
             rm -fr "$workdir"
-            git clone "$git_repo" "$workdir"
+            git clone --config core.autocrlf=false "$git_repo" "$workdir"
         else
             exit 1
         fi
