@@ -27,7 +27,7 @@ apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-
 
 ## NixOS
 
-You can use the `nix-shell` script [`Toolchain/serenity.nix`](../Toolchain/serenity.nix) to set up the environment:
+You can use the `nix-shell` script [`Toolchain/serenity.nix`](../../../../../Toolchain/serenity.nix) to set up the environment:
 
 ```console
 nix-shell Toolchain/serenity.nix

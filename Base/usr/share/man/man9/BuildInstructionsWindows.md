@@ -11,7 +11,7 @@ Once installed, you will need to make sure the distribution you want to use (and
 - `wsl --set-version <distro> <version>` is used to convert a distro to another version, and<br/>
 - `wsl --set-default-version 2` will set the default version for all new distros (if desired.)<br/>
 
-Next, go to [BuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md#prerequisites)
+Next, go to [help://man/9/BuildInstructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/help://man/9/BuildInstructions#prerequisites)
 and follow the instructions for your chosen Linux environment, to get the needed build tools.
 
 ## Note on filesystems

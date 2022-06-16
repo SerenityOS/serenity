@@ -44,7 +44,7 @@ sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
 
 ### Windows
 
-If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
+If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](help://man/9/BuildInstructionsWindows)
 for details.
 
 ### Arch Linux / Manjaro
@@ -58,8 +58,8 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
-* [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
-* [macOS](BuildInstructionsMacOS.md)
+* [Other Linux distributions and \*NIX systems](help://man/9/BuildInstructionsOther)
+* [macOS](help://man/9/BuildInstructionsMacOS)
 
 ## Build
 
@@ -97,5 +97,5 @@ start Serenity, `curl` will be available.
 
 ## More information
 
-At this point you should have a fully functioning VM for SerenityOS. The [advanced build instructions guide](AdvancedBuildInstructions.md)
+At this point you should have a fully functioning VM for SerenityOS. The [advanced build instructions guide](help://man/9/AdvancedBuildInstructions)
 has more information for some less commonly used features of the build system.
