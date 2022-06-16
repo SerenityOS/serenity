@@ -15,10 +15,18 @@ class GUIDPartitionTable final : public MBRPartitionTable {
 public:
     virtual ~GUIDPartitionTable() = default;
 
+#ifdef KERNEL
     static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
     explicit GUIDPartitionTable(Kernel::StorageDevice const&);
+#else
+    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(NonnullRefPtr<Core::File>);
+    explicit GUIDPartitionTable(NonnullRefPtr<Core::File>);
+#endif
 
-    virtual bool is_valid() const override { return m_valid; };
+    virtual bool is_valid() const override
+    {
+        return m_valid;
+    }
 
 private:
     bool is_unused_entry(Array<u8, 16>) const;
