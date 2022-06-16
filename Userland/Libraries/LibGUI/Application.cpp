@@ -311,6 +311,10 @@ void Application::event(Core::Event& event)
                 on_action_leave(action);
         }
     }
+    if (event.type() == GUI::Event::ThemeChange) {
+        if (on_theme_change)
+            on_theme_change();
+    }
     Object::event(event);
 }
 
