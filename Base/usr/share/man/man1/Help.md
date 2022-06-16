@@ -30,6 +30,7 @@ The SerenityOS manual is split into the following *sections*, or *chapters*:
 6. Games
 7. Miscellanea
 8. Sysadmin Tools
+9. Developer Documentation
 
 Sections are subject to change in the future.
 
@@ -62,4 +63,3 @@ this man page should be located at `/usr/share/man/man1/Help.md`.
 ## See Also
 
 * [`man`(1)](help://man/1/man) To read these same man pages from the terminal
-

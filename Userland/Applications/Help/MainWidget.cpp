@@ -198,7 +198,8 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
                 "5",
                 "6",
                 "7",
-                "8"
+                "8",
+                "9"
             };
             for (auto s : sections) {
                 String path = String::formatted("/usr/share/man/man{}/{}.md", s, start_page);

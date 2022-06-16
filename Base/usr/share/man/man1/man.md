@@ -27,6 +27,7 @@ The SerenityOS manual is split into the following *sections*, or *chapters*:
 6. Games
 7. Miscellanea
 8. Sysadmin Tools
+9. Developer Documentation
 
 Sections are subject to change in the future.
 

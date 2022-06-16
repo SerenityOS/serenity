@@ -6,3 +6,4 @@
 - [Section 6: Games (2048, Chess, FlappyBug, etc.)](man6/index.html)
 - [Section 7: Miscellanea (mitigations, sys filesystem, SystemServer, etc.)](man7/index.html)
 - [Section 8: Sysadmin Tools (dmesg, pls, sysctl, useradd, etc.)](man8/index.html)
+- [Section 9: Developer Documentation (building and running, coding conventions, etc.)](man9/index.html)

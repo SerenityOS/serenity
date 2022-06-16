@@ -82,7 +82,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             "5",
             "6",
             "7",
-            "8"
+            "8",
+            "9",
         };
         for (auto s : sections) {
             String path = make_path(s);

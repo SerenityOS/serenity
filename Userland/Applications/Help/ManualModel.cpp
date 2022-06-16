@@ -18,7 +18,8 @@ static ManualSectionNode s_sections[] = {
     { "5", "File Formats" },
     { "6", "Games" },
     { "7", "Miscellanea" },
-    { "8", "Sysadmin Tools" }
+    { "8", "Sysadmin Tools" },
+    { "9", "Developer Documentation" },
 };
 
 ManualModel::ManualModel()

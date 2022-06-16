@@ -73,6 +73,7 @@ for d in output/*/; do
         6) section_title="Games";; # TODO: Populate this section
         7) section_title="Miscellanea";;
         8) section_title="Sysadmin Tools";;
+        9) section_title="Developer Documentation";;
         *) section_title="SerenityOS man pages"; echo "WARNING: Unrecognized section ${section_number}?!";;
     esac
     pandoc -f gfm -t html5 -s \
