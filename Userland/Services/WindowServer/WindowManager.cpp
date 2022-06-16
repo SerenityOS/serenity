@@ -2111,6 +2111,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name, bool keep
     auto new_theme = Gfx::load_system_theme(theme_path);
     if (!new_theme.is_valid())
         return false;
+    m_theme_overridden = false;
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     m_config->write_entry("Theme", "Name", theme_name);
@@ -2120,6 +2121,35 @@ bool WindowManager::update_theme(String theme_path, String theme_name, bool keep
         return false;
     invalidate_after_theme_or_font_change();
     return true;
+}
+
+bool WindowManager::set_theme_override(Core::AnonymousBuffer const& theme_override)
+{
+    if (!theme_override.is_valid())
+        return false;
+    m_theme_overridden = true;
+    Gfx::set_system_theme(theme_override);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_override);
+    invalidate_after_theme_or_font_change();
+    return true;
+}
+
+Optional<Core::AnonymousBuffer> WindowManager::get_theme_override() const
+{
+    if (!m_theme_overridden)
+        return {};
+    return Gfx::current_system_theme_buffer();
+}
+
+void WindowManager::clear_theme_override()
+{
+    m_theme_overridden = false;
+    auto previous_theme_name = m_config->read_entry("Theme", "Name");
+    auto previous_theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", previous_theme_name));
+    VERIFY(previous_theme.is_valid());
+    Gfx::set_system_theme(previous_theme);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
+    invalidate_after_theme_or_font_change();
 }
 
 void WindowManager::did_popup_a_menu(Badge<Menu>)
