@@ -8,9 +8,15 @@
 
 namespace Partition {
 
+#ifdef KERNEL
 ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)));
+#else
+ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::File> device_file)
+{
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(move(device_file))));
+#endif
     if (table->is_protective_mbr())
         return Error::from_errno(ENOTSUP);
     if (!table->is_valid())
@@ -18,7 +24,11 @@ ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(K
     return table;
 }
 
+#ifdef KERNEL
 void EBRPartitionTable::search_extended_partition(Kernel::StorageDevice const& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
+#else
+void EBRPartitionTable::search_extended_partition(NonnullRefPtr<Core::File> device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
+#endif
 {
     if (limit == 0)
         return;
@@ -38,7 +48,11 @@ void EBRPartitionTable::search_extended_partition(Kernel::StorageDevice const& d
     search_extended_partition(device, *next_ebr, current_block_offset, (limit - 1));
 }
 
+#ifdef KERNEL
 EBRPartitionTable::EBRPartitionTable(Kernel::StorageDevice const& device)
+#else
+EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<Core::File> device)
+#endif
     : MBRPartitionTable(device)
 {
     if (!is_header_valid())
