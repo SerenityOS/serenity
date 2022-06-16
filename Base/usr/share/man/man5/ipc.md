@@ -14,3 +14,4 @@ The format is loosely inspired by C++ headers.
 ## See Also
 
 - [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/).
+- [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation)
