@@ -1,6 +1,10 @@
-# ProcFS Indexing
+## Name
 
-## Is a ProcFS index deterministic value?
+kernel-procfsindexing - ProcFS Indexing in the Kernel
+
+## Description
+
+### Is a ProcFS index deterministic value?
 
 Short answer - yes. Long answer - because of the design pattern that was chosen,
 each `InodeIndex` actually represent a known object, so it is guaranteed to be
@@ -10,7 +14,7 @@ all sub-segments of it are not relevant anymore, but if the process is still ali
 it is guaranteed that accessing the same `InodeIndex` in regard to a object tied to
 a process directory will provide the expected object.
 
-## The goal - zero allocations when creating new process
+### The goal - zero allocations when creating new process
 
 The main goal is to have zero allocations happening in ProcFS when a new process is created.
 The old ProcFS design followed that principle, but was quite hard to edit and to extend with new
@@ -19,9 +23,9 @@ The current ProcFS design doesn't follow that principle, but is easier to edit a
 A compromise is needed to ensure we get the advantages from both designs while minimizing the
 effects of the disadvantages of each design.
 
-## The segmented index
+### The segmented index
 
-### The layout of the segmented index
+#### The layout of the segmented index
 
 Since it was decided that heap allocations for ProcFS are *mostly* bad, the new
 design layout tries to achieve most of the principle of "Don't allocate anything
@@ -48,7 +52,7 @@ Example: To find a Thread 0 stack, for PID 1, the following encoding is applied:
 hex(2 << 16 | 2 << (16 + 28)) == 0x200000020000
 ```
 
-### Two rules for indexing
+#### Two rules for indexing
 
 We don't want to allocate anything when a process is created, but we still want
 to allocate global objects, so it's somewhat a compromise between two conflicting targets.
@@ -68,4 +72,3 @@ Otherwise, for every primary segment value > 0, value 0 in both sub-directory an
 property segments are reserved to represent the root PID directory.
 Please note that if the sub-directory segment > 0, and property segment = 0 is a valid
 index, and represents a valid property object in that sub-directory.
-
