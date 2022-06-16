@@ -213,7 +213,9 @@ void ComboBox::set_selected_index(size_t index, AllowCallback allow_callback)
         return;
     size_t previous_index = selected_index();
     TemporaryChange change(m_updating_model, true);
-    m_list_view->set_cursor(m_list_view->model()->index(index, 0), AbstractView::SelectionUpdate::Set);
+    auto model_index = m_list_view->model()->index(index, 0);
+    m_list_view->set_cursor(model_index, AbstractView::SelectionUpdate::Set);
+    selection_updated(model_index);
     if (previous_index != selected_index() && on_change && allow_callback == AllowCallback::Yes)
         on_change(m_editor->text(), m_list_view->cursor_index());
 }
