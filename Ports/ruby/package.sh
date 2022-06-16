@@ -2,6 +2,8 @@
 
 source version.sh
 
+export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/ruby/bin:${PATH}"
+
 port=ruby
 version=${RUBY_VERSION}
 useconfigure="true"
