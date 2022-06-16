@@ -30,15 +30,15 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
 
     size_t current_theme_index;
     auto current_theme_name = current_system_theme();
+    auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
     m_theme_names.ensure_capacity(m_themes.size());
     for (auto& theme_meta : m_themes) {
         m_theme_names.append(theme_meta.name);
-        if (current_theme_name == theme_meta.name) {
+        if (!theme_overridden && current_theme_name == theme_meta.name) {
             m_selected_theme = &theme_meta;
             current_theme_index = m_theme_names.size() - 1;
         }
     }
-    VERIFY(m_selected_theme);
     m_theme_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<ThemePreviewWidget>(palette());
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
@@ -58,6 +58,13 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     };
 
     GUI::Application::the()->on_theme_change = [&]() {
+        auto theme_override = GUI::ConnectionToWindowServer::the().get_system_theme_override();
+        if (theme_override.has_value()) {
+            m_themes_combo->clear_selection();
+            static_cast<RefPtr<GUI::AbstractThemePreview>>(m_theme_preview)->set_theme(*theme_override);
+            return;
+        }
+
         auto current_theme_name = current_system_theme();
 
         size_t index = 0;
