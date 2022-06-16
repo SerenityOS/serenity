@@ -366,185 +366,73 @@ void ArgsParser::add_option(Option&& option)
 
 void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode)
 {
-    Option option {
-        false,
-        "Ignored",
-        long_name,
-        short_name,
-        nullptr,
+    add_option_helper<false>("Ignored", long_name, short_name, nullptr, hide_mode,
         [](char const*) {
             return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode)
 {
-    Option option {
-        false,
-        help_string,
-        long_name,
-        short_name,
-        nullptr,
+    add_option_helper<false>(help_string, long_name, short_name, nullptr, hide_mode,
         [&value](char const* s) {
             VERIFY(s == nullptr);
             value = true;
             return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
-void ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
-void ArgsParser::add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
-void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper(help_string, long_name, short_name, value_name, hide_mode,
         [&value](char const* s) {
             auto opt = StringView(s).to_int();
             value = opt.value_or(0);
             return opt.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper(help_string, long_name, short_name, value_name, hide_mode,
         [&value](char const* s) {
             auto opt = StringView(s).to_uint();
             value = opt.value_or(0);
             return opt.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper(help_string, long_name, short_name, value_name, hide_mode,
         [&value](char const* s) {
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper<true>(help_string, long_name, short_name, value_name, hide_mode,
         [&value](char const* s) {
             value = convert_to_double(s);
             return value.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper<true>(help_string, long_name, short_name, value_name, hide_mode,
         [&value](char const* s) {
             value = AK::StringUtils::convert_to_uint<size_t>(s);
             return value.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
+        });
 }
 
 void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, OptionHideMode hide_mode)
 {
-    Option option {
-        true,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
+    add_option_helper<true>(help_string, long_name, short_name, value_name, hide_mode,
         [&values, separator](char const* s) {
             bool parsed_all_values = true;
 
@@ -556,12 +444,31 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
             });
 
             return parsed_all_values;
-        },
+        });
+}
+
+template void ArgsParser::add_option(char const*&, char const*, char const*, char, char const*, OptionHideMode);
+template void ArgsParser::add_option(StringView&, char const*, char const*, char, char const*, OptionHideMode);
+template void ArgsParser::add_option(String&, char const*, char const*, char, char const*, OptionHideMode);
+
+template<bool RequireArgument>
+void ArgsParser::add_option_helper(char const* help_string, char const* long_name, char short_name, char const* value_name, ArgsParser::OptionHideMode hide_mode, Function<bool(char const*)> accept_value)
+{
+    Option option {
+        RequireArgument,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        move(accept_value),
         hide_mode
     };
 
     add_option(move(option));
 }
+
+template void ArgsParser::add_option_helper<true>(char const*, char const*, char, char const*, ArgsParser::OptionHideMode, Function<bool(char const*)>);
+template void ArgsParser::add_option_helper<false>(char const*, char const*, char, char const*, ArgsParser::OptionHideMode, Function<bool(char const*)>);
 
 void ArgsParser::add_positional_argument(Arg&& arg)
 {

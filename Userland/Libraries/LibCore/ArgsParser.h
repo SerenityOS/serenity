@@ -82,15 +82,22 @@ public:
     void add_option(Option&&);
     void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
+
+    template<typename T>
+    requires(IsOneOf<T, char const*, String, StringView>) void add_option(T& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None)
+    {
+        add_option_helper(help_string, long_name, short_name, value_name, hide_mode,
+            [&value](char const* s) {
+                value = s;
+                return true;
+            });
+    }
 
     void add_positional_argument(Arg&&);
 
@@ -119,6 +126,9 @@ public:
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
+    template<bool RequireArgument = true>
+    void add_option_helper(char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode, Function<bool(char const*)> accept_value);
+
     template<bool IsContainer = false>
     void add_positional_argument_helper(char const* help_string, char const* name, Required required, Function<bool(char const*)> accept_value);
 
