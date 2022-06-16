@@ -247,9 +247,10 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
         if (g_themes_menu->is_visible())
             return;
         auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
+        auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
         for (size_t index = 0; index < g_themes.size(); ++index) {
             auto* action = g_themes_menu->action_at(index);
-            action->set_checked(action->text() == current_theme_name);
+            action->set_checked(!theme_overridden && action->text() == current_theme_name);
         }
     };
 
