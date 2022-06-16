@@ -111,6 +111,12 @@ concept IterableContainer = requires
     { declval<T>().begin() } -> IteratorPairWith<decltype(declval<T>().end())>;
 };
 
+template<typename T, typename InnerType = typename T::ValueType>
+inline constexpr bool IsAppendableContainer = requires(T container, InnerType element)
+{
+    { container.append(element) } -> SameAs<void>;
+};
+
 // clang-format on
 }
 
@@ -120,6 +126,7 @@ using AK::Concepts::Enum;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Fundamental;
 using AK::Concepts::Integral;
+using AK::Concepts::IsAppendableContainer;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
