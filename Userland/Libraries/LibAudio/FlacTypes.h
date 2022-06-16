@@ -14,14 +14,16 @@
 
 namespace Audio {
 
-// Temporary constants for header blocksize/sample rate spec
+// These are not the actual values stored in the file! They are marker constants instead, only used temporarily in the decoder.
+// 11.22.3. INTERCHANNEL SAMPLE BLOCK SIZE
 #define FLAC_BLOCKSIZE_AT_END_OF_HEADER_8 0xffffffff
 #define FLAC_BLOCKSIZE_AT_END_OF_HEADER_16 0xfffffffe
+// 11.22.4. SAMPLE RATE
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_8 0xffffffff
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_16 0xfffffffe
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10 0xfffffffd
 
-// Metadata block type, 7 bits.
+// 11.8 BLOCK_TYPE (7 bits)
 enum class FlacMetadataBlockType : u8 {
     STREAMINFO = 0,     // Important data about the audio format
     PADDING = 1,        // Non-data block to be ignored
@@ -33,7 +35,7 @@ enum class FlacMetadataBlockType : u8 {
     INVALID = 127,      // Error
 };
 
-// follows FLAC codes
+// 11.22.5. CHANNEL ASSIGNMENT
 enum class FlacFrameChannelType : u8 {
     Mono = 0,
     Stereo = 1,
@@ -49,7 +51,7 @@ enum class FlacFrameChannelType : u8 {
     // others are reserved
 };
 
-// follows FLAC codes
+// 11.25.1. SUBFRAME TYPE
 enum class FlacSubframeType : u8 {
     Constant = 0,
     Verbatim = 1,
@@ -58,13 +60,13 @@ enum class FlacSubframeType : u8 {
     // others are reserved
 };
 
-// follows FLAC codes
+// 11.30.1. RESIDUAL_CODING_METHOD
 enum class FlacResidualMode : u8 {
     Rice4Bit = 0,
     Rice5Bit = 1,
 };
 
-// Simple wrapper around any kind of metadata block
+// 11.6. METADATA_BLOCK
 struct FlacRawMetadataBlock {
     bool is_last_block;
     FlacMetadataBlockType type;
@@ -72,7 +74,7 @@ struct FlacRawMetadataBlock {
     ByteBuffer data;
 };
 
-// An abstract, parsed and validated FLAC frame
+// 11.22. FRAME_HEADER
 struct FlacFrameHeader {
     u32 sample_count;
     u32 sample_rate;
@@ -80,6 +82,7 @@ struct FlacFrameHeader {
     PcmSampleFormat bit_depth;
 };
 
+// 11.25. SUBFRAME_HEADER
 struct FlacSubframeHeader {
     FlacSubframeType type;
     // order for fixed and LPC subframes
@@ -88,6 +91,7 @@ struct FlacSubframeHeader {
     u8 bits_per_sample;
 };
 
+// 11.14. SEEKPOINT
 struct FlacSeekPoint {
     u64 sample_index;
     u64 byte_offset;
