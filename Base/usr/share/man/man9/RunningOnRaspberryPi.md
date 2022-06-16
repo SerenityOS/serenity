@@ -12,7 +12,7 @@ Currently only UART output is supported, no display.
 
 ### Step 1: Set Up Serenity
 
-Please follow [build instructions](BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
+Please follow [build instructions](../man9/BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
 
 ### Step 2: Build Aarch64 toolchain
 

@@ -52,17 +52,17 @@ Man pages are available online at [man.serenityos.org](https://man.serenityos.or
 
 When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI.
 
-Code-related documentation can be found in the [documentation](Documentation/) folder.
+Code-related documentation can be found in the [documentation](Base/usr/share/man/man9/) folder.
 
 ## How do I build and run this?
 
-See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md). Serenity runs on Linux, macOS (aarch64 might be a challenge), Windows (with WSL2) and many other *Nixes with hardware or software virtualization.
+See the [SerenityOS build instructions](Base/usr/share/man/man9/BuildInstructions.md). Serenity runs on Linux, macOS (aarch64 might be a challenge), Windows (with WSL2) and many other *Nixes with hardware or software virtualization.
 
 ## Get in touch and participate!
 
 Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 
-Before opening an issue, please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
+Before opening an issue, please see the [issue policy](CONTRIBUTING.md#issue-policy).
 
 A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 

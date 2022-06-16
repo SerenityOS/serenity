@@ -4,7 +4,7 @@
 There are currently issues with running Serenity in VirtualBox. Please refer to the [open issue](https://github.com/SerenityOS/serenity/issues/2927) for a list of currently known issues. Anything that doesn't currently work will be noted in this document.
 
 ## Creating the disk image
-Before creating a disk image that will work in VirtualBox, you will need to create a GRUB image as described in the [Serenity installation guide](BareMetalInstallation.md). Please skip the final step of that section, as that is only relevant for putting the image onto a real drive. You **cannot** use the same disk image created for QEMU. Using that image will halt immediately with the message ``FATAL: No bootable medium found! System halted.``
+Before creating a disk image that will work in VirtualBox, you will need to create a GRUB image as described in the [Serenity installation guide](../man9/BareMetalInstallation.md). Please skip the final step of that section, as that is only relevant for putting the image onto a real drive. You **cannot** use the same disk image created for QEMU. Using that image will halt immediately with the message ``FATAL: No bootable medium found! System halted.``
 
 There are a couple of ways to convert the disk image:
 
@@ -54,7 +54,7 @@ Please note that at the time of writing, audio and networking do not work in Vir
 That is all you need to boot Serenity in VirtualBox! Read on for additional configuration you may want to use.
 
 ## Blinking cursor after GRUB menu
-If you only see a blinking cursor after selecting an option in the GRUB menu, it is very likely you have encountered one of the errors listed in the [troubleshooting document.](Troubleshooting.md)
+If you only see a blinking cursor after selecting an option in the GRUB menu, it is very likely you have encountered one of the errors listed in the [troubleshooting document.](../man9/Troubleshooting.md)
 
 - Check that you have enabled PAE/NX in the **Settings** > **System** > **Processor** tab.
 - If you are using a 64-bit disk image, check that **Version** is set to **Other/Unknown (64-bit)** instead of **Other/Unknown** in **Settings** > **General**.

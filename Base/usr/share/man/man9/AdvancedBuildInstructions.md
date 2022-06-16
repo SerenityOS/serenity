@@ -21,7 +21,7 @@ cp /somewhere/on/your/system/file.txt mnt/home/anon
 ```
 
 
-This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.
+This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../../../../../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.
 
 ## Ninja build targets
 
@@ -56,7 +56,7 @@ There are some optional features that can be enabled during compilation that are
 - `ENABLE_ALL_DEBUG_FACILITIES`: used for checking whether debug code compiles on CI. Enables both `ENABLE_ALL_THE_DEBUG_MACROS` and `ENABLE_EXTRA_KERNEL_DEBUG_SYMBOLS`.
 - `ENABLE_COMPILETIME_FORMAT_CHECK`: checks for the validity of `std::format`-style format string during compilation. Enabled by default.
 - `ENABLE_PCI_IDS_DOWNLOAD`: downloads the [`pci.ids` database](https://pci-ids.ucw.cz/) that contains information about PCI devices at build time, if not already present. Enabled by default.
-- `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
+- `BUILD_LAGOM`: builds [Lagom](../../../../../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `ENABLE_MOLD_LINKER`: builds the userland with the [`mold` linker](https://github.com/rui314/mold). `mold` can be built by running `Toolchain/BuildMold.sh`.
 - `ENABLE_JAKT`: builds the `jakt` compiler as a Lagom host tool and enables building applications and libraries that are written in the jakt language.
@@ -67,7 +67,7 @@ There are some optional features that can be enabled during compilation that are
 - `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
-Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
+Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../../../../../Meta/CMake/all_the_debug_macros.cmake).
 
 To toggle or change a build option, see the [CMake Cache Manipulation](#cmake-cache-manipulation) section below.
 
@@ -109,7 +109,7 @@ $ ninja -C Build/i686 setup-and-run
 ```
 
 The CMake configuration of the `superbuild-<arch>` directory configures two [ExternalProjects](https://cmake.org/cmake/help/latest/module/ExternalProject.html).
-The first project is `lagom`, which is the host build of the project. For more information on Lagom, see the [Lagom ReadMe](../Meta/Lagom/ReadMe.md). It is used
+The first project is `lagom`, which is the host build of the project. For more information on Lagom, see the [Lagom ReadMe](../../../../../Meta/Lagom/ReadMe.md). It is used
 to build all the code generators and other host tools needed for the main Serenity build. The second project is the main build, which compiles the system for the
 target architecture using the selected toolchain.
 
@@ -173,16 +173,16 @@ This will prompt you which build type you want to use and allows you to customiz
 
 ## Tests
 
-For information on running host and target tests, see [Running Tests](RunningTests.md). The documentation there explains the difference between host tests run with Lagom and
+For information on running host and target tests, see [Running Tests](../man9/RunningTests.md). The documentation there explains the difference between host tests run with Lagom and
 target tests run on SerenityOS. It also contains useful information for debugging CI test failures.
 
 ## Running SerenityOS with VirtualBox and VMware
 
-Outside of QEMU, Serenity will run on VirtualBox and VMware. If you're curious, see how to [install Serenity on VirtualBox](VirtualBox.md) or [install Serenity on VMware](VMware.md).
+Outside of QEMU, Serenity will run on VirtualBox and VMware. If you're curious, see how to [install Serenity on VirtualBox](../man9/VirtualBox.md) or [install Serenity on VMware](../man9/VMware.md).
 
 ## Running SerenityOS on bare metal
 
-Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](BareMetalInstallation.md)
+Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](../man9/BareMetalInstallation.md)
 
 ## Filesystem performance on Windows
 

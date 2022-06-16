@@ -56,5 +56,5 @@ extensions, or you try to use VirtualBox without using a x64 virtualization mode
 ### Boot fails with "Your computer does not support PAE. Halting!"
 
 - If booting on bare metal, your CPU is too old to boot Serenity.
-- If you're using VirtualBox, you need to enable PAE/NX. Check the instructions [here.](VirtualBox.md)
+- If you're using VirtualBox, you need to enable PAE/NX. Check the instructions [here.](../man9/VirtualBox.md)
 - If you're using QEMU, the [CPU model configuration](https://qemu-project.gitlab.io/qemu/system/qemu-cpu-models.html) is not exposing PAE.
