@@ -18,6 +18,7 @@ extern "C" {
 #define WIFEXITED(status) (WTERMSIG(status) == 0)
 #define WIFSTOPPED(status) (((status)&0xff) == 0x7f)
 #define WIFSIGNALED(status) (((char)(((status)&0x7f) + 1) >> 1) > 0)
+#define WIFCONTINUED(status) ((status) == 0xffff)
 
 #define WNOHANG 1
 #define WUNTRACED 2
