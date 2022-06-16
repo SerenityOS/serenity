@@ -200,6 +200,13 @@ void ComboBox::set_model(NonnullRefPtr<Model> model)
     m_list_view->set_model(move(model));
 }
 
+void ComboBox::clear_selection()
+{
+    m_selected_index.clear();
+    m_editor->clear_selection();
+    m_editor->clear();
+}
+
 void ComboBox::set_selected_index(size_t index, AllowCallback allow_callback)
 {
     if (!m_list_view->model())
