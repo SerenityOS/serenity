@@ -478,13 +478,23 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
 void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) const
 {
     pid_t child;
+
+    posix_spawnattr_t spawn_attributes;
+    posix_spawnattr_init(&spawn_attributes);
+
+    posix_spawnattr_setpgroup(&spawn_attributes, getsid(0));
+
+    short current_flag;
+    posix_spawnattr_getflags(&spawn_attributes, &current_flag);
+    posix_spawnattr_setflags(&spawn_attributes, static_cast<short>(current_flag | POSIX_SPAWN_SETPGROUP));
+
     if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
 
         char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
-        posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, nullptr, const_cast<char**>(argv), environ);
+        posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, &spawn_attributes, const_cast<char**>(argv), environ);
         if (disown(child) < 0)
             perror("disown");
 
@@ -492,7 +502,7 @@ void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) 
     } else {
         for (auto& path : selected_file_paths()) {
             char const* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
-            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, &spawn_attributes, const_cast<char**>(argv), environ);
             if (disown(child) < 0)
                 perror("disown");
         }
