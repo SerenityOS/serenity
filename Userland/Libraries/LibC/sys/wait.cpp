@@ -45,14 +45,13 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
     if (rc < 0)
         return rc;
 
-    if (wstatus) {
-        if ((options & WNOHANG) && siginfo.si_pid == 0) {
-            // No child in a waitable state was found. All other fields
-            // in siginfo are undefined
-            *wstatus = 0;
-            return 0;
-        }
+    if ((options & WNOHANG) && siginfo.si_pid == 0) {
+        // No child in a waitable state was found. All other fields
+        // in siginfo are undefined
+        return 0;
+    }
 
+    if (wstatus) {
         switch (siginfo.si_code) {
         case CLD_EXITED:
             *wstatus = siginfo.si_status << 8;
@@ -65,7 +64,7 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
             break;
         case CLD_CONTINUED:
             *wstatus = 0xffff;
-            return 0; // return 0 if running
+            break;
         default:
             VERIFY_NOT_REACHED();
         }
