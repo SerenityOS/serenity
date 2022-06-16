@@ -129,6 +129,11 @@ endpoint WindowServer
     get_system_theme() => ([UTF8] String theme_name)
     refresh_system_theme() =|
 
+    set_system_theme_override(Core::AnonymousBuffer buffer) => (bool success)
+    get_system_theme_override() => (Optional<Core::AnonymousBuffer> buffer)
+    clear_system_theme_override() =|
+    is_system_theme_overridden() => (bool overridden)
+
     apply_cursor_theme(String name) =|
     get_cursor_theme() => (String name)
 
