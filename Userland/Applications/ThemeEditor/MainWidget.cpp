@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2021-2022, Jakob-Niklas See <git@nwex.de>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
@@ -15,6 +15,10 @@
 #include <Applications/ThemeEditor/MetricPropertyGML.h>
 #include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
+// FIXME: LibIPC Decoder and Encoder are sensitive to include order here
+// clang-format off
+#include <LibGUI/ConnectionToWindowServer.h>
+// clang-format on
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -196,6 +200,8 @@ MainWidget::MainWidget()
     add_property_tab(window_tab);
     add_property_tab(widgets_tab);
     add_property_tab(syntax_highlighting_tab);
+
+    build_override_controls();
 }
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
@@ -367,6 +373,84 @@ void MainWidget::save_to_file(Core::File& file)
     }
 }
 
+ErrorOr<Core::AnonymousBuffer> MainWidget::encode()
+{
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(sizeof(Gfx::SystemTheme)));
+    auto* data = buffer.data<Gfx::SystemTheme>();
+
+#define __ENUMERATE_ALIGNMENT_ROLE(role) \
+    data->alignment[(int)Gfx::AlignmentRole::role] = m_current_palette.alignment(Gfx::AlignmentRole::role);
+    ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
+#undef __ENUMERATE_ALIGNMENT_ROLE
+
+#define __ENUMERATE_COLOR_ROLE(role) \
+    data->color[(int)Gfx::ColorRole::role] = m_current_palette.color(Gfx::ColorRole::role).value();
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+
+#define __ENUMERATE_FLAG_ROLE(role) \
+    data->flag[(int)Gfx::FlagRole::role] = m_current_palette.flag(Gfx::FlagRole::role);
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
+
+#define __ENUMERATE_METRIC_ROLE(role) \
+    data->metric[(int)Gfx::MetricRole::role] = m_current_palette.metric(Gfx::MetricRole::role);
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+
+#define ENCODE_PATH(role, allow_empty)                                                                                                       \
+    do {                                                                                                                                     \
+        auto path = m_current_palette.path(Gfx::PathRole::role);                                                                             \
+        char const* characters;                                                                                                              \
+        if (path.is_empty()) {                                                                                                               \
+            switch (Gfx::PathRole::role) {                                                                                                   \
+            case Gfx::PathRole::TitleButtonIcons:                                                                                            \
+                characters = "/res/icons/16x16/";                                                                                            \
+                break;                                                                                                                       \
+            default:                                                                                                                         \
+                characters = allow_empty ? "" : "/res/";                                                                                     \
+            }                                                                                                                                \
+        }                                                                                                                                    \
+        characters = path.characters();                                                                                                      \
+        memcpy(data->path[(int)Gfx::PathRole::role], characters, min(strlen(characters) + 1, sizeof(data->path[(int)Gfx::PathRole::role]))); \
+        data->path[(int)Gfx::PathRole::role][sizeof(data->path[(int)Gfx::PathRole::role]) - 1] = '\0';                                       \
+    } while (0)
+
+    ENCODE_PATH(TitleButtonIcons, false);
+    ENCODE_PATH(ActiveWindowShadow, true);
+    ENCODE_PATH(InactiveWindowShadow, true);
+    ENCODE_PATH(TaskbarShadow, true);
+    ENCODE_PATH(MenuShadow, true);
+    ENCODE_PATH(TooltipShadow, true);
+
+    return buffer;
+}
+
+void MainWidget::build_override_controls()
+{
+    auto* theme_override_controls = find_descendant_of_type_named<GUI::Widget>("theme_override_controls");
+
+    m_theme_override_apply = theme_override_controls->find_child_of_type_named<GUI::Button>("apply");
+    m_theme_override_reset = theme_override_controls->find_child_of_type_named<GUI::Button>("reset");
+
+    m_theme_override_apply->on_click = [&](auto) {
+        auto encoded = encode();
+        if (encoded.is_error())
+            return;
+        GUI::ConnectionToWindowServer::the().async_set_system_theme_override(encoded.value());
+    };
+
+    m_theme_override_reset->on_click = [&](auto) {
+        GUI::ConnectionToWindowServer::the().async_clear_system_theme_override();
+    };
+
+    GUI::Application::the()->on_theme_change = [&]() {
+        auto override_active = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
+        m_theme_override_apply->set_enabled(!override_active && window()->is_modified());
+        m_theme_override_reset->set_enabled(override_active);
+    };
+}
+
 void MainWidget::add_property_tab(PropertyTab const& property_tab)
 {
     auto& scrollable_container = m_property_tabs->add_tab<GUI::ScrollableContainerWidget>(property_tab.title);
@@ -513,6 +597,7 @@ void MainWidget::set_palette(Gfx::Palette palette)
 {
     m_current_palette = move(palette);
     m_preview_widget->set_preview_palette(m_current_palette);
+    m_theme_override_apply->set_enabled(true);
     window()->set_modified(true);
 }
 
