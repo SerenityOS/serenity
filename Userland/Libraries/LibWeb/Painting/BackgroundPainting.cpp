@@ -154,10 +154,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // where round() is a function that returns the nearest natural number
             // (integer greater than zero).
             if (layer.repeat_x == CSS::Repeat::Round) {
-                image_rect.set_width(background_positioning_area.width() / background_positioning_area.width() / image_rect.width());
+                image_rect.set_width(background_positioning_area.width() / roundf(background_positioning_area.width() / image_rect.width()));
             }
             if (layer.repeat_y == CSS::Repeat::Round) {
-                image_rect.set_height(background_positioning_area.height() / background_positioning_area.height() / image_rect.height());
+                image_rect.set_height(background_positioning_area.height() / roundf(background_positioning_area.height() / image_rect.height()));
             }
 
             // If background-repeat is round for one dimension only and if background-size is auto
