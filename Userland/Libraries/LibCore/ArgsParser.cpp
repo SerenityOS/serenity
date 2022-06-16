@@ -568,143 +568,51 @@ void ArgsParser::add_positional_argument(Arg&& arg)
     m_positional_args.append(move(arg));
 }
 
-void ArgsParser::add_positional_argument(char const*& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
-void ArgsParser::add_positional_argument(String& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
-void ArgsParser::add_positional_argument(StringView& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
 void ArgsParser::add_positional_argument(int& value, char const* help_string, char const* name, Required required)
 {
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
+    add_positional_argument_helper(help_string, name, required,
         [&value](char const* s) {
             auto opt = StringView(s).to_int();
             value = opt.value_or(0);
             return opt.has_value();
-        }
-    };
-    add_positional_argument(move(arg));
+        });
 }
 
 void ArgsParser::add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required)
 {
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
+    add_positional_argument_helper(help_string, name, required,
         [&value](char const* s) {
             auto opt = StringView(s).to_uint();
             value = opt.value_or(0);
             return opt.has_value();
-        }
-    };
-    add_positional_argument(move(arg));
+        });
 }
 
 void ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
 {
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
+    add_positional_argument_helper(help_string, name, required,
         [&value](char const* s) {
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
-        }
-    };
-    add_positional_argument(move(arg));
+        });
 }
 
-void ArgsParser::add_positional_argument(Vector<char const*>& values, char const* help_string, char const* name, Required required)
+template<bool IsContainer>
+void ArgsParser::add_positional_argument_helper(char const* help_string, char const* name, Required required, Function<bool(char const*)> accept_value)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
-        INT_MAX,
-        [&values](char const* s) {
-            values.append(s);
-            return true;
-        }
+        IsContainer ? INT_MAX : 1,
+        move(accept_value)
     };
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<String>& values, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        INT_MAX,
-        [&values](char const* s) {
-            values.append(s);
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
-void ArgsParser::add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        INT_MAX,
-        [&values](char const* s) {
-            values.append(s);
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
+template void ArgsParser::add_positional_argument_helper<true>(char const*, char const*, Required, Function<bool(char const*)>);
+template void ArgsParser::add_positional_argument_helper<false>(char const*, char const*, Required, Function<bool(char const*)>);
 
 void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char const* const> remaining_arguments)
 {

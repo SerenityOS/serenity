@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
+#include <climits>
 #include <stdio.h>
 
 namespace Core {
@@ -91,17 +93,35 @@ public:
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
 
     void add_positional_argument(Arg&&);
-    void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
+
+    template<typename T>
+    requires(IsAppendableContainer<T>) void add_positional_argument(T& values, char const* help_string, char const* name, Required required = Required::Yes)
+    {
+        add_positional_argument_helper<true>(help_string, name, required,
+            [&values](char const* s) {
+                values.append(s);
+                return true;
+            });
+    }
+
+    template<typename T>
+    requires(IsOneOf<T, char const*, String, StringView>) void add_positional_argument(T& value, char const* help_string, char const* name, Required required = Required::Yes)
+    {
+        add_positional_argument_helper(help_string, name, required,
+            [&value](char const* s) {
+                value = s;
+                return true;
+            });
+    }
+
     void add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<char const*>& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<String>& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
+    template<bool IsContainer = false>
+    void add_positional_argument_helper(char const* help_string, char const* name, Required required, Function<bool(char const*)> accept_value);
+
     void autocomplete(FILE*, StringView program_name, Span<char const* const> remaining_arguments);
 
     Vector<Option> m_options;
