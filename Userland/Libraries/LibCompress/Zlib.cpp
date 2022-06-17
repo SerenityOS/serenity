@@ -11,37 +11,32 @@
 
 namespace Compress {
 
+constexpr static size_t Adler32Size = sizeof(u32);
+
 Optional<Zlib> Zlib::try_create(ReadonlyBytes data)
 {
-    if (data.size() < 6)
-        return {}; // header + footer size is 6
+    if (data.size() < (sizeof(ZlibHeader) + Adler32Size))
+        return {};
 
-    Zlib zlib { data };
+    ZlibHeader header { .as_u16 = data.at(0) << 8 | data.at(1) };
 
-    u8 compression_info = data.at(0);
-    u8 flags = data.at(1);
-
-    zlib.m_compression_method = compression_info & 0xF;
-    zlib.m_compression_info = (compression_info >> 4) & 0xF;
-    zlib.m_check_bits = flags & 0xF;
-    zlib.m_has_dictionary = (flags >> 5) & 0x1;
-    zlib.m_compression_level = (flags >> 6) & 0x3;
-
-    if (zlib.m_compression_method != 8 || zlib.m_compression_info > 7)
+    if (header.compression_method != ZlibCompressionMethod::Deflate || header.compression_info > 7)
         return {}; // non-deflate compression
 
-    if (zlib.m_has_dictionary)
+    if (header.present_dictionary)
         return {}; // we dont support pre-defined dictionaries
 
-    if ((compression_info * 256 + flags) % 31 != 0)
+    if (header.as_u16 % 31 != 0)
         return {}; // error correction code doesn't match
 
-    zlib.m_data_bytes = data.slice(2, data.size() - 2 - 4);
+    Zlib zlib { header, data };
+    zlib.m_data_bytes = data.slice(2, data.size() - sizeof(ZlibHeader) - Adler32Size);
     return zlib;
 }
 
-Zlib::Zlib(ReadonlyBytes data)
-    : m_input_data(data)
+Zlib::Zlib(ZlibHeader header, ReadonlyBytes data)
+    : m_header(header)
+    , m_input_data(data)
 {
 }
 
@@ -61,7 +56,7 @@ Optional<ByteBuffer> Zlib::decompress_all(ReadonlyBytes bytes)
 u32 Zlib::checksum()
 {
     if (!m_checksum) {
-        auto bytes = m_input_data.slice(m_input_data.size() - 4, 4);
+        auto bytes = m_input_data.slice_from_end(Adler32Size);
         m_checksum = bytes.at(0) << 24 | bytes.at(1) << 16 | bytes.at(2) << 8 || bytes.at(3);
     }
 

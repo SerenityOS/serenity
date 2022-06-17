@@ -48,13 +48,9 @@ public:
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    Zlib(ReadonlyBytes data);
+    Zlib(ZlibHeader, ReadonlyBytes data);
 
-    u8 m_compression_method;
-    u8 m_compression_info;
-    u8 m_check_bits;
-    u8 m_has_dictionary;
-    u8 m_compression_level;
+    ZlibHeader m_header;
 
     u32 m_checksum { 0 };
     ReadonlyBytes m_input_data;
