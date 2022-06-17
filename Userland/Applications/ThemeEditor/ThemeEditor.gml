@@ -18,9 +18,8 @@
     @GUI::Widget {
         name: "theme_override_controls"
         layout: @GUI::HorizontalBoxLayout {
-            margins: [ 0, 4 ]
+            margins: [0, 4]
         }
-
         fixed_height: 30
 
         @GUI::Layout::Spacer {}
