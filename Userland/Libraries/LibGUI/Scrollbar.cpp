@@ -303,7 +303,7 @@ void Scrollbar::mousedown_event(MouseEvent& event)
     if (event.shift()) {
         scroll_to_position(event.position());
         m_pressed_component = component_at_position(event.position());
-        VERIFY(m_pressed_component == Component::Scrubber);
+        return;
     }
     if (m_pressed_component == Component::Scrubber) {
         m_scrub_start_value = value();
