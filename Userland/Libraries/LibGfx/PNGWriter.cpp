@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/String.h>
+#include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
@@ -44,23 +45,6 @@ private:
 
     ByteBuffer m_data;
     String m_type;
-};
-
-class NonCompressibleBlock {
-public:
-    void finalize(PNGChunk&);
-    void add_byte_to_block(u8 data, PNGChunk&);
-
-    u16 adler_s1() const { return m_adler_s1; }
-    u16 adler_s2() const { return m_adler_s2; }
-
-private:
-    void add_block_to_chunk(PNGChunk&, bool);
-    void update_adler(u8);
-    bool full() { return m_non_compressible_data.size() == 65535; }
-    Vector<u8> m_non_compressible_data;
-    u16 m_adler_s1 { 1 };
-    u16 m_adler_s2 { 0 };
 };
 
 PNGChunk::PNGChunk(String type)
@@ -118,40 +102,6 @@ void PNGChunk::add_u8(u8 data)
     add(data);
 }
 
-void NonCompressibleBlock::add_byte_to_block(u8 data, PNGChunk& chunk)
-{
-    m_non_compressible_data.append(data);
-    update_adler(data);
-    if (full()) {
-        add_block_to_chunk(chunk, false);
-        m_non_compressible_data.clear_with_capacity();
-    }
-}
-
-void NonCompressibleBlock::add_block_to_chunk(PNGChunk& png_chunk, bool last)
-{
-    png_chunk.add_u8(last);
-
-    u16 len = m_non_compressible_data.size();
-    u16 nlen = ~len;
-
-    png_chunk.add_as_little_endian(len);
-    png_chunk.add_as_little_endian(nlen);
-
-    png_chunk.add(m_non_compressible_data.data(), m_non_compressible_data.size());
-}
-
-void NonCompressibleBlock::finalize(PNGChunk& chunk)
-{
-    add_block_to_chunk(chunk, true);
-}
-
-void NonCompressibleBlock::update_adler(u8 data)
-{
-    m_adler_s1 = (m_adler_s1 + data) % 65521;
-    m_adler_s2 = (m_adler_s2 + m_adler_s1) % 65521;
-}
-
 void PNGWriter::add_chunk(PNGChunk& png_chunk)
 {
     png_chunk.store_data_length();
@@ -190,27 +140,29 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     PNGChunk png_chunk { "IDAT" };
     png_chunk.reserve(bitmap.size_in_bytes());
 
-    u16 CMF_FLG = 0x81d;
-    png_chunk.add_as_big_endian(CMF_FLG);
-
-    NonCompressibleBlock non_compressible_block;
+    ByteBuffer uncompressed_block_data;
+    uncompressed_block_data.ensure_capacity(bitmap.size_in_bytes() + bitmap.height());
 
     for (int y = 0; y < bitmap.height(); ++y) {
-        non_compressible_block.add_byte_to_block(0, png_chunk);
+        uncompressed_block_data.append(0);
 
         for (int x = 0; x < bitmap.width(); ++x) {
             auto pixel = bitmap.get_pixel(x, y);
-            non_compressible_block.add_byte_to_block(pixel.red(), png_chunk);
-            non_compressible_block.add_byte_to_block(pixel.green(), png_chunk);
-            non_compressible_block.add_byte_to_block(pixel.blue(), png_chunk);
-            non_compressible_block.add_byte_to_block(pixel.alpha(), png_chunk);
+            uncompressed_block_data.append(pixel.red());
+            uncompressed_block_data.append(pixel.green());
+            uncompressed_block_data.append(pixel.blue());
+            uncompressed_block_data.append(pixel.alpha());
         }
     }
-    non_compressible_block.finalize(png_chunk);
 
-    png_chunk.add_as_big_endian(non_compressible_block.adler_s2());
-    png_chunk.add_as_big_endian(non_compressible_block.adler_s1());
+    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data);
+    if (!maybe_zlib_buffer.has_value()) {
+        // FIXME: Handle errors.
+        VERIFY_NOT_REACHED();
+    }
+    auto zlib_buffer = maybe_zlib_buffer.release_value();
 
+    png_chunk.add(zlib_buffer.data(), zlib_buffer.size());
     add_chunk(png_chunk);
 }
 
