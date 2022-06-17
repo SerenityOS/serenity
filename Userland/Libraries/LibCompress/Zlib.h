@@ -6,10 +6,13 @@
 
 #pragma once
 
+#include <AK/BitStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
+#include <LibCrypto/Checksum/Adler32.h>
 
 namespace Compress {
 
@@ -55,6 +58,26 @@ private:
     u32 m_checksum { 0 };
     ReadonlyBytes m_input_data;
     ReadonlyBytes m_data_bytes;
+};
+
+class ZlibCompressor : public OutputStream {
+public:
+    ZlibCompressor(OutputStream&, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    ~ZlibCompressor();
+
+    size_t write(ReadonlyBytes) override;
+    bool write_or_error(ReadonlyBytes) override;
+    void finish();
+
+    static Optional<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+
+private:
+    void write_header(ZlibCompressionMethod, ZlibCompressionLevel);
+
+    bool m_finished { false };
+    OutputBitStream m_output_stream;
+    OwnPtr<OutputStream> m_compressor;
+    Crypto::Checksum::Adler32 m_adler32_checksum;
 };
 
 }
