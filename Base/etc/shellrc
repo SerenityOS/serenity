@@ -28,6 +28,7 @@ alias ue=UserspaceEmulator
 alias fe=FontEditor
 alias ss=Spreadsheet
 
+alias dir='ls'
 alias ll='ls -l'
 
 if [ "$(id -u)" = "0" ] {
