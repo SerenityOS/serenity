@@ -3,11 +3,6 @@ describe("correct behavior", () => {
         expect(Temporal.PlainDate.prototype.since).toHaveLength(1);
     });
 
-    // FIXME: All the checks for years, months, weeks and days have to check for -0 instead of 0.
-    //        This is because CreateTemporalDuration in the spec doesn't convert -0 to 0 unlike the polyfill or what
-    //        the test262 tests expect.
-    //        Once this has been fixed in the spec, change the -0 checks for these properties to be just 0.
-
     test("basic functionality", () => {
         const dateOne = new Temporal.PlainDate(2021, 11, 14);
         const dateTwo = new Temporal.PlainDate(2022, 12, 25);
