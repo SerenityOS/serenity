@@ -59,10 +59,10 @@ public:
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
-    Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
+    Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;
-    Function<void(const AK::URL&, Gfx::IntPoint const& screen_position)> on_link_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint const& screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
+    Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
+    Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void(String const&)> on_title_change;
@@ -87,9 +87,9 @@ public:
     void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor);
     void notify_server_did_change_title(Badge<WebContentClient>, String const&);
     void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32);
-    void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const&);
+    void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint);
     void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&);
-    void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, String const&);
+    void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, String const&);
     void notify_server_did_leave_tooltip_area(Badge<WebContentClient>);
     void notify_server_did_hover_link(Badge<WebContentClient>, const AK::URL&);
     void notify_server_did_unhover_link(Badge<WebContentClient>);
@@ -97,9 +97,9 @@ public:
     void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers);
     void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&);
     void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&);
-    void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&);
-    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers);
-    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers, Gfx::ShareableBitmap const&);
+    void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint);
+    void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, String const& target, unsigned modifiers);
+    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, String const& target, unsigned modifiers, Gfx::ShareableBitmap const&);
     void notify_server_did_request_alert(Badge<WebContentClient>, String const& message);
     bool notify_server_did_request_confirm(Badge<WebContentClient>, String const& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_);

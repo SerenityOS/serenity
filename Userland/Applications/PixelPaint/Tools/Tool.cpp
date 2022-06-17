@@ -46,7 +46,7 @@ void Tool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-Gfx::IntPoint Tool::editor_stroke_position(Gfx::IntPoint const& pixel_coords, int stroke_thickness) const
+Gfx::IntPoint Tool::editor_stroke_position(Gfx::IntPoint pixel_coords, int stroke_thickness) const
 {
     auto position = m_editor->content_to_frame_position(pixel_coords);
     auto offset = (stroke_thickness % 2 == 0) ? 0 : m_editor->scale() / 2;

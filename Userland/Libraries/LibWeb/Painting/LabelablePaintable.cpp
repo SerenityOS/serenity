@@ -35,7 +35,7 @@ Layout::FormAssociatedLabelableNode& LabelablePaintable::layout_box()
     return static_cast<Layout::FormAssociatedLabelableNode&>(PaintableBox::layout_box());
 }
 
-LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned)
+LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary || !layout_box().dom_node().enabled())
         return DispatchEventOfSameName::No;
@@ -46,7 +46,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousedown
     return DispatchEventOfSameName::Yes;
 }
 
-LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const& position, unsigned button, unsigned)
+LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint position, unsigned button, unsigned)
 {
     if (!m_tracking_mouse || button != GUI::MouseButton::Primary || !layout_box().dom_node().enabled())
         return DispatchEventOfSameName::No;
@@ -61,7 +61,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mouseup(B
     return DispatchEventOfSameName::Yes;
 }
 
-LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const& position, unsigned, unsigned)
+LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint position, unsigned, unsigned)
 {
     if (!m_tracking_mouse || !layout_box().dom_node().enabled())
         return DispatchEventOfSameName::No;

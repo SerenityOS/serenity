@@ -222,7 +222,7 @@ void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, 
     m_underlying_painter.blit(a_rect.location(), outline_ellipse_bitmap, outline_ellipse_bitmap->rect(), color.alpha() / 255.);
 }
 
-void Gfx::AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color, BlendMode blend_mode)
+void Gfx::AntiAliasingPainter::fill_circle(IntPoint center, int radius, Color color, BlendMode blend_mode)
 {
     if (radius <= 0)
         return;

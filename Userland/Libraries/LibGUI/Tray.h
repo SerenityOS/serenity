@@ -45,7 +45,7 @@ private:
         Gfx::IntRect rect(Tray const&) const;
     };
 
-    Item* item_at(Gfx::IntPoint const&);
+    Item* item_at(Gfx::IntPoint);
 
     Vector<Item> m_items;
 

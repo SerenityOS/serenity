@@ -318,15 +318,15 @@ private:
 
 class ContextMenuEvent final : public Event {
 public:
-    explicit ContextMenuEvent(Gfx::IntPoint const& position, Gfx::IntPoint const& screen_position)
+    explicit ContextMenuEvent(Gfx::IntPoint position, Gfx::IntPoint screen_position)
         : Event(Event::ContextMenu)
         , m_position(position)
         , m_screen_position(screen_position)
     {
     }
 
-    Gfx::IntPoint const& position() const { return m_position; }
-    Gfx::IntPoint const& screen_position() const { return m_screen_position; }
+    Gfx::IntPoint position() const { return m_position; }
+    Gfx::IntPoint screen_position() const { return m_screen_position; }
 
 private:
     Gfx::IntPoint m_position;
@@ -410,7 +410,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, Gfx::IntPoint const& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y, int wheel_raw_delta_x, int wheel_raw_delta_y)
+    MouseEvent(Type type, Gfx::IntPoint position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y, int wheel_raw_delta_x, int wheel_raw_delta_y)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -423,7 +423,7 @@ public:
     {
     }
 
-    Gfx::IntPoint const& position() const { return m_position; }
+    Gfx::IntPoint position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
@@ -451,14 +451,14 @@ private:
 
 class DragEvent final : public Event {
 public:
-    DragEvent(Type type, Gfx::IntPoint const& position, Vector<String> mime_types)
+    DragEvent(Type type, Gfx::IntPoint position, Vector<String> mime_types)
         : Event(type)
         , m_position(position)
         , m_mime_types(move(mime_types))
     {
     }
 
-    Gfx::IntPoint const& position() const { return m_position; }
+    Gfx::IntPoint position() const { return m_position; }
     Vector<String> const& mime_types() const { return m_mime_types; }
 
 private:
@@ -468,11 +468,11 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(Gfx::IntPoint const&, String const& text, NonnullRefPtr<Core::MimeData> mime_data);
+    DropEvent(Gfx::IntPoint, String const& text, NonnullRefPtr<Core::MimeData> mime_data);
 
     ~DropEvent() = default;
 
-    Gfx::IntPoint const& position() const { return m_position; }
+    Gfx::IntPoint position() const { return m_position; }
     String const& text() const { return m_text; }
     Core::MimeData const& mime_data() const { return m_mime_data; }
 

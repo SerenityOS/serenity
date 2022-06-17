@@ -103,7 +103,7 @@ static void fill_core(int x, int y, Gfx::Bitmap& bitmap, Gfx::Color const& targe
     } while (prev_row_length != 0 && ++y < bitmap.height());
 }
 
-static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position, Color target_color, Color fill_color, int threshold)
+static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint start_position, Color target_color, Color fill_color, int threshold)
 {
     VERIFY(bitmap.bpp() == 32);
 

@@ -198,10 +198,10 @@ public:
 
     void check_hide_geometry_overlay(Window&);
 
-    void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
+    void start_window_resize(Window&, Gfx::IntPoint, MouseButton);
     void start_window_resize(Window&, MouseEvent const&);
     void start_window_move(Window&, MouseEvent const&);
-    void start_window_move(Window&, Gfx::IntPoint const&);
+    void start_window_move(Window&, Gfx::IntPoint);
 
     Window const* active_fullscreen_window() const
     {
@@ -263,7 +263,7 @@ public:
     }
     bool is_window_in_modal_stack(Window& window_in_modal_stack, Window& other_window);
 
-    Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint const& desired);
+    Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint desired);
 
     void reload_icon_bitmaps_after_scale_change();
 
@@ -424,7 +424,7 @@ private:
 
     bool is_considered_doubleclick(MouseEvent const&, DoubleClickInfo::ClickMetadata const&) const;
 
-    Gfx::IntPoint to_floating_cursor_position(Gfx::IntPoint const&) const;
+    Gfx::IntPoint to_floating_cursor_position(Gfx::IntPoint) const;
 
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };

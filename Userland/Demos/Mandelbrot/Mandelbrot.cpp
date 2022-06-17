@@ -55,7 +55,7 @@ public:
         calculate();
     }
 
-    void pan_by(Gfx::IntPoint const& delta)
+    void pan_by(Gfx::IntPoint delta)
     {
         auto relative_width_pixel = (m_x_end - m_x_start) / m_bitmap->width();
         auto relative_height_pixel = (m_y_end - m_y_start) / m_bitmap->height();
@@ -179,7 +179,7 @@ private:
         m_y_end = y_mid + aspect_corrected_y_length / 2;
     }
 
-    void move_contents_by(Gfx::IntPoint const& delta)
+    void move_contents_by(Gfx::IntPoint delta)
     {
         // If we're moving down we paint upwards, else we paint downwards, to
         // avoid overwriting.
@@ -223,7 +223,7 @@ class Mandelbrot : public GUI::Frame {
         In,
         Out,
     };
-    void zoom(Zoom in_out, Gfx::IntPoint const& center);
+    void zoom(Zoom in_out, Gfx::IntPoint center);
 
     void reset();
 
@@ -247,7 +247,7 @@ private:
     MandelbrotSet m_set;
 };
 
-void Mandelbrot::zoom(Zoom in_out, Gfx::IntPoint const& center)
+void Mandelbrot::zoom(Zoom in_out, Gfx::IntPoint center)
 {
     static constexpr double zoom_in_multiplier = 0.8;
     static constexpr double zoom_out_multiplier = 1.25;

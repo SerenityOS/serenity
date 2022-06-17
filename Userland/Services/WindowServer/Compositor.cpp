@@ -79,7 +79,7 @@ Gfx::Bitmap const& Compositor::front_bitmap_for_screenshot(Badge<ConnectionFromC
     return *screen.compositor_screen_data().m_front_bitmap;
 }
 
-Gfx::Color Compositor::color_at_position(Badge<ConnectionFromClient>, Screen& screen, Gfx::IntPoint const& position) const
+Gfx::Color Compositor::color_at_position(Badge<ConnectionFromClient>, Screen& screen, Gfx::IntPoint position) const
 {
     return screen.compositor_screen_data().m_front_bitmap->get_pixel(position);
 }

@@ -355,7 +355,7 @@ void Scrollbar::set_automatic_scrolling_active(bool active, Component pressed_co
     }
 }
 
-void Scrollbar::scroll_by_page(Gfx::IntPoint const& click_position)
+void Scrollbar::scroll_by_page(Gfx::IntPoint click_position)
 {
     float range_size = max() - min();
     float available = scrubbable_range_in_pixels();
@@ -371,7 +371,7 @@ void Scrollbar::scroll_by_page(Gfx::IntPoint const& click_position)
     }
 }
 
-void Scrollbar::scroll_to_position(Gfx::IntPoint const& click_position)
+void Scrollbar::scroll_to_position(Gfx::IntPoint click_position)
 {
     float range_size = max() - min();
     float available = scrubbable_range_in_pixels();
@@ -381,7 +381,7 @@ void Scrollbar::scroll_to_position(Gfx::IntPoint const& click_position)
     set_target_value(min() + rel_x_or_y * range_size);
 }
 
-Scrollbar::Component Scrollbar::component_at_position(Gfx::IntPoint const& position)
+Scrollbar::Component Scrollbar::component_at_position(Gfx::IntPoint position)
 {
     if (scrubber_rect().contains(position))
         return Component::Scrubber;

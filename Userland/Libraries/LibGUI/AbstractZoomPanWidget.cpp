@@ -34,7 +34,7 @@ void AbstractZoomPanWidget::scale_by(float delta)
     set_scale(new_scale);
 }
 
-void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint const& center)
+void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint center)
 {
     if (m_original_rect.is_null())
         return;
@@ -51,7 +51,7 @@ void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint const&
     set_scale(new_scale);
 }
 
-void AbstractZoomPanWidget::start_panning(Gfx::IntPoint const& position)
+void AbstractZoomPanWidget::start_panning(Gfx::IntPoint position)
 {
     m_saved_cursor = override_cursor();
     set_override_cursor(Gfx::StandardCursor::Drag);
@@ -66,7 +66,7 @@ void AbstractZoomPanWidget::stop_panning()
     set_override_cursor(m_saved_cursor);
 }
 
-void AbstractZoomPanWidget::pan_to(Gfx::IntPoint const& position)
+void AbstractZoomPanWidget::pan_to(Gfx::IntPoint position)
 {
     // NOTE: `position` here (and `m_pan_mouse_pos`) are both in frame coordinates, not
     // content coordinates, by design. The derived class should not have to keep track of
@@ -76,7 +76,7 @@ void AbstractZoomPanWidget::pan_to(Gfx::IntPoint const& position)
     relayout();
 }
 
-Gfx::FloatPoint AbstractZoomPanWidget::frame_to_content_position(Gfx::IntPoint const& frame_position) const
+Gfx::FloatPoint AbstractZoomPanWidget::frame_to_content_position(Gfx::IntPoint frame_position) const
 {
     return {
         (static_cast<float>(frame_position.x()) - m_content_rect.x()) / m_scale,
@@ -95,7 +95,7 @@ Gfx::FloatRect AbstractZoomPanWidget::frame_to_content_rect(Gfx::IntRect const& 
     return content_rect;
 }
 
-Gfx::FloatPoint AbstractZoomPanWidget::content_to_frame_position(Gfx::IntPoint const& content_position) const
+Gfx::FloatPoint AbstractZoomPanWidget::content_to_frame_position(Gfx::IntPoint content_position) const
 {
     return {
         m_content_rect.x() + content_position.x() * m_scale,

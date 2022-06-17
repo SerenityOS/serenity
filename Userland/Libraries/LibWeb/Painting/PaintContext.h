@@ -16,7 +16,7 @@ namespace Web {
 
 class PaintContext {
 public:
-    PaintContext(Gfx::Painter& painter, Palette const& palette, Gfx::IntPoint const& scroll_offset);
+    PaintContext(Gfx::Painter& painter, Palette const& palette, Gfx::IntPoint scroll_offset);
 
     Gfx::Painter& painter() const { return m_painter; }
     Palette const& palette() const { return m_palette; }

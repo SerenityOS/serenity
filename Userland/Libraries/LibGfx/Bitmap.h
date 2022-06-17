@@ -215,7 +215,7 @@ public:
     template<StorageFormat>
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
-    [[nodiscard]] Color get_pixel(IntPoint const& physical_position) const
+    [[nodiscard]] Color get_pixel(IntPoint physical_position) const
     {
         return get_pixel(physical_position.x(), physical_position.y());
     }
@@ -223,7 +223,7 @@ public:
     template<StorageFormat>
     void set_pixel(int physical_x, int physical_y, Color);
     void set_pixel(int physical_x, int physical_y, Color);
-    void set_pixel(IntPoint const& physical_position, Color color)
+    void set_pixel(IntPoint physical_position, Color color)
     {
         set_pixel(physical_position.x(), physical_position.y(), color);
     }

@@ -37,8 +37,8 @@ public:
 
 protected:
     virtual Color color_for(GUI::MouseEvent const& event);
-    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point);
-    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end);
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint point);
+    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint start, Gfx::IntPoint end);
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;

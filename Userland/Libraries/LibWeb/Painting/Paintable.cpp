@@ -10,22 +10,22 @@
 
 namespace Web::Painting {
 
-Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-Paintable::DispatchEventOfSameName Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (auto* containing_block = this->containing_block()) {
         if (!containing_block->is_scrollable())

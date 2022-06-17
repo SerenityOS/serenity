@@ -36,7 +36,7 @@ public:
     }
 
     void move_by(int dx, int dy);
-    void move_by(IntPoint const& delta)
+    void move_by(IntPoint delta)
     {
         move_by(delta.x(), delta.y());
     }
@@ -134,7 +134,7 @@ public:
         for (auto& rect : m_rects)
             rect.translate_by(dx, dy);
     }
-    void translate_by(Gfx::IntPoint const& delta)
+    void translate_by(Gfx::IntPoint delta)
     {
         for (auto& rect : m_rects)
             rect.translate_by(delta);

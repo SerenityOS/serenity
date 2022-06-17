@@ -18,9 +18,9 @@ public:
 
     virtual bool wants_mouse_events() const override;
     virtual DOM::Node* mouse_event_target() const override;
-    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned modifiers) override;
-    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned modifiers) override;
-    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers) override;
 
 private:
     explicit TextPaintable(Layout::TextNode const&);

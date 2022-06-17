@@ -29,7 +29,7 @@ private:
 
     Gfx::IntRect frame_inner_rect() const;
 
-    int value_at(Gfx::IntPoint const&) const;
+    int value_at(Gfx::IntPoint) const;
 
     bool m_dragging { false };
 };

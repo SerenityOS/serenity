@@ -51,7 +51,7 @@ String FloatPoint::to_string() const
 
 namespace IPC {
 
-bool encode(Encoder& encoder, Gfx::IntPoint const& point)
+bool encode(Encoder& encoder, Gfx::IntPoint point)
 {
     encoder << point.x() << point.y();
     return true;

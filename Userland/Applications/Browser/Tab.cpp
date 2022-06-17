@@ -257,7 +257,7 @@ Tab::Tab(BrowserWindow& window)
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
+    view().on_link_context_menu_request = [this](auto& url, auto screen_position) {
         m_link_context_menu_url = url;
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
@@ -284,7 +284,7 @@ Tab::Tab(BrowserWindow& window)
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+    view().on_image_context_menu_request = [this](auto& image_url, auto screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);
@@ -392,7 +392,7 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
     m_page_context_menu->add_action(window.inspect_dom_node_action());
-    view().on_context_menu_request = [&](auto& screen_position) {
+    view().on_context_menu_request = [&](auto screen_position) {
         m_page_context_menu->popup(screen_position);
     };
 }
@@ -505,7 +505,7 @@ void Tab::did_become_active()
     update_actions();
 }
 
-void Tab::context_menu_requested(Gfx::IntPoint const& screen_position)
+void Tab::context_menu_requested(Gfx::IntPoint const screen_position)
 {
     m_tab_context_menu->popup(screen_position);
 }

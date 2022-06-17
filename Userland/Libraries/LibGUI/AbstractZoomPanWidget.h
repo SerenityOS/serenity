@@ -21,21 +21,21 @@ public:
     void set_scale_bounds(float min_scale, float max_scale);
 
     void scale_by(float amount);
-    void scale_centered(float new_scale, Gfx::IntPoint const& center);
+    void scale_centered(float new_scale, Gfx::IntPoint center);
 
     bool is_panning() const { return m_is_panning; }
-    void start_panning(Gfx::IntPoint const& position);
+    void start_panning(Gfx::IntPoint position);
     void stop_panning();
 
-    void pan_to(Gfx::IntPoint const& position);
+    void pan_to(Gfx::IntPoint position);
 
     // Should be overridden by derived classes if they want updates.
     virtual void handle_relayout(Gfx::IntRect const&) { update(); }
     void relayout();
 
-    Gfx::FloatPoint frame_to_content_position(Gfx::IntPoint const& frame_position) const;
+    Gfx::FloatPoint frame_to_content_position(Gfx::IntPoint frame_position) const;
     Gfx::FloatRect frame_to_content_rect(Gfx::IntRect const& frame_rect) const;
-    Gfx::FloatPoint content_to_frame_position(Gfx::IntPoint const& content_position) const;
+    Gfx::FloatPoint content_to_frame_position(Gfx::IntPoint content_position) const;
     Gfx::FloatRect content_to_frame_rect(Gfx::IntRect const& content_rect) const;
 
     virtual void mousewheel_event(GUI::MouseEvent& event) override;

@@ -77,7 +77,7 @@ Color BrushTool::color_for(GUI::MouseEvent const& event)
     return m_editor->color_for(event);
 }
 
-void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
+void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint point)
 {
     for (int y = point.y() - size(); y < point.y() + size(); y++) {
         for (int x = point.x() - size(); x < point.x() + size(); x++) {
@@ -95,7 +95,7 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::In
     }
 }
 
-void BrushTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
+void BrushTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint start, Gfx::IntPoint end)
 {
     int length_x = end.x() - start.x();
     int length_y = end.y() - start.y();

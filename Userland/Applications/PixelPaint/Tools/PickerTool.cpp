@@ -16,7 +16,7 @@ namespace PixelPaint {
 
 void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
-    auto& position = event.layer_event().position();
+    auto position = event.layer_event().position();
 
     Color color;
     if (m_sample_all_layers) {

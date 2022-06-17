@@ -99,7 +99,7 @@ public:
     void crop(Gfx::IntRect const& rect);
     void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
 
-    Color color_at(Gfx::IntPoint const& point) const;
+    Color color_at(Gfx::IntPoint point) const;
 
 private:
     explicit Image(Gfx::IntSize const&);

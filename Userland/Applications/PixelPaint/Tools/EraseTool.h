@@ -24,7 +24,7 @@ public:
 
 protected:
     virtual Color color_for(GUI::MouseEvent const& event) override;
-    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point) override;
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint point) override;
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;

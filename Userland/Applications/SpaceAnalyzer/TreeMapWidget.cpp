@@ -258,7 +258,7 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-Vector<int> TreeMapWidget::path_to_position(Gfx::IntPoint const& position)
+Vector<int> TreeMapWidget::path_to_position(Gfx::IntPoint position)
 {
     TreeMapNode const* node = path_node(m_viewpoint);
     if (!node) {

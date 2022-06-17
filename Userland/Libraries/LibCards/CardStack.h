@@ -31,8 +31,8 @@ public:
     };
 
     CardStack();
-    CardStack(Gfx::IntPoint const& position, Type type);
-    CardStack(Gfx::IntPoint const& position, Type type, NonnullRefPtr<CardStack> associated_stack);
+    CardStack(Gfx::IntPoint position, Type type);
+    CardStack(Gfx::IntPoint position, Type type, NonnullRefPtr<CardStack> associated_stack);
 
     bool is_empty() const { return m_stack.is_empty(); }
     bool is_focused() const { return m_focused; }
@@ -51,7 +51,7 @@ public:
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
-    void add_all_grabbed_cards(Gfx::IntPoint const& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
+    void add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
     void draw(GUI::Painter&, Gfx::Color const& background_color);
     void clear();
 

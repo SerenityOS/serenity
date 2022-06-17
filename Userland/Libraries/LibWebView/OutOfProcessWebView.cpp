@@ -245,7 +245,7 @@ void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClien
     vertical_scrollbar().increase_slider_by(y_delta);
 }
 
-void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint const& scroll_position)
+void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
 {
     horizontal_scrollbar().set_value(scroll_position.x());
     vertical_scrollbar().set_value(scroll_position.y());
@@ -256,7 +256,7 @@ void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebCo
     scroll_into_view(rect, true, true);
 }
 
-void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, String const& title)
+void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, String const& title)
 {
     GUI::Application::the()->show_tooltip(title, nullptr);
 }
@@ -303,19 +303,19 @@ void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClien
         on_load_finish(url);
 }
 
-void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
+void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
 {
     if (on_context_menu_request)
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned)
+void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, String const&, unsigned)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, String const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (on_image_context_menu_request)
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);

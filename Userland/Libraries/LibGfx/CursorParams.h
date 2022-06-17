@@ -13,17 +13,17 @@ namespace Gfx {
 
 class CursorParams {
 public:
-    static CursorParams parse_from_filename(StringView, Gfx::IntPoint const&);
+    static CursorParams parse_from_filename(StringView, Gfx::IntPoint);
 
     CursorParams() = default;
 
-    CursorParams(Gfx::IntPoint const& hotspot)
+    CursorParams(Gfx::IntPoint hotspot)
         : m_hotspot(hotspot)
     {
     }
     CursorParams constrained(Gfx::Bitmap const&) const;
 
-    Gfx::IntPoint const& hotspot() const { return m_hotspot; }
+    Gfx::IntPoint hotspot() const { return m_hotspot; }
     unsigned frames() const { return m_frames; }
     unsigned frame_ms() const { return m_frame_ms; }
 

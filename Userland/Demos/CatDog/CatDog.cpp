@@ -128,7 +128,7 @@ void CatDog::paint_event(GUI::PaintEvent& event)
     painter.blit(Gfx::IntPoint(0, 0), *m_curr_bmp, m_curr_bmp->rect());
 }
 
-void CatDog::track_mouse_move(Gfx::IntPoint const& point)
+void CatDog::track_mouse_move(Gfx::IntPoint point)
 {
     if (!m_roaming)
         return;

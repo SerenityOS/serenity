@@ -35,7 +35,7 @@ public:
         AlphaSubtract
     };
 
-    void fill_circle(IntPoint const& center, int radius, Color, BlendMode blend_mode = BlendMode::Normal);
+    void fill_circle(IntPoint center, int radius, Color, BlendMode blend_mode = BlendMode::Normal);
     void fill_ellipse(IntRect const& a_rect, Color, BlendMode blend_mode = BlendMode::Normal);
 
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);

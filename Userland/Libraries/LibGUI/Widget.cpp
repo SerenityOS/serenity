@@ -656,7 +656,7 @@ Gfx::IntRect Widget::screen_relative_rect() const
     return window_relative_rect().translated(window_position);
 }
 
-Widget* Widget::child_at(Gfx::IntPoint const& point) const
+Widget* Widget::child_at(Gfx::IntPoint point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!is<Widget>(children()[i]))
@@ -670,7 +670,7 @@ Widget* Widget::child_at(Gfx::IntPoint const& point) const
     return nullptr;
 }
 
-Widget::HitTestResult Widget::hit_test(Gfx::IntPoint const& position, ShouldRespectGreediness should_respect_greediness)
+Widget::HitTestResult Widget::hit_test(Gfx::IntPoint position, ShouldRespectGreediness should_respect_greediness)
 {
     if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };

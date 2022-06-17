@@ -93,7 +93,7 @@ public:
     virtual Gfx::IntRect editing_rect(ModelIndex const& index) const { return content_rect(index); }
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const { return content_rect(index); }
 
-    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&) const { return {}; }
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint) const { return {}; }
     void begin_editing(ModelIndex const&);
     void stop_editing();
 

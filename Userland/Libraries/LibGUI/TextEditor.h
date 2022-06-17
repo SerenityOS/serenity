@@ -207,7 +207,7 @@ public:
 
     int number_of_visible_lines() const;
     Gfx::IntRect cursor_content_rect() const;
-    TextPosition text_position_at_content_position(Gfx::IntPoint const&) const;
+    TextPosition text_position_at_content_position(Gfx::IntPoint) const;
 
     void delete_text_range(TextRange);
 
@@ -246,7 +246,7 @@ protected:
     Gfx::IntRect ruler_content_rect(size_t line) const;
     Gfx::IntRect gutter_content_rect(size_t line) const;
 
-    TextPosition text_position_at(Gfx::IntPoint const&) const;
+    TextPosition text_position_at(Gfx::IntPoint) const;
     bool ruler_visible() const { return m_ruler_visible; }
     bool gutter_visible() const { return m_gutter_visible; }
     Gfx::IntRect content_rect_for_position(TextPosition const&) const;

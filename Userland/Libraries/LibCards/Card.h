@@ -41,7 +41,7 @@ public:
 
     Gfx::IntRect& rect() { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }
-    Gfx::IntPoint const& old_position() const { return m_old_position; }
+    Gfx::IntPoint old_position() const { return m_old_position; }
     uint8_t value() const { return m_value; };
     Suit suit() const { return m_suit; }
 

@@ -22,10 +22,10 @@ public:
     explicit EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
     ~EventHandler();
 
-    bool handle_mouseup(Gfx::IntPoint const&, unsigned button, unsigned modifiers);
-    bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned modifiers);
-    bool handle_mousemove(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_mouseup(Gfx::IntPoint, unsigned button, unsigned modifiers);
+    bool handle_mousedown(Gfx::IntPoint, unsigned button, unsigned modifiers);
+    bool handle_mousemove(Gfx::IntPoint, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(Gfx::IntPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);

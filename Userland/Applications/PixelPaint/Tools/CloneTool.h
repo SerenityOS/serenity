@@ -19,8 +19,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
 protected:
-    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point) override;
-    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end) override;
+    virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint point) override;
+    virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint start, Gfx::IntPoint end) override;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;

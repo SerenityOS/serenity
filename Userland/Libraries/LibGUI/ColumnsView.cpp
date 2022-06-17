@@ -206,7 +206,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position) const
+ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint a_position) const
 {
     if (!model())
         return {};

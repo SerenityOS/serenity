@@ -26,7 +26,7 @@ public:
     void invalidate_applet(Window const& applet, Gfx::IntRect const& rect);
     void relayout();
 
-    void set_position(Gfx::IntPoint const&);
+    void set_position(Gfx::IntPoint);
 
     Window* window() { return m_window; }
     Window const* window() const { return m_window; }

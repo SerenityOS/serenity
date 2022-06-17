@@ -24,7 +24,7 @@
 
 namespace PixelPaint {
 
-void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, int thickness, int corner_radius)
+void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint start_position, Gfx::IntPoint end_position, int thickness, int corner_radius)
 {
     Gfx::IntRect rect;
     if (m_draw_mode == DrawMode::FromCenter) {
