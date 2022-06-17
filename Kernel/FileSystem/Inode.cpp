@@ -348,6 +348,10 @@ ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace
             if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
                 continue;
 
+            // Locks with the same owner can't conflict with each other.
+            if (lock.pid == Process::current().pid())
+                continue;
+
             if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {
                 lookup = { lock.type, SEEK_SET, lock.start, lock.len, lock.pid };
                 return copy_to_user(reference_lock, &lookup);
