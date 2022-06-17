@@ -13,6 +13,32 @@
 
 namespace Compress {
 
+enum class ZlibCompressionMethod : u8 {
+    Deflate = 8,
+};
+
+enum class ZlibCompressionLevel : u8 {
+    Fastest,
+    Fast,
+    Default,
+    Best,
+};
+
+struct ZlibHeader {
+    union {
+        struct {
+            ZlibCompressionMethod compression_method : 4;
+            u8 compression_info : 4;
+
+            u8 check_bits : 5;
+            bool present_dictionary : 1;
+            ZlibCompressionLevel compression_level : 2;
+        };
+        NetworkOrdered<u16> as_u16;
+    };
+};
+static_assert(sizeof(ZlibHeader) == sizeof(u16));
+
 class Zlib {
 public:
     Optional<ByteBuffer> decompress();
