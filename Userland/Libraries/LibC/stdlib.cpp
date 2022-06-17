@@ -133,7 +133,7 @@ private:
         if (is_below_cutoff) {
             return true;
         } else {
-            return m_num == m_cutoff && digit < m_max_digit_after_cutoff;
+            return m_num == m_cutoff && digit <= m_max_digit_after_cutoff;
         }
     }
 
