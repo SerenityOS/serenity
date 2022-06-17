@@ -276,7 +276,11 @@ void Scrollbar::on_automatic_scrolling_timer_fired()
         }
         return;
     }
-    m_gutter_click_state = GutterClickState::NotPressed;
+    if (m_gutter_click_state != GutterClickState::NotPressed) {
+        m_gutter_click_state = GutterClickState::NotPressed;
+        update();
+        return;
+    }
 }
 
 void Scrollbar::mousedown_event(MouseEvent& event)
