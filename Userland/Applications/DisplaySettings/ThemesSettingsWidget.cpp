@@ -17,11 +17,6 @@
 
 namespace DisplaySettings {
 
-static inline String current_system_theme()
-{
-    return GUI::ConnectionToWindowServer::the().get_system_theme();
-}
-
 ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     : m_background_settings_changed { background_settings_changed }
 {
@@ -29,7 +24,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     m_themes = Gfx::list_installed_system_themes();
 
     size_t current_theme_index;
-    auto current_theme_name = current_system_theme();
+    auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
     auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
     m_theme_names.ensure_capacity(m_themes.size());
     for (auto& theme_meta : m_themes) {
@@ -65,7 +60,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
             return;
         }
 
-        auto current_theme_name = current_system_theme();
+        auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
         size_t index = 0;
         for (auto& theme_meta : m_themes) {
@@ -81,7 +76,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
 
 void ThemesSettingsWidget::apply_settings()
 {
-    if (m_selected_theme && m_selected_theme->name != current_system_theme())
+    if (m_selected_theme && m_selected_theme->name != GUI::ConnectionToWindowServer::the().get_system_theme())
         VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed));
     m_background_settings_changed = false;
 }
