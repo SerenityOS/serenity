@@ -46,7 +46,7 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip
+          sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.5.1
       - name: Install Python dependencies
