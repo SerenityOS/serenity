@@ -869,6 +869,10 @@ void TextEditor::keydown_event(KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Tab) {
         if (has_selection()) {
+            if (event.modifiers() == Mod_Shift) {
+                unindent_selection();
+                return;
+            }
             if (is_indenting_selection()) {
                 indent_selection();
                 return;
@@ -985,6 +989,23 @@ void TextEditor::indent_selection()
         m_selection.set_start({ selection_start.line(), selection_start.column() + m_soft_tab_width });
         m_selection.set_end({ selection_end.line(), selection_end.column() + m_soft_tab_width });
         set_cursor({ m_cursor.line(), m_cursor.column() + m_soft_tab_width });
+    }
+}
+
+void TextEditor::unindent_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    if (current_line().first_non_whitespace_column() != 0) {
+        if (current_line().first_non_whitespace_column() > m_soft_tab_width && selection_start.column() != 0) {
+            m_selection.set_start({ selection_start.line(), selection_start.column() - m_soft_tab_width });
+            m_selection.set_end({ selection_end.line(), selection_end.column() - m_soft_tab_width });
+        } else if (selection_start.column() != 0) {
+            m_selection.set_start({ selection_start.line(), selection_start.column() - current_line().leading_spaces() });
+            m_selection.set_end({ selection_end.line(), selection_end.column() - current_line().leading_spaces() });
+        }
+        execute<UnindentSelection>(m_soft_tab_width, TextRange(selection_start, selection_end));
     }
 }
 
