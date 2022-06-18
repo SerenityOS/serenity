@@ -123,8 +123,52 @@ void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, 
     draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
+void Gfx::AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Gfx::Color color, int thickness)
+{
+    // AA circles don't really work below a radius of 2px.
+    if (thickness < 4)
+        return m_underlying_painter.draw_line(point1, point2, color, thickness, Painter::LineStyle::Dotted);
+
+    auto draw_spaced_dots = [&](int start, int end, auto to_point) {
+        int step = thickness * 2;
+        if (start > end)
+            swap(start, end);
+        int delta = end - start;
+        int dots = delta / step;
+        if (dots == 0)
+            return;
+        int fudge_per_dot = 0;
+        int extra_fudge = 0;
+        if (dots > 3) {
+            // Fudge the numbers so the last dot is drawn at the `end' point (otherwise you can get lines cuts short).
+            // You need at least a handful of dots to do this.
+            int fudge = delta % step;
+            fudge_per_dot = fudge / dots;
+            extra_fudge = fudge % dots;
+        }
+        for (int dot = start; dot <= end; dot += (step + fudge_per_dot + (extra_fudge > 0))) {
+            fill_circle(to_point(dot), thickness / 2, color);
+            --extra_fudge;
+        }
+    };
+
+    if (point1.y() == point2.y()) {
+        draw_spaced_dots(point1.x(), point2.x(), [&](int dot_x) {
+            return IntPoint { dot_x, point1.y() };
+        });
+    } else if (point1.x() == point2.x()) {
+        draw_spaced_dots(point1.y(), point2.y(), [&](int dot_y) {
+            return IntPoint { point1.x(), dot_y };
+        });
+    } else {
+        TODO();
+    }
+}
+
 void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
 {
+    if (style == Painter::LineStyle::Dotted)
+        return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
     draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
