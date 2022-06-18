@@ -471,12 +471,9 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     if (!validate_stack_size(arguments, environment))
         return E2BIG;
 
-    // FIXME: split_view() currently allocates (Vector) without checking for failure.
-    auto parts = path->view().split_view('/');
-    if (parts.is_empty())
-        return ENOENT;
+    auto last_part = path->view().find_last_split_view('/');
 
-    auto new_process_name = TRY(KString::try_create(parts.last()));
+    auto new_process_name = TRY(KString::try_create(last_part));
     auto new_main_thread_name = TRY(new_process_name->try_clone());
 
     auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
