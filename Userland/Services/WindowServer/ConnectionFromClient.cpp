@@ -804,6 +804,27 @@ Messages::WindowServer::GetSystemThemeResponse ConnectionFromClient::get_system_
     return name;
 }
 
+Messages::WindowServer::SetSystemThemeOverrideResponse ConnectionFromClient::set_system_theme_override(Core::AnonymousBuffer const& theme_override)
+{
+    bool success = WindowManager::the().set_theme_override(theme_override);
+    return success;
+}
+
+Messages::WindowServer::GetSystemThemeOverrideResponse ConnectionFromClient::get_system_theme_override()
+{
+    return WindowManager::the().get_theme_override();
+}
+
+void ConnectionFromClient::clear_system_theme_override()
+{
+    WindowManager::the().clear_theme_override();
+}
+
+Messages::WindowServer::IsSystemThemeOverriddenResponse ConnectionFromClient::is_system_theme_overridden()
+{
+    return WindowManager::the().is_theme_overridden();
+}
+
 void ConnectionFromClient::apply_cursor_theme(String const& name)
 {
     WindowManager::the().apply_cursor_theme(name);

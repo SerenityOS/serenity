@@ -5,6 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -231,8 +232,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
     // 9. Let mergedFields be ? CalendarMergeFields(calendar, fields, inputFields).
     auto* merged_fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *input_fields));
 
-    // 10. Let mergedFieldNames be CalendarMergeFieldNames(receiverFieldNames, inputFieldNames).
-    auto merged_field_names = calendar_merge_field_names(receiver_field_names, input_field_names);
+    // 10. Let mergedFieldNames be MergeLists(receiverFieldNames, inputFieldNames).
+    auto merged_field_names = merge_lists(receiver_field_names, input_field_names);
 
     // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
     merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, Vector<StringView> {}));

@@ -71,6 +71,8 @@ private:
 
     Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
 
+    void draw_dotted_line(IntPoint, IntPoint, Gfx::Color, int thickness);
+
     enum class AntiAliasPolicy {
         OnlyEnds,
         Full,

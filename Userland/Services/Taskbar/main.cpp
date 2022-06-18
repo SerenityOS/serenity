@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,7 @@
 #include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MenuItem.h>
 #include <LibGUI/Process.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
@@ -240,6 +242,17 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
             ++theme_identifier;
         }
     }
+
+    GUI::Application::the()->on_theme_change = [&]() {
+        if (g_themes_menu->is_visible())
+            return;
+        auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
+        auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
+        for (size_t index = 0; index < g_themes.size(); ++index) {
+            auto* action = g_themes_menu->action_at(index);
+            action->set_checked(!theme_overridden && action->text() == current_theme_name);
+        }
+    };
 
     system_menu->add_action(GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         GUI::Process::spawn_or_show_error(window_ref.get(), "/bin/Settings"sv);

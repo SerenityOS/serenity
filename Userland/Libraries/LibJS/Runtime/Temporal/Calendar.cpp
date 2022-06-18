@@ -997,32 +997,4 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_ob
     return merged;
 }
 
-// 12.2.41 CalendarMergeFieldNames ( receiverFieldNames, inputFieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefieldnames
-Vector<String> calendar_merge_field_names(Vector<String> const& receiver_field_names, Vector<String> const& input_field_names)
-{
-    // 1. Let merged be a new empty List.
-    Vector<String> merged;
-
-    // 2. For each element name of receiverFieldNames, do
-    for (auto const& field_name : receiver_field_names) {
-        // a. If merged does not contain name, then
-        if (!merged.contains_slow(field_name)) {
-            // i. Append name to merged.
-            merged.append(field_name);
-        }
-    }
-
-    // 3. For each element name of inputFieldNames, do
-    for (auto const& field_name : input_field_names) {
-        // a. If merged does not contain name, then
-        if (!merged.contains_slow(field_name)) {
-            // i. Append name to merged.
-            merged.append(field_name);
-        }
-    }
-
-    // 4. Return merged.
-    return merged;
-}
-
 }
