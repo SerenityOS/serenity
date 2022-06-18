@@ -1511,7 +1511,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     return RoundedDuration { .duration_record = duration, .remainder = remainder };
 }
 
-// 7.5.26 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
+// 7.5.26 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
 ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object)
 {
     auto& vm = global_object.vm();
