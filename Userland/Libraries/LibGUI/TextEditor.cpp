@@ -867,6 +867,15 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
+    if (event.key() == KeyCode::Key_Tab) {
+        if (has_selection()) {
+            if (is_indenting_selection()) {
+                indent_selection();
+                return;
+            }
+        }
+    }
+
     if (event.key() == KeyCode::Key_Delete) {
         if (!is_editable())
             return;
@@ -950,6 +959,33 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     event.ignore();
+}
+
+bool TextEditor::is_indenting_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+    auto const whole_line_selected = selection_end.column() - selection_start.column() >= current_line().length() - current_line().first_non_whitespace_column();
+    auto const on_same_line = selection_start.line() == selection_end.line();
+
+    if (has_selection() && (whole_line_selected || !on_same_line)) {
+        return true;
+    }
+
+    return false;
+}
+
+void TextEditor::indent_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    if (is_indenting_selection()) {
+        execute<IndentSelection>(m_soft_tab_width, TextRange(selection_start, selection_end));
+        m_selection.set_start({ selection_start.line(), selection_start.column() + m_soft_tab_width });
+        m_selection.set_end({ selection_end.line(), selection_end.column() + m_soft_tab_width });
+        set_cursor({ m_cursor.line(), m_cursor.column() + m_soft_tab_width });
+    }
 }
 
 void TextEditor::delete_previous_word()
@@ -1444,7 +1480,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
 {
     ReflowDeferrer defer(*this);
     VERIFY(is_editable());
-    if (has_selection())
+    if (has_selection() && !is_indenting_selection())
         delete_selection();
 
     // Check if adding a newline leaves the previous line as just whitespace.
@@ -1453,7 +1489,8 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         && clear_length > 0
         && current_line().leading_spaces() == clear_length;
 
-    execute<InsertTextCommand>(text, m_cursor);
+    if (!is_indenting_selection())
+        execute<InsertTextCommand>(text, m_cursor);
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
         auto const original_cursor_position = cursor();

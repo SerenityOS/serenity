@@ -259,4 +259,16 @@ private:
     String m_action_text;
 };
 
+class IndentSelection : public TextDocumentUndoCommand {
+public:
+    IndentSelection(TextDocument&, size_t tab_width, TextRange const&);
+    virtual void undo() override;
+    virtual void redo() override;
+    TextRange const& range() const { return m_range; }
+
+private:
+    size_t m_tab_width { 0 };
+    TextRange m_range;
+};
+
 }
