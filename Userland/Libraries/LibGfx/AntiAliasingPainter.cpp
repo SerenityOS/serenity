@@ -15,10 +15,12 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Path.h>
 
+namespace Gfx {
+
 // Base algorithm from https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm,
 // because there seems to be no other known method for drawing AA'd lines (?)
-template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy>
-void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color)
+template<AntiAliasingPainter::AntiAliasPolicy policy>
+void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color)
 {
     // FIXME: Implement this :P
     VERIFY(style == Painter::LineStyle::Solid);
@@ -118,12 +120,12 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
     draw_line(mapped_from.x(), mapped_from.y(), mapped_to.x(), mapped_to.y());
 }
 
-void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
+void AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
 {
     draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
-void Gfx::AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Gfx::Color color, int thickness)
+void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
 {
     // AA circles don't really work below a radius of 2px.
     if (thickness < 4)
@@ -165,19 +167,19 @@ void Gfx::AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2
     }
 }
 
-void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
+void AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
 {
     if (style == Painter::LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
     draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
-void Gfx::AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)
+void AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)
 {
     Detail::fill_path<Detail::FillPathMode::AllowFloatingPoints>(*this, path, color, rule);
 }
 
-void Gfx::AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
+void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
     FloatPoint cursor;
 
@@ -215,28 +217,28 @@ void Gfx::AntiAliasingPainter::stroke_path(Path const& path, Color color, float 
     }
 }
 
-void Gfx::AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
 {
-    Gfx::Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
-    Gfx::Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
-    Gfx::Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
+    Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, int thickness)
+void AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, int thickness)
 {
     // FIXME: Come up with an allocation-free version of this!
     // Using draw_line() for segments of an ellipse was attempted but gave really poor results :^(
@@ -250,7 +252,7 @@ void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, 
     auto color_no_alpha = color;
     color_no_alpha.set_alpha(255);
     auto outline_ellipse_bitmap = ({
-        auto bitmap = Gfx::Bitmap::try_create(BitmapFormat::BGRA8888, a_rect.size());
+        auto bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, a_rect.size());
         if (bitmap.is_error())
             return warnln("Failed to allocate temporary bitmap for antialiased outline ellipse!");
         bitmap.release_value();
@@ -259,21 +261,21 @@ void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, 
     auto outer_rect = a_rect;
     outer_rect.set_location({ 0, 0 });
     auto inner_rect = outer_rect.shrunken(thickness * 2, thickness * 2);
-    Gfx::Painter painter { outline_ellipse_bitmap };
+    Painter painter { outline_ellipse_bitmap };
     AntiAliasingPainter aa_painter { painter };
     aa_painter.fill_ellipse(outer_rect, color_no_alpha);
     aa_painter.fill_ellipse(inner_rect, color_no_alpha, BlendMode::AlphaSubtract);
     m_underlying_painter.blit(a_rect.location(), outline_ellipse_bitmap, outline_ellipse_bitmap->rect(), color.alpha() / 255.);
 }
 
-void Gfx::AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color, BlendMode blend_mode)
+void AntiAliasingPainter::fill_circle(IntPoint const& center, int radius, Color color, BlendMode blend_mode)
 {
     if (radius <= 0)
         return;
     draw_ellipse_part(center, radius, radius, color, false, {}, blend_mode);
 }
 
-void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color, BlendMode blend_mode)
+void AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color, BlendMode blend_mode)
 {
     auto center = a_rect.center();
     auto radius_a = a_rect.width() / 2;
@@ -287,7 +289,7 @@ void Gfx::AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color, 
     draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range, blend_mode);
 }
 
-Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
+AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
     IntPoint center, int radius_a, int radius_b, Color color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode)
 {
     /*
@@ -475,12 +477,12 @@ Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
     return Range { min_paint_x, max_paint_x };
 }
 
-void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int radius)
+void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int radius)
 {
     fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius);
 }
 
-void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
+void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
 {
     fill_rect_with_rounded_corners(a_rect, color,
         { top_left_radius, top_left_radius },
@@ -489,7 +491,7 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         { bottom_left_radius, bottom_left_radius });
 }
 
-void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode)
+void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode)
 {
     if (!top_left && !top_right && !bottom_right && !bottom_left) {
         if (blend_mode == BlendMode::Normal)
@@ -561,11 +563,11 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         m_underlying_painter.fill_rect(left_rect, color);
         m_underlying_painter.fill_rect(inner, color);
     } else if (blend_mode == BlendMode::AlphaSubtract) {
-        m_underlying_painter.clear_rect(top_rect, Gfx::Color());
-        m_underlying_painter.clear_rect(right_rect, Gfx::Color());
-        m_underlying_painter.clear_rect(bottom_rect, Gfx::Color());
-        m_underlying_painter.clear_rect(left_rect, Gfx::Color());
-        m_underlying_painter.clear_rect(inner, Gfx::Color());
+        m_underlying_painter.clear_rect(top_rect, Color());
+        m_underlying_painter.clear_rect(right_rect, Color());
+        m_underlying_painter.clear_rect(bottom_rect, Color());
+        m_underlying_painter.clear_rect(left_rect, Color());
+        m_underlying_painter.clear_rect(inner, Color());
     }
 
     auto fill_corner = [&](auto const& ellipse_center, auto const& corner_point, CornerRadius const& corner) {
@@ -583,4 +585,6 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         fill_corner(bottom_left_corner, bounding_rect.bottom_left(), bottom_left);
     if (bottom_right)
         fill_corner(bottom_right_corner, bounding_rect.bottom_right(), bottom_right);
+}
+
 }
