@@ -20,8 +20,8 @@ public:
     virtual ~SectionNode() override = default;
 
     SectionNode(String section, String name)
-        : m_section(section)
-        , m_full_name(String::formatted("{}. {}", section, name))
+        : m_section(move(section))
+        , m_name(move(name))
     {
     }
 
@@ -32,18 +32,20 @@ public:
     }
 
     virtual Node const* parent() const override { return nullptr; }
-    virtual String name() const override { return m_full_name; }
+    virtual String name() const override;
+    String const& section_name() const { return m_section; }
+    virtual String path() const;
+
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);
 
-    String const& section_name() const { return m_section; }
-    String path() const;
+protected:
+    String m_section;
+    String m_name;
 
 private:
     void reify_if_needed() const;
 
-    String m_section;
-    String m_full_name;
     mutable NonnullRefPtrVector<Node> m_children;
     mutable bool m_reified { false };
     bool m_open { false };

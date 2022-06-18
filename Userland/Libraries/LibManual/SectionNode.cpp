@@ -18,6 +18,11 @@ String SectionNode::path() const
     return String::formatted("/usr/share/man/man{}", m_section);
 }
 
+String SectionNode::name() const
+{
+    return String::formatted("{}. {}", m_section, m_name);
+}
+
 void SectionNode::reify_if_needed() const
 {
     if (m_reified)
