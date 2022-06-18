@@ -21,7 +21,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
-    TRY(Core::System::unveil("/res", "r"));
+    // FIXME: We should really allow the web content client to set these up before we lock the veil.
+    TRY(Core::System::unveil("/res", "r"));           // test pages
+    TRY(Core::System::unveil("/usr/share/man", "r")); // Help
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
