@@ -232,6 +232,12 @@ void Inode::did_remove_child(InodeIdentifier, StringView name)
 
 void Inode::did_modify_contents()
 {
+    // FIXME: What happens if this fails?
+    //        ENOTIMPL would be a meaningless error to return here
+    auto time = kgettimeofday().to_truncated_seconds();
+    (void)set_mtime(time);
+    (void)set_ctime(time);
+
     m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);
     });

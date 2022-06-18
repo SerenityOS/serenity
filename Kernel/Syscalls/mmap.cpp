@@ -600,7 +600,6 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
         // FIXME: Handle MS_ASYNC
         TRY(inode_vmobject.sync(offset / PAGE_SIZE, rounded_size / PAGE_SIZE));
         // FIXME: Handle MS_INVALIDATE
-        // FIXME: If msync() causes any write to a file, the file's st_ctime and st_mtime fields shall be marked for update.
     }
     return 0;
 }
