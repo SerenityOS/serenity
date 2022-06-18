@@ -47,7 +47,10 @@ Optional<String> ManualModel::page_name(const GUI::ModelIndex& index) const
     if (!node->is_page())
         return {};
     auto* page = static_cast<Manual::PageNode const*>(node);
-    return page->name();
+    auto path = page->name();
+    if (path.is_error())
+        return {};
+    return path.release_value();
 }
 
 Optional<String> ManualModel::page_path(const GUI::ModelIndex& index) const
@@ -159,7 +162,9 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
                 return DeprecatedString(page.release_value());
         return {};
     case GUI::ModelRole::Display:
-        return node->name();
+        if (auto name = node->name(); !name.is_error())
+            return name.release_value();
+        return {};
     case GUI::ModelRole::Icon:
         if (node->is_page())
             return m_page_icon;

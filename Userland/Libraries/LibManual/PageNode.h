@@ -25,7 +25,7 @@ public:
 
     virtual NonnullRefPtrVector<Node>& children() const override;
     virtual Node const* parent() const override;
-    virtual String name() const override { return m_page; };
+    virtual ErrorOr<String> name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
 
     ErrorOr<String> path() const;

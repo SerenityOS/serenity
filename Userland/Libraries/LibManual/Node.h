@@ -22,7 +22,7 @@ public:
 
     virtual NonnullRefPtrVector<Node>& children() const = 0;
     virtual Node const* parent() const = 0;
-    virtual String name() const = 0;
+    virtual ErrorOr<String> name() const = 0;
     virtual bool is_page() const { return false; }
     virtual bool is_open() const { return false; }
 };

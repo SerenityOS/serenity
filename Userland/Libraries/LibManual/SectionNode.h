@@ -19,7 +19,7 @@ public:
 
     SectionNode(StringView section, StringView name)
         : m_section(MUST(String::from_utf8(section)))
-        , m_full_name(MUST(String::formatted("{}. {}", section, name)))
+        , m_name(MUST(String::from_utf8(name)))
     {
     }
 
@@ -30,18 +30,20 @@ public:
     }
 
     virtual Node const* parent() const override { return nullptr; }
-    virtual String name() const override { return m_full_name; }
+    virtual ErrorOr<String> name() const override;
+    String const& section_name() const { return m_section; }
+    ErrorOr<String> path() const;
+
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);
 
-    String const& section_name() const { return m_section; }
-    ErrorOr<String> path() const;
+protected:
+    String m_section;
+    String m_name;
 
 private:
     ErrorOr<void> reify_if_needed() const;
 
-    String m_section;
-    String m_full_name;
     mutable NonnullRefPtrVector<Node> m_children;
     mutable bool m_reified { false };
     bool m_open { false };

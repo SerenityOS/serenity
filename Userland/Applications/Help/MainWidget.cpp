@@ -307,6 +307,7 @@ void MainWidget::open_page(Optional<String> const& path)
         m_web_view->load_empty_document();
         return;
     }
+    dbgln("open page: {}", path.value());
     open_url(URL::create_with_url_or_path(path.value().to_deprecated_string()));
 }
 
