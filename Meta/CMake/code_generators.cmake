@@ -78,8 +78,8 @@ function(compile_jakt source)
     )
     get_property(JAKT_INCLUDE_DIR TARGET Lagom::jakt PROPERTY IMPORTED_INCLUDE_DIRECTORIES)
     set_source_files_properties("${output}" PROPERTIES
-        INCLUDE_DIRECTORIES "${JAKT_INCLUDE_DIR};${JAKT_INCLUDE_DIR}/runtime"
-        COMPILE_FLAGS "-Wno-unused-local-typedefs")
+        INCLUDE_DIRECTORIES "${JAKT_INCLUDE_DIR}/runtime"
+        COMPILE_OPTIONS "-Wno-unused-local-typedefs;-Wno-unused-function")
     get_filename_component(output_name ${output} NAME)
     add_custom_target(generate_${output_name} DEPENDS ${output})
     add_dependencies(all_generated generate_${output_name})

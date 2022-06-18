@@ -35,5 +35,6 @@ if (NOT jakt_POPULATED)
     install(DIRECTORY "${jakt_SOURCE_DIR}/runtime"
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jakt
             FILES_MATCHING PATTERN "*.h"
-                           PATTERN "*.cpp")
+                           PATTERN "*.cpp"
+                           PATTERN "utility")
 endif()
