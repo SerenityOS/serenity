@@ -127,6 +127,14 @@ public:
 
     [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
 
+    [[nodiscard]] StringView find_last_split_view(char separator) const
+    {
+        auto begin = find_last(separator);
+        if (!begin.has_value())
+            return *this;
+        return substring_view(begin.release_value() + 1);
+    }
+
     template<VoidFunction<StringView> Callback>
     void for_each_split_view(char separator, bool keep_empty, Callback callback) const
     {

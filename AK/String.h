@@ -159,6 +159,8 @@ public:
     using SearchDirection = StringUtils::SearchDirection;
     [[nodiscard]] Optional<size_t> find_any_of(StringView needles, SearchDirection direction) const { return StringUtils::find_any_of(*this, needles, direction); }
 
+    [[nodiscard]] StringView find_last_split_view(char separator) const { return view().find_last_split_view(separator); }
+
     [[nodiscard]] String substring(size_t start, size_t length) const;
     [[nodiscard]] String substring(size_t start) const;
     [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
