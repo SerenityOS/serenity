@@ -359,6 +359,22 @@ ErrorOr<int> run_in_desktop_mode()
         window);
     copy_action->set_enabled(false);
 
+    auto set_background_action
+        = GUI::Action::create(
+            "Set as Desktop &Wallpaper",
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-image.png").release_value_but_fixme_should_propagate_errors(),
+            [&](GUI::Action const&) {
+                if(!directory_view->selected_file_paths().is_empty()) {
+                    auto bitmap_data = Gfx::Bitmap::try_load_from_file(directory_view->selected_file_paths()[0]);
+
+                    if (!bitmap_data.is_error() && !GUI::Desktop::the().set_wallpaper(bitmap_data.release_value(), directory_view->selected_file_paths()[0])) {
+                        dbgln("Failed to set wallpaper: {}", directory_view->selected_file_paths()[0]);
+                    }
+                }
+            },
+            window);
+
+
     auto create_archive_action
         = GUI::Action::create(
             "Create &Archive",
@@ -459,6 +475,7 @@ ErrorOr<int> run_in_desktop_mode()
     TRY(desktop_context_menu->try_add_action(cut_action));
     TRY(desktop_context_menu->try_add_action(copy_action));
     TRY(desktop_context_menu->try_add_action(paste_action));
+    TRY(desktop_context_menu->try_add_action(set_background_action));
     TRY(desktop_context_menu->try_add_action(directory_view->delete_action()));
     TRY(desktop_context_menu->try_add_action(directory_view->rename_action()));
     TRY(desktop_context_menu->try_add_separator());
@@ -480,9 +497,12 @@ ErrorOr<int> run_in_desktop_mode()
                 if (added_open_menu_items)
                     file_context_menu->add_separator();
 
+                set_background_action->set_enabled(Gfx::Bitmap::is_path_a_supported_image_format(node.full_path()));
+
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
+                file_context_menu->add_action(set_background_action);
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
                 file_context_menu->add_action(create_archive_action);
@@ -856,6 +876,21 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         },
         window);
 
+    auto set_background_action
+        = GUI::Action::create(
+            "Set as Desktop &Wallpaper",
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-image.png").release_value_but_fixme_should_propagate_errors(),
+            [&](GUI::Action const&) {
+                if (!directory_view->selected_file_paths().is_empty()) {
+                    auto bitmap_data = Gfx::Bitmap::try_load_from_file(directory_view->selected_file_paths()[0]);
+
+                    if (!bitmap_data.is_error() && !GUI::Desktop::the().set_wallpaper(bitmap_data.release_value(), directory_view->selected_file_paths()[0])) {
+                        dbgln("Failed to set wallpaper: {}", directory_view->selected_file_paths()[0]);
+                    }
+                }
+            },
+            window);
+
     auto folder_specific_paste_action = GUI::CommonActions::make_paste_action(
         [&](GUI::Action const& action) {
             String target_directory;
@@ -1171,9 +1206,13 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
                 if (added_launch_file_handlers)
                     file_context_menu->add_separator();
 
+
+                set_background_action->set_enabled(Gfx::Bitmap::is_path_a_supported_image_format(node.full_path()));
+
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
+                file_context_menu->add_action(set_background_action);
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
                 file_context_menu->add_action(shortcut_action);
