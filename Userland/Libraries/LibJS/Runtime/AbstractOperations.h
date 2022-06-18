@@ -136,6 +136,35 @@ ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_obje
     return global_object.heap().allocate<T>(global_object, forward<Args>(args)..., *prototype);
 }
 
+// 14.1 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists
+template<typename T>
+Vector<T> merge_lists(Vector<T> const& a, Vector<T> const& b)
+{
+    // 1. Let merged be a new empty List.
+    Vector<T> merged;
+
+    // 2. For each element element of a, do
+    for (auto const& element : a) {
+        // a. If merged does not contain element, then
+        if (!merged.contains_slow(element)) {
+            // i. Append element to merged.
+            merged.append(element);
+        }
+    }
+
+    // 3. For each element element of b, do
+    for (auto const& element : b) {
+        // a. If merged does not contain element, then
+        if (!merged.contains_slow(element)) {
+            // i. Append element to merged.
+            merged.append(element);
+        }
+    }
+
+    // 4. Return merged.
+    return merged;
+}
+
 // x modulo y, https://tc39.es/ecma262/#eqn-modulo
 template<typename T, typename U>
 auto modulo(T x, U y) requires(IsArithmetic<T>, IsArithmetic<U>)

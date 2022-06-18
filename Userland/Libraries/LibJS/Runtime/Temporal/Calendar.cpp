@@ -997,32 +997,4 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_ob
     return merged;
 }
 
-// 12.2.41 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists
-Vector<String> merge_lists(Vector<String> const& a, Vector<String> const& b)
-{
-    // 1. Let merged be a new empty List.
-    Vector<String> merged;
-
-    // 2. For each element element of a, do
-    for (auto const& element : a) {
-        // a. If merged does not contain element, then
-        if (!merged.contains_slow(element)) {
-            // i. Append element to merged.
-            merged.append(element);
-        }
-    }
-
-    // 3. For each element element of b, do
-    for (auto const& element : b) {
-        // a. If merged does not contain element, then
-        if (!merged.contains_slow(element)) {
-            // i. Append element to merged.
-            merged.append(element);
-        }
-    }
-
-    // 4. Return merged.
-    return merged;
-}
-
 }
