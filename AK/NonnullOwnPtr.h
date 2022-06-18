@@ -135,12 +135,6 @@ public:
         return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 
-    bool operator==(NonnullOwnPtr const& other) const { return m_ptr == other.m_ptr; }
-    bool operator!=(NonnullOwnPtr const& other) const { return m_ptr != other.m_ptr; }
-
-    bool operator==(NonnullOwnPtr& other) { return m_ptr == other.m_ptr; }
-    bool operator!=(NonnullOwnPtr& other) { return m_ptr != other.m_ptr; }
-
 private:
     void clear()
     {
