@@ -287,7 +287,7 @@ void HTMLScriptElement::prepare_script()
                 begin_delaying_document_load_event(*parser_document);
 
             ResourceLoader::the().load(
-                request,
+                request, document().url(),
                 [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {
                         dbgln("HTMLScriptElement: Failed to load {}", url);

@@ -105,7 +105,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
 
             // 5. Fetch request, with processResponseEndOfBody given response res set to finalize and report timing with res, the element's node document's relevant global object, and "object".
             //    Fetching the resource must delay the load event of the element's node document until the task that is queued by the networking task source once the resource has been fetched (defined next) has been run.
-            set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+            set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request, document().url()));
 
             // 6. If the resource is not yet available (e.g. because the resource was not available in the cache, so that loading the resource required making a request over the network), then jump to the step below labeled fallback. The task that is queued by the networking task source once the resource is available must restart this algorithm from this step. Resources can load incrementally; user agents may opt to consider a resource "available" whenever enough data has been obtained to begin processing the resource.
 

@@ -187,12 +187,18 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (!request.headers().contains("Accept"))
         request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    auto* document = browsing_context().active_document();
+    auto* container_document = browsing_context().container_document();
+    auto origin_url = document ? document->url() : container_document ? container_document->url()
+                                                                      : url;
+    // It's safe to load a page with itself as the origin if we're not inside an iframe.
+    if (type != Type::IFrame)
+        origin_url = url;
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request, origin_url));
 
     if (type == Type::IFrame)
         return true;
 
-    auto* document = browsing_context().active_document();
     if (document && document->has_active_favicon())
         return true;
 
@@ -204,7 +210,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         favicon_url.set_paths({ "favicon.ico" });
 
         ResourceLoader::the().load(
-            favicon_url,
+            favicon_url, url,
             [this, favicon_url](auto data, auto&, auto) {
                 // Always fetch the current document
                 auto* document = this->browsing_context().active_document();
@@ -272,7 +278,7 @@ void FrameLoader::set_error_page_url(String error_page_url)
 void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error)
 {
     ResourceLoader::the().load(
-        s_error_page_url,
+        s_error_page_url, s_error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;

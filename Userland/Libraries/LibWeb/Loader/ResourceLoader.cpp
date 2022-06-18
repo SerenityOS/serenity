@@ -82,7 +82,7 @@ void ResourceLoader::preconnect(AK::URL const& url)
 
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
 
-RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest& request)
+RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest& request, AK::URL const& load_origin_uri)
 {
     if (!request.is_valid())
         return nullptr;
@@ -108,6 +108,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
 
     load(
         request,
+        load_origin_uri,
         [=](auto data, auto& headers, auto status_code) {
             const_cast<Resource&>(*resource).did_load({}, data, headers, status_code);
         },
@@ -138,7 +139,7 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
+void ResourceLoader::load(LoadRequest& request, AK::URL const& load_origin_uri, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
 {
     auto& url = request.url();
     request.start_timer();
@@ -146,7 +147,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
     emit_signpost(String::formatted("Starting load: {}", url_for_logging), id);
-    dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
+    dbgln("ResourceLoader: Starting load of: \"{}\" from {}", url_for_logging, load_origin_uri);
 
     auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
@@ -213,6 +214,12 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     }
 
     if (url.protocol() == "file") {
+        if (load_origin_uri.protocol() != "file") {
+            log_failure(request, "file:// resources can only be loaded by a file:// document");
+            if (error_callback)
+                error_callback("file:// resources can only be loaded by a file:// document", {});
+            return;
+        }
         auto file_result = Core::File::open(url.path(), Core::OpenMode::ReadOnly);
         if (file_result.is_error()) {
             auto& error = file_result.error();
@@ -298,11 +305,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
+void ResourceLoader::load(const AK::URL& url, AK::URL const& load_origin_uri, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
 {
     LoadRequest request;
     request.set_url(url);
-    load(request, move(success_callback), move(error_callback), timeout);
+    load(request, load_origin_uri, move(success_callback), move(error_callback), timeout);
 }
 
 bool ResourceLoader::is_port_blocked(int port)

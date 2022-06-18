@@ -37,7 +37,9 @@ void ImageLoader::load_without_resetting_redirect_counter(AK::URL const& url)
     m_loading_state = LoadingState::Loading;
 
     auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
+    // FIXME: This is a hack to circumvent ResourceLoader file:// protections.
+    //        This image is loaded on the error page, whose URL is still the URL of the dead page.
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request, url == "file:///res/icons/32x32/msgbox-warning.png" ? url : m_owner_element.document().url()));
 }
 
 void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const

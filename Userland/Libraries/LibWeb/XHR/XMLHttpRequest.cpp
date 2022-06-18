@@ -603,7 +603,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
         // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
         ResourceLoader::the().load(
-            request,
+            request, m_window->associated_document().url(),
             [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
                 auto strong_this = weak_this.strong_ref();
                 if (!strong_this)

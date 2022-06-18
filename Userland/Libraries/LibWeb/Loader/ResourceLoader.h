@@ -67,10 +67,10 @@ public:
     static void initialize(RefPtr<ResourceLoaderConnector>);
     static ResourceLoader& the();
 
-    RefPtr<Resource> load_resource(Resource::Type, LoadRequest&);
+    RefPtr<Resource> load_resource(Resource::Type, LoadRequest&, AK::URL const& load_origin_uri);
 
-    void load(LoadRequest&, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {});
-    void load(const AK::URL&, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {});
+    void load(LoadRequest&, AK::URL const& load_origin_uri, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {});
+    void load(AK::URL const&, AK::URL const& load_origin_uri, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {});
 
     ResourceLoaderConnector& connector() { return *m_connector; }
 

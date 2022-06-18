@@ -46,7 +46,7 @@ public:
     {
         LoadRequest request;
         request.set_url(move(url));
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request, style_computer.document().url()));
     }
 
     virtual ~FontLoader() override { }

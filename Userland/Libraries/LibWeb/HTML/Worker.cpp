@@ -198,6 +198,8 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     ResourceLoader::the().load(
         url,
+        // FIXME: What is the worker's origin?
+        m_document->url(),
         [this, is_shared, is_top_level, url, &outside_port](auto data, auto&, auto) {
             // In both cases, to perform the fetch given request, perform the following steps if the is top-level flag is set:
             if (is_top_level) {

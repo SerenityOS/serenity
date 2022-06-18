@@ -36,7 +36,7 @@ void HTMLLinkElement::inserted()
         // NOTE: Mark this element as delaying the document load event *before* calling set_resource()
         //       as it may trigger a synchronous resource_did_load() callback.
         m_document_load_event_delayer.emplace(document());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request, document().url()));
 
         // NOTE: If we ended up not loading a resource for whatever reason, don't delay the load event.
         if (!resource())
@@ -47,7 +47,7 @@ void HTMLLinkElement::inserted()
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
         request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
-        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request, document().url());
     } else if (m_relationship & Relationship::DNSPrefetch) {
         ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
@@ -55,7 +55,7 @@ void HTMLLinkElement::inserted()
     } else if (m_relationship & Relationship::Icon) {
         auto favicon_url = document().parse_url(href());
         auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, document().page());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, favicon_request));
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, favicon_request, document().url()));
     }
 }
 
