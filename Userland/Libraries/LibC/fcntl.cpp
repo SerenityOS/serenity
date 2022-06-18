@@ -104,6 +104,13 @@ int posix_fadvise(int fd, off_t offset, off_t len, int advice)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_fallocate.html
+int posix_fallocate(int fd, off_t offset, off_t len)
+{
+    // posix_fallocate does not set errno.
+    return static_cast<int>(syscall(SC_posix_fallocate, fd, &offset, &len));
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/utimensat.html
 int utimensat(int dirfd, char const* path, struct timespec const times[2], int flag)
 {

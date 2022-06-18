@@ -243,6 +243,7 @@ set(KERNEL_SOURCES
     Syscalls/emuctl.cpp
     Syscalls/execve.cpp
     Syscalls/exit.cpp
+    Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
     Syscalls/fork.cpp
     Syscalls/fsync.cpp
