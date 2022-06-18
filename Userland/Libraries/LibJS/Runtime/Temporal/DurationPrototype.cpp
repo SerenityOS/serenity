@@ -425,8 +425,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 24. Let balanceResult be ? BalanceDurationRelative(adjustResult.[[Years]], adjustResult.[[Months]], adjustResult.[[Weeks]], adjustResult.[[Days]], largestUnit, relativeTo).
     auto balance_result = TRY(balance_duration_relative(global_object, adjust_result.years, adjust_result.months, adjust_result.weeks, adjust_result.days, *largest_unit, relative_to));
 
-    // 25. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
-    // TODO: The spec doesn't check the type of relativeTo here and relativeTo can be undefined.
+    // 25. If Type(relativeTo) is Object and relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
         auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(relative_to.as_object());
 
@@ -483,10 +482,12 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     // 9. Let intermediate be undefined.
     ZonedDateTime* intermediate = nullptr;
 
-    // 10. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
+    // 10. If Type(relativeTo) is Object and relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
+        auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(relative_to.as_object());
+
         // a. Set intermediate to ? MoveRelativeZonedDateTime(relativeTo, unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], 0).
-        intermediate = TRY(move_relative_zoned_date_time(global_object, static_cast<ZonedDateTime&>(relative_to.as_object()), unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
+        intermediate = TRY(move_relative_zoned_date_time(global_object, relative_to_zoned_date_time, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
     }
 
     // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
