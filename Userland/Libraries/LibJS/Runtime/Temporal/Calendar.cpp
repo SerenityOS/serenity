@@ -997,27 +997,27 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_ob
     return merged;
 }
 
-// 12.2.41 CalendarMergeFieldNames ( receiverFieldNames, inputFieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefieldnames
-Vector<String> calendar_merge_field_names(Vector<String> const& receiver_field_names, Vector<String> const& input_field_names)
+// 12.2.41 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists
+Vector<String> merge_lists(Vector<String> const& a, Vector<String> const& b)
 {
     // 1. Let merged be a new empty List.
     Vector<String> merged;
 
-    // 2. For each element name of receiverFieldNames, do
-    for (auto const& field_name : receiver_field_names) {
-        // a. If merged does not contain name, then
-        if (!merged.contains_slow(field_name)) {
-            // i. Append name to merged.
-            merged.append(field_name);
+    // 2. For each element element of a, do
+    for (auto const& element : a) {
+        // a. If merged does not contain element, then
+        if (!merged.contains_slow(element)) {
+            // i. Append element to merged.
+            merged.append(element);
         }
     }
 
-    // 3. For each element name of inputFieldNames, do
-    for (auto const& field_name : input_field_names) {
-        // a. If merged does not contain name, then
-        if (!merged.contains_slow(field_name)) {
-            // i. Append name to merged.
-            merged.append(field_name);
+    // 3. For each element element of b, do
+    for (auto const& element : b) {
+        // a. If merged does not contain element, then
+        if (!merged.contains_slow(element)) {
+            // i. Append element to merged.
+            merged.append(element);
         }
     }
 
