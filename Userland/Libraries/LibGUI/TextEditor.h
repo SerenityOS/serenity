@@ -153,6 +153,7 @@ public:
     virtual void redo();
     bool is_indenting_selection();
     void indent_selection();
+    void unindent_selection();
 
     Function<void()> on_change;
     Function<void(bool modified)> on_modified_change;

@@ -959,6 +959,35 @@ void IndentSelection::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
+UnindentSelection::UnindentSelection(TextDocument& document, size_t tab_width, TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_tab_width(tab_width)
+    , m_range(range)
+{
+}
+
+void UnindentSelection::redo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).leading_spaces() >= m_tab_width)
+            m_document.remove({ { i, 0 }, { i, m_tab_width } });
+        else
+            m_document.remove({ { i, 0 }, { i, m_document.line(i).leading_spaces() } });
+    }
+
+    m_document.set_all_cursors(m_range.start());
+}
+
+void UnindentSelection::undo()
+{
+    auto const tab = String::repeated(' ', m_tab_width);
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
+        m_document.insert_at({ i, 0 }, tab, m_client);
+
+    m_document.set_all_cursors(m_range.start());
+}
+
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)
 {
     TextPosition cursor = position;
