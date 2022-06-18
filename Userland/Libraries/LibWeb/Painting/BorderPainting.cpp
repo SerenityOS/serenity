@@ -133,6 +133,11 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
             p2.translate_by(int_width / 2, -int_width / 2);
             break;
         }
+        if (border_style == CSS::LineStyle::Dotted) {
+            Gfx::AntiAliasingPainter aa_painter { context.painter() };
+            aa_painter.draw_line(p1.to_type<float>(), p2.to_type<float>(), color, int_width, gfx_line_style);
+            return;
+        }
         context.painter().draw_line(p1, p2, color, int_width, gfx_line_style);
         return;
     }
