@@ -151,6 +151,8 @@ public:
     void select_current_line();
     virtual void undo();
     virtual void redo();
+    bool is_indenting_selection();
+    void indent_selection();
 
     Function<void()> on_change;
     Function<void(bool modified)> on_modified_change;
