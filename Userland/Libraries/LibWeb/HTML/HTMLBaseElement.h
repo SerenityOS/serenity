@@ -17,6 +17,9 @@ public:
     HTMLBaseElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLBaseElement() override;
 
+    String href() const;
+    void set_href(String const& href);
+
     AK::URL const& frozen_base_url() const { return m_frozen_base_url; }
 
     virtual void inserted() override;
