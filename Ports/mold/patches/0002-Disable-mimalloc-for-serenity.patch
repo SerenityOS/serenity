@@ -10,7 +10,7 @@ That's one yak too far for right now.
  1 file changed, 2 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index 18262a1..98c26cc 100644
+index 946c952..dc8563d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -60,6 +60,8 @@ endif

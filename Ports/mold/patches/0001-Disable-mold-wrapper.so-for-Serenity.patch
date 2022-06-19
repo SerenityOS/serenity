@@ -10,7 +10,7 @@ implemented in the Serenity DynamicLoader.
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index e2d7cd9..18262a1 100644
+index 844d149..946c952 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -119,7 +119,7 @@ ifeq ($(OS), Linux)
