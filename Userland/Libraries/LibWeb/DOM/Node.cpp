@@ -81,8 +81,8 @@ Node::~Node()
 // https://dom.spec.whatwg.org/#dom-node-baseuri
 String Node::base_uri() const
 {
-    // FIXME: Return this’s node document’s document base URL, serialized.
-    return document().url_string();
+    // Return this’s node document’s document base URL, serialized.
+    return document().base_url().to_string();
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
