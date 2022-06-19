@@ -181,6 +181,11 @@ void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)
     s_hack_studio_widget->set_current_editor_wrapper(wrapper);
 }
 
+void show_file_title_modified()
+{
+    s_hack_studio_widget->update_file_title_after_modified();
+}
+
 Locator& locator()
 {
     return s_hack_studio_widget->locator();

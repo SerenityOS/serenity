@@ -1120,6 +1120,12 @@ void HackStudioWidget::set_current_editor_tab_widget(RefPtr<GUI::TabWidget> tab_
     m_current_editor_tab_widget = tab_widget;
 }
 
+void HackStudioWidget::update_file_title_after_modified()
+{
+    update_current_editor_title();
+    update_window_title();
+}
+
 void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_wrapper)
 {
     m_current_editor_wrapper = editor_wrapper;

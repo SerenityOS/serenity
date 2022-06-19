@@ -49,6 +49,7 @@ public:
     EditorWrapper const& current_editor_wrapper() const;
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
     void set_current_editor_tab_widget(RefPtr<GUI::TabWidget>);
+    void update_file_title_after_modified();
 
     GUI::TabWidget& current_editor_tab_widget();
     GUI::TabWidget const& current_editor_tab_widget() const;
@@ -160,6 +161,7 @@ private:
     void update_tree_view();
     void update_window_title();
     void update_current_editor_title();
+
     void on_cursor_change();
     void file_renamed(String const& old_name, String const& new_name);
 
