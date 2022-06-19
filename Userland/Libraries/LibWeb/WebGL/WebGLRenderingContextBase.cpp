@@ -12,7 +12,7 @@
 namespace Web::WebGL {
 
 WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-    : m_canvas_element(canvas_element)
+    : RefCountForwarder(canvas_element)
     , m_context(move(context))
     , m_context_creation_parameters(move(context_creation_parameters))
     , m_actual_context_parameters(move(actual_context_parameters))
@@ -67,15 +67,23 @@ void WebGLRenderingContextBase::present()
     }
 }
 
+HTML::HTMLCanvasElement& WebGLRenderingContextBase::canvas_element()
+{
+    return ref_count_target();
+}
+
+HTML::HTMLCanvasElement const& WebGLRenderingContextBase::canvas_element() const
+{
+    return ref_count_target();
+}
+
 void WebGLRenderingContextBase::needs_to_present()
 {
     m_should_present = true;
 
-    if (!m_canvas_element)
+    if (!canvas_element().layout_node())
         return;
-    if (!m_canvas_element->layout_node())
-        return;
-    m_canvas_element->layout_node()->set_needs_display();
+    canvas_element().layout_node()->set_needs_display();
 }
 
 void WebGLRenderingContextBase::set_error(GLenum error)
