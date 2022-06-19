@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/RefCountForwarder.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGL/GLContext.h>
@@ -16,7 +16,7 @@
 namespace Web::WebGL {
 
 class WebGLRenderingContextBase
-    : public RefCounted<WebGLRenderingContextBase>
+    : public RefCountForwarder<HTML::HTMLCanvasElement>
     , public Weakable<WebGLRenderingContextBase> {
 public:
     virtual ~WebGLRenderingContextBase();
@@ -63,8 +63,6 @@ protected:
     WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
 
 private:
-    WeakPtr<HTML::HTMLCanvasElement> m_canvas_element;
-
     NonnullOwnPtr<GL::GLContext> m_context;
 
     // https://www.khronos.org/registry/webgl/specs/latest/1.0/#context-creation-parameters
@@ -86,6 +84,9 @@ private:
     bool m_should_present { true };
 
     GLenum m_error { GL_NO_ERROR };
+
+    HTML::HTMLCanvasElement& canvas_element();
+    HTML::HTMLCanvasElement const& canvas_element() const;
 
     void needs_to_present();
     void set_error(GLenum error);
