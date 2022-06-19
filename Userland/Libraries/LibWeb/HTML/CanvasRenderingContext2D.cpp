@@ -25,11 +25,26 @@
 namespace Web::HTML {
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(HTMLCanvasElement& element)
-    : m_element(element)
+    : RefCountForwarder(element)
 {
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
+
+HTMLCanvasElement& CanvasRenderingContext2D::canvas_element()
+{
+    return ref_count_target();
+}
+
+HTMLCanvasElement const& CanvasRenderingContext2D::canvas_element() const
+{
+    return ref_count_target();
+}
+
+NonnullRefPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding() const
+{
+    return canvas_element();
+}
 
 void CanvasRenderingContext2D::set_fill_style(String style)
 {
@@ -263,24 +278,19 @@ void CanvasRenderingContext2D::rotate(float radians)
 void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
-    if (!m_element)
+    if (!canvas_element().layout_node())
         return;
-    if (!m_element->layout_node())
-        return;
-    m_element->layout_node()->set_needs_display();
+    canvas_element().layout_node()->set_needs_display();
 }
 
 OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
 {
-    if (!m_element)
-        return {};
-
-    if (!m_element->bitmap()) {
-        if (!m_element->create_bitmap())
+    if (!canvas_element().bitmap()) {
+        if (!canvas_element().create_bitmap())
             return {};
     }
 
-    return make<Gfx::Painter>(*m_element->bitmap());
+    return make<Gfx::Painter>(*canvas_element().bitmap());
 }
 
 void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
@@ -468,9 +478,9 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
     auto image_data = ImageData::create_with_size(wrapper()->global_object(), width, height);
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
-    if (!m_element || !m_element->bitmap())
+    if (!canvas_element().bitmap())
         return image_data;
-    auto const& bitmap = *m_element->bitmap();
+    auto const& bitmap = *canvas_element().bitmap();
 
     // 5. Let the source rectangle be the rectangle whose corners are the four points (sx, sy), (sx+sw, sy), (sx+sw, sy+sh), (sx, sy+sh).
     auto source_rect = Gfx::Rect { x, y, width, height };
