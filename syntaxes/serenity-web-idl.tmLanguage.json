@@ -882,7 +882,7 @@
     },
     "argument-list": {
       "name": "meta.argument-list.idl",
-      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(((?:optional\\s+)?\\g<TypeWithExtendedAttributes>(?:\\.\\.\\.)?\\s+[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:\\s*=\\s*[^,);]+)?))((?:,\\s*\\g<5>)*)",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(((?:\\g<ExtendedAttributes>\\s+)?(?:optional\\s+)?\\g<TypeWithExtendedAttributes>(?:\\.\\.\\.)?\\s+[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:\\s*=\\s*[^,);]+)?))((?:,\\s*\\g<5>)*)",
       "captures": {
         "4": {
           "patterns": [
@@ -917,42 +917,49 @@
     },
     "argument": {
       "name": "meta.argument.idl",
-      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:(optional)\\s+(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*(.*))?)|(?:(\\g<TypeWithExtendedAttributes>)(\\.\\.\\.)?\\s+(([_-]?[A-Za-z][0-9A-Z_a-z-]*)))",
+      "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:(?:(\\g<ExtendedAttributes>)\\s+)?(optional)\\s+(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*(.*))?)|(?:(\\g<TypeWithExtendedAttributes>)(\\.\\.\\.)?\\s+(([_-]?[A-Za-z][0-9A-Z_a-z-]*)))",
       "captures": {
         "4": {
-          "name": "storage.modifier.specifier.optional.idl"
+          "patterns": [
+            {
+              "include": "#extended-attribute-list"
+            }
+          ]
         },
         "5": {
+          "name": "storage.modifier.specifier.optional.idl"
+        },
+        "6": {
           "patterns": [
             {
               "include": "#type-with-extended-attributes"
             }
           ]
         },
-        "6": {
+        "7": {
           "name": "variable.parameter.idl"
         },
-        "7": {
+        "8": {
           "name": "keyword.operator.assignment.idl"
         },
-        "8": {
+        "9": {
           "patterns": [
             {
               "include": "#default"
             }
           ]
         },
-        "9": {
+        "10": {
           "patterns": [
             {
               "include": "#type-with-extended-attributes"
             }
           ]
         },
-        "10": {
+        "11": {
           "name": "punctuation.ellipsis.idl"
         },
-        "11": {
+        "12": {
           "name": "variable.parameter.idl"
         }
       }
