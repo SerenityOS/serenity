@@ -38,8 +38,6 @@ The GML formatter needs to save the file in order to format it, so formatting an
 
 ### Web-IDL
 
-- Only the last argument in a row is recognized.
-- Argument lists don't fully obey the comma rules.
 - Extended attribute highlighting may not be spec-compliant.
 
 ## Contributing

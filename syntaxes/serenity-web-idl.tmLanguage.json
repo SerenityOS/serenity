@@ -228,7 +228,7 @@
           "include": "#comment"
         },
         {
-          "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}\\b(?:(required)\\s+)?(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*([^;]+))?(;)",
+          "match": "(?<TypeWithExtendedAttributes>(?<ExtendedAttributes>\\[\\g<ExtendedAttributes>?[^\\[\\]]+\\g<ExtendedAttributes>?\\]\\s*)?(?<Type>(?:(?:\\(\\g<TypeWithExtendedAttributes>(?:\\s+or\\s+\\g<TypeWithExtendedAttributes>)+\\))|(?:\\b(?:unrestricted\\s+)?(?:float|double))|(?:\\b(?:unsigned\\s+)?(?:(?:long(?:\\s+long)?)|short))|(?:\\b[_-]?[A-Za-z][0-9A-Z_a-z-]*(?:<\\g<TypeWithExtendedAttributes>(?:,\\s+\\g<TypeWithExtendedAttributes>)?>)?))\\??)){0}(?:\\b(required)\\s+)?(\\g<TypeWithExtendedAttributes>)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(?:\\s*(=)\\s*([^;]+))?(;)",
           "captures": {
             "4": {
               "name": "storage.modifier.specifier.required.idl"
@@ -383,14 +383,26 @@
           "begin": "\\b(\\w+)\\s*(=)",
           "end": "(,)|(?=\\])",
           "beginCaptures": {
-            "1": { "name": "variable.parameter.attribute.idl" },
-            "2": { "name": "keyword.assignment.idl" },
-            "3": { "name": "constant.other.attribute.idl" }
+            "1": {
+              "name": "variable.parameter.attribute.idl"
+            },
+            "2": {
+              "name": "keyword.assignment.idl"
+            },
+            "3": {
+              "name": "constant.other.attribute.idl"
+            }
           },
           "endCaptures": {
-            "1": { "name": "punctuation.separator.delimiter.comma.idl" }
+            "1": {
+              "name": "punctuation.separator.delimiter.comma.idl"
+            }
           },
-          "patterns": [{ "include": "#extended-attribute-values" }]
+          "patterns": [
+            {
+              "include": "#extended-attribute-values"
+            }
+          ]
         },
         {
           "match": "\\b\\w+\\b",
@@ -408,8 +420,16 @@
           "name": "constant.other.attribute.tuple.idl",
           "begin": "\\(",
           "end": "\\)",
-          "beginCaptures": { "0": { "name": "punctuation.bracket.begin.idl" } },
-          "endCaptures": { "0": { "name": "punctuation.bracket.end.idl" } },
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.bracket.begin.idl"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.bracket.end.idl"
+            }
+          },
           "patterns": [
             {
               "include": "#extended-attribute-values"
