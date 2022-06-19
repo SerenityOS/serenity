@@ -232,7 +232,7 @@
   },
   {
     "quote": "science man make picture of bright light",
-    "author":"Andrew Kaster",
+    "author": "Andrew Kaster",
     "url": "https://discord.com/channels/830522505605283862/831544568767578162/959570790393733160",
     "utc_time": 1648849904,
     "context": "Explaining state-of-the-art astronomy research"
@@ -242,5 +242,11 @@
     "author": "Andrew Kaster",
     "url": "https://discord.com/channels/830522505605283862/831544568767578162/959571489076690994",
     "utc_time": 1648850070
+  },
+  {
+    "quote": "This is a test quote, I'm trying to restore the /quote feature to the Discord bot. If you see this in a PR, please close it immediately and inform @kleinesfilmroellchen.",
+    "author": "kleines Filmröllchen",
+    "url": "https://discord.com/channels/870263083686330378/870263085586321489/988100986155446273",
+    "utc_time": 1655652634
   }
 ]
