@@ -32,6 +32,8 @@ class [[nodiscard]] RefPtr {
     friend class RefPtr;
     template<typename U>
     friend class WeakPtr;
+    template<typename U>
+    friend class NonnullRefPtr;
 
 public:
     enum AdoptTag {
@@ -269,6 +271,16 @@ public:
 
     bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
     bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
+
+    template<typename U>
+    bool operator==(NonnullRefPtr<U> const& other) const { return as_ptr() == other.m_ptr; }
+    template<typename U>
+    bool operator!=(NonnullRefPtr<U> const& other) const { return as_ptr() != other.m_ptr; }
+
+    template<typename U>
+    bool operator==(NonnullRefPtr<U>& other) { return as_ptr() == other.m_ptr; }
+    template<typename U>
+    bool operator!=(NonnullRefPtr<U>& other) { return as_ptr() != other.m_ptr; }
 
     bool operator==(const T* other) const { return as_ptr() == other; }
     bool operator!=(const T* other) const { return as_ptr() != other; }
