@@ -17,3 +17,12 @@
 
 - Fixed GML formatting behavior. A temporary file is used instead of saving the file in order to avoid formatting loops.
 - Fixes to IPC and GML syntax highlighting mostly aimed at better compatibility with more themes.
+
+## 0.2.0
+
+- Add Web-Idl language support
+
+## 0.2.1
+
+- [IDL] Fix an issue with Unions in dictionaries 
+- [IDL] Fix ExtendedAttributes before optional arguments
