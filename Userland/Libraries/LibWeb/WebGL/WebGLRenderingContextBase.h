@@ -23,6 +23,8 @@ public:
 
     void present();
 
+    NonnullRefPtr<HTML::HTMLCanvasElement> canvas_for_binding() const;
+
     bool is_context_lost() const;
 
     Optional<Vector<String>> get_supported_extensions() const;

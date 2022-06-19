@@ -77,6 +77,11 @@ HTML::HTMLCanvasElement const& WebGLRenderingContextBase::canvas_element() const
     return ref_count_target();
 }
 
+NonnullRefPtr<HTML::HTMLCanvasElement> WebGLRenderingContextBase::canvas_for_binding() const
+{
+    return canvas_element();
+}
+
 void WebGLRenderingContextBase::needs_to_present()
 {
     m_should_present = true;

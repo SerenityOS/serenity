@@ -1,3 +1,4 @@
+#import <HTML/HTMLCanvasElement.idl>
 #import <WebGL/Types.idl>
 
 dictionary WebGLContextAttributes {
@@ -17,6 +18,9 @@ interface mixin WebGLRenderingContextBase {
     //       This is because context loss is handled manually on a function by function basis instead of having to add it to the
     //       IDL code generator. This also allows us to handle the return type ourselves instead of adding the complexity of the
     //       code generator working out the return type and returning the appropriate value to return on context loss.
+
+    // FIXME: The type should be (HTMLCanvasElement or OffscreenCanvas).
+    [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 
     boolean isContextLost();
 
