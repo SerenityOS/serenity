@@ -4,12 +4,13 @@ Syntax highlighting for SerenityOS' Domain Specific Languages:
 
 - `.ipc`: Endpoint specification for the Inter Process Communication protocol.
 - `.gml`: Graphical Markup Language for creating SerenityOS GUI application layouts.
+- `.idl`: [Web-IDL](https://webidl.spec.whatwg.org/) which SerenityOS's LibWeb directly uses to generate web API bindings.
 
 ## Features
 
 Provides TextMate Grammar-based syntax highlighting for the IPC and GML languages. Syntax highlighting is mostly compliant with SerenityOS' own syntax highlighters (in the case of GML) and code generators (in the case of IPC).
 
-Additionally it provides TextMate Grammar-based syntax highlighting for (Web-IDL)[https://webidl.spec.whatwg.org/] with all extensions to it that SerenityOS uses.
+Additionally it provides TextMate Grammar-based syntax highlighting for [Web-IDL](https://webidl.spec.whatwg.org/) with all extensions to it that SerenityOS uses.
 
 ### GML syntax highlighting
 
@@ -18,6 +19,10 @@ Additionally it provides TextMate Grammar-based syntax highlighting for (Web-IDL
 ### IPC syntax highlighting
 
 ![](./img/ipc-highlight.png)
+
+### Web IDL syntax highlighting
+
+![](./img/idl-highlight.png)
 
 ### GML formatting
 
@@ -33,10 +38,9 @@ The GML formatter needs to save the file in order to format it, so formatting an
 
 ### Web-IDL
 
-Only the last argument in a row is recognised....
-Argument lists don't fully obey the comma rules
-
-Extended-Attributes are not differentiated
+- Only the last argument in a row is recognized.
+- Argument lists don't fully obey the comma rules.
+- Extended attribute highlighting may not be spec-compliant.
 
 ## Contributing
 
@@ -45,3 +49,4 @@ I always appreciate help with developing this extension. Here's some things you 
 - [File an issue](https://github.com/kleinesfilmroellchen/serenity-dsl-syntaxhighlight/issues/new) on GitHub if something doesn't work as expected or if you are missing a feature. This is especially important when Serenity changes features of the DSLs (which doesn't happen often but can in theory do so at any time).
 - Help with the Shell syntax highlighting, which is currently stalling around [on the shell branch](https://github.com/kleinesfilmroellchen/serenity-dsl-syntaxhighlight/tree/shell).
 - Improve Serenity's `gml-format` and this extension's integration, so that more advanced features like selection formatting, saveless formatting or setting the formatter path are possible.
+- Check and improve the spec compliance of the Web IDL highlighter.
