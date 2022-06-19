@@ -45,7 +45,7 @@ public:
     Region* find_region_from_range(VirtualRange const&);
     Region* find_region_containing(VirtualRange const&);
 
-    ErrorOr<Vector<Region*>> find_regions_intersecting(VirtualRange const&);
+    ErrorOr<Vector<Region*, 4>> find_regions_intersecting(VirtualRange const&);
 
     bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
     void set_enforces_syscall_regions(bool b) { m_enforces_syscall_regions = b; }

@@ -253,9 +253,9 @@ Region* AddressSpace::find_region_containing(VirtualRange const& range)
     return m_region_tree.find_region_containing(range);
 }
 
-ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
+ErrorOr<Vector<Region*, 4>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
 {
-    Vector<Region*> regions = {};
+    Vector<Region*, 4> regions = {};
     size_t total_size_collected = 0;
 
     SpinlockLocker lock(m_lock);
