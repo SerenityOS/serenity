@@ -295,6 +295,7 @@ void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint con
         m_drag_hovered_widget->dispatch_event(enter_event, m_drag_hovered_widget->window());
         if (enter_event.is_accepted())
             set_pending_drop_widget(m_drag_hovered_widget);
+        ConnectionToWindowServer::the().async_set_accepts_drag(enter_event.is_accepted());
     }
 }
 

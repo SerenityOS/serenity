@@ -824,6 +824,13 @@ Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(Strin
     return true;
 }
 
+void ConnectionFromClient::set_accepts_drag(bool accepts)
+{
+    auto& wm = WindowManager::the();
+    VERIFY(wm.dnd_client());
+    wm.set_accepts_drag(accepts);
+}
+
 Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(String const& theme_path, String const& theme_name, bool keep_desktop_background)
 {
     bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background);
