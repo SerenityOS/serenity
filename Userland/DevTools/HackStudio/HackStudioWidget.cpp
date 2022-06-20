@@ -1128,6 +1128,10 @@ void HackStudioWidget::build()
     auto result = m_project_builder->build(active_file());
     if (result.is_error()) {
         GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Build failed", GUI::MessageBox::Type::Error);
+        m_build_action->set_enabled(true);
+        m_stop_action->set_enabled(false);
+    } else {
+        m_stop_action->set_enabled(true);
     }
 }
 
@@ -1136,6 +1140,10 @@ void HackStudioWidget::run()
     auto result = m_project_builder->run(active_file());
     if (result.is_error()) {
         GUI::MessageBox::show(window(), String::formatted("{}", result.error()), "Run failed", GUI::MessageBox::Type::Error);
+        m_run_action->set_enabled(true);
+        m_stop_action->set_enabled(false);
+    } else {
+        m_stop_action->set_enabled(true);
     }
 }
 
@@ -1277,7 +1285,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
 
         reveal_action_tab(*m_terminal_wrapper);
         build();
-        m_stop_action->set_enabled(true);
     });
 }
 
@@ -1286,7 +1293,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_run_action()
     return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-run.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         reveal_action_tab(*m_terminal_wrapper);
         run();
-        m_stop_action->set_enabled(true);
     });
 }
 
