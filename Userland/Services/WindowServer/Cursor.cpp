@@ -103,6 +103,8 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
         return WindowManager::the().help_cursor();
     case Gfx::StandardCursor::Drag:
         return WindowManager::the().drag_cursor();
+    case Gfx::StandardCursor::DragCopy:
+        return WindowManager::the().drag_copy_cursor();
     case Gfx::StandardCursor::Move:
         return WindowManager::the().move_cursor();
     case Gfx::StandardCursor::Wait:
