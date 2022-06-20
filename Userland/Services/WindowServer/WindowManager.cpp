@@ -2278,6 +2278,7 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
     reload_cursor(m_disallowed_cursor, "Disallowed");
     reload_cursor(m_move_cursor, "Move");
     reload_cursor(m_drag_cursor, "Drag");
+    reload_cursor(m_drag_copy_cursor, "DragCopy");
     reload_cursor(m_wait_cursor, "Wait");
     reload_cursor(m_crosshair_cursor, "Crosshair");
     reload_cursor(m_eyedropper_cursor, "Eyedropper");

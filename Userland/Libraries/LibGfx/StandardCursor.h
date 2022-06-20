@@ -23,6 +23,7 @@ enum class StandardCursor {
     Hand,
     Help,
     Drag,
+    DragCopy,
     Move,
     Wait,
     Disallowed,
