@@ -1543,8 +1543,9 @@ void HackStudioWidget::stop_debugger_if_running()
 void HackStudioWidget::close_current_project()
 {
     m_editors_splitter->remove_all_children();
-    add_new_editor_tab_widget(*m_editors_splitter);
+    m_all_editor_tab_widgets.clear();
     m_all_editor_wrappers.clear();
+    add_new_editor_tab_widget(*m_editors_splitter);
     m_open_files.clear();
     m_open_files_vector.clear();
     m_find_in_files_widget->reset();
