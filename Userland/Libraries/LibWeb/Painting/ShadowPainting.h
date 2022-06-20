@@ -26,7 +26,7 @@ struct ShadowData {
     ShadowPlacement placement;
 };
 
-void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<ShadowData> const&);
+void paint_box_shadow(PaintContext&, Gfx::IntRect const&, BorderRadiiData const&, Vector<ShadowData> const&);
 void paint_text_shadow(PaintContext&, Layout::LineBoxFragment const&, Vector<ShadowData> const&);
 
 }

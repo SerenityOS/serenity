@@ -302,6 +302,7 @@ class PaintableWithLines;
 class StackingContext;
 class TextPaintable;
 struct BorderRadiusData;
+struct BorderRadiiData;
 }
 
 namespace Web::RequestIdleCallback {
