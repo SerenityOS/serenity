@@ -69,7 +69,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                         static_cast<int>(layer.spread_distance.to_px(layout_node())),
                         layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
                 }
-                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), resolved_box_shadow_data);
+                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), border_radii_data, resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;

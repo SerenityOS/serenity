@@ -9,13 +9,16 @@
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
+#include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
-void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, Vector<ShadowData> const& box_shadow_layers)
+void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, BorderRadiiData const& border_radii, Vector<ShadowData> const& box_shadow_layers)
 {
+    (void) border_radii;
+
     if (box_shadow_layers.is_empty())
         return;
 
