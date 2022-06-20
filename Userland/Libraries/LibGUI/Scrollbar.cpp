@@ -19,56 +19,28 @@ REGISTER_WIDGET(GUI, Scrollbar)
 
 namespace GUI {
 
-static constexpr Gfx::CharacterBitmap s_up_arrow_bitmap {
-    "         "
-    "         "
-    "         "
-    "    #    "
-    "   ###   "
-    "  #####  "
-    " ####### "
-    "         "
-    "         ",
-    9, 9
+static constexpr AK::Array<Gfx::IntPoint, 3> s_up_arrow_coords = {
+    Gfx::IntPoint { 4, 2 },
+    Gfx::IntPoint { 1, 5 },
+    Gfx::IntPoint { 7, 5 },
 };
 
-static constexpr Gfx::CharacterBitmap s_down_arrow_bitmap {
-    "         "
-    "         "
-    "         "
-    " ####### "
-    "  #####  "
-    "   ###   "
-    "    #    "
-    "         "
-    "         ",
-    9, 9
+static constexpr AK::Array<Gfx::IntPoint, 3> s_down_arrow_coords = {
+    Gfx::IntPoint { 1, 3 },
+    Gfx::IntPoint { 7, 3 },
+    Gfx::IntPoint { 4, 6 },
 };
 
-static constexpr Gfx::CharacterBitmap s_left_arrow_bitmap {
-    "         "
-    "     #   "
-    "    ##   "
-    "   ###   "
-    "  ####   "
-    "   ###   "
-    "    ##   "
-    "     #   "
-    "         ",
-    9, 9
+static constexpr AK::Array<Gfx::IntPoint, 3> s_left_arrow_coords = {
+    Gfx::IntPoint { 5, 1 },
+    Gfx::IntPoint { 2, 4 },
+    Gfx::IntPoint { 5, 7 },
 };
 
-static constexpr Gfx::CharacterBitmap s_right_arrow_bitmap {
-    "         "
-    "   #     "
-    "   ##    "
-    "   ###   "
-    "   ####  "
-    "   ###   "
-    "   ##    "
-    "   #     "
-    "         ",
-    9, 9
+static constexpr AK::Array<Gfx::IntPoint, 3> s_right_arrow_coords = {
+    Gfx::IntPoint { 3, 1 },
+    Gfx::IntPoint { 6, 4 },
+    Gfx::IntPoint { 3, 7 },
 };
 
 Scrollbar::Scrollbar(Orientation orientation)
@@ -241,15 +213,15 @@ void Scrollbar::paint_event(PaintEvent& event)
         if (decrement_pressed)
             decrement_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
-            painter.draw_bitmap(decrement_location.translated(1, 1), orientation() == Orientation::Vertical ? s_up_arrow_bitmap : s_left_arrow_bitmap, palette().threed_highlight());
-        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_bitmap : s_left_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+            painter.draw_triangle(decrement_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, palette().threed_highlight());
+        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
         if (increment_pressed)
             increment_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
-            painter.draw_bitmap(increment_location.translated(1, 1), orientation() == Orientation::Vertical ? s_down_arrow_bitmap : s_right_arrow_bitmap, palette().threed_highlight());
-        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_bitmap : s_right_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+            painter.draw_triangle(increment_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, palette().threed_highlight());
+        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
     }
 
     if (has_scrubber() && !scrubber_rect().is_null())

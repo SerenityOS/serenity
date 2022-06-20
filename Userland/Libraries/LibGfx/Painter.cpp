@@ -671,6 +671,12 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
     }
 }
 
+void Painter::draw_triangle(IntPoint const& offset, Span<IntPoint const> control_points, Color color)
+{
+    VERIFY(control_points.size() == 3);
+    draw_triangle(control_points[0] + offset, control_points[1] + offset, control_points[2] + offset, color);
+}
+
 void Painter::draw_triangle(IntPoint const& a, IntPoint const& b, IntPoint const& c, Color color)
 {
     IntPoint p0(to_physical(a));
@@ -689,6 +695,10 @@ void Painter::draw_triangle(IntPoint const& a, IntPoint const& b, IntPoint const
     if (p0.y() == p2.y())
         return;
 
+    // return if all points are on the same line vertically
+    if (p0.x() == p1.x() && p1.x() == p2.x())
+        return;
+
     // return if top is below clip rect or bottom is above clip rect
     auto clip = clip_rect();
     if (p0.y() >= clip.bottom())
@@ -696,56 +706,78 @@ void Painter::draw_triangle(IntPoint const& a, IntPoint const& b, IntPoint const
     if (p2.y() < clip.top())
         return;
 
+    class BoundaryLine {
+    private:
+        IntPoint m_base {};
+        IntPoint m_path {};
+
+    public:
+        BoundaryLine(IntPoint a, IntPoint b)
+        {
+            VERIFY(a.y() <= b.y());
+            m_base = a;
+            m_path = b - a;
+        }
+
+        int top_y() const { return m_base.y(); }
+
+        int bottom_y() const { return m_base.y() + m_path.y(); }
+
+        bool is_vertical() const { return m_path.x() == 0; }
+
+        bool is_horizontal() const { return m_path.y() == 0; }
+
+        bool in_y_range(int y) const { return y >= top_y() && y <= bottom_y(); }
+
+        Optional<int> intersection_on_x(int y) const
+        {
+            if (!in_y_range(y))
+                return {};
+            if (is_horizontal())
+                return {};
+            if (is_vertical())
+                return m_base.x();
+
+            int y_diff = y - top_y();
+            int x_d = m_path.x() * y_diff, y_d = m_path.y();
+
+            return (x_d / y_d) + m_base.x();
+        }
+    };
+
+    BoundaryLine l0(p0, p1), l1(p0, p2), l2(p1, p2);
+
     int rgba = color.value();
 
-    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
-    float x01 = p0.x();
-    float x02 = p0.x();
+    for (int y = max(p0.y(), clip.top()); y <= min(p2.y(), clip.bottom()); y++) {
+        Optional<int>
+            x0 = l0.intersection_on_x(y),
+            x1 = l1.intersection_on_x(y),
+            x2 = l2.intersection_on_x(y);
 
-    if (p0.y() != p1.y()) { // p0 and p1 are on different lines
-        float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
+        int result_a = 0, result_b = 0;
 
-        int top = p0.y();
-        if (top < clip.top()) {
-            x01 += dx01 * (clip.top() - top);
-            x02 += dx02 * (clip.top() - top);
-            top = clip.top();
-        }
-
-        for (int y = top; y < p1.y() && y < clip.bottom(); ++y) { // XXX <=?
-            int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
-            int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
-            auto* scanline = m_target->scanline(y);
-            for (int x = start; x < end; x++) {
-                scanline[x] = rgba;
+        if (x0.has_value()) {
+            result_a = x0.value();
+            if (x1.has_value() && ((!x2.has_value()) || (result_a != x1.value()))) {
+                result_b = x1.value();
+            } else {
+                result_b = x2.value();
             }
-            x01 += dx01;
-            x02 += dx02;
+        } else if (x1.has_value()) {
+            result_a = x1.value();
+            result_b = x2.value();
         }
-    }
 
-    // return if middle point and bottom point are on same line
-    if (p1.y() == p2.y())
-        return;
+        if (result_a > result_b)
+            swap(result_a, result_b);
 
-    float x12 = p1.x();
-    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
-    int top = p1.y();
-    if (top < clip.top()) {
-        x02 += dx02 * (clip.top() - top);
-        x12 += dx12 * (clip.top() - top);
-        top = clip.top();
-    }
+        int left_bound = result_a, right_bound = result_b;
 
-    for (int y = top; y < p2.y() && y < clip.bottom(); ++y) { // XXX <=?
-        int start = x12 > x02 ? max((int)x02, clip.left()) : max((int)x12, clip.left());
-        int end = x12 > x02 ? min((int)x12, clip.right()) : min((int)x02, clip.right());
-        auto* scanline = m_target->scanline(y);
-        for (int x = start; x < end; x++) {
+        ARGB32* scanline = m_target->scanline(y);
+        for (int x = max(left_bound, clip.left()); x <= min(right_bound, clip.right()); x++) {
             scanline[x] = rgba;
         }
-        x02 += dx02;
-        x12 += dx12;
     }
 }
 

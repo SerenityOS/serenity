@@ -491,6 +491,103 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
     return true;
 }
 
+bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
+{
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
+    if (!paint_root())
+        return false;
+
+    // TODO: Allow selecting element behind if one on top has pointer-events set to none.
+    RefPtr<Painting::Paintable> paintable;
+    if (m_mouse_event_tracking_layout_node) {
+        paintable = m_mouse_event_tracking_layout_node->paintable();
+    } else {
+        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
+        if (!result.has_value())
+            return false;
+        paintable = result->paintable;
+    }
+
+    auto pointer_events = paintable->computed_values().pointer_events();
+    // FIXME: Handle other values for pointer-events.
+    if (pointer_events == CSS::PointerEvents::None)
+        return false;
+
+    RefPtr<DOM::Node> node = paintable->mouse_event_target();
+    if (!node)
+        node = paintable->dom_node();
+
+    if (paintable->wants_mouse_events()) {
+        // FIXME: Handle double clicks.
+    }
+
+    if (!node)
+        return false;
+
+    if (is<HTML::HTMLIFrameElement>(*node)) {
+        if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
+            return nested_browsing_context->event_handler().handle_doubleclick(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), button, modifiers);
+        return false;
+    }
+
+    // Search for the first parent of the hit target that's an element.
+    // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
+    auto* layout_node = &paintable->layout_node();
+    while (layout_node && node && !node->is_element() && layout_node->parent()) {
+        layout_node = layout_node->parent();
+        node = layout_node->dom_node();
+    }
+    if (!node || !layout_node)
+        return false;
+
+    auto offset = compute_mouse_event_offset(position, *layout_node);
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
+
+    // NOTE: Dispatching an event may have disturbed the world.
+    if (!paint_root() || paint_root() != node->document().paint_box())
+        return true;
+
+    if (button == GUI::MouseButton::Primary) {
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
+            auto paintable = result->paintable;
+            if (!paintable->dom_node())
+                return true;
+
+            auto const& layout_node = paintable->layout_node();
+            if (!layout_node.is_text_node())
+                return true;
+            auto const& text_for_rendering = verify_cast<Layout::TextNode>(layout_node).text_for_rendering();
+
+            int first_word_break_before = [&] {
+                // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
+                // This also helps us dealing with cases where index is equal to the string length.
+                for (int i = result->index_in_node - 1; i >= 0; --i) {
+                    if (is_ascii_space(text_for_rendering[i])) {
+                        // Don't include the space in the selection
+                        return i + 1;
+                    }
+                }
+                return 0;
+            }();
+
+            int first_word_break_after = [&] {
+                for (size_t i = result->index_in_node; i < text_for_rendering.length(); ++i) {
+                    if (is_ascii_space(text_for_rendering[i]))
+                        return i;
+                }
+                return text_for_rendering.length();
+            }();
+
+            m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), first_word_break_after));
+            layout_root()->set_selection({ { paintable->layout_node(), first_word_break_before }, { paintable->layout_node(), first_word_break_after } });
+        }
+    }
+
+    return true;
+}
+
 bool EventHandler::focus_next_element()
 {
     if (!m_browsing_context.active_document())
