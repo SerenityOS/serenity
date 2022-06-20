@@ -849,7 +849,7 @@ void Window::set_hovered_widget(Widget* widget)
 void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
 {
     auto& bitmap = backing_store.bitmap();
-    ConnectionToWindowServer::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    ConnectionToWindowServer::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.scale(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)

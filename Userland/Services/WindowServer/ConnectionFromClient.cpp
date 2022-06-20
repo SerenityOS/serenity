@@ -707,7 +707,7 @@ void ConnectionFromClient::did_finish_painting(i32 window_id, Vector<Gfx::IntRec
 }
 
 void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
-    [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
+    [[maybe_unused]] i32 pitch, i32 scale_factor, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
     Gfx::IntSize const& size, bool flush_immediately)
 {
     auto it = m_windows.find(window_id);
@@ -719,8 +719,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
     if (window.last_backing_store() && window.last_backing_store_serial() == serial) {
         window.swap_backing_stores();
     } else {
-        // FIXME: Plumb scale factor here eventually.
-        auto buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
+        auto buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height() * scale_factor);
         if (buffer_or_error.is_error()) {
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
@@ -729,7 +728,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             buffer_or_error.release_value(),
             size,
-            1,
+            scale_factor,
             {});
         if (backing_store_or_error.is_error()) {
             did_misbehave("");
