@@ -289,7 +289,7 @@ void AntiAliasingPainter::fill_ellipse(IntRect const& a_rect, Color color, Blend
     draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range, blend_mode);
 }
 
-AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
+FLATTEN AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
     IntPoint center, int radius_a, int radius_b, Color color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode)
 {
     /*
