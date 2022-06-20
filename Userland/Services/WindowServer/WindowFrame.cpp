@@ -884,7 +884,23 @@ void WindowFrame::open_menubar_menu(Menu& menu)
 {
     auto menubar_rect = this->menubar_rect();
     MenuManager::the().close_everyone();
-    menu.ensure_menu_window(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
+    auto position = menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location());
+    auto& window = menu.ensure_menu_window(position);
+    auto window_rect = window.rect();
+    auto& screen = Screen::closest_to_rect(window_rect);
+    auto window_border_thickness = 1;
+
+    // If the menu is off the right edge of the screen align its right edge with the edge of the screen.
+    if (window_rect.right() > screen.width()) {
+        position = position.translated(((window_rect.right() - screen.width()) * -1) - window_border_thickness, 0);
+    }
+    // If the menu is below the bottom of the screen move it to appear above the menubar.
+    if (window_rect.bottom() > screen.height()) {
+        position = position.translated(0, (window_rect.height() * -1) - menubar_rect.height());
+    }
+
+    window.set_rect(position.x(), position.y(), window_rect.width(), window_rect.height());
+
     MenuManager::the().open_menu(menu);
     WindowManager::the().set_window_with_active_menu(&m_window);
     invalidate(menubar_rect);
