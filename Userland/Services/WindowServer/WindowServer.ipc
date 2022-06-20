@@ -123,6 +123,7 @@ endpoint WindowServer
     set_window_custom_cursor(i32 window_id, Gfx::ShareableBitmap cursor) =|
 
     start_drag([UTF8] String text, HashMap<String,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
+    set_accepts_drag(bool accepts) =|
 
     set_system_theme(String theme_path, [UTF8] String theme_name, bool keep_desktop_background) => (bool success)
     get_system_theme() => ([UTF8] String theme_name)

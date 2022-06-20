@@ -1016,14 +1016,13 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         m_dnd_overlay->cursor_moved();
 
         // We didn't let go of the drag yet, see if we should send some drag move events..
-        for_each_visible_window_from_front_to_back([&](Window& window) {
-            if (!window.rect().contains(event.position()))
-                return IterationDecision::Continue;
+        if (auto* window = current_window_stack().window_at(event.position(), WindowStack::IncludeWindowFrame::No)) {
             event.set_drag(true);
             event.set_mime_data(*m_dnd_mime_data);
-            deliver_mouse_event(window, event, false);
-            return IterationDecision::Break;
-        });
+            deliver_mouse_event(*window, event, false);
+        } else {
+            set_accepts_drag(false);
+        }
     }
 
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Primary))
@@ -1918,8 +1917,11 @@ ConnectionFromClient const* WindowManager::active_client() const
 
 Cursor const& WindowManager::active_cursor() const
 {
-    if (m_dnd_client)
+    if (m_dnd_client) {
+        if (m_dnd_accepts_drag)
+            return *m_drag_copy_cursor;
         return *m_drag_cursor;
+    }
 
     if (m_move_window)
         return *m_move_cursor;
@@ -2061,6 +2063,14 @@ void WindowManager::end_dnd_drag()
     m_dnd_client = nullptr;
     m_dnd_text = {};
     m_dnd_overlay = nullptr;
+    m_dnd_accepts_drag = false;
+}
+
+void WindowManager::set_accepts_drag(bool accepts)
+{
+    VERIFY(m_dnd_client);
+    m_dnd_accepts_drag = accepts;
+    Compositor::the().invalidate_cursor();
 }
 
 void WindowManager::invalidate_after_theme_or_font_change()

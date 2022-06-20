@@ -96,6 +96,8 @@ public:
     void start_dnd_drag(ConnectionFromClient&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
+    void set_accepts_drag(bool);
+
     Window* active_window()
     {
         VERIFY(m_current_window_stack);
@@ -480,6 +482,7 @@ private:
     OwnPtr<DndOverlay> m_dnd_overlay;
     WeakPtr<ConnectionFromClient> m_dnd_client;
     String m_dnd_text;
+    bool m_dnd_accepts_drag { false };
 
     RefPtr<Core::MimeData> m_dnd_mime_data;
 
