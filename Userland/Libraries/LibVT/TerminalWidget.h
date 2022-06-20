@@ -120,6 +120,7 @@ private:
     virtual void focusin_event(GUI::FocusEvent&) override;
     virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void did_change_font() override;
