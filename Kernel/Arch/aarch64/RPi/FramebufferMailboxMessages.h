@@ -8,7 +8,7 @@
 
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 
-namespace Prekernel {
+namespace Kernel::RPi {
 
 class FramebufferSetPhysicalSizeMboxMessage : public Mailbox::Message {
 public:

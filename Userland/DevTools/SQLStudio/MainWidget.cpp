@@ -266,9 +266,9 @@ bool MainWidget::request_close()
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), {});
     switch (result) {
-    case GUI::Dialog::ExecResult::ExecYes:
+    case GUI::Dialog::ExecResult::Yes:
         break;
-    case GUI::Dialog::ExecResult::ExecNo:
+    case GUI::Dialog::ExecResult::No:
         return true;
     default:
         return false;

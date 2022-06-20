@@ -28,6 +28,5 @@
         }
     }
 
-    // Spacer
-    @GUI::Widget {}
+    @GUI::Layout::Spacer {}
 }

@@ -1,6 +1,6 @@
 serenity_component(
     CharacterMap
-    REQUIRED
+    RECOMMENDED
     TARGETS CharacterMap
 )
 

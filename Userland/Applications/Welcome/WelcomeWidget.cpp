@@ -9,16 +9,16 @@
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
-#include <LibCore/Process.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Process.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <serenity.h>
 
 WelcomeWidget::WelcomeWidget()
@@ -32,7 +32,7 @@ WelcomeWidget::WelcomeWidget()
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
     light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png").release_value_but_fixme_should_propagate_errors());
 
-    m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
+    m_web_view = *find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
 
     m_tip_label = *find_descendant_of_type_named<GUI::Label>("tip_label");
 
@@ -53,8 +53,8 @@ WelcomeWidget::WelcomeWidget()
 
     m_help_button = *find_descendant_of_type_named<GUI::Button>("help_button");
     m_help_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png").release_value_but_fixme_should_propagate_errors());
-    m_help_button->on_click = [](auto) {
-        Core::Process::spawn("/bin/Help"sv);
+    m_help_button->on_click = [&](auto) {
+        GUI::Process::spawn_or_show_error(window(), "/bin/Help"sv);
     };
 
     m_new_button = *find_descendant_of_type_named<GUI::Button>("new_button");

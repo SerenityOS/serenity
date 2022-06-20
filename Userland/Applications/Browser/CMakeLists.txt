@@ -2,7 +2,7 @@ serenity_component(
     Browser
     RECOMMENDED
     TARGETS Browser
-    DEPENDS ImageDecoder RequestServer WebContent WebSocket
+    DEPENDS BrowserSettings ImageDecoder RequestServer WebContent WebSocket
 )
 
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
@@ -23,7 +23,7 @@ set(SOURCES
     History.cpp
     IconBag.cpp
     InspectorWidget.cpp
-    LocalStorageModel.cpp
+    StorageModel.cpp
     StorageWidget.cpp
     StorageWidgetGML.h
     Tab.cpp
@@ -33,5 +33,5 @@ set(SOURCES
 )
 
 serenity_app(Browser ICON app-browser)
-target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop LibConfig LibMain)
+target_link_libraries(Browser LibWebView LibWeb LibProtocol LibGUI LibDesktop LibConfig LibMain)
 link_with_unicode_data(Browser)

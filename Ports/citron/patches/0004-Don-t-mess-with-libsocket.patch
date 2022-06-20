@@ -1,7 +1,7 @@
-From 3f73149c75a5755c2b45334abe682dd4b970144b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:46:16 +0330
-Subject: [PATCH 4/9] Don't mess with libsocket
+Subject: [PATCH] Don't mess with libsocket
 
 ---
  makefile | 8 +-------
@@ -47,6 +47,3 @@ index ded4d5a..b262cd0 100644
  $(BUILDDIR)/%.o: src/%.c
  	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
  
--- 
-2.34.1
-

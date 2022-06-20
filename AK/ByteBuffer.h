@@ -80,6 +80,8 @@ public:
     [[nodiscard]] static ErrorOr<ByteBuffer> copy(void const* data, size_t size)
     {
         auto buffer = TRY(create_uninitialized(size));
+        if (buffer.m_inline && size > inline_capacity)
+            __builtin_unreachable();
         if (size != 0)
             __builtin_memcpy(buffer.data(), data, size);
         return { move(buffer) };
@@ -132,13 +134,12 @@ public:
     [[nodiscard]] void* end_pointer() { return data() + m_size; }
     [[nodiscard]] void const* end_pointer() const { return data() + m_size; }
 
-    // FIXME: Make this function handle failures too.
-    [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
+    [[nodiscard]] ErrorOr<ByteBuffer> slice(size_t offset, size_t size) const
     {
         // I cannot hand you a slice I don't have
         VERIFY(offset + size <= this->size());
 
-        return copy(offset_pointer(offset), size).release_value();
+        return copy(offset_pointer(offset), size);
     }
 
     void clear()

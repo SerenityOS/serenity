@@ -109,4 +109,10 @@ int fstatat(int fd, char const* path, struct stat* statbuf, int flags)
 {
     return do_stat(fd, path, statbuf, !(flags & AT_SYMLINK_NOFOLLOW));
 }
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/futimens.html
+int futimens(int fd, struct timespec const times[2])
+{
+    return utimensat(fd, "", times, 0);
+}
 }

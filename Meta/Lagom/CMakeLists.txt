@@ -60,22 +60,7 @@ if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
 endif()
 
 include(wasm_spec_tests)
-
-add_compile_options(-fsigned-char)
-add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-implicit-const-int-float-conversion)
-add_compile_options(-O2)
-add_compile_options(-Wall -Wextra -Werror)
-add_compile_options(-fPIC -g)
-add_compile_options(-Wno-maybe-uninitialized)
-add_compile_options(-fno-exceptions)
-add_compile_options(-fdiagnostics-color=always)
-if (NOT ENABLE_FUZZERS)
-    add_compile_options(-fno-semantic-interposition)
-endif()
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include(lagom_compile_options)
 
 include(GNUInstallDirs) # make sure to include before we mess w/RPATH
 
@@ -117,6 +102,10 @@ endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
+    # FIXME: Re-enable this check when the warning stops triggering, or document why we can't stop it from triggering.
+    # For now, there is a lot of unused private fields in LibWeb that trigger this that could be removed.
+    # See issue #14137 for details
+    add_compile_options(-Wno-unused-private-field)
 
     if (ENABLE_FUZZERS_LIBFUZZER)
         add_compile_options(-fsanitize=fuzzer)
@@ -162,10 +151,10 @@ set(Lagom_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
     CACHE PATH "CMake package config location relative to the install prefix")
 mark_as_advanced(Lagom_INSTALL_CMAKEDIR)
 
+configure_file("${SERENITY_PROJECT_ROOT}/Meta/CMake/lagom-install-config.cmake.in" "${package}Config.cmake" @ONLY)
 install(
-    FILES "${SERENITY_PROJECT_ROOT}/Meta/CMake/lagom-install-config.cmake"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${package}Config.cmake"
     DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
-    RENAME "${package}Config.cmake"
     COMPONENT Lagom_Development
 )
 
@@ -340,11 +329,12 @@ if (BUILD_LAGOM)
 
     # Gfx
     file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
+    file(GLOB LIBGFX_FILTER_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Filters/*.cpp")
     file(GLOB LIBGFX_FONT_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/*.cpp")
     file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/TrueType/*.cpp")
     file(GLOB LIBGFX_WOFF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/WOFF/*.cpp")
     lagom_lib(Gfx gfx
-            SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
+            SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FILTER_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
             LIBS m LagomCompress LagomTextCodec LagomIPC
             )
 
@@ -488,6 +478,40 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWASM_SOURCES}
     )
 
+    # Web
+    include(libweb_generators)
+    file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
+    file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
+    file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
+    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
+    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
+
+    generate_css_implementation()
+
+    set(LIBWEB_GENERATED_SOURCES
+        LibWeb/CSS/DefaultStyleSheetSource.cpp
+        LibWeb/CSS/Enums.cpp
+        LibWeb/CSS/MediaFeatureID.cpp
+        LibWeb/CSS/PropertyID.cpp
+        LibWeb/CSS/QuirksModeStyleSheetSource.cpp
+        LibWeb/CSS/TransformFunctions.cpp
+        LibWeb/CSS/ValueID.cpp
+    )
+
+    lagom_lib(Web web
+        SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
+        LIBS LagomMarkdown LagomGemini LagomGfx LagomGL LagomJS LagomTextCodec LagomWasm LagomXML
+    )
+    generate_js_wrappers(LagomWeb)
+
+    # WebSocket
+    file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
+    file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
+    lagom_lib(WebSocket websocket
+        SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
+        LIBS LagomCrypto LagomTLS
+    )
+
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
@@ -526,6 +550,10 @@ if (BUILD_LAGOM)
         add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
         target_link_libraries(gml-format_lagom LagomCore LagomGML LagomMain)
+
+        add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
+        set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
+        target_link_libraries(headless_browser_lagom LagomWeb LagomWebSocket LagomHTTP LagomJS LagomGfx LagomMain)
 
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
@@ -584,6 +612,7 @@ if (BUILD_LAGOM)
         endforeach()
 
         # Compress
+        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibCompress/brotli-test-files" DESTINATION "./")
         file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
         foreach(source ${LIBCOMPRESS_TESTS})
             lagom_test(${source} LIBS LagomCompress)

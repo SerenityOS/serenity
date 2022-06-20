@@ -112,7 +112,7 @@ ByteBuffer StandardSecurityHandler::compute_user_password_value<false>(ByteBuffe
     //    described in [Algorithm 2]
     auto encryption_key = compute_encryption_key(password_string);
 
-    // b) Initialize the MD5 hash functino and pass the 32-byte padding string
+    // b) Initialize the MD5 hash function and pass the 32-byte padding string
     //    shown in step (a) of [Algorithm 2] as input to this function
     Crypto::Hash::MD5 md5;
     md5.update(standard_encryption_key_padding_bytes);

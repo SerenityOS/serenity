@@ -5,16 +5,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
     auto& painter = context.painter();
 
@@ -40,17 +42,47 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     auto color_rect = border_rect;
     if (background_layers && !background_layers->is_empty())
         color_rect = get_box(background_layers->last().clip);
-    // FIXME: Support elliptical corners
-    painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(), background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
 
-    if (!background_layers)
+    auto layer_is_paintable = [&](auto& layer) {
+        return layer.image && layer.image->bitmap();
+    };
+
+    bool has_paintable_layers = false;
+    if (background_layers) {
+        for (auto& layer : *background_layers) {
+            if (layer_is_paintable(layer)) {
+                has_paintable_layers = true;
+                break;
+            }
+        }
+    }
+
+    Optional<BorderRadiusCornerClipper> corner_radius_clipper {};
+
+    if (border_radii.has_any_radius()) {
+        if (!has_paintable_layers) {
+            Gfx::AntiAliasingPainter aa_painter { painter };
+            aa_painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(),
+                background_color, border_radii.top_left.as_corner(), border_radii.top_right.as_corner(), border_radii.bottom_right.as_corner(), border_radii.bottom_left.as_corner());
+            return;
+        }
+        auto clipper = BorderRadiusCornerClipper::create(border_rect.to_rounded<int>(), border_radii);
+        if (!clipper.is_error())
+            corner_radius_clipper = clipper.release_value();
+    }
+
+    if (corner_radius_clipper.has_value())
+        corner_radius_clipper->sample_under_corners(painter);
+
+    painter.fill_rect(color_rect.to_rounded<int>(), background_color);
+
+    if (!has_paintable_layers)
         return;
 
     // Note: Background layers are ordered front-to-back, so we paint them in reverse
-    for (int layer_index = background_layers->size() - 1; layer_index >= 0; layer_index--) {
-        auto& layer = background_layers->at(layer_index);
+    for (auto& layer : background_layers->in_reverse()) {
         // TODO: Gradients!
-        if (!layer.image || !layer.image->bitmap())
+        if (!layer_is_paintable(layer))
             continue;
         auto& image = *layer.image->bitmap();
 
@@ -122,10 +154,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // where round() is a function that returns the nearest natural number
             // (integer greater than zero).
             if (layer.repeat_x == CSS::Repeat::Round) {
-                image_rect.set_width(background_positioning_area.width() / background_positioning_area.width() / image_rect.width());
+                image_rect.set_width(background_positioning_area.width() / roundf(background_positioning_area.width() / image_rect.width()));
             }
             if (layer.repeat_y == CSS::Repeat::Round) {
-                image_rect.set_height(background_positioning_area.height() / background_positioning_area.height() / image_rect.height());
+                image_rect.set_height(background_positioning_area.height() / roundf(background_positioning_area.height() / image_rect.height()));
             }
 
             // If background-repeat is round for one dimension only and if background-size is auto
@@ -227,16 +259,20 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             image_rect.set_y(image_rect.y() - y_delta);
         }
 
-        // FIXME: Handle rounded corners
         float initial_image_x = image_rect.x();
         float image_y = image_rect.y();
+        Optional<Gfx::IntRect> last_int_image_rect;
+
         while (image_y < clip_rect.bottom()) {
             image_rect.set_y(image_y);
 
             float image_x = initial_image_x;
             while (image_x < clip_rect.right()) {
                 image_rect.set_x(image_x);
-                painter.draw_scaled_bitmap(image_rect.to_rounded<int>(), image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                auto int_image_rect = image_rect.to_rounded<int>();
+                if (int_image_rect != last_int_image_rect)
+                    painter.draw_scaled_bitmap(int_image_rect, image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                last_int_image_rect = int_image_rect;
                 if (!repeat_x)
                     break;
                 image_x += x_step;
@@ -249,6 +285,9 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         painter.restore();
     }
+
+    if (corner_radius_clipper.has_value())
+        corner_radius_clipper->blit_corner_clipping(painter);
 }
 
 }

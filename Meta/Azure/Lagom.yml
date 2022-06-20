@@ -13,7 +13,7 @@ jobs:
 
     - name: job_pool
       ${{ if eq(parameters.os, 'Linux') }}:
-        value: ubuntu-20.04
+        value: ubuntu-22.04
       ${{ if eq(parameters.os, 'macOS') }}:
         value: macos-11
 

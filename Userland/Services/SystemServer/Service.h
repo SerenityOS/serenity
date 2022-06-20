@@ -14,9 +14,11 @@
 #include <LibCore/Object.h>
 
 class Service final : public Core::Object {
-    C_OBJECT(Service)
+    C_OBJECT_ABSTRACT(Service)
 
 public:
+    static ErrorOr<NonnullRefPtr<Service>> try_create(Core::ConfigFile const& config, StringView name);
+
     bool is_enabled() const;
     void activate();
     void did_exit(int exit_code);
@@ -30,6 +32,8 @@ private:
     Service(Core::ConfigFile const&, StringView name);
 
     void spawn(int socket_fd = -1);
+
+    ErrorOr<void> determine_account(int fd);
 
     /// SocketDescriptor describes the details of a single socket that was
     /// requested by a service.
@@ -83,8 +87,8 @@ private:
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
 
-    void setup_socket(SocketDescriptor&);
-    void setup_sockets();
+    ErrorOr<void> setup_socket(SocketDescriptor&);
+    ErrorOr<void> setup_sockets();
     void setup_notifier();
     void handle_socket_connection();
 };

@@ -21,7 +21,7 @@ public:
     virtual ~ComboBox() override;
 
     String text() const;
-    void set_text(String const&);
+    void set_text(String const&, AllowCallback = AllowCallback::Yes);
 
     void open();
     void close();
@@ -33,6 +33,7 @@ public:
 
     size_t selected_index() const;
     void set_selected_index(size_t index, AllowCallback = AllowCallback::Yes);
+    void clear_selection();
 
     bool only_allow_values_from_model() const { return m_only_allow_values_from_model; }
     void set_only_allow_values_from_model(bool);

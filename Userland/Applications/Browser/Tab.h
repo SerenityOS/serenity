@@ -16,7 +16,7 @@
 #include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace WebView {
 class OutOfProcessWebView;
 }
 
@@ -66,6 +66,7 @@ public:
     Function<void()> on_dump_cookies;
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
+    Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
 
     enum class InspectorTarget {
         Document,
@@ -79,7 +80,7 @@ public:
     String const& title() const { return m_title; }
     Gfx::Bitmap const* icon() const { return m_icon; }
 
-    Web::OutOfProcessWebView& view() { return *m_web_content_view; }
+    WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
 
 private:
     explicit Tab(BrowserWindow&);
@@ -103,7 +104,7 @@ private:
 
     History m_history;
 
-    RefPtr<Web::OutOfProcessWebView> m_web_content_view;
+    RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 
     RefPtr<GUI::UrlBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;

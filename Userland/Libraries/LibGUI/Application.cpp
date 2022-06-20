@@ -136,9 +136,9 @@ void Application::unregister_global_shortcut_action(Badge<Action>, Action& actio
     m_global_shortcut_actions.remove(action.alternate_shortcut());
 }
 
-Action* Application::action_for_key_event(KeyEvent const& event)
+Action* Application::action_for_shortcut(Shortcut const& shortcut) const
 {
-    auto it = m_global_shortcut_actions.find(Shortcut(event.modifiers(), (KeyCode)event.key()));
+    auto it = m_global_shortcut_actions.find(shortcut);
     if (it == m_global_shortcut_actions.end())
         return nullptr;
     return (*it).value;
@@ -310,6 +310,10 @@ void Application::event(Core::Event& event)
             if (on_action_leave)
                 on_action_leave(action);
         }
+    }
+    if (event.type() == GUI::Event::ThemeChange) {
+        if (on_theme_change)
+            on_theme_change();
     }
     Object::event(event);
 }

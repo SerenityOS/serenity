@@ -17,10 +17,6 @@
 
 namespace AK {
 
-template<typename T, typename PtrTraits>
-class RefPtr;
-template<typename T>
-class NonnullRefPtr;
 template<typename T>
 class WeakPtr;
 
@@ -64,14 +60,14 @@ public:
     template<typename U>
     NonnullOwnPtr& operator=(NonnullOwnPtr<U> const&) = delete;
 
-    template<typename U, typename PtrTraits = RefPtrTraits<U>>
-    NonnullOwnPtr(RefPtr<U, PtrTraits> const&) = delete;
+    template<typename U>
+    NonnullOwnPtr(RefPtr<U> const&) = delete;
     template<typename U>
     NonnullOwnPtr(NonnullRefPtr<U> const&) = delete;
     template<typename U>
     NonnullOwnPtr(WeakPtr<U> const&) = delete;
-    template<typename U, typename PtrTraits = RefPtrTraits<U>>
-    NonnullOwnPtr& operator=(RefPtr<U, PtrTraits> const&) = delete;
+    template<typename U>
+    NonnullOwnPtr& operator=(RefPtr<U> const&) = delete;
     template<typename U>
     NonnullOwnPtr& operator=(NonnullRefPtr<U> const&) = delete;
     template<typename U>

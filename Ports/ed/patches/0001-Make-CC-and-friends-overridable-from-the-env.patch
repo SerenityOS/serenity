@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Fri, 1 Apr 2022 02:54:00 +0200
+Subject: [PATCH] Make CC and friends overridable from the env
+
+Co-Authored-By: roytam1 <roytam@gmail.com>
+---
+ configure | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/configure b/configure
+index 3531bcd..a225c14 100755
+--- a/configure
++++ b/configure
+@@ -21,10 +21,10 @@ datarootdir='$(prefix)/share'
+ infodir='$(datarootdir)/info'
+ mandir='$(datarootdir)/man'
+ program_prefix=
+-CC=gcc
+-CPPFLAGS=
+-CFLAGS='-Wall -W -O2'
+-LDFLAGS=
++CC?=gcc
++CPPFLAGS?=
++CFLAGS?='-Wall -W -O2'
++LDFLAGS?=
+ 
+ # checking whether we are using GNU C.
+ /bin/sh -c "${CC} --version" > /dev/null 2>&1 || { CC=cc ; CFLAGS=-O2 ; }

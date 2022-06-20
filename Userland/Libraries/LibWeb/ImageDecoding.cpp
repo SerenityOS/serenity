@@ -1,23 +1,32 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/ImageDecoding.h>
 
-namespace Web {
+namespace Web::ImageDecoding {
 
-ImageDecoderClient::Client& image_decoder_client()
+static RefPtr<Decoder> s_decoder;
+
+Decoder::Decoder() = default;
+
+Decoder::~Decoder() = default;
+
+void Decoder::initialize(RefPtr<Decoder>&& decoder)
 {
-    static RefPtr<ImageDecoderClient::Client> image_decoder_client;
-    if (!image_decoder_client) {
-        image_decoder_client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
-        image_decoder_client->on_death = [&] {
-            image_decoder_client = nullptr;
-        };
+    s_decoder = move(decoder);
+}
+
+Decoder& Decoder::the()
+{
+    if (!s_decoder) [[unlikely]] {
+        dbgln("Web::ImageDecoding::Decoder was not initialized!");
+        VERIFY_NOT_REACHED();
     }
-    return *image_decoder_client;
+    return *s_decoder;
 }
 
 }

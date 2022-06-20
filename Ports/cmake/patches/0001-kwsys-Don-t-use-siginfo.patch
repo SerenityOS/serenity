@@ -1,7 +1,7 @@
-From 5e5e6f2f0c25da400093818cbc3c1ae277a1df23 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: AnotherTest <ali.mpfard@gmail.com>
 Date: Fri, 12 Feb 2021 13:42:50 +0330
-Subject: [PATCH 1/6] kwsys: Don't use siginfo
+Subject: [PATCH] kwsys: Don't use siginfo
 
 We don't support SIGINFO. This patch removes uses of SIGINFO.
 
@@ -49,6 +49,3 @@ index e6cc48f2..17fbd547 100644
    static int saOrigValid = 0;
    static struct sigaction saABRTOrig;
    static struct sigaction saSEGVOrig;
--- 
-2.36.1
-

@@ -170,7 +170,7 @@ describe("errors", () => {
                 dateOne.until(dateTwo, pluralSmallestUnitOptions);
             }).toThrowWithMessage(
                 RangeError,
-                `${smallestUnit} is not a valid value for option smallestUnit`
+                `${smallestUnit}s is not a valid value for option smallestUnit`
             );
         }
 
@@ -189,7 +189,7 @@ describe("errors", () => {
                 dateOne.until(dateTwo, pluralLargestUnitOptions);
             }).toThrowWithMessage(
                 RangeError,
-                `${largestUnit} is not a valid value for option largestUnit`
+                `${largestUnit}s is not a valid value for option largestUnit`
             );
         }
     });

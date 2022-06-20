@@ -1,7 +1,7 @@
-From dd42cfe84e75619676a06b05f8ebe1c1c2e658c9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:30:04 +0200
-Subject: [PATCH 2/7] Build: Replace `-lGL` with `-lgl` to reference our LibGL
+Subject: [PATCH] Build: Replace `-lGL` with `-lgl` to reference our LibGL
 
 ---
  configure | 4 ++--
@@ -29,6 +29,3 @@ index 05ebf5d..10f771f 100755
  
  else
    { { echo "$as_me:3177: error: OpenGL is not installed" >&5
--- 
-2.34.1
-

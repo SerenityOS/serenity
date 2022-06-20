@@ -85,7 +85,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
                 button.set_button_style(Gfx::ButtonStyle::Coolbar);
                 button.on_click = [this, button = &button](auto) {
                     m_selected_emoji_text = button->text();
-                    done(ExecOK);
+                    done(ExecResult::OK);
                 };
             } else {
                 horizontal_container.add<Widget>();
@@ -99,7 +99,7 @@ void EmojiInputDialog::event(Core::Event& event)
     if (event.type() == Event::KeyDown) {
         auto& key_event = static_cast<KeyEvent&>(event);
         if (key_event.key() == Key_Escape) {
-            done(ExecCancel);
+            done(ExecResult::Cancel);
             return;
         }
     }

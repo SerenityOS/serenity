@@ -37,9 +37,9 @@ extern "C" {
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
-#define SHUT_RD 1
-#define SHUT_WR 2
-#define SHUT_RDWR 3
+#define SHUT_RD 0
+#define SHUT_WR 1
+#define SHUT_RDWR 2
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1

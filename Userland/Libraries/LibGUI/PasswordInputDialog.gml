@@ -68,7 +68,7 @@
             }
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Widget {
             shrink_to_fit: true
@@ -78,16 +78,14 @@
 
             @GUI::Widget {}
 
-            @GUI::Button {
+            @GUI::DialogButton {
                 text: "OK"
                 name: "ok_button"
-                fixed_width: 75
             }
 
-            @GUI::Button {
+            @GUI::DialogButton {
                 text: "Cancel"
                 name: "cancel_button"
-                fixed_width: 75
             }
         }
     }

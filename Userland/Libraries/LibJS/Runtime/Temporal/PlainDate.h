@@ -37,21 +37,23 @@ private:
     Object& m_calendar;   // [[Calendar]]
 };
 
-struct ISODate {
+// 3.5.1 ISO Date Records, https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records
+struct ISODateRecord {
     i32 year;
     u8 month;
     u8 day;
 };
 
+ISODateRecord create_iso_date_record(i32 year, u8 month, u8 day);
 ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject&, Value item, Object const* options = nullptr);
 DateDurationRecord difference_iso_date(GlobalObject&, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit);
-ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject&, double year, double month, double day, StringView overflow);
+ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject&, double year, double month, double day, StringView overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
-ISODate balance_iso_date(double year, double month, double day);
+ISODateRecord balance_iso_date(double year, double month, double day);
 String pad_iso_year(i32 y);
 ThrowCompletionOr<String> temporal_date_to_string(GlobalObject&, PlainDate&, StringView show_calendar);
-ThrowCompletionOr<ISODate> add_iso_date(GlobalObject&, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow);
+ThrowCompletionOr<ISODateRecord> add_iso_date(GlobalObject&, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow);
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
 ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject&, DifferenceOperation, PlainDate&, Value other, Value options);
 

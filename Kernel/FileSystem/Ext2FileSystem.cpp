@@ -49,9 +49,9 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-ErrorOr<NonnullRefPtr<Ext2FS>> Ext2FS::try_create(OpenFileDescription& file_description)
+ErrorOr<NonnullRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description)));
 }
 
 Ext2FS::Ext2FS(OpenFileDescription& file_description)
@@ -1545,6 +1545,8 @@ ErrorOr<void> Ext2FSInode::set_atime(time_t t)
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
+    if (t > INT32_MAX)
+        return EINVAL;
     m_raw_inode.i_atime = t;
     set_metadata_dirty(true);
     return {};

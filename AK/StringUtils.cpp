@@ -462,6 +462,20 @@ String to_titlecase(StringView str)
     return builder.to_string();
 }
 
+String invert_case(StringView str)
+{
+    StringBuilder builder(str.length());
+
+    for (auto ch : str) {
+        if (is_ascii_lower_alpha(ch))
+            builder.append(to_ascii_uppercase(ch));
+        else
+            builder.append(to_ascii_lowercase(ch));
+    }
+
+    return builder.to_string();
+}
+
 String replace(StringView str, StringView needle, StringView replacement, bool all_occurrences)
 {
     if (str.is_empty())

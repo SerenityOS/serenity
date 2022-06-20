@@ -1,8 +1,8 @@
-From e02111d802947f23b9424c4e50a76c55288b6fd6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: circl <circl.lastname@gmail.com>
 Date: Sun, 20 Mar 2022 17:13:21 +0100
-Subject: [PATCH 1/2] malloc.h doesn't exist on Serenity, but the code only
- checks for macOS and BSDs
+Subject: [PATCH] malloc.h doesn't exist on Serenity, but the code only checks
+ for macOS and BSDs
 
 ---
  src/Update.cpp | 2 +-
@@ -21,6 +21,3 @@ index 50ef666..5996846 100644
  #include <malloc.h>
  #endif
  #include <cstring>
--- 
-2.32.0
-

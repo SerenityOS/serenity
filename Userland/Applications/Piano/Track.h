@@ -14,8 +14,10 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibDSP/Effects.h>
+#include <LibDSP/Keyboard.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/Synthesizers.h>
+#include <LibDSP/Transport.h>
 
 using LibDSP::RollNote;
 using RollIter = AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
@@ -25,7 +27,7 @@ class Track {
     AK_MAKE_NONMOVABLE(Track);
 
 public:
-    explicit Track(u32 const& time);
+    Track(NonnullRefPtr<LibDSP::Transport>, NonnullRefPtr<LibDSP::Keyboard>);
     ~Track() = default;
 
     Vector<Audio::Sample> const& recorded_sample() const { return m_recorded_sample; }
@@ -38,8 +40,8 @@ public:
     void reset();
     String set_recorded_sample(StringView path);
     void set_roll_note(int note, u32 on_sample, u32 off_sample);
-    void set_keyboard_note(int note, Switch state);
     void set_volume(int volume);
+    void set_active(bool active) { m_is_active_track = active; }
 
 private:
     Audio::Sample recorded_sample(size_t note);
@@ -50,13 +52,12 @@ private:
 
     int m_volume;
 
-    u32 const& m_time;
-
-    NonnullRefPtr<LibDSP::Transport> m_temporary_transport;
+    NonnullRefPtr<LibDSP::Transport> m_transport;
     NonnullRefPtr<LibDSP::Effects::Delay> m_delay;
     NonnullRefPtr<LibDSP::Synthesizers::Classic> m_synth;
 
     SinglyLinkedList<RollNote> m_roll_notes[note_count];
     RollIter m_roll_iterators[note_count];
-    Array<Optional<RollNote>, note_count> m_keyboard_notes;
+    NonnullRefPtr<LibDSP::Keyboard> m_keyboard;
+    bool m_is_active_track { false };
 };

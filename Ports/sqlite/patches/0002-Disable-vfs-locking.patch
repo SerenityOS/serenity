@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Sat, 27 Mar 2021 12:38:07 +0100
+Subject: [PATCH] Disable vfs locking
+
+---
+ sqlite3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sqlite3.c b/sqlite3.c
+index 0b227f0..90c38bd 100644
+--- a/sqlite3.c
++++ b/sqlite3.c
+@@ -42840,6 +42840,7 @@ SQLITE_API int sqlite3_os_init(void){
+   ** array cannot be const.
+   */
+   static sqlite3_vfs aVfs[] = {
++    UNIXVFS("unix-none",     nolockIoFinder ),
+ #if SQLITE_ENABLE_LOCKING_STYLE && defined(__APPLE__)
+     UNIXVFS("unix",          autolockIoFinder ),
+ #elif OS_VXWORKS
+@@ -42847,7 +42848,6 @@ SQLITE_API int sqlite3_os_init(void){
+ #else
+     UNIXVFS("unix",          posixIoFinder ),
+ #endif
+-    UNIXVFS("unix-none",     nolockIoFinder ),
+     UNIXVFS("unix-dotfile",  dotlockIoFinder ),
+     UNIXVFS("unix-excl",     posixIoFinder ),
+ #if OS_VXWORKS

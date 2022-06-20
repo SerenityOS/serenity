@@ -16,7 +16,7 @@
 
 namespace GUI {
 
-int MessageBox::show(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
+Dialog::ExecResult MessageBox::show(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
 {
     auto box = MessageBox::construct(parent_window, text, title, type, input_type);
     if (parent_window)
@@ -24,12 +24,12 @@ int MessageBox::show(Window* parent_window, StringView text, StringView title, T
     return box->exec();
 }
 
-int MessageBox::show_error(Window* parent_window, StringView text)
+Dialog::ExecResult MessageBox::show_error(Window* parent_window, StringView text)
 {
     return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
 }
 
-int MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
+Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
 {
     StringBuilder builder;
     builder.append("Save changes to ");
@@ -151,7 +151,7 @@ void MessageBox::build()
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](String label, Dialog::ExecResult result) -> GUI::Button& {
+    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
         button.set_text(label);
@@ -164,13 +164,13 @@ void MessageBox::build()
 
     button_container.layout()->add_spacer();
     if (should_include_ok_button())
-        m_ok_button = add_button("OK", Dialog::ExecOK);
+        m_ok_button = add_button("OK", ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = add_button("Yes", Dialog::ExecYes);
+        m_yes_button = add_button("Yes", ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = add_button("No", Dialog::ExecNo);
+        m_no_button = add_button("No", ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = add_button("Cancel", Dialog::ExecCancel);
+        m_cancel_button = add_button("Cancel", ExecResult::Cancel);
     button_container.layout()->add_spacer();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;

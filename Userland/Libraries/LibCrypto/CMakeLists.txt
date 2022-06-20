@@ -19,6 +19,8 @@ set(SOURCES
     Checksum/CRC32.cpp
     Cipher/AES.cpp
     Cipher/ChaCha20.cpp
+    Curves/Curve25519.cpp
+    Curves/Ed25519.cpp
     Curves/SECP256r1.cpp
     Curves/X25519.cpp
     Curves/X448.cpp

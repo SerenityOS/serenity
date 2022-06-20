@@ -21,6 +21,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -37,7 +38,7 @@ public:
         auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
         dialog->set_title("Add a keymap");
 
-        if (dialog->exec() == GUI::Dialog::ExecOK) {
+        if (dialog->exec() == ExecResult::OK) {
             return dialog->selected_keymap();
         }
 
@@ -87,12 +88,12 @@ private:
 
         auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
-            done(Dialog::ExecOK);
+            done(ExecResult::OK);
         };
 
         auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
-            done(Dialog::ExecCancel);
+            done(ExecResult::Cancel);
         };
     }
 
@@ -187,6 +188,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         if (!selection.is_empty()) {
             auto& selected_keymap = keymaps_list_model.keymap_at(selection.first().row());
             keymaps_list_model.set_active_keymap(selected_keymap);
+            set_modified(true);
         }
     };
 
@@ -202,8 +204,10 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_add_keymap_button->on_click = [&](auto) {
         auto keymap = KeymapSelectionDialog::select_keymap(window(), keymaps_list_model.keymaps());
-        if (!keymap.is_empty())
+        if (!keymap.is_empty()) {
             keymaps_list_model.add_keymap(keymap);
+            set_modified(true);
+        }
     };
 
     m_remove_keymap_button = find_descendant_of_type_named<GUI::Button>("remove_keymap_button");
@@ -218,6 +222,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         }
         if (active_keymap_deleted)
             keymaps_list_model.set_active_keymap(keymaps_list_model.keymap_at(0));
+        set_modified(true);
     };
 
     m_selected_keymaps_listview->on_selection_change = [&]() {
@@ -243,6 +248,9 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_num_lock_checkbox = find_descendant_of_type_named<GUI::CheckBox>("num_lock_checkbox");
     m_num_lock_checkbox->set_checked(Config::read_bool("KeyboardSettings", "StartupEnable", "NumLock", true));
+    m_num_lock_checkbox->on_checked = [&](auto) {
+        set_modified(true);
+    };
 }
 
 KeyboardSettingsWidget::~KeyboardSettingsWidget()
@@ -274,12 +282,6 @@ void KeyboardSettingsWidget::apply_settings()
 
 void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps, String const& active_keymap)
 {
-    pid_t child_pid;
-
     auto keymaps_string = String::join(',', keymaps);
-    char const* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), "-m", active_keymap.characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-        exit(1);
-    }
+    GUI::Process::spawn_or_show_error(window(), "/bin/keymap", Array { "-s", keymaps_string.characters(), "-m", active_keymap.characters() });
 }

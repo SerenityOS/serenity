@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Music.h"
+#include <AK/NonnullRefPtr.h>
+#include <LibDSP/Keyboard.h>
 #include <LibGUI/Frame.h>
 
 class TrackManager;
@@ -18,14 +20,11 @@ class KeysWidget final : public GUI::Frame {
 public:
     virtual ~KeysWidget() override = default;
 
-    int key_code_to_key(int key_code) const;
+    static i8 key_code_to_key(int key_code);
     int mouse_note() const;
 
-    void set_key(int key, Switch);
-    bool note_is_set(int note) const;
-
 private:
-    explicit KeysWidget(TrackManager&);
+    KeysWidget(NonnullRefPtr<LibDSP::Keyboard>);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -34,9 +33,9 @@ private:
 
     int note_for_event_position(Gfx::IntPoint const&) const;
 
-    TrackManager& m_track_manager;
+    void set_key(i8 key, LibDSP::Keyboard::Switch);
 
-    u8 m_key_on[note_count] { 0 };
+    NonnullRefPtr<LibDSP::Keyboard> m_keyboard;
 
     bool m_mouse_down { false };
     int m_mouse_note { -1 };

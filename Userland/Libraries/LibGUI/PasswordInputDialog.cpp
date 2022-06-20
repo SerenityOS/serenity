@@ -42,13 +42,13 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, String title, St
     ok_button.on_click = [&](auto) {
         dbgln("GUI::PasswordInputDialog: OK button clicked");
         m_password = password_box.text();
-        done(ExecOK);
+        done(ExecResult::OK);
     };
 
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [this](auto) {
         dbgln("GUI::PasswordInputDialog: Cancel button clicked");
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     password_box.on_return_pressed = [&] {
@@ -60,7 +60,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, String title, St
     password_box.set_focus(true);
 }
 
-int PasswordInputDialog::show(Window* parent_window, String& text_value, String title, String server, String username)
+Dialog::ExecResult PasswordInputDialog::show(Window* parent_window, String& text_value, String title, String server, String username)
 {
     auto box = PasswordInputDialog::construct(parent_window, move(title), move(server), move(username));
     auto result = box->exec();

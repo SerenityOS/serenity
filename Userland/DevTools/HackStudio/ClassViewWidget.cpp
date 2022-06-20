@@ -101,16 +101,16 @@ ClassViewModel::ClassViewModel()
 {
     m_root_scope.clear();
     ProjectDeclarations::the().for_each_declared_symbol([this](auto& decl) {
-        if (decl.type == GUI::AutocompleteProvider::DeclarationType::Class
-            || decl.type == GUI::AutocompleteProvider::DeclarationType::Struct
-            || decl.type == GUI::AutocompleteProvider::DeclarationType::Member
-            || decl.type == GUI::AutocompleteProvider::DeclarationType::Namespace) {
+        if (decl.type == CodeComprehension::DeclarationType::Class
+            || decl.type == CodeComprehension::DeclarationType::Struct
+            || decl.type == CodeComprehension::DeclarationType::Member
+            || decl.type == CodeComprehension::DeclarationType::Namespace) {
             add_declaration(decl);
         }
     });
 }
 
-static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& children, NonnullOwnPtr<ClassViewNode>&& node_ptr, ClassViewNode* parent, const GUI::AutocompleteProvider::Declaration* declaration)
+static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& children, NonnullOwnPtr<ClassViewNode>&& node_ptr, ClassViewNode* parent, CodeComprehension::Declaration const* declaration)
 {
     node_ptr->parent = parent;
     node_ptr->declaration = declaration;
@@ -127,7 +127,7 @@ static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& childre
     return children.at(inserted_index);
 }
 
-void ClassViewModel::add_declaration(const GUI::AutocompleteProvider::Declaration& decl)
+void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
 {
     ClassViewNode* parent = nullptr;
     auto scope_parts = decl.scope.view().split_view("::");

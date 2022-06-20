@@ -12,11 +12,13 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html
 pid_t wait(int* wstatus)
 {
     return waitpid(-1, wstatus, 0);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
     siginfo_t siginfo;
@@ -45,14 +47,13 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
     if (rc < 0)
         return rc;
 
-    if (wstatus) {
-        if ((options & WNOHANG) && siginfo.si_pid == 0) {
-            // No child in a waitable state was found. All other fields
-            // in siginfo are undefined
-            *wstatus = 0;
-            return 0;
-        }
+    if ((options & WNOHANG) && siginfo.si_pid == 0) {
+        // No child in a waitable state was found. All other fields
+        // in siginfo are undefined
+        return 0;
+    }
 
+    if (wstatus) {
         switch (siginfo.si_code) {
         case CLD_EXITED:
             *wstatus = siginfo.si_status << 8;
@@ -64,8 +65,8 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
             *wstatus = siginfo.si_status << 8 | 0x7f;
             break;
         case CLD_CONTINUED:
-            *wstatus = 0;
-            return 0; // return 0 if running
+            *wstatus = 0xffff;
+            break;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -74,6 +75,7 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
     return siginfo.si_pid;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitid.html
 int waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options)
 {
     Syscall::SC_waitid_params params { idtype, id, infop, options };

@@ -30,6 +30,8 @@
                 text_alignment: "CenterLeft"
             }
 
+            @GUI::Layout::Spacer {}
+
             @GUI::Button {
                 name: "log_in"
                 text: "Log in"

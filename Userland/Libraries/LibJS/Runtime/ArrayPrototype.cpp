@@ -73,8 +73,12 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
-    define_native_function(vm.names.groupBy, group_by, 1, attr);
-    define_native_function(vm.names.groupByToMap, group_by_to_map, 1, attr);
+    define_native_function(vm.names.group, group, 1, attr);
+    define_native_function(vm.names.groupToMap, group_to_map, 1, attr);
+    define_native_function(vm.names.toReversed, to_reversed, 0, attr);
+    define_native_function(vm.names.toSorted, to_sorted, 1, attr);
+    define_native_function(vm.names.toSpliced, to_spliced, 2, attr);
+    define_native_function(vm.names.with, with, 2, attr);
 
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -85,6 +89,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // 23.1.3.35 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With find from last proposal, https://tc39.es/proposal-array-find-from-last/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
+    // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
@@ -96,10 +101,13 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true)));
-    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupBy, Value(true)));
-    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupByToMap, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.group, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.groupToMap, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.keys, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toReversed, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toSorted, Value(true)));
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.toSpliced, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
@@ -867,12 +875,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
+ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
     if (arr_to_sort.size() <= 1)
         return {};
+
+    auto& vm = global_object.vm();
 
     MarkedVector<Value> left(vm.heap());
     MarkedVector<Value> right(vm.heap());
@@ -888,8 +898,8 @@ static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_obj
         }
     }
 
-    TRY(array_merge_sort(vm, global_object, compare_func, left));
-    TRY(array_merge_sort(vm, global_object, compare_func, right));
+    TRY(array_merge_sort(global_object, compare_func, left));
+    TRY(array_merge_sort(global_object, compare_func, right));
 
     arr_to_sort.clear();
 
@@ -899,54 +909,13 @@ static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_obj
         auto x = left[left_index];
         auto y = right[right_index];
 
-        double comparison_result;
-
-        if (x.is_undefined() && y.is_undefined()) {
-            comparison_result = 0;
-        } else if (x.is_undefined()) {
-            comparison_result = 1;
-        } else if (y.is_undefined()) {
-            comparison_result = -1;
-        } else if (compare_func) {
-            auto call_result = TRY(call(global_object, *compare_func, js_undefined(), left[left_index], right[right_index]));
-            auto number = TRY(call_result.to_number(global_object));
-            if (number.is_nan())
-                comparison_result = 0;
-            else
-                comparison_result = number.as_double();
-        } else {
-            // FIXME: It would probably be much better to be smarter about this and implement
-            // the Abstract Relational Comparison in line once iterating over code points, rather
-            // than calling it twice after creating two primitive strings.
-
-            auto x_string = TRY(x.to_primitive_string(global_object));
-
-            auto y_string = TRY(y.to_primitive_string(global_object));
-
-            auto x_string_value = Value(x_string);
-            auto y_string_value = Value(y_string);
-
-            // Because they are called with primitive strings, these is_less_than calls
-            // should never result in a VM exception.
-            auto x_lt_y_relation = MUST(is_less_than(global_object, true, x_string_value, y_string_value));
-            VERIFY(x_lt_y_relation != TriState::Unknown);
-            auto y_lt_x_relation = MUST(is_less_than(global_object, true, y_string_value, x_string_value));
-            VERIFY(y_lt_x_relation != TriState::Unknown);
-
-            if (x_lt_y_relation == TriState::True) {
-                comparison_result = -1;
-            } else if (y_lt_x_relation == TriState::True) {
-                comparison_result = 1;
-            } else {
-                comparison_result = 0;
-            }
-        }
+        double comparison_result = TRY(compare_array_elements(global_object, x, y, compare_func));
 
         if (comparison_result <= 0) {
-            arr_to_sort.append(left[left_index]);
+            arr_to_sort.append(x);
             left_index++;
         } else {
-            arr_to_sort.append(right[right_index]);
+            arr_to_sort.append(y);
             right_index++;
         }
     }
@@ -990,7 +959,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // to be stable. FIXME: when initially scanning through the array, maintain a flag
     // for if an unstable sort would be indistinguishable from a stable sort (such as just
     // just strings or numbers), and in that case use quick sort instead for better performance.
-    TRY(array_merge_sort(vm, global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
+    TRY(array_merge_sort(global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
 
     for (size_t j = 0; j < items.size(); ++j)
         TRY(object->set(j, items[j], Object::ShouldThrowExceptions::Yes));
@@ -1673,7 +1642,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
 {
     // 1. For each Record { [[Key]], [[Elements]] } g of groups, do
     //      a. If SameValue(g.[[Key]], key) is true, then
-    //      NOTE: This is performed in KeyedGroupTraits::equals for groupByToMap and Traits<JS::PropertyKey>::equals for groupBy.
+    //      NOTE: This is performed in KeyedGroupTraits::equals for groupToMap and Traits<JS::PropertyKey>::equals for group.
     auto existing_elements_iterator = groups.find(key);
     if (existing_elements_iterator != groups.end()) {
         // i. Assert: exactly one element of groups meets this criteria.
@@ -1695,8 +1664,8 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
-// 2.1 Array.prototype.groupBy ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
+// 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.group
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1749,8 +1718,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by)
     return object;
 }
 
-// 2.2 Array.prototype.groupByToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
+// 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.grouptomap
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1818,6 +1787,265 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_by_to_map)
 
     // 9. Return map.
     return map;
+}
+
+// 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
+{
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 4. Let k be 0.
+    // 5. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let from be ! ToString(𝔽(len - k - 1)).
+        auto from = PropertyKey { length - k - 1 };
+
+        // b. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        // c. Let fromValue be ? Get(O, from).
+        auto from_value = TRY(object->get(from));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pk, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set k to k + 1.
+    }
+
+    // 6. Return A.
+    return array;
+}
+
+// 1.1.1.5 Array.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSorted
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
+{
+    auto comparefn = vm.argument(0);
+
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
+    if (!comparefn.is_undefined() && !comparefn.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn);
+
+    // 2. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 3. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 4. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 5. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
+    Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
+        // a. Return ? CompareArrayElements(x, y, comparefn).
+        return TRY(compare_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
+    };
+
+    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
+    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, false));
+
+    // 7. Let j be 0.
+    // 8. Repeat, while j < len,
+    for (size_t j = 0; j < length; ++j) {
+        // a. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(j)), sortedList[j]).
+        MUST(array->create_data_property_or_throw(j, sorted_list[j]));
+
+        // b. Set j to j + 1.
+    }
+
+    // 9. Return A.
+    return array;
+}
+
+// 1.1.1.6 Array.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSpliced
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
+{
+    auto start = vm.argument(0);
+    auto delete_count = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let relativeStart be ? ToIntegerOrInfinity(start).
+    auto relative_start = TRY(start.to_integer_or_infinity(global_object));
+
+    size_t actual_start;
+
+    // 4. If relativeStart is -∞, let actualStart be 0.
+    if (Value(relative_start).is_negative_infinity())
+        actual_start = 0;
+    // 5. Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
+    else if (relative_start < 0)
+        actual_start = static_cast<size_t>(max(static_cast<double>(length) + relative_start, 0));
+    // 6. Else, let actualStart be min(relativeStart, len).
+    else
+        actual_start = static_cast<size_t>(min(relative_start, static_cast<double>(length)));
+
+    // Sanity check
+    VERIFY(actual_start <= length);
+
+    // 7. Let insertCount be the number of elements in items.
+    auto insert_count = vm.argument_count() >= 2 ? vm.argument_count() - 2 : 0;
+
+    size_t actual_delete_count;
+
+    // 8. If start is not present, then
+    if (vm.argument_count() == 0) {
+        // a. Let actualDeleteCount be 0.
+        actual_delete_count = 0;
+    }
+    // 9. Else if deleteCount is not present, then
+    else if (vm.argument_count() == 1) {
+        // a. Let actualDeleteCount be len - actualStart.
+        actual_delete_count = length - actual_start;
+    }
+    // 10. Else,
+    else {
+        // a. Let dc be ? ToIntegerOrInfinity(deleteCount).
+        auto dc = TRY(delete_count.to_integer_or_infinity(global_object));
+
+        // b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
+        actual_delete_count = static_cast<size_t>(clamp(dc, 0, static_cast<double>(length - actual_start)));
+    }
+
+    // Sanity check
+    VERIFY(actual_delete_count <= (length - actual_start));
+
+    // 11. Let newLen be len + insertCount - actualDeleteCount.
+    auto new_length_double = static_cast<double>(length) + static_cast<double>(insert_count) - static_cast<double>(actual_delete_count);
+
+    // 12. If newLen > 2^53 - 1, throw a TypeError exception.
+    if (new_length_double > MAX_ARRAY_LIKE_INDEX)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+
+    auto new_length = static_cast<size_t>(new_length_double);
+
+    // 13. Let A be ? ArrayCreate(𝔽(newLen)).
+    auto* array = TRY(Array::create(global_object, new_length));
+
+    // 14. Let i be 0.
+    size_t i = 0;
+
+    // 15. Let r be actualStart + actualDeleteCount.
+    auto r = actual_start + actual_delete_count;
+
+    // 16. Repeat, while i < actualStart,
+    while (i < actual_start) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let iValue be ? Get(O, Pi).
+        auto i_value = TRY(object->get(property_key));
+
+        // c. Perform ! CreateDataPropertyOrThrow(A, Pi, iValue).
+        MUST(array->create_data_property_or_throw(property_key, i_value));
+
+        // d. Set i to i + 1.
+        ++i;
+    }
+
+    // 17. For each element E of items, do
+    for (size_t element_index = 2; element_index < vm.argument_count(); ++element_index) {
+        auto element = vm.argument(element_index);
+
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Perform ! CreateDataPropertyOrThrow(A, Pi, E).
+        MUST(array->create_data_property_or_throw(property_key, element));
+
+        // c. Set i to i + 1.
+        ++i;
+    }
+
+    // 18. Repeat, while i < newLen,
+    while (i < new_length) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let from be ! ToString(𝔽(r)).
+        auto from = PropertyKey { r };
+
+        // c. Let fromValue be ? Get(O, from).
+        auto from_value = TRY(object->get(from));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pi, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set i to i + 1.
+        ++i;
+
+        // f. Set r to r + 1.
+        ++r;
+    }
+
+    // 19. Return A.
+    return array;
+}
+
+// 1.1.1.7 Array.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
+{
+    auto index = vm.argument(0);
+    auto value = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = TRY(length_of_array_like(global_object, *object));
+
+    // 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
+    auto relative_index = TRY(index.to_integer_or_infinity(global_object));
+
+    double actual_index;
+
+    // 4. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
+    if (relative_index >= 0)
+        actual_index = relative_index;
+    // 5. Else, let actualIndex be len + relativeIndex.
+    else
+        actual_index = static_cast<double>(length) + relative_index;
+
+    // 6. If actualIndex ≥ len or actualIndex < 0, throw a RangeError exception.
+    if (actual_index >= static_cast<double>(length) || actual_index < 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, actual_index, length);
+
+    // 7. Let A be ? ArrayCreate(𝔽(len)).
+    auto* array = TRY(Array::create(global_object, length));
+
+    // 8. Let k be 0.
+    // 9. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        Value from_value;
+
+        // b. If k is actualIndex, let fromValue be value.
+        if (k == static_cast<size_t>(actual_index))
+            from_value = value;
+        // c. Else, let fromValue be ? Get(O, Pk).
+        else
+            from_value = TRY(object->get(property_key));
+
+        // d. Perform ! CreateDataPropertyOrThrow(A, Pk, fromValue).
+        MUST(array->create_data_property_or_throw(property_key, from_value));
+
+        // e. Set k to k + 1.
+    }
+
+    // 10. Return A.
+    return array;
 }
 
 }

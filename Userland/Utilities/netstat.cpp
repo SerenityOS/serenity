@@ -24,12 +24,6 @@ constexpr int max_formatted_address_length = 21;
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath unix"));
-    TRY(Core::System::unveil("/proc/net", "r"));
-    TRY(Core::System::unveil("/proc/all", "r"));
-    TRY(Core::System::unveil("/etc/passwd", "r"));
-    TRY(Core::System::unveil("/etc/services", "r"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool flag_all = false;
     bool flag_list = false;
@@ -49,6 +43,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
     args_parser.add_option(flag_wide, "Do not truncate IP addresses by printing out the whole symbolic host", "wide", 'W');
     args_parser.parse(arguments);
+
+    TRY(Core::System::unveil("/proc/net", "r"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/services", "r"));
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
 

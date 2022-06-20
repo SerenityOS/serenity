@@ -10,6 +10,7 @@ set(TEST_SOURCES
     TestLibCString.cpp
     TestLibCTime.cpp
     TestMalloc.cpp
+    TestMemalign.cpp
     TestMemmem.cpp
     TestMkDir.cpp
     TestQsort.cpp

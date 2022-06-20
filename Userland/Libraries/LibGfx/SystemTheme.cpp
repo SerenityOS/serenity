@@ -131,19 +131,19 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
 
-#define DO_PATH(x, allow_empty)                                                                                  \
+#define ENCODE_PATH(x, allow_empty)                                                                              \
     do {                                                                                                         \
         auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
         memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
         data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
     } while (0)
 
-    DO_PATH(TitleButtonIcons, false);
-    DO_PATH(ActiveWindowShadow, true);
-    DO_PATH(InactiveWindowShadow, true);
-    DO_PATH(TaskbarShadow, true);
-    DO_PATH(MenuShadow, true);
-    DO_PATH(TooltipShadow, true);
+    ENCODE_PATH(TitleButtonIcons, false);
+    ENCODE_PATH(ActiveWindowShadow, true);
+    ENCODE_PATH(InactiveWindowShadow, true);
+    ENCODE_PATH(TaskbarShadow, true);
+    ENCODE_PATH(MenuShadow, true);
+    ENCODE_PATH(TooltipShadow, true);
 
     return buffer;
 }

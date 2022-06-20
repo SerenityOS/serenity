@@ -51,12 +51,13 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, G
 
     auto& ok_button = button_container.add<GUI::Button>("OK");
     ok_button.on_click = [this](auto) {
-        done(ExecOK);
+        done(ExecResult::OK);
     };
+    ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     width_spinbox.on_change = [this](int value) {
@@ -65,10 +66,6 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, G
 
     height_spinbox.on_change = [this](int value) {
         m_layer_size.set_height(value);
-    };
-
-    m_name_textbox->on_return_pressed = [this] {
-        done(ExecOK);
     };
 
     width_spinbox.set_range(1, 16384);

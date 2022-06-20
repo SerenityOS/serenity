@@ -94,7 +94,7 @@ void TextEditor::create_actions()
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecOK) {
+                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecResult::OK) {
                     auto line_target = value.to_uint();
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -757,7 +757,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 {
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
-        if (m_autocomplete_box->apply_suggestion() == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes)
+        if (m_autocomplete_box->apply_suggestion() == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes)
             hide_autocomplete();
         else
             try_update_autocomplete();
@@ -931,7 +931,8 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+    // AltGr is emulated as Ctrl+Alt; if Ctrl is set check if it's not for AltGr
+    if ((!event.ctrl() || event.altgr()) && !event.alt() && event.code_point() != 0) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         add_code_point(event.code_point());
         return;
@@ -1576,14 +1577,8 @@ void TextEditor::did_change(AllowCallback allow_callback)
     recompute_all_visual_lines();
     hide_autocomplete_if_needed();
     m_needs_rehighlight = true;
-    if (!m_has_pending_change_notification) {
-        m_has_pending_change_notification = true;
-        deferred_invoke([this, allow_callback] {
-            m_has_pending_change_notification = false;
-            if (on_change && allow_callback == AllowCallback::Yes)
-                on_change();
-        });
-    }
+    if (on_change && allow_callback == AllowCallback::Yes)
+        on_change();
 }
 void TextEditor::set_mode(const Mode mode)
 {

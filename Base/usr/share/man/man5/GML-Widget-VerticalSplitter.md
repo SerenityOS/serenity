@@ -1,6 +1,6 @@
 ## Name
 
-GML Vertical Spliiter Widget
+GML Vertical Splitter Widget
 
 ## Description
 

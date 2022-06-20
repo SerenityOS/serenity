@@ -166,7 +166,7 @@ void EventLoop::process()
     //               - The user agent believes that updating the rendering of the Document's browsing context would have no visible effect, and
     //               - The Document's map of animation frame callbacks is empty.
 
-    // FIXME:     5. Remove from docs all Document objects for which the user agent believes that it's preferrable to skip updating the rendering for other reasons.
+    // FIXME:     5. Remove from docs all Document objects for which the user agent believes that it's preferable to skip updating the rendering for other reasons.
 
     // FIXME:     6. For each fully active Document in docs, flush autofocus candidates for that Document if its browsing context is a top-level browsing context.
 

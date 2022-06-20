@@ -12,6 +12,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Path.h>
@@ -151,7 +152,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
                     move_point = { (7 - square.file) * tile_width, square.rank * tile_height };
                 }
 
-                painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
+                Gfx::AntiAliasingPainter aa_painter { painter };
+                aa_painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
             }
         }
 
@@ -235,7 +237,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     Chess::Move move = { m_moving_square, target_square };
     if (board().is_promotion_move(move)) {
         auto promotion_dialog = PromotionDialog::construct(*this);
-        if (promotion_dialog->exec() == PromotionDialog::ExecOK)
+        if (promotion_dialog->exec() == PromotionDialog::ExecResult::OK)
             move.promote_to = promotion_dialog->selected_piece();
     }
 
@@ -262,7 +264,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 update();
                 if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?", "Claim Draw?",
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecYes) {
+                    == GUI::Dialog::ExecResult::Yes) {
                     msg = "Draw by 50 move rule.";
                 } else {
                     over = false;
@@ -275,7 +277,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 update();
                 if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?", "Claim Draw?",
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecYes) {
+                    == GUI::Dialog::ExecResult::Yes) {
                     msg = "Draw by threefold repetition.";
                 } else {
                     over = false;
@@ -691,7 +693,7 @@ int ChessWidget::resign()
     }
 
     auto result = GUI::MessageBox::show(window(), "Are you sure you wish to resign?", "Resign", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
-    if (result != GUI::MessageBox::ExecYes)
+    if (result != GUI::MessageBox::ExecResult::Yes)
         return -1;
 
     board().set_resigned(m_board.turn());

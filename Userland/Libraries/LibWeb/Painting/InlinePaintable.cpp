@@ -54,8 +54,8 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
-            auto border_radius_data = Painting::normalized_border_radius_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            Painting::paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
+            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            Painting::paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), &computed_values().background_layers(), border_radii_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
                 Vector<Painting::ShadowData> resolved_box_shadow_data;
@@ -106,9 +106,9 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             }
 
             auto bordered_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-            auto border_radius_data = Painting::normalized_border_radius_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
 
-            Painting::paint_all_borders(context, bordered_rect, border_radius_data, borders_data);
+            Painting::paint_all_borders(context, bordered_rect, border_radii_data, borders_data);
 
             return IterationDecision::Continue;
         });

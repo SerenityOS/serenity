@@ -61,6 +61,7 @@ public:
     virtual void set_light_state(unsigned, Light const&) = 0;
     virtual void set_material_state(Face, Material const&) = 0;
     virtual void set_stencil_configuration(Face, StencilConfiguration const&) = 0;
+    virtual void set_clip_planes(Vector<FloatVector4> const&) = 0;
 
     virtual RasterPosition raster_position() const = 0;
     virtual void set_raster_position(RasterPosition const& raster_position) = 0;

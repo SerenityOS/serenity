@@ -1,7 +1,7 @@
-From 6b7f5908f2d9ca0c3b19fe377feae8f8529e8f4e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:35:57 +0330
-Subject: [PATCH 2/4] Tweak configure and configure.ac
+Subject: [PATCH] Tweak configure and configure.ac
 
 As usual, make the `configure` script recognize Serenity. Also set
 `MACHDEP` (which is used for `sys.platform`) to a version-less
@@ -12,7 +12,7 @@ As usual, make the `configure` script recognize Serenity. Also set
  2 files changed, 16 insertions(+), 2 deletions(-)
 
 diff --git a/configure b/configure
-index 0cc86f9..45a4ad6 100755
+index 19f1bd5..340e76e 100755
 --- a/configure
 +++ b/configure
 @@ -3335,6 +3335,9 @@ then
@@ -53,7 +53,7 @@ index 0cc86f9..45a4ad6 100755
  	Darwin/*)
  		LINKFORSHARED="$extra_undefs -framework CoreFoundation"
 diff --git a/configure.ac b/configure.ac
-index 547255f..b352890 100644
+index 763fc69..8d4c0af 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -391,6 +391,9 @@ then
@@ -93,6 +93,3 @@ index 547255f..b352890 100644
  	# -u libsys_s pulls in all symbols in libsys
  	Darwin/*)
  		LINKFORSHARED="$extra_undefs -framework CoreFoundation"
--- 
-2.35.1
-

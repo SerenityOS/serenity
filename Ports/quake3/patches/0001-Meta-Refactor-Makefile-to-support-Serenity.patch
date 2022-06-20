@@ -1,14 +1,14 @@
-From 7658f60b1a064ca08da8e71c4f44c4505df6f571 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jesse Buhagiar <jooster669@gmail.com>
 Date: Fri, 25 Mar 2022 09:39:21 +1100
-Subject: [PATCH 1/8] Meta: Refactor Makefile to support Serenity
+Subject: [PATCH] Meta: Refactor Makefile to support Serenity
 
 ---
  Makefile | 36 ++++++++++++++++--------------------
  1 file changed, 16 insertions(+), 20 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 9e535559..b26ceb7f 100644
+index 9e53555..b26ceb7 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
@@ -120,6 +120,3 @@ index 9e535559..b26ceb7f 100644
  #############################################################################
  # SETUP AND BUILD -- GENERIC
  #############################################################################
--- 
-2.35.1
-

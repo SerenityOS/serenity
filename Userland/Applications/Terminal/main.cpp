@@ -11,7 +11,6 @@
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -27,6 +26,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -328,7 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            Core::Process::spawn("/bin/TerminalSettings");
+            GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings");
         });
 
     TRY(terminal->context_menu().try_add_separator());
@@ -336,7 +336,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        Core::Process::spawn("/bin/Terminal");
+        GUI::Process::spawn_or_show_error(window, "/bin/Terminal");
     })));
 
     TRY(file_menu->try_add_action(open_settings_action));
@@ -357,9 +357,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return background_process_count;
     };
 
-    auto check_terminal_quit = [&]() -> int {
+    auto check_terminal_quit = [&]() -> GUI::Dialog::ExecResult {
         if (!should_confirm_close)
-            return GUI::MessageBox::ExecOK;
+            return GUI::MessageBox::ExecResult::OK;
         Optional<String> close_message;
         if (tty_has_foreground_process()) {
             close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
@@ -372,12 +372,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (close_message.has_value())
             return GUI::MessageBox::show(window, *close_message, "Close this terminal?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-        return GUI::MessageBox::ExecOK;
+        return GUI::MessageBox::ExecResult::OK;
     };
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         dbgln("Terminal: Quit menu activated!");
-        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
             GUI::Application::the()->quit();
     })));
 
@@ -408,7 +408,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (check_terminal_quit() == GUI::MessageBox::ExecOK)
+        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };

@@ -353,6 +353,7 @@ public:
     ErrorOr<FlatPtr> sys$mkdir(Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
+    ErrorOr<FlatPtr> sys$utimensat(Userspace<Syscall::SC_utimensat_params const*>);
     ErrorOr<FlatPtr> sys$link(Userspace<Syscall::SC_link_params const*>);
     ErrorOr<FlatPtr> sys$unlink(int dirfd, Userspace<char const*> pathname, size_t path_length, int flags);
     ErrorOr<FlatPtr> sys$symlink(Userspace<Syscall::SC_symlink_params const*>);
@@ -584,6 +585,7 @@ public:
     ErrorOr<void> procfs_get_virtual_memory_stats(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_binary_link(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
+    ErrorOr<void> procfs_get_command_line(KBufferBuilder& builder) const;
     mode_t binary_link_required_mode() const;
     ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;

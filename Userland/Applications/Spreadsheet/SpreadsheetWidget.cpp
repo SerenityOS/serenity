@@ -11,7 +11,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -99,7 +98,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         VERIFY(sheet_ptr); // How did we get here without a sheet?
         auto& sheet = *sheet_ptr;
         String new_name;
-        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecResult::OK) {
             sheet.set_name(new_name);
             sheet.update();
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
@@ -108,7 +107,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_tab_context_menu->add_action(*m_rename_action);
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         String name;
-        if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecResult::OK) {
             NonnullRefPtrVector<Sheet> new_sheets;
             new_sheets.append(m_workbook->add_sheet(name));
             setup_tabs(move(new_sheets));
@@ -125,11 +124,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         if (!request_close())
             return;
 
-        Optional<String> load_path = GUI::FilePicker::get_open_filepath(window());
-        if (!load_path.has_value())
-            return;
-
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), *load_path);
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
         if (response.is_error())
             return;
         load_file(*response.value());
@@ -141,16 +136,18 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
         }
 
-        save(current_filename());
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), current_filename(), Core::OpenMode::WriteOnly);
+        if (response.is_error())
+            return;
+        save(*response.value());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         String name = "workbook";
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-        if (!save_path.has_value())
+        auto response = FileSystemAccessClient::Client::the().try_save_file(window(), name, "sheets");
+        if (response.is_error())
             return;
-
-        save(save_path.value());
+        save(*response.value());
         update_window_title();
     });
 
@@ -420,9 +417,9 @@ void SpreadsheetWidget::redo()
     update();
 }
 
-void SpreadsheetWidget::save(StringView filename)
+void SpreadsheetWidget::save(Core::File& file)
 {
-    auto result = m_workbook->save(filename);
+    auto result = m_workbook->write_to_file(file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
         return;
@@ -456,12 +453,12 @@ bool SpreadsheetWidget::request_close()
         return true;
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_filename());
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         m_save_action->activate();
         return !m_workbook->dirty();
     }
 
-    if (result == GUI::MessageBox::ExecNo)
+    if (result == GUI::MessageBox::ExecResult::No)
         return true;
 
     return false;

@@ -177,10 +177,10 @@ if that's undesirable.
 Boolean option (`false` by default), will replace the `config.sub` pointed to by
 `config_sub_path` as part of the patching process if set to true.
 
-#### `config_sub_path`
+#### `config_sub_paths`
 
-Path to the `config.sub` file used by autoconf, starting at `$workdir`.
-This is set to `config.sub` by default.
+Paths to the `config.sub` files used by autoconf, starting at `$workdir`.
+This is set to `(config.sub)` by default.
 
 #### `configscript`
 

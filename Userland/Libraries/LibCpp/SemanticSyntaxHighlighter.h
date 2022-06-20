@@ -27,7 +27,7 @@ public:
     virtual Syntax::Language language() const override { return Syntax::Language::Cpp; }
     virtual void rehighlight(Palette const&) override;
 
-    void update_tokens_info(Vector<GUI::AutocompleteProvider::TokenInfo>);
+    void update_tokens_info(Vector<CodeComprehension::TokenInfo>);
 
     virtual bool is_cpp_semantic_highlighter() const override { return true; }
 
@@ -36,10 +36,10 @@ protected:
     virtual bool token_types_equal(u64 token1, u64 token2) const override { return m_simple_syntax_highlighter.token_types_equal(token1, token2); };
 
 private:
-    void update_spans(Vector<GUI::AutocompleteProvider::TokenInfo> const&, Gfx::Palette const&);
+    void update_spans(Vector<CodeComprehension::TokenInfo> const&, Gfx::Palette const&);
 
     Cpp::SyntaxHighlighter m_simple_syntax_highlighter;
-    Vector<GUI::AutocompleteProvider::TokenInfo> m_tokens_info;
+    Vector<CodeComprehension::TokenInfo> m_tokens_info;
     String m_saved_tokens_text;
     Vector<Token> m_saved_tokens;
     Threading::Mutex m_lock;

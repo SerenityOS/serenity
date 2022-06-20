@@ -1,7 +1,7 @@
-From 99607c7382d82b955015586c716ab4dc5f747235 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Tue, 29 Mar 2022 22:42:18 +0200
-Subject: [PATCH 2/2] Build: Force `inet_aton` detection
+Subject: [PATCH] Build: Force `inet_aton` detection
 
 For a reason unknown to me, the build system fails to find `inet_aton`
 and tries to redefine it with its own implementation in
@@ -11,7 +11,7 @@ and tries to redefine it with its own implementation in
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index d9a8d0b9..687c2d87 100644
+index d9a8d0b..687c2d8 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -365,8 +365,7 @@ if test "$ac_cv_func_dlopen" = "yes"; then
@@ -24,6 +24,3 @@ index d9a8d0b9..687c2d87 100644
  
  dnl Then headers.
  dnl ----------------------------------------------------------------------------
--- 
-2.32.0
-

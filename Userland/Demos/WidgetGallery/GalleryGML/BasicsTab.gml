@@ -92,7 +92,7 @@
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {}
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Button {
                     name: "normal_button"
@@ -105,7 +105,7 @@
                     enabled: "false"
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
 
             @GUI::VerticalSeparator {}
@@ -113,7 +113,7 @@
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {}
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Button {
                     name: "enabled_coolbar_button"
@@ -128,7 +128,7 @@
                     button_style: "Coolbar"
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
         }
 
@@ -144,7 +144,7 @@
                     fixed_width: 60
                     layout: @GUI::VerticalBoxLayout {}
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
 
                     @GUI::RadioButton {
                         name: "top_radiobutton"
@@ -157,16 +157,16 @@
                         text: "Radio 2"
                     }
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Widget {
                     fixed_width: 70
                     layout: @GUI::VerticalBoxLayout {}
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
 
                     @GUI::CheckBox {
                         name: "top_checkbox"
@@ -179,10 +179,10 @@
                         enabled: false
                     }
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
 
             @GUI::VerticalSeparator {}
@@ -190,7 +190,7 @@
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {}
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Button {
                     name: "icon_button"
@@ -203,7 +203,7 @@
                     enabled: "false"
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
         }
     }
@@ -278,7 +278,7 @@
                     }
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
                 @GUI::Button {
                     name: "font_button"
@@ -295,7 +295,7 @@
                     text: "Input dialog..."
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
         }
 

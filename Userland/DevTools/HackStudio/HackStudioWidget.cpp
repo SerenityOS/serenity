@@ -471,6 +471,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_new_plain_file_action = create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "");
 
     m_open_selected_action = create_open_selected_action();
+    m_open_selected_in_new_tab_action = create_open_selected_in_new_tab_action();
     m_show_in_file_manager_action = create_show_in_file_manager_action();
 
     m_new_directory_action = create_new_directory_action();
@@ -490,6 +491,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     new_file_submenu.add_action(*m_new_directory_action);
 
     project_tree_view_context_menu->add_action(*m_open_selected_action);
+    project_tree_view_context_menu->add_action(*m_open_selected_in_new_tab_action);
     project_tree_view_context_menu->add_action(*m_show_in_file_manager_action);
     // TODO: Cut, copy, duplicate with new name...
     project_tree_view_context_menu->add_separator();
@@ -502,7 +504,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(String const
 {
     return GUI::Action::create(label, Gfx::Bitmap::try_load_from_file(icon).release_value_but_fixme_should_propagate_errors(), [this, extension](const GUI::Action&) {
         String filename;
-        if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecResult::OK)
             return;
 
         if (!extension.is_empty() && !filename.ends_with(String::formatted(".{}", extension))) {
@@ -543,7 +545,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
     return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String directory_name;
-        if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecResult::OK)
             return;
 
         auto path_to_selected = selected_file_paths();
@@ -582,6 +584,20 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
     return open_selected_action;
 }
 
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_in_new_tab_action()
+{
+    auto open_selected_in_new_tab_action = GUI::Action::create("Open in New &Tab", [this](const GUI::Action&) {
+        auto files = selected_file_paths();
+        for (auto& file : files) {
+            add_new_editor(*m_current_editor_tab_widget);
+            open_file(file);
+        }
+    });
+    open_selected_in_new_tab_action->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors());
+    open_selected_in_new_tab_action->set_enabled(true);
+    return open_selected_in_new_tab_action;
+}
+
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action()
 {
     auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](const GUI::Action&) {
@@ -615,7 +631,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             "Confirm deletion",
             GUI::MessageBox::Type::Warning,
             GUI::MessageBox::InputType::OKCancel);
-        if (result == GUI::MessageBox::ExecCancel)
+        if (result == GUI::MessageBox::ExecResult::Cancel)
             return;
 
         for (auto& file : files) {
@@ -657,7 +673,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
 
-        if (result == GUI::Dialog::ExecResult::ExecOK && dialog->created_project_path().has_value())
+        if (result == GUI::Dialog::ExecResult::OK && dialog->created_project_path().has_value())
             open_project(dialog->created_project_path().value());
     });
 }
@@ -1436,7 +1452,7 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     m_editor_font_action = GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, m_editor_font, false);
-            if (picker->exec() == GUI::Dialog::ExecOK) {
+            if (picker->exec() == GUI::Dialog::ExecResult::OK) {
                 change_editor_font(picker->font());
             }
         });
@@ -1550,10 +1566,10 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(String
 
     auto result = GUI::MessageBox::show(window(), prompt, "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
-    if (result == GUI::MessageBox::ExecCancel)
+    if (result == GUI::MessageBox::ExecResult::Cancel)
         return ContinueDecision::No;
 
-    if (result == GUI::MessageBox::ExecYes) {
+    if (result == GUI::MessageBox::ExecResult::Yes) {
         for (auto& editor_wrapper : m_all_editor_wrappers) {
             if (editor_wrapper.editor().document().is_modified()) {
                 editor_wrapper.save();

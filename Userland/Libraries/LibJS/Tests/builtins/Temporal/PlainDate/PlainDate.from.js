@@ -44,18 +44,18 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "null is not a function");
     });
 
-    test("invalid date string", () => {
+    test("invalid date time string", () => {
         expect(() => {
             Temporal.PlainDate.from("foo");
-        }).toThrowWithMessage(RangeError, "Invalid date string 'foo'");
+        }).toThrowWithMessage(RangeError, "Invalid date time string 'foo'");
     });
 
     test("extended year must not be negative zero", () => {
         expect(() => {
             Temporal.PlainDate.from("-000000-01-01");
-        }).toThrowWithMessage(RangeError, "Invalid date string '-000000-01-01'");
+        }).toThrowWithMessage(RangeError, "Invalid date time string '-000000-01-01'");
         expect(() => {
             Temporal.PlainDate.from("−000000-01-01"); // U+2212
-        }).toThrowWithMessage(RangeError, "Invalid date string '−000000-01-01'");
+        }).toThrowWithMessage(RangeError, "Invalid date time string '−000000-01-01'");
     });
 });

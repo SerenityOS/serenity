@@ -1,16 +1,16 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=brogue
+port='brogue'
 depends=("SDL2" "SDL2_image")
-version=1.10.1
+version='1.11.1'
 workdir="BrogueCE-${version}"
-files="https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz brogue-${version}.tar.gz 3e0425b3f1b59afe98a92c0282aa4dd7e8964b53f7cab969fcf437701a04c5fa"
-auth_type=sha256
+files="https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz brogue-${version}.tar.gz dc562cf774f88b12b6aeebdac5a00e62e8598b3f84da2130a54a67a60c5debf2"
+auth_type='sha256'
 makeopts+=("bin/brogue")
 
 install() {
-    datadir="$SERENITY_INSTALL_ROOT/usr/local/share/games/brogue/assets"
+    datadir="${SERENITY_INSTALL_ROOT}/usr/local/share/games/brogue/assets"
     mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
-    mkdir -p $datadir
-    cp $workdir/bin/assets/* $datadir
+    mkdir -p "${datadir}"
+    cp "${workdir}"/bin/assets/* "${datadir}"
     cp "${workdir}/bin/brogue" "${SERENITY_INSTALL_ROOT}/usr/local/bin"
 }

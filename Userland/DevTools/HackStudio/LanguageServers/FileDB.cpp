@@ -12,7 +12,7 @@
 
 namespace LanguageServers {
 
-RefPtr<const GUI::TextDocument> FileDB::get(String const& filename) const
+RefPtr<const GUI::TextDocument> FileDB::get_document(String const& filename) const
 {
     auto absolute_path = to_absolute_path(filename);
     auto document_optional = m_open_files.get(absolute_path);
@@ -22,29 +22,25 @@ RefPtr<const GUI::TextDocument> FileDB::get(String const& filename) const
     return *document_optional.value();
 }
 
-RefPtr<GUI::TextDocument> FileDB::get(String const& filename)
+RefPtr<GUI::TextDocument> FileDB::get_document(String const& filename)
 {
-    auto document = reinterpret_cast<FileDB const*>(this)->get(filename);
+    auto document = reinterpret_cast<FileDB const*>(this)->get_document(filename);
     if (document.is_null())
         return nullptr;
     return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
-RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(String const& filename) const
+Optional<String> FileDB::get_or_read_from_filesystem(StringView filename) const
 {
     auto absolute_path = to_absolute_path(filename);
-    auto document = get(absolute_path);
+    auto document = get_document(absolute_path);
     if (document)
-        return document;
-    return create_from_filesystem(absolute_path);
-}
+        return document->text();
 
-RefPtr<GUI::TextDocument> FileDB::get_or_create_from_filesystem(String const& filename)
-{
-    auto document = reinterpret_cast<FileDB const*>(this)->get_or_create_from_filesystem(filename);
-    if (document.is_null())
-        return nullptr;
-    return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
+    document = create_from_filesystem(absolute_path);
+    if (document)
+        return document->text();
+    return {};
 }
 
 bool FileDB::is_open(String const& filename) const
@@ -123,7 +119,7 @@ RefPtr<GUI::TextDocument> FileDB::create_from_file(Core::File& file) const
 void FileDB::on_file_edit_insert_text(String const& filename, String const& inserted_text, size_t start_line, size_t start_column)
 {
     VERIFY(is_open(filename));
-    auto document = get(filename);
+    auto document = get_document(filename);
     VERIFY(document);
     GUI::TextPosition start_position { start_line, start_column };
     document->insert_at(start_position, inserted_text, &s_default_document_client);
@@ -136,7 +132,7 @@ void FileDB::on_file_edit_remove_text(String const& filename, size_t start_line,
     // TODO: If file is not open - need to get its contents
     // Otherwise- somehow verify that respawned language server is synced with all file contents
     VERIFY(is_open(filename));
-    auto document = get(filename);
+    auto document = get_document(filename);
     VERIFY(document);
     GUI::TextPosition start_position { start_line, start_column };
     GUI::TextRange range {

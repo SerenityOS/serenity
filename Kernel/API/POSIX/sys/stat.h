@@ -70,6 +70,9 @@ struct stat {
 #define st_mtime st_mtim.tv_sec
 #define st_ctime st_ctim.tv_sec
 
+#define UTIME_OMIT -1
+#define UTIME_NOW -2
+
 #ifdef __cplusplus
 }
 #endif

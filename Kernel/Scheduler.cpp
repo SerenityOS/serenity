@@ -8,7 +8,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
@@ -405,7 +405,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
-    idle_thread->set_name(KString::must_create("idle thread #0"));
+    idle_thread->set_name(KString::must_create("Idle Task #0"));
 
     set_idle_thread(idle_thread);
 }

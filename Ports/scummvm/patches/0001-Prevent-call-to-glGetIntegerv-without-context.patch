@@ -1,4 +1,4 @@
-From c758a59b2b26e3ab22c4fbcba6c83e0b385b86ce Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Wed, 12 Jan 2022 13:41:39 +0100
 Subject: [PATCH] Prevent call to `glGetIntegerv` without context
@@ -25,6 +25,3 @@ index d5c034f..8a4e3ff 100644
  		#endif
  
  		// When rendering to a framebuffer, MSAA is enabled on that framebuffer, not on the screen
--- 
-2.32.0
-

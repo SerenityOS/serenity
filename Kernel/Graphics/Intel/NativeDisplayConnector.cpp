@@ -175,10 +175,10 @@ Optional<IntelGraphics::PLLSettings> IntelNativeDisplayConnector::create_pll_set
     return {};
 }
 
-NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length)
+NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length)
 {
     auto registers_region = MUST(MM.allocate_kernel_region(PhysicalAddress(registers_region_address), registers_region_length, "Intel Native Graphics Registers", Memory::Region::Access::ReadWrite));
-    auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(framebuffer_address, move(registers_region));
+    auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_region));
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->initialize_gmbus_settings_and_read_edid());
@@ -208,15 +208,6 @@ ErrorOr<void> IntelNativeDisplayConnector::unblank()
     return Error::from_errno(ENOTIMPL);
 }
 
-ErrorOr<size_t> IntelNativeDisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
-{
-    VERIFY(m_control_lock.is_locked());
-    if (offset + length > m_framebuffer_region->size())
-        return Error::from_errno(EOVERFLOW);
-    TRY(buffer.read(m_framebuffer_data + offset, 0, length));
-    return length;
-}
-
 void IntelNativeDisplayConnector::enable_console()
 {
     VERIFY(m_control_lock.is_locked());
@@ -238,19 +229,13 @@ ErrorOr<void> IntelNativeDisplayConnector::flush_first_surface()
 
 ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console()
 {
-    auto rounded_size = TRY(Memory::page_round_up(m_current_mode_setting.vertical_active * m_current_mode_setting.horizontal_stride));
-    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
-    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
-
-    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address, m_current_mode_setting.horizontal_active, m_current_mode_setting.vertical_active, m_current_mode_setting.horizontal_stride);
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), m_current_mode_setting.horizontal_active, m_current_mode_setting.vertical_active, m_current_mode_setting.horizontal_stride);
     GraphicsManagement::the().set_console(*m_framebuffer_console);
     return {};
 }
 
-IntelNativeDisplayConnector::IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region)
-    : DisplayConnector()
-    , m_framebuffer_address(framebuffer_address)
+IntelNativeDisplayConnector::IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, true)
     , m_registers_region(move(registers_region))
 {
     {
@@ -506,7 +491,7 @@ bool IntelNativeDisplayConnector::set_safe_crt_resolution()
     dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
     enable_dpll_without_vga(pll_settings.value(), dac_multiplier);
     set_display_timings(modesetting);
-    enable_output(m_framebuffer_address, modesetting.horizontal.blanking_start());
+    enable_output(m_framebuffer_address.value(), modesetting.horizontal.blanking_start());
 
     DisplayConnector::ModeSetting mode_set {
         .horizontal_stride = modesetting.horizontal.blanking_start() * sizeof(u32),
@@ -524,10 +509,6 @@ bool IntelNativeDisplayConnector::set_safe_crt_resolution()
     };
 
     m_current_mode_setting = mode_set;
-
-    auto rounded_size = MUST(Memory::page_round_up(m_current_mode_setting.vertical_active * m_current_mode_setting.horizontal_stride));
-    m_framebuffer_region = MUST(MM.allocate_kernel_region(m_framebuffer_address, rounded_size, "Intel Native Graphics Framebuffer", Memory::Region::Access::ReadWrite));
-    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
 
     if (m_framebuffer_console)
         m_framebuffer_console->set_resolution(m_current_mode_setting.horizontal_active, m_current_mode_setting.vertical_active, m_current_mode_setting.horizontal_stride);

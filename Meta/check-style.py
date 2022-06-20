@@ -23,7 +23,7 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
     'AK/Checked.h',
     'AK/Function.h',
     'Userland/Libraries/LibC/elf.h',
-    'Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/',
+    'Userland/Libraries/LibCodeComprehension/Cpp/Tests/',
     'Userland/Libraries/LibCpp/Tests/parser/',
     'Userland/Libraries/LibCpp/Tests/preprocessor/'
 }

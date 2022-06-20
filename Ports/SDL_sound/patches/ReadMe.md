@@ -1,6 +1,7 @@
-# Patches for SDL_sound
+# Patches for SDL_sound on SerenityOS
 
-## `fix_cmakelists.patch`
+## `0001-Use-pkgconfig-to-find-SDL2.patch`
 
-Use `FindPkgConfig` to find SDL2 instead of `find_package`.
+Use pkgconfig to find SDL2
+
 

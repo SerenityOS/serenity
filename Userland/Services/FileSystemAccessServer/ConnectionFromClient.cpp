@@ -77,7 +77,7 @@ void ConnectionFromClient::request_file_handler(i32 window_server_client_id, i32
         if (prompt == ShouldPrompt::Yes) {
             auto exe_name = LexicalPath::basename(exe_path);
             auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
-            approved = result == GUI::MessageBox::ExecYes;
+            approved = result == GUI::MessageBox::ExecResult::Yes;
         } else {
             approved = true;
         }

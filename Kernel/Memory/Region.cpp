@@ -129,8 +129,6 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
         m_range, move(vmobject_clone), m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
 
     if (m_stack) {
-        VERIFY(is_readable());
-        VERIFY(is_writable());
         VERIFY(vmobject().is_anonymous());
         clone_region->set_stack(true);
     }

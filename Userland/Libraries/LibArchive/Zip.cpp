@@ -51,9 +51,9 @@ Optional<Zip> Zip::try_create(ReadonlyBytes buffer)
             return {};
         if (!central_directory_record.read(buffer.slice(member_offset)))
             return {};
-        if (central_directory_record.general_purpose_flags & 1)
+        if (central_directory_record.general_purpose_flags.encrypted)
             return {}; // TODO: support encrypted zip members
-        if (central_directory_record.general_purpose_flags & 3)
+        if (central_directory_record.general_purpose_flags.data_descriptor)
             return {}; // TODO: support zip data descriptors
         if (central_directory_record.compression_method != ZipCompressionMethod::Store && central_directory_record.compression_method != ZipCompressionMethod::Deflate)
             return {}; // TODO: support obsolete zip compression methods
@@ -128,7 +128,7 @@ void ZipOutputStream::add_member(ZipMember const& member)
 
     LocalFileHeader local_file_header {
         .minimum_version = minimum_version_needed(member.compression_method),
-        .general_purpose_flags = 0,
+        .general_purpose_flags = { .flags = 0 },
         .compression_method = static_cast<u16>(member.compression_method),
         .modification_time = 0, // TODO: support modification time
         .modification_date = 0,
@@ -156,7 +156,7 @@ void ZipOutputStream::finish()
         CentralDirectoryRecord central_directory_record {
             .made_by_version = zip_version,
             .minimum_version = zip_version,
-            .general_purpose_flags = 0,
+            .general_purpose_flags = { .flags = 0 },
             .compression_method = member.compression_method,
             .modification_time = 0, // TODO: support modification time
             .modification_date = 0,

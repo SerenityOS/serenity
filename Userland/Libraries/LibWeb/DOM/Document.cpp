@@ -43,6 +43,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
+#include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -523,11 +524,49 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     return &body_layout_node->background_layers();
 }
 
+RefPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+{
+    RefPtr<HTML::HTMLBaseElement> base_element;
+
+    for_each_in_subtree_of_type<HTML::HTMLBaseElement>([&base_element](HTML::HTMLBaseElement const& base_element_in_tree) {
+        if (base_element_in_tree.has_attribute(HTML::AttributeNames::href)) {
+            base_element = base_element_in_tree;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return base_element;
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fallback-base-url
+AK::URL Document::fallback_base_url() const
+{
+    // FIXME: 1. If document is an iframe srcdoc document, then return the document base URL of document's browsing context's container document.
+    // FIXME: 2. If document's URL is about:blank, and document's browsing context's creator base URL is non-null, then return that creator base URL.
+
+    // 3. Return document's URL.
+    return m_url;
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#document-base-url
+AK::URL Document::base_url() const
+{
+    // 1. If there is no base element that has an href attribute in the Document, then return the Document's fallback base URL.
+    auto base_element = first_base_element_with_href_in_tree_order();
+    if (!base_element)
+        return fallback_base_url();
+
+    // 2. Otherwise, return the frozen base URL of the first base element in the Document that has an href attribute, in tree order.
+    return base_element->frozen_base_url();
+}
+
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
 AK::URL Document::parse_url(String const& url) const
 {
-    // FIXME: Make sure we do this according to spec.
-    return m_url.complete_url(url);
+    // FIXME: Pass in document's character encoding.
+    return base_url().complete_url(url);
 }
 
 void Document::set_needs_layout()
@@ -952,10 +991,15 @@ NonnullRefPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-NonnullRefPtr<Event> Document::create_event(String const& interface)
+DOM::ExceptionOr<NonnullRefPtr<Event>> Document::create_event(String const& interface)
 {
-    auto interface_lowercase = interface.to_lowercase();
+    // NOTE: This is named event here, since we do step 5 and 6 as soon as possible for each case.
+    // 1. Let constructor be null.
     RefPtr<Event> event;
+
+    // 2. If interface is an ASCII case-insensitive match for any of the strings in the first column in the following table,
+    //      then set constructor to the interface in the second column on the same row as the matching string:
+    auto interface_lowercase = interface.to_lowercase();
     if (interface_lowercase == "beforeunloadevent") {
         event = Event::create(""); // FIXME: Create BeforeUnloadEvent
     } else if (interface_lowercase == "compositionevent") {
@@ -992,17 +1036,29 @@ NonnullRefPtr<Event> Document::create_event(String const& interface)
         event = Event::create(""); // FIXME: Create TouchEvent
     } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
         event = UIEvents::UIEvent::create("");
-    } else {
-        // FIXME:
-        // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
-        // 4. If the interface indicated by constructor is not exposed on the relevant global object of this, then throw a "NotSupportedError" DOMException.
-        TODO();
     }
-    // Setting type to empty string is handled by each constructor.
-    // FIXME:
-    // 7. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp representing the high resolution time from the time origin to now.
+
+    // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
+    if (!event) {
+        return DOM::NotSupportedError::create("No constructor for interface found");
+    }
+
+    // FIXME: 4. If the interface indicated by constructor is not exposed on the relevant global object of this, then throw a "NotSupportedError" DOMException.
+
+    // NOTE: These are done in the if-chain above
+    // 5. Let event be the result of creating an event given constructor.
+    // 6. Initialize event’s type attribute to the empty string.
+    // NOTE: This is handled by each constructor.
+
+    // FIXME: 7. Initialize event’s timeStamp attribute to the result of calling current high resolution time with this’s relevant global object.
+
+    // 8. Initialize event’s isTrusted attribute to false.
     event->set_is_trusted(false);
+
+    // 9. Unset event’s initialized flag.
     event->set_initialized(false);
+
+    // 10. Return event.
     return event.release_nonnull();
 }
 

@@ -35,8 +35,8 @@ public:
     virtual ~ProgressEvent() override = default;
 
     bool length_computable() const { return m_length_computable; }
-    u32 loaded() const { return m_loaded; }
-    u32 total() const { return m_total; }
+    u64 loaded() const { return m_loaded; }
+    u64 total() const { return m_total; }
 
 protected:
     ProgressEvent(FlyString const& event_name, ProgressEventInit const& event_init)
@@ -48,8 +48,8 @@ protected:
     }
 
     bool m_length_computable { false };
-    u32 m_loaded { 0 };
-    u32 m_total { 0 };
+    u64 m_loaded { 0 };
+    u64 m_total { 0 };
 };
 
 }

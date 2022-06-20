@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>.
+ * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,9 +8,17 @@
 #include <AK/Format.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+
+static void print_cache_info(StringView description, JsonObject const& cache_object)
+{
+    outln("\t{}:", description);
+    outln("\t\tSize: {}", human_readable_size(cache_object.get("size").as_u32()));
+    outln("\t\tLine size: {}", human_readable_size(cache_object.get("line_size").as_u32()));
+};
 
 static void print_cpu_info(JsonObject const& value)
 {
@@ -22,6 +31,17 @@ static void print_cpu_info(JsonObject const& value)
     outln("\tModel: {}", value.get("model").as_u32());
     outln("\tStepping: {}", value.get("stepping").as_u32());
     outln("\tType: {}", value.get("type").as_u32());
+
+    auto& caches = value.get("caches").as_object();
+    if (caches.has("l1_data"))
+        print_cache_info("L1 data cache", caches.get("l1_data").as_object());
+    if (caches.has("l1_instruction"))
+        print_cache_info("L1 instruction cache", caches.get("l1_instruction").as_object());
+    if (caches.has("l2"))
+        print_cache_info("L2 cache", caches.get("l2").as_object());
+    if (caches.has("l3"))
+        print_cache_info("L3 cache", caches.get("l3").as_object());
+
     out("\tFeatures: ");
 
     auto& features = value.get("features").as_array();

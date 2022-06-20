@@ -305,7 +305,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
     bool rebound = true;
     if (event.button() == GUI::MouseButton::Secondary) {
         // This enables the game to move the focused cards to the first possible stack excluding empty stacks.
-        // NOTE: This ignores empty stacks, as the game has no undo button, and a card, which has been moved to an empty stack without any other possibilities is not reversable.
+        // NOTE: This ignores empty stacks, as the game has no undo button, and a card, which has been moved to an empty stack without any other possibilities is not reversible.
         for (auto& stack : m_stacks) {
             if (stack.is_focused())
                 continue;

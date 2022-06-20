@@ -4,29 +4,55 @@
         margins: [8]
     }
 
-    @GUI::Frame {
-        layout: @GUI::HorizontalBoxLayout {}
-        name: "preview_frame"
-        fixed_width: 306
-        fixed_height: 201
-    }
+    @GUI::GroupBox {
+        layout: @GUI::VerticalBoxLayout {
+            margins: [14, 14, 4]
+        }
+        title: "Window Theme"
+        fixed_height: 294
 
-    @GUI::Widget {
-        fixed_height: 20
-    }
-
-    @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {}
-
-        @GUI::Label {
-            text: "Theme:"
-            text_alignment: "CenterLeft"
-            fixed_width: 95
+        @GUI::Frame {
+            layout: @GUI::HorizontalBoxLayout {}
+            name: "preview_frame"
+            fixed_width: 306
+            fixed_height: 201
         }
 
-        @GUI::ComboBox {
-            name: "themes_combo"
+        @GUI::Widget {
+            fixed_height: 20
+        }
+
+        @GUI::Widget {
+            shrink_to_fit: true
+            layout: @GUI::HorizontalBoxLayout {}
+
+            @GUI::Label {
+                text: "Theme:"
+                text_alignment: "CenterLeft"
+                fixed_width: 95
+            }
+
+            @GUI::ComboBox {
+                name: "themes_combo"
+            }
+        }
+    }
+
+    @GUI::GroupBox {
+        layout: @GUI::VerticalBoxLayout {
+            margins: [14, 14, 4]
+        }
+        title: "Cursor Theme"
+        shrink_to_fit: true
+
+        @GUI::Button {
+            name: "cursor_themes_button"
+            text: "Change in Mouse Settings..."
+            fixed_width: 200
+        }
+
+        @GUI::Widget {
+            fixed_height: 10
         }
     }
 }

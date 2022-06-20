@@ -69,10 +69,9 @@
                     fixed_width: 20
                 }
 
-                @GUI::Button {
+                @GUI::DialogButton {
                     name: "ok_button"
                     text: "OK"
-                    fixed_width: 75
                 }
             }
 
@@ -80,12 +79,11 @@
                 fixed_height: 22
                 layout: @GUI::HorizontalBoxLayout {}
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
 
-                @GUI::Button {
+                @GUI::DialogButton {
                     name: "cancel_button"
                     text: "Cancel"
-                    fixed_width: 75
                 }
             }
         }

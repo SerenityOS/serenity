@@ -26,13 +26,19 @@
 
 namespace Web {
 
+static String s_default_favicon_path = "/res/icons/16x16/app-browser.png";
 static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
+
+void FrameLoader::set_default_favicon_path(String path)
+{
+    s_default_favicon_path = move(path);
+}
 
 FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
 {
     if (!s_default_favicon_bitmap) {
-        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png").release_value_but_fixme_should_propagate_errors();
+        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file(s_default_favicon_path).release_value_but_fixme_should_propagate_errors();
         VERIFY(s_default_favicon_bitmap);
     }
 }
@@ -75,8 +81,7 @@ static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 
 static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
 {
-    NonnullRefPtr decoder = image_decoder_client();
-    auto image = decoder->decode_image(data);
+    auto image = ImageDecoding::Decoder::the().decode_image(data);
     if (!image.has_value() || image->frames.is_empty())
         return false;
     auto const& frame = image->frames[0];
@@ -209,7 +214,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                 if (data.is_empty())
                     return;
                 RefPtr<Gfx::Bitmap> favicon_bitmap;
-                auto decoded_image = image_decoder_client().decode_image(data);
+                auto decoded_image = ImageDecoding::Decoder::the().decode_image(data);
                 if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
                     dbgln("Could not decode favicon {}", favicon_url);
                 } else {
@@ -254,14 +259,20 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
     browsing_context().set_active_document(&parser->document());
 }
 
+static String s_error_page_url = "file:///res/html/error.html";
+
+void FrameLoader::set_error_page_url(String error_page_url)
+{
+    s_error_page_url = error_page_url;
+}
+
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error)
 {
-    auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
-        error_page_url,
+        s_error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;
@@ -282,7 +293,7 @@ void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
     if (auto* page = browsing_context().page()) {
         if (bitmap)
             page->client().page_did_change_favicon(*bitmap);
-        else
+        else if (s_default_favicon_bitmap)
             page->client().page_did_change_favicon(*s_default_favicon_bitmap);
     }
 }
@@ -330,11 +341,6 @@ void FrameLoader::resource_did_load()
         }
     }
     m_redirects_count = 0;
-
-    if (!resource()->has_encoded_data()) {
-        load_error_page(url, "No data");
-        return;
-    }
 
     if (resource()->has_encoding()) {
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());

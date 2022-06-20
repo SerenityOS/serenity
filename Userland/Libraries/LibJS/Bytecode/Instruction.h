@@ -82,6 +82,7 @@
     O(Sub)                           \
     O(Throw)                         \
     O(Typeof)                        \
+    O(TypeofVariable)                \
     O(UnaryMinus)                    \
     O(UnaryPlus)                     \
     O(UnsignedRightShift)            \

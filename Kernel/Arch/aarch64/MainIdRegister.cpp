@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/aarch64/MainIdRegister.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 MainIdRegister::MainIdRegister()
 {

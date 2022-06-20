@@ -21,6 +21,11 @@ class ProcessorInfo {
 public:
     ProcessorInfo(Processor const& processor);
 
+    struct Cache {
+        u64 size;
+        u64 line_size;
+    };
+
     StringView vendor_id_string() const { return m_vendor_id_string->view(); }
     StringView hypervisor_vendor_id_string() const { return m_hypervisor_vendor_id_string->view(); }
     StringView brand_string() const { return m_brand_string->view(); }
@@ -30,14 +35,24 @@ public:
     u32 stepping() const { return m_stepping; }
     u32 type() const { return m_type; }
     u32 apic_id() const { return m_apic_id; }
+    Optional<Cache> const& l1_data_cache() const { return m_l1_data_cache; }
+    Optional<Cache> const& l1_instruction_cache() const { return m_l1_instruction_cache; }
+    Optional<Cache> const& l2_cache() const { return m_l2_cache; }
+    Optional<Cache> const& l3_cache() const { return m_l3_cache; }
 
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
+
+    static constexpr StringView s_amd_vendor_id = "AuthenticAMD";
+    static constexpr StringView s_intel_vendor_id = "GenuineIntel";
 
 private:
     static NonnullOwnPtr<KString> build_vendor_id_string();
     static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(Processor const&);
     static NonnullOwnPtr<KString> build_brand_string();
     static NonnullOwnPtr<KString> build_features_string(Processor const&);
+
+    void populate_cache_sizes_amd();
+    void populate_cache_sizes_intel();
 
     NonnullOwnPtr<KString> m_vendor_id_string;
     NonnullOwnPtr<KString> m_hypervisor_vendor_id_string;
@@ -48,6 +63,11 @@ private:
     u32 m_stepping { 0 };
     u32 m_type { 0 };
     u32 m_apic_id { 0 };
+
+    Optional<Cache> m_l1_data_cache;
+    Optional<Cache> m_l1_instruction_cache;
+    Optional<Cache> m_l2_cache;
+    Optional<Cache> m_l3_cache;
 };
 
 }

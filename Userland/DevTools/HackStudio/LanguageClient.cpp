@@ -14,7 +14,7 @@
 
 namespace HackStudio {
 
-void ConnectionToServer::auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const& suggestions)
+void ConnectionToServer::auto_complete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const& suggestions)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -23,7 +23,7 @@ void ConnectionToServer::auto_complete_suggestions(Vector<GUI::AutocompleteProvi
     m_current_language_client->provide_autocomplete_suggestions(suggestions);
 }
 
-void ConnectionToServer::declaration_location(const GUI::AutocompleteProvider::ProjectLocation& location)
+void ConnectionToServer::declaration_location(CodeComprehension::ProjectLocation const& location)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -43,7 +43,7 @@ void ConnectionToServer::parameters_hint_result(Vector<String> const& params, in
     m_current_language_client->parameters_hint_result(params, static_cast<size_t>(argument_index));
 }
 
-void ConnectionToServer::tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
+void ConnectionToServer::tokens_info_result(Vector<CodeComprehension::TokenInfo> const& tokens_info)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -93,10 +93,10 @@ void LanguageClient::request_autocomplete(String const& path, size_t cursor_line
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->async_auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column });
+    m_connection_wrapper.connection()->async_auto_complete_suggestions(CodeComprehension::ProjectLocation { path, cursor_line, cursor_column });
 }
 
-void LanguageClient::provide_autocomplete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const& suggestions) const
+void LanguageClient::provide_autocomplete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const& suggestions) const
 {
     if (on_autocomplete_suggestions)
         on_autocomplete_suggestions(suggestions);
@@ -120,12 +120,12 @@ bool LanguageClient::is_active_client() const
 
 HashMap<String, NonnullOwnPtr<ConnectionToServerWrapper>> ConnectionToServerInstances::s_instance_for_language;
 
-void ConnectionToServer::declarations_in_document(String const& filename, Vector<GUI::AutocompleteProvider::Declaration> const& declarations)
+void ConnectionToServer::declarations_in_document(String const& filename, Vector<CodeComprehension::Declaration> const& declarations)
 {
     ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
-void ConnectionToServer::todo_entries_in_document(String const& filename, Vector<Cpp::Parser::TodoEntry> const& todo_entries)
+void ConnectionToServer::todo_entries_in_document(String const& filename, Vector<CodeComprehension::TodoEntry> const& todo_entries)
 {
     ToDoEntries::the().set_entries(filename, move(todo_entries));
 }
@@ -135,7 +135,7 @@ void LanguageClient::search_declaration(String const& path, size_t line, size_t 
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->async_find_declaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
+    m_connection_wrapper.connection()->async_find_declaration(CodeComprehension::ProjectLocation { path, line, column });
 }
 
 void LanguageClient::get_parameters_hint(String const& path, size_t line, size_t column)
@@ -143,7 +143,7 @@ void LanguageClient::get_parameters_hint(String const& path, size_t line, size_t
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->async_get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
+    m_connection_wrapper.connection()->async_get_parameters_hint(CodeComprehension::ProjectLocation { path, line, column });
 }
 
 void LanguageClient::get_tokens_info(String const& filename)

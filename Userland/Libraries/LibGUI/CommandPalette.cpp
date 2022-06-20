@@ -288,7 +288,7 @@ void CommandPalette::finish_with_index(GUI::ModelIndex const& filter_index)
     auto* action = static_cast<GUI::Action*>(action_index.internal_data());
     VERIFY(action);
     m_selected_action = action;
-    done(ExecOK);
+    done(ExecResult::OK);
 }
 
 }

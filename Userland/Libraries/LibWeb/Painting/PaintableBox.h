@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
@@ -128,9 +129,9 @@ protected:
 
     virtual Gfx::FloatRect compute_absolute_rect() const;
 
-private:
-    Painting::BorderRadiusData normalized_border_radius_data() const;
+    Painting::BorderRadiiData normalized_border_radii_data() const;
 
+private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;

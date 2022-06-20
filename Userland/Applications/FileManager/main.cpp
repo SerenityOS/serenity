@@ -194,7 +194,7 @@ void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* wind
 void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
 {
     String archive_name;
-    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecOK)
+    if (GUI::InputBox::show(window, archive_name, "Enter name:", "Create Archive") != GUI::InputBox::ExecResult::OK)
         return;
 
     auto output_directory_path = LexicalPath(selected_file_paths.first());
@@ -1107,10 +1107,10 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
     directory_view->on_selection_change = [&](GUI::AbstractView& view) {
         auto& selection = view.selection();
-        cut_action->set_enabled(!selection.is_empty());
+        cut_action->set_enabled(!selection.is_empty() && access(directory_view->path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
-            || !directory_view->current_view().selection().is_empty());
+            || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
 
     auto directory_open_action = GUI::Action::create("Open", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
@@ -1153,6 +1153,8 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(tree_view_directory_context_menu->try_add_action(properties_action));
 
     RefPtr<GUI::Menu> file_context_menu;
+    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
         if (index.is_valid()) {
@@ -1163,8 +1165,6 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position(), directory_open_action);
             } else {
-                NonnullRefPtrVector<LauncherHandler> current_file_handlers;
-                RefPtr<GUI::Action> file_context_menu_action_default_action;
                 file_context_menu = GUI::Menu::construct("Directory View File");
 
                 bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);

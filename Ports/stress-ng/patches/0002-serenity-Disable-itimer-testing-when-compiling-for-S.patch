@@ -1,8 +1,7 @@
-From daec883ade0af0b20a4e2f3ef584cde57e22bf3b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:57:05 -0800
-Subject: [PATCH 02/14] serenity: Disable itimer testing when compiling for
- Serenity
+Subject: [PATCH] serenity: Disable itimer testing when compiling for Serenity
 
 The itimer APIs are not implemented in serenity, so just disable
 these tests.
@@ -113,6 +112,3 @@ index 5d9a10a..cacd01c 100644
  
  		ret = bad_syscall(addr);
  		if (ret < 0)
--- 
-2.32.0
-

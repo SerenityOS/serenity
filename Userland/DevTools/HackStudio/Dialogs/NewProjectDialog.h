@@ -22,7 +22,7 @@ class NewProjectDialog : public GUI::Dialog {
     C_OBJECT(NewProjectDialog);
 
 public:
-    static int show(GUI::Window* parent_window);
+    static ExecResult show(GUI::Window* parent_window);
 
     Optional<String> created_project_path() const { return m_created_project_path; }
 

@@ -10,14 +10,23 @@
 
 // FIXME: Merge the code in this file with Kernel/Panic.cpp once the proper abstractions are in place.
 
-namespace Kernel {
+// Note: This is required here, since __assertion_failed should be out of the Kernel namespace,
+//       but the PANIC macro uses functions that require the Kernel namespace.
+using namespace Kernel;
 
-void __panic(char const* file, unsigned int line, char const* function)
+[[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
+{
+    critical_dmesgln("ASSERTION FAILED: {}", msg);
+    critical_dmesgln("{}:{} in {}", file, line, func);
+
+    // Used for printing a nice backtrace!
+    PANIC("Aborted");
+}
+
+void Kernel::__panic(char const* file, unsigned int line, char const* function)
 {
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
 
     Processor::halt();
-}
-
 }

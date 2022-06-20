@@ -52,7 +52,7 @@ describe("errors", () => {
     test("missing fields", () => {
         expect(() => {
             Temporal.PlainMonthDay.from({});
-        }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
+        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
         expect(() => {
             Temporal.PlainMonthDay.from({ month: 1 });
         }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");

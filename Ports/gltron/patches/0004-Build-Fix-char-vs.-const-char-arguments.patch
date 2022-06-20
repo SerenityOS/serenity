@@ -1,7 +1,7 @@
-From 0ec20dfd57ae517d18f06c4c580d346fddd2f926 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jelle Raaijmakers <jelle@gmta.nl>
 Date: Mon, 9 May 2022 00:32:04 +0200
-Subject: [PATCH 4/7] Build: Fix `char*` vs. `const char*` arguments
+Subject: [PATCH] Build: Fix `char*` vs. `const char*` arguments
 
 These arguments are of the wrong constness, which will trip our
 compiler.
@@ -26,6 +26,3 @@ index 867eada..f5d8084 100644
  extern void scripting_RunGC();
  extern void scripting_Register(const char *name, int(*func) (lua_State *L));
  
--- 
-2.34.1
-

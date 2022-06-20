@@ -41,7 +41,7 @@
             }
         }
 
-        @Web::OutOfProcessWebView {
+        @WebView::OutOfProcessWebView {
             name: "web_view"
         }
     }

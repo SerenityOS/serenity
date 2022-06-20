@@ -74,10 +74,10 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     button_layout.set_spacing(10);
 
     buttonbox.add<GUI::Button>("Cancel").on_click = [this](auto) {
-        done(Dialog::ExecCancel);
+        done(ExecResult::Cancel);
     };
 
     buttonbox.add<GUI::Button>("OK").on_click = [this](auto) {
-        done(Dialog::ExecOK);
+        done(ExecResult::OK);
     };
 }

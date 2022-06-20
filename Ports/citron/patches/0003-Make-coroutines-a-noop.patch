@@ -1,7 +1,7 @@
-From ee5ca4723aa24d850d13c9a3fcbf7f23250cc4b7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:37:54 +0330
-Subject: [PATCH 3/9] Make coroutines a noop
+Subject: [PATCH] Make coroutines a noop
 
 Serenity doesn't have ucontext.
 ---
@@ -172,6 +172,3 @@ index 8497869..8215cfa 100644
 +    return 0;
 +#endif
 +}
--- 
-2.34.1
-

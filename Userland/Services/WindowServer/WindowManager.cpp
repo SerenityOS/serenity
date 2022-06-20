@@ -82,6 +82,10 @@ void WindowManager::reload_config()
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
+    m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
+    Color default_highlight_color = Color::NamedColor::Red;
+    default_highlight_color.set_alpha(110);
+    m_cursor_highlight_color = Color::from_string(m_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
@@ -116,8 +120,6 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, S
 
     reload_icon_bitmaps_after_scale_change();
 
-    Compositor::the().screen_resolution_changed();
-
     tell_wms_screen_rects_changed();
 
     for_each_window_stack([&](auto& window_stack) {
@@ -128,6 +130,8 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, S
         });
         return IterationDecision::Continue;
     });
+
+    Compositor::the().screen_resolution_changed();
 
     if (save)
         Screen::layout().save_config(*m_config);
@@ -260,8 +264,7 @@ void WindowManager::set_acceleration_factor(double factor)
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
     m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 void WindowManager::set_scroll_step_size(unsigned step_size)
@@ -269,8 +272,7 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     ScreenInput::the().set_scroll_step_size(step_size);
     dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->filename());
     m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 void WindowManager::set_double_click_speed(int speed)
@@ -279,8 +281,7 @@ void WindowManager::set_double_click_speed(int speed)
     m_double_click_speed = speed;
     dbgln("Saving double-click speed {} to config file at {}", speed, m_config->filename());
     m_config->write_entry("Input", "DoubleClickSpeed", String::number(speed));
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 int WindowManager::double_click_speed() const
@@ -293,8 +294,7 @@ void WindowManager::set_buttons_switched(bool switched)
     m_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
     m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
-    if (auto result = m_config->sync(); result.is_error())
-        dbgln("Failed to save config file: {}", result.error());
+    sync_config_to_disk();
 }
 
 bool WindowManager::get_buttons_switched() const
@@ -538,6 +538,17 @@ void WindowManager::tell_wms_super_space_key_pressed()
             return IterationDecision::Continue;
 
         conn.async_super_space_key_pressed(conn.window_id());
+        return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wms_super_d_key_pressed()
+{
+    for_each_window_manager([](WMConnectionFromClient& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_d_key_pressed(conn.window_id());
         return IterationDecision::Continue;
     });
 }
@@ -1605,6 +1616,11 @@ void WindowManager::process_key_event(KeyEvent& event)
             return;
         }
 
+        if (event.type() == Event::KeyDown && event.key() == Key_D) {
+            tell_wms_super_d_key_pressed();
+            return;
+        }
+
         if (event.type() == Event::KeyDown && event.key() >= Key_0 && event.key() <= Key_9) {
             auto digit = event.key() - Key_0;
             tell_wms_super_digit_key_pressed(digit);
@@ -1681,40 +1697,47 @@ void WindowManager::process_key_event(KeyEvent& event)
     if (!active_input_window)
         return;
 
-    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Super && active_input_window->type() != WindowType::Desktop) {
-        if (event.key() == Key_Down) {
-            if (active_input_window->is_resizable() && active_input_window->is_maximized()) {
-                maximize_windows(*active_input_window, false);
-                return;
-            }
-            if (active_input_window->is_minimizable())
-                minimize_windows(*active_input_window, true);
+    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Super) {
+        if (event.key() == Key_H) {
+            m_cursor_highlight_enabled = !m_cursor_highlight_enabled;
+            Compositor::the().invalidate_cursor();
             return;
         }
-        if (active_input_window->is_resizable()) {
-            if (event.key() == Key_Up) {
-                maximize_windows(*active_input_window, !active_input_window->is_maximized());
-                return;
-            }
-            if (event.key() == Key_Left) {
-                if (active_input_window->tile_type() == WindowTileType::Left) {
-                    active_input_window->set_untiled();
+        if (active_input_window->type() != WindowType::Desktop) {
+            if (event.key() == Key_Down) {
+                if (active_input_window->is_resizable() && active_input_window->is_maximized()) {
+                    maximize_windows(*active_input_window, false);
                     return;
                 }
-                if (active_input_window->is_maximized())
-                    maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(WindowTileType::Left);
+                if (active_input_window->is_minimizable())
+                    minimize_windows(*active_input_window, true);
                 return;
             }
-            if (event.key() == Key_Right) {
-                if (active_input_window->tile_type() == WindowTileType::Right) {
-                    active_input_window->set_untiled();
+            if (active_input_window->is_resizable()) {
+                if (event.key() == Key_Up) {
+                    maximize_windows(*active_input_window, !active_input_window->is_maximized());
                     return;
                 }
-                if (active_input_window->is_maximized())
-                    maximize_windows(*active_input_window, false);
-                active_input_window->set_tiled(WindowTileType::Right);
-                return;
+                if (event.key() == Key_Left) {
+                    if (active_input_window->tile_type() == WindowTileType::Left) {
+                        active_input_window->set_untiled();
+                        return;
+                    }
+                    if (active_input_window->is_maximized())
+                        maximize_windows(*active_input_window, false);
+                    active_input_window->set_tiled(WindowTileType::Left);
+                    return;
+                }
+                if (event.key() == Key_Right) {
+                    if (active_input_window->tile_type() == WindowTileType::Right) {
+                        active_input_window->set_untiled();
+                        return;
+                    }
+                    if (active_input_window->is_maximized())
+                        maximize_windows(*active_input_window, false);
+                    active_input_window->set_tiled(WindowTileType::Right);
+                    return;
+                }
             }
         }
     }
@@ -2088,17 +2111,45 @@ bool WindowManager::update_theme(String theme_path, String theme_name, bool keep
     auto new_theme = Gfx::load_system_theme(theme_path);
     if (!new_theme.is_valid())
         return false;
+    m_theme_overridden = false;
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     m_config->write_entry("Theme", "Name", theme_name);
     if (!keep_desktop_background)
         m_config->remove_entry("Background", "Color");
-    if (auto result = m_config->sync(); result.is_error()) {
-        dbgln("Failed to save config file: {}", result.error());
+    if (!sync_config_to_disk())
         return false;
-    }
     invalidate_after_theme_or_font_change();
     return true;
+}
+
+bool WindowManager::set_theme_override(Core::AnonymousBuffer const& theme_override)
+{
+    if (!theme_override.is_valid())
+        return false;
+    m_theme_overridden = true;
+    Gfx::set_system_theme(theme_override);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_override);
+    invalidate_after_theme_or_font_change();
+    return true;
+}
+
+Optional<Core::AnonymousBuffer> WindowManager::get_theme_override() const
+{
+    if (!m_theme_overridden)
+        return {};
+    return Gfx::current_system_theme_buffer();
+}
+
+void WindowManager::clear_theme_override()
+{
+    m_theme_overridden = false;
+    auto previous_theme_name = m_config->read_entry("Theme", "Name");
+    auto previous_theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", previous_theme_name));
+    VERIFY(previous_theme.is_valid());
+    Gfx::set_system_theme(previous_theme);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
+    invalidate_after_theme_or_font_change();
 }
 
 void WindowManager::did_popup_a_menu(Badge<Menu>)
@@ -2260,6 +2311,33 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
 
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
+    sync_config_to_disk();
+}
+
+void WindowManager::set_cursor_highlight_radius(int radius)
+{
+    // TODO: Validate radius
+    m_cursor_highlight_radius = radius;
+    Compositor::the().invalidate_cursor();
+    m_config->write_num_entry("Mouse", "CursorHighlightRadius", radius);
+    sync_config_to_disk();
+}
+
+void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
+{
+    m_cursor_highlight_color = color;
+    Compositor::the().invalidate_cursor();
+    m_config->write_entry("Mouse", "CursorHighlightColor", color.to_string());
+    sync_config_to_disk();
+}
+
+bool WindowManager::sync_config_to_disk()
+{
+    if (auto result = m_config->sync(); result.is_error()) {
+        dbgln("Failed to save config file: {}", result.error());
+        return false;
+    }
+    return true;
 }
 
 }

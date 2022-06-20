@@ -87,4 +87,10 @@ post_install() {
     # Target folder has to be removed, otherwise we will get `/usr/local/include/ncurses/ncursesw`.
     rm -rf "${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
     ln -svf ncursesw "${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
+
+    # Compatibility symlink for ports that expect `/usr/local/include/curses.h` and friends.
+    # FIXME: Is there a logical explanation for all of this? If so, we should clean it up at some point.
+    for file in $(ls "${SERENITY_INSTALL_ROOT}/usr/local/include/ncursesw"); do
+        ln -svf ncursesw/${file} "${SERENITY_INSTALL_ROOT}/usr/local/include/${file}"
+    done
 }

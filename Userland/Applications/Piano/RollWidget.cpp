@@ -126,7 +126,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int distance_to_next_x = next_x_pos - x_pos;
             Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
-            if (keys_widget() && keys_widget()->note_is_set(note))
+            if (m_track_manager.keyboard()->is_pressed(note))
                 painter.fill_rect(rect, note_pressed_color.with_alpha(128));
         }
     }
@@ -160,7 +160,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
-    int x = m_roll_width * (static_cast<double>(m_track_manager.time()) / roll_length);
+    int x = m_roll_width * (static_cast<double>(m_track_manager.transport()->time()) / roll_length);
     if (x > x_offset && x <= x_offset + widget_inner_rect().width())
         painter.draw_line({ x, 0 }, { x, roll_height }, Gfx::Color::Black);
 

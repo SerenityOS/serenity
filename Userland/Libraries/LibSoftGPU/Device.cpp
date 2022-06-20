@@ -24,13 +24,13 @@
 
 namespace SoftGPU {
 
-static u64 g_num_rasterized_triangles;
-static u64 g_num_pixels;
-static u64 g_num_pixels_shaded;
-static u64 g_num_pixels_blended;
-static u64 g_num_sampler_calls;
-static u64 g_num_stencil_writes;
-static u64 g_num_quads;
+static i64 g_num_rasterized_triangles;
+static i64 g_num_pixels;
+static i64 g_num_pixels_shaded;
+static i64 g_num_pixels_blended;
+static i64 g_num_sampler_calls;
+static i64 g_num_stencil_writes;
+static i64 g_num_quads;
 
 using AK::abs;
 using AK::SIMD::any;
@@ -247,7 +247,7 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
     auto const qy1 = render_bounds_bottom & ~1;
 
     // Rasterize all quads
-    // FIXME: this could be embarrasingly parallel
+    // FIXME: this could be embarrassingly parallel
     for (int qy = qy0; qy <= qy1; qy += 2) {
         for (int qx = qx0; qx <= qx1; qx += 2) {
             PixelQuad quad;
@@ -431,8 +431,13 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
             set_quad_attributes(quad);
             shade_fragments(quad);
 
-            if (m_options.enable_alpha_test && m_options.alpha_test_func != GPU::AlphaTestFunction::Always && !test_alpha(quad))
-                continue;
+            // Alpha testing
+            if (m_options.enable_alpha_test) {
+                test_alpha(quad);
+                coverage_bits = maskbits(quad.mask);
+                if (coverage_bits == 0)
+                    continue;
+            }
 
             // Write to depth buffer
             if (m_options.enable_depth_test && m_options.enable_depth_write)
@@ -728,11 +733,6 @@ void Device::rasterize_triangle(Triangle& triangle)
 
     auto const half_pixel_offset = Vector2<i32x4> { expand4(subpixel_factor / 2), expand4(subpixel_factor / 2) };
 
-    auto const window_z_coordinates = Vector3<f32x4> {
-        expand4(vertex0.window_coordinates.z()),
-        expand4(vertex1.window_coordinates.z()),
-        expand4(vertex2.window_coordinates.z()),
-    };
     auto const window_w_coordinates = Vector3<f32x4> {
         expand4(vertex0.window_coordinates.w()),
         expand4(vertex1.window_coordinates.w()),
@@ -774,6 +774,12 @@ void Device::rasterize_triangle(Triangle& triangle)
         depth_offset = depth_max_slope * m_options.depth_offset_factor + NumericLimits<float>::epsilon() * m_options.depth_offset_constant;
     }
 
+    auto const window_z_coordinates = Vector3<f32x4> {
+        expand4(vertex0.window_coordinates.z() + depth_offset),
+        expand4(vertex1.window_coordinates.z() + depth_offset),
+        expand4(vertex2.window_coordinates.z() + depth_offset),
+    };
+
     rasterize(
         render_bounds,
         [&](auto& quad) {
@@ -791,7 +797,7 @@ void Device::rasterize_triangle(Triangle& triangle)
             quad.barycentrics = quad.barycentrics * one_over_area;
 
             // Because the Z coordinates were divided by W, we can interpolate between them
-            quad.depth = window_z_coordinates.dot(quad.barycentrics) + depth_offset;
+            quad.depth = AK::SIMD::clamp(window_z_coordinates.dot(quad.barycentrics), 0.f, 1.f);
         },
         [&](auto& quad) {
             auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
@@ -825,6 +831,7 @@ GPU::DeviceInfo Device::info() const
         .device_name = "SoftGPU",
         .num_texture_units = GPU::NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
+        .max_clip_planes = MAX_CLIP_PLANES,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
     };
@@ -1174,6 +1181,9 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         m_clipped_vertices.append(triangle.vertices[2]);
         m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
 
+        if (m_clip_planes.size() > 0)
+            m_clipper.clip_triangle_against_user_defined(m_clipped_vertices, m_clip_planes);
+
         if (m_clipped_vertices.size() < 3)
             continue;
 
@@ -1264,37 +1274,37 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     quad.out_color.set_w(quad.out_color.w() * quad.coverage);
 }
 
-ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
+ALWAYS_INLINE void Device::test_alpha(PixelQuad& quad)
 {
     auto const alpha = quad.out_color.w();
     auto const ref_value = expand4(m_options.alpha_test_ref_value);
 
     switch (m_options.alpha_test_func) {
-    case GPU::AlphaTestFunction::Less:
-        quad.mask &= alpha < ref_value;
+    case GPU::AlphaTestFunction::Always:
+        quad.mask &= expand4(~0);
         break;
     case GPU::AlphaTestFunction::Equal:
         quad.mask &= alpha == ref_value;
         break;
-    case GPU::AlphaTestFunction::LessOrEqual:
-        quad.mask &= alpha <= ref_value;
-        break;
     case GPU::AlphaTestFunction::Greater:
         quad.mask &= alpha > ref_value;
-        break;
-    case GPU::AlphaTestFunction::NotEqual:
-        quad.mask &= alpha != ref_value;
         break;
     case GPU::AlphaTestFunction::GreaterOrEqual:
         quad.mask &= alpha >= ref_value;
         break;
+    case GPU::AlphaTestFunction::Less:
+        quad.mask &= alpha < ref_value;
+        break;
+    case GPU::AlphaTestFunction::LessOrEqual:
+        quad.mask &= alpha <= ref_value;
+        break;
+    case GPU::AlphaTestFunction::NotEqual:
+        quad.mask &= alpha != ref_value;
+        break;
     case GPU::AlphaTestFunction::Never:
-    case GPU::AlphaTestFunction::Always:
     default:
         VERIFY_NOT_REACHED();
     }
-
-    return any(quad.mask);
 }
 
 void Device::resize(Gfx::IntSize const& size)
@@ -1494,6 +1504,11 @@ void Device::set_stencil_configuration(GPU::Face face, GPU::StencilConfiguration
 void Device::set_raster_position(GPU::RasterPosition const& raster_position)
 {
     m_raster_position = raster_position;
+}
+
+void Device::set_clip_planes(Vector<FloatVector4> const& clip_planes)
+{
+    m_clip_planes = clip_planes;
 }
 
 void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform)

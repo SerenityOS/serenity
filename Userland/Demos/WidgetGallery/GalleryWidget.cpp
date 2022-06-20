@@ -34,7 +34,6 @@ GalleryWidget::GalleryWidget()
     load_from_gml(window_gml);
 
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
-    tab_widget.set_reorder_allowed(true);
 
     auto basics_tab = tab_widget.try_add_tab<GUI::Widget>("Basics").release_value_but_fixme_should_propagate_errors();
     basics_tab->load_from_gml(basics_tab_gml);
@@ -99,7 +98,7 @@ GalleryWidget::GalleryWidget()
 
     m_font_button->on_click = [&](auto) {
         auto picker = GUI::FontPicker::try_create(window(), &m_text_editor->font(), false).release_value_but_fixme_should_propagate_errors();
-        if (picker->exec() == GUI::Dialog::ExecOK) {
+        if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_text_editor->set_font(picker->font());
         }
     };
@@ -119,7 +118,7 @@ GalleryWidget::GalleryWidget()
 
     m_input_button->on_click = [&](auto) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Enter input:", "Input") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(window(), value, "Enter input:", "Input") == GUI::InputBox::ExecResult::OK && !value.is_empty())
             m_text_editor->set_text(value);
     };
 
@@ -278,11 +277,11 @@ GalleryWidget::GalleryWidget()
         m_wizard_output->set_text(sb.to_string());
 
         auto wizard = DemoWizardDialog::try_create(window()).release_value_but_fixme_should_propagate_errors();
-        int result = wizard->exec();
+        auto result = wizard->exec();
 
-        sb.append(String::formatted("\nWizard execution complete.\nDialog ExecResult code: {}", result));
-        if (result == GUI::Dialog::ExecResult::ExecOK)
-            sb.append(String::formatted(" (ExecOK)\n'Installation' location: \"{}\"", wizard->page_1_location()));
+        sb.append(String::formatted("\nWizard execution complete.\nDialog ExecResult code: {}", to_underlying(result)));
+        if (result == GUI::Dialog::ExecResult::OK)
+            sb.append(String::formatted(" (ExecResult::OK)\n'Installation' location: \"{}\"", wizard->page_1_location()));
         m_wizard_output->set_text(sb.string_view());
     };
 

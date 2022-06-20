@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
@@ -614,7 +615,7 @@ UNMAP_AFTER_INIT void flush_idt()
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-UNMAP_AFTER_INIT void idt_init()
+UNMAP_AFTER_INIT void initialize_interrupts()
 {
     s_idtr.address = s_idt;
     s_idtr.limit = 256 * sizeof(IDTEntry) - 1;

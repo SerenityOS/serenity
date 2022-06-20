@@ -26,7 +26,7 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 9.2.1 Temporal.PlainYearMonth.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plainyearmonth-prototype
+    // 9.2.1 Temporal.PlainYearMonth.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_year_month_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
@@ -99,8 +99,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 
         auto& plain_year_month_object = static_cast<PlainYearMonth&>(item.as_object());
 
-        // b. Return ? CreateTemporalYearMonth(item.[[ISOYear]], item.[[ISOMonth]], item.[[Calendar]], item.[[ISODay]]).
-        return TRY(create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day()));
+        // b. Return ! CreateTemporalYearMonth(item.[[ISOYear]], item.[[ISOMonth]], item.[[Calendar]], item.[[ISODay]]).
+        return MUST(create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day()));
     }
 
     // 3. Return ? ToTemporalYearMonth(item, options).

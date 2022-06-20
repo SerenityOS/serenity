@@ -1,7 +1,7 @@
-From 13d34247badfb4adcbf725c04dd6ee2af30e6995 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 13 Jan 2022 16:13:02 +0330
-Subject: [PATCH 14/14] Makefile: Install to /usr/local
+Subject: [PATCH] Makefile: Install to /usr/local
 
 ---
  Makefile | 8 ++++----
@@ -26,6 +26,3 @@ index f8f71c5..1d90cd0 100644
  
  #
  #  Stressors
--- 
-2.32.0
-

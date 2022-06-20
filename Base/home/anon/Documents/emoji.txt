@@ -84,6 +84,7 @@ Yak Emoji (limited cross-platform support)
 􌴠 - U+10CD20 YAKSPEED
 􌴡 - U+10CD21 YAKMANDO
 􌴢 - U+10CD22 NINJYAK
+􌴣 - U+10CD23 YOWL
 􌵠 - U+10CD60 PARTYAK
 􌵡 - U+10CD61 YAKKISS
 􌵢 - U+10CD62 THOUSANDYAKSTARE
@@ -142,6 +143,7 @@ Regional Indicator Symbol Flags
 🇲🇰 - U+1F1F2 U+1F1F0 MK North Macedonia
 🇳🇱 - U+1F1F3 U+1F1F1 NL Netherlands
 🇳🇴 - U+1F1F3 U+1F1F4 NO Norway
+🇵🇭 - U+1F1F5 U+1F1ED PH Philippines
 🇵🇱 - U+1F1F5 U+1F1F1 PL Poland
 🇵🇸 - U+1F1F5 U+1F1F8 PS Palestine
 🇷🇺 - U+1F1F7 U+1F1FA RU Russia

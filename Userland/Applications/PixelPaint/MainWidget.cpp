@@ -12,6 +12,7 @@
 #include "EditGuideDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
+#include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -40,9 +41,6 @@ MainWidget::MainWidget()
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
-    m_tab_widget->set_container_margins({ 4, 5, 5, 4 });
-    m_tab_widget->set_reorder_allowed(true);
-    m_tab_widget->set_close_button_enabled(true);
 
     m_palette_widget = *find_descendant_of_type_named<PixelPaint::PaletteWidget>("palette_widget");
 
@@ -118,7 +116,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_new_image_action = GUI::Action::create(
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
-            if (dialog->exec() == GUI::Dialog::ExecOK) {
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
                 auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
@@ -176,7 +174,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to BMP failed: {}", result.error()));
             }));
@@ -191,7 +189,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
@@ -395,7 +393,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_add_guide_action = GUI::Action::create(
         "&Add Guide", g_icon_bag.add_guide, [&](auto&) {
             auto dialog = PixelPaint::EditGuideDialog::construct(&window);
-            if (dialog->exec() != GUI::Dialog::ExecOK)
+            if (dialog->exec() != GUI::Dialog::ExecResult::OK)
                 return;
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -503,6 +501,14 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
+        "&Resize Image...", { Mod_Ctrl | Mod_Shift, Key_R }, g_icon_bag.resize_image, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+                editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
+        }));
+    m_image_menu->add_action(GUI::Action::create(
         "&Crop To Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -520,7 +526,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
-            if (dialog->exec() == GUI::Dialog::ExecOK) {
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (layer_or_error.is_error()) {
                     GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size()));
@@ -674,7 +680,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         auto dialog = PixelPaint::FilterGallery::construct(&window, editor);
-        if (dialog->exec() != GUI::Dialog::ExecOK)
+        if (dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
     }));
 

@@ -129,12 +129,16 @@ describe("errors", () => {
     test("requires year property", () => {
         expect(() => {
             Temporal.ZonedDateTime.from({ timeZone: new Temporal.TimeZone("UTC") });
-        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
+        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
     });
 
     test("requires month property", () => {
         expect(() => {
-            Temporal.ZonedDateTime.from({ timeZone: new Temporal.TimeZone("UTC"), year: 2021 });
+            Temporal.ZonedDateTime.from({
+                timeZone: new Temporal.TimeZone("UTC"),
+                day: 1,
+                year: 2021,
+            });
         }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
     });
 

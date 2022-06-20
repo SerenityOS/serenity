@@ -144,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNo);
 
-            if (result == GUI::MessageBox::ExecYes)
+            if (result == GUI::MessageBox::ExecResult::Yes)
                 return GUI::Window::CloseRequestDecision::Close;
             else
                 return GUI::Window::CloseRequestDecision::StayOpen;

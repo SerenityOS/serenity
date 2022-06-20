@@ -1,8 +1,7 @@
-From bb67e44f840df4b833ea3316cf20dee42d62cdb8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:53:47 -0800
-Subject: [PATCH 01/14] serenity: Disable linux scheduler integration on
- Serenity
+Subject: [PATCH] serenity: Disable linux scheduler integration on Serenity
 
 Follow the path of other platforms, and make this code nop
 when compiling for serenity.
@@ -39,6 +38,3 @@ index 91d1d02..6f172d3 100644
  
  static const int policies[] = {
  #if defined(SCHED_IDLE)
--- 
-2.32.0
-

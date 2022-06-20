@@ -48,6 +48,10 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "AbortSignal")
         return true;
+    if (type.name == "CanvasRenderingContext2D")
+        return true;
+    if (type.name == "WebGLRenderingContext")
+        return true;
     return false;
 }
 
@@ -89,6 +93,12 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
     if (type.name == "unsigned short" && !type.nullable)
         return { .name = "u16", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "long long" && !type.nullable)
+        return { .name = "i64", .sequence_storage_type = SequenceStorageType::Vector };
+
+    if (type.name == "unsigned long long" && !type.nullable)
+        return { .name = "u64", .sequence_storage_type = SequenceStorageType::Vector };
 
     if (type.name == "long" && !type.nullable)
         return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
@@ -259,7 +269,7 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0, bool used_as_argument = false)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
     auto acceptable_cpp_name = make_input_acceptable_cpp(cpp_name);
@@ -571,6 +581,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
         enum_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
+)~~~");
+
+        if (optional) {
+            enum_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined()) {
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
     auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(global_object));
 )~~~");
         auto first = true;
@@ -586,10 +605,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        if (used_as_argument) {
-            enum_generator.append(R"~~~(
+        enum_generator.append(R"~~~(
     @else@
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
+)~~~");
+
+        if (optional) {
+            enum_generator.append(R"~~~(
+    }
 )~~~");
         }
     } else if (interface.dictionaries.contains(parameter.type->name)) {
@@ -1212,7 +1235,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0, true);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), interface, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic, 0);
         ++argument_index;
     }
 
@@ -1294,10 +1317,16 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         return;
     }
 
-    if (type.nullable) {
+    if (type.nullable && !is<UnionType>(type)) {
         if (type.is_string()) {
             scoped_generator.append(R"~~~(
     if (@value@.is_null()) {
+        @result_expression@ JS::js_null();
+    } else {
+)~~~");
+        } else if (type.name == "sequence") {
+            scoped_generator.append(R"~~~(
+    if (!@value@.has_value()) {
         @result_expression@ JS::js_null();
     } else {
 )~~~");
@@ -1320,10 +1349,20 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 
         scoped_generator.append(R"~~~(
     auto* new_array@recursion_depth@ = MUST(JS::Array::create(global_object, 0));
+)~~~");
 
+        if (!type.nullable) {
+            scoped_generator.append(R"~~~(
     for (size_t i@recursion_depth@ = 0; i@recursion_depth@ < @value@.size(); ++i@recursion_depth@) {
         auto& element@recursion_depth@ = @value@.at(i@recursion_depth@);
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    auto& @value@_non_optional = @value@.value();
+    for (size_t i@recursion_depth@ = 0; i@recursion_depth@ < @value@_non_optional.size(); ++i@recursion_depth@) {
+        auto& element@recursion_depth@ = @value@_non_optional.at(i@recursion_depth@);
+)~~~");
+        }
 
         generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
 
@@ -1346,12 +1385,66 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((u32)@value@);
 )~~~");
+    } else if (type.name == "long long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((double)@value@);
+)~~~");
+    } else if (type.name == "unsigned long long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((double)@value@);
+)~~~");
     } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
-        TODO();
+        auto& union_type = verify_cast<IDL::UnionType>(type);
+        auto union_types = union_type.flattened_member_types();
+        auto union_generator = scoped_generator.fork();
+
+        union_generator.append(R"~~~(
+    @result_expression@ @value@.visit(
+)~~~");
+
+        for (size_t current_union_type_index = 0; current_union_type_index < union_types.size(); ++current_union_type_index) {
+            auto& current_union_type = union_types.at(current_union_type_index);
+            auto cpp_type = IDL::idl_type_name_to_cpp_type(current_union_type, interface);
+            union_generator.set("current_type", cpp_type.name);
+            union_generator.append(R"~~~(
+        [&vm, &global_object](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
+            // These may be unused.
+            (void)vm;
+            (void)global_object;
+)~~~");
+
+            // NOTE: While we are using const&, the underlying type for wrappable types in unions is (Nonnull)RefPtr, which are not references.
+            generate_wrap_statement(union_generator, String::formatted("visited_union_value{}", recursion_depth), current_union_type, interface, "return"sv, WrappingReference::No, recursion_depth + 1);
+
+            // End of current visit lambda.
+            // The last lambda cannot have a trailing comma on the closing brace, unless the type is nullable, where an extra lambda will be generated for the Empty case.
+            if (current_union_type_index != union_types.size() - 1 || type.nullable) {
+                union_generator.append(R"~~~(
+        },
+)~~~");
+            } else {
+                union_generator.append(R"~~~(
+        }
+)~~~");
+            }
+        }
+
+        if (type.nullable) {
+            union_generator.append(R"~~~(
+        [](Empty) -> JS::Value {
+            return JS::js_null();
+        }
+)~~~");
+        }
+
+        // End of visit.
+        union_generator.append(R"~~~(
+    );
+)~~~");
     } else if (interface.enumerations.contains(type.name)) {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
@@ -1378,6 +1471,45 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
   @result_expression@ @value@->callback.cell();
 )~~~");
         }
+    } else if (interface.dictionaries.contains(type.name)) {
+        // https://webidl.spec.whatwg.org/#es-dictionary
+        auto dictionary_generator = scoped_generator.fork();
+
+        dictionary_generator.append(R"~~~(
+    auto* dictionary_object@recursion_depth@ = JS::Object::create(global_object, global_object.object_prototype());
+)~~~");
+
+        auto* current_dictionary = &interface.dictionaries.find(type.name)->value;
+        while (true) {
+            for (auto& member : current_dictionary->members) {
+                dictionary_generator.set("member_key", member.name);
+                auto member_key_js_name = String::formatted("{}{}", make_input_acceptable_cpp(member.name.to_snakecase()), recursion_depth);
+                dictionary_generator.set("member_name", member_key_js_name);
+                auto member_value_js_name = String::formatted("{}_value", member_key_js_name);
+                dictionary_generator.set("member_value", member_value_js_name);
+
+                auto wrapped_value_name = String::formatted("auto wrapped_{}", member_value_js_name);
+                dictionary_generator.set("wrapped_value_name", wrapped_value_name);
+                generate_wrap_statement(dictionary_generator, String::formatted("{}.{}", value, member.name), member.type, interface, wrapped_value_name, WrappingReference::No, recursion_depth + 1);
+
+                dictionary_generator.append(R"~~~(
+    MUST(dictionary_object@recursion_depth@->create_data_property("@member_key@", @wrapped_value_name@));
+)~~~");
+            }
+
+            if (current_dictionary->parent_name.is_null())
+                break;
+            VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
+            current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
+        }
+
+        dictionary_generator.append(R"~~~(
+    @result_expression@ dictionary_object@recursion_depth@;
+)~~~");
+    } else if (type.name == "object") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value(const_cast<JS::Object*>(@value@));
+)~~~");
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
@@ -1390,7 +1522,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         }
     }
 
-    if (type.nullable) {
+    if (type.nullable && !is<UnionType>(type)) {
         scoped_generator.append(R"~~~(
     }
 )~~~");
@@ -1767,6 +1899,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -2683,6 +2816,7 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::UIEvents;
 using namespace Web::XHR;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -2764,10 +2898,11 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
     for (auto& constant : interface.constants) {
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
-        constant_generator.set("constant.value", constant.value);
+
+        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, String::formatted("auto constant_{}_value =", constant.name));
 
         constant_generator.append(R"~~~(
-define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
 )~~~");
     }
 
@@ -2961,6 +3096,7 @@ using namespace Web::SVG;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -3032,10 +3168,11 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
-        constant_generator.set("constant.value", constant.value);
+
+        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, String::formatted("auto constant_{}_value =", constant.name));
 
         constant_generator.append(R"~~~(
-    define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
 )~~~");
     }
 
@@ -3403,6 +3540,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
@@ -3518,6 +3656,7 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::URL;
+using namespace Web::WebGL;
 
 namespace Web::Bindings {
 

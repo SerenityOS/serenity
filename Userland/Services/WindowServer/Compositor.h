@@ -111,7 +111,7 @@ public:
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
     Cursor const* current_cursor() const { return m_current_cursor; }
-    void current_cursor_was_reloaded(Cursor const* new_cursor) { m_current_cursor = new_cursor; }
+    void current_cursor_was_reloaded(Cursor const* new_cursor) { change_cursor(new_cursor); }
 
     void increment_display_link_count(Badge<ConnectionFromClient>);
     void decrement_display_link_count(Badge<ConnectionFromClient>);

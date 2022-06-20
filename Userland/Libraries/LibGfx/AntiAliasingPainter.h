@@ -28,10 +28,35 @@ public:
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint const& delta) { m_transform.translate(delta); }
 
-    void draw_circle(IntPoint const& center, int radius, Color);
-    void draw_ellipse(IntRect const& a_rect, Color);
+    void draw_ellipse(IntRect const& a_rect, Color, int thickness);
+
+    enum class BlendMode {
+        Normal,
+        AlphaSubtract
+    };
+
+    void fill_circle(IntPoint const& center, int radius, Color, BlendMode blend_mode = BlendMode::Normal);
+    void fill_ellipse(IntRect const& a_rect, Color, BlendMode blend_mode = BlendMode::Normal);
+
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
+
+    struct CornerRadius {
+        int horizontal_radius;
+        int vertical_radius;
+
+        inline operator bool() const
+        {
+            return horizontal_radius > 0 && vertical_radius > 0;
+        }
+
+        Gfx::IntRect as_rect() const
+        {
+            return { 0, 0, horizontal_radius, vertical_radius };
+        }
+    };
+
+    void fill_rect_with_rounded_corners(IntRect const&, Color, CornerRadius top_left, CornerRadius top_right, CornerRadius bottom_right, CornerRadius bottom_left, BlendMode blend_mode = BlendMode::Normal);
 
 private:
     struct Range {
@@ -43,7 +68,10 @@ private:
             return n >= min && n <= max;
         }
     };
-    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip);
+
+    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
+
+    void draw_dotted_line(IntPoint, IntPoint, Gfx::Color, int thickness);
 
     enum class AntiAliasPolicy {
         OnlyEnds,

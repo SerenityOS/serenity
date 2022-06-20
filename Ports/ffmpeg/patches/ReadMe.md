@@ -1,9 +1,9 @@
-# Patches for FFmpeg on SerenityOS
+# Patches for ffmpeg on SerenityOS
 
-## `errno-is-not-valid-during-cpp.patch`
+## `0001-Assume-that-EDOM-exists.patch`
 
-FFmpeg performs a preprocessor-time test on errno values. This test does
-not work on SerenityOS because our errno values are described by an
-enum, and therefore are only available at compile time.
+Assume that EDOM exists
 
-The patch removes the preprocessor-time test.
+Since errno values are not numeric constants on serenity, this won't
+work in cpp, assume that it exists.
+

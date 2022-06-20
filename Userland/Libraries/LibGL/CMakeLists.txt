@@ -1,10 +1,11 @@
 set(SOURCES
+    ClipPlanes.cpp
     ContextParameter.cpp
     GLAPI.cpp
     GLContext.cpp
-    Matrix.cpp
     Lighting.cpp
     Lists.cpp
+    Matrix.cpp
     Stencil.cpp
     Tex/NameAllocator.cpp
     Tex/Texture2D.cpp

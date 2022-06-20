@@ -28,6 +28,7 @@ to the root of the serenity source tree when running on a non-SerenityOS host.
 # /path/to/serenity repository
 export SERENITY_SOURCE_DIR=${PWD}
 cd Build/lagom
+ninja
 ninja test
 ```
 

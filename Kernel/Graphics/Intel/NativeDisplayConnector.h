@@ -81,7 +81,7 @@ class IntelNativeDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector
@@ -93,7 +93,6 @@ private:
     virtual ErrorOr<void> set_safe_mode_setting() override;
     virtual ErrorOr<void> set_y_offset(size_t y) override;
     virtual ErrorOr<void> unblank() override;
-    virtual ErrorOr<size_t> write_to_first_surface(u64 offset, UserOrKernelBuffer const&, size_t length) override final;
     virtual ErrorOr<void> flush_first_surface() override final;
     virtual void enable_console() override;
     virtual void disable_console() override;
@@ -104,7 +103,7 @@ private:
 
     ErrorOr<void> initialize_gmbus_settings_and_read_edid();
 
-    IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region);
+    IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region);
 
     ErrorOr<void> create_attached_framebuffer_console();
 
@@ -156,10 +155,7 @@ private:
     Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
 
     mutable Spinlock m_registers_lock;
-    const PhysicalAddress m_framebuffer_address;
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
-    OwnPtr<Memory::Region> m_framebuffer_region;
-    u8* m_framebuffer_data {};
 
     const PhysicalAddress m_registers;
     NonnullOwnPtr<Memory::Region> m_registers_region;

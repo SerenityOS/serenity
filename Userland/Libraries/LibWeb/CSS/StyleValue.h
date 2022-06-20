@@ -67,8 +67,9 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     case CSS::ImageRendering::Smooth:
         return Gfx::Painter::ScalingMode::BilinearBlend;
     case CSS::ImageRendering::CrispEdges:
-    case CSS::ImageRendering::Pixelated:
         return Gfx::Painter::ScalingMode::NearestNeighbor;
+    case CSS::ImageRendering::Pixelated:
+        return Gfx::Painter::ScalingMode::SmoothPixels;
     }
     VERIFY_NOT_REACHED();
 }

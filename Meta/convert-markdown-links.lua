@@ -5,6 +5,14 @@ function Link(el)
 end
 
 function Image(el)
+    -- HACK: Handle images that are not icons separately; they're copied manually in the
+    --       Meta/build-manpages-website.sh script.
+    --       Ideally this would be generalized so the paths export below could handle both.
+    if el.src:find("^/res/icons/") == nil then
+        el.src = "../" .. el.src
+        return el
+    end
+
     local pattern = "/res/icons/(.*)"
     local image = string.gsub(el.src, pattern, "%1")
 

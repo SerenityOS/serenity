@@ -35,6 +35,8 @@ class BorderStyleValue;
 class CalculatedStyleValue;
 class ColorStyleValue;
 class ContentStyleValue;
+class CSSConditionRule;
+class CSSGroupingRule;
 class CSSImportRule;
 class CSSFontFaceRule;
 class CSSMediaRule;
@@ -368,12 +370,17 @@ class EventHandler;
 class FrameLoader;
 class LoadRequest;
 class Origin;
-class OutOfProcessWebView;
 class Page;
 class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
+}
+
+namespace Web::WebGL {
+class WebGLContextEvent;
+class WebGLRenderingContext;
+class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
@@ -406,12 +413,17 @@ class CharacterDataWrapper;
 class CloseEventWrapper;
 class CommentWrapper;
 class CryptoWrapper;
+class CSSConditionRuleWrapper;
 class CSSFontFaceRuleWrapper;
+class CSSGroupingRuleWrapper;
+class CSSImportRuleWrapper;
+class CSSMediaRuleWrapper;
 class CSSRuleListWrapper;
 class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;
 class CSSStyleRuleWrapper;
 class CSSStyleSheetWrapper;
+class CSSSupportsRuleWrapper;
 class CustomEventWrapper;
 class DocumentFragmentWrapper;
 class DocumentTypeWrapper;
@@ -509,6 +521,7 @@ class ImageDataWrapper;
 class IntersectionObserverWrapper;
 class KeyboardEventWrapper;
 class LocationObject;
+class MediaListWrapper;
 class MediaQueryListEventWrapper;
 class MediaQueryListWrapper;
 class MessageChannelWrapper;
@@ -569,6 +582,8 @@ class URLSearchParamsIteratorWrapper;
 class URLSearchParamsPrototype;
 class URLSearchParamsWrapper;
 class URLWrapper;
+class WebGLContextEventWrapper;
+class WebGLRenderingContextWrapper;
 class WebSocketWrapper;
 class WindowObject;
 class WindowProxy;

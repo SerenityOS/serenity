@@ -19,7 +19,7 @@ namespace GUI {
 
 class AutocompleteSuggestionModel final : public GUI::Model {
 public:
-    explicit AutocompleteSuggestionModel(Vector<AutocompleteProvider::Entry>&& suggestions)
+    explicit AutocompleteSuggestionModel(Vector<CodeComprehension::AutocompleteResultEntry>&& suggestions)
         : m_suggestions(move(suggestions))
     {
     }
@@ -50,13 +50,13 @@ public:
                     return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
-                if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
+                if (suggestion.language == CodeComprehension::Language::Cpp) {
                     if (!s_cpp_identifier_icon) {
                         s_cpp_identifier_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/completion/cpp-identifier.png").release_value_but_fixme_should_propagate_errors();
                     }
                     return *s_cpp_identifier_icon;
                 }
-                if (suggestion.language == GUI::AutocompleteProvider::Language::Unspecified) {
+                if (suggestion.language == CodeComprehension::Language::Unspecified) {
                     if (!s_unspecified_identifier_icon) {
                         s_unspecified_identifier_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/completion/unspecified-identifier.png").release_value_but_fixme_should_propagate_errors();
                     }
@@ -73,15 +73,15 @@ public:
             return suggestion.completion;
 
         if ((int)role == InternalRole::HideAutocompleteAfterApplying)
-            return suggestion.hide_autocomplete_after_applying == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes;
+            return suggestion.hide_autocomplete_after_applying == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes;
 
         return {};
     }
 
-    void set_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions) { m_suggestions = move(suggestions); }
+    void set_suggestions(Vector<CodeComprehension::AutocompleteResultEntry>&& suggestions) { m_suggestions = move(suggestions); }
 
 private:
-    Vector<AutocompleteProvider::Entry> m_suggestions;
+    Vector<CodeComprehension::AutocompleteResultEntry> m_suggestions;
 };
 
 AutocompleteBox::AutocompleteBox(TextEditor& editor)
@@ -109,7 +109,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     m_no_suggestions_view = main_widget.add<GUI::Label>("No suggestions");
 }
 
-void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
+void AutocompleteBox::update_suggestions(Vector<CodeComprehension::AutocompleteResultEntry>&& suggestions)
 {
     // FIXME: There's a potential race here if, after the user selected an autocomplete suggestion,
     // the LanguageServer sends an update and this function is executed before AutocompleteBox::apply_suggestion()
@@ -182,9 +182,9 @@ void AutocompleteBox::previous_suggestion()
     }
 }
 
-AutocompleteProvider::Entry::HideAutocompleteAfterApplying AutocompleteBox::apply_suggestion()
+CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying AutocompleteBox::apply_suggestion()
 {
-    auto hide_when_done = AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes;
+    auto hide_when_done = CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes;
 
     if (m_editor.is_null())
         return hide_when_done;
@@ -202,7 +202,7 @@ AutocompleteProvider::Entry::HideAutocompleteAfterApplying AutocompleteBox::appl
     auto hide_after_applying = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::HideAutocompleteAfterApplying).to_bool();
 
     if (!hide_after_applying)
-        hide_when_done = AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No;
+        hide_when_done = CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No;
 
     VERIFY(completion.length() >= partial_length);
     if (!m_editor->has_selection()) {
@@ -217,16 +217,6 @@ AutocompleteProvider::Entry::HideAutocompleteAfterApplying AutocompleteBox::appl
     m_editor->insert_at_cursor_or_replace_selection(completion);
 
     return hide_when_done;
-}
-
-bool AutocompleteProvider::Declaration::operator==(AutocompleteProvider::Declaration const& other) const
-{
-    return name == other.name && position == other.position && type == other.type && scope == other.scope;
-}
-
-bool AutocompleteProvider::ProjectLocation::operator==(ProjectLocation const& other) const
-{
-    return file == other.file && line == other.line && column == other.column;
 }
 
 }

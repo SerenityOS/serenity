@@ -493,7 +493,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     auto normalized_method = normalize_method(method);
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
-    auto parsed_url = settings_object.responsible_document()->parse_url(url);
+    auto parsed_url = settings_object.api_base_url().complete_url(url);
 
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())

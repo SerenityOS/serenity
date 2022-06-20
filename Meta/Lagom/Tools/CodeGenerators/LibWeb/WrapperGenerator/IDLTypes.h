@@ -141,7 +141,7 @@ struct CallbackFunction {
     bool is_legacy_treat_non_object_as_null { false };
 };
 
-struct Interface;
+class Interface;
 
 struct ParameterizedType : public Type {
     ParameterizedType() = default;
@@ -167,7 +167,13 @@ static inline size_t get_shortest_function_length(Vector<Function&> const& overl
     return longest_length;
 }
 
-struct Interface : public RefCounted<Interface> {
+class Interface {
+    AK_MAKE_NONCOPYABLE(Interface);
+    AK_MAKE_NONMOVABLE(Interface);
+
+public:
+    explicit Interface() = default;
+
     String name;
     String parent_name;
 
@@ -198,7 +204,7 @@ struct Interface : public RefCounted<Interface> {
     HashMap<String, Dictionary> dictionaries;
     HashMap<String, Enumeration> enumerations;
     HashMap<String, Typedef> typedefs;
-    HashMap<String, NonnullRefPtr<Interface>> mixins;
+    HashMap<String, Interface*> mixins;
     HashMap<String, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
@@ -212,7 +218,7 @@ struct Interface : public RefCounted<Interface> {
 
     String module_own_path;
     HashTable<String> required_imported_paths;
-    NonnullRefPtrVector<Interface> imported_modules;
+    Vector<Interface&> imported_modules;
 
     HashMap<String, Vector<Function&>> overload_sets;
     HashMap<String, Vector<Function&>> static_overload_sets;

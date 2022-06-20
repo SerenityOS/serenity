@@ -39,8 +39,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {
         if (auto result = m_socket->send_fd(fd.value()); result.is_error()) {
-            dbgln("{}", result.error());
-            shutdown();
+            shutdown_with_error(result.error());
             return result;
         }
     }
@@ -55,15 +54,13 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
         if (maybe_nwritten.is_error()) {
             auto error = maybe_nwritten.release_error();
             if (error.is_errno()) {
+                shutdown_with_error(error);
                 switch (error.code()) {
                 case EPIPE:
-                    shutdown();
                     return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer"sv);
                 case EAGAIN:
-                    shutdown();
                     return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed"sv);
                 default:
-                    shutdown();
                     return Error::from_syscall("IPC::Connection::post_message write"sv, -error.code());
                 }
             } else {
@@ -82,6 +79,12 @@ void ConnectionBase::shutdown()
 {
     m_socket->close();
     die();
+}
+
+void ConnectionBase::shutdown_with_error(Error const& error)
+{
+    dbgln("IPC::ConnectionBase ({:p}) had an error ({}), disconnecting.", this, error);
+    shutdown();
 }
 
 void ConnectionBase::handle_messages()
@@ -136,6 +139,8 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
         auto bytes_read = maybe_bytes_read.release_value();
         if (bytes_read.is_empty()) {
             deferred_invoke([this] { shutdown(); });
+            if (!bytes.is_empty())
+                break;
             return Error::from_string_literal("IPC connection EOF"sv);
         }
 

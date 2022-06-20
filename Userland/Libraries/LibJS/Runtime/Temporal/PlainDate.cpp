@@ -37,6 +37,16 @@ void PlainDate::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
+// 3.5.2 CreateISODateRecord ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record
+ISODateRecord create_iso_date_record(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
+
+    // 2. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+    return { .year = year, .month = month, .day = day };
+}
+
 // 3.5.1 CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate
 ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target)
 {
@@ -114,7 +124,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
 
         // g. Return ? CalendarDateFromFields(calendar, fields, options).
         return calendar_date_from_fields(global_object, *calendar, *fields, options);
@@ -154,10 +164,10 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             return create_date_duration_record(0, 0, 0, 0);
 
         // c. Let start be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
-        auto start = ISODate { .year = year1, .month = month1, .day = day1 };
+        auto start = ISODateRecord { .year = year1, .month = month1, .day = day1 };
 
         // d. Let end be the Record { [[Year]]: y2, [[Month]]: m2, [[Day]]: d2 }.
-        auto end = ISODate { .year = year2, .month = month2, .day = day2 };
+        auto end = ISODateRecord { .year = year2, .month = month2, .day = day2 };
 
         // e. Let years be end.[[Year]] - start.[[Year]].
         double years = end.year - start.year;
@@ -224,27 +234,26 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
         }
 
-        // o. Let days be 0.
-        double days = 0;
+        double days;
 
-        // p. If mid.[[Month]] = end.[[Month]], then
+        // o. If mid.[[Month]] = end.[[Month]], then
         if (mid.month == end.month) {
             // i. Assert: mid.[[Year]] = end.[[Year]].
             VERIFY(mid.year == end.year);
 
-            // ii. Set days to end.[[Day]] - mid.[[Day]].
+            // ii. Let days be end.[[Day]] - mid.[[Day]].
             days = end.day - mid.day;
         }
-        // q. Else if sign < 0, set days to -mid.[[Day]] - (! ISODaysInMonth(end.[[Year]], end.[[Month]]) - end.[[Day]]).
+        // p. Else if sign < 0, let days be -mid.[[Day]] - (! ISODaysInMonth(end.[[Year]], end.[[Month]]) - end.[[Day]]).
         else if (sign < 0) {
             days = -mid.day - (iso_days_in_month(end.year, end.month) - end.day);
         }
-        // r. Else, set days to end.[[Day]] + (! ISODaysInMonth(mid.[[Year]], mid.[[Month]]) - mid.[[Day]]).
+        // q. Else, let days be end.[[Day]] + (! ISODaysInMonth(mid.[[Year]], mid.[[Month]]) - mid.[[Day]]).
         else {
             days = end.day + (iso_days_in_month(mid.year, mid.month) - mid.day);
         }
 
-        // s. If largestUnit is "month", then
+        // r. If largestUnit is "month", then
         if (largest_unit == "month"sv) {
             // i. Set months to months + years × 12.
             months += years * 12;
@@ -253,30 +262,33 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             years = 0;
         }
 
-        // t. Return ! CreateDateDurationRecord(years, months, 0, days).
+        // s. Return ! CreateDateDurationRecord(years, months, 0, days).
         return create_date_duration_record(years, months, 0, days);
     }
-    // 2. If largestUnit is "day" or "week", then
+    // 2. Else,
     else {
-        // a. Let epochDays1 be MakeDay(𝔽(y1), 𝔽(m1 - 1), 𝔽(d1)).
+        // a. Assert: largestUnit is "day" or "week".
+        VERIFY(largest_unit.is_one_of("day"sv, "week"sv));
+
+        // b. Let epochDays1 be MakeDay(𝔽(y1), 𝔽(m1 - 1), 𝔽(d1)).
         auto epoch_days_1 = make_day(year1, month1 - 1, day1);
 
-        // b. Assert: epochDays1 is finite.
+        // c. Assert: epochDays1 is finite.
         VERIFY(isfinite(epoch_days_1));
 
-        // c. Let epochDays2 be MakeDay(𝔽(y2), 𝔽(m2 - 1), 𝔽(d2)).
+        // d. Let epochDays2 be MakeDay(𝔽(y2), 𝔽(m2 - 1), 𝔽(d2)).
         auto epoch_days_2 = make_day(year2, month2 - 1, day2);
 
-        // d. Assert: epochDays2 is finite.
+        // e. Assert: epochDays2 is finite.
         VERIFY(isfinite(epoch_days_2));
 
-        // e. Let days be ℝ(epochDays2) - ℝ(epochDays1).
+        // f. Let days be ℝ(epochDays2) - ℝ(epochDays1).
         auto days = epoch_days_2 - epoch_days_1;
 
-        // f. Let weeks be 0.
+        // g. Let weeks be 0.
         double weeks = 0;
 
-        // g. If largestUnit is "week", then
+        // h. If largestUnit is "week", then
         if (largest_unit == "week"sv) {
             // i. Set weeks to RoundTowardsZero(days / 7).
             weeks = trunc(days / 7);
@@ -285,23 +297,43 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             days = fmod(days, 7);
         }
 
-        // h. Return ! CreateDateDurationRecord(0, 0, weeks, days).
+        // i. Return ! CreateDateDurationRecord(0, 0, weeks, days).
         return create_date_duration_record(0, 0, weeks, days);
     }
-    VERIFY_NOT_REACHED();
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
-ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
+ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, StringView overflow)
 {
     auto& vm = global_object.vm();
-    // 1. Assert: year, month, and day are integers.
-    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
-    // 2. Assert: overflow is either "constrain" or "reject".
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
-    // 3. If overflow is "reject", then
-    if (overflow == "reject"sv) {
+    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
+
+    // 1. If overflow is "constrain", then
+    if (overflow == "constrain"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
+        // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
+        // ISO value for years: -273975 - 273975, which is a subset of this check.
+        if (!AK::is_within_range<i32>(year))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+
+        // a. Set month to the result of clamping month between 1 and 12.
+        month = clamp(month, 1, 12);
+
+        // b. Let daysInMonth be ! ISODaysInMonth(year, month).
+        auto days_in_month = iso_days_in_month(static_cast<i32>(year), static_cast<u8>(month));
+
+        // c. Set day to the result of clamping day between 1 and daysInMonth.
+        day = clamp(day, 1, days_in_month);
+
+        // d. Return CreateISODateRecord(year, month, day).
+        return create_iso_date_record(static_cast<i32>(year), static_cast<u8>(month), static_cast<u8>(day));
+    }
+    // 2. Else,
+    else {
+        // a. Assert: overflow is "reject".
+        VERIFY(overflow == "reject"sv);
+
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behavior as the call to IsValidISODate will immediately check that these values are valid ISO
         // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
@@ -311,36 +343,13 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
         auto y = static_cast<i32>(year);
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
-        // a. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
+        // b. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (!is_valid_iso_date(y, m, d))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-        // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return ISODate { .year = y, .month = m, .day = d };
+        // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+        return ISODateRecord { .year = y, .month = m, .day = d };
     }
-    // 4. If overflow is "constrain", then
-    else if (overflow == "constrain"sv) {
-        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
-        // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
-        // ISO value for years: -273975 - 273975, which is a subset of this check.
-        if (!AK::is_within_range<i32>(year))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
-
-        auto y = static_cast<i32>(year);
-
-        // a. Set month to the result of clamping month between 1 and 12.
-        month = clamp(month, 1, 12);
-
-        // b. Let daysInMonth be ! ISODaysInMonth(year, month).
-        auto days_in_month = iso_days_in_month(y, (u8)month);
-
-        // c. Set day to the result of clamping day between 1 and daysInMonth.
-        day = clamp(day, 1, days_in_month);
-
-        // d. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return ISODate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
-    }
-    VERIFY_NOT_REACHED();
 }
 
 // 3.5.5 IsValidISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate
@@ -366,7 +375,7 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
 }
 
 // 3.5.6 BalanceISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodate
-ISODate balance_iso_date(double year, double month, double day)
+ISODateRecord balance_iso_date(double year, double month, double day)
 {
     // 1. Let epochDays be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
     auto epoch_days = make_day(year, month - 1, day);
@@ -377,8 +386,8 @@ ISODate balance_iso_date(double year, double month, double day)
     // 3. Let ms be MakeDate(epochDays, +0𝔽).
     auto ms = make_date(epoch_days, 0);
 
-    // 4. Return the Record { [[Year]]: ℝ(YearFromTime(ms)), [[Month]]: ℝ(MonthFromTime(ms)) + 1, [[Day]]: ℝ(DateFromTime(ms)) }.
-    return { .year = year_from_time(ms), .month = static_cast<u8>(month_from_time(ms) + 1), .day = date_from_time(ms) };
+    // 4. Return CreateISODateRecord(ℝ(YearFromTime(ms)), ℝ(MonthFromTime(ms)) + 1, ℝ(DateFromTime(ms))).
+    return create_iso_date_record(year_from_time(ms), static_cast<u8>(month_from_time(ms) + 1), date_from_time(ms));
 }
 
 // 3.5.7 PadISOYear ( y ), https://tc39.es/proposal-temporal/#sec-temporal-padisoyear
@@ -426,7 +435,7 @@ ThrowCompletionOr<String> temporal_date_to_string(GlobalObject& global_object, P
 }
 
 // 3.5.9 AddISODate ( year, month, day, years, months, weeks, days, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-addisodate
-ThrowCompletionOr<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow)
+ThrowCompletionOr<ISODateRecord> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, StringView overflow)
 {
     // 1. Assert: year, month, day, years, months, weeks, and days are integers.
     VERIFY(years == trunc(years) && months == trunc(months) && weeks == trunc(weeks) && days == trunc(days));
@@ -438,19 +447,16 @@ ThrowCompletionOr<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u
     auto intermediate_year_month = balance_iso_year_month(year + years, month + months);
 
     // 4. Let intermediate be ? RegulateISODate(intermediate.[[Year]], intermediate.[[Month]], day, overflow).
-    auto intermediate_date = TRY(regulate_iso_date(global_object, intermediate_year_month.year, intermediate_year_month.month, day, overflow));
+    auto intermediate = TRY(regulate_iso_date(global_object, intermediate_year_month.year, intermediate_year_month.month, day, overflow));
 
     // 5. Set days to days + 7 × weeks.
     days += 7 * weeks;
 
     // 6. Let d be intermediate.[[Day]] + days.
-    auto d = intermediate_date.day + days;
+    auto d = intermediate.day + days;
 
-    // 7. Let intermediate be BalanceISODate(intermediate.[[Year]], intermediate.[[Month]], d).
-    auto intermediate = balance_iso_date(intermediate_date.year, intermediate_date.month, d);
-
-    // 8. Return ? RegulateISODate(intermediate.[[Year]], intermediate.[[Month]], intermediate.[[Day]], overflow).
-    return regulate_iso_date(global_object, intermediate.year, intermediate.month, intermediate.day, overflow);
+    // 7. Return BalanceISODate(intermediate.[[Year]], intermediate.[[Month]], d).
+    return balance_iso_date(intermediate.year, intermediate.month, d);
 }
 
 // 3.5.10 CompareISODate ( y1, m1, d1, y2, m2, d2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodate
@@ -504,20 +510,22 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
     // 4. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, options_value));
 
-    // 5. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
-    auto disallowed_units = Vector<StringView> { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
+    // 5. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", date, "day").
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::Date, { "day"sv }));
 
-    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
-
-    // 7. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
-    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
+    // 7. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", date, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::Date, { "auto"sv }));
 
-    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 8. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
+    if (largest_unit == "auto"sv)
+        largest_unit = default_largest_unit;
+
+    // 9. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -532,7 +540,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, options, largest_unit.release_value()));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, largest_unit.release_value()));
 
     // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* duration = TRY(calendar_date_until(global_object, temporal_date.calendar(), &temporal_date, other, *until_options));

@@ -26,8 +26,6 @@ set(KERNEL_SOURCES
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
     Bus/PCI/Initializer.cpp
-    Bus/PCI/SysFSPCI.cpp
-    Bus/USB/SysFSUSB.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp
@@ -144,22 +142,35 @@ set(KERNEL_SOURCES
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
     FileSystem/SysFS.cpp
-    FileSystem/SysFSComponent.cpp
+    FileSystem/SysFS/Component.cpp
+    FileSystem/SysFS/Registry.cpp
+    FileSystem/SysFS/RootDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
+    FileSystem/SysFS/Subsystems/Bus/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/BlockDevicesDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/CharacterDevicesDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/DeviceComponent.cpp
+    FileSystem/SysFS/Subsystems/Devices/Directory.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
+    FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
+    FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
+    FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/Hypervisor/VMWareBackdoor.cpp
     Firmware/MultiProcessor/Parser.cpp
-    Firmware/BIOS.cpp
-    Firmware/PowerStateSwitch.cpp
-    Firmware/SysFSFirmware.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IOAPIC.cpp
     Interrupts/IRQHandler.cpp
-    Interrupts/InterruptManagement.cpp
     Interrupts/PIC.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/SpuriousInterruptHandler.cpp
@@ -182,6 +193,7 @@ set(KERNEL_SOURCES
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/ScopedAddressSpaceSwitcher.cpp
+    Memory/SharedFramebufferVMObject.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
@@ -281,6 +293,7 @@ set(KERNEL_SOURCES
     Syscalls/unlink.cpp
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
+    Syscalls/utimensat.cpp
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
@@ -330,9 +343,10 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
@@ -397,18 +411,10 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${CRYPTO_SOURCES}
     )
 else()
-    set(PREKERNEL_SOURCES
-        Arch/aarch64/Prekernel/Aarch64_asm_utils.S
-        Arch/aarch64/Prekernel/boot.S
-        Arch/aarch64/Prekernel/PrekernelCommon.cpp
-        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
-        Arch/aarch64/Prekernel/PrekernelMMU.cpp
-
-        Prekernel/UBSanitizer.cpp
-    )
     set(RPI_SOURCES
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
+        Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/Timer.cpp
@@ -416,15 +422,19 @@ else()
     )
     set(SOURCES
         ${AK_SOURCES}
-        ${PREKERNEL_SOURCES}
         ${RPI_SOURCES}
 
+        Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/Dummy.cpp
+        Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
+        Arch/aarch64/InterruptManagement.cpp
+        Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
@@ -437,6 +447,7 @@ else()
         # Files from base Kernel
         KSyms.cpp
         MiniStdLib.cpp
+        UBSanitizer.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
@@ -454,6 +465,11 @@ else()
         Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
+
+        Interrupts/GenericInterruptHandler.cpp
+        Interrupts/IRQHandler.cpp
+        Interrupts/SharedIRQHandler.cpp
+        Interrupts/UnhandledInterruptHandler.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
@@ -466,9 +482,13 @@ endif()
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
+
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)
+elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_compile_options(-mgeneral-regs-only)
 endif()
+
 add_compile_options(-fno-asynchronous-unwind-tables)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-fno-exceptions)
@@ -485,6 +505,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 
     set(TARGET_STRING "")
+
+
+    # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
+    set_source_files_properties(MiniStdLib.cpp
+        PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
     add_link_options(LINKER:-z,pack-relative-relocs)
 else() # Assume Clang
@@ -508,7 +533,7 @@ endmacro()
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mcmodel=large -mno-red-zone)
     set_new_alignment(8)
-else()
+elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set_new_alignment(4)
 endif()
 
@@ -547,8 +572,10 @@ elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)
 endif()
 
-# Kernel Undefined Behavior Sanitizer (KUBSAN)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
+    # Kernel Undefined Behavior Sanitizer (KUBSAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
 
 # Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
 # is not currently meant to be used, besides when developing Kernel ASAN support.

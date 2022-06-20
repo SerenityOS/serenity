@@ -8,8 +8,8 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/PCI/SysFSPCI.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT void initialize()
         VERIFY_NOT_REACHED();
     }
 
-    PCI::PCIBusSysFSDirectory::initialize();
+    PCIBusSysFSDirectory::initialize();
 
     MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
         dmesgln("{} {}", device_identifier.address(), device_identifier.hardware_id());

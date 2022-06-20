@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Filter.h"
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint::Filters {

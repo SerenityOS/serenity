@@ -82,6 +82,24 @@ enum class ZipCompressionMethod : u16 {
     Deflate = 8
 };
 
+union ZipGeneralPurposeFlags {
+    u16 flags;
+    struct {
+        u16 encrypted : 1;
+        u16 compression_options : 2;
+        u16 data_descriptor : 1;
+        u16 enhanced_deflation : 1;
+        u16 compressed_patched_data : 1;
+        u16 strong_encryption : 1;
+        u16 : 4;
+        u16 language_encoding : 1;
+        u16 : 1;
+        u16 masked_data_values : 1;
+        u16 : 2;
+    };
+};
+static_assert(sizeof(ZipGeneralPurposeFlags) == sizeof(u16));
+
 OutputStream& operator<<(OutputStream& stream, ZipCompressionMethod method);
 
 struct [[gnu::packed]] CentralDirectoryRecord {
@@ -89,7 +107,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
 
     u16 made_by_version;
     u16 minimum_version;
-    u16 general_purpose_flags;
+    ZipGeneralPurposeFlags general_purpose_flags;
     ZipCompressionMethod compression_method;
     u16 modification_time;
     u16 modification_date;
@@ -125,7 +143,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         stream.write_or_error(signature);
         stream << made_by_version;
         stream << minimum_version;
-        stream << general_purpose_flags;
+        stream << general_purpose_flags.flags;
         stream << compression_method;
         stream << modification_time;
         stream << modification_date;
@@ -158,7 +176,7 @@ struct [[gnu::packed]] LocalFileHeader {
     static constexpr Array<u8, signature_length> signature = { 0x50, 0x4b, 0x03, 0x04 }; // 'PK\x03\x04'
 
     u16 minimum_version;
-    u16 general_purpose_flags;
+    ZipGeneralPurposeFlags general_purpose_flags;
     u16 compression_method;
     u16 modification_time;
     u16 modification_date;
@@ -188,7 +206,7 @@ struct [[gnu::packed]] LocalFileHeader {
     {
         stream.write_or_error(signature);
         stream << minimum_version;
-        stream << general_purpose_flags;
+        stream << general_purpose_flags.flags;
         stream << compression_method;
         stream << modification_time;
         stream << modification_date;

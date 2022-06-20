@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<TmpFS>> TmpFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> TmpFS::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS));
 }
 
 TmpFS::TmpFS() = default;

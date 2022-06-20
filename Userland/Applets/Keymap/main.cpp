@@ -7,7 +7,7 @@
 #include "KeymapStatusWindow.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
 

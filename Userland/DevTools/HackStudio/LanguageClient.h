@@ -46,12 +46,12 @@ public:
     LanguageClient const* active_client() const { return !m_current_language_client ? nullptr : m_current_language_client.ptr(); }
 
 protected:
-    virtual void auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const&) override;
-    virtual void declaration_location(GUI::AutocompleteProvider::ProjectLocation const&) override;
-    virtual void declarations_in_document(String const&, Vector<GUI::AutocompleteProvider::Declaration> const&) override;
-    virtual void todo_entries_in_document(String const&, Vector<Cpp::Parser::TodoEntry> const&) override;
+    virtual void auto_complete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const&) override;
+    virtual void declaration_location(CodeComprehension::ProjectLocation const&) override;
+    virtual void declarations_in_document(String const&, Vector<CodeComprehension::Declaration> const&) override;
+    virtual void todo_entries_in_document(String const&, Vector<CodeComprehension::TodoEntry> const&) override;
     virtual void parameters_hint_result(Vector<String> const&, int index) override;
-    virtual void tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const&) override;
+    virtual void tokens_info_result(Vector<CodeComprehension::TokenInfo> const&) override;
     void set_wrapper(ConnectionToServerWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;
@@ -137,15 +137,15 @@ public:
     virtual void get_parameters_hint(String const& path, size_t line, size_t column);
     virtual void get_tokens_info(String const& filename);
 
-    void provide_autocomplete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const&) const;
+    void provide_autocomplete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> const&) const;
     void declaration_found(String const& file, size_t line, size_t column) const;
     void parameters_hint_result(Vector<String> const& params, size_t argument_index) const;
 
     // Callbacks that get called when the result of a language server query is ready
-    Function<void(Vector<GUI::AutocompleteProvider::Entry>)> on_autocomplete_suggestions;
+    Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> on_autocomplete_suggestions;
     Function<void(String const&, size_t, size_t)> on_declaration_found;
     Function<void(Vector<String> const&, size_t)> on_function_parameters_hint_result;
-    Function<void(Vector<GUI::AutocompleteProvider::TokenInfo> const&)> on_tokens_info_result;
+    Function<void(Vector<CodeComprehension::TokenInfo> const&)> on_tokens_info_result;
 
 private:
     ConnectionToServerWrapper& m_connection_wrapper;

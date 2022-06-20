@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
+#include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -15,10 +17,9 @@
 
 namespace LibDSP {
 
-// FIXME: Audio::Frame is 64-bit float, which is quite large for long clips.
 using Sample = Audio::Sample;
 
-Sample const SAMPLE_OFF = { 0.0, 0.0 };
+constexpr Sample const SAMPLE_OFF = { 0.0, 0.0 };
 
 struct RollNote {
     constexpr u32 length() const { return (off_sample - on_sample) + 1; }
@@ -28,7 +29,7 @@ struct RollNote {
     u8 pitch;
     i8 velocity;
 
-    Envelope to_envelope(u32 time, u32 attack_samples, u32 decay_samples, u32 release_samples)
+    constexpr Envelope to_envelope(u32 time, u32 attack_samples, u32 decay_samples, u32 release_samples) const
     {
         i64 time_since_end = static_cast<i64>(time) - static_cast<i64>(off_sample);
         // We're before the end of this note.
@@ -58,7 +59,7 @@ struct RollNote {
         return Envelope::from_release(static_cast<double>(time_since_end) / static_cast<double>(release_samples));
     }
 
-    constexpr bool is_playing(u32 time) { return on_sample <= time && time <= off_sample; }
+    constexpr bool is_playing(u32 time) const { return on_sample <= time && time <= off_sample; }
 };
 
 enum class SignalType : u8 {
@@ -67,13 +68,29 @@ enum class SignalType : u8 {
     Note
 };
 
-using RollNotes = OrderedHashMap<u8, RollNote>;
+// Perfect hashing for note (MIDI) values. This just uses the note value as the hash itself.
+class PerfectNoteHashTraits : Traits<u8> {
+public:
+    static constexpr bool equals(u8 const& a, u8 const& b) { return a == b; }
+    static constexpr unsigned hash(u8 value)
+    {
+        return static_cast<unsigned>(value);
+    }
+};
 
-struct Signal : public Variant<Sample, RollNotes> {
+using RollNotes = OrderedHashMap<u8, RollNote, PerfectNoteHashTraits>;
+
+struct Signal : public Variant<FixedArray<Sample>, RollNotes> {
     using Variant::Variant;
+    AK_MAKE_NONCOPYABLE(Signal);
+
+public:
+    Signal& operator=(Signal&&) = default;
+    Signal(Signal&&) = default;
+
     ALWAYS_INLINE SignalType type() const
     {
-        if (has<Sample>())
+        if (has<FixedArray<Sample>>())
             return SignalType::Sample;
         if (has<RollNotes>())
             return SignalType::Note;
@@ -85,7 +102,7 @@ struct Signal : public Variant<Sample, RollNotes> {
 // We calculate note frequencies relative to A4:
 // 440.0 * pow(pow(2.0, 1.0 / 12.0), N)
 // Where N is the note distance from A.
-constexpr double note_frequencies[] = {
+constexpr Array<double, 84> note_frequencies = {
     // Octave 1
     32.703195662574764,
     34.647828872108946,
@@ -178,8 +195,8 @@ constexpr double note_frequencies[] = {
     3729.3100921447249,
     3951.0664100489994,
 };
-constexpr size_t note_count = array_size(note_frequencies);
 
-constexpr double middle_c = note_frequencies[36];
+constexpr size_t const notes_per_octave = 12;
+constexpr double const middle_c = note_frequencies[36];
 
 }

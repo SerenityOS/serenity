@@ -18,15 +18,14 @@
             __assertion_failed(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__); \
     } while (0)
 
-#define VERIFY_NOT_REACHED() VERIFY(false)
+#define VERIFY_NOT_REACHED() __assertion_failed("not reached", __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 extern "C" {
 [[noreturn]] void _abort();
 [[noreturn]] void abort();
 }
 
-static constexpr bool TODO = false;
-#define TODO() VERIFY(TODO)
+#define TODO() __assertion_failed("TODO", __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 #if ARCH(I386) || ARCH(X86_64)
 #    define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))

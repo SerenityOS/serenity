@@ -8,8 +8,7 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/CPU.h>
 
 extern "C" uintptr_t vector_table_el1;
 
@@ -21,15 +20,23 @@ void Processor::initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
 
-    auto current_exception_level = static_cast<u64>(Kernel::Aarch64::Asm::get_current_exception_level());
+    auto current_exception_level = static_cast<u64>(Aarch64::Asm::get_current_exception_level());
     dbgln("CPU{} started in: EL{}", cpu, current_exception_level);
 
     dbgln("Drop CPU{} to EL1", cpu);
-    Prekernel::drop_to_exception_level_1();
+    drop_to_exception_level_1();
 
     // Load EL1 vector table
-    el1_vector_table_install(&vector_table_el1);
+    Aarch64::Asm::el1_vector_table_install(&vector_table_el1);
 
     g_current_processor = this;
 }
+
+[[noreturn]] void Processor::halt()
+{
+    disable_interrupts();
+    for (;;)
+        asm volatile("wfi");
+}
+
 }

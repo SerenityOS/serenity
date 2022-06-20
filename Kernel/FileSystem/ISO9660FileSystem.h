@@ -305,7 +305,7 @@ public:
         }
     };
 
-    static ErrorOr<NonnullRefPtr<ISO9660FS>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~ISO9660FS() override;
     virtual ErrorOr<void> initialize() override;

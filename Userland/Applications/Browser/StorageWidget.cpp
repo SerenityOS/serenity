@@ -6,7 +6,7 @@
 
 #include "StorageWidget.h"
 #include "CookiesModel.h"
-#include "LocalStorageModel.h"
+#include "StorageModel.h"
 #include <AK/Variant.h>
 #include <Applications/Browser/StorageWidgetGML.h>
 #include <LibGUI/TabWidget.h>
@@ -39,7 +39,7 @@ StorageWidget::StorageWidget()
 
     m_local_storage_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("local_storage_tableview");
     m_local_storage_textbox = tab_widget.find_descendant_of_type_named<GUI::TextBox>("local_storage_filter_textbox");
-    m_local_storage_model = adopt_ref(*new LocalStorageModel());
+    m_local_storage_model = adopt_ref(*new StorageModel());
 
     m_local_storage_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_local_storage_model));
     m_local_storage_filtering_model->set_filter_term("");
@@ -53,6 +53,23 @@ StorageWidget::StorageWidget()
     m_local_storage_table_view->set_model(m_local_storage_filtering_model);
     m_local_storage_table_view->set_column_headers_visible(true);
     m_local_storage_table_view->set_alternating_row_colors(true);
+
+    m_session_storage_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("session_storage_tableview");
+    m_session_storage_textbox = tab_widget.find_descendant_of_type_named<GUI::TextBox>("session_storage_filter_textbox");
+    m_session_storage_model = adopt_ref(*new StorageModel());
+
+    m_session_storage_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_session_storage_model));
+    m_session_storage_filtering_model->set_filter_term("");
+
+    m_session_storage_textbox->on_change = [this] {
+        m_session_storage_filtering_model->set_filter_term(m_session_storage_textbox->text());
+        if (m_session_storage_filtering_model->row_count() != 0)
+            m_session_storage_table_view->set_cursor(m_session_storage_filtering_model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
+    };
+
+    m_session_storage_table_view->set_model(m_session_storage_filtering_model);
+    m_session_storage_table_view->set_column_headers_visible(true);
+    m_session_storage_table_view->set_alternating_row_colors(true);
 }
 
 void StorageWidget::set_cookies_entries(Vector<Web::Cookie::Cookie> entries)
@@ -73,6 +90,16 @@ void StorageWidget::set_local_storage_entries(OrderedHashMap<String, String> ent
 void StorageWidget::clear_local_storage_entries()
 {
     m_local_storage_model->clear_items();
+}
+
+void StorageWidget::set_session_storage_entries(OrderedHashMap<String, String> entries)
+{
+    m_session_storage_model->set_items(entries);
+}
+
+void StorageWidget::clear_session_storage_entries()
+{
+    m_session_storage_model->clear_items();
 }
 
 }

@@ -10,20 +10,18 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/InterruptManagement.h>
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
-
-static void draw_logo();
-static u32 query_firmware_version();
-
-extern "C" void wait_cycles(int n);
 
 struct TrapFrame {
     u64 x[31];     // Saved general purpose registers
@@ -33,89 +31,7 @@ struct TrapFrame {
     u64 sp_el0;    // EL0 stack pointer
 };
 
-extern "C" [[noreturn]] void halt();
-extern "C" [[noreturn]] void init();
 extern "C" void exception_common(TrapFrame const* const trap_frame);
-
-typedef void (*ctor_func_t)();
-extern ctor_func_t start_heap_ctors[];
-extern ctor_func_t end_heap_ctors[];
-extern ctor_func_t start_ctors[];
-extern ctor_func_t end_ctors[];
-
-ALWAYS_INLINE static Kernel::Processor& bootstrap_processor()
-{
-    alignas(Kernel::Processor) static u8 bootstrap_processor_storage[sizeof(Kernel::Processor)];
-    return (Kernel::Processor&)bootstrap_processor_storage;
-}
-
-extern "C" [[noreturn]] void init()
-{
-    dbgln("Welcome to Serenity OS!");
-    dbgln("Imagine this being your ideal operating system.");
-    dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
-    dbgln();
-
-    new (&bootstrap_processor()) Kernel::Processor();
-    bootstrap_processor().initialize(0);
-
-    // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
-    // might rely on being able to call new/kmalloc in the constructor. We do have to run the
-    // kmalloc constructors, because kmalloc_init relies on that.
-    for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
-        (*ctor)();
-    kmalloc_init();
-
-    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
-        (*ctor)();
-
-    Kernel::load_kernel_symbol_table();
-
-    auto firmware_version = query_firmware_version();
-    dbgln("Firmware version: {}", firmware_version);
-
-    dbgln("Initialize MMU");
-    Prekernel::init_prekernel_page_tables();
-
-    auto& framebuffer = Prekernel::Framebuffer::the();
-    if (framebuffer.initialized()) {
-        draw_logo();
-    }
-
-    dbgln("Enter loop");
-
-    auto& timer = Prekernel::Timer::the();
-    u64 start_musec = 0;
-    for (;;) {
-        u64 now_musec;
-        while ((now_musec = timer.microseconds_since_boot()) - start_musec < 1'000'000)
-            ;
-        start_musec = now_musec;
-        dbgln("Timer: {}", now_musec);
-    }
-}
-
-// FIXME: Share this with the Intel Prekernel.
-extern size_t __stack_chk_guard;
-size_t __stack_chk_guard;
-extern "C" [[noreturn]] void __stack_chk_fail();
-
-void __stack_chk_fail()
-{
-    Prekernel::halt();
-}
-
-using namespace Kernel;
-
-[[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
-{
-    critical_dmesgln("ASSERTION FAILED: {}", msg);
-    critical_dmesgln("{}:{} in {}", file, line, func);
-
-    // Used for printing a nice backtrace!
-    PANIC("Aborted");
-}
-
 extern "C" void exception_common(TrapFrame const* const trap_frame)
 {
     constexpr bool print_stack_frame = true;
@@ -132,15 +48,99 @@ extern "C" void exception_common(TrapFrame const* const trap_frame)
         dbgln("elr_el1: {:x}", trap_frame->elr_el1);
         dbgln("tpidr_el1: {:x}", trap_frame->tpidr_el1);
         dbgln("sp_el0: {:x}", trap_frame->sp_el0);
+
+        auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
+        dbgln("esr_el1: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
     }
+
+    Kernel::Processor::halt();
 }
 
-class QueryFirmwareVersionMboxMessage : Prekernel::Mailbox::Message {
+typedef void (*ctor_func_t)();
+extern ctor_func_t start_heap_ctors[];
+extern ctor_func_t end_heap_ctors[];
+extern ctor_func_t start_ctors[];
+extern ctor_func_t end_ctors[];
+
+// FIXME: Share this with the Intel Prekernel.
+extern size_t __stack_chk_guard;
+size_t __stack_chk_guard;
+extern "C" [[noreturn]] void __stack_chk_fail();
+
+void __stack_chk_fail()
+{
+    Kernel::Processor::halt();
+}
+
+namespace Kernel {
+
+static void draw_logo();
+static u32 query_firmware_version();
+
+extern "C" [[noreturn]] void halt();
+extern "C" [[noreturn]] void init();
+
+ALWAYS_INLINE static Processor& bootstrap_processor()
+{
+    alignas(Processor) static u8 bootstrap_processor_storage[sizeof(Processor)];
+    return (Processor&)bootstrap_processor_storage;
+}
+
+extern "C" [[noreturn]] void init()
+{
+    dbgln("Welcome to Serenity OS!");
+    dbgln("Imagine this being your ideal operating system.");
+    dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
+    dbgln();
+
+    new (&bootstrap_processor()) Processor();
+    bootstrap_processor().initialize(0);
+
+    // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
+    // might rely on being able to call new/kmalloc in the constructor. We do have to run the
+    // kmalloc constructors, because kmalloc_init relies on that.
+    for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
+        (*ctor)();
+    kmalloc_init();
+
+    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
+        (*ctor)();
+
+    load_kernel_symbol_table();
+
+    initialize_interrupts();
+    InterruptManagement::initialize();
+    Processor::enable_interrupts();
+
+    auto firmware_version = query_firmware_version();
+    dbgln("Firmware version: {}", firmware_version);
+
+    dbgln("Initialize MMU");
+    init_prekernel_page_tables();
+
+    auto& framebuffer = RPi::Framebuffer::the();
+    if (framebuffer.initialized()) {
+        draw_logo();
+    }
+
+    auto& timer = RPi::Timer::the();
+    timer.set_interrupt_interval_usec(1'000'000);
+    timer.enable_interrupt_mode();
+
+    dbgln("Enter loop");
+
+    // This will not disable interrupts, so the timer will still fire and show that
+    // interrupts are working!
+    for (;;)
+        asm volatile("wfi");
+}
+
+class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
 public:
     u32 version;
 
     QueryFirmwareVersionMboxMessage()
-        : Prekernel::Mailbox::Message(0x0000'0001, 4)
+        : RPi::Mailbox::Message(0x0000'0001, 4)
     {
         version = 0;
     }
@@ -149,12 +149,12 @@ public:
 static u32 query_firmware_version()
 {
     struct __attribute__((aligned(16))) {
-        Prekernel::Mailbox::MessageHeader header;
+        RPi::Mailbox::MessageHeader header;
         QueryFirmwareVersionMboxMessage query_firmware_version;
-        Prekernel::Mailbox::MessageTail tail;
+        RPi::Mailbox::MessageTail tail;
     } message_queue;
 
-    if (!Prekernel::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+    if (!RPi::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
         return 0xffff'ffff;
     }
 
@@ -166,7 +166,7 @@ extern "C" const u32 serenity_boot_logo_size;
 
 static void draw_logo()
 {
-    Prekernel::BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
+    BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
     if (!logo_parser.parse()) {
         dbgln("Failed to parse boot logo.");
         return;
@@ -174,7 +174,7 @@ static void draw_logo()
 
     dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
 
-    auto& framebuffer = Prekernel::Framebuffer::the();
+    auto& framebuffer = RPi::Framebuffer::the();
     auto fb_ptr = framebuffer.gpu_buffer();
     auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
     auto image_right = image_left + logo_parser.image.width;
@@ -186,12 +186,12 @@ static void draw_logo()
         for (u32 x = 0; x < framebuffer.width(); x++) {
             if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
                 switch (framebuffer.pixel_order()) {
-                case Prekernel::Framebuffer::PixelOrder::RGB:
+                case RPi::Framebuffer::PixelOrder::RGB:
                     fb_ptr[0] = logo_pixels[0];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[2];
                     break;
-                case Prekernel::Framebuffer::PixelOrder::BGR:
+                case RPi::Framebuffer::PixelOrder::BGR:
                     fb_ptr[0] = logo_pixels[2];
                     fb_ptr[1] = logo_pixels[1];
                     fb_ptr[2] = logo_pixels[0];
@@ -213,4 +213,6 @@ static void draw_logo()
         }
         fb_ptr += framebuffer.pitch() - framebuffer.width() * 4;
     }
+}
+
 }

@@ -203,8 +203,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         round_to = TRY(get_options_object(global_object, vm.argument(0)));
     }
 
-    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « "year", "month", "week", "day" », undefined).
-    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *round_to, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
+    // 6. Let smallestUnit be ? GetTemporalUnit(roundTo, "smallestUnit", time, required).
+    auto smallest_unit_value = TRY(get_temporal_unit(global_object, *round_to, vm.names.smallestUnit, UnitGroup::Time, TemporalUnitRequired {}));
 
     // 6. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value())

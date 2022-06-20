@@ -66,25 +66,25 @@ void ConnectionFromClient::file_edit_remove_text(String const& filename, i32 sta
     m_autocomplete_engine->on_edit(filename);
 }
 
-void ConnectionFromClient::auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const& location)
+void ConnectionFromClient::auto_complete_suggestions(CodeComprehension::ProjectLocation const& location)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "AutoCompleteSuggestions for: {} {}:{}", location.file, location.line, location.column);
 
-    auto document = m_filedb.get(location.file);
+    auto document = m_filedb.get_document(location.file);
     if (!document) {
         dbgln("file {} has not been opened", location.file);
         return;
     }
 
     GUI::TextPosition autocomplete_position = { (size_t)location.line, (size_t)max(location.column, location.column - 1) };
-    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(location.file, autocomplete_position);
+    Vector<CodeComprehension::AutocompleteResultEntry> suggestions = m_autocomplete_engine->get_suggestions(location.file, autocomplete_position);
     async_auto_complete_suggestions(move(suggestions));
 }
 
 void ConnectionFromClient::set_file_content(String const& filename, String const& content)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", filename);
-    auto document = m_filedb.get(filename);
+    auto document = m_filedb.get_document(filename);
     if (!document) {
         m_filedb.add(filename, content);
         VERIFY(m_filedb.is_open(filename));
@@ -95,10 +95,10 @@ void ConnectionFromClient::set_file_content(String const& filename, String const
     m_autocomplete_engine->on_edit(filename);
 }
 
-void ConnectionFromClient::find_declaration(GUI::AutocompleteProvider::ProjectLocation const& location)
+void ConnectionFromClient::find_declaration(CodeComprehension::ProjectLocation const& location)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", location.file, location.line, location.column);
-    auto document = m_filedb.get(location.file);
+    auto document = m_filedb.get_document(location.file);
     if (!document) {
         dbgln("file {} has not been opened", location.file);
         return;
@@ -112,13 +112,13 @@ void ConnectionFromClient::find_declaration(GUI::AutocompleteProvider::ProjectLo
     }
 
     dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", decl_location.value().file, decl_location.value().line, decl_location.value().column);
-    async_declaration_location(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column });
+    async_declaration_location(CodeComprehension::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column });
 }
 
-void ConnectionFromClient::get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation const& location)
+void ConnectionFromClient::get_parameters_hint(CodeComprehension::ProjectLocation const& location)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "GetParametersHint: {} {}:{}", location.file, location.line, location.column);
-    auto document = m_filedb.get(location.file);
+    auto document = m_filedb.get_document(location.file);
     if (!document) {
         dbgln("file {} has not been opened", location.file);
         return;
@@ -143,7 +143,7 @@ void ConnectionFromClient::get_parameters_hint(GUI::AutocompleteProvider::Projec
 void ConnectionFromClient::get_tokens_info(String const& filename)
 {
     dbgln_if(LANGUAGE_SERVER_DEBUG, "GetTokenInfo: {}", filename);
-    auto document = m_filedb.get(filename);
+    auto document = m_filedb.get_document(filename);
     if (!document) {
         dbgln("file {} has not been opened", filename);
         return;

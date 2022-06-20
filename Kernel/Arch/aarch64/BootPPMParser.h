@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Prekernel {
+namespace Kernel {
 
 // Quick parser for .ppm image format (raw PortablePixMap)
 // This is much simpler version than userland implementation in PPMLoader.cpp

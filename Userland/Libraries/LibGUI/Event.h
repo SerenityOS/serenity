@@ -67,6 +67,7 @@ public:
         WM_AppletAreaSizeChanged,
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
+        WM_SuperDKeyPressed,
         WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
         WM_KeymapChanged,
@@ -113,6 +114,14 @@ class WMSuperSpaceKeyPressedEvent : public WMEvent {
 public:
     explicit WMSuperSpaceKeyPressedEvent(int client_id)
         : WMEvent(Event::Type::WM_SuperSpaceKeyPressed, client_id, 0)
+    {
+    }
+};
+
+class WMSuperDKeyPressedEvent : public WMEvent {
+public:
+    explicit WMSuperDKeyPressedEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperDKeyPressed, client_id, 0)
     {
     }
 };
@@ -545,5 +554,25 @@ public:
 private:
     NonnullRefPtr<Action> m_action;
 };
+
+inline StringView mouse_button_to_string(MouseButton key)
+{
+    switch (key) {
+    case MouseButton::None:
+        return "None";
+    case MouseButton::Primary:
+        return "Primary";
+    case MouseButton::Secondary:
+        return "Secondary";
+    case MouseButton::Middle:
+        return "Middle";
+    case MouseButton::Backward:
+        return "Backward";
+    case MouseButton::Forward:
+        return "Forward";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 }

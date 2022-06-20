@@ -1,7 +1,7 @@
-From 88242bebd8381deef7598470ed74c23dbffaacb4 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 18:29:07 +0330
-Subject: [PATCH 7/9] Disable GC on serenity
+Subject: [PATCH] Disable GC on serenity
 
 ---
  src/memory.c | 4 ++++
@@ -55,6 +55,3 @@ index e42d09a..a6856b8 100644
      ctr_object* previousObject = NULL;
      ctr_object* currentObject = ctr_first_object;
      ctr_object* nextObject = NULL;
--- 
-2.34.1
-

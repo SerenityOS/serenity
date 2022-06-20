@@ -304,6 +304,7 @@ private:
         Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
     };
     Optional<Dimension> parse_dimension(ComponentValue const&);
+    Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
     Optional<Length> parse_length(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);

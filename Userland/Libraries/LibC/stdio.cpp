@@ -1299,6 +1299,15 @@ FILE* tmpfile()
     return fdopen(fd, "rw");
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ctermid.html
+char* ctermid(char* s)
+{
+    static char tty_path[L_ctermid] = "/dev/tty";
+    if (s)
+        return strcpy(s, tty_path);
+    return tty_path;
+}
+
 size_t __fpending(FILE* stream)
 {
     ScopedFileLock lock(stream);

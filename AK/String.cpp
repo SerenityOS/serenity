@@ -388,6 +388,11 @@ String String::to_titlecase() const
     return StringUtils::to_titlecase(*this);
 }
 
+String String::invert_case() const
+{
+    return StringUtils::invert_case(*this);
+}
+
 bool operator<(char const* characters, String const& string)
 {
     return string.view() > characters;

@@ -75,5 +75,5 @@ private:
 
     RefPtr<GUI::TableView> m_cursors_tableview;
     RefPtr<GUI::ComboBox> m_theme_name_box;
-    String m_theme_name;
+    RefPtr<MouseCursorModel> m_mouse_cursor_model;
 };

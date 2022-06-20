@@ -185,6 +185,7 @@ enum class NeedsBigProcessLock {
     S(unlink, NeedsBigProcessLock::No)                      \
     S(unveil, NeedsBigProcessLock::Yes)                     \
     S(utime, NeedsBigProcessLock::Yes)                      \
+    S(utimensat, NeedsBigProcessLock::Yes)                  \
     S(waitid, NeedsBigProcessLock::Yes)                     \
     S(write, NeedsBigProcessLock::Yes)                      \
     S(writev, NeedsBigProcessLock::Yes)                     \
@@ -414,6 +415,13 @@ struct SC_pledge_params {
 struct SC_unveil_params {
     StringArgument path;
     StringArgument permissions;
+};
+
+struct SC_utimensat_params {
+    int dirfd;
+    StringArgument path;
+    struct timespec const* times;
+    int flag;
 };
 
 struct SC_waitid_params {

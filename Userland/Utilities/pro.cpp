@@ -132,7 +132,8 @@ private:
 
         if (!m_buffer.is_empty()) {
             auto size = OutputFileStream::write(m_buffer);
-            m_buffer = m_buffer.slice(size, m_buffer.size() - size);
+            // FIXME: Propagate errors.
+            m_buffer = MUST(m_buffer.slice(size, m_buffer.size() - size));
         }
 
         if (!m_buffer.is_empty())
