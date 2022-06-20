@@ -10,7 +10,7 @@
 
 namespace Web::Painting {
 
-ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii)
+ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
 {
     VERIFY(border_radii.has_any_radius());
 
@@ -43,7 +43,7 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRec
         .corner_bitmap_size = corners_bitmap_size
     };
 
-    return BorderRadiusCornerClipper { corner_data, corner_bitmap.release_nonnull() };
+    return BorderRadiusCornerClipper { corner_data, corner_bitmap.release_nonnull(), corner_clip };
 }
 
 void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
@@ -60,7 +60,9 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
             for (int col = 0; col < mask_src.width(); ++col) {
                 auto corner_location = mask_src.location().translated(col, row);
                 auto mask_pixel = m_corner_bitmap->get_pixel(corner_location);
-                u8 mask_alpha = ~mask_pixel.alpha();
+                u8 mask_alpha = mask_pixel.alpha();
+                if (m_corner_clip == CornerClip::Outside)
+                    mask_alpha = ~mask_pixel.alpha();
                 auto final_pixel = Color();
                 if (mask_alpha > 0) {
                     auto page_pixel = page_painter.get_pixel(page_location.translated(col, row));
