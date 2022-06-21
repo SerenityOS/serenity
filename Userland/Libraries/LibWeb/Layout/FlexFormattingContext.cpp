@@ -412,20 +412,22 @@ void FlexFormattingContext::set_offset(Box const& box, float main_offset, float 
         m_state.get_mutable(box).offset = Gfx::FloatPoint { cross_offset, main_offset };
 }
 
-void FlexFormattingContext::set_main_axis_first_margin(Box const& box, float margin)
+void FlexFormattingContext::set_main_axis_first_margin(FlexItem& item, float margin)
 {
+    item.margins.main_before = margin;
     if (is_row_layout())
-        m_state.get_mutable(box).margin_left = margin;
+        m_state.get_mutable(item.box).margin_left = margin;
     else
-        m_state.get_mutable(box).margin_top = margin;
+        m_state.get_mutable(item.box).margin_top = margin;
 }
 
-void FlexFormattingContext::set_main_axis_second_margin(Box const& box, float margin)
+void FlexFormattingContext::set_main_axis_second_margin(FlexItem& item, float margin)
 {
+    item.margins.main_after = margin;
     if (is_row_layout())
-        m_state.get_mutable(box).margin_right = margin;
+        m_state.get_mutable(item.box).margin_right = margin;
     else
-        m_state.get_mutable(box).margin_bottom = margin;
+        m_state.get_mutable(item.box).margin_bottom = margin;
 }
 
 float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const& box) const
@@ -1067,16 +1069,16 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
             float size_per_auto_margin = remaining_free_space / (float)auto_margins;
             for (auto& flex_item : flex_line.items) {
                 if (is_main_axis_margin_first_auto(flex_item->box))
-                    set_main_axis_first_margin(flex_item->box, size_per_auto_margin);
+                    set_main_axis_first_margin(*flex_item, size_per_auto_margin);
                 if (is_main_axis_margin_second_auto(flex_item->box))
-                    set_main_axis_second_margin(flex_item->box, size_per_auto_margin);
+                    set_main_axis_second_margin(*flex_item, size_per_auto_margin);
             }
         } else {
             for (auto& flex_item : flex_line.items) {
                 if (is_main_axis_margin_first_auto(flex_item->box))
-                    set_main_axis_first_margin(flex_item->box, 0);
+                    set_main_axis_first_margin(*flex_item, 0);
                 if (is_main_axis_margin_second_auto(flex_item->box))
-                    set_main_axis_second_margin(flex_item->box, 0);
+                    set_main_axis_second_margin(*flex_item, 0);
             }
         }
 
