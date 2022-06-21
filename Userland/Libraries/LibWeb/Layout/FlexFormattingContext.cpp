@@ -14,6 +14,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FlexFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::Layout {
@@ -70,6 +71,10 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
 
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : m_flex_items) {
+        if (flex_item.box.is_replaced_box()) {
+            // FIXME: Get rid of prepare_for_replaced_layout() and make replaced elements figure out their intrinsic size lazily.
+            static_cast<ReplacedBox&>(flex_item.box).prepare_for_replaced_layout();
+        }
         determine_flex_base_size_and_hypothetical_main_size(flex_item);
     }
 
