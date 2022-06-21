@@ -89,16 +89,16 @@ void ConnectionToWindowServer::update_system_effects(Vector<bool> const& effects
     Desktop::the().set_system_effects(effects);
 }
 
-void ConnectionToWindowServer::paint(i32 window_id, Gfx::IntSize const& window_size, Vector<Gfx::IntRect> const& rects)
+void ConnectionToWindowServer::paint(i32 window_id, Gfx::IntSize const& window_size, i32 scale_factor, Vector<Gfx::IntRect> const& rects)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MultiPaintEvent>(rects, window_size));
+        Core::EventLoop::current().post_event(*window, make<MultiPaintEvent>(rects, window_size, scale_factor));
 }
 
-void ConnectionToWindowServer::window_resized(i32 window_id, Gfx::IntRect const& new_rect)
+void ConnectionToWindowServer::window_target_buffer_change(i32 window_id, Gfx::IntSize const& new_size, i32 scale_factor)
 {
     if (auto* window = Window::from_window_id(window_id)) {
-        Core::EventLoop::current().post_event(*window, make<ResizeEvent>(new_rect.size()));
+        Core::EventLoop::current().post_event(*window, make<TargetBufferChangeEvent>(new_size, scale_factor));
     }
 }
 

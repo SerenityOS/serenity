@@ -513,7 +513,7 @@ void Window::event(Core::Event& event)
         m_client->async_window_close_request(m_window_id);
         break;
     case Event::WindowResized:
-        m_client->async_window_resized(m_window_id, static_cast<ResizeEvent const&>(event).rect());
+        m_client->async_window_target_buffer_change(m_window_id, static_cast<ResizeEvent const&>(event).rect().size(), scale_factor());
         break;
     default:
         break;
@@ -648,7 +648,7 @@ void Window::invalidate_last_rendered_screen_rects_now()
 
 void Window::refresh_client_size()
 {
-    client()->async_window_resized(m_window_id, m_rect);
+    client()->async_window_target_buffer_change(m_window_id, size(), scale_factor());
 }
 
 void Window::prepare_dirty_rects()

@@ -243,7 +243,7 @@ private:
     void handle_mouse_event(MouseEvent&);
     void handle_multi_paint_event(MultiPaintEvent&);
     void handle_key_event(KeyEvent&);
-    void handle_resize_event(ResizeEvent&);
+    void handle_target_buffer_change_event(TargetBufferChangeEvent&);
     void handle_input_entered_or_left_event(Core::Event&);
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
@@ -257,7 +257,7 @@ private:
 
     void server_did_destroy();
 
-    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize const&);
+    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize const&, int scale_factor);
     void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
     void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();

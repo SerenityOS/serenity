@@ -696,7 +696,7 @@ void ConnectionFromClient::post_paint_message(Window& window, bool ignore_occlus
     if (window.is_minimized() || (!ignore_occlusion && window.is_occluded()))
         return;
 
-    async_paint(window.window_id(), window.size(), rect_set.rects());
+    async_paint(window.window_id(), window.size(), window.scale_factor(), rect_set.rects());
 }
 
 void ConnectionFromClient::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> const& rects, bool ignore_occlusion)
