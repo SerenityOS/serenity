@@ -138,6 +138,11 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
     //        part of the spec, and simply covering up the fact that our inside layout currently
     //        mutates the height of BFC roots.
     copy_dimensions_from_flex_items_to_boxes();
+
+    flex_container().for_each_child_of_type<Box>([&](Layout::Box& box) {
+        if (box.is_absolutely_positioned())
+            layout_absolutely_positioned_element(box);
+    });
 }
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
