@@ -1296,9 +1296,8 @@ void Editor::cleanup()
 {
     auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
     auto new_lines = current_prompt_metrics().lines_with_addition(current_buffer_metrics, m_num_columns);
-    auto shown_lines = num_lines();
-    if (new_lines < shown_lines)
-        m_extra_forward_lines = max(shown_lines - new_lines, m_extra_forward_lines);
+    if (new_lines < m_shown_lines)
+        m_extra_forward_lines = max(m_shown_lines - new_lines, m_extra_forward_lines);
 
     OutputFileStream stderr_stream { stderr };
     reposition_cursor(stderr_stream, true);
@@ -1313,6 +1312,8 @@ void Editor::refresh_display()
     DuplexMemoryStream output_stream;
     ScopeGuard flush_stream {
         [&] {
+            m_shown_lines = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
+
             auto buffer = output_stream.copy_into_contiguous_buffer();
             if (buffer.is_empty())
                 return;
