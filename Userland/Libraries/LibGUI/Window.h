@@ -101,6 +101,7 @@ public:
     Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_supported_scale_factors(Vector<int> const&);
+    int scale_factor() const;
     void set_rect(Gfx::IntRect const&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 

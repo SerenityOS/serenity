@@ -112,6 +112,7 @@ private:
     virtual void start_window_resize(i32) override;
     virtual Messages::WindowServer::SetWindowRectResponse set_window_rect(i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::GetWindowRectResponse get_window_rect(i32) override;
+    virtual Messages::WindowServer::GetWindowScaleFactorResponse get_window_scale_factor(i32) override;
     virtual void set_window_supported_scale_factors(i32, Vector<i32> const&) override;
     virtual void set_window_minimum_size(i32, Gfx::IntSize const&) override;
     virtual Messages::WindowServer::GetWindowMinimumSizeResponse get_window_minimum_size(i32) override;

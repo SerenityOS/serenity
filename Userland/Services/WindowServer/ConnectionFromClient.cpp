@@ -500,6 +500,16 @@ static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
     return { 0, 0 };
 }
 
+Messages::WindowServer::GetWindowScaleFactorResponse ConnectionFromClient::get_window_scale_factor(i32 window_id)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("GetWindowScaleFactor: Bad window ID");
+        return nullptr;
+    }
+    return it->value->scale_factor();
+}
+
 void ConnectionFromClient::set_window_supported_scale_factors(i32 window_id, Vector<i32> const& supported_scale_factors)
 {
     auto it = m_windows.find(window_id);

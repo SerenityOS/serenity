@@ -273,6 +273,11 @@ void Window::set_supported_scale_factors(Vector<int> const& supported_scale_fact
     ConnectionToWindowServer::the().async_set_window_supported_scale_factors(m_window_id, supported_scale_factors);
 }
 
+int Window::scale_factor() const
+{
+    return ConnectionToWindowServer::the().get_window_scale_factor(m_window_id);
+}
+
 void Window::set_rect(Gfx::IntRect const& a_rect)
 {
     if (a_rect.location() != m_rect_when_windowless.location()) {

@@ -198,6 +198,25 @@ void Window::set_supported_scale_factors(Vector<i32> const& supported_scale_fact
     }
 }
 
+int Window::scale_factor() const
+{
+    Optional<int> min_common_supported_scale_factor = {};
+    for (auto* screen : screens()) {
+        int screen_scale_factor = screen->scale_factor();
+        if (m_supported_scale_factors.contains_slow(screen_scale_factor)) {
+            if (!min_common_supported_scale_factor.has_value())
+                min_common_supported_scale_factor = screen_scale_factor;
+            else
+                min_common_supported_scale_factor = min(min_common_supported_scale_factor.value(), screen_scale_factor);
+        }
+    }
+
+    if (!min_common_supported_scale_factor.has_value())
+        min_common_supported_scale_factor = 1;
+
+    return min_common_supported_scale_factor.value();
+}
+
 void Window::handle_mouse_event(MouseEvent const& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
