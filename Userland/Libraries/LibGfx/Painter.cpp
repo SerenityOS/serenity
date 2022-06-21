@@ -1040,8 +1040,6 @@ void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source,
 
 void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
 {
-    VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
-
     if (opacity < 1.0f || (source.has_alpha_channel() && apply_alpha))
         return blit_with_opacity(position, source, a_src_rect, opacity, apply_alpha);
 
