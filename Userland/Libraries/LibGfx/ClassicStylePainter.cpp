@@ -520,7 +520,7 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& a_
 
     auto set_pixels = [&](auto const& points, Gfx::Color color) {
         for (auto const& p : points) {
-            painter.set_pixel(rect.location().translated(p), color);
+            painter.set_pixel_scaled(rect.location().translated(p), color);
         }
     };
 
@@ -661,7 +661,7 @@ void ClassicStylePainter::paint_simple_rect_shadow(Painter& painter, IntRect con
         // Fill the enclosed rectangle with the RGBA color of the right-bottom pixel of the TL tile
         auto inner_rect = containing_rect.shrunken(2 * base_size, 2 * base_size);
         if (!inner_rect.is_empty())
-            painter.fill_rect(inner_rect, shadow_bitmap.get_pixel(2 * base_size - 1, base_size - 1));
+            painter.fill_rect(inner_rect, shadow_bitmap.get_pixel((2 * base_size - 1) * painter.scale(), (base_size - 1) * painter.scale()));
     }
 }
 

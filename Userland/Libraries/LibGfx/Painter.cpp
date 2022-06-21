@@ -80,9 +80,7 @@ Painter::Painter(Gfx::Bitmap& bitmap)
 
 void Painter::fill_rect_with_draw_op(IntRect const& a_rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
-    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    auto rect = to_physical(a_rect).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
@@ -152,9 +150,7 @@ void Painter::fill_rect(IntRect const& a_rect, Color color)
 
 void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a, Color color_b)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
-    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    auto rect = to_physical(a_rect).intersected(clip_rect() * scale());
     if (rect.is_empty())
         return;
 
@@ -174,11 +170,11 @@ void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a
     }
 }
 
-void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize const& cell_size, Color color_dark, Color color_light)
+void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize const& in_cell_size, Color color_dark, Color color_light)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    IntSize cell_size = in_cell_size * scale();
 
-    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    auto rect = to_physical(a_rect).intersected(clip_rect() * scale());
     if (rect.is_empty())
         return;
 
@@ -473,24 +469,33 @@ void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint const
 
 void Painter::fill_ellipse(IntRect const& a_rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
-    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    auto rect = to_physical(a_rect);
+    auto clipped_rect = (a_rect.translated(translation()).intersected(clip_rect())) * scale();
     if (rect.is_empty())
         return;
 
-    VERIFY(m_target->rect().contains(rect));
+    if (!to_physical(m_target->rect()).contains(clipped_rect))
+        return;
 
-    for (int i = 1; i < a_rect.height(); i++) {
-        float y = a_rect.height() * 0.5 - i;
-        float x = a_rect.width() * AK::sqrt(0.25f - y * y / a_rect.height() / a_rect.height());
-        draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
+    int rgba = color.value();
+
+    for (int i = 1 + clipped_rect.top() - rect.top(); i < clipped_rect.height(); i++) {
+        float y = rect.height() * 0.5 - i;
+        float x = rect.width() * AK::sqrt(0.25f - y * y / rect.height() / rect.height());
+
+        int left_bound = max(rect.left() + rect.width() / 2 - (int)x, clipped_rect.left()),
+            right_bound = min(rect.left() + rect.width() / 2 + (int)x - 1, clipped_rect.right());
+
+        ARGB32* scanline = m_target->scanline(rect.top() + i);
+        for (int current_x = left_bound; current_x <= right_bound; current_x++) {
+            scanline[current_x] = rgba;
+        }
     }
 }
 
 void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int thickness)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    // FIXME: Improve scaling support.
 
     if (thickness <= 0)
         return;
@@ -530,14 +535,14 @@ static void for_each_pixel_around_rect_clockwise(RectType const& rect, Callback 
 
 void Painter::draw_focus_rect(IntRect const& rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    // FIXME: Improve scaling support.
 
     if (rect.is_empty())
         return;
     bool state = false;
-    for_each_pixel_around_rect_clockwise(rect, [&](auto x, auto y) {
+    for_each_pixel_around_rect_clockwise(to_physical(rect), [&](auto x, auto y) {
         if (state)
-            set_pixel(x, y, color);
+            set_pixel_scaled(x, y, color);
         state = !state;
     });
 }
@@ -611,29 +616,36 @@ void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thi
 
 void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
-    auto rect = IntRect(p, bitmap.size()).translated(translation());
+    auto rect = IntRect(p.translated(translation()), bitmap.size());
     auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     int const first_row = clipped_rect.top() - rect.top();
     int const last_row = clipped_rect.bottom() - rect.top();
+
+    auto anon_buffer = m_target->anonymous_buffer();
+
     int const first_column = clipped_rect.left() - rect.left();
     int const last_column = clipped_rect.right() - rect.left();
-    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    ARGB32* dst = m_target->scanline(clipped_rect.y() * scale()) + clipped_rect.x() * scale();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
     char const* bitmap_row = &bitmap.bits()[first_row * bitmap.width() + first_column];
     size_t const bitmap_skip = bitmap.width();
+    int local_scale = scale();
 
     for (int row = first_row; row <= last_row; ++row) {
-        for (int j = 0; j <= (last_column - first_column); ++j) {
-            char fc = bitmap_row[j];
-            if (fc == '#')
-                dst[j] = color.value();
+        for (int vertical_repeat = 0; vertical_repeat < local_scale; vertical_repeat++) {
+            for (int j = 0; j <= (last_column - first_column); ++j) {
+                char fc = bitmap_row[j];
+                if (fc == '#') {
+                    for (int horizontal_repeat = 0; horizontal_repeat < local_scale; horizontal_repeat++) {
+                        dst[j * local_scale + horizontal_repeat] = color.value();
+                    }
+                }
+            }
+            dst += dst_skip;
         }
         bitmap_row += bitmap_skip;
-        dst += dst_skip;
     }
 }
 
@@ -705,7 +717,7 @@ void Painter::draw_triangle(IntPoint const& a, IntPoint const& b, IntPoint const
         return;
 
     // return if top is below clip rect or bottom is above clip rect
-    auto clip = clip_rect();
+    auto clip = clip_rect() * scale();
     if (p0.y() >= clip.bottom())
         return;
     if (p2.y() < clip.top())
@@ -844,7 +856,14 @@ static void do_blit_with_opacity(BlitState& state)
 
 void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
 {
-    VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
+    if (scale() < source.scale()) {
+        // We just bail if we encounter a downsampling scenario
+        // The magenta gets left behind to signify that there is something here to fix
+        // The downsampling is used when switching the system to a lower scaling factor
+        // FIXME: Remove this once all those edge cases that use this are gone
+        fill_rect(IntRect(position + a_src_rect.location(), a_src_rect.size()), Color::Magenta);
+        return;
+    }
 
     if (opacity >= 1.0f && !(source.has_alpha_channel() && apply_alpha))
         return blit(position, source, a_src_rect);
@@ -1034,8 +1053,6 @@ void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source,
 
 void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
 {
-    VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
-
     if (opacity < 1.0f || (source.has_alpha_channel() && apply_alpha))
         return blit_with_opacity(position, source, a_src_rect, opacity, apply_alpha);
 
@@ -1770,13 +1787,17 @@ void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> d
     });
 }
 
+void Painter::set_pixel_translated(IntPoint const& p, Color color, bool blend)
+{
+    set_pixel(p.translated(state().translation), color, blend);
+}
+
 void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
 {
     auto point = p;
-    point.translate_by(state().translation);
     // Use the scale only to avoid clipping pixels set in drawing functions that handle
     // scaling and call set_pixel() -- do not scale the pixel.
-    if (!clip_rect().contains(point / scale()))
+    if (!(clip_rect() * scale()).contains(point))
         return;
     auto& dst = m_target->scanline(point.y())[point.x()];
     if (!blend) {
@@ -1793,6 +1814,27 @@ Optional<Color> Painter::get_pixel(IntPoint const& p)
     if (!clip_rect().contains(point / scale()))
         return {};
     return Color::from_argb(m_target->scanline(point.y())[point.x()]);
+}
+
+void Painter::set_pixel_scaled(IntPoint const& p, Color color, bool blend)
+{
+    auto point = to_physical(p);
+    if (!(clip_rect() * scale()).contains(point))
+        return;
+
+    int local_scale = scale();
+
+    for (int vertical_repeat = 0; vertical_repeat < local_scale; vertical_repeat++) {
+        auto scanline = m_target->scanline(point.y() + vertical_repeat);
+        for (int horizontal_repeat = 0; horizontal_repeat < local_scale; horizontal_repeat++) {
+            auto& dst = scanline[point.x() + horizontal_repeat];
+            if (!blend) {
+                dst = color.value();
+            } else {
+                dst = Color::from_argb(dst).blend(color).value();
+            }
+        }
+    }
 }
 
 ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
@@ -2078,7 +2120,7 @@ void Painter::for_each_line_segment_on_bezier_curve(FloatPoint const& control_po
 
 void Painter::draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const& p1, IntPoint const& p2, Color color, int thickness, LineStyle style)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    // FIXME: Improve scaling support.
 
     if (thickness <= 0)
         return;
@@ -2218,7 +2260,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, Floa
 
 void Painter::draw_elliptical_arc(IntPoint const& p1, IntPoint const& p2, IntPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    // FIXME: Improve scaling support.
 
     if (thickness <= 0)
         return;
@@ -2252,8 +2294,6 @@ PainterStateSaver::~PainterStateSaver()
 
 void Painter::stroke_path(Path const& path, Color color, int thickness)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
 
@@ -2296,7 +2336,6 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
 
 void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
     Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(*this, path, color, winding_rule);
 }
 

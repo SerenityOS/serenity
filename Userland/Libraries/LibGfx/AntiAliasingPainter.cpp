@@ -400,7 +400,7 @@ FLATTEN AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
             alpha = ~alpha;
         auto pixel_color = color;
         pixel_color.set_alpha(alpha);
-        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_color, blend_mode == BlendMode::Normal);
+        m_underlying_painter.set_pixel_translated(center + IntPoint { x, y }, pixel_color, blend_mode == BlendMode::Normal);
     };
 
     auto fill = [&](int x, int ymax, int ymin, int alpha) {
