@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openssl
 branch='1.1.1'
-version="${branch}o"
+version="${branch}p"
 useconfigure=true
 configscript=Configure
-files="https://ftp.nluug.nl/security/openssl/openssl-${version}.tar.gz openssl-${version}.tar.gz 9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f"
+files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz bf61b62aaa66c7c7639942a94de4c9ae8280c08f17d4eac2e44644d9fc8ace6f"
 auth_type=sha256
 
 depends=("zlib")
