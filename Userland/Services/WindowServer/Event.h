@@ -35,6 +35,7 @@ public:
         WindowInputLeft,
         WindowCloseRequest,
         WindowResized,
+        WindowScaleFactorChanged,
     };
 
     Event() = default;
@@ -155,6 +156,20 @@ public:
 
 private:
     Gfx::IntRect m_rect;
+};
+
+class ScaleFactorChangeEvent final : public Event {
+public:
+    ScaleFactorChangeEvent(int scale_factor)
+        : Event(Event::WindowScaleFactorChanged)
+        , m_scale_factor(scale_factor)
+    {
+    }
+
+    int scale_factor() const { return m_scale_factor; }
+
+private:
+    int m_scale_factor;
 };
 
 }

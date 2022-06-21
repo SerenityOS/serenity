@@ -604,6 +604,9 @@ void Window::event(Core::Event& event)
     case Event::WindowResized:
         m_client->async_window_target_buffer_change(m_window_id, static_cast<ResizeEvent const&>(event).rect().size(), scale_factor());
         break;
+    case Event::WindowScaleFactorChanged:
+        m_client->async_window_target_buffer_change(m_window_id, size(), static_cast<ScaleFactorChangeEvent const&>(event).scale_factor());
+        break;
     default:
         break;
     }
