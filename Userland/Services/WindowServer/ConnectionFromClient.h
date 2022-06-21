@@ -101,7 +101,7 @@ private:
     virtual void update_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&, Gfx::ShareableBitmap const&) override;
     virtual void remove_menu_item(i32 menu_id, i32 identifier) override;
     virtual void flash_menubar_menu(i32, i32) override;
-    virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,
+    virtual void create_window(i32, Gfx::IntRect const&, Vector<i32> const&, bool, bool, bool,
         bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
         Optional<Gfx::IntSize> const&, i32, i32, String const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
@@ -112,6 +112,7 @@ private:
     virtual void start_window_resize(i32) override;
     virtual Messages::WindowServer::SetWindowRectResponse set_window_rect(i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::GetWindowRectResponse get_window_rect(i32) override;
+    virtual void set_window_supported_scale_factors(i32, Vector<i32> const&) override;
     virtual void set_window_minimum_size(i32, Gfx::IntSize const&) override;
     virtual Messages::WindowServer::GetWindowMinimumSizeResponse get_window_minimum_size(i32) override;
     virtual Messages::WindowServer::GetAppletRectOnScreenResponse get_applet_rect_on_screen(i32) override;

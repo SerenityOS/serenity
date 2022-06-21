@@ -145,6 +145,7 @@ void Window::show()
     ConnectionToWindowServer::the().async_create_window(
         m_window_id,
         m_rect_when_windowless,
+        m_supported_scale_factors,
         !m_moved_by_client,
         m_has_alpha_channel,
         m_minimizable,
@@ -260,6 +261,16 @@ Gfx::IntRect Window::rect() const
     if (!is_visible())
         return m_rect_when_windowless;
     return ConnectionToWindowServer::the().get_window_rect(m_window_id);
+}
+
+void Window::set_supported_scale_factors(Vector<int> const& supported_scale_factors)
+{
+    if (m_supported_scale_factors == supported_scale_factors)
+        return;
+    m_supported_scale_factors = supported_scale_factors;
+    if (!is_visible())
+        return;
+    ConnectionToWindowServer::the().async_set_window_supported_scale_factors(m_window_id, supported_scale_factors);
 }
 
 void Window::set_rect(Gfx::IntRect const& a_rect)

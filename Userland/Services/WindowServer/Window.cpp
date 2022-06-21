@@ -189,6 +189,15 @@ void Window::set_minimum_size(Gfx::IntSize const& size)
     m_minimum_size = size;
 }
 
+void Window::set_supported_scale_factors(Vector<i32> const& supported_scale_factors)
+{
+    if (m_supported_scale_factors != supported_scale_factors) {
+        m_supported_scale_factors = supported_scale_factors;
+        if (is_visible())
+            request_update({ {}, size() });
+    }
+}
+
 void Window::handle_mouse_event(MouseEvent const& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);

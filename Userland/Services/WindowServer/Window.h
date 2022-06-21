@@ -197,6 +197,8 @@ public:
     void set_rect_without_repaint(Gfx::IntRect const&);
     bool apply_minimum_size(Gfx::IntRect&);
 
+    void set_supported_scale_factors(Vector<i32> const&);
+
     Gfx::IntSize minimum_size() const { return m_minimum_size; }
     void set_minimum_size(Gfx::IntSize const&);
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
@@ -401,6 +403,7 @@ private:
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
     Vector<Screen*, default_screen_count> m_screens;
+    Vector<i32, 3> m_supported_scale_factors { 1 };
     Gfx::DisjointRectSet m_dirty_rects;
     Gfx::DisjointRectSet m_opaque_rects;
     Gfx::DisjointRectSet m_transparency_rects;

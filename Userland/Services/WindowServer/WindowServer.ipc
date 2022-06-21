@@ -42,6 +42,7 @@ endpoint WindowServer
     create_window(
         i32 window_id,
         Gfx::IntRect rect,
+        Vector<i32> supported_scale_factors,
         bool auto_position,
         bool has_alpha_channel,
         bool minimizable,
@@ -74,6 +75,8 @@ endpoint WindowServer
 
     set_window_rect(i32 window_id, Gfx::IntRect rect) => (Gfx::IntRect rect)
     get_window_rect(i32 window_id) => (Gfx::IntRect rect)
+
+    set_window_supported_scale_factors(i32 window_id, Vector<i32> supported_scale_factors) =|
 
     set_window_minimum_size(i32 window_id, Gfx::IntSize size) =|
     get_window_minimum_size(i32 window_id) => (Gfx::IntSize size)
