@@ -120,6 +120,7 @@ char* getpass(char const* prompt);
 int pause(void);
 int chroot(char const*);
 int getdtablesize(void);
+int nice(int incr);
 
 enum {
     _PC_NAME_MAX,

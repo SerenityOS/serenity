@@ -16,7 +16,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/Forward.h>
+#include <LibWebView/Forward.h>
 
 namespace TextEditor {
 
@@ -51,7 +51,7 @@ private:
     void update_markdown_preview();
     void update_html_preview();
 
-    Web::OutOfProcessWebView& ensure_web_view();
+    WebView::OutOfProcessWebView& ensure_web_view();
     void set_web_view_visible(bool);
 
     virtual void drop_event(GUI::DropEvent&) override;
@@ -134,7 +134,7 @@ private:
     RefPtr<GUI::Action> m_shell_highlight;
     RefPtr<GUI::Action> m_sql_highlight;
 
-    RefPtr<Web::OutOfProcessWebView> m_page_view;
+    RefPtr<WebView::OutOfProcessWebView> m_page_view;
 
     bool m_auto_detect_preview_mode { false };
     bool m_use_regex { false };

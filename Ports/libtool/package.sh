@@ -3,7 +3,7 @@ port=libtool
 version=2.4.7
 useconfigure=true
 use_fresh_config_sub=true
-config_sub_path=build-aux/config.sub
+config_sub_paths=("build-aux/config.sub")
 depends=("bash" "sed")
 files="https://ftpmirror.gnu.org/gnu/libtool/libtool-${version}.tar.xz libtool-${version}.tar.xz
 https://ftpmirror.gnu.org/gnu/libtool/libtool-${version}.tar.xz.sig libtool-${version}.tar.xz.sig

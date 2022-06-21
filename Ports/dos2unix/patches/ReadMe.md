@@ -1,5 +1,7 @@
-# Patches for dos2unix
+# Patches for dos2unix on SerenityOS
 
-## `Makefile.patch`
+## `0001-Link-with-lintl.patch`
 
-Link with `-lintl`.
+Link with `-lintl`
+
+

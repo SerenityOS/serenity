@@ -127,7 +127,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         auto unregulated_result = TRY(to_temporal_time_record(global_object, item_object));
 
         // g. Set result to ? RegulateTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], overflow).
-        result = TRY(regulate_time(global_object, unregulated_result.hour, unregulated_result.minute, unregulated_result.second, unregulated_result.millisecond, unregulated_result.microsecond, unregulated_result.nanosecond, *overflow));
+        result = TRY(regulate_time(global_object, *unregulated_result.hour, *unregulated_result.minute, *unregulated_result.second, *unregulated_result.millisecond, *unregulated_result.microsecond, *unregulated_result.nanosecond, *overflow));
     }
     // 4. Else,
     else {
@@ -147,54 +147,11 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         }
     }
 
-    // 5. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return TRY(create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
+    // 5. Return ! CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return MUST(create_temporal_time(global_object, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond));
 }
 
-// 4.5.3 ToPartialTime ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialtime
-ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject& global_object, Object& temporal_time_like)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Assert: Type(temporalTimeLike) is Object.
-
-    // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
-    auto result = PartialUnregulatedTemporalTime {};
-
-    // 3. Let any be false.
-    bool any = false;
-
-    // 4. For each row of Table 3, except the header row, in table order, do
-    for (auto& [internal_slot, property] : temporal_time_like_properties<PartialUnregulatedTemporalTime, Optional<double>>(vm)) {
-        // a. Let property be the Property value of the current row.
-
-        // b. Let value be ? Get(temporalTimeLike, property).
-        auto value = TRY(temporal_time_like.get(property));
-
-        // c. If value is not undefined, then
-        if (!value.is_undefined()) {
-            // i. Set any to true.
-            any = true;
-
-            // ii. Set value to ? ToIntegerThrowOnInfinity(value).
-            auto value_number = TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
-
-            // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
-            result.*internal_slot = value_number;
-        }
-    }
-
-    // 5. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
-    }
-
-    // 6. Return result.
-    return result;
-}
-
-// 4.5.4 RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulatetime
+// 4.5.3 RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulatetime
 ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow)
 {
     auto& vm = global_object.vm();
@@ -211,21 +168,21 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
         // a. Return ! ConstrainTime(hour, minute, second, millisecond, microsecond, nanosecond).
         return constrain_time(hour, minute, second, millisecond, microsecond, nanosecond);
     }
+    // 4. Else,
+    else {
+        // a. Assert: overflow is "reject".
+        VERIFY(overflow == "reject"sv);
 
-    // 4. If overflow is "reject", then
-    if (overflow == "reject"sv) {
-        // a. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+        // b. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
         if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
-        // b. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+        // c. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
         return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
     }
-
-    VERIFY_NOT_REACHED();
 }
 
-// 4.5.5 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
+// 4.5.4 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
     // 1. If hour < 0 or hour > 23, then
@@ -268,7 +225,7 @@ bool is_valid_time(double hour, double minute, double second, double millisecond
     return true;
 }
 
-// 4.5.6 BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balancetime
+// 4.5.5 BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balancetime
 DaysAndTime balance_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
@@ -322,7 +279,7 @@ DaysAndTime balance_time(double hour, double minute, double second, double milli
     };
 }
 
-// 4.5.7 ConstrainTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-constraintime
+// 4.5.6 ConstrainTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-constraintime
 TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
@@ -349,7 +306,7 @@ TemporalTime constrain_time(double hour, double minute, double second, double mi
     return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
 }
 
-// 4.5.8 CreateTemporalTime ( hour, minute, second, millisecond, microsecond, nanosecond [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime
+// 4.5.7 CreateTemporalTime ( hour, minute, second, millisecond, microsecond, nanosecond [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime
 ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target)
 {
     auto& vm = global_object.vm();
@@ -378,50 +335,47 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, 
     return object;
 }
 
-// 4.5.9 ToTemporalTimeRecord ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
-ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like)
+// 4.5.8 ToTemporalTimeRecord ( temporalTimeLike [ , completeness ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
+ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(GlobalObject& global_object, Object const& temporal_time_like, ToTemporalTimeRecordCompleteness completeness)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(temporalTimeLike) is Object.
+    // 1. If completeness is not present, set completeness to complete.
 
-    // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
-    auto result = UnregulatedTemporalTime {};
+    // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
+    auto* partial = TRY(prepare_temporal_fields(global_object, temporal_time_like, { "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "nanosecond"sv, "second"sv }, PrepareTemporalFieldsPartial {}));
 
-    // 3. Let any be false.
-    auto any = false;
+    // 3. Let result be a new TemporalTimeLike Record with each field set to undefined.
+    auto result = TemporalTimeLikeRecord {};
 
-    // 4. For each row of Table 3, except the header row, in table order, do
-    for (auto& [internal_slot, property] : temporal_time_like_properties<UnregulatedTemporalTime, double>(vm)) {
-        // a. Let property be the Property value of the current row.
+    // 4. For each row of Table 4, except the header row, in table order, do
+    for (auto& [field, property_name] : temporal_time_like_record_fields<TemporalTimeLikeRecord, Optional<double>>(vm)) {
+        // a. Let field be the Field Name value of the current row.
+        // b. Let propertyName be the Property Name value of the current row.
 
-        // b. Let value be ? Get(temporalTimeLike, property).
-        auto value = TRY(temporal_time_like.get(property));
+        // c. Let valueDesc be OrdinaryGetOwnProperty(partial, propertyName).
+        auto value_descriptor = MUST(partial->Object::internal_get_own_property(property_name));
 
-        // c. If value is not undefined, then
-        if (!value.is_undefined()) {
-            // i. Set any to true.
-            any = true;
+        // d. If valueDesc is not undefined, then
+        if (value_descriptor.has_value()) {
+            // i. Assert: valueDesc is a data Property Descriptor.
+            VERIFY(value_descriptor->is_data_descriptor());
+
+            // ii. Set the field of result whose name is field to valueDesc.[[Value]].
+            result.*field = value_descriptor->value->as_double();
         }
-
-        // d. Set value to ? ToIntegerThrowOnInfinity(value).
-        auto value_number = TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
-
-        // e. Set result's internal slot whose name is the Internal Slot value of the current row to value.
-        result.*internal_slot = value_number;
-    }
-
-    // 5. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
+        // e. Else if completeness is complete, then
+        else if (completeness == ToTemporalTimeRecordCompleteness::Complete) {
+            // i. Set the field of result whose name is field to 0.
+            result.*field = 0;
+        }
     }
 
     // 6. Return result.
     return result;
 }
 
-// 4.5.10 TemporalTimeToString ( hour, minute, second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaltimetostring
+// 4.5.9 TemporalTimeToString ( hour, minute, second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaltimetostring
 String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
@@ -436,7 +390,7 @@ String temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u
     return String::formatted("{:02}:{:02}{}", hour, minute, seconds);
 }
 
-// 4.5.11 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime
+// 4.5.10 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime
 i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {
     // 1. Assert: h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, and ns2 are integers.
@@ -493,7 +447,7 @@ i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16
     return 0;
 }
 
-// 4.5.12 AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-addtime
+// 4.5.11 AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-addtime
 DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integers.
@@ -521,7 +475,7 @@ DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microse
     return balance_time(hour_, minute_, second_, millisecond_, microsecond_, nanosecond_);
 }
 
-// 4.5.13 RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLengthNs ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundtime
+// 4.5.12 RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLengthNs ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundtime
 DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length_ns)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, and increment are integers.
@@ -573,7 +527,7 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
         quantity = nanosecond;
     }
 
-    // 10. Let result be ! RoundNumberToIncrement(quantity, increment, roundingMode).
+    // 10. Let result be RoundNumberToIncrement(quantity, increment, roundingMode).
     auto result = round_number_to_increment(quantity, increment, rounding_mode);
 
     // If unit is "day", then
@@ -619,68 +573,63 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
     return balance_time(hour, minute, second, millisecond, microsecond, result);
 }
 
-// 4.5.14 DifferenceTemporalPlainTime ( operation, temporalTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaintime
+// 4.5.13 DifferenceTemporalPlainTime ( operation, temporalTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaintime
 ThrowCompletionOr<Duration*> difference_temporal_plain_time(GlobalObject& global_object, DifferenceOperation operation, PlainTime const& temporal_time, Value other_value, Value options_value)
 {
+    auto& vm = global_object.vm();
+
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
-
-    PlainTime const* first;
-    PlainTime const* second;
 
     // 2. Set other to ? ToTemporalTime(other).
     auto* other = TRY(to_temporal_time(global_object, other_value));
 
-    // FIXME: Copied from DifferenceTemporalInstant, also needed here (spec issue, see https://github.com/tc39/proposal-temporal/pull/2184)
-    if (operation == DifferenceOperation::Until) {
-        first = &temporal_time;
-        second = other;
-    } else {
-        first = other;
-        second = &temporal_time;
-    }
-
     // 3. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, options_value));
 
-    // 4. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
+    // 4. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", time, "nanosecond").
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::Time, { "nanosecond"sv }));
 
-    // 5. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", "hour").
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, "hour"sv));
+    // 5. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", time, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::Time, { "auto"sv }));
 
-    // 6. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+    // 6. If largestUnit is "auto", set largestUnit to "hour".
+    if (largest_unit == "auto"sv)
+        largest_unit = "hour"sv;
 
-    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    // 7. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+
+    // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 8. If operation is since, then
+    // 9. If operation is since, then
     if (operation == DifferenceOperation::Since) {
         // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
         rounding_mode = negate_temporal_rounding_mode(rounding_mode);
     }
 
-    // 9. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 10. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double>(maximum), false));
 
-    // 11. Let result be ! DifferenceTime(other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]]).
-    auto result = difference_time(first->iso_hour(), first->iso_minute(), first->iso_second(), first->iso_millisecond(), first->iso_microsecond(), first->iso_nanosecond(), second->iso_hour(), second->iso_minute(), second->iso_second(), second->iso_millisecond(), second->iso_microsecond(), second->iso_nanosecond());
+    // 12. Let result be ! DifferenceTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]]).
+    auto result = difference_time(temporal_time.iso_hour(), temporal_time.iso_minute(), temporal_time.iso_second(), temporal_time.iso_millisecond(), temporal_time.iso_microsecond(), temporal_time.iso_nanosecond(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond());
 
-    // 12. Set result to (? RoundDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode)).[[DurationRecord]].
-    auto rounded_result = TRY(round_duration(global_object, 0, 0, 0, 0, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode)).duration_record;
+    // 13. Set result to (! RoundDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode)).[[DurationRecord]].
+    auto rounded_result = MUST(round_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode)).duration_record;
 
-    // 13. Set result to ? BalanceDuration(0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]], largestUnit).
-    result = MUST(balance_duration(global_object, 0, sign * rounded_result.hours, sign * rounded_result.minutes, sign * rounded_result.seconds, sign * rounded_result.milliseconds, sign * rounded_result.microseconds, Crypto::SignedBigInteger { (i32)(sign * rounded_result.nanoseconds) }, *largest_unit));
+    // 14. Set result to ! BalanceDuration(0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], largestUnit).
+    result = MUST(balance_duration(global_object, 0, rounded_result.hours, rounded_result.minutes, rounded_result.seconds, rounded_result.milliseconds, rounded_result.microseconds, Crypto::SignedBigInteger { (i32)rounded_result.nanoseconds }, *largest_unit));
 
-    // 14. Return ! CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    // 15. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+    return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 
-// 4.5.15 AddDurationToOrSubtractDurationFromPlainTime ( operation, temporalTime, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplaintime
+// 4.5.14 AddDurationToOrSubtractDurationFromPlainTime ( operation, temporalTime, temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplaintime
 ThrowCompletionOr<PlainTime*> add_duration_to_or_subtract_duration_from_plain_time(GlobalObject& global_object, ArithmeticOperation operation, PlainTime const& temporal_time, Value temporal_duration_like)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
@@ -695,8 +644,8 @@ ThrowCompletionOr<PlainTime*> add_duration_to_or_subtract_duration_from_plain_ti
     // 4. Assert: IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
     VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 
-    // 5. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+    // 5. Return ! CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return MUST(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 }

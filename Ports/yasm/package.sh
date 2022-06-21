@@ -5,5 +5,5 @@ files="https://www.tortall.net/projects/yasm/releases/yasm-${version}.tar.gz yas
 auth_type="sha256"
 useconfigure=true
 use_fresh_config_sub=true
-config_sub_path=config/config.sub
+config_sub_paths=("config/config.sub")
 makeopts=()

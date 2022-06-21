@@ -243,7 +243,7 @@ void GLContext::gl_cull_face(GLenum cull_mode)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_cull_face, cull_mode);
 
-    RETURN_WITH_ERROR_IF(cull_mode < GL_FRONT || cull_mode > GL_FRONT_AND_BACK, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(cull_mode != GL_FRONT && cull_mode != GL_BACK && cull_mode != GL_FRONT_AND_BACK, GL_INVALID_ENUM);
 
     m_culled_sides = cull_mode;
 

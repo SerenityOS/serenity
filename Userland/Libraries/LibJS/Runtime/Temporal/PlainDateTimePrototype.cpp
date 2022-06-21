@@ -377,20 +377,20 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
     auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
-    // 7. Let partialDateTime be ? PreparePartialTemporalFields(temporalDateTimeLike, fieldNames).
-    auto* partial_date_time = TRY(prepare_partial_temporal_fields(global_object, temporal_date_time_like.as_object(), field_names));
+    // 7. Let partialDateTime be ? PrepareTemporalFields(temporalDateTimeLike, fieldNames, partial).
+    auto* partial_date_time = TRY(prepare_temporal_fields(global_object, temporal_date_time_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
 
     // 8. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 9. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialDateTime).
     fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_date_time));
 
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
-    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, Vector<StringView> {}));
 
     // 12. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto result = TRY(interpret_temporal_date_time_fields(global_object, calendar, *fields, *options));
@@ -545,26 +545,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
         round_to = TRY(get_options_object(global_object, vm.argument(0)));
     }
 
-    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « "year", "month", "week" », undefined).
-    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *round_to, { "year"sv, "month"sv, "week"sv }, {}));
+    // 6. Let smallestUnit be ? GetTemporalUnit(roundTo, "smallestUnit", time, required, « "day" »).
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *round_to, vm.names.smallestUnit, UnitGroup::Time, TemporalUnitRequired {}, { "day"sv }));
 
-    // 7. If smallestUnit is undefined, throw a RangeError exception.
-    if (!smallest_unit_value.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
-
-    // NOTE: At this point smallest_unit_value can only be a string
-    auto& smallest_unit = *smallest_unit_value;
-
-    // 8. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"));
 
-    // 9. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo, smallestUnit).
-    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(global_object, *round_to, smallest_unit));
+    // 8. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo, smallestUnit).
+    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(global_object, *round_to, *smallest_unit));
 
-    // 10. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
-    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, smallest_unit, rounding_mode);
+    // 9. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
 
-    // 11. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
+    // 10. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
     return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time->calendar()));
 }
 
@@ -693,7 +686,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
     return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
@@ -713,7 +706,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
     auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
     return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
@@ -726,8 +719,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
     auto* date_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
-    return TRY(create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond()));
+    // 3. Return ! CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    return MUST(create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond()));
 }
 
 // 5.3.41 Temporal.PlainDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.getisofields

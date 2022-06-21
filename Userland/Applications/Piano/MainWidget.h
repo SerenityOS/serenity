@@ -10,6 +10,7 @@
 #pragma once
 
 #include "Music.h"
+#include <LibDSP/Keyboard.h>
 #include <LibGUI/Widget.h>
 
 class AudioPlayerLoop;
@@ -28,7 +29,7 @@ public:
 
     void add_track_actions(GUI::Menu&);
 
-    void set_octave_and_ensure_note_change(Direction);
+    void set_octave_and_ensure_note_change(LibDSP::Keyboard::Direction);
     void set_octave_and_ensure_note_change(int);
 
 private:
@@ -38,7 +39,7 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void custom_event(Core::CustomEvent&) override;
 
-    void note_key_action(int key_code, Switch);
+    void note_key_action(int key_code, LibDSP::Keyboard::Switch);
     void special_key_action(int key_code);
 
     void turn_off_pressed_keys();
@@ -56,5 +57,6 @@ private:
     RefPtr<KnobsWidget> m_knobs_widget;
     RefPtr<PlayerWidget> m_player_widget;
 
+    // Not the piano keys, but the computer keyboard keys!
     bool m_keys_pressed[key_code_count] { false };
 };

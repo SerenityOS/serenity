@@ -111,7 +111,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     if (is_shared)
         TODO();
 
-    // FIXME: Make and use subclasses of WorkerGlobalScope, however this requries JS::GlobalObject to
+    // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
     //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
     m_worker_scope = m_worker_vm->heap().allocate_without_global_object<JS::GlobalObject>();
     m_worker_scope->initialize_global_object();
@@ -171,7 +171,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, m_execution_context);
 
     // 10. Set worker global scope's name to the value of options's name member.
-    // FIXME: name propery requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
+    // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
 
     // 11. Append owner to worker global scope's owner set.
     // FIXME: support for 'owner' set on WorkerGlobalScope

@@ -50,5 +50,27 @@
                 }
             }
         }
+
+        @GUI::Widget {
+            title: "Session Storage"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [4]
+            }
+
+            @GUI::TextBox {
+                name: "session_storage_filter_textbox"
+                placeholder: "Filter"
+            }
+
+            @GUI::GroupBox {
+                layout: @GUI::VerticalBoxLayout {
+                    margins: [6]
+                }
+
+                @GUI::TableView {
+                    name: "session_storage_tableview"
+                }
+            }
+        }
     }
 }

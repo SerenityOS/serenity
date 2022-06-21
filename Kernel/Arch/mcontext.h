@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <AK/Platform.h>
-
-#if ARCH(X86_64) || ARCH(I386)
+#if defined(__i386__) || defined(__x86_64__)
 #    include <Kernel/Arch/x86/mcontext.h>
-#elif ARCH(AARCH64)
+#elif defined(__aarch64__)
 #    include <Kernel/Arch/aarch64/mcontext.h>
 #endif

@@ -115,11 +115,16 @@ class NonnullOwnPtrVector;
 template<typename T>
 class Optional;
 
+#ifdef KERNEL
 template<typename T>
 struct RefPtrTraits;
 
 template<typename T, typename PtrTraits = RefPtrTraits<T>>
 class RefPtr;
+#else
+template<typename T>
+class RefPtr;
+#endif
 
 template<typename T>
 class OwnPtr;

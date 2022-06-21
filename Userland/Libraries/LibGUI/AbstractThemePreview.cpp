@@ -78,6 +78,13 @@ void AbstractThemePreview::set_preview_palette(Gfx::Palette const& palette)
     update();
 }
 
+void AbstractThemePreview::set_theme(Core::AnonymousBuffer const& theme_buffer)
+{
+    VERIFY(theme_buffer.is_valid());
+    m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer));
+    set_preview_palette(m_preview_palette);
+}
+
 void AbstractThemePreview::set_theme_from_file(Core::File& file)
 {
     auto config_file = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();

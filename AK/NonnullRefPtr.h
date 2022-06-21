@@ -21,7 +21,7 @@ namespace AK {
 
 template<typename T>
 class OwnPtr;
-template<typename T, typename PtrTraits>
+template<typename T>
 class RefPtr;
 
 template<typename T>
@@ -40,7 +40,7 @@ ALWAYS_INLINE void unref_if_not_null(T* ptr)
 
 template<typename T>
 class [[nodiscard]] NonnullRefPtr {
-    template<typename U, typename P>
+    template<typename U>
     friend class RefPtr;
     template<typename U>
     friend class NonnullRefPtr;

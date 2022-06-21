@@ -31,6 +31,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
@@ -264,14 +265,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
     debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
     debug_button.on_click = [&](int) {
-        pid_t child;
-        const char* argv[4] = { "HackStudio", "-c", coredump_path, nullptr };
-        if ((errno = posix_spawn(&child, "/bin/HackStudio", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child) < 0)
-                perror("disown");
-        }
+        GUI::Process::spawn_or_show_error(window, "/bin/HackStudio", Array { "-c", coredump_path });
     };
 
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");

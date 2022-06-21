@@ -9,9 +9,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<Plan9FS>> Plan9FS::try_create(OpenFileDescription& file_description)
+ErrorOr<NonnullRefPtr<FileSystem>> Plan9FS::try_create(OpenFileDescription& file_description)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FS(file_description));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FS(file_description)));
 }
 
 Plan9FS::Plan9FS(OpenFileDescription& file_description)

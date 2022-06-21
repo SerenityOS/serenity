@@ -1,18 +1,14 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=SDL_sound
-version=git
-_commit=df3fc779774c2c5dc1147239da1af858c88f1a74
-workdir=SDL_sound-${_commit}
-useconfigure=true
-depends=("SDL2")
-files="https://github.com/icculus/SDL_sound/archive/${_commit}.zip ${_commit}.zip bf655a03ab96a49c4140e19135433d62893c124330955e85e3dfddbe9963bac2"
-auth_type=sha256
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
-
-configure() {
-    run cmake "${configopts[@]}"
-}
-
-install() {
-    run make install
-}
+port='SDL_sound'
+version='1.0.3'
+useconfigure='true'
+use_fresh_config_sub='true'
+depends=("sdl12-compat" "libmikmod")
+files="https://www.icculus.org/SDL_sound/downloads/${port}-${version}.tar.gz ${port}-${version}.tar.gz 3999fd0bbb485289a52be14b2f68b571cb84e380cc43387eadf778f64c79e6df" 
+auth_type='sha256'
+configopts=(
+    "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
+    "--enable-ogg=no"
+    "--enable-modplug=no"
+)
+makeopts=("LDFLAGS=-lm")

@@ -28,6 +28,8 @@ public:
     void set_complete() { m_complete = true; }
     void set_error_occurred() { m_error_occurred = true; }
 
+    ErrorOr<void> write_buffer(u16 len, void* data);
+
     // `const` here makes sure we don't blow up by writing to a physical address
     USBRequestData const& request() const { return m_request; }
     Pipe const& pipe() const { return m_pipe; }
@@ -47,4 +49,5 @@ private:
     bool m_complete { false };                   // Has this transfer been completed?
     bool m_error_occurred { false };             // Did an error occur during this transfer?
 };
+
 }

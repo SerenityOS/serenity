@@ -46,8 +46,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     button_container->layout()->set_spacing(6);
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
-        window->m_reset_button = TRY(button_container->try_add<GUI::Button>("Defaults"));
-        window->m_reset_button->set_fixed_width(75);
+        window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>("Defaults"));
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
             window->reset_default_values();
         };
@@ -55,22 +54,19 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
     TRY(button_container->layout()->try_add_spacer());
 
-    window->m_ok_button = TRY(button_container->try_add<GUI::Button>("OK"));
-    window->m_ok_button->set_fixed_width(75);
+    window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"));
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
         window->apply_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_cancel_button = TRY(button_container->try_add<GUI::Button>("Cancel"));
-    window->m_cancel_button->set_fixed_width(75);
+    window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"));
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
         window->cancel_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_apply_button = TRY(button_container->try_add<GUI::Button>("Apply"));
-    window->m_apply_button->set_fixed_width(75);
+    window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"));
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
         window->apply_settings();
     };

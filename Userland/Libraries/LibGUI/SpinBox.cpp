@@ -35,6 +35,10 @@ SpinBox::SpinBox()
     m_editor->on_down_pressed = [this] {
         set_value(m_value - 1);
     };
+    m_editor->on_return_pressed = [this] {
+        if (on_return_pressed)
+            on_return_pressed();
+    };
 
     m_increment_button = add<Button>();
     m_increment_button->set_button_style(Gfx::ButtonStyle::ThickCap);

@@ -1,14 +1,14 @@
-From 91c2345d42459232d958eaf0eba5b10786ac3475 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 9 Jul 2021 04:59:05 +0430
-Subject: [PATCH 4/7] tcp: Don't use SO_LINGER
+Subject: [PATCH] tcp: Don't use SO_LINGER
 
 ---
  src/unix/tcp.c | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/src/unix/tcp.c b/src/unix/tcp.c
-index bc0fb66..e78259a 100644
+index 789807f..f92af6b 100644
 --- a/src/unix/tcp.c
 +++ b/src/unix/tcp.c
 @@ -313,15 +313,19 @@ int uv_tcp_getpeername(const uv_tcp_t* handle,
@@ -31,6 +31,3 @@ index bc0fb66..e78259a 100644
  
    uv_close((uv_handle_t*) handle, close_cb);
    return 0;
--- 
-2.32.0
-

@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
+#include <LibWebView/Forward.h>
 
 namespace Browser {
 
@@ -38,7 +39,7 @@ public:
 
     virtual ~InspectorWidget() = default;
 
-    void set_web_view(NonnullRefPtr<Web::OutOfProcessWebView> web_view) { m_web_view = web_view; }
+    void set_web_view(NonnullRefPtr<WebView::OutOfProcessWebView> web_view) { m_web_view = web_view; }
     void set_dom_json(String);
     void clear_dom_json();
     void set_dom_node_properties_json(Selection, String specified_values_json, String computed_values_json, String custom_properties_json, String node_box_sizing_json);
@@ -54,7 +55,7 @@ private:
     void update_node_box_model(Optional<String> node_box_sizing_json);
     void clear_style_json();
 
-    RefPtr<Web::OutOfProcessWebView> m_web_view;
+    RefPtr<WebView::OutOfProcessWebView> m_web_view;
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;

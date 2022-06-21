@@ -243,11 +243,10 @@ namespace JS {
     P(globalThis)                            \
     P(granularity)                           \
     P(group)                                 \
-    P(groupBy)                               \
-    P(groupByToMap)                          \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \
+    P(groupToMap)                            \
     P(has)                                   \
     P(hasIndices)                            \
     P(hasOwn)                                \
@@ -342,6 +341,7 @@ namespace JS {
     P(nanoseconds)                           \
     P(negated)                               \
     P(next)                                  \
+    P(normalize)                             \
     P(notation)                              \
     P(now)                                   \
     P(numberingSystem)                       \
@@ -485,6 +485,9 @@ namespace JS {
     P(toPlainTime)                           \
     P(toPlainYearMonth)                      \
     P(toPrecision)                           \
+    P(toReversed)                            \
+    P(toSorted)                              \
+    P(toSpliced)                             \
     P(toString)                              \
     P(total)                                 \
     P(toTemporalInstant)                     \

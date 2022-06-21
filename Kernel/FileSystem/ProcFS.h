@@ -28,7 +28,7 @@ class ProcFS final : public FileSystem {
 
 public:
     virtual ~ProcFS() override;
-    static ErrorOr<NonnullRefPtr<ProcFS>> try_create();
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }

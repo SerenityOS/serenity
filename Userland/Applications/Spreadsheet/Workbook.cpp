@@ -57,53 +57,21 @@ Result<bool, String> Workbook::open_file(Core::File& file)
     auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
     // Make an import dialog, we might need to import it.
-    auto result = ImportDialog::make_and_run_for(m_parent_window, mime, file, *this);
-    if (result.is_error())
-        return result.error();
-
-    m_sheets = result.release_value();
+    m_sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, file, *this));
 
     set_filename(file.filename());
 
     return true;
 }
 
-Result<bool, String> Workbook::load(StringView filename)
+Result<bool, String> Workbook::write_to_file(Core::File& file)
 {
-    auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(&m_parent_window, filename);
-    if (response.is_error()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for reading. Error: ");
-        sb.appendff("{}", response.error());
-        return sb.to_string();
-    }
-
-    return open_file(*response.value());
-}
-
-Result<bool, String> Workbook::save(StringView filename)
-{
-    auto mime = Core::guess_mime_type_based_on_filename(filename);
-    auto file = Core::File::construct(filename);
-    file->open(Core::OpenMode::WriteOnly);
-    if (!file->is_open()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for write. Error: ");
-        sb.append(file->error_string());
-
-        return sb.to_string();
-    }
+    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
 
     // Make an export dialog, we might need to import it.
-    auto result = ExportDialog::make_and_run_for(mime, *file, *this);
-    if (result.is_error())
-        return result.error();
+    TRY(ExportDialog::make_and_run_for(mime, file, *this));
 
-    set_filename(filename);
+    set_filename(file.filename());
     set_dirty(false);
     return true;
 }

@@ -19,6 +19,7 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
+#include <LibGUI/Shortcut.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -66,6 +67,8 @@ void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& 
     Window::for_each_window({}, [](auto& window) {
         Core::EventLoop::current().post_event(window, make<ThemeChangeEvent>());
     });
+
+    Application::the()->dispatch_event(*make<ThemeChangeEvent>());
 }
 
 void ConnectionToWindowServer::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
@@ -133,29 +136,29 @@ void ConnectionToWindowServer::window_left(i32 window_id)
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowLeft));
 }
 
-static Action* action_for_key_event(Window& window, KeyEvent const& event)
+static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
 {
-    if (event.key() == KeyCode::Key_Invalid)
+    if (!shortcut.is_valid())
         return nullptr;
 
-    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", event.to_string());
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
-        if (auto* action = widget->action_for_key_event(event)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {}", *widget, action);
+        if (auto* action = widget->action_for_shortcut(shortcut)) {
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", *widget, action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
             return action;
         }
     }
 
-    if (auto* action = window.action_for_key_event(event)) {
-        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {}", window, action);
+    if (auto* action = window.action_for_shortcut(shortcut)) {
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", window, action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
         return action;
     }
 
     // NOTE: Application-global shortcuts are ignored while a modal window is up.
     if (!window.is_modal()) {
-        if (auto* action = Application::the()->action_for_key_event(event)) {
-            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {}", action);
+        if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
             return action;
         }
     }
@@ -171,7 +174,7 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
 
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, modifiers, code_point, scancode);
 
-    if (auto* action = action_for_key_event(*window, *key_event)) {
+    if (auto* action = action_for_shortcut(*window, Shortcut(key_event->modifiers(), key_event->key()))) {
         if (action->is_enabled()) {
             action->flash_menubar_menu(*window);
             action->activate();
@@ -248,8 +251,23 @@ static MouseButton to_mouse_button(u32 button)
 
 void ConnectionToWindowServer::mouse_down(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
-    if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDown, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
+    auto* window = Window::from_window_id(window_id);
+    if (!window)
+        return;
+
+    auto mouse_event = make<MouseEvent>(Event::MouseDown, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y);
+
+    if (auto* action = action_for_shortcut(*window, Shortcut(mouse_event->modifiers(), mouse_event->button()))) {
+        if (action->is_enabled()) {
+            action->flash_menubar_menu(*window);
+            action->activate();
+            return;
+        }
+        if (action->swallow_key_event_when_disabled())
+            return;
+    }
+
+    Core::EventLoop::current().post_event(*window, move(mouse_event));
 }
 
 void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)

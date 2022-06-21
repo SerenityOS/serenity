@@ -113,13 +113,13 @@ describe("errors", () => {
     test("missing fields", () => {
         expect(() => {
             Temporal.PlainDateTime.from({});
-        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
+        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
         expect(() => {
-            Temporal.PlainDateTime.from({ year: 0 });
+            Temporal.PlainDateTime.from({ year: 0, day: 1 });
         }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
         expect(() => {
-            Temporal.PlainDateTime.from({ year: 0, month: 1 });
-        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
+            Temporal.PlainDateTime.from({ month: 1, day: 1 });
+        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
     });
 
     test("with 'reject' overflow option", () => {

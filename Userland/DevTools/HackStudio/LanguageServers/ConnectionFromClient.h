@@ -8,10 +8,10 @@
 #pragma once
 
 #include "../AutoCompleteResponse.h"
-#include "CodeComprehensionEngine.h"
 #include "FileDB.h"
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
+#include <LibCodeComprehension/CodeComprehensionEngine.h>
 #include <LibIPC/ConnectionFromClient.h>
 
 #include <Userland/DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
@@ -32,13 +32,13 @@ protected:
     virtual void file_edit_insert_text(String const&, String const&, i32, i32) override;
     virtual void file_edit_remove_text(String const&, i32, i32, i32, i32) override;
     virtual void set_file_content(String const&, String const&) override;
-    virtual void auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const&) override;
-    virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
-    virtual void get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation const&) override;
+    virtual void auto_complete_suggestions(CodeComprehension::ProjectLocation const&) override;
+    virtual void find_declaration(CodeComprehension::ProjectLocation const&) override;
+    virtual void get_parameters_hint(CodeComprehension::ProjectLocation const&) override;
     virtual void get_tokens_info(String const&) override;
 
     FileDB m_filedb;
-    OwnPtr<CodeComprehensionEngine> m_autocomplete_engine;
+    OwnPtr<CodeComprehension::CodeComprehensionEngine> m_autocomplete_engine;
 };
 
 }

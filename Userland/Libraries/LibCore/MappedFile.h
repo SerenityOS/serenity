@@ -19,8 +19,8 @@ class MappedFile : public RefCounted<MappedFile> {
     AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    static ErrorOr<NonnullRefPtr<MappedFile>> map(String const& path);
-    static ErrorOr<NonnullRefPtr<MappedFile>> map_from_fd_and_close(int fd, String const& path);
+    static ErrorOr<NonnullRefPtr<MappedFile>> map(StringView path);
+    static ErrorOr<NonnullRefPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path);
     ~MappedFile();
 
     void* data() { return m_data; }

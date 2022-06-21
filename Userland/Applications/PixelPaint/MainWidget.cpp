@@ -12,6 +12,8 @@
 #include "EditGuideDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
+#include "LevelsDialog.h"
+#include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -500,6 +502,14 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
+        "&Resize Image...", { Mod_Ctrl | Mod_Shift, Key_R }, g_icon_bag.resize_image, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+                editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
+        }));
+    m_image_menu->add_action(GUI::Action::create(
         "&Crop To Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -692,6 +702,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"), &window));
 
+    m_levels_dialog_action = GUI::Action::create(
+        "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::LevelsDialog::construct(&window, editor);
+            if (dialog->exec() != GUI::Dialog::ExecResult::OK)
+                dialog->revert_possible_changes();
+        });
+
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.add_action(*m_new_image_action);
     toolbar.add_action(*m_open_image_action);
@@ -706,6 +725,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     toolbar.add_action(*m_zoom_in_action);
     toolbar.add_action(*m_zoom_out_action);
     toolbar.add_action(*m_reset_zoom_action);
+
     m_zoom_combobox = toolbar.add<GUI::ComboBox>();
     m_zoom_combobox->set_max_width(75);
     m_zoom_combobox->set_model(*GUI::ItemListModel<String>::create(s_suggested_zoom_levels));
@@ -743,6 +763,9 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_zoom_combobox->on_return_pressed = [this]() {
         m_zoom_combobox->on_change(m_zoom_combobox->text(), GUI::ModelIndex());
     };
+
+    toolbar.add_separator();
+    toolbar.add_action(*m_levels_dialog_action);
 }
 
 void MainWidget::set_actions_enabled(bool enabled)

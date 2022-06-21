@@ -16,7 +16,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace Spreadsheet {
 
@@ -80,7 +80,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_listview->set_activates_on_selection(true);
     m_listview->set_model(HelpListModel::create());
 
-    m_webview = splitter.add<Web::OutOfProcessWebView>();
+    m_webview = splitter.add<WebView::OutOfProcessWebView>();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
         VERIFY(url.protocol() == "spreadsheet");
         if (url.host() == "example") {

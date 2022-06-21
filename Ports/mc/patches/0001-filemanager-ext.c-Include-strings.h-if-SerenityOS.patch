@@ -1,7 +1,7 @@
-From 749c81e5006dea41daf16e99c8a60926236d2373 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Kenneth Myhra <kennethmyhra@gmail.com>
 Date: Sat, 25 Dec 2021 19:15:35 +0100
-Subject: [PATCH 1/2] filemanager/ext.c: Include strings.h if SerenityOS
+Subject: [PATCH] filemanager/ext.c: Include strings.h if SerenityOS
 
 - [ ] Local?
 - [X] Should be merged to upstream?
@@ -12,7 +12,7 @@ Subject: [PATCH 1/2] filemanager/ext.c: Include strings.h if SerenityOS
  1 file changed, 3 insertions(+)
 
 diff --git a/src/filemanager/ext.c b/src/filemanager/ext.c
-index 781a763..33baf8c 100644
+index a18fda0..12bd8d5 100644
 --- a/src/filemanager/ext.c
 +++ b/src/filemanager/ext.c
 @@ -36,6 +36,9 @@
@@ -25,6 +25,3 @@ index 781a763..33baf8c 100644
  #include <unistd.h>
  
  #include "lib/global.h"
--- 
-2.25.1
-

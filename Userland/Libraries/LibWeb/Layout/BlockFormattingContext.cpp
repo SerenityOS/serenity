@@ -278,22 +278,45 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto width = computed_values.width().has_value() ? computed_values.width()->resolved(box, width_of_containing_block_as_length).resolved(box) : CSS::Length::make_auto();
+    auto compute_width = [&](auto width) {
+        // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
+        if (width.is_auto()) {
 
-    // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
-    if (width.is_auto()) {
+            // Find the available width: in this case, this is the width of the containing
+            // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
+            // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
+            float available_width = width_of_containing_block
+                - margin_left.to_px(box) - computed_values.border_left().width - padding_left.to_px(box)
+                - padding_right.to_px(box) - computed_values.border_right().width - margin_right.to_px(box);
 
-        // Find the available width: in this case, this is the width of the containing
-        // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
-        // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
-        float available_width = width_of_containing_block
-            - margin_left.to_px(box) - computed_values.border_left().width - padding_left.to_px(box)
-            - padding_right.to_px(box) - computed_values.border_right().width - margin_right.to_px(box);
+            auto result = calculate_shrink_to_fit_widths(box);
 
-        auto result = calculate_shrink_to_fit_widths(box);
+            // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
+            width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
+        }
 
-        // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
-        width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
+        return width;
+    };
+
+    auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(box, width_of_containing_block_as_length).resolved(box) : CSS::Length::make_auto();
+
+    // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
+    auto width = compute_width(specified_width);
+
+    // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
+    //    but this time using the computed value of 'max-width' as the computed value for 'width'.
+    auto specified_max_width = computed_values.max_width().has_value() ? computed_values.max_width()->resolved(box, width_of_containing_block_as_length).resolved(box) : CSS::Length::make_auto();
+    if (!specified_max_width.is_auto()) {
+        if (width.to_px(box) > specified_max_width.to_px(box))
+            width = compute_width(specified_max_width);
+    }
+
+    // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
+    //    but this time using the value of 'min-width' as the computed value for 'width'.
+    auto specified_min_width = computed_values.min_width().has_value() ? computed_values.min_width()->resolved(box, width_of_containing_block_as_length).resolved(box) : CSS::Length::make_auto();
+    if (!specified_min_width.is_auto()) {
+        if (width.to_px(box) < specified_min_width.to_px(box))
+            width = compute_width(specified_min_width);
     }
 
     auto& box_state = m_state.get_mutable(box);

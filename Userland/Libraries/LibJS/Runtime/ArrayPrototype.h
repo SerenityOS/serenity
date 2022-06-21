@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,8 +54,14 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(keys);
     JS_DECLARE_NATIVE_FUNCTION(entries);
     JS_DECLARE_NATIVE_FUNCTION(copy_within);
-    JS_DECLARE_NATIVE_FUNCTION(group_by);
-    JS_DECLARE_NATIVE_FUNCTION(group_by_to_map);
+    JS_DECLARE_NATIVE_FUNCTION(group);
+    JS_DECLARE_NATIVE_FUNCTION(group_to_map);
+    JS_DECLARE_NATIVE_FUNCTION(to_reversed);
+    JS_DECLARE_NATIVE_FUNCTION(to_sorted);
+    JS_DECLARE_NATIVE_FUNCTION(to_spliced);
+    JS_DECLARE_NATIVE_FUNCTION(with);
 };
+
+ThrowCompletionOr<void> array_merge_sort(GlobalObject&, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort);
 
 }

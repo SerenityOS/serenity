@@ -36,7 +36,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
 
@@ -77,7 +77,7 @@ ErrorOr<void> Editor::initialize_documentation_tooltip()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = TRY(m_documentation_tooltip_window->try_set_main_widget<Web::OutOfProcessWebView>());
+    m_documentation_page_view = TRY(m_documentation_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
     return {};
 }
 
@@ -86,7 +86,7 @@ ErrorOr<void> Editor::initialize_parameters_hint_tooltip()
     m_parameters_hint_tooltip_window = GUI::Window::construct();
     m_parameters_hint_tooltip_window->set_rect(0, 0, 280, 35);
     m_parameters_hint_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_parameter_hint_page_view = TRY(m_parameters_hint_tooltip_window->try_set_main_widget<Web::OutOfProcessWebView>());
+    m_parameter_hint_page_view = TRY(m_parameters_hint_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
     return {};
 }
 
@@ -497,7 +497,7 @@ Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data(
     return Editor::AutoCompleteRequestData { cursor() };
 }
 
-void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
+void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehension::AutocompleteResultEntry>)> callback)
 {
     auto& editor = static_cast<Editor&>(*m_editor).wrapper().editor();
     auto data = editor.get_autocomplete_request_data();
@@ -655,7 +655,7 @@ void Editor::set_language_client_for(CodeDocument const& document)
         m_language_client = get_language_client<LanguageClients::Shell::ConnectionToServer>(project().root_path());
 
     if (m_language_client) {
-        m_language_client->on_tokens_info_result = [this](Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info) {
+        m_language_client->on_tokens_info_result = [this](Vector<CodeComprehension::TokenInfo> const& tokens_info) {
             on_tokens_info_result(tokens_info);
         };
     }
@@ -728,7 +728,7 @@ void Editor::on_token_info_timer_tick()
     m_language_client->get_tokens_info(code_document().file_path());
 }
 
-void Editor::on_tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
+void Editor::on_tokens_info_result(Vector<CodeComprehension::TokenInfo> const& tokens_info)
 {
     auto highlighter = syntax_highlighter();
     if (highlighter && highlighter->is_cpp_semantic_highlighter()) {

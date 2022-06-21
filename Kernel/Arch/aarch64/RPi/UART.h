@@ -9,7 +9,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 struct UARTRegisters;
 

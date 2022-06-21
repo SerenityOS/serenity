@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=pt2-clone
-version=1.43
-useconfigure=true
-files="https://github.com/8bitbubsy/pt2-clone/archive/v${version}.tar.gz v${version}.tar.gz 760c1545105fbf3798fd101c6f213e0fd60943869023ef735f16f4b35221e007"
-auth_type=sha256
+port='pt2-clone'
+version='1.49'
+files="https://github.com/8bitbubsy/pt2-clone/archive/v${version}.tar.gz v${version}.tar.gz c2e796b25aba625551c50b2c0743ccc83b007d2eeac2f5eaad870b60f5a1554b"
+auth_type='sha256'
+useconfigure='true'
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 depends=("SDL2")
 

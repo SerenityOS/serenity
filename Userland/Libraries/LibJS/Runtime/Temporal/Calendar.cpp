@@ -46,13 +46,18 @@ bool is_builtin_calendar(String const& identifier)
 }
 
 // 12.1.2 AvailableCalendars ( ), https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars
-// NOTE: This is the minimum AvailableCalendars implementation for engines without ECMA-402.
-// NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.
 Span<StringView const> available_calendars()
 {
-    // 1. Return « "iso8601" ».
-    static constexpr AK::Array values { "iso8601"sv };
-    return values.span();
+    // 1. Let calendars be the List of String values representing calendar types supported by the implementation.
+    // NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.
+    static constexpr AK::Array calendars { "iso8601"sv };
+
+    // 2. Assert: calendars contains "iso8601".
+    // 3. Assert: calendars does not contain any element that does not identify a calendar type in the Unicode Common Locale Data Repository (CLDR).
+    // 4. Sort calendars in order as if an Array of the same values had been sorted using %Array.prototype.sort% with undefined as comparefn.
+
+    // 5. Return calendars.
+    return calendars.span();
 }
 
 // 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
@@ -132,8 +137,8 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 
     // 2. If mergeFields is undefined, then
     if (!merge_fields) {
-        // a. Return ? DefaultMergeFields(fields, additionalFields).
-        return TRY(default_merge_fields(global_object, fields, additional_fields));
+        // a. Return ? DefaultMergeCalendarFields(fields, additionalFields).
+        return TRY(default_merge_calendar_fields(global_object, fields, additional_fields));
     }
 
     // 3. Let result be ? Call(mergeFields, calendar, « fields, additionalFields »).
@@ -679,7 +684,10 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
         if (month.is_undefined())
             return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.month.as_string());
 
-        // b. Return month.
+        // b. Assert: Type(month) is Number.
+        VERIFY(month.is_number());
+
+        // c. Return ℝ(month).
         return month.as_double();
     }
 
@@ -704,7 +712,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     if (number_part_integer < 1 || number_part_integer > 12)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
 
-    // 11. If month is not undefined, and month ≠ numberPart, then
+    // 11. If month is not undefined and month ≠ numberPart, then
     if (!month.is_undefined() && month.as_double() != number_part_integer) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
@@ -721,7 +729,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 }
 
 // 12.2.33 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
 {
     auto& vm = global_object.vm();
 
@@ -730,15 +738,14 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> { "year"sv, "day"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
 
-    // 5. If year is undefined, throw a TypeError exception.
-    if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
+    // 5. Assert: Type(year) is Number.
+    VERIFY(year.is_number());
 
     // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
@@ -746,11 +753,10 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     // 7. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
 
-    // 8. If day is undefined, throw a TypeError exception.
-    if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
+    // 8. Assert: Type(day) is Number.
+    VERIFY(day.is_number());
 
-    // 9. Return ? RegulateISODate(year, month, day, overflow).
+    // 9. Return ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
 }
 
@@ -764,20 +770,19 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "year"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
 
-    // 5. If year is undefined, throw a TypeError exception.
-    if (year.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.year.as_string());
+    // 5. Assert: Type(year) is Number.
+    VERIFY(year.is_number());
 
     // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
+    // 7. Let result be ? RegulateISOYearMonth(ℝ(year), month, overflow).
     auto result = TRY(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
@@ -794,8 +799,8 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 2. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
-    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
+    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "day"sv }));
 
     // 4. Let month be ! Get(fields, "month").
     auto month_value = MUST(prepared_fields->get(vm.names.month));
@@ -818,23 +823,25 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 9. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
 
-    // 10. If day is undefined, throw a TypeError exception.
-    if (day.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.day.as_string());
+    // 10. Assert: Type(day) is Number.
+    VERIFY(day.is_number());
 
     // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
 
-    Optional<ISODate> result;
+    Optional<ISODateRecord> result;
 
     // 12. If monthCode is undefined, then
     if (month_code.is_undefined()) {
-        // a. Let result be ? RegulateISODate(year, month, day, overflow).
+        // a. Assert: Type(year) is Number.
+        VERIFY(year.is_number());
+
+        // b. Let result be ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
         result = TRY(regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow));
     }
     // 13. Else,
     else {
-        // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
+        // a. Let result be ? RegulateISODate(referenceISOYear, month, ℝ(day), overflow).
         result = TRY(regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow));
     }
 
@@ -914,59 +921,59 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.40 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
-ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
+// 12.2.40 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
+ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto* merged = Object::create(global_object, global_object.object_prototype());
 
-    // 2. Let originalKeys be ? EnumerableOwnPropertyNames(fields, key).
-    auto original_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
+    auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
-    // 3. For each element nextKey of originalKeys, do
-    for (auto& next_key : original_keys) {
-        // a. If nextKey is not "month" or "monthCode", then
-        if (next_key.as_string().string() != vm.names.month.as_string() && next_key.as_string().string() != vm.names.monthCode.as_string()) {
-            auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+    // 3. For each element key of fieldsKeys, do
+    for (auto& key : fields_keys) {
+        // a. If key is not "month" or "monthCode", then
+        if (key.as_string().string() != vm.names.month.as_string() && key.as_string().string() != vm.names.monthCode.as_string()) {
+            auto property_key = MUST(PropertyKey::from_value(global_object, key));
 
-            // i. Let propValue be ? Get(fields, nextKey).
+            // i. Let propValue be ? Get(fields, key).
             auto prop_value = TRY(fields.get(property_key));
 
             // ii. If propValue is not undefined, then
             if (!prop_value.is_undefined()) {
-                // 1. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+                // 1. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
                 MUST(merged->create_data_property_or_throw(property_key, prop_value));
             }
         }
     }
 
-    // 4. Let newKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
-    auto new_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
+    // 4. Let additionalFieldsKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
+    auto additional_fields_keys = TRY(additional_fields.enumerable_own_property_names(Object::PropertyKind::Key));
 
     // IMPLEMENTATION DEFINED: This is an optimization, so we don't have to iterate new_keys three times (worst case), but only once.
-    bool new_keys_contains_month_or_month_code_property = false;
+    bool additional_fields_keys_contains_month_or_month_code_property = false;
 
-    // 5. For each element nextKey of newKeys, do
-    for (auto& next_key : new_keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+    // 5. For each element key of additionalFieldsKeys, do
+    for (auto& key : additional_fields_keys) {
+        auto property_key = MUST(PropertyKey::from_value(global_object, key));
 
-        // a. Let propValue be ? Get(additionalFields, nextKey).
+        // a. Let propValue be ? Get(additionalFields, key).
         auto prop_value = TRY(additional_fields.get(property_key));
 
         // b. If propValue is not undefined, then
         if (!prop_value.is_undefined()) {
-            // i. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+            // i. Perform ! CreateDataPropertyOrThrow(merged, key, propValue).
             MUST(merged->create_data_property_or_throw(property_key, prop_value));
         }
 
         // See comment above.
-        new_keys_contains_month_or_month_code_property |= next_key.as_string().string() == vm.names.month.as_string() || next_key.as_string().string() == vm.names.monthCode.as_string();
+        additional_fields_keys_contains_month_or_month_code_property |= key.as_string().string() == vm.names.month.as_string() || key.as_string().string() == vm.names.monthCode.as_string();
     }
 
-    // 6. If newKeys does not contain either "month" or "monthCode", then
-    if (!new_keys_contains_month_or_month_code_property) {
+    // 6. If additionalFieldsKeys does not contain either "month" or "monthCode", then
+    if (!additional_fields_keys_contains_month_or_month_code_property) {
         // a. Let month be ? Get(fields, "month").
         auto month = TRY(fields.get(vm.names.month));
 

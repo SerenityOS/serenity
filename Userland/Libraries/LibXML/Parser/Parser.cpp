@@ -891,7 +891,7 @@ ErrorOr<StringView, ParseError> Parser::parse_char_data()
     // CharData ::= [^<&]* - ([^<&]* ']]>' [^<&]*)
     auto cend_state = 0; // 1: ], 2: ], 3: >
     auto text = m_lexer.consume_while([&](auto ch) {
-        if (ch == '<' || ch == '&')
+        if (ch == '<' || ch == '&' || cend_state == 3)
             return false;
         switch (cend_state) {
         case 0:
@@ -904,7 +904,7 @@ ErrorOr<StringView, ParseError> Parser::parse_char_data()
         case 2:
             if (ch == '>') {
                 cend_state++;
-                return false;
+                return true;
             }
             cend_state = 0;
             return true;

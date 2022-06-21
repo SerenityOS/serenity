@@ -7,9 +7,11 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonArray.h>
+#include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
 #include <LibCore/Event.h>
+#include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
 #include <stdio.h>
@@ -20,6 +22,11 @@ namespace HTTP {
 static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, String const& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
+
+    // FIXME: Actually do the decompression of the data using streams, instead of all at once when everything has been
+    //        received. This will require that some of the decompression algorithms are implemented in a streaming way.
+    //        Gzip and Deflate are implemented using AK::Stream, while Brotli uses the newer Core::Stream. The Gzip and
+    //        Deflate implementations will likely need to be changed to LibCore::Stream for this to work easily.
 
     if (content_encoding == "gzip") {
         if (!Compress::GzipDecompressor::is_likely_compressed(buf)) {
@@ -62,6 +69,31 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Strin
 
         if constexpr (JOB_DEBUG) {
             dbgln("Job::handle_content_encoding: Deflate decompression successful.");
+            dbgln("  Input size: {}", buf.size());
+            dbgln("  Output size: {}", uncompressed.value().size());
+        }
+
+        return uncompressed.release_value();
+    } else if (content_encoding == "br") {
+        dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
+
+        // FIXME: MemoryStream is both read and write, however we only need the read part here
+        auto bufstream_result = Core::Stream::MemoryStream::construct({ const_cast<u8*>(buf.data()), buf.size() });
+        if (bufstream_result.is_error()) {
+            dbgln("Job::handle_content_encoding: MemoryStream::construct() failed.");
+            return {};
+        }
+        auto bufstream = bufstream_result.release_value();
+        auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
+
+        auto uncompressed = brotli_stream.read_all();
+        if (uncompressed.is_error()) {
+            dbgln("Job::handle_content_encoding: Brotli::decompress() failed: {}.", uncompressed.error());
+            return {};
+        }
+
+        if constexpr (JOB_DEBUG) {
+            dbgln("Job::handle_content_encoding: Brotli::decompress() successful.");
             dbgln("  Input size: {}", buf.size());
             dbgln("  Output size: {}", uncompressed.value().size());
         }

@@ -109,7 +109,6 @@ set(SOURCES
     DOM/Text.idl
     DOM/TreeWalker.cpp
     DOMParsing/InnerHTML.cpp
-    DOMTreeModel.cpp
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
@@ -285,12 +284,12 @@ set(SOURCES
     MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
-    OutOfProcessWebView.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
+    Painting/BorderRadiusCornerClipper.cpp
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
@@ -336,7 +335,6 @@ set(SOURCES
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
-    StylePropertiesModel.cpp
     UIEvents/EventNames.cpp
     UIEvents/FocusEvent.cpp
     UIEvents/KeyboardEvent.cpp
@@ -355,19 +353,14 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
-    WebContentClient.cpp
+    WebGL/WebGLContextAttributes.cpp
+    WebGL/WebGLRenderingContext.cpp
+    WebGL/WebGLRenderingContextBase.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
     XML/XMLDocumentBuilder.cpp
-)
-
-set(GENERATED_SOURCES
-    ../../Services/RequestServer/RequestClientEndpoint.h
-    ../../Services/RequestServer/RequestServerEndpoint.h
-    ../../Services/WebContent/WebContentClientEndpoint.h
-    ../../Services/WebContent/WebContentServerEndpoint.h
 )
 
 generate_css_implementation()
@@ -383,12 +376,12 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm LibXML)
+
+# NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
 generate_js_wrappers(LibWeb)
 
 # Note: If you're looking for the calls to "libweb_js_wrapper()",
 # they have been moved to "idl_files.cmake"
-
-add_subdirectory(DumpLayoutTree)

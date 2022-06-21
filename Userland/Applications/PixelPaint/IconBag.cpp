@@ -26,6 +26,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.clear_guides = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/clear-guides.png"));
     icon_bag.edit_flip_vertical = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"));
     icon_bag.edit_flip_horizontal = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"));
+    icon_bag.resize_image = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"));
     icon_bag.crop = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/crop.png"));
     icon_bag.new_layer = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png"));
     icon_bag.previous_layer = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/previous-layer.png"));
@@ -39,6 +40,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.merge_active_layer_up = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-up.png"));
     icon_bag.merge_active_layer_down = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-down.png"));
     icon_bag.filter = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png"));
+    icon_bag.levels = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/levels.png"));
 
     return icon_bag;
 }

@@ -12,6 +12,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Path.h>
@@ -151,7 +152,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
                     move_point = { (7 - square.file) * tile_width, square.rank * tile_height };
                 }
 
-                painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
+                Gfx::AntiAliasingPainter aa_painter { painter };
+                aa_painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
             }
         }
 

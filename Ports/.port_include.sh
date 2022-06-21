@@ -2,6 +2,12 @@
 set -eu
 
 SCRIPT="$(dirname "${0}")"
+
+if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
+    exec "${SCRIPT}/.strip_env.sh" "${@}"
+fi
+unset SERENITY_STRIPPED_ENV
+
 export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
 
 maybe_source() {
@@ -19,18 +25,12 @@ target_env
 DESTDIR="${SERENITY_INSTALL_ROOT}"
 
 enable_ccache() {
-    if command -v ccache &>/dev/null; then
+    if [ "${USE_CCACHE:-true}" = "true" ] && command -v ccache &>/dev/null; then
         ccache_tooldir="${SERENITY_BUILD_DIR}/ccache"
         mkdir -p "$ccache_tooldir"
-        if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
-            for tool in clang clang++; do
-                ln -sf "$(command -v ccache)" "${ccache_tooldir}/$tool"
-            done
-        else
-            for tool in gcc g++ c++; do
-                ln -sf "$(command -v ccache)" "${ccache_tooldir}/${SERENITY_ARCH}-pc-serenity-${tool}"
-            done
-        fi
+        for tool in cc clang gcc c++ clang++ g++; do
+            ln -sf "$(command -v ccache)" "${ccache_tooldir}/${SERENITY_ARCH}-pc-serenity-${tool}"
+        done
         export PATH="${ccache_tooldir}:$PATH"
     fi
 }
@@ -46,6 +46,7 @@ host_env() {
     export READELF="${HOST_READELF}"
     export OBJCOPY="${HOST_OBJCOPY}"
     export STRIP="${HOST_STRIP}"
+    export CXXFILT="${HOST_CXXFILT}"
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
@@ -59,8 +60,8 @@ installopts=()
 configscript=configure
 configopts=()
 useconfigure=false
-config_sub_path=config.sub
-config_guess_path=config.guess
+config_sub_paths=("config.sub")
+config_guess_paths=("config.guess")
 use_fresh_config_sub=false
 use_fresh_config_guess=false
 depends=()
@@ -119,7 +120,7 @@ get_new_config_sub() {
         exit 1
     fi
     if ! run grep -q serenity "$config_sub"; then
-        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${1:-config.sub}" false
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${config_sub}" false
     fi
 }
 
@@ -130,16 +131,20 @@ get_new_config_guess() {
         exit 1
     fi
     if ! run grep -q SerenityOS "$config_guess"; then
-        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${1:-config_guess}" false
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${config_guess}" false
     fi
 }
 
 ensure_new_config_sub() {
-    get_new_config_sub "$config_sub_path"
+    for path in "${config_sub_paths[@]}"; do
+        get_new_config_sub "${path}"
+    done
 }
 
 ensure_new_config_guess() {
-    get_new_config_guess "$config_guess_path"
+    for path in "${config_guess_paths[@]}"; do
+        get_new_config_guess "${path}"
+    done
 }
 
 ensure_build() {
@@ -665,7 +670,7 @@ do_generate_patch_readme() {
         {
             echo "## \`$patch\`"
             echo
-            cat "$tempdir/$patch.desc"
+            sed -e '/^Co-Authored-By: /d' < "$tempdir/$patch.desc"
             echo
         } >> ReadMe.md
         count=$((count + 1))
@@ -694,19 +699,31 @@ prompt_yes_no() {
     fi
 }
 
+prompt_yes_no_default_yes() {
+    read -N1 -rp \
+        "$1 (Y/n) " result
+    2>&1 echo
+    if [ "${result,,}" == n ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 do_dev() {
     if [ -n "${IN_SERENITY_PORT_DEV:-}"  ]; then
         >&2 echo "Error: Already in dev environment for $IN_SERENITY_PORT_DEV"
         exit 1
     fi
 
-    git_repo=".$workdir-git"
+    git_repo=".${workdir////_}-git"
     [ -d "$git_repo" ] || (
         mv "$workdir" "$git_repo"
         pushd "$git_repo"
         if [ ! -d "$git_repo/.git" ]; then
             git init .
-            git add .
+            git config core.autocrlf false
+            git add --all --force
             git commit -a -m 'Initial import'
         fi
         # Make it allow pushes from other local checkouts
@@ -729,7 +746,38 @@ do_dev() {
 
                             launch_user_shell
                         fi
-                        git commit --verbose
+                        main_author=''
+                        co_authors=()
+                        patch_name_in_parent_directory="patches/$(basename "$patch")"
+                        while read -r line; do
+                            author="$(echo "$line" | cut -f2 -d'	')"
+                            if [[ -z "$main_author" ]]; then
+                                main_author="$author"
+                            else
+                                co_authors+=("$author")
+                            fi
+                        done < <(git -C .. shortlog -esn -- "$patch_name_in_parent_directory")
+
+                        if [[ -n "$main_author" ]]; then
+                            date="$(git -C .. log --format=%ad -n1 -- "$patch_name_in_parent_directory")"
+                            >&2 echo -n "- This patch was authored by $main_author"
+                            if [[ ${#co_authors[@]} -ne 0 ]]; then
+                                >&2 echo -n " (and ${co_authors[*]})"
+                            fi
+                            >&2 echo " at $date"
+                            if prompt_yes_no_default_yes "- Would you like to preserve that information?"; then
+                                trailers=()
+                                for a in "${co_authors[@]}"; do
+                                    trailers+=("--trailer" "Co-Authored-By: $a")
+                                done
+                                git commit --verbose --author "$main_author" --date "$date" "${trailers[@]}"
+                            else
+                                >&2 echo " Okay, using your current git identity as the author."
+                                git commit --verbose
+                            fi
+                        else
+                            git commit --verbose
+                        fi
                     else
                         # The patch didn't apply, oh no!
                         # Ask the user to figure it out :shrug:
@@ -757,14 +805,14 @@ do_dev() {
     )
 
     [ -d "$git_repo" ] && [ ! -d "$workdir" ] && {
-        git clone "$git_repo" "$workdir"
+        git clone --config core.autocrlf=false "$git_repo" "$workdir"
     }
 
     [ -d "$workdir/.git" ] || {
         >&2 echo "$workdir does not appear to be a git repository, if you did this manually, you're on your own"
         if prompt_yes_no "Otherwise, press 'y' to remove that directory and clone it again"; then
             rm -fr "$workdir"
-            git clone "$git_repo" "$workdir"
+            git clone --config core.autocrlf=false "$git_repo" "$workdir"
         else
             exit 1
         fi
@@ -772,7 +820,9 @@ do_dev() {
 
     local first_hash="$(git -C "$git_repo" rev-list --max-parents=0 HEAD)"
 
+    pushd "$workdir"
     launch_user_shell
+    popd >/dev/null 2>&1
 
     local current_hash="$(git -C "$git_repo" rev-parse HEAD)"
 
@@ -780,7 +830,7 @@ do_dev() {
     if [ "$first_hash" != "$current_hash" ]; then
         >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
         rm -fr patches/*.patch
-        git -C "$git_repo" format-patch "$first_hash" -o "$(realpath patches)"
+        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath patches)"
         do_generate_patch_readme
     fi
 }

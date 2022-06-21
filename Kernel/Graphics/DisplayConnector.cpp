@@ -6,33 +6,52 @@
 
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
-DisplayConnector::DisplayConnector()
+DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
     : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    , m_enable_write_combine_optimization(enable_write_combine_optimization)
+    , m_framebuffer_at_arbitrary_physical_range(false)
+    , m_framebuffer_address(framebuffer_address)
+    , m_framebuffer_resource_size(framebuffer_resource_size)
 {
 }
 
-ErrorOr<Memory::Region*> DisplayConnector::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
+DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization)
+    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    , m_enable_write_combine_optimization(enable_write_combine_optimization)
+    , m_framebuffer_at_arbitrary_physical_range(true)
+    , m_framebuffer_address({})
+    , m_framebuffer_resource_size(framebuffer_resource_size)
 {
-    return Error::from_errno(ENOTSUP);
+}
+
+ErrorOr<Memory::Region*> DisplayConnector::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+{
+    VERIFY(m_shared_framebuffer_vmobject);
+    if (offset != 0)
+        return Error::from_errno(ENOTSUP);
+
+    return process.address_space().allocate_region_with_vmobject(
+        range,
+        *m_shared_framebuffer_vmobject,
+        0,
+        "Mapped Framebuffer",
+        prot,
+        shared);
 }
 
 ErrorOr<size_t> DisplayConnector::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     return Error::from_errno(ENOTIMPL);
 }
-ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64 offset, UserOrKernelBuffer const& framebuffer_data, size_t length)
+
+ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t)
 {
-    SpinlockLocker locker(m_control_lock);
-    // FIXME: We silently ignore the request if we are in console mode.
-    // WindowServer is not ready yet to handle errors such as EBUSY currently.
-    if (console_mode()) {
-        return length;
-    }
-    return write_to_first_surface(offset, framebuffer_data, length);
+    return Error::from_errno(ENOTIMPL);
 }
 
 void DisplayConnector::will_be_destroyed()
@@ -44,7 +63,24 @@ void DisplayConnector::will_be_destroyed()
 void DisplayConnector::after_inserting()
 {
     Device::after_inserting();
+    auto rounded_size = MUST(Memory::page_round_up(m_framebuffer_resource_size));
+
+    if (!m_framebuffer_at_arbitrary_physical_range) {
+        VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
+        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
+        m_framebuffer_region = MUST(MM.allocate_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    } else {
+        m_shared_framebuffer_vmobject = MUST(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
+        m_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    }
+
+    m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
+    m_fake_writes_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
+
     GraphicsManagement::the().attach_new_display_connector({}, *this);
+    if (m_enable_write_combine_optimization) {
+        [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
+    }
 }
 
 bool DisplayConnector::console_mode() const
@@ -56,22 +92,41 @@ bool DisplayConnector::console_mode() const
 void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode mode)
 {
     SpinlockLocker locker(m_control_lock);
+
     {
         SpinlockLocker locker(m_modeset_lock);
         [[maybe_unused]] auto result = set_y_offset(0);
     }
+
     m_console_mode = mode == DisplayMode::Console ? true : false;
-    if (m_console_mode)
+    if (m_console_mode) {
+        VERIFY(m_framebuffer_region->size() == m_fake_writes_framebuffer_region->size());
+        memcpy(m_fake_writes_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->size());
+        m_shared_framebuffer_vmobject->switch_to_fake_sink_framebuffer_writes({});
         enable_console();
-    else
+    } else {
         disable_console();
+        m_shared_framebuffer_vmobject->switch_to_real_framebuffer_writes({});
+        VERIFY(m_framebuffer_region->size() == m_fake_writes_framebuffer_region->size());
+        memcpy(m_framebuffer_region->vaddr().as_ptr(), m_fake_writes_framebuffer_region->vaddr().as_ptr(), m_framebuffer_region->size());
+    }
 }
 
-ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor()
+ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor(Optional<Array<u8, 3>> possible_manufacturer_id_string)
 {
+    u8 raw_manufacturer_id[2] = { 0x0, 0x0 };
+    if (possible_manufacturer_id_string.has_value()) {
+        Array<u8, 3> manufacturer_id_string = possible_manufacturer_id_string.release_value();
+        u8 byte1 = (((static_cast<u8>(manufacturer_id_string[0]) - '@') & 0x1f) << 2) | (((static_cast<u8>(manufacturer_id_string[1]) - '@') >> 3) & 3);
+        u8 byte2 = ((static_cast<u8>(manufacturer_id_string[2]) - '@') & 0x1f) | (((static_cast<u8>(manufacturer_id_string[1]) - '@') << 5) & 0xe0);
+        Array<u8, 2> manufacturer_id_string_packed_bytes = { byte1, byte2 };
+        raw_manufacturer_id[0] = manufacturer_id_string_packed_bytes[1];
+        raw_manufacturer_id[1] = manufacturer_id_string_packed_bytes[0];
+    }
+
     Array<u8, 128> virtual_monitor_edid = {
         0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, /* header */
-        0x0, 0x0,                                       /* manufacturer */
+        raw_manufacturer_id[1], raw_manufacturer_id[0], /* manufacturer */
         0x00, 0x00,                                     /* product code */
         0x00, 0x00, 0x00, 0x00,                         /* serial number goes here */
         0x01,                                           /* week of manufacture */
@@ -110,6 +165,14 @@ ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor()
         0x00, /* number of extensions */
         0x00  /* checksum goes here */
     };
+    // Note: Fix checksum to avoid warnings about checksum mismatch.
+    size_t checksum = 0;
+    // Note: Read all 127 bytes to add them to the checksum. Byte 128 is zeroed so
+    // we could technically add it to the sum result, but it could lead to an error if it contained
+    // a non-zero value, so we are not using it.
+    for (size_t index = 0; index < sizeof(virtual_monitor_edid) - 1; index++)
+        checksum += virtual_monitor_edid[index];
+    virtual_monitor_edid[127] = 0x100 - checksum;
     set_edid_bytes(virtual_monitor_edid);
     return {};
 }

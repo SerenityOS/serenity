@@ -59,8 +59,8 @@ ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& 
     if (MUST(m_declarative_record->has_binding(name)))
         return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
-    // 3. Return DclRec.CreateMutableBinding(N, D).
-    return m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted);
+    // 3. Return ! DclRec.CreateMutableBinding(N, D).
+    return MUST(m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted));
 }
 
 // 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
@@ -71,8 +71,8 @@ ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject
     if (MUST(m_declarative_record->has_binding(name)))
         return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
-    // 3. Return DclRec.CreateImmutableBinding(N, S).
-    return m_declarative_record->create_immutable_binding(global_object, name, strict);
+    // 3. Return ! DclRec.CreateImmutableBinding(N, S).
+    return MUST(m_declarative_record->create_immutable_binding(global_object, name, strict));
 }
 
 // 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
@@ -112,8 +112,7 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& glob
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
-        // FIXME: Should be `! DclRec.GetBindingValue(N, S)` (see https://github.com/tc39/ecma262/pull/2764)
-        // a. Return DclRec.GetBindingValue(N, S).
+        // a. Return ? DclRec.GetBindingValue(N, S).
         return m_declarative_record->get_binding_value(global_object, name, strict);
     }
 

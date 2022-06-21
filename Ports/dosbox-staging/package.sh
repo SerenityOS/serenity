@@ -10,11 +10,11 @@ launcher_name=DOSBox
 launcher_category=Games
 launcher_command=/usr/local/bin/dosbox
 icon_file=contrib/icons/dosbox-staging.ico
+use_fresh_config_sub=true
 
 export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 
-pre_configure() {
+pre_patch() {
     run ./autogen.sh
-    run sed -i 's@irix\* \\@irix* | *serenity* \\@' config.sub
 }

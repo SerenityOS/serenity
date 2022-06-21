@@ -7,7 +7,7 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/KBufferBuilder.h>
@@ -312,6 +312,16 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
 ErrorOr<void> Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
 {
     return builder.append(TRY(const_cast<Process&>(*this).current_directory()->try_serialize_absolute_path())->view());
+}
+
+ErrorOr<void> Process::procfs_get_command_line(KBufferBuilder& builder) const
+{
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
+    for (auto const& arg : arguments()) {
+        TRY(array.add(arg.view()));
+    }
+    TRY(array.finish());
+    return {};
 }
 
 mode_t Process::binary_link_required_mode() const

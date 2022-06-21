@@ -64,6 +64,7 @@ public:
     ErrorOr<void> access(StringView path, int mode, Custody& base);
     ErrorOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     ErrorOr<void> utime(StringView path, Custody& base, time_t atime, time_t mtime);
+    ErrorOr<void> utimensat(StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options = 0);
     ErrorOr<void> rename(StringView oldpath, StringView newpath, Custody& base);
     ErrorOr<void> mknod(StringView path, mode_t, dev_t, Custody& base);
     ErrorOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);

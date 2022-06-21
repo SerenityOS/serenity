@@ -198,7 +198,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
     Memory::VirtualRange requested_range { VirtualAddress { addr }, rounded_size };
     if (addr && !(map_fixed || map_fixed_noreplace)) {
         // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-        requested_range = { {}, 0 };
+        requested_range = { {}, rounded_size };
     }
 
     if (map_anonymous) {

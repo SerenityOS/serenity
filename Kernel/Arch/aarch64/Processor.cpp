@@ -34,6 +34,7 @@ void Processor::initialize(u32 cpu)
 
 [[noreturn]] void Processor::halt()
 {
+    disable_interrupts();
     for (;;)
         asm volatile("wfi");
 }

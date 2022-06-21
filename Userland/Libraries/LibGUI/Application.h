@@ -33,7 +33,7 @@ public:
     int exec();
     void quit(int = 0);
 
-    Action* action_for_key_event(KeyEvent const&);
+    Action* action_for_shortcut(Shortcut const&) const;
 
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
@@ -83,6 +83,7 @@ public:
 
     Function<void(Action&)> on_action_enter;
     Function<void(Action&)> on_action_leave;
+    Function<void()> on_theme_change;
 
     auto const& global_shortcut_actions(Badge<GUI::CommandPalette>) const { return m_global_shortcut_actions; }
 

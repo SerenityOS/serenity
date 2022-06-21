@@ -17,6 +17,7 @@
 #include <LibWeb/Bindings/ProgressEventWrapper.h>
 #include <LibWeb/Bindings/PromiseRejectionEventWrapper.h>
 #include <LibWeb/Bindings/SubmitEventWrapper.h>
+#include <LibWeb/Bindings/WebGLContextEventWrapper.h>
 
 namespace Web::Bindings {
 
@@ -47,6 +48,8 @@ EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
         return static_cast<ProgressEventWrapper*>(wrap_impl(global_object, static_cast<XHR::ProgressEvent&>(event)));
     if (is<UIEvents::UIEvent>(event))
         return static_cast<UIEventWrapper*>(wrap_impl(global_object, static_cast<UIEvents::UIEvent&>(event)));
+    if (is<WebGL::WebGLContextEvent>(event))
+        return static_cast<WebGLContextEventWrapper*>(wrap_impl(global_object, static_cast<WebGL::WebGLContextEvent&>(event)));
     return static_cast<EventWrapper*>(wrap_impl(global_object, event));
 }
 

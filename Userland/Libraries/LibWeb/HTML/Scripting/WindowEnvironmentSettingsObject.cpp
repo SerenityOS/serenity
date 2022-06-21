@@ -62,9 +62,8 @@ String WindowEnvironmentSettingsObject::api_url_character_encoding()
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-base-url
 AK::URL WindowEnvironmentSettingsObject::api_base_url()
 {
-    // FIXME: Return the current base URL of window's associated Document.
-    //        (This currently just returns the current document URL, not accounting for <base> elements and such)
-    return m_window->associated_document().url();
+    // Return the current base URL of window's associated Document.
+    return m_window->associated_document().base_url();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:concept-settings-object-origin

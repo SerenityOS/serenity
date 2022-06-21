@@ -24,7 +24,7 @@ ConsoleWidget::ConsoleWidget()
     set_layout<GUI::VerticalBoxLayout>();
     set_fill_with_background_color(true);
 
-    m_output_view = add<Web::OutOfProcessWebView>();
+    m_output_view = add<WebView::OutOfProcessWebView>();
     m_output_view->load("data:text/html,<html></html>");
     // Wait until our output WebView is loaded, and then request any messages that occurred before we existed
     m_output_view->on_load_finish = [this](auto&) {

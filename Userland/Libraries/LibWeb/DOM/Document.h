@@ -66,6 +66,10 @@ public:
 
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
+    AK::URL fallback_base_url() const;
+    AK::URL base_url() const;
+
+    RefPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
 
     String url_string() const { return m_url.to_string(); }
     String document_uri() const { return m_url.to_string(); }
@@ -186,7 +190,7 @@ public:
     NonnullRefPtr<Text> create_text_node(String const& data);
     NonnullRefPtr<Comment> create_comment(String const& data);
     NonnullRefPtr<Range> create_range();
-    NonnullRefPtr<Event> create_event(String const& interface);
+    ExceptionOr<NonnullRefPtr<Event>> create_event(String const& interface);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }

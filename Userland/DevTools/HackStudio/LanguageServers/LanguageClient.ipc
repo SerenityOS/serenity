@@ -1,9 +1,9 @@
 endpoint LanguageClient
 {
-    auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> suggestions) =|
-    declaration_location(GUI::AutocompleteProvider::ProjectLocation location) =|
-    declarations_in_document(String filename, Vector<GUI::AutocompleteProvider::Declaration> declarations) =|
-    todo_entries_in_document(String filename, Vector<Cpp::Parser::TodoEntry> todo_entries) =|
+    auto_complete_suggestions(Vector<CodeComprehension::AutocompleteResultEntry> suggestions) =|
+    declaration_location(CodeComprehension::ProjectLocation location) =|
+    declarations_in_document(String filename, Vector<CodeComprehension::Declaration> declarations) =|
+    todo_entries_in_document(String filename, Vector<CodeComprehension::TodoEntry> todo_entries) =|
     parameters_hint_result(Vector<String> params, int current_index) =|
-    tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> tokens_info) =|
+    tokens_info_result(Vector<CodeComprehension::TokenInfo> tokens_info) =|
 }

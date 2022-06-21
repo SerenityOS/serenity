@@ -22,7 +22,7 @@ public:
         __Count
     };
 
-    explicit ToDoEntriesModel(Vector<Cpp::Parser::TodoEntry> const&& matches)
+    explicit ToDoEntriesModel(Vector<CodeComprehension::TodoEntry> const&& matches)
         : m_matches(move(matches))
     {
     }
@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    Vector<Cpp::Parser::TodoEntry> m_matches;
+    Vector<CodeComprehension::TodoEntry> m_matches;
 };
 
 void ToDoEntriesWidget::refresh()
@@ -103,7 +103,7 @@ ToDoEntriesWidget::ToDoEntriesWidget()
     m_result_view = add<GUI::TableView>();
 
     m_result_view->on_activation = [](auto& index) {
-        auto& match = *(Cpp::Parser::TodoEntry const*)index.internal_data();
+        auto& match = *(CodeComprehension::TodoEntry const*)index.internal_data();
         open_file(match.filename, match.line, match.column);
     };
 }

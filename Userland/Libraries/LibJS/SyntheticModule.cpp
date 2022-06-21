@@ -61,10 +61,10 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
     // 5. For each exportName in module.[[ExportNames]],
     for (auto& export_name : m_export_names) {
         // a. Perform ! envRec.CreateMutableBinding(exportName, false).
-        environment->create_mutable_binding(global_object, export_name, false);
+        MUST(environment->create_mutable_binding(global_object, export_name, false));
 
         // b. Perform ! envRec.InitializeBinding(exportName, undefined).
-        environment->initialize_binding(global_object, export_name, js_undefined());
+        MUST(environment->initialize_binding(global_object, export_name, js_undefined()));
     }
 
     // 6. Return unused.

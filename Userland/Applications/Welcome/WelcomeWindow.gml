@@ -53,7 +53,7 @@
             }
         }
 
-        @Web::OutOfProcessWebView {
+        @WebView::OutOfProcessWebView {
             name: "web_view"
             min_width: 340
             min_height: 160
@@ -85,7 +85,7 @@
                 text: "Next Tip"
             }
 
-            @GUI::Widget {}
+            @GUI::Layout::Spacer {}
 
             @GUI::HorizontalSeparator {
                 fixed_height: 2
@@ -107,7 +107,7 @@
             autosize: true
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Button {
             name: "close_button"

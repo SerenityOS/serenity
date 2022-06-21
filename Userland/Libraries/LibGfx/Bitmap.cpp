@@ -102,18 +102,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
-        highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append('/');
-        highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendff("-{}x.", scale_factor);
-        highdpi_icon_path.append(lexical_path.extension());
+        TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
 
-        auto highdpi_icon_string = highdpi_icon_path.to_string();
+        auto highdpi_icon_string = highdpi_icon_path.string_view();
         auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
 
         auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
@@ -129,7 +125,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
     return try_load_from_fd_and_close(fd, path);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
 {
     auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
@@ -469,6 +465,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() co
     return bitmap;
 }
 
+void Bitmap::invert()
+{
+    for (auto y = 0; y < height(); y++) {
+        for (auto x = 0; x < width(); x++)
+            set_pixel(x, y, get_pixel(x, y).inverted());
+    }
+}
+
 Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
@@ -598,6 +602,23 @@ bool Bitmap::visually_equals(Bitmap const& other) const
     }
 
     return true;
+}
+
+Optional<Color> Bitmap::solid_color(u8 alpha_threshold) const
+{
+    Optional<Color> color;
+    for (auto y = 0; y < height(); ++y) {
+        for (auto x = 0; x < width(); ++x) {
+            auto const& pixel = get_pixel(x, y);
+            if (has_alpha_channel() && pixel.alpha() <= alpha_threshold)
+                continue;
+            if (!color.has_value())
+                color = pixel;
+            else if (pixel != color)
+                return {};
+        }
+    }
+    return color;
 }
 
 }

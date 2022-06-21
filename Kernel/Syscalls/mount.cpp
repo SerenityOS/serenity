@@ -18,6 +18,54 @@
 
 namespace Kernel {
 
+struct FileSystemInitializer {
+    StringView short_name;
+    StringView name;
+    bool requires_open_file_description { false };
+    bool requires_block_device { false };
+    bool requires_seekable_file { false };
+    ErrorOr<NonnullRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&) = nullptr;
+    ErrorOr<NonnullRefPtr<FileSystem>> (*create)(void) = nullptr;
+};
+
+static constexpr FileSystemInitializer s_initializers[] = {
+    { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create },
+    { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create },
+    { "dev"sv, "DevTmpFS"sv, false, false, false, {}, DevTmpFS::try_create },
+    { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create },
+    { "tmp"sv, "TmpFS"sv, false, false, false, {}, TmpFS::try_create },
+    { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {} },
+    { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {} },
+    { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {} },
+};
+
+static ErrorOr<NonnullRefPtr<FileSystem>> create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
+{
+    for (auto& initializer_entry : s_initializers) {
+        if (fs_type != initializer_entry.short_name && fs_type != initializer_entry.name)
+            continue;
+        if (!initializer_entry.requires_open_file_description) {
+            VERIFY(initializer_entry.create);
+            NonnullRefPtr<FileSystem> fs = TRY(initializer_entry.create());
+            return fs;
+        }
+        VERIFY(initializer_entry.create_with_fd);
+        if (!possible_description)
+            return EBADF;
+        OpenFileDescription& description = *possible_description;
+
+        if (initializer_entry.requires_block_device && !description.file().is_block_device())
+            return ENOTBLK;
+        if (initializer_entry.requires_seekable_file && !description.file().is_seekable()) {
+            dbgln("mount: this is not a seekable file");
+            return ENODEV;
+        }
+        NonnullRefPtr<FileSystem> fs = TRY(initializer_entry.create_with_fd(description));
+        return fs;
+    }
+    return ENODEV;
+}
+
 ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
@@ -61,56 +109,17 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 
     RefPtr<FileSystem> fs;
 
-    if (fs_type == "ext2"sv || fs_type == "Ext2FS"sv) {
-        if (description_or_error.is_error())
-            return EBADF;
+    if (!description_or_error.is_error()) {
         auto description = description_or_error.release_value();
-        if (!description->file().is_block_device())
-            return ENOTBLK;
-        if (!description->file().is_seekable()) {
-            dbgln("mount: this is not a seekable file");
-            return ENODEV;
-        }
-
+        fs = TRY(create_filesystem_instance(fs_type, description.ptr()));
         auto source_pseudo_path = TRY(description->pseudo_path());
         dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
-
-        fs = TRY(Ext2FS::try_create(*description));
-    } else if (fs_type == "9p"sv || fs_type == "Plan9FS"sv) {
-        if (description_or_error.is_error())
-            return EBADF;
-        auto description = description_or_error.release_value();
-        fs = TRY(Plan9FS::try_create(*description));
-    } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
-        fs = TRY(ProcFS::try_create());
-    } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
-        fs = TRY(DevPtsFS::try_create());
-    } else if (fs_type == "dev"sv || fs_type == "DevTmpFS"sv) {
-        fs = TRY(DevTmpFS::try_create());
-    } else if (fs_type == "sys"sv || fs_type == "SysFS"sv) {
-        fs = TRY(SysFS::try_create());
-    } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
-        fs = TRY(TmpFS::try_create());
-    } else if (fs_type == "iso9660"sv || fs_type == "ISO9660FS"sv) {
-        if (description_or_error.is_error())
-            return EBADF;
-        auto description = description_or_error.release_value();
-        if (!description->file().is_seekable()) {
-            dbgln("mount: this is not a seekable file");
-            return ENODEV;
-        }
-        auto source_pseudo_path = TRY(description->pseudo_path());
-        dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
-        fs = TRY(ISO9660FS::try_create(*description));
     } else {
-        return ENODEV;
+        fs = TRY(create_filesystem_instance(fs_type, {}));
     }
 
-    if (!fs)
-        return ENOMEM;
-
     TRY(fs->initialize());
-    TRY(VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags));
+    TRY(VirtualFileSystem::the().mount(*fs, target_custody, params.flags));
     return 0;
 }
 

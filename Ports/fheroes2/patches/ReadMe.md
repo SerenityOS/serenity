@@ -1,13 +1,17 @@
 # Patches for fheroes2 on SerenityOS
 
-## `cmakelists.patch`
+## `0001-Include-endian.h-on-serenity-as-well.patch`
 
-Fix library detection for SDL2 dependencies in CMakeLists files.
+Include <endian.h> on serenity as well
 
-## `add-serenity-support.patch`
 
-Add `__serenity__` option in header files that validate current platform.
+## `0002-Use-pkg-config-for-SDL_-and-SDL2.patch`
 
-## `set-sdl-software-renderer.patch`
+Use pkg-config for SDL_* and SDL2
 
-Use SDL Software renderer, instead of hardware-accelerated one.
+
+## `0003-Disable-SDL-s-accelerated-rendering.patch`
+
+Disable SDL's accelerated rendering
+
+

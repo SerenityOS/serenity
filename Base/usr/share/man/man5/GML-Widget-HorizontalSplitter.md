@@ -1,6 +1,6 @@
 ## Name
 
-GUI Horizontal Spitter Widget
+GUI Horizontal Splitter Widget
 
 ## Description
 
@@ -8,12 +8,12 @@ Defines a GUI horizontal splitter widget.
 
 ## Synopsis
 
-`@GUI::HorizontalSpitter`
+`@GUI::HorizontalSplitter`
 
 ## Examples
 
 ```gml
-@GUI::HorizontalSpitter {
+@GUI::HorizontalSplitter {
 
 }
 ```

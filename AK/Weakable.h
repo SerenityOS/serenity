@@ -1,22 +1,20 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Assertions.h"
-#include "Atomic.h"
-#include "RefCounted.h"
-#include "RefPtr.h"
-#include "StdLibExtras.h"
 #ifdef KERNEL
-#    include <Kernel/Arch/Processor.h>
-#    include <Kernel/Arch/ScopedCritical.h>
+#    include <Kernel/Library/ThreadSafeWeakable.h>
 #else
+#    include <AK/Assertions.h>
+#    include <AK/Atomic.h>
+#    include <AK/RefCounted.h>
+#    include <AK/RefPtr.h>
+#    include <AK/StdLibExtras.h>
 #    include <sched.h>
-#endif
 
 namespace AK {
 
@@ -32,18 +30,13 @@ class WeakLink : public RefCounted<WeakLink> {
     friend class WeakPtr;
 
 public:
-    template<typename T, typename PtrTraits = RefPtrTraits<T>>
-    RefPtr<T, PtrTraits> strong_ref() const
+    template<typename T>
+    RefPtr<T> strong_ref() const
         requires(IsBaseOf<RefCountedBase, T>)
     {
-        RefPtr<T, PtrTraits> ref;
+        RefPtr<T> ref;
 
         {
-#ifdef KERNEL
-            // We don't want to be pre-empted while we are trying to obtain
-            // a strong reference
-            Kernel::ScopedCritical critical;
-#endif
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
                 T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
                 if (ptr && ptr->try_ref())
@@ -79,11 +72,7 @@ public:
         // We flagged revocation, now wait until everyone trying to obtain
         // a strong reference is done
         while (current_consumers > 0) {
-#ifdef KERNEL
-            Kernel::Processor::wait_check();
-#else
             sched_yield();
-#endif
             current_consumers = m_consumers.load(AK::MemoryOrder::memory_order_acquire) & ~1u;
         }
         // No one is trying to use it (anymore)
@@ -106,13 +95,12 @@ private:
     class Link;
 
 public:
-#ifndef KERNEL
     template<typename U = T>
     WeakPtr<U> make_weak_ptr() const
     {
         return MUST(try_make_weak_ptr<U>());
     }
-#endif
+
     template<typename U = T>
     ErrorOr<WeakPtr<U>> try_make_weak_ptr() const;
 
@@ -121,9 +109,6 @@ protected:
 
     ~Weakable()
     {
-#ifdef KERNEL
-        m_being_destroyed.store(true, AK::MemoryOrder::memory_order_release);
-#endif
         revoke_weak_ptrs();
     }
 
@@ -135,11 +120,10 @@ protected:
 
 private:
     mutable RefPtr<WeakLink> m_link;
-#ifdef KERNEL
-    Atomic<bool> m_being_destroyed { false };
-#endif
 };
 
 }
 
 using AK::Weakable;
+
+#endif

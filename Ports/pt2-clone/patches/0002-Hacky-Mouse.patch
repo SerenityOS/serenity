@@ -1,7 +1,7 @@
-From eec08d29c64513c6ebba4af8a367c61aa7bfa1fa Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: EWouters <6179932+EWouters@users.noreply.github.com>
 Date: Tue, 5 Apr 2022 14:55:01 +0200
-Subject: [PATCH 2/2] Hacky Mouse
+Subject: [PATCH] Hacky Mouse
 
 Set video.useDesktopMouseCoords to false.
 ---
@@ -21,6 +21,3 @@ index 40527f5..0b73b9a 100644
  	const char *videoDriver = SDL_GetCurrentVideoDriver();
  	if (videoDriver != NULL && (strcmp("KMSDRM", videoDriver) == 0 || strcmp("wayland", videoDriver) == 0))
  		video.useDesktopMouseCoords = false;
--- 
-2.32.0 (Apple Git-132)
-

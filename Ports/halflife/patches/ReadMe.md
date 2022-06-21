@@ -1,19 +1,16 @@
-# Patches for halflife
+# Patches for halflife on SerenityOS
 
-## `fwgs-add-serenity.patch`
+## `0001-Build-Add-SerenityOS-to-list-of-compatible-systems.patch`
 
-Add SerenityOS to the supported architectures of FWGS.
+Build: Add SerenityOS to list of compatible systems
 
-## `fwgs-dont-format-nan-loop.patch`
+This is required by the build system to spit out a library with
+the correct name/platform.
 
-This keeps FWGS from formatting a NaN value multiple times each frame,
-which would otherwise result in a big performance hit.
+## `0002-Build-Add-__STRINGS_H_COMPAT_HACK-macro.patch`
 
-## `hlsdk-add-serenity.patch`
+Build: Add `__STRINGS_H_COMPAT_HACK` macro
 
-Add SerenityOS to the supported architectures of hlsdk.
-
-## `hlsdk-strings-compat.patch`
-
-This bypasses a bunch of `str[n]cmpcase` errors that occur due to weird LibC compatibility problems.
+This bypasses a bunch of `str[n]cmpcase` errors that occur due to weird
+LibC compatibility problems.
 

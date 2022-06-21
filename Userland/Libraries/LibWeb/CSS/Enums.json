@@ -89,7 +89,9 @@
         "crisp-edges",
         "high-quality",
         "pixelated",
-        "smooth"
+        "smooth",
+        "optimizespeed=pixelated",
+        "optimizequality=smooth"
     ],
     "justify-content": [
         "flex-start",

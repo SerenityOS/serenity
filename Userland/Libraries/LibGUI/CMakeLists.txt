@@ -79,6 +79,7 @@ set(SOURCES
     PasswordInputDialog.cpp
     PasswordInputDialogGML.h
     PersistentModelIndex.cpp
+    Process.cpp
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp
@@ -114,7 +115,7 @@ set(SOURCES
     Widget.cpp
     Window.cpp
     ConnectionToWindowServer.cpp
-    ConnectionToWindowMangerServer.cpp
+    ConnectionToWindowManagerServer.cpp
     Wizards/WizardDialog.cpp
     Wizards/AbstractWizardPage.cpp
     Wizards/CoverWizardPage.cpp

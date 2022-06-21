@@ -161,6 +161,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
+    ok_button.set_default(true);
 
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [this](auto) {

@@ -1,5 +1,7 @@
-# Patches for dmidecode
+# Patches for dmidecode on SerenityOS
 
-## `dmidecode.patch`
+## `0001-Use-serenity-s-firmware-binary-path.patch`
 
-Set the correct path for the dmi firmware.
+Use serenity's firmware binary path
+
+

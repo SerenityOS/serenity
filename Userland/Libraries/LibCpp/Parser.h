@@ -10,6 +10,7 @@
 #include "AST.h"
 #include "Preprocessor.h"
 #include <AK/Noncopyable.h>
+#include <LibCodeComprehension/Types.h>
 #include <LibCpp/Lexer.h>
 
 namespace Cpp {
@@ -35,13 +36,7 @@ public:
     Vector<Token> const& tokens() const { return m_tokens; }
     Vector<String> const& errors() const { return m_errors; }
 
-    struct TodoEntry {
-        String content;
-        String filename;
-        size_t line { 0 };
-        size_t column { 0 };
-    };
-    Vector<TodoEntry> get_todo_entries() const;
+    Vector<CodeComprehension::TodoEntry> get_todo_entries() const;
 
     Vector<Token> tokens_in_range(Position start, Position end) const;
 

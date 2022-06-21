@@ -23,6 +23,9 @@ public:
         IFrame,
     };
 
+    static void set_default_favicon_path(String);
+    static void set_error_page_url(String);
+
     explicit FrameLoader(HTML::BrowsingContext&);
     ~FrameLoader();
 

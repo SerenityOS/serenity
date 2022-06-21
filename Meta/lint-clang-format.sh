@@ -12,7 +12,7 @@ if [ "$#" -eq "1" ]; then
             '*.h' \
             ':!:Base' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
-            ':!:Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/*' \
+            ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*' \
             ':!:Userland/Libraries/LibCpp/Tests/parser/*' \
             ':!:Userland/Libraries/LibCpp/Tests/preprocessor/*'
     )

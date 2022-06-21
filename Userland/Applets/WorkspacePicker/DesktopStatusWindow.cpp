@@ -6,7 +6,7 @@
  */
 
 #include "DesktopStatusWindow.h"
-#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -63,7 +63,7 @@ public:
 
         // Handle case where divider is clicked.
         if (rect_for_desktop(row, col).contains(event.position()))
-            GUI::ConnectionToWindowMangerServer::the().async_set_workspace(row, col);
+            GUI::ConnectionToWindowManagerServer::the().async_set_workspace(row, col);
     }
 
     virtual void mousewheel_event(GUI::MouseEvent& event) override
@@ -82,7 +82,7 @@ public:
         else
             row = abs((int)row + direction) % vrows;
 
-        GUI::ConnectionToWindowMangerServer::the().async_set_workspace(row, col);
+        GUI::ConnectionToWindowManagerServer::the().async_set_workspace(row, col);
     }
 
     unsigned current_row() const { return m_current_row; }

@@ -1,6 +1,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 
 endpoint WebContentClient
 {

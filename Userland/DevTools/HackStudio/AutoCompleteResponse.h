@@ -16,7 +16,7 @@
 namespace IPC {
 
 template<>
-inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Entry& response)
+inline bool encode(Encoder& encoder, CodeComprehension::AutocompleteResultEntry const& response)
 {
     encoder << response.completion;
     encoder << response.partial_input_length;
@@ -27,7 +27,7 @@ inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Entry& res
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Entry& response)
+inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::AutocompleteResultEntry& response)
 {
     TRY(decoder.decode(response.completion));
     TRY(decoder.decode(response.partial_input_length));
@@ -38,7 +38,7 @@ inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Entry& 
 }
 
 template<>
-inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::ProjectLocation& location)
+inline bool encode(Encoder& encoder, CodeComprehension::ProjectLocation const& location)
 {
     encoder << location.file;
     encoder << location.line;
@@ -47,7 +47,7 @@ inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::ProjectLoc
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::ProjectLocation& location)
+inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::ProjectLocation& location)
 {
     TRY(decoder.decode(location.file));
     TRY(decoder.decode(location.line));
@@ -56,7 +56,7 @@ inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Project
 }
 
 template<>
-inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Declaration& declaration)
+inline bool encode(Encoder& encoder, CodeComprehension::Declaration const& declaration)
 {
     encoder << declaration.name;
     if (!encode(encoder, declaration.position))
@@ -67,7 +67,7 @@ inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Declaratio
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Declaration& declaration)
+inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::Declaration& declaration)
 {
     TRY(decoder.decode(declaration.name));
     TRY(decoder.decode(declaration.position));
@@ -77,7 +77,7 @@ inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Declara
 }
 
 template<>
-inline bool encode(Encoder& encoder, Cpp::Parser::TodoEntry const& entry)
+inline bool encode(Encoder& encoder, CodeComprehension::TodoEntry const& entry)
 {
     encoder << entry.content;
     encoder << entry.filename;
@@ -87,7 +87,7 @@ inline bool encode(Encoder& encoder, Cpp::Parser::TodoEntry const& entry)
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, Cpp::Parser::TodoEntry& entry)
+inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::TodoEntry& entry)
 {
     TRY(decoder.decode(entry.content));
     TRY(decoder.decode(entry.filename));
@@ -97,7 +97,7 @@ inline ErrorOr<void> decode(Decoder& decoder, Cpp::Parser::TodoEntry& entry)
 }
 
 template<>
-inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::TokenInfo& location)
+inline bool encode(Encoder& encoder, CodeComprehension::TokenInfo const& location)
 {
     encoder << (u32)location.type;
     static_assert(sizeof(location.type) == sizeof(u32));
@@ -109,13 +109,13 @@ inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::TokenInfo&
 }
 
 template<>
-inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::TokenInfo& entry)
+inline ErrorOr<void> decode(Decoder& decoder, CodeComprehension::TokenInfo& entry)
 {
     u32 semantic_type { 0 };
     static_assert(sizeof(semantic_type) == sizeof(entry.type));
 
     TRY(decoder.decode(semantic_type));
-    entry.type = static_cast<GUI::AutocompleteProvider::TokenInfo::SemanticType>(semantic_type);
+    entry.type = static_cast<CodeComprehension::TokenInfo::SemanticType>(semantic_type);
     TRY(decoder.decode(entry.start_line));
     TRY(decoder.decode(entry.start_column));
     TRY(decoder.decode(entry.end_line));

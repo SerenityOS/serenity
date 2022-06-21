@@ -1,23 +1,31 @@
-# Patches for Super-Mario
+# Patches for Super-Mario on SerenityOS
 
-## `cwd.patch`
+## `0001-chdir-to-the-installed-directory-before-execution.patch`
 
-`chdir()`s to the installed directory before execution.
+chdir() to the installed directory before execution
 
-## `gcc-11-static-initializers.patch`
+The game expects its assets in the current directory, but we install
+those to /opt/Super_Mario, so chdir() there at program startup to avoid
+crashing.
 
-Removes global static initializers.
-Presumably not needed anymore.
+## `0002-Disable-graphics-acceleration.patch`
 
-## `fix_cmakelists.patch`
-
-Use `FindPkgConfig` instead of `find_package()` to locate SDL2.
-
-## `fix_fireball_header.patch`
-
-Fixes a header include name.
-
-## `disable_graphic_acceleration.patch`
+Disable graphics acceleration
 
 Disables SDL2 hardware acceleration as we don't support that.
+
+## `0003-Use-pkgconfig-instead-of-find_package-to-look-for-de.patch`
+
+Use pkgconfig instead of find_package() to look for dependencies
+
+
+## `0004-Fix-a-header-include-path.patch`
+
+Fix a header include path
+
+
+## `0005-Remove-global-static-initializers.patch`
+
+Remove global static initializers
+
 

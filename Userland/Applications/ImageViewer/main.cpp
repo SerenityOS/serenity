@@ -240,6 +240,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     nearest_neighbor_action->set_checked(true);
 
+    auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels", [&](auto&) {
+        widget->set_scaling_mode(Gfx::Painter::ScalingMode::SmoothPixels);
+    });
+
     auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
@@ -314,9 +318,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto scaling_mode_group = make<GUI::ActionGroup>();
     scaling_mode_group->set_exclusive(true);
     scaling_mode_group->add_action(*nearest_neighbor_action);
+    scaling_mode_group->add_action(*smooth_pixels_action);
     scaling_mode_group->add_action(*bilinear_action);
 
     TRY(scaling_mode_menu->try_add_action(nearest_neighbor_action));
+    TRY(scaling_mode_menu->try_add_action(smooth_pixels_action));
     TRY(scaling_mode_menu->try_add_action(bilinear_action));
 
     TRY(view_menu->try_add_separator());

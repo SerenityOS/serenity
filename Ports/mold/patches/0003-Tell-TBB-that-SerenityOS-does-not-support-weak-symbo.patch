@@ -1,7 +1,7 @@
-From c99783c82b7591768c2b5131c55a55eaa26ca2c1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Tue, 11 Jan 2022 01:04:05 -0700
-Subject: [PATCH 3/6] Tell TBB that SerenityOS does not support weak symbols
+Subject: [PATCH] Tell TBB that SerenityOS does not support weak symbols
 
 Something about the Clang toolchain configuration causes undefined weak
 references to scalable_malloc to remain in the mold executable even
@@ -24,6 +24,3 @@ index cce8ad6..3e07302 100644
  #endif
  
  /** Presence of compiler features **/
--- 
-2.25.1
-

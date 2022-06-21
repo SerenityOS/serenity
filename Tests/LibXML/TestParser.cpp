@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibTest/TestCase.h>
+#include <LibXML/Parser/Parser.h>
+
+TEST_CASE(char_data_ending)
+{
+    EXPECT_NO_CRASH("parsing character data ending by itself should not crash", [] {
+        // After seeing `<C>`, the parser will start parsing the content of the element. The content parser will then parse any character data it sees.
+        // The character parser would see the first two `]]` and consume them. Then, it would see the `>` and set the state machine to say we have seen this,
+        // but it did _not_ consume it and would instead tell GenericLexer that it should stop consuming characters. Therefore, we only consumed 2 characters.
+        // Then, it would see that we are in the state where we've seen the full `]]>` and try to take off three characters from the end of the consumed
+        // input when we only have 2 characters, causing an assertion failure as we are asking to take off more characters than there really is.
+        XML::Parser parser("<C>]]>");
+        (void)parser.parse();
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}

@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    TestLibPthreadCleanup.cpp
     TestLibPthreadSpinLocks.cpp
     TestLibPthreadRWLocks.cpp
 )

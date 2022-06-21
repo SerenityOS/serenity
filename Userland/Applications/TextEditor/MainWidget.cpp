@@ -41,7 +41,7 @@
 #include <LibSQL/AST/SyntaxHighlighter.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
-#include <LibWeb/OutOfProcessWebView.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 
 namespace TextEditor {
@@ -311,11 +311,11 @@ MainWidget::MainWidget()
     m_toolbar->add_action(m_editor->redo_action());
 }
 
-Web::OutOfProcessWebView& MainWidget::ensure_web_view()
+WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
 {
     if (!m_page_view) {
         auto& web_view_container = *find_descendant_of_type_named<GUI::Widget>("web_view_container");
-        m_page_view = web_view_container.add<Web::OutOfProcessWebView>();
+        m_page_view = web_view_container.add<WebView::OutOfProcessWebView>();
         m_page_view->on_link_hover = [this](auto& url) {
             if (url.is_valid())
                 m_statusbar->set_text(url.to_string());

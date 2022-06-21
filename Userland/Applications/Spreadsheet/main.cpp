@@ -71,10 +71,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (filename) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename);
-        if (response.is_error())
-            return 1;
-        spreadsheet_widget.load_file(*response.value());
+        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename));
+        spreadsheet_widget.load_file(file);
     }
 
     return app->exec();

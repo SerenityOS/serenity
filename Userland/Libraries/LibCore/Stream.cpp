@@ -47,6 +47,22 @@ bool Stream::read_or_error(Bytes buffer)
     return true;
 }
 
+ErrorOr<ByteBuffer> Stream::read_all()
+{
+    ByteBuffer output;
+    u8 buffer_raw[4096];
+    Bytes buffer { buffer_raw, 4096 };
+
+    while (true) {
+        Bytes read_bytes = TRY(read(buffer));
+        if (read_bytes.is_empty())
+            break;
+        output.append(read_bytes);
+    }
+
+    return output;
+}
+
 bool Stream::write_or_error(ReadonlyBytes buffer)
 {
     VERIFY(buffer.size());
@@ -115,6 +131,11 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
     auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
     file->m_fd = fd;
     return file;
+}
+
+bool File::exists(StringView filename)
+{
+    return !Core::System::stat(filename).is_error();
 }
 
 int File::open_mode_to_options(OpenMode mode)

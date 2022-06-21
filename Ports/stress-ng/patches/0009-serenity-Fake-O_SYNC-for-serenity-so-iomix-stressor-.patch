@@ -1,8 +1,7 @@
-From f332ec78663a2642c5ff93003dc806575cccfb54 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 23:47:45 -0800
-Subject: [PATCH 09/14] serenity: Fake O_SYNC for serenity so iomix stressor
- compiles
+Subject: [PATCH] serenity: Fake O_SYNC for serenity so iomix stressor compiles
 
 Serenity doesn't yet support O_SYNC, so just make it compile.
 ---
@@ -25,6 +24,3 @@ index e99d262..8518e39 100644
  typedef void (*stress_iomix_func)(const stress_args_t *args, const int fd, const off_t iomix_bytes);
  
  static const stress_help_t help[] = {
--- 
-2.32.0
-

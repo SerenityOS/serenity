@@ -1,25 +1,25 @@
 interface PerformanceTiming {
 
-    readonly attribute unsigned long navigationStart;
-    readonly attribute unsigned long unloadEventStart;
-    readonly attribute unsigned long unloadEventEnd;
-    readonly attribute unsigned long redirectStart;
-    readonly attribute unsigned long redirectEnd;
-    readonly attribute unsigned long fetchStart;
-    readonly attribute unsigned long domainLookupStart;
-    readonly attribute unsigned long domainLookupEnd;
-    readonly attribute unsigned long connectStart;
-    readonly attribute unsigned long connectEnd;
-    readonly attribute unsigned long secureConnectionStart;
-    readonly attribute unsigned long requestStart;
-    readonly attribute unsigned long responseStart;
-    readonly attribute unsigned long responseEnd;
-    readonly attribute unsigned long domLoading;
-    readonly attribute unsigned long domInteractive;
-    readonly attribute unsigned long domContentLoadedEventStart;
-    readonly attribute unsigned long domContentLoadedEventEnd;
-    readonly attribute unsigned long domComplete;
-    readonly attribute unsigned long loadEventStart;
-    readonly attribute unsigned long loadEventEnd;
+    readonly attribute unsigned long long navigationStart;
+    readonly attribute unsigned long long unloadEventStart;
+    readonly attribute unsigned long long unloadEventEnd;
+    readonly attribute unsigned long long redirectStart;
+    readonly attribute unsigned long long redirectEnd;
+    readonly attribute unsigned long long fetchStart;
+    readonly attribute unsigned long long domainLookupStart;
+    readonly attribute unsigned long long domainLookupEnd;
+    readonly attribute unsigned long long connectStart;
+    readonly attribute unsigned long long connectEnd;
+    readonly attribute unsigned long long secureConnectionStart;
+    readonly attribute unsigned long long requestStart;
+    readonly attribute unsigned long long responseStart;
+    readonly attribute unsigned long long responseEnd;
+    readonly attribute unsigned long long domLoading;
+    readonly attribute unsigned long long domInteractive;
+    readonly attribute unsigned long long domContentLoadedEventStart;
+    readonly attribute unsigned long long domContentLoadedEventEnd;
+    readonly attribute unsigned long long domComplete;
+    readonly attribute unsigned long long loadEventStart;
+    readonly attribute unsigned long long loadEventEnd;
 
 };

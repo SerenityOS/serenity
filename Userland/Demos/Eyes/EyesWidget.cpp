@@ -41,9 +41,9 @@ void EyesWidget::render_eyeball(int row, int column, Gfx::AntiAliasingPainter& p
     auto height_thickness = max(int(eye_height / 5.5), 1);
 
     bounds.shrink(int(eye_width / 12.5), 0);
-    painter.draw_ellipse(bounds, palette().base_text());
+    painter.fill_ellipse(bounds, palette().base_text());
     bounds.shrink(width_thickness, height_thickness);
-    painter.draw_ellipse(bounds, palette().base());
+    painter.fill_ellipse(bounds, palette().base());
 
     Gfx::IntPoint pupil_center = this->pupil_center(bounds);
     Gfx::IntSize pupil_size {
@@ -57,7 +57,7 @@ void EyesWidget::render_eyeball(int row, int column, Gfx::AntiAliasingPainter& p
         pupil_size.height()
     };
 
-    painter.draw_ellipse(pupil, palette().base_text());
+    painter.fill_ellipse(pupil, palette().base_text());
 }
 
 Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const

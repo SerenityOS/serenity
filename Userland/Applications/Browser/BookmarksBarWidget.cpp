@@ -57,20 +57,15 @@ private:
         m_title_textbox->set_text(title);
         m_title_textbox->set_focus(true);
         m_title_textbox->select_all();
-        m_title_textbox->on_return_pressed = [this] {
-            done(ExecResult::OK);
-        };
 
         m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
         m_url_textbox->set_text(url);
-        m_url_textbox->on_return_pressed = [this] {
-            done(ExecResult::OK);
-        };
 
         auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
             done(ExecResult::OK);
         };
+        ok_button.set_default(true);
 
         auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
@@ -233,7 +228,7 @@ void BookmarksBarWidget::update_content_size()
 
     for (size_t i = 0; i < m_bookmarks.size(); ++i) {
         auto& bookmark = m_bookmarks.at(i);
-        if (x_position + bookmark.width() > width()) {
+        if (x_position + bookmark.width() + m_additional->width() > width()) {
             m_last_visible_index = i;
             break;
         }

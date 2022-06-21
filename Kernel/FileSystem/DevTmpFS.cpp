@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<DevTmpFS>> DevTmpFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> DevTmpFS::try_create()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS));
 }
 
 DevTmpFS::DevTmpFS() = default;
@@ -94,7 +94,7 @@ InodeMetadata DevTmpFSInode::metadata() const
     metadata.uid = m_uid;
     metadata.gid = m_gid;
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     switch (node_type()) {
     case Type::RootDirectory:
         metadata.inode = { fsid(), 1 };
@@ -102,7 +102,7 @@ InodeMetadata DevTmpFSInode::metadata() const
         metadata.uid = 0;
         metadata.gid = 0;
         metadata.size = 0;
-        metadata.mtime = mepoch;
+        metadata.mtime = TimeManagement::boot_time();
         break;
     case Type::Directory:
         metadata.inode = { fsid(), index() };

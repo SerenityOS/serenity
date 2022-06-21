@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 
 class VirtualAddress;
 
@@ -117,6 +118,22 @@ public:
     {
         VERIFY_NOT_REACHED();
         return 0;
+    }
+
+    ALWAYS_INLINE static bool are_interrupts_enabled()
+    {
+        auto daif = Aarch64::DAIF::read();
+        return !daif.I;
+    }
+
+    ALWAYS_INLINE static void enable_interrupts()
+    {
+        Aarch64::DAIF::clear_I();
+    }
+
+    ALWAYS_INLINE static void disable_interrupts()
+    {
+        Aarch64::DAIF::set_I();
     }
 
     ALWAYS_INLINE static void enter_critical() { VERIFY_NOT_REACHED(); }

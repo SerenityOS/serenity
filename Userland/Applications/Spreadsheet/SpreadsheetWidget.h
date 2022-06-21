@@ -23,7 +23,7 @@ class SpreadsheetWidget final
 public:
     virtual ~SpreadsheetWidget() override = default;
 
-    void save(StringView filename);
+    void save(Core::File&);
     void load_file(Core::File&);
     bool request_close();
     void add_sheet();

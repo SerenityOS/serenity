@@ -168,9 +168,9 @@ private:
     Vector<DirectoryState> m_directory_stack;
 };
 
-ErrorOr<NonnullRefPtr<ISO9660FS>> ISO9660FS::try_create(OpenFileDescription& description)
+ErrorOr<NonnullRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& description)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660FS(description));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660FS(description)));
 }
 
 ISO9660FS::ISO9660FS(OpenFileDescription& description)

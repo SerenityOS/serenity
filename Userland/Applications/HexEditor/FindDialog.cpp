@@ -130,10 +130,6 @@ FindDialog::FindDialog()
         m_find_all_button->set_enabled(!m_text_editor->text().is_empty());
     };
 
-    m_text_editor->on_return_pressed = [this] {
-        m_find_button->click();
-    };
-
     m_find_button->on_click = [this](auto) {
         auto text = m_text_editor->text();
         if (!text.is_empty()) {
@@ -141,6 +137,7 @@ FindDialog::FindDialog()
             done(ExecResult::OK);
         }
     };
+    m_find_button->set_default(true);
 
     m_find_all_button->on_click = [this](auto) {
         m_find_all = true;

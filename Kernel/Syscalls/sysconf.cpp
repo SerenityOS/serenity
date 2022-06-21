@@ -35,6 +35,8 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
         return Kernel::VirtualFileSystem::symlink_recursion_limit;
     case _SC_ARG_MAX:
         return Process::max_arguments_size;
+    case _SC_IOV_MAX:
+        return IOV_MAX;
     default:
         return EINVAL;
     }

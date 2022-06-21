@@ -1,7 +1,7 @@
-From 55c1e96ff844e75a9bf07114e00e27fabb7f54ee Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Fri, 11 Feb 2022 16:13:52 +0330
-Subject: [PATCH 1/9] Get rid of wordexp on serenity
+Subject: [PATCH] Get rid of wordexp on serenity
 
 ---
  src/file.c | 15 ++++++++++++++-
@@ -74,6 +74,3 @@ index a3bfd16..720a6e5 100644
  }
  
  /**
--- 
-2.34.1
-

@@ -23,6 +23,11 @@ inline void set_ttbr0_el1(FlatPtr ttbr0_el1)
     asm("msr ttbr0_el1, %[value]" ::[value] "r"(ttbr0_el1));
 }
 
+inline void set_sp_el1(FlatPtr sp_el1)
+{
+    asm("msr sp_el1, %[value]" ::[value] "r"(sp_el1));
+}
+
 inline void flush()
 {
     asm("dsb ish");

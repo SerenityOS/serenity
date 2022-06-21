@@ -14,7 +14,7 @@ void kernelputstr(char const* characters, size_t length)
     if (!characters)
         return;
 
-    auto& uart = Kernel::UART::the();
+    auto& uart = Kernel::RPi::UART::the();
     uart.print_str(characters, length);
 }
 
@@ -23,7 +23,7 @@ void kernelcriticalputstr(char const* characters, size_t length)
     if (!characters)
         return;
 
-    auto& uart = Kernel::UART::the();
+    auto& uart = Kernel::RPi::UART::the();
     uart.print_str(characters, length);
 }
 
@@ -32,6 +32,6 @@ void kernelearlyputstr(char const* characters, size_t length)
     if (!characters)
         return;
 
-    auto& uart = Kernel::UART::the();
+    auto& uart = Kernel::RPi::UART::the();
     uart.print_str(characters, length);
 }

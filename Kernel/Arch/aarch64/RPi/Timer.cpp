@@ -5,11 +5,12 @@
  */
 
 #include <AK/Format.h>
+#include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // "12.1 System Timer Registers" / "10.2 System Timer Registers"
 struct TimerRegisters {
@@ -29,14 +30,15 @@ enum FlagBits {
 };
 
 Timer::Timer()
-    : m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000))
+    : IRQHandler(1)
+    , m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000))
 {
 }
 
 Timer& Timer::the()
 {
-    static Timer instance;
-    return instance;
+    static AK::NeverDestroyed<Timer> instance;
+    return *instance;
 }
 
 u64 Timer::microseconds_since_boot()
@@ -48,6 +50,41 @@ u64 Timer::microseconds_since_boot()
         low = m_registers->counter_low;
     }
     return (static_cast<u64>(high) << 32) | low;
+}
+
+bool Timer::handle_irq(RegisterState const&)
+{
+    dbgln("Timer fired: {} us", m_current_timer_value);
+
+    m_current_timer_value += m_interrupt_interval;
+    set_compare(TimerID::Timer1, m_current_timer_value);
+
+    clear_interrupt(TimerID::Timer1);
+    return true;
+};
+
+void Timer::enable_interrupt_mode()
+{
+    m_current_timer_value = microseconds_since_boot();
+    m_current_timer_value += m_interrupt_interval;
+    set_compare(TimerID::Timer1, m_current_timer_value);
+
+    enable_irq();
+}
+
+void Timer::set_interrupt_interval_usec(u32 interrupt_interval)
+{
+    m_interrupt_interval = interrupt_interval;
+}
+
+void Timer::clear_interrupt(TimerID id)
+{
+    m_registers->control_and_status = 1 << to_underlying(id);
+}
+
+void Timer::set_compare(TimerID id, u32 compare)
+{
+    m_registers->compare[to_underlying(id)] = compare;
 }
 
 class SetClockRateMboxMessage : Mailbox::Message {

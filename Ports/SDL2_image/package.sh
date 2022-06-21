@@ -12,15 +12,11 @@ configure() {
         --host="${SERENITY_ARCH}-pc-serenity" \
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-webp=false --enable-webp-shared=false     \
+        --disable-static \
+        --enable-shared \
         LDFLAGS="-lgui -lgfx -lipc -lcore -lm"
 }
 
 build() {
     run make -k
-}
-
-install() {
-    run make -k DESTDIR="${SERENITY_INSTALL_ROOT}" install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.so -Wl,-soname,libSDL2_image.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.a -Wl,--no-whole-archive -lpng -ljpeg -ltiff
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.la
 }

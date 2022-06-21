@@ -81,6 +81,15 @@ WindowActions::WindowActions(GUI::Window& window)
         },
         &window);
     m_show_bookmarks_bar_action->set_status_tip("Show/hide the bookmarks bar");
+
+    m_vertical_tabs_action = GUI::Action::create_checkable(
+        "&Vertical Tabs", { Mod_Ctrl, Key_Comma },
+        [this](auto& action) {
+            if (on_vertical_tabs)
+                on_vertical_tabs(action);
+        },
+        &window);
+    m_vertical_tabs_action->set_status_tip("Enable/Disable vertical tabs");
 }
 
 }

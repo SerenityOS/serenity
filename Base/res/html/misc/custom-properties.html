@@ -45,6 +45,11 @@
             border: var(--border);
         }
 
+        .test-inside-a-function {
+            --blue: 255;
+            background-color: rgb(255, 0, var(--blue));
+        }
+
         .test-mixed {
             background: var(--background-color) url("background-repeat.png") var(--background-position) no-repeat;
         }
@@ -176,6 +181,18 @@
     <div class="box test-nested">
         <pre>.test-nested</pre>
         This should have a 10px solid orange border
+    </div>
+
+    <pre>
+        .test-inside-a-function {
+            --blue: 255;
+            background-color: rgb(255, 0, var(--blue));
+        }
+    </pre>
+
+    <div class="box test-inside-a-function">
+        <pre>.test-inside-a-function</pre>
+        This should be fuchsia
     </div>
 
     <h2>Mixed var()</h2>

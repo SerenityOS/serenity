@@ -182,8 +182,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalTimeLike).
     TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_time_like));
 
-    // 5. Let partialTime be ? ToPartialTime(temporalTimeLike).
-    auto partial_time = TRY(to_partial_time(global_object, temporal_time_like));
+    // 5. Let partialTime be ? ToTemporalTimeRecord(temporalTimeLike, partial).
+    auto partial_time = TRY(to_temporal_time_record(global_object, temporal_time_like, ToTemporalTimeRecordCompleteness::Partial));
 
     // 6. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -230,8 +230,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 20. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
     auto result = TRY(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
-    // 21. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+    // 21. Return ! CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return MUST(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 // 4.3.13 Temporal.PlainTime.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until
@@ -244,8 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
-    // FIXME: until, not since (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
     return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Until, *temporal_time, other, options));
 }
 
@@ -259,8 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
     auto* temporal_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
-    // FIXME: since, not until (spec issue, see https://github.com/tc39/proposal-temporal/pull/2183)
+    // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
     return TRY(difference_temporal_plain_time(global_object, DifferenceOperation::Since, *temporal_time, other, options));
 }
 
@@ -295,44 +293,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::round)
         round_to = TRY(get_options_object(global_object, vm.argument(0)));
     }
 
-    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « "year", "month", "week", "day" », undefined).
-    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *round_to, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
+    // 6. Let smallestUnit be ? GetTemporalUnit(roundTo, "smallestUnit", time, required).
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *round_to, vm.names.smallestUnit, UnitGroup::Time, TemporalUnitRequired {}));
 
-    // 7. If smallestUnit is undefined, throw a RangeError exception.
-    if (!smallest_unit_value.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
-
-    // NOTE: At this point smallest_unit_value can only be a string
-    auto& smallest_unit = *smallest_unit_value;
-
-    // 8. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"));
 
-    double maximum;
+    // 8. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 9. If smallestUnit is "hour", then
-    if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
-    }
-    // 10. Else if smallestUnit is "minute" or "second", then
-    else if (smallest_unit == "minute"sv || smallest_unit == "second"sv) {
-        // a. Let maximum be 60.
-        maximum = 60;
-    }
-    // 11. Else,
-    else {
-        // a. Let maximum be 1000.
-        maximum = 1000;
-    }
+    // 9. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *round_to, *maximum, false));
 
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *round_to, maximum, false));
+    // 10. Let result be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    auto result = round_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
 
-    // 13. Let result be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
-    auto result = round_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), rounding_increment, smallest_unit, rounding_mode);
-
-    // 14. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    // 11. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 

@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel {
+namespace Kernel::RPi {
 
 // Can exchange mailbox messages with the Raspberry Pi's VideoCore chip.
 // https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface

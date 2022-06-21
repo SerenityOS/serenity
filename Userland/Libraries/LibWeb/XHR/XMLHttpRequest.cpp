@@ -493,7 +493,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     auto normalized_method = normalize_method(method);
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
-    auto parsed_url = settings_object.responsible_document()->parse_url(url);
+    auto parsed_url = settings_object.api_base_url().complete_url(url);
 
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
@@ -637,7 +637,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                 xhr.set_ready_state(ReadyState::Done);
                 xhr.set_status(status_code.value_or(0));
                 xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
-            });
+            },
+            m_timeout);
     } else {
         TODO();
     }
@@ -693,4 +694,23 @@ DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 
     return {};
 }
+
+// https://xhr.spec.whatwg.org/#ref-for-dom-xmlhttprequest-timeout%E2%91%A2
+DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
+{
+    // 1. If the current global object is a Window object and this’s synchronous flag is set,
+    //    then throw an "InvalidAccessError" DOMException.
+    auto& global_object = wrapper()->global_object();
+    if (global_object.class_name() == "WindowObject" && m_synchronous)
+        return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
+
+    // 2. Set this’s timeout to the given value.
+    m_timeout = timeout;
+
+    return {};
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-timeout
+u32 XMLHttpRequest::timeout() const { return m_timeout; }
+
 }

@@ -19,6 +19,7 @@ public:
 
     void reset();
     void set_use_system_theme(bool b);
+    void set_check_guesses_in_dictionary(bool b);
     void set_word_length(size_t length);
     void set_max_guesses(size_t max_guesses);
     Gfx::IntSize game_size() const;
@@ -26,8 +27,10 @@ public:
     Optional<String> random_word(size_t length);
     size_t shortest_word();
     size_t longest_word();
+    bool is_checking_guesses() const;
 
     void add_guess(AK::StringView guess);
+    bool is_in_dictionary(AK::StringView guess);
 
 private:
     WordGame();
@@ -42,6 +45,8 @@ private:
 
     size_t m_max_guesses { 6 };
     size_t m_num_letters { 5 };
+    bool m_check_guesses { false };
+    bool m_last_word_not_in_dictionary { false };
     static constexpr int m_letter_width { 40 };
     static constexpr int m_letter_spacing { 5 };
     static constexpr int m_outer_margin { 20 };
@@ -53,6 +58,7 @@ private:
     Color m_wrong_letter_color { m_border_color };
     Color m_background_color { Color::from_rgb(0x121213) };
     Color m_text_color { Color::White };
+    Color m_word_not_in_dict_color { Color::from_argb(0x40aa0000) };
 
     enum LetterState {
         Correct,

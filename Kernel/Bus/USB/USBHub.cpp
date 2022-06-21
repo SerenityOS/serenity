@@ -5,11 +5,11 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Bus/USB/SysFSUSB.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel::USB {

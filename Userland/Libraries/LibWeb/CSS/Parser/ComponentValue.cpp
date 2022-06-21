@@ -41,10 +41,10 @@ String ComponentValue::to_debug_string() const
             return String::formatted("Token: {}", token.to_debug_string());
         },
         [](NonnullRefPtr<Block> const& block) {
-            return String::formatted("Function: {}", block->to_string());
+            return String::formatted("Block: {}", block->to_string());
         },
         [](NonnullRefPtr<Function> const& function) {
-            return String::formatted("Block: {}", function->to_string());
+            return String::formatted("Function: {}", function->to_string());
         });
 }
 

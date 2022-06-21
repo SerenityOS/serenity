@@ -143,6 +143,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.match, match, 1, attr);
     define_native_function(vm.names.matchAll, match_all, 1, attr);
+    define_native_function(vm.names.normalize, normalize, 0, attr);
     define_native_function(vm.names.replace, replace, 2, attr);
     define_native_function(vm.names.replaceAll, replace_all, 2, attr);
     define_native_function(vm.names.search, search, 1, attr);
@@ -801,6 +802,31 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 
     auto* rx = TRY(regexp_create(global_object, regexp, js_string(vm, "g")));
     return TRY(Value(rx).invoke(global_object, *vm.well_known_symbol_match_all(), js_string(vm, move(string))));
+}
+
+// 22.1.3.14 String.prototype.normalize ( [ form ] ), https://tc39.es/ecma262/#sec-string.prototype.normalize
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
+{
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
+    auto string = TRY(ak_string_from(vm, global_object));
+
+    // 3. If form is undefined, let f be "NFC".
+    // 4. Else, let f be ? ToString(form).
+    String form = "NFC";
+    auto form_value = vm.argument(0);
+    if (!form_value.is_undefined())
+        form = TRY(form_value.to_string(global_object));
+
+    // 5. If f is not one of "NFC", "NFD", "NFKC", or "NFKD", throw a RangeError exception.
+    if (!form.is_one_of("NFC"sv, "NFD"sv, "NFKC"sv, "NFKD"sv))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidNormalizationForm, form);
+
+    // FIXME: 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
+    auto ns = string;
+
+    // 7. return ns.
+    return js_string(vm, move(ns));
 }
 
 // 22.1.3.18 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace

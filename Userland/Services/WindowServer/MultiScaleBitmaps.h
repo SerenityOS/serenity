@@ -24,6 +24,7 @@ public:
     Gfx::BitmapFormat format() const { return m_format; }
     bool load(StringView filename, StringView default_filename = {});
     void add_bitmap(int scale_factor, NonnullRefPtr<Gfx::Bitmap>&&);
+    bool is_empty() const { return m_bitmaps.is_empty(); }
 
 private:
     MultiScaleBitmaps() = default;

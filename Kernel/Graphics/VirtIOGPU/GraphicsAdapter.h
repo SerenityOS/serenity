@@ -50,10 +50,25 @@ public:
     Graphics::VirtIOGPU::ResourceID allocate_resource_id(Badge<VirtIODisplayConnector>);
     Graphics::VirtIOGPU::ContextID allocate_context_id(Badge<VirtIODisplayConnector>);
 
+    ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
+    void set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    void flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    void transfer_framebuffer_data_to_host(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& rect, bool main_buffer);
+
 private:
+    ErrorOr<void> attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size);
+
     void flush_dirty_rectangle(Graphics::VirtIOGPU::ScanoutID, Graphics::VirtIOGPU::ResourceID, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect);
     struct Scanout {
+        struct PhysicalBuffer {
+            size_t framebuffer_offset { 0 };
+            Graphics::VirtIOGPU::Protocol::Rect dirty_rect {};
+            Graphics::VirtIOGPU::ResourceID resource_id { 0 };
+        };
+
         RefPtr<VirtIODisplayConnector> display_connector;
+        PhysicalBuffer main_buffer;
+        PhysicalBuffer back_buffer;
     };
 
     VirtIOGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<Memory::Region> scratch_space_region);
@@ -64,6 +79,13 @@ private:
     virtual void handle_queue_update(u16 queue_index) override;
     u32 get_pending_events();
     void clear_pending_events(u32 event_bitmask);
+
+    // 2D framebuffer stuff
+    static ErrorOr<FlatPtr> calculate_framebuffer_size(size_t width, size_t height)
+    {
+        // VirtIO resources can only map on page boundaries!
+        return Memory::page_round_up(sizeof(u32) * width * height);
+    }
 
     // 3D Command stuff
     Graphics::VirtIOGPU::ContextID create_context();

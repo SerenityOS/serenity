@@ -24,8 +24,10 @@ NonnullRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIO
     return connector;
 }
 
+static_assert((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2) % PAGE_SIZE == 0);
+
 VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
-    : DisplayConnector()
+    : DisplayConnector((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), false)
     , m_graphics_adapter(graphics_adapter)
     , m_scanout_id(scanout_id)
 {
@@ -48,14 +50,14 @@ ErrorOr<void> VirtIODisplayConnector::set_mode_setting(ModeSetting const& mode_s
         return Error::from_errno(ENOTSUP);
 
     auto& info = m_display_info;
-
     info.rect = {
         .x = 0,
         .y = 0,
         .width = (u32)mode_setting.horizontal_active,
         .height = (u32)mode_setting.vertical_active,
     };
-    TRY(create_framebuffer());
+
+    TRY(m_graphics_adapter->mode_set_resolution({}, *this, mode_setting.horizontal_active, mode_setting.vertical_active));
     DisplayConnector::ModeSetting mode_set {
         .horizontal_stride = info.rect.width * sizeof(u32),
         .pixel_clock_in_khz = 0, // Note: There's no pixel clock in paravirtualized hardware
@@ -71,6 +73,8 @@ ErrorOr<void> VirtIODisplayConnector::set_mode_setting(ModeSetting const& mode_s
         .vertical_offset = 0,
     };
     m_current_mode_setting = mode_set;
+
+    m_display_info.enabled = 1;
     return {};
 }
 ErrorOr<void> VirtIODisplayConnector::set_safe_mode_setting()
@@ -96,9 +100,9 @@ ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t y)
 {
     VERIFY(m_control_lock.is_locked());
     if (y == 0)
-        m_current_buffer = &m_main_buffer;
+        m_last_set_buffer_index.store(0);
     else if (y == m_display_info.rect.height)
-        m_current_buffer = &m_back_buffer;
+        m_last_set_buffer_index.store(1);
     else
         return Error::from_errno(EINVAL);
     return {};
@@ -108,25 +112,11 @@ ErrorOr<void> VirtIODisplayConnector::unblank()
     return Error::from_errno(ENOTIMPL);
 }
 
-ErrorOr<size_t> VirtIODisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
-{
-    VERIFY(m_control_lock.is_locked());
-    if (offset + length > (m_buffer_size * 2))
-        return Error::from_errno(EOVERFLOW);
-    if (offset < m_buffer_size && (offset + length) > (m_buffer_size))
-        return Error::from_errno(EOVERFLOW);
-    if (offset < m_buffer_size) {
-        TRY(buffer.read(m_main_buffer.framebuffer_data + offset, 0, length));
-    } else {
-        TRY(buffer.read(m_back_buffer.framebuffer_data + offset - m_buffer_size, 0, length));
-    }
-
-    return length;
-}
-
 ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRect const& rect)
 {
     VERIFY(m_flushing_lock.is_locked());
+    if (!is_valid_buffer_index(buffer_index))
+        return Error::from_errno(EINVAL);
     SpinlockLocker locker(m_graphics_adapter->operation_lock());
     Graphics::VirtIOGPU::Protocol::Rect dirty_rect {
         .x = rect.x,
@@ -135,23 +125,13 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
         .height = rect.height
     };
 
-    auto& buffer = buffer_from_index(buffer_index);
-    transfer_framebuffer_data_to_host(dirty_rect, buffer);
-    if (&buffer == m_current_buffer) {
+    bool main_buffer = (buffer_index == 0);
+    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
+    if (m_last_set_buffer_index.load() == buffer_index) {
         // Flushing directly to screen
-        flush_displayed_image(dirty_rect, buffer);
-        buffer.dirty_rect = {};
+        flush_displayed_image(dirty_rect, main_buffer);
     } else {
-        if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
-            buffer.dirty_rect = dirty_rect;
-        } else {
-            auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
-            auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
-            buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
-            buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
-            buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
-            buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
-        }
+        set_dirty_displayed_rect(dirty_rect, main_buffer);
     }
     return {};
 }
@@ -166,24 +146,14 @@ ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
         .width = m_display_info.rect.width,
         .height = m_display_info.rect.height
     };
-    auto& buffer = buffer_from_index(0);
-    transfer_framebuffer_data_to_host(dirty_rect, buffer);
-    if (&buffer == m_current_buffer) {
-        // Flushing directly to screen
-        flush_displayed_image(dirty_rect, buffer);
-        buffer.dirty_rect = {};
-    } else {
-        if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
-            buffer.dirty_rect = dirty_rect;
-        } else {
-            auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
-            auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
-            buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
-            buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
-            buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
-            buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
-        }
-    }
+
+    auto current_buffer_index = m_last_set_buffer_index.load();
+    VERIFY(is_valid_buffer_index(current_buffer_index));
+
+    bool main_buffer = (current_buffer_index == 0);
+    m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, main_buffer);
+    // Flushing directly to screen
+    flush_displayed_image(dirty_rect, main_buffer);
     return {};
 }
 
@@ -201,11 +171,21 @@ void VirtIODisplayConnector::disable_console()
     m_console->disable();
 }
 
-void VirtIODisplayConnector::clear_to_black(Buffer& buffer)
+void VirtIODisplayConnector::set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes)
+{
+    DisplayConnector::set_edid_bytes(edid_bytes);
+}
+
+Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display VirtIODisplayConnector::display_information(Badge<VirtIOGraphicsAdapter>) const
+{
+    return m_display_info;
+}
+
+void VirtIODisplayConnector::clear_to_black()
 {
     size_t width = m_display_info.rect.width;
     size_t height = m_display_info.rect.height;
-    u8* data = buffer.framebuffer_data;
+    u8* data = framebuffer_data();
     for (size_t i = 0; i < width * height; ++i) {
         data[4 * i + 0] = 0x00;
         data[4 * i + 1] = 0x00;
@@ -214,7 +194,7 @@ void VirtIODisplayConnector::clear_to_black(Buffer& buffer)
     }
 }
 
-void VirtIODisplayConnector::draw_ntsc_test_pattern(Buffer& buffer)
+void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>)
 {
     constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
@@ -232,134 +212,57 @@ void VirtIODisplayConnector::draw_ntsc_test_pattern(Buffer& buffer)
     };
     size_t width = m_display_info.rect.width;
     size_t height = m_display_info.rect.height;
-    u8* data = buffer.framebuffer_data;
+    u8* data = framebuffer_data();
     // Draw NTSC test card
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x) {
-            size_t color = 0;
-            if (3 * y < 2 * height) {
-                // Top 2/3 of image is 7 vertical stripes of color spectrum
-                color = (7 * x) / width;
-            } else if (4 * y < 3 * height) {
-                // 2/3 mark to 3/4 mark  is backwards color spectrum alternating with black
-                auto segment = (7 * x) / width;
-                color = segment % 2 ? 10 : 6 - segment;
-            } else {
-                if (28 * x < 5 * width) {
-                    color = 8;
-                } else if (28 * x < 10 * width) {
-                    color = 0;
-                } else if (28 * x < 15 * width) {
-                    color = 7;
-                } else if (28 * x < 20 * width) {
-                    color = 10;
-                } else if (7 * x < 6 * width) {
-                    // Grayscale gradient
-                    color = 26 - ((21 * x) / width);
+    for (size_t i = 0; i < 2; ++i) {
+        for (size_t y = 0; y < height; ++y) {
+            for (size_t x = 0; x < width; ++x) {
+                size_t color = 0;
+                if (3 * y < 2 * height) {
+                    // Top 2/3 of image is 7 vertical stripes of color spectrum
+                    color = (7 * x) / width;
+                } else if (4 * y < 3 * height) {
+                    // 2/3 mark to 3/4 mark  is backwards color spectrum alternating with black
+                    auto segment = (7 * x) / width;
+                    color = segment % 2 ? 10 : 6 - segment;
                 } else {
-                    // Solid black
-                    color = 10;
+                    if (28 * x < 5 * width) {
+                        color = 8;
+                    } else if (28 * x < 10 * width) {
+                        color = 0;
+                    } else if (28 * x < 15 * width) {
+                        color = 7;
+                    } else if (28 * x < 20 * width) {
+                        color = 10;
+                    } else if (7 * x < 6 * width) {
+                        // Grayscale gradient
+                        color = 26 - ((21 * x) / width);
+                    } else {
+                        // Solid black
+                        color = 10;
+                    }
+                }
+                u8* pixel = &data[4 * (y * width + x)];
+                for (int i = 0; i < 4; ++i) {
+                    pixel[i] = colors[color][i];
                 }
             }
-            u8* pixel = &data[4 * (y * width + x)];
-            for (int i = 0; i < 4; ++i) {
-                pixel[i] = colors[color][i];
-            }
         }
+        data = data + (width * height * sizeof(u32));
     }
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
-u8* VirtIODisplayConnector::framebuffer_data()
-{
-    return m_current_buffer->framebuffer_data;
-}
-
-ErrorOr<void> VirtIODisplayConnector::create_framebuffer()
-{
-    SpinlockLocker locker(m_graphics_adapter->operation_lock());
-    // First delete any existing framebuffers to free the memory first
-    m_framebuffer = nullptr;
-    m_framebuffer_sink_vmobject = nullptr;
-
-    // Allocate frame buffer for both front and back
-    m_buffer_size = calculate_framebuffer_size(m_display_info.rect.width, m_display_info.rect.height);
-    auto region_name = TRY(KString::formatted("VirtGPU FrameBuffer #{}", m_scanout_id.value()));
-    m_framebuffer = TRY(MM.allocate_kernel_region(m_buffer_size * 2, region_name->view(), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
-    auto write_sink_page = TRY(MM.allocate_user_physical_page(Memory::MemoryManager::ShouldZeroFill::No));
-    auto num_needed_pages = m_framebuffer->vmobject().page_count();
-
-    NonnullRefPtrVector<Memory::PhysicalPage> pages;
-    for (auto i = 0u; i < num_needed_pages; ++i) {
-        TRY(pages.try_append(write_sink_page));
-    }
-    m_framebuffer_sink_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span()));
-
-    m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
-    create_buffer(m_main_buffer, 0, m_buffer_size);
-    create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
-
-    return {};
-}
-
-void VirtIODisplayConnector::set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes)
-{
-    DisplayConnector::set_edid_bytes(edid_bytes);
-}
-
-Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display VirtIODisplayConnector::display_information(Badge<VirtIOGraphicsAdapter>)
-{
-    return m_display_info;
-}
-
-void VirtIODisplayConnector::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
+void VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
     VERIFY(m_graphics_adapter->operation_lock().is_locked());
-    buffer.framebuffer_offset = framebuffer_offset;
-    buffer.framebuffer_data = m_framebuffer->vaddr().as_ptr() + framebuffer_offset;
-
-    // 1. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
-    if (buffer.resource_id.value() != 0)
-        m_graphics_adapter->delete_resource(buffer.resource_id);
-    buffer.resource_id = m_graphics_adapter->create_2d_resource(m_display_info.rect);
-
-    // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
-    m_graphics_adapter->ensure_backing_storage(buffer.resource_id, *m_framebuffer, buffer.framebuffer_offset, framebuffer_size);
-    // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
-    if (&buffer == m_current_buffer)
-        m_graphics_adapter->set_scanout_resource(m_scanout_id, buffer.resource_id, m_display_info.rect);
-    // 4. Render our test pattern
-    draw_ntsc_test_pattern(buffer);
-    // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
-    transfer_framebuffer_data_to_host(m_display_info.rect, buffer);
-    // 6. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
-    if (&buffer == m_current_buffer)
-        flush_displayed_image(m_display_info.rect, buffer);
-
-    // Make sure we constrain the existing dirty rect (if any)
-    if (buffer.dirty_rect.width != 0 || buffer.dirty_rect.height != 0) {
-        auto dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
-        auto dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
-        buffer.dirty_rect.width = min(dirty_right, m_display_info.rect.x + m_display_info.rect.width) - buffer.dirty_rect.x;
-        buffer.dirty_rect.height = min(dirty_bottom, m_display_info.rect.y + m_display_info.rect.height) - buffer.dirty_rect.y;
-    }
-
-    m_display_info.enabled = 1;
+    m_graphics_adapter->flush_displayed_image({}, *this, dirty_rect, main_buffer);
 }
 
-void VirtIODisplayConnector::transfer_framebuffer_data_to_host(Graphics::VirtIOGPU::Protocol::Rect const& rect, Buffer& buffer)
+void VirtIODisplayConnector::set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
-    m_graphics_adapter->transfer_framebuffer_data_to_host(m_scanout_id, buffer.resource_id, rect);
-}
-
-void VirtIODisplayConnector::flush_dirty_window(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, Buffer& buffer)
-{
-    m_graphics_adapter->flush_dirty_rectangle(m_scanout_id, buffer.resource_id, dirty_rect);
-}
-
-void VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, Buffer& buffer)
-{
-    m_graphics_adapter->flush_displayed_image(buffer.resource_id, dirty_rect);
+    VERIFY(m_graphics_adapter->operation_lock().is_locked());
+    m_graphics_adapter->set_dirty_displayed_rect({}, *this, dirty_rect, main_buffer);
 }
 
 }

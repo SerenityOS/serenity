@@ -48,9 +48,7 @@ ErrorOr<void> QuickLaunchEntryAppFile::launch() const
 
 ErrorOr<void> QuickLaunchEntryExecutable::launch() const
 {
-    auto pid = Core::Process::spawn(m_path);
-    if (pid < 0)
-        return Error::from_syscall("Core::Process::spawn", -errno);
+    TRY(Core::Process::spawn(m_path));
     return {};
 }
 

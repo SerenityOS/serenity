@@ -47,6 +47,7 @@ protected:
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
     virtual void try_parse_messages(Vector<u8> const& bytes, size_t& index) = 0;
+    virtual void shutdown_with_error(Error const&);
 
     OwnPtr<IPC::Message> wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id);
     void wait_for_socket_to_become_readable();

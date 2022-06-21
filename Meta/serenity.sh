@@ -8,7 +8,7 @@ print_help() {
     cat <<EOF
 Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
   Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or i686 if not set.
-  Supported TOOLCHAINs: GNU, Clang. Defaults to GNU if not set.
+  Supported TOOLCHAINs: GNU, Clang. Defaults to SERENITY_TOOLCHAIN, or GNU if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
@@ -82,6 +82,10 @@ if [ "$CMD" = "help" ]; then
     exit 0
 fi
 
+if [ "$(id -u)" -eq 0 ]; then
+   die "Do not run serenity.sh as root, your Build directory will become root-owned"
+fi
+
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else
@@ -92,21 +96,16 @@ CMAKE_ARGS=()
 HOST_COMPILER=""
 
 # Toolchain selection only applies to non-lagom targets.
-if [ "$TARGET" != "lagom" ]; then
-    case "$1" in
-        GNU|Clang)
-            TOOLCHAIN_TYPE="$1"; shift
-            ;;
-        *)
-            if [ -n "$1" ]; then
-                echo "WARNING: unknown toolchain '$1'. Defaulting to GNU."
-                echo "         Valid values are 'Clang', 'GNU' (default)"
-            fi
-            TOOLCHAIN_TYPE="GNU"
-            ;;
-    esac
-    CMAKE_ARGS+=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
+if [ "$TARGET" != "lagom" ] && [ -n "$1" ]; then
+    TOOLCHAIN_TYPE="$1"; shift
+else
+    TOOLCHAIN_TYPE="${SERENITY_TOOLCHAIN:-"GNU"}"
 fi
+if ! [[ "${TOOLCHAIN_TYPE}" =~ ^(GNU|Clang)$ ]]; then
+    >&2 echo "ERROR: unknown toolchain '${TOOLCHAIN_TYPE}'."
+    exit 1
+fi
+CMAKE_ARGS+=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
 
 CMD_ARGS=( "$@" )
 

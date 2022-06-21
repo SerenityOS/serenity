@@ -125,6 +125,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
+            Archive::TarFileStream file_stream = tar_stream.file_contents();
+
+            // Handle other header types that don't just have an effect on extraction.
+            switch (header.type_flag()) {
+            case Archive::TarFileType::LongName: {
+                StringBuilder long_name;
+
+                Array<u8, buffer_size> buffer;
+                size_t bytes_read;
+
+                while ((bytes_read = file_stream.read(buffer)) > 0)
+                    long_name.append(reinterpret_cast<char*>(buffer.data()), bytes_read);
+
+                local_overrides.set("path", long_name.to_string());
+                continue;
+            }
+            default:
+                // None of the relevant headers, so continue as normal.
+                break;
+            }
+
             LexicalPath path = LexicalPath(header.filename());
             if (!header.prefix().is_empty())
                 path = path.prepend(header.prefix());
@@ -134,8 +155,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                Archive::TarFileStream file_stream = tar_stream.file_contents();
-
                 String absolute_path = Core::File::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
 

@@ -2,7 +2,7 @@ serenity_component(
     HackStudio
     RECOMMENDED
     TARGETS HackStudio
-    DEPENDS CppLanguageServer ShellLanguageServer
+    DEPENDS CppLanguageServer ShellLanguageServer WebContent
 )
 
 add_subdirectory(LanguageServers)
@@ -55,6 +55,6 @@ set(SOURCES
 )
 
 serenity_app(HackStudio ICON app-hack-studio)
-target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibCpp LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell LibSymbolication LibRegex LibSQL LibCoredump LibMain)
+target_link_libraries(HackStudio LibWebView LibWeb LibMarkdown LibGUI LibCpp LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell LibSymbolication LibRegex LibSQL LibCoredump LibMain)
 link_with_unicode_data(HackStudio)
 add_dependencies(HackStudio CppLanguageServer)

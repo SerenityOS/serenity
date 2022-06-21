@@ -494,7 +494,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.is_arrow_function());
+    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
     return {};
 }
 
@@ -761,6 +761,29 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     auto& ast_interpreter = scope.interpreter();
     auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? "" : name));
     interpreter.accumulator() = class_object;
+    return {};
+}
+
+// 13.5.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation
+ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    // 1. Let val be the result of evaluating UnaryExpression.
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(interpreter.vm().resolve_binding(string));
+
+    // 2. If val is a Reference Record, then
+    //    a. If IsUnresolvableReference(val) is true, return "undefined".
+    if (reference.is_unresolvable()) {
+        interpreter.accumulator() = js_string(interpreter.vm(), "undefined"sv);
+        return {};
+    }
+
+    // 3. Set val to ? GetValue(val).
+    auto value = TRY(reference.get_value(interpreter.global_object()));
+
+    // 4. NOTE: This step is replaced in section B.3.6.3.
+    // 5. Return a String according to Table 41.
+    interpreter.accumulator() = js_string(interpreter.vm(), value.typeof());
     return {};
 }
 
@@ -1074,6 +1097,11 @@ String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetNewTarget"sv;
+}
+
+String TypeofVariable::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 }

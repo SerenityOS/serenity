@@ -26,6 +26,11 @@ public:
     static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
     static Error from_string_literal(StringView string_literal) { return Error(string_literal); }
 
+    bool operator==(Error const& other) const
+    {
+        return m_code == other.m_code && m_string_literal == other.m_string_literal && m_syscall == other.m_syscall;
+    }
+
     bool is_errno() const { return m_code != 0; }
     bool is_syscall() const { return m_syscall; }
 

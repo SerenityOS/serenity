@@ -13,12 +13,11 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/Forward.h>
 
 namespace JS::Intl {
-
-using Fallback = Variant<Empty, bool, StringView>;
 
 struct LocaleOptions {
     Value locale_matcher;
@@ -72,15 +71,13 @@ Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
 Vector<String> best_fit_supported_locales(Vector<String> const& requested_locales);
 ThrowCompletionOr<Array*> supported_locales(GlobalObject&, Vector<String> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options);
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Span<StringView const> values, Fallback fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback);
 Vector<PatternPartition> partition_pattern(StringView pattern);
 
-template<size_t Size>
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, StringView const (&values)[Size], Fallback fallback)
-{
-    return get_option(global_object, options, property, type, Span<StringView const> { values }, fallback);
-}
+// NOTE: ECMA-402's GetOption is being removed in favor of a shared ECMA-262 GetOption in the Temporal proposal.
+// Until Temporal is merged into ECMA-262, our implementation lives in the Temporal-specific AO file & namespace.
+using Temporal::get_option;
+using Temporal::OptionType;
 
 }

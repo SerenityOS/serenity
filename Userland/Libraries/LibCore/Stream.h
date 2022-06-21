@@ -37,6 +37,7 @@ public:
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
     virtual bool read_or_error(Bytes);
+    ErrorOr<ByteBuffer> read_all();
 
     virtual bool is_writable() const { return false; }
     /// Tries to write the entire contents of the buffer. It is possible for
@@ -179,6 +180,7 @@ class File final : public SeekableStream {
 public:
     static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
+    static bool exists(StringView filename);
 
     File(File&& other) { operator=(move(other)); }
 

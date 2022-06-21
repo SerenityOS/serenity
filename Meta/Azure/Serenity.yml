@@ -15,7 +15,7 @@ jobs:
       value: $(Build.SourcesDirectory)/.ccache
 
     pool:
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-22.04
 
     steps:
     - template: Setup.yml

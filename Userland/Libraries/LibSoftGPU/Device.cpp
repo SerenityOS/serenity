@@ -24,13 +24,13 @@
 
 namespace SoftGPU {
 
-static u64 g_num_rasterized_triangles;
-static u64 g_num_pixels;
-static u64 g_num_pixels_shaded;
-static u64 g_num_pixels_blended;
-static u64 g_num_sampler_calls;
-static u64 g_num_stencil_writes;
-static u64 g_num_quads;
+static i64 g_num_rasterized_triangles;
+static i64 g_num_pixels;
+static i64 g_num_pixels_shaded;
+static i64 g_num_pixels_blended;
+static i64 g_num_sampler_calls;
+static i64 g_num_stencil_writes;
+static i64 g_num_quads;
 
 using AK::abs;
 using AK::SIMD::any;
@@ -247,7 +247,7 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
     auto const qy1 = render_bounds_bottom & ~1;
 
     // Rasterize all quads
-    // FIXME: this could be embarrasingly parallel
+    // FIXME: this could be embarrassingly parallel
     for (int qy = qy0; qy <= qy1; qy += 2) {
         for (int qx = qx0; qx <= qx1; qx += 2) {
             PixelQuad quad;
@@ -431,8 +431,13 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
             set_quad_attributes(quad);
             shade_fragments(quad);
 
-            if (m_options.enable_alpha_test && m_options.alpha_test_func != GPU::AlphaTestFunction::Always && !test_alpha(quad))
-                continue;
+            // Alpha testing
+            if (m_options.enable_alpha_test) {
+                test_alpha(quad);
+                coverage_bits = maskbits(quad.mask);
+                if (coverage_bits == 0)
+                    continue;
+            }
 
             // Write to depth buffer
             if (m_options.enable_depth_test && m_options.enable_depth_write)
@@ -1269,37 +1274,37 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     quad.out_color.set_w(quad.out_color.w() * quad.coverage);
 }
 
-ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
+ALWAYS_INLINE void Device::test_alpha(PixelQuad& quad)
 {
     auto const alpha = quad.out_color.w();
     auto const ref_value = expand4(m_options.alpha_test_ref_value);
 
     switch (m_options.alpha_test_func) {
-    case GPU::AlphaTestFunction::Less:
-        quad.mask &= alpha < ref_value;
+    case GPU::AlphaTestFunction::Always:
+        quad.mask &= expand4(~0);
         break;
     case GPU::AlphaTestFunction::Equal:
         quad.mask &= alpha == ref_value;
         break;
-    case GPU::AlphaTestFunction::LessOrEqual:
-        quad.mask &= alpha <= ref_value;
-        break;
     case GPU::AlphaTestFunction::Greater:
         quad.mask &= alpha > ref_value;
-        break;
-    case GPU::AlphaTestFunction::NotEqual:
-        quad.mask &= alpha != ref_value;
         break;
     case GPU::AlphaTestFunction::GreaterOrEqual:
         quad.mask &= alpha >= ref_value;
         break;
+    case GPU::AlphaTestFunction::Less:
+        quad.mask &= alpha < ref_value;
+        break;
+    case GPU::AlphaTestFunction::LessOrEqual:
+        quad.mask &= alpha <= ref_value;
+        break;
+    case GPU::AlphaTestFunction::NotEqual:
+        quad.mask &= alpha != ref_value;
+        break;
     case GPU::AlphaTestFunction::Never:
-    case GPU::AlphaTestFunction::Always:
     default:
         VERIFY_NOT_REACHED();
     }
-
-    return any(quad.mask);
 }
 
 void Device::resize(Gfx::IntSize const& size)

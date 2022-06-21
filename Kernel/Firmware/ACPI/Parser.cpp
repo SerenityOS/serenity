@@ -9,8 +9,8 @@
 #include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>

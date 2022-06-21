@@ -13,7 +13,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>
-#include <LibProtocol/Request.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Browser {
 
@@ -31,7 +31,7 @@ private:
 
     URL m_url;
     String m_destination_path;
-    RefPtr<Protocol::Request> m_download;
+    RefPtr<Web::ResourceLoaderConnectorRequest> m_download;
     RefPtr<GUI::Progressbar> m_progressbar;
     RefPtr<GUI::Label> m_progress_label;
     RefPtr<GUI::Button> m_cancel_button;

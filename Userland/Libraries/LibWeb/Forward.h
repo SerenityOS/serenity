@@ -370,12 +370,17 @@ class EventHandler;
 class FrameLoader;
 class LoadRequest;
 class Origin;
-class OutOfProcessWebView;
 class Page;
 class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
+}
+
+namespace Web::WebGL {
+class WebGLContextEvent;
+class WebGLRenderingContext;
+class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
@@ -577,6 +582,8 @@ class URLSearchParamsIteratorWrapper;
 class URLSearchParamsPrototype;
 class URLSearchParamsWrapper;
 class URLWrapper;
+class WebGLContextEventWrapper;
+class WebGLRenderingContextWrapper;
 class WebSocketWrapper;
 class WindowObject;
 class WindowProxy;
