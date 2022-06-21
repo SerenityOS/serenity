@@ -621,14 +621,59 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     }();
 
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
-    auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : determine_min_main_size_of_child(child_box);
+    auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : automatic_minimum_size(flex_item);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
     flex_item.hypothetical_main_size = css_clamp(flex_item.flex_base_size, clamp_min, clamp_max);
 }
 
-float FlexFormattingContext::determine_min_main_size_of_child(Box const& box)
+// https://drafts.csswg.org/css-flexbox-1/#min-size-auto
+float FlexFormattingContext::automatic_minimum_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_min_and_max_content_width(box).min_content_size : calculate_min_and_max_content_height(box).min_content_size;
+    // FIXME: Deal with scroll containers.
+    return content_based_minimum_size(item);
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#specified-size-suggestion
+Optional<float> FlexFormattingContext::specified_size_suggestion(FlexItem const& item) const
+{
+    // If the item’s preferred main size is definite and not automatic,
+    // then the specified size suggestion is that size. It is otherwise undefined.
+    if (has_definite_main_size(item.box))
+        return specified_main_size(item.box);
+    return {};
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#content-size-suggestion
+float FlexFormattingContext::content_size_suggestion(FlexItem const& item) const
+{
+    // FIXME: Apply clamps
+    if (is_row_layout())
+        return calculate_min_and_max_content_width(item.box).min_content_size;
+    return calculate_min_and_max_content_height(item.box).min_content_size;
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#content-based-minimum-size
+float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) const
+{
+    auto unclamped_size = [&] {
+        // The content-based minimum size of a flex item is the smaller of its specified size suggestion
+        // and its content size suggestion if its specified size suggestion exists;
+        if (auto specified_size_suggestion = this->specified_size_suggestion(item); specified_size_suggestion.has_value()) {
+            return min(specified_size_suggestion.value(), content_size_suggestion(item));
+        }
+
+        // FIXME: otherwise, the smaller of its transferred size suggestion and its content size suggestion
+        //        if the element is replaced and its transferred size suggestion exists;
+
+        // otherwise its content size suggestion.
+        return content_size_suggestion(item);
+    }();
+
+    // In all cases, the size is clamped by the maximum main size if it’s definite.
+    if (has_main_max_size(item.box)) {
+        return min(unclamped_size, specified_main_max_size(item.box));
+    }
+    return unclamped_size;
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-container
@@ -832,7 +877,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
             for_each_unfrozen_item([&](FlexItem* item) {
                 auto min_main = has_main_min_size(item->box)
                     ? specified_main_min_size(item->box)
-                    : determine_min_main_size_of_child(item->box);
+                    : automatic_minimum_size(*item);
                 auto max_main = has_main_max_size(item->box)
                     ? specified_main_max_size(item->box)
                     : NumericLimits<float>::max();
