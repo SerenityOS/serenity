@@ -212,6 +212,8 @@ public:
 
     Gfx::IntSize size() const { return m_rect.size(); }
 
+    int scale_factor() const;
+
     void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(Gfx::IntRect const&, bool invalidate_frame = false);
     void invalidate_menubar();
