@@ -467,6 +467,16 @@ Messages::WindowServer::GetWindowRectResponse ConnectionFromClient::get_window_r
     return it->value->rect();
 }
 
+void ConnectionFromClient::set_window_supported_scale_factors(i32 window_id, Vector<i32> const& supported_scale_factors)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowSupportedScaleFactors: Bad window ID");
+        return;
+    }
+    it->value->set_supported_scale_factors(supported_scale_factors);
+}
+
 void ConnectionFromClient::set_window_minimum_size(i32 window_id, Gfx::IntSize const& size)
 {
     auto it = m_windows.find(window_id);
@@ -528,7 +538,7 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
     return it->value.ptr();
 }
 
-void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
+void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect, Vector<i32> const& supported_scale_factors,
     bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool closeable, bool resizable,
     bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
     float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
@@ -581,6 +591,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
         window->set_rect(Screen::bounding_rect());
         window->recalculate_rect();
     }
+    window->set_supported_scale_factors(supported_scale_factors);
     window->set_opacity(opacity);
     window->set_alpha_hit_threshold(alpha_hit_threshold);
     window->set_size_increment(size_increment);

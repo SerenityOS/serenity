@@ -93,6 +93,7 @@ public:
     Gfx::IntRect rect() const;
     Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
+    void set_supported_scale_factors(Vector<int> const&);
     void set_rect(Gfx::IntRect const&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
@@ -273,6 +274,7 @@ private:
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
+    Vector<int, 3> m_supported_scale_factors { 1 };
     Gfx::IntSize m_minimum_size_when_windowless { 50, 50 };
     bool m_minimum_size_modified { false };
     String m_title_when_windowless;
