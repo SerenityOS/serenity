@@ -82,6 +82,7 @@ private:
     float automatic_minimum_size(FlexItem const&) const;
     float content_based_minimum_size(FlexItem const&) const;
     Optional<float> specified_size_suggestion(FlexItem const&) const;
+    Optional<float> transferred_size_suggestion(FlexItem const&) const;
     float content_size_suggestion(FlexItem const&) const;
 
     void set_main_size(Box const&, float size);

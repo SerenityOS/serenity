@@ -654,6 +654,22 @@ float FlexFormattingContext::content_size_suggestion(FlexItem const& item) const
     return calculate_min_and_max_content_height(item.box).min_content_size;
 }
 
+// https://drafts.csswg.org/css-flexbox-1/#transferred-size-suggestion
+Optional<float> FlexFormattingContext::transferred_size_suggestion(FlexItem const& item) const
+{
+    // If the item has a preferred aspect ratio and its preferred cross size is definite,
+    // then the transferred size suggestion is that size
+    // (clamped by its minimum and maximum cross sizes if they are definite), converted through the aspect ratio.
+    if (item.box.has_intrinsic_aspect_ratio() && has_definite_cross_size(item.box)) {
+        auto aspect_ratio = item.box.intrinsic_aspect_ratio().value();
+        // FIXME: Clamp cross size to min/max cross size before this conversion.
+        return resolved_definite_cross_size(item.box) * aspect_ratio;
+    }
+
+    // It is otherwise undefined.
+    return {};
+}
+
 // https://drafts.csswg.org/css-flexbox-1/#content-based-minimum-size
 float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) const
 {
@@ -664,8 +680,13 @@ float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) co
             return min(specified_size_suggestion.value(), content_size_suggestion(item));
         }
 
-        // FIXME: otherwise, the smaller of its transferred size suggestion and its content size suggestion
-        //        if the element is replaced and its transferred size suggestion exists;
+        // otherwise, the smaller of its transferred size suggestion and its content size suggestion
+        // if the element is replaced and its transferred size suggestion exists;
+        if (item.box.is_replaced_box()) {
+            if (auto transferred_size_suggestion = this->transferred_size_suggestion(item); transferred_size_suggestion.has_value()) {
+                return min(transferred_size_suggestion.value(), content_size_suggestion(item));
+            }
+        }
 
         // otherwise its content size suggestion.
         return content_size_suggestion(item);
