@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,13 +17,13 @@ FinalizationRegistry::FinalizationRegistry(Realm& realm, JobCallback cleanup_cal
 {
 }
 
-void FinalizationRegistry::add_finalization_record(Cell& target, Value held_value, Object* unregister_token)
+void FinalizationRegistry::add_finalization_record(Cell& target, Value held_value, Cell* unregister_token)
 {
     VERIFY(!held_value.is_empty());
     m_records.append({ &target, held_value, unregister_token });
 }
 
-bool FinalizationRegistry::remove_by_token(Object& unregister_token)
+bool FinalizationRegistry::remove_by_token(Cell& unregister_token)
 {
     auto removed = false;
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {

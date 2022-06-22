@@ -12,9 +12,15 @@ test("basic functionality", () => {
 
     var target2 = {};
     var heldValue2 = {};
-    var token = {};
+    var token1 = {};
 
-    registry.register(target2, heldValue2, token);
+    registry.register(target2, heldValue2, token1);
+
+    var target3 = Symbol("target");
+    var heldValue3 = {};
+    var token2 = Symbol("token");
+
+    registry.register(target3, heldValue3, token2);
 });
 
 test("errors", () => {
@@ -22,7 +28,7 @@ test("errors", () => {
 
     expect(() => {
         registry.register(5, {});
-    }).toThrowWithMessage(TypeError, "is not an object");
+    }).toThrowWithMessage(TypeError, "cannot be held weakly");
 
     expect(() => {
         var a = {};
@@ -30,6 +36,11 @@ test("errors", () => {
     }).toThrowWithMessage(TypeError, "Target and held value must not be the same");
 
     expect(() => {
+        var a = Symbol();
+        registry.register(a, a);
+    }).toThrowWithMessage(TypeError, "Target and held value must not be the same");
+
+    expect(() => {
         registry.register({}, {}, 5);
-    }).toThrowWithMessage(TypeError, "is not an object");
+    }).toThrowWithMessage(TypeError, "cannot be held weakly");
 });

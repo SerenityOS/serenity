@@ -5,15 +5,25 @@ test("length is 2", () => {
 test("basic functionality", () => {
     var registry = new FinalizationRegistry(() => {});
 
-    var target = {};
-    var heldValue = {};
-    var token = {};
+    var target1 = {};
+    var heldValue1 = {};
+    var token1 = {};
 
-    registry.register(target, heldValue, token);
+    registry.register(target1, heldValue1, token1);
 
     expect(registry.unregister({})).toBe(false);
-    expect(registry.unregister(token)).toBe(true);
-    expect(registry.unregister(token)).toBe(false);
+    expect(registry.unregister(token1)).toBe(true);
+    expect(registry.unregister(token1)).toBe(false);
+
+    var target2 = Symbol("target");
+    var heldValue2 = Symbol("heldValue");
+    var token2 = Symbol("token");
+
+    registry.register(target2, heldValue2, token2);
+
+    expect(registry.unregister(Symbol("token"))).toBe(false);
+    expect(registry.unregister(token2)).toBe(true);
+    expect(registry.unregister(token2)).toBe(false);
 });
 
 test("errors", () => {
@@ -21,5 +31,5 @@ test("errors", () => {
 
     expect(() => {
         registry.unregister(5);
-    }).toThrowWithMessage(TypeError, "is not an object");
+    }).toThrowWithMessage(TypeError, "cannot be held weakly");
 });
