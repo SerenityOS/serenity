@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +30,9 @@ JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
     auto* weak_ref = TRY(typed_this_object(global_object));
 
     weak_ref->update_execution_generation();
-    return weak_ref->value() ?: js_undefined();
+    return weak_ref->value().visit(
+        [](Empty) -> Value { return js_undefined(); },
+        [](auto* value) -> Value { return value; });
 }
 
 }
