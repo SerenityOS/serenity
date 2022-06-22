@@ -704,11 +704,12 @@ private:
                 bucket.previous->next = bucket.next;
             else
                 m_collection_data.head = bucket.next;
-
+            bucket.previous = nullptr;
             if (bucket.next)
                 bucket.next->previous = bucket.previous;
             else
                 m_collection_data.tail = bucket.previous;
+            bucket.next = nullptr;
         }
     }
 
