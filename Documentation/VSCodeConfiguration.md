@@ -14,11 +14,11 @@ The official clangd extension can be used for C++ comprehension. It is recommend
 
 ```yaml
 CompileFlags:
-  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/11.2.0, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/11.2.0/i686-pc-serenity]
+  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0/i686-pc-serenity]
   CompilationDatabase: Build/i686
 ```
 
-You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `i686`, with the one you're compiling most often. And finally, the compiler version (`11.2.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
+You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `i686`, with the one you're compiling most often. And finally, the compiler version (`12.1.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
 
 A known issue with clangd in general is that it likes to crash. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
 
