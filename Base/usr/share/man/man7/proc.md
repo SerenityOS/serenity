@@ -20,7 +20,7 @@ by a device file.
 them.
 * **`dmesg`** - this node exports information from the kernel log.
 * **`interrupts`** - this node exports information on all IRQ handlers and basic statistics on
-them. 
+them.
 * **`kernel_base`** - this node reveals the loading address of the kernel.
 * **`keymap`** - this node exports information on current used keymap.
 * **`memstat`** - this node exports statistics on memory allocation in the kernel.
@@ -54,6 +54,7 @@ sanitizer errors.
 * **`stacks`** - this directory lists all stack traces of process threads.
 * **`unveil`** - this node exports information on all the unveil requests of a process.
 * **`vm`** - this node exports information on virtual memory mappings of a process.
+* **`children`** - this directory lists all the child processes of a process.
 
 ### Consistency and stability of data across multiple read operations
 
@@ -61,7 +62,7 @@ When opening a data node, the kernel generates the required data so it's prepare
 for read operation when requested to. However, in order to ensure that multiple reads
 will not create a corrupted data from that data node, a read operation alone will
 not inquire the kernel to refresh the data.
-To keep data output being refreshed, the userland has to re-open the data node with a 
+To keep data output being refreshed, the userland has to re-open the data node with a
 new file descriptor, or to perform the `lseek` syscall on the open file descriptor to
 reset the the offset to 0.
 
