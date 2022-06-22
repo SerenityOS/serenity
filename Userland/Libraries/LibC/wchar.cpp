@@ -1,14 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Tim Schumacher <timschumi@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <AK/ScopeGuard.h>
 #include <AK/UnicodeUtils.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 #include <wchar.h>
 
 static unsigned int mbstate_expected_bytes(mbstate_t* state)
@@ -687,13 +690,38 @@ size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsftime.html
-size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, wchar_t const* __restrict format, const struct tm* __restrict timeptr)
+size_t wcsftime(wchar_t* destination, size_t maxsize, wchar_t const* format, const struct tm* tm)
 {
-    (void)wcs;
-    (void)maxsize;
-    (void)format;
-    (void)timeptr;
-    dbgln("FIXME: Implement wcsftime()");
-    TODO();
+    // FIXME: Add actual wide char support for this.
+    char* ascii_format = static_cast<char*>(malloc(wcslen(format) + 1));
+    char* ascii_destination = static_cast<char*>(malloc(maxsize));
+
+    VERIFY(ascii_format && ascii_destination);
+
+    // These are copied by value because we will change the pointers without rolling them back.
+    ScopeGuard free_ascii = [ascii_format, ascii_destination] {
+        free(ascii_format);
+        free(ascii_destination);
+    };
+
+    char* ascii_format_copy = ascii_format;
+    do {
+        VERIFY(*format <= 0x7f);
+        *ascii_format_copy++ = static_cast<char>(*format);
+    } while (*format++ != L'\0');
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+    size_t ret = strftime(ascii_destination, maxsize, ascii_format, tm);
+#pragma GCC diagnostic pop
+
+    if (ret == 0)
+        return 0;
+
+    do {
+        *destination++ = *ascii_destination;
+    } while (*ascii_destination++ != '\0');
+
+    return ret;
 }
 }
