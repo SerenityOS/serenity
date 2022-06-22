@@ -201,3 +201,13 @@ TEST_CASE(basic_contains)
     EXPECT_EQ(map.remove(1), true);
     EXPECT_EQ(map.contains(1), false);
 }
+
+TEST_CASE(in_place_rehashing_ordered_loop_bug)
+{
+    OrderedHashMap<String, String> map;
+    map.set("yt.innertube::nextId", "");
+    map.set("yt.innertube::requests", "");
+    map.remove("yt.innertube::nextId");
+    map.set("yt.innertube::nextId", "");
+    VERIFY(map.keys().size() == 2);
+}
