@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,12 +18,14 @@ class WeakRef final
     JS_OBJECT(WeakRef, Object);
 
 public:
-    static WeakRef* create(GlobalObject&, Object*);
+    static WeakRef* create(GlobalObject&, Object&);
+    static WeakRef* create(GlobalObject&, Symbol&);
 
-    explicit WeakRef(Object*, Object& prototype);
+    explicit WeakRef(Object&, Object& prototype);
+    explicit WeakRef(Symbol&, Object& prototype);
     virtual ~WeakRef() override = default;
 
-    Object* value() const { return m_value; };
+    auto const& value() const { return m_value; };
 
     void update_execution_generation() { m_last_execution_generation = vm().execution_generation(); };
 
@@ -32,7 +34,7 @@ public:
 private:
     virtual void visit_edges(Visitor&) override;
 
-    Object* m_value { nullptr };
+    Variant<Object*, Symbol*, Empty> m_value;
     u32 m_last_execution_generation { 0 };
 };
 
