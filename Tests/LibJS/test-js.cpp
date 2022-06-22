@@ -68,10 +68,10 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
 
     auto value = TRY(reference.get_value(global_object));
 
-    if (!value.is_object())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
+    if (!can_be_held_weakly(value))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::CannotBeHeldWeakly, String::formatted("Variable with name {}", variable_name.string()));
 
-    vm.heap().uproot_cell(&value.as_object());
+    vm.heap().uproot_cell(&value.as_cell());
     TRY(reference.delete_(global_object));
 
     return JS::js_undefined();

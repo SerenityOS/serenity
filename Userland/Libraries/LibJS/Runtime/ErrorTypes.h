@@ -19,6 +19,7 @@
     M(CallStackSizeExceeded, "Call stack size limit exceeded")                                                                          \
     M(CannotDeclareGlobalFunction, "Cannot declare global function of name '{}'")                                                       \
     M(CannotDeclareGlobalVariable, "Cannot declare global variable of name '{}'")                                                       \
+    M(CannotBeHeldWeakly, "{} cannot be held weakly")                                                                                   \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
     M(ClassExtendsValueNotAConstructorOrNull, "Class extends value {} is not a constructor or null")                                    \
     M(ClassExtendsValueInvalidPrototype, "Class extends value has an invalid prototype {}")                                             \
