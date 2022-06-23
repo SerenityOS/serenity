@@ -361,7 +361,7 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(GlobalObject& 
             // i. Assert: valueDesc is a data Property Descriptor.
             VERIFY(value_descriptor->is_data_descriptor());
 
-            // ii. Set the field of result whose name is field to valueDesc.[[Value]].
+            // ii. Set the field of result whose name is field to ℝ(valueDesc.[[Value]]).
             result.*field = value_descriptor->value->as_double();
         }
         // e. Else if completeness is complete, then
