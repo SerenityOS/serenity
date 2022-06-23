@@ -388,7 +388,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
         day = 1;
     }
 
-    // 11. Perform ! CreateDataPropertyOrThrow(fields, "day", day).
+    // 11. Perform ! CreateDataPropertyOrThrow(fields, "day", 𝔽(day)).
     MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
 
     // 12. Let date be ? CalendarDateFromFields(calendar, fields).
