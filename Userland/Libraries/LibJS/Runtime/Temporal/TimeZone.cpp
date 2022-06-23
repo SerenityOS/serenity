@@ -607,22 +607,36 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
-    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds - ℤ(nsPerDay)).
-    auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(ns_per_day_bigint))));
+    // 8. Let dayBeforeNs be epochNanoseconds - ℤ(nsPerDay).
+    auto* day_before_ns = js_bigint(vm, epoch_nanoseconds->big_integer().minus(ns_per_day_bigint));
 
-    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + ℤ(nsPerDay)).
-    auto* day_after = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().plus(ns_per_day_bigint))));
+    // 9. If ! IsValidEpochNanoseconds(dayBeforeNs) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*day_before_ns))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
 
-    // 10. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
+    // 10. Let dayBefore be ! CreateTemporalInstant(dayBeforeNs).
+    auto* day_before = MUST(create_temporal_instant(global_object, *day_before_ns));
+
+    // 11. Let dayAfterNs be epochNanoseconds + ℤ(nsPerDay).
+    auto* day_after_ns = js_bigint(vm, epoch_nanoseconds->big_integer().plus(ns_per_day_bigint));
+
+    // 12. If ! IsValidEpochNanoseconds(dayAfterNs) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*day_after_ns))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+
+    // 13. Let dayAfter be ! CreateTemporalInstant(dayAfterNs).
+    auto* day_after = MUST(create_temporal_instant(global_object, *day_after_ns));
+
+    // 14. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
     auto offset_before = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_before));
 
-    // 11. Let offsetAfter be ? GetOffsetNanosecondsFor(timeZone, dayAfter).
+    // 15. Let offsetAfter be ? GetOffsetNanosecondsFor(timeZone, dayAfter).
     auto offset_after = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_after));
 
-    // 12. Let nanoseconds be offsetAfter - offsetBefore.
+    // 16. Let nanoseconds be offsetAfter - offsetBefore.
     auto nanoseconds = offset_after - offset_before;
 
-    // 13. If disambiguation is "earlier", then
+    // 17. If disambiguation is "earlier", then
     if (disambiguation == "earlier"sv) {
         // a. Let earlier be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, undefined).
         auto earlier = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, nullptr));
@@ -641,26 +655,26 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
         return possible_instants_[0];
     }
 
-    // 14. Assert: disambiguation is "compatible" or "later".
+    // 18. Assert: disambiguation is "compatible" or "later".
     VERIFY(disambiguation.is_one_of("compatible"sv, "later"sv));
 
-    // 15. Let later be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds, undefined).
+    // 19. Let later be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds, undefined).
     auto later = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), 0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds, nullptr));
 
-    // 16. Let laterDateTime be ! CreateTemporalDateTime(later.[[Year]], later.[[Month]], later.[[Day]], later.[[Hour]], later.[[Minute]], later.[[Second]], later.[[Millisecond]], later.[[Microsecond]], later.[[Nanosecond]], dateTime.[[Calendar]]).
+    // 20. Let laterDateTime be ! CreateTemporalDateTime(later.[[Year]], later.[[Month]], later.[[Day]], later.[[Hour]], later.[[Minute]], later.[[Second]], later.[[Millisecond]], later.[[Microsecond]], later.[[Nanosecond]], dateTime.[[Calendar]]).
     auto* later_date_time = MUST(create_temporal_date_time(global_object, later.year, later.month, later.day, later.hour, later.minute, later.second, later.millisecond, later.microsecond, later.nanosecond, date_time.calendar()));
 
-    // 17. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, laterDateTime).
+    // 21. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, laterDateTime).
     auto possible_instants_ = TRY(get_possible_instants_for(global_object, time_zone, *later_date_time));
 
-    // 18. Set n to possibleInstants's length.
+    // 22. Set n to possibleInstants's length.
     n = possible_instants_.size();
 
-    // 19. If n = 0, throw a RangeError exception.
+    // 23. If n = 0, throw a RangeError exception.
     if (n == 0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsZero);
 
-    // 20. Return possibleInstants[n - 1].
+    // 24. Return possibleInstants[n - 1].
     return possible_instants_[n - 1];
 }
 
