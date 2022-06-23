@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,7 +13,6 @@
 #include <AK/URL.h>
 #include <LibCore/Object.h>
 #include <LibCore/Proxy.h>
-#include <LibCore/Timer.h>
 #include <LibWeb/Loader/Resource.h>
 
 namespace Web {
@@ -99,7 +98,6 @@ private:
     HashTable<NonnullRefPtr<ResourceLoaderConnectorRequest>> m_active_requests;
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
     String m_user_agent;
-    RefPtr<Core::Timer> m_timer;
 };
 
 }

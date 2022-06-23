@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,6 +11,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/Timer.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
@@ -141,13 +142,6 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 {
     auto& url = request.url();
     request.start_timer();
-    RefPtr<ResourceLoaderConnectorRequest> protocol_request;
-    if (timeout.has_value() && timeout.value() > 0) {
-        m_timer = Core::Timer::create_single_shot(timeout.value(), [&protocol_request] {
-            protocol_request->stop();
-        });
-        m_timer->start();
-    }
 
     auto id = resource_id++;
     auto url_for_logging = sanitized_url_for_logging(url);
@@ -248,7 +242,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             headers.set(it.key, it.value);
         }
 
-        protocol_request = m_connector->start_request(request.method(), url, headers, request.body(), proxy);
+        auto protocol_request = m_connector->start_request(request.method(), url, headers, request.body(), proxy);
         if (!protocol_request) {
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);
@@ -256,6 +250,15 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 error_callback(start_request_failure_msg, {});
             return;
         }
+
+        if (timeout.has_value() && timeout.value() > 0) {
+            auto timer = Core::Timer::construct(timeout.value(), nullptr);
+            timer->on_timeout = [timer, protocol_request]() mutable {
+                protocol_request->stop();
+            };
+            timer->start();
+        }
+
         m_active_requests.set(*protocol_request);
 
         protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
