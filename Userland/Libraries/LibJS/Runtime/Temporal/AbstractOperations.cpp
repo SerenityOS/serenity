@@ -712,7 +712,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone.as_object(), *calendar));
     }
 
-    // 9. Return ! CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+    // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
