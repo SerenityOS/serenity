@@ -668,8 +668,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
     auto* date_time = TRY(typed_this_object(global_object));
 
-    // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
-    return TRY(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
+    // 3. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    return MUST(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
 }
 
 // 5.3.38 Temporal.PlainDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainyearmonth
