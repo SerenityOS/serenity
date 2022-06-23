@@ -118,25 +118,19 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 5. Let utc be GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     auto* utc = get_epoch_from_iso_parts(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
-    // 6. If ℝ(utc) < nsMinInstant or ℝ(utc) > nsMaxInstant, then
-    if (utc->big_integer() < ns_min_instant || utc->big_integer() > ns_max_instant) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
-    }
-
-    // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
+    // 6. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
     auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
 
-    // 8. Let result be utc - ℤ(offsetNanoseconds).
+    // 7. Let result be utc - ℤ(offsetNanoseconds).
     auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
 
-    // 9. If ! IsValidEpochNanoseconds(result) is false, then
+    // 8. If ! IsValidEpochNanoseconds(result) is false, then
     if (!is_valid_epoch_nanoseconds(*result_ns)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
     }
 
-    // 10. Return result.
+    // 9. Return result.
     return result_ns;
 }
 
