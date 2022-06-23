@@ -157,10 +157,14 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 
     // 7. For each value epochNanoseconds in possibleEpochNanoseconds, do
     for (auto& epoch_nanoseconds : possible_epoch_nanoseconds) {
-        // a. Let instant be ! CreateTemporalInstant(epochNanoseconds).
+        // a. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+        if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+
+        // b. Let instant be ! CreateTemporalInstant(epochNanoseconds).
         auto* instant = MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 
-        // b. Append instant to possibleInstants.
+        // c. Append instant to possibleInstants.
         possible_instants.append(instant);
     }
 
