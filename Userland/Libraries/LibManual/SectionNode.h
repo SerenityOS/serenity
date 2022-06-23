@@ -64,7 +64,7 @@ Array<NonnullRefPtr<SectionNode>, number_of_sections> const sections = { {
     make_ref_counted<SectionNode>("8", "Sysadmin Tools"),
 } };
 
-constexpr Array<StringView, number_of_sections> const section_numbers = { {
+constexpr Array<StringView, number_of_sections> const section_numbers = {
     "1"sv,
     "2"sv,
     "3"sv,
@@ -73,6 +73,6 @@ constexpr Array<StringView, number_of_sections> const section_numbers = { {
     "6"sv,
     "7"sv,
     "8"sv,
-} };
+};
 
 }

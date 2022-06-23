@@ -99,19 +99,19 @@ MainWidget::MainWidget()
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.protocol() == "file") {
-            auto path = url.path();
-            if (!path.starts_with("/usr/share/man/"sv)) {
+            auto path = LexicalPath { url.path() };
+            if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
                 return;
             }
-            auto browse_view_index = m_manual_model->index_from_path(path);
+            auto browse_view_index = m_manual_model->index_from_path(path.string());
             if (browse_view_index.has_value()) {
                 dbgln("Found path _{}_ in m_manual_model at index {}", path, browse_view_index.value());
                 m_browse_view->selection().set(browse_view_index.value());
                 return;
             }
-            m_history.push(path);
-            open_page(path);
+            m_history.push(path.string());
+            open_page(path.string());
         } else if (url.protocol() == "help") {
             if (url.host() == "man") {
                 if (url.paths().size() != 2) {
@@ -119,9 +119,15 @@ MainWidget::MainWidget()
                     return;
                 }
                 auto const section = url.paths()[0];
+                auto maybe_section_number = section.to_uint();
+                if (!maybe_section_number.has_value()) {
+                    dbgln("Bad section number '{}'", section);
+                    return;
+                }
+                auto section_number = maybe_section_number.value();
                 auto const page = url.paths()[1];
-                auto const path = String::formatted("/usr/share/man/man{}/{}.md", section, page);
 
+                auto path = make_ref_counted<Manual::PageNode>(Manual::sections[section_number - 1], page)->path();
                 m_history.push(path);
                 open_url(URL::create_with_file_scheme(path, url.fragment()));
             } else {
@@ -156,7 +162,7 @@ MainWidget::MainWidget()
     m_go_forward_action->set_enabled(false);
 
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) {
-        String path = "/usr/share/man/man7/Help-index.md";
+        String const path = make_ref_counted<Manual::PageNode>(Manual::sections[7 - 1], "Help-index"sv)->path();
         m_history.push(path);
         open_page(path);
     });
@@ -184,9 +190,9 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
 {
     bool set_start_page = false;
     if (!start_page.is_null()) {
-        if (section != 0) {
+        if (section != 0 && section < Manual::number_of_sections) {
             // > Help [section] [name]
-            String path = String::formatted("/usr/share/man/man{}/{}.md", section, start_page);
+            String const path = Manual::PageNode { Manual::sections[section - 1], start_page }.path();
             m_history.push(path);
             open_page(path);
             set_start_page = true;
@@ -199,8 +205,8 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
             // > Help [query]
 
             // First, see if we can find the page by name
-            for (auto s : Manual::section_numbers) {
-                String path = String::formatted("/usr/share/man/man{}/{}.md", s, start_page);
+            for (auto const& section : Manual::sections) {
+                String const path = Manual::PageNode { section, start_page }.path();
                 if (Core::File::exists(path)) {
                     m_history.push(path);
                     open_page(path);
@@ -241,7 +247,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
-        String path = "/usr/share/man/man1/Help.md";
+        String const path = make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], "Help"sv)->path();
         open_page(path);
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window)));

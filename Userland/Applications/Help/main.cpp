@@ -32,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
+    // We specifically don't want to load this path from a library, as that can be hijacked with LD_PRELOAD.
     TRY(Core::System::unveil("/usr/share/man", "r"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
