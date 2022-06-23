@@ -300,3 +300,12 @@ BENCHMARK_CASE(benchmark_thrashing)
         table.remove(i);
     }
 }
+
+TEST_CASE(reinsertion)
+{
+    OrderedHashTable<String> map;
+    map.set("ytidb::LAST_RESULT_ENTRY_KEY");
+    map.set("__sak");
+    map.remove("__sak");
+    map.set("__sak");
+}
