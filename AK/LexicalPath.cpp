@@ -72,6 +72,22 @@ bool LexicalPath::has_extension(StringView extension) const
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
 
+bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
+{
+    // Any relative path is a child of an absolute path.
+    if (!this->is_absolute() && possible_parent.is_absolute())
+        return true;
+    // An absolute path can't meaningfully be a child of a relative path.
+    if (this->is_absolute() && !possible_parent.is_absolute())
+        return false;
+
+    // Two relative paths and two absolute paths can be meaningfully compared.
+    if (possible_parent.parts_view().size() > this->parts_view().size())
+        return false;
+    auto common_parts_with_parent = this->parts_view().span().trim(possible_parent.parts_view().size());
+    return common_parts_with_parent == possible_parent.parts_view().span();
+}
+
 DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
 {
     if (path.is_null())

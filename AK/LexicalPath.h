@@ -33,6 +33,7 @@ public:
     [[nodiscard]] Vector<DeprecatedString> parts() const;
 
     bool has_extension(StringView) const;
+    bool is_child_of(LexicalPath const& possible_parent) const;
 
     [[nodiscard]] LexicalPath append(StringView) const;
     [[nodiscard]] LexicalPath prepend(StringView) const;
