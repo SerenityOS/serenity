@@ -62,9 +62,17 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
         // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
-        // b. Return epochNanoseconds - ℤ(offsetNanoseconds).
+        // b. Set epochNanoseconds to epochNanoseconds - ℤ(offsetNanoseconds).
+        // FIXME: Narrowing conversion from 'double' to 'i64'
         auto offset_nanoseconds_bigint = Crypto::SignedBigInteger::create_from((i64)offset_nanoseconds);
-        return js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
+        epoch_nanoseconds = js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
+
+        // c. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+        if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+
+        // d. Return epochNanoseconds.
+        return epoch_nanoseconds;
     }
 
     // 5. Assert: offsetBehaviour is option.
