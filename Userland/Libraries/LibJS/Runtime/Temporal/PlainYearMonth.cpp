@@ -345,23 +345,17 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
 {
     auto& vm = global_object.vm();
 
-    // 1. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
+    // 1. Let duration be ? ToTemporalDuration(temporalDurationLike).
+    auto* duration = TRY(to_temporal_duration(global_object, temporal_duration_like));
 
     // 2. If operation is subtract, then
     if (operation == ArithmeticOperation::Subtract) {
         // a. Set duration to ! CreateNegatedTemporalDuration(duration).
-        // FIXME: According to the spec CreateNegatedTemporalDuration takes a Temporal.Duration object,
-        //        not a record, so we have to do some trickery. If they want to accept anything that has
-        //        the required internal slots, this should be updated in the AO's description.
-        //        We also have to convert back to a Duration Record afterwards to match the initial type.
-        auto* actual_duration = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
-        auto* negated_duration = create_negated_temporal_duration(global_object, *actual_duration);
-        duration = MUST(to_temporal_duration_record(global_object, negated_duration));
+        duration = create_negated_temporal_duration(global_object, *duration);
     }
 
     // 3. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = TRY(balance_duration(global_object, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, Crypto::SignedBigInteger::create_from((i64)duration.nanoseconds), "day"sv));
+    auto balance_result = TRY(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from((i64)duration->nanoseconds()), "day"sv));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, options_value));
@@ -376,7 +370,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, Vector<StringView> {}));
 
     // 8. Set sign to ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto sign = duration_sign(duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0);
+    auto sign = duration_sign(duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0);
 
     double day;
 
@@ -401,7 +395,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields));
 
     // 13. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
+    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 14. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
     auto* options_copy = Object::create(global_object, global_object.object_prototype());
