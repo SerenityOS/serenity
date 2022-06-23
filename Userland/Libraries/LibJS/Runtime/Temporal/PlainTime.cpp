@@ -453,25 +453,28 @@ DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microse
     // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integers.
     VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
 
-    // 2. Let hour be hour + hours.
+    // 2. Assert: IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is true.
+    VERIFY(is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond));
+
+    // 3. Let hour be hour + hours.
     auto hour_ = hour + hours;
 
-    // 3. Let minute be minute + minutes.
+    // 4. Let minute be minute + minutes.
     auto minute_ = minute + minutes;
 
-    // 4. Let second be second + seconds.
+    // 5. Let second be second + seconds.
     auto second_ = second + seconds;
 
-    // 5. Let millisecond be millisecond + milliseconds.
+    // 6. Let millisecond be millisecond + milliseconds.
     auto millisecond_ = millisecond + milliseconds;
 
-    // 6. Let microsecond be microsecond + microseconds.
+    // 7. Let microsecond be microsecond + microseconds.
     auto microsecond_ = microsecond + microseconds;
 
-    // 7. Let nanosecond be nanosecond + nanoseconds.
+    // 8. Let nanosecond be nanosecond + nanoseconds.
     auto nanosecond_ = nanosecond + nanoseconds;
 
-    // 8. Return ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
+    // 9. Return ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
     return balance_time(hour_, minute_, second_, millisecond_, microsecond_, nanosecond_);
 }
 
