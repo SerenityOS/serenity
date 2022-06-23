@@ -1786,14 +1786,25 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             any = true;
 
             // ii. If property is in the Property column of Table 15 and there is a Conversion value in the same row, then
-            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
-            // 2. Set value to ? Conversion(value).
-            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
+            // 1. Let Conversion be the Conversion value of the same row.
+            // 2. If Conversion is ToIntegerThrowOnInfinity, then
+            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv)) {
+                // a. Set value to ? ToIntegerThrowOnInfinity(value).
+                // b. Set value to 𝔽(value).
                 value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
-            else if (property.is_one_of("month"sv, "day"sv))
+            }
+            // 3. Else if Conversion is ToPositiveInteger, then
+            else if (property.is_one_of("month"sv, "day"sv)) {
+                // a. Set value to ? ToPositiveInteger(value).
+                // b. Set value to 𝔽(value).
                 value = Value(TRY(to_positive_integer(global_object, value)));
-            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
+            }
+            // 4. Else,
+            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv)) {
+                // a. Assert: Conversion is ToString.
+                // b. Set value to ? ToString(value).
                 value = TRY(value.to_primitive_string(global_object));
+            }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
             MUST(result->create_data_property_or_throw(property, value));
