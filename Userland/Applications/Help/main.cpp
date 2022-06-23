@@ -19,7 +19,7 @@ using namespace Help;
 
 static DeprecatedString parse_input(StringView input)
 {
-    AK::URL url(input);
+    AK::URL url = URL::create_with_url_or_path(input);
     if (url.is_valid())
         return url.basename();
 
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .accept_value = [&](char const* input_ptr) {
             StringView input { input_ptr, strlen(input_ptr) };
             // If start_page was already set by our section arg, then it can't be set again
-            if (start_page.is_empty())
+            if (!start_page.is_empty())
                 return false;
             start_page = parse_input(input);
             return true;
