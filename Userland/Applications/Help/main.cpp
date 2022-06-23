@@ -33,6 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
+    // We specifically don't want to load this path from a library, as that can be hijacked with LD_PRELOAD.
     TRY(Core::System::unveil("/usr/share/man", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
