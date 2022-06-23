@@ -1307,31 +1307,31 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     // 9. Perform ! CreateDataPropertyOrThrow(fields, "calendar", calendar).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&calendar)));
 
-    // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", dateTime.[[ISODay]]).
+    // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", 𝔽(dateTime.[[ISODay]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoDay, Value(date_time->iso_day())));
 
-    // 11. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", dateTime.[[ISOHour]]).
+    // 11. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", 𝔽(dateTime.[[ISOHour]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoHour, Value(date_time->iso_hour())));
 
-    // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", dateTime.[[ISOMicrosecond]]).
+    // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", 𝔽(dateTime.[[ISOMicrosecond]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(date_time->iso_microsecond())));
 
-    // 13. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", dateTime.[[ISOMillisecond]]).
+    // 13. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", 𝔽(dateTime.[[ISOMillisecond]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(date_time->iso_millisecond())));
 
-    // 14. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", dateTime.[[ISOMinute]]).
+    // 14. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", 𝔽(dateTime.[[ISOMinute]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoMinute, Value(date_time->iso_minute())));
 
-    // 15. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", dateTime.[[ISOMonth]]).
+    // 15. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", 𝔽(dateTime.[[ISOMonth]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoMonth, Value(date_time->iso_month())));
 
-    // 16. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", dateTime.[[ISONanosecond]]).
+    // 16. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", 𝔽(dateTime.[[ISONanosecond]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(date_time->iso_nanosecond())));
 
-    // 17. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", dateTime.[[ISOSecond]]).
+    // 17. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(dateTime.[[ISOSecond]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoSecond, Value(date_time->iso_second())));
 
-    // 18. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", dateTime.[[ISOYear]]).
+    // 18. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(dateTime.[[ISOYear]])).
     MUST(fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year())));
 
     // 19. Perform ! CreateDataPropertyOrThrow(fields, "offset", offset).
