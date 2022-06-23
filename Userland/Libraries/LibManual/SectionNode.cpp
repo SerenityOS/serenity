@@ -6,6 +6,7 @@
 
 #include "SectionNode.h"
 #include "PageNode.h"
+#include "Path.h"
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
@@ -14,7 +15,7 @@ namespace Manual {
 
 ErrorOr<String> SectionNode::path() const
 {
-    return String::formatted("/usr/share/man/man{}", m_section);
+    return String::formatted("{}/{}{}", manual_base_path, top_level_section_prefix, m_section);
 }
 
 ErrorOr<String> SectionNode::name() const

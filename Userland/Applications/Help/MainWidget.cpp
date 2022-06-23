@@ -34,6 +34,7 @@
 #include <LibMain/Main.h>
 #include <LibManual/Node.h>
 #include <LibManual/PageNode.h>
+#include <LibManual/Path.h>
 #include <LibManual/SectionNode.h>
 #include <LibMarkdown/Document.h>
 
@@ -98,19 +99,22 @@ MainWidget::MainWidget()
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.scheme() == "file") {
-            auto path = url.path();
-            if (!path.starts_with("/usr/share/man/"sv)) {
+            auto path = LexicalPath { url.path() };
+            if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
                 return;
             }
-            auto browse_view_index = m_manual_model->index_from_path(path);
+            auto browse_view_index = m_manual_model->index_from_path(path.string());
             if (browse_view_index.has_value()) {
                 dbgln("Found path _{}_ in m_manual_model at index {}", path, browse_view_index.value());
                 m_browse_view->selection().set(browse_view_index.value());
                 return;
             }
-            m_history.push(path);
-            open_page(MUST(String::from_utf8(path)));
+            m_history.push(path.string());
+            auto string_path = String::from_utf8(path.string());
+            if (string_path.is_error())
+                return;
+            open_page(string_path.value());
         } else if (url.scheme() == "help") {
             if (url.host() == "man") {
                 if (url.paths().size() != 2) {
@@ -118,9 +122,24 @@ MainWidget::MainWidget()
                     return;
                 }
                 auto const section = url.paths()[0];
-                auto const page = url.paths()[1];
-                auto const path = DeprecatedString::formatted("/usr/share/man/man{}/{}.md", section, page);
+                auto maybe_section_number = section.to_uint();
+                if (!maybe_section_number.has_value()) {
+                    dbgln("Bad section number '{}'", section);
+                    return;
+                }
+                auto section_number = maybe_section_number.value();
+                auto page = String::from_utf8(url.paths()[1]);
+                if (page.is_error())
+                    return;
 
+                auto const page_object = try_make_ref_counted<Manual::PageNode>(Manual::sections[section_number - 1], page.release_value());
+                if (page_object.is_error())
+                    return;
+                auto const maybe_path = page_object.value()->path();
+                if (maybe_path.is_error())
+                    return;
+
+                auto path = maybe_path.value().to_deprecated_string();
                 m_history.push(path);
                 open_url(URL::create_with_file_scheme(path, url.fragment()));
             } else {
@@ -177,9 +196,9 @@ ErrorOr<void> MainWidget::set_start_page(StringView start_page, u32 section)
 {
     bool set_start_page = false;
     if (!start_page.is_null()) {
-        if (section != 0) {
+        if (section != 0 && section < Manual::number_of_sections) {
             // > Help [section] [name]
-            String path = TRY(String::formatted("/usr/share/man/man{}/{}.md", section, start_page));
+            String const path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[section - 1], TRY(String::from_utf8(start_page))))->path());
             m_history.push(path);
             open_page(path);
             set_start_page = true;
@@ -192,8 +211,8 @@ ErrorOr<void> MainWidget::set_start_page(StringView start_page, u32 section)
             // > Help [query]
 
             // First, see if we can find the page by name
-            for (auto s : Manual::section_numbers) {
-                String path = TRY(String::formatted("/usr/share/man/man{}/{}.md", s, start_page));
+            for (auto const& section : Manual::sections) {
+                String const path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(section, TRY(String::from_utf8(start_page))))->path());
                 if (Core::File::exists(path)) {
                     m_history.push(path);
                     open_page(path);
@@ -219,7 +238,7 @@ ErrorOr<void> MainWidget::set_start_page(StringView start_page, u32 section)
 
 ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 {
-    static String help_index_path = TRY(String::from_utf8("/usr/share/man/man7/Help-index.md"sv));
+    static String const help_index_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[7 - 1], TRY(String::from_utf8("Help-index"sv))))->path());
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) {
         m_history.push(help_index_path);
         open_page(help_index_path);
@@ -240,7 +259,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_home_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
-    static String help_page_path = TRY(String::from_utf8("/usr/share/man/man1/Help.md"sv));
+    String const help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], TRY(String::from_utf8("Help"sv))))->path());
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
         open_page(help_page_path);
