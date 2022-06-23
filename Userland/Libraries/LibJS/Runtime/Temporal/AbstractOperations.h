@@ -121,11 +121,20 @@ struct SecondsStringPrecision {
     u32 increment;
 };
 
+struct DifferenceSettings {
+    String smallest_unit;
+    String largest_unit;
+    String rounding_mode;
+    u64 rounding_increment;
+    Object& options;
+};
+
 struct TemporalUnitRequired { };
 struct PrepareTemporalFieldsPartial { };
 struct GetOptionRequired { };
 
 using OptionDefault = Variant<GetOptionRequired, Empty, bool, StringView, double>;
+using TemporalUnitDefault = Variant<TemporalUnitRequired, Optional<StringView>>;
 
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
@@ -141,7 +150,7 @@ ThrowCompletionOr<String> to_show_offset_option(GlobalObject&, Object const& nor
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);
-ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject&, Object const& normalized_options, PropertyKey const&, UnitGroup, Variant<TemporalUnitRequired, Optional<StringView>> const& default_, Vector<StringView> const& extra_values = {});
+ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject&, Object const& normalized_options, PropertyKey const&, UnitGroup, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values = {});
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject&, Object const& options);
 StringView larger_of_two_temporal_units(StringView, StringView);
 ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object const& options, String largest_unit);
@@ -170,6 +179,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<double> to_positive_integer(GlobalObject&, Value argument);
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields);
+ThrowCompletionOr<DifferenceSettings> get_difference_settings(GlobalObject&, DifferenceOperation, Value options_value, UnitGroup unit_group, Vector<StringView> const& disallowed_units, TemporalUnitDefault const& fallback_smallest_unit, StringView smallest_largest_default_unit);
 
 template<size_t Size>
 ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, OptionType type, StringView const (&values)[Size], OptionDefault const& default_)

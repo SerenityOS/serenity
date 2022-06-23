@@ -507,50 +507,21 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
     if (!TRY(calendar_equals(global_object, temporal_date.calendar(), other->calendar())))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
-    // 4. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, options_value));
+    // 4. Let settings be ? GetDifferenceSettings(operation, options, date, « », "day", "day").
+    auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::Date, {}, { "day"sv }, "day"sv));
 
-    // 5. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", date, "day").
-    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, UnitGroup::Date, { "day"sv }));
+    // 5. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
+    auto* until_options = TRY(merge_largest_unit_option(global_object, settings.options, settings.largest_unit));
 
-    // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
-    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
-
-    // 7. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", date, "auto").
-    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, UnitGroup::Date, { "auto"sv }));
-
-    // 8. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
-    if (largest_unit == "auto"sv)
-        largest_unit = default_largest_unit;
-
-    // 9. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
-    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
-
-    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
-
-    // 11. If operation is since, then
-    if (operation == DifferenceOperation::Since) {
-        // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
-        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
-    }
-
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
-
-    // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, largest_unit.release_value()));
-
-    // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
+    // 6. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* duration = TRY(calendar_date_until(global_object, temporal_date.calendar(), &temporal_date, other, *until_options));
 
     auto result = DurationRecord { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
 
-    // 15. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
-    if (*smallest_unit != "day"sv || rounding_increment != 1) {
-        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
-        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, &temporal_date)).duration_record;
+    // 7. If settings.[[SmallestUnit]] is not "day" or settings.[[RoundingIncrement]] ≠ 1, then
+    if (settings.smallest_unit != "day"sv || settings.rounding_increment != 1) {
+        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], temporalDate)).[[DurationRecord]].
+        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &temporal_date)).duration_record;
     }
 
     // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], 0, 0, 0, 0, 0, 0).
