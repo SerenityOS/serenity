@@ -82,6 +82,7 @@ public:
 
     DynamicObject const& dynamic_object() const;
 
+    bool is_fully_relocated() const { return m_fully_relocated; }
     bool is_fully_initialized() const { return m_fully_initialized; }
 
 private:
@@ -161,6 +162,7 @@ private:
 
     mutable RefPtr<DynamicObject> m_cached_dynamic_object;
 
+    bool m_fully_relocated { false };
     bool m_fully_initialized { false };
 };
 
