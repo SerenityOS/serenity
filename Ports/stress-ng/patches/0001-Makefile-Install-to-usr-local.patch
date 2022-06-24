@@ -8,10 +8,10 @@ Subject: [PATCH] Makefile: Install to /usr/local
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index f8f71c5..1d90cd0 100644
+index d990692..a07b40e 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -74,10 +74,10 @@ LDFLAGS += -static -z muldefs
+@@ -87,10 +87,10 @@ LDFLAGS += -static -z muldefs
  CFLAGS += -DBUILD_STATIC
  endif
  
@@ -25,4 +25,4 @@ index f8f71c5..1d90cd0 100644
 +BASHDIR=/usr/local/share/bash-completion/completions
  
  #
- #  Stressors
+ # Header files
