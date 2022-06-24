@@ -468,6 +468,7 @@ ExceptionOr<void> Element::set_inner_html(String const& markup)
 
     // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
     document().invalidate_layout();
+    document().set_needs_layout();
     return {};
 }
 
