@@ -2082,12 +2082,25 @@ void Shell::notify_child_event()
     // The child might still be alive (and even running) when this signal is dispatched to us
     // so just...repeat until we find a suitable child.
     // This, of course, will mean that someone can send us a SIGCHILD and we'd be spinning here
-    // until the next child event we can actually handle.
+    // until the next child event we can actually handle, so stop after spending a total of 5110us (~5ms) on it.
     bool found_child = false;
-    do {
+    size_t const max_tries = 10;
+    size_t valid_attempts = max_tries;
+    useconds_t backoff_usec = 20;
+    int backoff_multiplier = 2;
+
+    for (;;) {
+        if (found_child || --valid_attempts == 0)
+            break;
+
         // Ignore stray SIGCHLD when there are no jobs.
         if (jobs.is_empty())
             return;
+
+        if (valid_attempts < max_tries - 1) {
+            usleep(backoff_usec);
+            backoff_usec *= backoff_multiplier;
+        }
 
         for (auto& it : jobs) {
             auto job_id = it.key;
@@ -2141,7 +2154,7 @@ void Shell::notify_child_event()
         for (auto job_id : disowned_jobs) {
             jobs.remove(job_id);
         }
-    } while (!found_child);
+    }
 }
 
 Shell::Shell()
