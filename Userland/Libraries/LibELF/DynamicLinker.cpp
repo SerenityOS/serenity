@@ -299,8 +299,16 @@ static void for_each_unfinished_dependency_of(String const& name, HashTable<Stri
     if (!loader.has_value())
         return;
 
-    if (loader.value()->is_fully_initialized())
+    if (loader.value()->is_fully_relocated()) {
+        if (!loader.value()->is_fully_initialized()) {
+            // If we are ending up here, that possibly means that this library either dlopens itself or a library that depends
+            // on it while running its initializers. Assuming that this is the only funny thing that the library does, there is
+            // a reasonable chance that nothing breaks, so just warn and continue.
+            dbgln("\033[33mWarning:\033[0m Querying for dependencies of '{}' while running its initializers", name);
+        }
+
         return;
+    }
 
     if (seen_names.contains(name))
         return;

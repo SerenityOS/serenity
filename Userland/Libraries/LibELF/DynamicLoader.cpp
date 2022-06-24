@@ -243,6 +243,8 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
 #endif
     }
 
+    m_fully_relocated = true;
+
     return NonnullRefPtr<DynamicObject> { *m_dynamic_object };
 }
 
