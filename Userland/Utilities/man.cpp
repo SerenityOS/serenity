@@ -8,13 +8,14 @@
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <LibManual/PageNode.h>
+#include <LibManual/SectionNode.h>
 #include <LibMarkdown/Document.h>
-#include <fcntl.h>
 #include <spawn.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -29,11 +30,7 @@ static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
     posix_spawn_file_actions_init(&action);
     posix_spawn_file_actions_adddup2(&action, stdout_pipe[0], STDIN_FILENO);
 
-    pid_t pid;
-    if ((errno = posix_spawnp(&pid, argv[0], &action, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-        exit(1);
-    }
+    pid_t pid = TRY(Core::System::posix_spawnp("sh"sv, &action, nullptr, const_cast<char**>(argv), environ));
     posix_spawn_file_actions_destroy(&action);
 
     TRY(Core::System::dup2(stdout_pipe[1], STDOUT_FILENO));
@@ -45,7 +42,7 @@ static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int view_width = 0;
-    if (isatty(STDOUT_FILENO)) {
+    if (isatty(STDOUT_FILENO) != 0) {
         struct winsize ws;
         if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
             view_width = ws.ws_col;
@@ -59,9 +56,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    StringView section {};
-    StringView name {};
-    StringView pager {};
+    DeprecatedString section;
+    DeprecatedString name;
+    DeprecatedString pager;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
@@ -70,49 +67,41 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager");
     args_parser.parse(arguments);
 
-    auto make_path = [name](StringView section) {
-        return DeprecatedString::formatted("/usr/share/man/man{}/{}.md", section, name);
-    };
+    Optional<NonnullRefPtr<Manual::PageNode>> page;
     if (section.is_empty()) {
-        constexpr StringView sections[] = {
-            "1"sv,
-            "2"sv,
-            "3"sv,
-            "4"sv,
-            "5"sv,
-            "6"sv,
-            "7"sv,
-            "8"sv
-        };
-        for (auto s : sections) {
-            DeprecatedString path = make_path(s);
-            if (access(path.characters(), R_OK) == 0) {
-                section = s;
+        for (auto const& s : Manual::sections) {
+            auto const maybe_page = make_ref_counted<Manual::PageNode>(s, TRY(String::from_utf8(name)));
+            if (Core::File::exists(TRY(maybe_page->path()).to_deprecated_string())) {
+                page = maybe_page;
+                section = s->section_name().to_deprecated_string();
                 break;
             }
         }
+    } else {
+        auto number_section = section.to_uint();
+        if (number_section.has_value())
+            page = make_ref_counted<Manual::PageNode>(Manual::sections[number_section.value() - 1], TRY(String::from_utf8(name)));
+        else
+            warnln("Section name '{}' invalid", section);
     }
-    auto filename = make_path(section);
-    if (section == nullptr) {
+
+    if (!page.has_value()) {
         warnln("No man page for {}", name);
         exit(1);
-    } else if (access(filename.characters(), R_OK) != 0) {
+    } else if (!Core::File::exists(TRY((*page)->path()))) {
         warnln("No man page for {} in section {}", name, section);
         exit(1);
     }
 
-    DeprecatedString pager_command;
-    if (!pager.is_empty())
-        pager_command = pager;
-    else
-        pager_command = DeprecatedString::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly));
-    pid_t pager_pid = TRY(pipe_to_pager(pager_command));
+    if (pager.is_empty())
+        pager = TRY(String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly))).to_deprecated_string();
+    pid_t pager_pid = TRY(pipe_to_pager(pager));
 
-    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::Stream::File::open(TRY((*page)->path()), Core::Stream::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio proc"));
 
-    dbgln("Loading man page from {}", filename);
+    dbgln("Loading man page from {}", (*page)->path());
     auto buffer = TRY(file->read_all());
     auto source = DeprecatedString::copy(buffer);
 
