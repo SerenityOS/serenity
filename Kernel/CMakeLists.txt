@@ -81,10 +81,10 @@ set(KERNEL_SOURCES
     Graphics/Console/TextModeConsole.cpp
     Graphics/Console/VGAConsole.cpp
     Graphics/DisplayConnector.cpp
+    Graphics/Generic/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VGA/DisplayConnector.cpp
     Graphics/VGA/ISAAdapter.cpp
     Graphics/VGA/PCIAdapter.cpp
     Graphics/VGA/VGACompatibleAdapter.cpp
