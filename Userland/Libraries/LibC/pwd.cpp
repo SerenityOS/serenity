@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
@@ -59,6 +60,10 @@ void endpwent()
 struct passwd* getpwuid(uid_t uid)
 {
     setpwent();
+    ScopeGuard guard = [] {
+        if (s_stream)
+            fclose(s_stream);
+    };
     while (auto* pw = getpwent()) {
         if (pw->pw_uid == uid)
             return pw;
@@ -69,6 +74,10 @@ struct passwd* getpwuid(uid_t uid)
 struct passwd* getpwnam(char const* name)
 {
     setpwent();
+    ScopeGuard guard = [] {
+        if (s_stream)
+            fclose(s_stream);
+    };
     while (auto* pw = getpwent()) {
         if (!strcmp(pw->pw_name, name))
             return pw;
@@ -178,6 +187,10 @@ int getpwnam_r(char const* name, struct passwd* pwd, char* buf, size_t buflen, s
     TemporaryChange shell_change { s_shell, {} };
 
     setpwent();
+    ScopeGuard guard = [] {
+        if (s_stream)
+            fclose(s_stream);
+    };
     bool found = false;
     while (auto* pw = getpwent()) {
         if (!strcmp(pw->pw_name, name)) {
@@ -209,6 +222,10 @@ int getpwuid_r(uid_t uid, struct passwd* pwd, char* buf, size_t buflen, struct p
     TemporaryChange shell_change { s_shell, {} };
 
     setpwent();
+    ScopeGuard guard = [] {
+        if (s_stream)
+            fclose(s_stream);
+    };
     bool found = false;
     while (auto* pw = getpwent()) {
         if (pw->pw_uid == uid) {
