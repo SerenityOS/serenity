@@ -14,6 +14,7 @@ configopts=(
     "-DQT_FEATURE_cxx20=ON"
     "-DINPUT_opengl=no"
 )
+depends=("md4c")
 
 QT_HOST_PATH=/usr
 QT_HOST_CMAKE_PATH=${QT_HOST_PATH}/lib64/cmake
