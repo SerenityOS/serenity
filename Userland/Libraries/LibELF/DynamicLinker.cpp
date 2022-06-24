@@ -292,12 +292,14 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_unfinished_dependency_of(String const& name, HashTable<String>& seen_names, bool first, bool skip_global_objects, Callback callback)
+static void for_each_unfinished_dependency_of(String const& name, HashTable<String>& seen_names, Callback callback)
 {
-    if (!s_loaders.contains(name))
+    auto loader = s_loaders.get(name);
+
+    if (!loader.has_value())
         return;
 
-    if (!first && skip_global_objects && s_global_objects.contains(name))
+    if (loader.value()->is_fully_initialized())
         return;
 
     if (seen_names.contains(name))
@@ -305,24 +307,24 @@ static void for_each_unfinished_dependency_of(String const& name, HashTable<Stri
     seen_names.set(name);
 
     for (auto const& needed_name : get_dependencies(name))
-        for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, false, skip_global_objects, callback);
+        for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, callback);
 
     callback(*s_loaders.get(name).value());
 }
 
-static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& name, bool skip_global_objects)
+static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& name)
 {
     HashTable<String> seen_names;
     NonnullRefPtrVector<DynamicLoader> loaders;
-    for_each_unfinished_dependency_of(name, seen_names, true, skip_global_objects, [&](auto& loader) {
+    for_each_unfinished_dependency_of(name, seen_names, [&](auto& loader) {
         loaders.append(loader);
     });
     return loaders;
 }
 
-static Result<void, DlErrorMessage> link_main_library(String const& name, int flags, bool skip_global_objects)
+static Result<void, DlErrorMessage> link_main_library(String const& name, int flags)
 {
-    auto loaders = collect_loaders_for_library(name, skip_global_objects);
+    auto loaders = collect_loaders_for_library(name);
 
     for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
@@ -447,7 +449,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
         return result2.error();
     }
 
-    auto result = link_main_library(library_name, flags, true);
+    auto result = link_main_library(library_name, flags);
     if (result.is_error())
         return result.error();
 
@@ -583,7 +585,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     auto entry_point_function = [&main_program_name] {
         auto library_name = get_library_name(main_program_name);
-        auto result = link_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY, false);
+        auto result = link_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY);
         if (result.is_error()) {
             warnln("{}", result.error().text);
             _exit(1);
