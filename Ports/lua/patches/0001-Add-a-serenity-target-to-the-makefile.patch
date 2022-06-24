@@ -9,32 +9,24 @@ Co-Authored-By: Larkin <45925460+larb0b@users.noreply.github.com>
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 Co-Authored-By: Noah Rosamilia <ivoahivoah@gmail.com>
 ---
- src/Makefile | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ src/Makefile | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/src/Makefile b/src/Makefile
-index a13afb9..c54c7bd 100644
+index 1907381..04beda5 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -26,7 +26,7 @@ MYOBJS=
+@@ -30,7 +30,7 @@ CMCFLAGS=
  
  # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
  
--PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
-+PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris serenity
+-PLATS= guess aix bsd c89 freebsd generic linux linux-readline macosx mingw posix solaris
++PLATS= guess aix bsd c89 freebsd generic linux linux-readline macosx mingw posix solaris serenity
  
  LUA_A=	liblua.a
- CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
-@@ -100,7 +100,6 @@ c89:
- 	@echo '*** C89 does not guarantee 64-bit integers for Lua.'
- 	@echo ''
- 
--
- freebsd:
- 	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX -I/usr/include/edit" SYSLIBS="-Wl,-E -ledit" CC="cc"
- 
-@@ -124,6 +123,13 @@ posix:
- solaris:
+ CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o lundump.o lvm.o lzio.o
+@@ -140,6 +140,13 @@ posix:
+ SunOS solaris:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
  
 +serenity:
@@ -44,6 +36,6 @@ index a13afb9..c54c7bd 100644
 +		SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_USE_READLINE" \
 +		SYSLIBS="-ldl -lreadline"
 +
- # list targets that do not create files (but not all makes understand .PHONY)
- .PHONY: all $(PLATS) default o a clean depend echo none
+ # Targets that do not create files (not all makes understand .PHONY).
+ .PHONY: all $(PLATS) help test clean default o a depend echo
  
