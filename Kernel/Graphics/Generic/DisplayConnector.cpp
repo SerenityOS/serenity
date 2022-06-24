@@ -8,8 +8,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
+#include <Kernel/Graphics/Generic/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/VGA/DisplayConnector.h>
 
 namespace Kernel {
 

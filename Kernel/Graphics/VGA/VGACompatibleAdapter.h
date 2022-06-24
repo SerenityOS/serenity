@@ -9,8 +9,8 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Graphics/Generic/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
-#include <Kernel/Graphics/VGA/DisplayConnector.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {

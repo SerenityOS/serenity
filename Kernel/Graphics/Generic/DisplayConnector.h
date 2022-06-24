@@ -36,7 +36,10 @@ protected:
 
     virtual bool partial_flush_support() const override final { return false; }
     virtual bool flush_support() const override final { return false; }
-    // Note: This is possibly a paravirtualized hardware, but since we don't know, we assume there's no refresh rate...
+    // Note: This is "possibly" a paravirtualized hardware, but since we don't know, we assume there's no refresh rate...
+    // We rely on the BIOS and/or the bootloader to initialize the hardware for us, so we don't really care about
+    // the specific implementation and settings that were chosen with the given hardware as long as we just
+    // have a dummy framebuffer to work with.
     virtual bool refresh_rate_support() const override final { return false; }
 
     virtual ErrorOr<void> flush_first_surface() override final;
