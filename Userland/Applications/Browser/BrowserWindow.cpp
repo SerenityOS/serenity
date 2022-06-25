@@ -100,7 +100,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::url_from_user_input(Browser::g_home_url), true);
+        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), true);
     };
 
     m_window_actions.on_next_tab = [this] {
@@ -606,6 +606,8 @@ void BrowserWindow::config_string_did_change(String const& domain, String const&
             Browser::g_search_engine = value;
         else if (key == "Home")
             Browser::g_home_url = value;
+        else if (key == "NewTab")
+            Browser::g_new_tab_url = value;
     } else if (group.starts_with("Proxy:")) {
         dbgln("Proxy mapping changed: {}/{} = {}", group, key, value);
         auto proxy_spec = group.substring_view(6);
