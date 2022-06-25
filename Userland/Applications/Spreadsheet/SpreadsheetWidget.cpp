@@ -383,6 +383,7 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
         m_inline_documentation_window->hide();
         return;
     }
+    cursor_offset = min(cursor_offset, source.length());
     auto maybe_function_and_argument = get_function_and_argument_index(source.substring_view(0, cursor_offset));
     if (!maybe_function_and_argument.has_value()) {
         m_inline_documentation_window->hide();
