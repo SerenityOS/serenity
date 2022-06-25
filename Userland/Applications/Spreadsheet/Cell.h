@@ -50,6 +50,15 @@ struct Cell : public Weakable<Cell> {
     bool dirty() const { return m_dirty; }
     void clear_dirty() { m_dirty = false; }
 
+    StringView name_for_javascript(Sheet const& sheet) const
+    {
+        if (!m_name_for_javascript.is_empty())
+            return m_name_for_javascript;
+
+        m_name_for_javascript = String::formatted("cell {}", m_position.to_cell_identifier(sheet));
+        return m_name_for_javascript;
+    }
+
     void set_thrown_value(JS::Value value) { m_thrown_value = value; }
     Optional<JS::Value> thrown_value() const
     {
@@ -116,6 +125,7 @@ private:
     CellType const* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
     Position m_position;
+    mutable String m_name_for_javascript;
 
     Vector<ConditionalFormat> m_conditional_formats;
     Format m_evaluated_formats;

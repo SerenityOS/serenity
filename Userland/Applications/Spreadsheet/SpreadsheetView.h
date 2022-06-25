@@ -78,6 +78,8 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
+    bool is_dragging() const { return m_is_dragging_for_cut || m_is_dragging_for_extend || m_is_dragging_for_select; }
+
     bool m_is_hovering_extend_zone { false };
     bool m_is_hovering_cut_zone { false };
     bool m_is_dragging_for_select { false };
