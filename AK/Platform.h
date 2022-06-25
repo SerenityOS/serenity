@@ -35,7 +35,7 @@
 #    define VALIDATE_IS_X86() static_assert(false, "Trying to include x86 only header on non x86 platform");
 #endif
 
-#if !defined(__clang__) && !defined(__CLION_IDE_)
+#if !defined(__clang__) && !defined(__CLION_IDE_) && !defined(__CLION_IDE__)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
 
