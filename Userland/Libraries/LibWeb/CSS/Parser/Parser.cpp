@@ -3741,8 +3741,10 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
-    if (x_value->to_identifier() == ValueID::Cover || x_value->to_identifier() == ValueID::Contain)
+    if (x_value->to_identifier() == ValueID::Cover || x_value->to_identifier() == ValueID::Contain) {
+        transaction.commit();
         return x_value;
+    }
 
     auto maybe_y_value = parse_css_value(tokens.peek_token());
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value)) {
