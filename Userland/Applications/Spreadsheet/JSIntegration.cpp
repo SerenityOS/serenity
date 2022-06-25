@@ -154,6 +154,7 @@ void SheetGlobalObject::initialize_global_object()
     define_native_function("column_arithmetic", column_arithmetic, 2, attr);
     define_native_function("column_index", column_index, 1, attr);
     define_native_function("get_column_bound", get_column_bound, 1, attr);
+    define_native_accessor("name", get_name, nullptr, attr);
 }
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
@@ -165,6 +166,17 @@ void SheetGlobalObject::visit_edges(Visitor& visitor)
 
         visitor.visit(it.value->evaluated_data());
     }
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_name)
+{
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    if (!is<SheetGlobalObject>(this_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+    return JS::js_string(global_object.heap(), sheet_object->m_sheet.name());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)

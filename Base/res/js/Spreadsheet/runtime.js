@@ -67,7 +67,11 @@ class Position {
             point = current_point.up(1)
         )
             current_point = point;
-        return R(current_point.name + ":" + up_one.name);
+
+        const sheetName = Object.is(this.sheet, thisSheet)
+            ? ""
+            : `sheet(${JSON.stringify(this.sheet.name)}):`;
+        return R(sheetName + current_point.name + ":" + up_one.name);
     }
 
     range_down() {
@@ -75,7 +79,11 @@ class Position {
         let current_point = down_one;
         for (let point = current_point.down(1); point.value() !== ""; point = current_point.down(1))
             current_point = point;
-        return R(current_point.name + ":" + down_one.name);
+
+        const sheetName = Object.is(this.sheet, thisSheet)
+            ? ""
+            : `sheet(${JSON.stringify(this.sheet.name)}):`;
+        return R(sheetName + current_point.name + ":" + down_one.name);
     }
 
     range_left() {
@@ -88,7 +96,11 @@ class Position {
             point = current_point.left(1)
         )
             current_point = point;
-        return R(current_point.name + ":" + left_one.name);
+
+        const sheetName = Object.is(this.sheet, thisSheet)
+            ? ""
+            : `sheet(${JSON.stringify(this.sheet.name)}):`;
+        return R(sheetName + current_point.name + ":" + left_one.name);
     }
 
     range_right() {
@@ -100,7 +112,11 @@ class Position {
             point = current_point.right(1)
         )
             current_point = point;
-        return R(current_point.name + ":" + right_one.name);
+
+        const sheetName = Object.is(this.sheet, thisSheet)
+            ? ""
+            : `sheet(${JSON.stringify(this.sheet.name)}):`;
+        return R(sheetName + current_point.name + ":" + right_one.name);
     }
 
     with_column(value) {
@@ -124,7 +140,9 @@ class Position {
     }
 
     toString() {
-        return `<Cell at ${this.name}>`;
+        return `<Cell at ${this.name}${
+            Object.is(this.sheet, thisSheet) ? "" : ` in sheet(${JSON.stringify(this.sheet.name)})`
+        }>`;
     }
 }
 
@@ -276,7 +294,15 @@ class Ranges extends CommonRange {
 }
 
 class Range extends CommonRange {
-    constructor(startingColumnName, endingColumnName, startingRow, endingRow, columnStep, rowStep) {
+    constructor(
+        startingColumnName,
+        endingColumnName,
+        startingRow,
+        endingRow,
+        columnStep,
+        rowStep,
+        sheet
+    ) {
         super();
         // using == to account for '0' since js will parse `+'0'` to 0
         if (columnStep == 0 || rowStep == 0)
@@ -292,6 +318,7 @@ class Range extends CommonRange {
         this.columnStep = columnStep ?? 1;
         this.rowStep = rowStep ?? 1;
         this.spansEntireColumn = endingRow === undefined;
+        this.sheet = sheet;
         if (!this.spansEntireColumn && startingRow === undefined)
             throw new Error("A Range with a defined end row must also have a defined start row");
 
@@ -299,32 +326,32 @@ class Range extends CommonRange {
     }
 
     first() {
-        return new Position(this.startingColumnName, this.startingRow);
+        return new Position(this.startingColumnName, this.startingRow, this.sheet);
     }
 
     forEach(callback) {
         const ranges = [];
-        let startingColumnIndex = thisSheet.column_index(this.startingColumnName);
-        let endingColumnIndex = thisSheet.column_index(this.endingColumnName);
+        let startingColumnIndex = this.sheet.column_index(this.startingColumnName);
+        let endingColumnIndex = this.sheet.column_index(this.endingColumnName);
         let columnDistance = endingColumnIndex - startingColumnIndex;
         for (
             let columnOffset = 0;
             columnOffset <= columnDistance;
             columnOffset += this.columnStep
         ) {
-            const columnName = thisSheet.column_arithmetic(this.startingColumnName, columnOffset);
+            const columnName = this.sheet.column_arithmetic(this.startingColumnName, columnOffset);
             ranges.push({
                 column: columnName,
                 rowStart: this.startingRow,
                 rowEnd: this.spansEntireColumn
-                    ? thisSheet.get_column_bound(columnName)
+                    ? this.sheet.get_column_bound(columnName)
                     : this.endingRow,
             });
         }
 
         outer: for (const range of ranges) {
             for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
-                if (callback(new Position(range.column, row)) === Break) break outer;
+                if (callback(new Position(range.column, row, this.sheet)) === Break) break outer;
             }
         }
     }
@@ -338,8 +365,8 @@ class Range extends CommonRange {
     }
 
     normalize() {
-        const startColumnIndex = thisSheet.column_index(this.startingColumnName);
-        const endColumnIndex = thisSheet.column_index(this.endingColumnName);
+        const startColumnIndex = this.sheet.column_index(this.startingColumnName);
+        const endColumnIndex = this.sheet.column_index(this.endingColumnName);
         if (startColumnIndex > endColumnIndex) {
             const temp = this.startingColumnName;
             this.startingColumnName = this.endingColumnName;
@@ -359,11 +386,15 @@ class Range extends CommonRange {
         const endingRow = this.endingRow ?? "";
         const showSteps = this.rowStep !== 1 || this.columnStep !== 1;
         const steps = showSteps ? `:${this.columnStep}:${this.rowStep}` : "";
-        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}${steps}\``;
+        const sheetName = Object.is(thisSheet, this.sheet)
+            ? ""
+            : `sheet(${JSON.stringify(this.sheet.name)}):`;
+        return `R\`${sheetName}${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}${steps}\``;
     }
 }
 
-const R_FORMAT = /^([a-zA-Z_]+)(?:(\d+):([a-zA-Z_]+)(\d+)?(?::(\d+):(\d+))?)?$/;
+const R_FORMAT =
+    /^(?:sheet\(("(?:[^"]|\\")*")\):)?([a-zA-Z_]+)(?:(\d+):([a-zA-Z_]+)(\d+)?(?::(\d+):(\d+))?)?$/;
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
     // done because:
@@ -372,11 +403,17 @@ function R(fmt, ...args) {
     // myFunc`ABC` => "["ABC"]"
     if (Array.isArray(fmt)) fmt = fmt[0];
     if (!R_FORMAT.test(fmt))
-        throw new Error("Invalid Format. Expected Format: R`A` or R`A0:A1` or R`A0:A2:1:2`");
-    // Format: Col(Row:Col(Row)?(:ColStep:RowStep)?)?
+        throw new Error(
+            'Invalid Format. Expected Format: R`A` or R`A0:A1` or R`A0:A2:1:2` or R`sheet("sheetName"):...`'
+        );
+    // Format: (sheet("sheetName"):)?Col(Row:Col(Row)?(:ColStep:RowStep)?)?
     // Ignore the first element of the match array as that will be the whole match.
     const [, ...matches] = fmt.match(R_FORMAT);
-    const [startCol, startRow, endCol, endRow, colStep, rowStep] = matches;
+    const [sheetExpression, startCol, startRow, endCol, endRow, colStep, rowStep] = matches;
+    const sheetFromName = name => {
+        if (name == null || name === "") return thisSheet;
+        return sheet(JSON.parse(name));
+    };
     return new Range(
         startCol,
         endCol ?? startCol,
@@ -384,7 +421,8 @@ function R(fmt, ...args) {
         // Don't make undefined an integer, because then it becomes 0.
         !!endRow ? integer(endRow) : endRow,
         integer(colStep ?? 1),
-        integer(rowStep ?? 1)
+        integer(rowStep ?? 1),
+        sheetFromName(sheetExpression)
     );
 }
 

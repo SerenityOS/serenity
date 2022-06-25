@@ -78,6 +78,28 @@ describe("Range", () => {
         expect(cellsVisited).toEqual(6);
     });
 
+    test("multiple sheets", () => {
+        const workbook = createWorkbook();
+        const sheet1 = createSheet(workbook, "Sheet 1");
+        const sheet2 = createSheet(workbook, "Sheet 2");
+        sheet1.makeCurrent();
+
+        sheet1.setCell("A", 0, "0");
+        sheet1.focusCell("A", 0);
+
+        sheet2.setCell("A", 0, "0");
+        sheet2.setCell("A", 10, "0");
+        sheet2.setCell("B", 1, "0");
+        sheet2.focusCell("A", 0);
+
+        expect(R).toBeDefined();
+        let cellsVisited = 0;
+        R`sheet("Sheet 2"):A0:A10`.forEach(name => {
+            ++cellsVisited;
+        });
+        expect(cellsVisited).toEqual(11);
+    });
+
     test("Ranges", () => {
         const workbook = createWorkbook();
         const sheet = createSheet(workbook, "Sheet 1");
