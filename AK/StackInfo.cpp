@@ -12,7 +12,7 @@
 
 #ifdef __serenity__
 #    include <serenity.h>
-#elif defined(__linux__) or defined(AK_OS_MACOS)
+#elif defined(__linux__) or defined(AK_OS_MACOS) or defined(AK_OS_BSD_GENERIC)
 #    include <pthread.h>
 #endif
 
