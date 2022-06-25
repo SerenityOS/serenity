@@ -165,8 +165,12 @@ void Sheet::update(Cell& cell)
 JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_behalf_of)
 {
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
+    auto name = on_behalf_of ? on_behalf_of->name_for_javascript(*this) : "cell <unknown>"sv;
+    auto script_or_error = JS::Script::parse(
+        source,
+        interpreter().realm(),
+        name);
 
-    auto script_or_error = JS::Script::parse(source, interpreter().realm());
     if (script_or_error.is_error())
         return interpreter().vm().throw_completion<JS::SyntaxError>(interpreter().global_object(), script_or_error.error().first().to_string());
 

@@ -13,6 +13,11 @@ namespace Spreadsheet {
 
 class SheetModel final : public GUI::Model {
 public:
+    enum class Role : UnderlyingType<GUI::ModelRole> {
+        _Custom = to_underlying(GUI::ModelRole::Custom),
+        Tooltip,
+    };
+
     static NonnullRefPtr<SheetModel> create(Sheet& sheet) { return adopt_ref(*new SheetModel(sheet)); }
     virtual ~SheetModel() override = default;
 
