@@ -24,6 +24,7 @@ private:
     BrowserSettingsWidget();
 
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
+    RefPtr<GUI::TextBox> m_new_tab_url_textbox;
     void set_color_scheme(StringView);
     RefPtr<GUI::ComboBox> m_color_scheme_combobox;
     RefPtr<GUI::CheckBox> m_show_bookmarks_bar_checkbox;

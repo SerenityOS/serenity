@@ -9,7 +9,7 @@
         title: "Homepage"
         fixed_height: 70
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [2, 8, 2]
             spacing: 2
         }
 
@@ -24,15 +24,42 @@
                 icon: "/res/icons/32x32/home.png"
             }
 
-            @GUI::Label {
-                text: "URL:"
-                text_alignment: "CenterLeft"
-                fixed_width: 30
-            }
+            @GUI::Widget {
+                layout: @GUI::VerticalBoxLayout {
+                }
 
-            @GUI::TextBox {
-                name: "homepage_url_textbox"
-                placeholder: "https://example.com"
+                @GUI::Widget {
+                    layout: @GUI::HorizontalBoxLayout {
+                        spacing: 16
+                    }
+
+                    @GUI::Label {
+                        text: "URL:"
+                        text_alignment: "CenterLeft"
+                        fixed_width: 45
+                    }
+
+                    @GUI::TextBox {
+                        name: "homepage_url_textbox"
+                        placeholder: "https://example.com"
+                    }
+                }
+                @GUI::Widget {
+                     layout: @GUI::HorizontalBoxLayout {
+                         spacing: 16
+                     }
+
+                     @GUI::Label {
+                         text: "New Tab:"
+                         text_alignment: "CenterLeft"
+                         fixed_width: 45
+                     }
+
+                     @GUI::TextBox {
+                         name: "new_tab_url_textbox"
+                         placeholder: "https://example.com"
+                     }
+                }
             }
         }
     }
