@@ -635,6 +635,12 @@ function internal_lookup(
     reference
 ) {
     if_missing = if_missing ?? undefined;
+    const missing = () => {
+        if (if_missing !== undefined) return if_missing;
+
+        throw new Error(`Failed to find ${req_lookup_value} in ${lookup_inputs}`);
+    };
+
     mode = mode ?? "exact";
     const lookup_value = req_lookup_value;
     let matches = null;
@@ -661,7 +667,7 @@ function internal_lookup(
         ++i;
     });
 
-    if (found_input == null) return if_missing;
+    if (found_input == null) return missing();
 
     if (lookup_outputs === undefined) {
         if (reference) return found_input;
@@ -691,14 +697,7 @@ function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mod
 }
 
 function reflookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
-    return internal_lookup(
-        req_lookup_value,
-        lookup_inputs,
-        lookup_outputs,
-        if_missing ?? here(),
-        mode,
-        true
-    );
+    return internal_lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode, true);
 }
 
 // Cheat the system and add documentation
@@ -1223,8 +1222,8 @@ lookup.__documentation = JSON.stringify({
         "Allows for finding things in a table or tabular data, by looking for matches in one range, and " +
         "grabbing the corresponding output value from another range.\n" +
         "if `lookup target` is not specified or is nullish, it is assumed to be the same as the `lookup source`\n." +
-        "if nothing matches, the value `value if no match`" +
-        " is returned, which is `undefined` by default.\nBy setting the `match method`, the function can be altered to return " +
+        "if nothing matches, either the value `value if no match` (if not `undefined`) is returned, or " +
+        "an error is thrown.\nBy setting the `match method`, the function can be altered to return " +
         "the closest ordered value (above or below) instead of an exact match. The valid choices for `match method` are:\n" +
         "- `'exact'`: The default method. Uses strict equality to match values.\n" +
         "- `'nextlargest'`: Uses the greater-or-equal operator to match values.\n" +
@@ -1251,8 +1250,8 @@ reflookup.__documentation = JSON.stringify({
         "Allows for finding references to things in a table or tabular data, by looking for matches in one range, and " +
         "grabbing the corresponding output value from another range.\n" +
         "if `lookup target` is not specified or is nullish, it is assumed to be the same as the `lookup source`\n." +
-        "if nothing matches, the value `value if no match`" +
-        " is returned, which is `undefined` by default.\nBy setting the `match method`, the function can be altered to return " +
+        "if nothing matches, either the value `value if no match` (if not `undefined`) is returned, or " +
+        "an error is thrown.\nBy setting the `match method`, the function can be altered to return " +
         "the closest ordered value (above or below) instead of an exact match. The valid choices for `match method` are:\n" +
         "- `'exact'`: The default method. Uses strict equality to match values.\n" +
         "- `'nextlargest'`: Uses the greater-or-equal operator to match values.\n" +
