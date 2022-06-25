@@ -20,6 +20,8 @@ public:
     Result<bool, String> open_file(Core::File&);
     Result<bool, String> write_to_file(Core::File&);
 
+    Result<bool, String> import_file(Core::File&);
+
     String const& current_filename() const { return m_current_filename; }
     bool set_filename(String const& filename);
     bool dirty() { return m_dirty; }
