@@ -251,7 +251,9 @@ String DateTime::to_string(StringView format) const
                 format_time_zone_offset(true);
                 break;
             case 'Z':
+#if !defined(__FreeBSD__)
                 builder.append(tzname[daylight]);
+#endif
                 break;
             case '%':
                 builder.append('%');
