@@ -823,6 +823,29 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
     return {};
 }
 
+static String resolve_module_filename(StringView filename, StringView module_type)
+{
+    auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
+    if (module_type == "json"sv)
+        extensions = { "json"sv };
+    if (!Core::File::exists(filename)) {
+        for (auto extension : extensions) {
+            // import "./foo" -> import "./foo.ext"
+            auto resolved_filepath = String::formatted("{}.{}", filename, extension);
+            if (Core::File::exists(resolved_filepath))
+                return resolved_filepath;
+        }
+    } else if (Core::File::is_directory(filename)) {
+        for (auto extension : extensions) {
+            // import "./foo" -> import "./foo/index.ext"
+            auto resolved_filepath = LexicalPath::join(filename, String::formatted("index.{}", extension)).string();
+            if (Core::File::exists(resolved_filepath))
+                return resolved_filepath;
+        }
+    }
+    return filename;
+}
+
 // 16.2.1.7 HostResolveImportedModule ( referencingScriptOrModule, specifier ), https://tc39.es/ecma262/#sec-hostresolveimportedmodule
 ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request)
 {
@@ -840,6 +863,12 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     // The actual mapping semantic is host-defined but typically a normalization process is applied to specifier as part of the mapping process.
     // A typical normalization process would include actions such as alphabetic case folding and expansion of relative and abbreviated path specifiers.
 
+    // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
+    VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
+    auto module_type = module_request.assertions.is_empty() ? String {} : module_request.assertions.first().value;
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
+
     StringView base_filename = referencing_script_or_module.visit(
         [&](Empty) {
             return "."sv;
@@ -850,6 +879,13 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 
     LexicalPath base_path { base_filename };
     auto filename = LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier);
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] base path: '{}'", base_path);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] initial filename: '{}'", filename);
+
+    filename = resolve_module_filename(filename, module_type);
+
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolved filename: '{}'", filename);
 
 #if JS_MODULE_DEBUG
     String referencing_module_string = referencing_script_or_module.visit(
@@ -866,12 +902,6 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filename);
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filename);
 #endif
-
-    // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
-    VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
-    auto module_type = module_request.assertions.is_empty() ? String {} : module_request.assertions.first().value;
-
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
 
     auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename, module_type);
     if (loaded_module_or_end != nullptr) {
