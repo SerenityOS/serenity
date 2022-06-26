@@ -347,6 +347,63 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
     return &typed_array;
 }
 
+// 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn, buffer ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
+ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
+{
+    auto& vm = global_object.vm();
+    // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
+    VERIFY(((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint())));
+
+    // 2. If comparefn is not undefined, then
+    if (comparefn != nullptr) {
+        // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
+        auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
+        auto value_number = TRY(value.to_number(global_object));
+
+        // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+        if (buffer.is_detached())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+
+        //  c. If v is NaN, return +0𝔽.
+        if (value_number.is_nan())
+            return 0;
+
+        // d. Return v.
+        return value_number.as_double();
+    }
+
+    // 3. If x and y are both NaN, return +0𝔽.
+    if (x.is_nan() && y.is_nan())
+        return 0;
+
+    // 4. If x is NaN, return 1𝔽.
+    if (x.is_nan())
+        return 1;
+
+    // 5. If y is NaN, return -1𝔽.
+    if (y.is_nan())
+        return -1;
+
+    // 6. If x < y, return -1𝔽.
+    if (x.is_bigint()
+            ? (x.as_bigint().big_integer() < y.as_bigint().big_integer())
+            : (x.as_double() < y.as_double()))
+        return -1;
+
+    // 7. If x > y, return 1𝔽.
+    if (x.is_bigint()
+            ? (x.as_bigint().big_integer() > y.as_bigint().big_integer())
+            : (x.as_double() > y.as_double()))
+        return 1;
+
+    // 9. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
+    if (x.is_positive_zero() && y.is_negative_zero())
+        return 1;
+
+    // 10. Return +0𝔽.
+    return 0;
+}
+
 void TypedArrayBase::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
