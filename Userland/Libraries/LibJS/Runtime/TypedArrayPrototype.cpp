@@ -141,24 +141,21 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObjec
 {
     auto& vm = global_object.vm();
 
-    TypedArrayConstructor* typed_array_default_constructor = nullptr;
+    // 1. Let defaultConstructor be the intrinsic object listed in column one of Table 72 for exemplar.[[TypedArrayName]].
+    auto* default_constructor = (global_object.*exemplar.intrinsic_constructor())();
 
-    // FIXME: This kinda sucks.
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
-    if (is<ClassName>(exemplar))                                                    \
-        typed_array_default_constructor = global_object.snake_name##_constructor();
-    JS_ENUMERATE_TYPED_ARRAYS
-#undef __JS_ENUMERATE
+    // 2. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
+    auto* constructor = TRY(species_constructor(global_object, exemplar, *default_constructor));
 
-    VERIFY(typed_array_default_constructor);
-
-    auto* constructor = TRY(species_constructor(global_object, exemplar, *typed_array_default_constructor));
-
+    // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
     auto* result = TRY(typed_array_create(global_object, *constructor, move(arguments)));
 
+    // 4. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
+    // 5. If result.[[ContentType]] ≠ exemplar.[[ContentType]], throw a TypeError exception.
     if (result->content_type() != exemplar.content_type())
         return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
 
+    // 6. Return result.
     return result;
 }
 
