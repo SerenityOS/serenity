@@ -13,7 +13,7 @@
 namespace AK {
 
 template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator>
-constexpr bool all_of(
+[[nodiscard]] constexpr bool all_of(
     TIterator const& begin,
     TEndIterator const& end,
     auto const& predicate)
@@ -25,7 +25,7 @@ constexpr bool all_of(
 }
 
 template<IterableContainer Container>
-constexpr bool all_of(Container&& container, auto const& predicate)
+[[nodiscard]] constexpr bool all_of(Container&& container, auto const& predicate)
 {
     return all_of(container.begin(), container.end(), predicate);
 }
