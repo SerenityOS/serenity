@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
@@ -61,7 +62,8 @@ ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_ta
         view_byte_length = buffer_byte_length - offset;
     } else {
         view_byte_length = TRY(vm.argument(2).to_index(global_object));
-        if (offset + view_byte_length > buffer_byte_length)
+        auto const checked_add = AK::make_checked(view_byte_length) + AK::make_checked(offset);
+        if (checked_add.has_overflow() || checked_add.value() > buffer_byte_length)
             return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, vm.names.DataView);
     }
 
