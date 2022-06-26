@@ -13,7 +13,7 @@
 #include <LibGUI/Model.h>
 
 static String default_homepage_url = "file:///res/html/misc/welcome.html";
-static String default_new_tab_url = "file:///res/html/misc/welcome.html";
+static String default_new_tab_url = "file:///res/html/misc/new-tab.html";
 static String default_search_engine = "";
 static String default_color_scheme = "auto";
 static bool default_show_bookmarks_bar = true;

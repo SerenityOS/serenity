@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
     Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
-    Browser::g_new_tab_url = Config::read_string("Browser", "Preferences", "NewTab", "file:///res/html/misc/welcome.html");
+    Browser::g_new_tab_url = Config::read_string("Browser", "Preferences", "NewTab", "file:///res/html/misc/new-tab.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
     Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters", true);
 
