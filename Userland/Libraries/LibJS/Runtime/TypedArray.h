@@ -32,11 +32,14 @@ public:
         Number,
     };
 
+    using IntrinsicConstructor = TypedArrayConstructor* (GlobalObject::*)();
+
     u32 array_length() const { return m_array_length; }
     u32 byte_length() const { return m_byte_length; }
     u32 byte_offset() const { return m_byte_offset; }
     ContentType content_type() const { return m_content_type; }
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }
+    IntrinsicConstructor intrinsic_constructor() const { return m_intrinsic_constructor; }
 
     void set_array_length(u32 length) { m_array_length = length; }
     void set_byte_length(u32 length) { m_byte_length = length; }
@@ -58,8 +61,9 @@ public:
     virtual Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
 
 protected:
-    explicit TypedArrayBase(Object& prototype)
+    TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor)
         : Object(prototype)
+        , m_intrinsic_constructor(intrinsic_constructor)
     {
     }
 
@@ -68,6 +72,7 @@ protected:
     u32 m_byte_offset { 0 };
     ContentType m_content_type { ContentType::Number };
     ArrayBuffer* m_viewed_array_buffer { nullptr };
+    IntrinsicConstructor m_intrinsic_constructor { nullptr };
 
 private:
     virtual void visit_edges(Visitor&) override;
@@ -430,8 +435,8 @@ public:
     Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) override { return viewed_array_buffer()->template get_modify_set_value<T>(byte_index, value, move(operation), is_little_endian); }
 
 protected:
-    TypedArray(Object& prototype, u32 array_length, ArrayBuffer& array_buffer)
-        : TypedArrayBase(prototype)
+    TypedArray(Object& prototype, IntrinsicConstructor intrinsic_constructor, u32 array_length, ArrayBuffer& array_buffer)
+        : TypedArrayBase(prototype, intrinsic_constructor)
     {
         VERIFY(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(UnderlyingBufferDataType)));
         m_viewed_array_buffer = &array_buffer;
