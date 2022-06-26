@@ -270,13 +270,13 @@ private:
 
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;
-        String filepath;
+        String filename;
         String type;
         NonnullRefPtr<Module> module;
         bool has_once_started_linking { false };
     };
 
-    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filepath, String const& type);
+    StoredModule* get_stored_module(ScriptOrModule const& script_or_module, String const& filename, String const& type);
 
     Vector<StoredModule> m_loaded_modules;
 
