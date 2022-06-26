@@ -48,7 +48,7 @@ public:
         return true;
     }
 
-    bool unreliable_eof() const override { return !m_next_byte.has_value() && m_stream.unreliable_eof(); }
+    [[nodiscard]] bool unreliable_eof() const override { return !m_next_byte.has_value() && m_stream.unreliable_eof(); }
 
     bool discard_or_error(size_t count) override
     {
@@ -226,7 +226,7 @@ public:
         }
     }
 
-    size_t bit_offset() const
+    [[nodiscard]] size_t bit_offset() const
     {
         return m_bit_offset;
     }
