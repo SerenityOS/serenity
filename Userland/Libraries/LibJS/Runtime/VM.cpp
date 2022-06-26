@@ -741,7 +741,7 @@ ScriptOrModule VM::get_active_script_or_module() const
     return m_execution_context_stack[0]->script_or_module;
 }
 
-VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filepath, String const&)
+VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& filename, String const&)
 {
     // Note the spec says:
     // Each time this operation is called with a specific referencingScriptOrModule, specifier pair as arguments
@@ -754,7 +754,7 @@ VM::StoredModule* VM::get_stored_module(ScriptOrModule const&, String const& fil
     // does not rule out success of another import with the same specifier but a different assertion list.
 
     auto end_or_module = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
-        return stored_module.filepath == filepath;
+        return stored_module.filename == filename;
     });
     if (end_or_module.is_end())
         return nullptr;
@@ -768,7 +768,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Interpreter>, SourceTextM
 
 ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
 {
-    auto filepath = module.filename();
+    auto filename = module.filename();
 
     auto module_or_end = m_loaded_modules.find_if([&](StoredModule const& stored_module) {
         return stored_module.module.ptr() == &module;
@@ -797,12 +797,12 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
         stored_module->has_once_started_linking = true;
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking module {}", filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking module {}", filename);
     auto linked_or_error = module.link(*this);
     if (linked_or_error.is_error())
         return linked_or_error.throw_completion();
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking passed, now evaluating module {}", filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Linking passed, now evaluating module {}", filename);
     auto evaluated_or_error = module.evaluate(*this);
 
     if (evaluated_or_error.is_error())
@@ -849,7 +849,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         });
 
     LexicalPath base_path { base_filename };
-    auto filepath = LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier);
+    auto filename = LexicalPath::absolute_path(base_path.dirname(), module_request.module_specifier);
 
 #if JS_MODULE_DEBUG
     String referencing_module_string = referencing_script_or_module.visit(
@@ -863,8 +863,8 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
             return String::formatted("Module @ {}", script_or_module);
         });
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filepath);
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filename);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE]     resolved {} + {} -> {}", base_path, module_request.module_specifier, filename);
 #endif
 
     // We only allow "type" as a supported assertion so it is the only valid key that should ever arrive here.
@@ -873,17 +873,17 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
 
-    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filepath, module_type);
+    auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename, module_type);
     if (loaded_module_or_end != nullptr) {
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filepath, loaded_module_or_end->module.ptr());
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filename, loaded_module_or_end->module.ptr());
         return loaded_module_or_end->module;
     }
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filepath);
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
     auto& global_object = current_realm()->global_object();
 
-    auto file_or_error = Core::File::open(filepath, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(global_object, ErrorType::ModuleNotFound, module_request.module_specifier);
@@ -897,13 +897,13 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         // If assertions has an entry entry such that entry.[[Key]] is "type", let type be entry.[[Value]]. The following requirements apply:
         // If type is "json", then this algorithm must either invoke ParseJSONModule and return the resulting Completion Record, or throw an exception.
         if (module_type == "json"sv) {
-            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing JSON module {}", filepath);
-            return parse_json_module(content_view, *current_realm(), filepath);
+            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing JSON module {}", filename);
+            return parse_json_module(content_view, *current_realm(), filename);
         }
 
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing as SourceTextModule module {}", filepath);
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing as SourceTextModule module {}", filename);
         // Note: We treat all files as module, so if a script does not have exports it just runs it.
-        auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filepath);
+        auto module_or_errors = SourceTextModule::parse(content_view, *current_realm(), filename);
 
         if (module_or_errors.is_error()) {
             VERIFY(module_or_errors.error().size() > 0);
@@ -912,12 +912,12 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         return module_or_errors.release_value();
     }());
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module(...) parsed {} to {}", filepath, module.ptr());
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module(...) parsed {} to {}", filename, module.ptr());
 
     // We have to set it here already in case it references itself.
     m_loaded_modules.empend(
         referencing_script_or_module,
-        filepath,
+        filename,
         module_type,
         module,
         false);
