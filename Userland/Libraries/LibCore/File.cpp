@@ -115,6 +115,38 @@ bool File::is_device(String const& filename)
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
 
+bool File::is_block_device() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISBLK(stat.st_mode);
+}
+
+bool File::is_block_device(String const& filename)
+{
+    struct stat st;
+    if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISBLK(st.st_mode);
+}
+
+bool File::is_char_device() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISCHR(stat.st_mode);
+}
+
+bool File::is_char_device(String const& filename)
+{
+    struct stat st;
+    if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISCHR(st.st_mode);
+}
+
 bool File::is_directory() const
 {
     struct stat stat;

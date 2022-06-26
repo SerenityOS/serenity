@@ -28,6 +28,10 @@ public:
 
     bool is_device() const;
     static bool is_device(String const& filename);
+    bool is_block_device() const;
+    static bool is_block_device(String const& filename);
+    bool is_char_device() const;
+    static bool is_char_device(String const& filename);
 
     bool is_link() const;
     static bool is_link(String const& filename);
