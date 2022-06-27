@@ -100,7 +100,7 @@ DynamicObject const& DynamicLoader::dynamic_object() const
         });
         VERIFY(!dynamic_section_address.is_null());
 
-        m_cached_dynamic_object = ELF::DynamicObject::create(m_filename, VirtualAddress(image().base_address()), dynamic_section_address);
+        m_cached_dynamic_object = ELF::DynamicObject::create(m_filepath, VirtualAddress(image().base_address()), dynamic_section_address);
     }
     return *m_cached_dynamic_object;
 }
@@ -146,7 +146,7 @@ RefPtr<DynamicObject> DynamicLoader::map()
 
     VERIFY(!m_base_address.is_null());
 
-    m_dynamic_object = DynamicObject::create(m_filename, m_base_address, m_dynamic_section_address);
+    m_dynamic_object = DynamicObject::create(m_filepath, m_base_address, m_dynamic_section_address);
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size_of_current_object);
 
@@ -163,7 +163,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
     VERIFY(flags & RTLD_GLOBAL);
 
     if (m_dynamic_object->has_text_relocations()) {
-        dbgln("\033[33mWarning:\033[0m Dynamic object {} has text relocations", m_dynamic_object->filename());
+        dbgln("\033[33mWarning:\033[0m Dynamic object {} has text relocations", m_dynamic_object->filepath());
         for (auto& text_segment : m_text_segments) {
             VERIFY(text_segment.address().get() != 0);
 

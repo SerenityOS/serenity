@@ -124,7 +124,7 @@ static Optional<String> resolve_library(String const& name, DynamicObject const&
     search_paths.append("/usr/local/lib"sv);
 
     for (auto const& search_path : search_paths) {
-        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filename())));
+        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath())));
         String library_name = library_path.append(name).string();
 
         if (access(library_name.characters(), F_OK) == 0)
@@ -233,7 +233,7 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
         auto& object = it.value;
         auto info = dl_phdr_info {
             .dlpi_addr = (ElfW(Addr))object->base_address().as_ptr(),
-            .dlpi_name = object->filename().characters(),
+            .dlpi_name = object->filepath().characters(),
             .dlpi_phdr = object->program_headers(),
             .dlpi_phnum = object->program_header_count()
         };
@@ -337,7 +337,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& name, int fl
     for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
         if (dynamic_object)
-            s_global_objects.set(dynamic_object->filename(), *dynamic_object);
+            s_global_objects.set(get_library_name(dynamic_object->filepath()), *dynamic_object);
     }
 
     for (auto& loader : loaders) {
@@ -529,7 +529,7 @@ static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
 
     info->dli_fbase = best_matching_library->base_address().as_ptr();
     // This works because we don't support unloading objects.
-    info->dli_fname = best_matching_library->filename().characters();
+    info->dli_fname = best_matching_library->filepath().characters();
     if (best_matching_symbol.has_value()) {
         info->dli_saddr = best_matching_symbol.value().address().as_ptr();
         info->dli_sname = best_matching_symbol.value().raw_name();
