@@ -742,8 +742,8 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object
 {
     auto& vm = global_object.vm();
 
-    // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
-    auto* merged = Object::create(global_object, global_object.object_prototype());
+    // 1. Let merged be OrdinaryObjectCreate(null).
+    auto* merged = Object::create(global_object, nullptr);
 
     // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
     auto keys = TRY(options.enumerable_own_property_names(Object::PropertyKind::Key));
@@ -1768,8 +1768,8 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
 {
     auto& vm = global_object.vm();
 
-    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(global_object, global_object.object_prototype());
+    // 1. Let result be OrdinaryObjectCreate(null).
+    auto* result = Object::create(global_object, nullptr);
     VERIFY(result);
 
     // 2. Let any be false.

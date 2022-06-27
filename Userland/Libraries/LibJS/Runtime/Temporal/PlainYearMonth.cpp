@@ -363,8 +363,8 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 13. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
-    // 14. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options_copy = Object::create(global_object, global_object.object_prototype());
+    // 14. Let optionsCopy be OrdinaryObjectCreate(null).
+    auto* options_copy = Object::create(global_object, nullptr);
 
     // 15. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
     auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));
