@@ -34,19 +34,18 @@ public:
 
     // Needs to return a pointer for the generated JS bindings to work.
     JS::Promise const* promise() const { return m_promise.cell(); }
-    JS::Value reason() const { return m_reason; }
+    JS::Value reason() const { return m_reason.value(); }
 
 protected:
     PromiseRejectionEvent(FlyString const& event_name, PromiseRejectionEventInit const& event_init)
         : DOM::Event(event_name, event_init)
         , m_promise(event_init.promise)
-        , m_reason(event_init.reason)
+        , m_reason(JS::make_handle(event_init.reason))
     {
     }
 
     JS::Handle<JS::Promise> m_promise;
-    // FIXME: Protect this from GC! Currently we have no handle for arbitrary JS::Value.
-    JS::Value m_reason;
+    JS::Handle<JS::Value> m_reason;
 };
 
 }
