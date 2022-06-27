@@ -19,15 +19,29 @@ Adds a hack for a header not found error when including
 Makes libc++ use its builtin character type table instead of the one
 provided by LibC as it is incomplete.
 ---
- libcxx/include/__config                   | 6 ++++--
- libcxx/include/__locale                   | 2 +-
- libcxx/include/__support/newlib/xlocale.h | 4 ++--
- libcxx/include/initializer_list           | 2 ++
- libcxx/include/locale                     | 2 +-
- libcxx/include/new                        | 4 ++--
- libcxx/src/include/config_elast.h         | 2 ++
- 7 files changed, 14 insertions(+), 8 deletions(-)
+ libcxx/include/CMakeLists.txt               |  1 +
+ libcxx/include/__config                     |  6 ++++--
+ libcxx/include/__locale                     |  2 ++
+ libcxx/include/__support/serenity/xlocale.h | 24 +++++++++++++++++++++
+ libcxx/include/initializer_list             |  2 ++
+ libcxx/include/locale                       |  2 +-
+ libcxx/include/new                          |  4 ++--
+ libcxx/src/include/config_elast.h           |  2 ++
+ 8 files changed, 38 insertions(+), 5 deletions(-)
+ create mode 100644 libcxx/include/__support/serenity/xlocale.h
 
+diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
+index 53700fc9e..67d50bdbc 100644
+--- a/libcxx/include/CMakeLists.txt
++++ b/libcxx/include/CMakeLists.txt
+@@ -365,6 +365,7 @@ set(files
+   __support/musl/xlocale.h
+   __support/newlib/xlocale.h
+   __support/openbsd/xlocale.h
++  __support/serenity/xlocale.h
+   __support/solaris/floatingpoint.h
+   __support/solaris/wchar.h
+   __support/solaris/xlocale.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
 index 458d0c1b8..69f627294 100644
 --- a/libcxx/include/__config
@@ -53,39 +67,48 @@ index 458d0c1b8..69f627294 100644
  #endif
  
 diff --git a/libcxx/include/__locale b/libcxx/include/__locale
-index 51f35eece..4bc91ecb5 100644
+index 51f35eece..6f25098a2 100644
 --- a/libcxx/include/__locale
 +++ b/libcxx/include/__locale
-@@ -30,7 +30,7 @@
- #elif defined(__sun__)
- # include <xlocale.h>
- # include <__support/solaris/xlocale.h>
--#elif defined(_NEWLIB_VERSION)
-+#elif defined(_NEWLIB_VERSION) || defined(__serenity__)
- # include <__support/newlib/xlocale.h>
- #elif defined(__OpenBSD__)
- # include <__support/openbsd/xlocale.h>
-diff --git a/libcxx/include/__support/newlib/xlocale.h b/libcxx/include/__support/newlib/xlocale.h
-index b75f9263a..f5ffb9003 100644
---- a/libcxx/include/__support/newlib/xlocale.h
-+++ b/libcxx/include/__support/newlib/xlocale.h
-@@ -9,7 +9,7 @@
- #ifndef _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
- #define _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
- 
--#if defined(_NEWLIB_VERSION)
-+#if defined(_NEWLIB_VERSION) || defined(__serenity__)
- 
- #include <cstdlib>
- #include <clocale>
-@@ -22,6 +22,6 @@
- #include <__support/xlocale/__strtonum_fallback.h>
+@@ -44,6 +44,8 @@
+ # include <__support/musl/xlocale.h>
+ #elif defined(_LIBCPP_HAS_MUSL_LIBC)
+ # include <__support/musl/xlocale.h>
++#elif defined(__serenity__)
++# include <__support/serenity/xlocale.h>
  #endif
  
--#endif // _NEWLIB_VERSION
-+#endif // _NEWLIB_VERSION || __serenity__
- 
- #endif
+ #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+diff --git a/libcxx/include/__support/serenity/xlocale.h b/libcxx/include/__support/serenity/xlocale.h
+new file mode 100644
+index 000000000..0f939d2f6
+--- /dev/null
++++ b/libcxx/include/__support/serenity/xlocale.h
+@@ -0,0 +1,24 @@
++//===----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++#define _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++
++#if defined(__serenity__)
++
++#include <cstdlib>
++#include <clocale>
++#include <cwctype>
++#include <ctype.h>
++#include <__support/xlocale/__nop_locale_mgmt.h>
++#include <__support/xlocale/__posix_l_fallback.h>
++#include <__support/xlocale/__strtonum_fallback.h>
++
++#endif // __serenity__
++
++#endif
 diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
 index fefaf8cf8..c388bc246 100644
 --- a/libcxx/include/initializer_list
