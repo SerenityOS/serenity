@@ -378,11 +378,11 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
         time_difference = MUST(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
     }
 
-    // 8. Let date1 be ? CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
-    auto* date1 = TRY(create_temporal_date(global_object, adjusted_date.year, adjusted_date.month, adjusted_date.day, calendar));
+    // 8. Let date1 be ! CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
+    auto* date1 = MUST(create_temporal_date(global_object, adjusted_date.year, adjusted_date.month, adjusted_date.day, calendar));
 
-    // 9. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
-    auto* date2 = TRY(create_temporal_date(global_object, year2, month2, day2, calendar));
+    // 9. Let date2 be ! CreateTemporalDate(y2, mon2, d2, calendar).
+    auto* date2 = MUST(create_temporal_date(global_object, year2, month2, day2, calendar));
 
     // 10. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
