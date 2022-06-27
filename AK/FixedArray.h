@@ -160,6 +160,12 @@ public:
         ::swap(m_elements, other.m_elements);
     }
 
+    void fill_with(T const& value)
+    {
+        for (size_t i = 0; i < m_size; ++i)
+            m_elements[i] = value;
+    }
+
     using Iterator = SimpleIterator<FixedArray, T>;
     using ConstIterator = SimpleIterator<FixedArray const, T const>;
 
