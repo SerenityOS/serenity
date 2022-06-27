@@ -366,8 +366,8 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 5. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 6. Let adjustedDate be BalanceISODate(y1, mon1, d1).
-    auto adjusted_date = balance_iso_date(year1, month1, day1);
+    // 6. Let adjustedDate be CreateISODateRecord(y1, mon1, d1).
+    auto adjusted_date = create_iso_date_record(year1, month1, day1);
 
     // 7. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
