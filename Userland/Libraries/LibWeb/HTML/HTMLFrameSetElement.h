@@ -17,6 +17,10 @@ public:
 
     HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFrameSetElement() override;
+
+private:
+    // ^HTML::GlobalEventHandlers
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
 };
 
 }

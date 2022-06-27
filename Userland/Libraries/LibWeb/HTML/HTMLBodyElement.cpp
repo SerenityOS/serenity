@@ -57,10 +57,14 @@ void HTMLBodyElement::parse_attribute(FlyString const& name, String const& value
     }
 }
 
-DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target()
+DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target(FlyString const& event_name)
 {
     // NOTE: This is a little weird, but IIUC document.body.onload actually refers to window.onload
-    return document().window();
+    // NOTE: document.body can return either a HTMLBodyElement or HTMLFrameSetElement, so both these elements must support this mapping.
+    if (DOM::is_window_reflecting_body_element_event_handler(event_name))
+        return document().window();
+
+    return *this;
 }
 
 }

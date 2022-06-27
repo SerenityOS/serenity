@@ -218,7 +218,7 @@ ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#window-reflecting-body-element-event-handler-set
-static bool is_window_reflecting_body_element_event_handler(FlyString const& name)
+bool is_window_reflecting_body_element_event_handler(FlyString const& name)
 {
     return name.is_one_of(
         HTML::EventNames::blur,

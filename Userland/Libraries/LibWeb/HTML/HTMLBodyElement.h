@@ -22,7 +22,7 @@ public:
 
 private:
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target() override;
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
 
     RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };
