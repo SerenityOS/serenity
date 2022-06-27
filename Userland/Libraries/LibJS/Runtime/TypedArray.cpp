@@ -347,6 +347,22 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
     return &typed_array;
 }
 
+// 1.2.1.1 TypedArrayCreateSameType ( exemplar, argumentList ) https://tc39.es/proposal-change-array-by-copy/#typedarray-create-same-type
+ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
+{
+    // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
+    // 2. Let constructor be the intrinsic object listed in column one of Table 63 (points to Table 72) for exemplar.[[TypedArrayName]].
+    auto* constructor = (global_object.*exemplar.intrinsic_constructor())();
+
+    // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
+    auto* result = TRY(typed_array_create(global_object, *constructor, move(arguments)));
+
+    // 4. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
+    // 5. Assert: result.[[ContentType]] is exemplar.[[ContentType]].
+    // 6. Return result.
+    return result;
+}
+
 // 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn, buffer ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
 ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
 {

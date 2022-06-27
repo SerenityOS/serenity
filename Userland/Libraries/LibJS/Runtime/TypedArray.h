@@ -451,6 +451,7 @@ private:
 };
 
 ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedVector<Value> arguments);
+ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedVector<Value> arguments);
 ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn, ArrayBuffer&);
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
