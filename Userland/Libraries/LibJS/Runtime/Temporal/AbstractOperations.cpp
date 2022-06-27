@@ -1695,10 +1695,10 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
 
-    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIdentifier Parse Nodes contained within parseResult, or an empty sequence of code points if not present.
     auto z = parse_result->utc_designator;
     auto offset_string = parse_result->time_zone_numeric_utc_offset;
-    auto name = parse_result->time_zone_iana_name;
+    auto name = parse_result->time_zone_identifier;
 
     // 4. If name is empty, then
     //     a. Set name to undefined.

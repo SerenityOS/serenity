@@ -37,7 +37,7 @@ struct ParseResult {
     Optional<StringView> time_zone_utc_offset_minute;
     Optional<StringView> time_zone_utc_offset_second;
     Optional<StringView> time_zone_utc_offset_fraction;
-    Optional<StringView> time_zone_iana_name;
+    Optional<StringView> time_zone_identifier;
     Optional<StringView> duration_years;
     Optional<StringView> duration_months;
     Optional<StringView> duration_weeks;
