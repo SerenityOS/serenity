@@ -71,17 +71,18 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
 JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
 {
-    auto& global_object = m_settings_object.global_object();
+    auto& global_object = settings_object().global_object();
     auto& vm = global_object.vm();
 
-    // 1. Let settings be the settings object of script. (NOTE: Not necessary)
+    // 1. Let settings be the settings object of script.
+    auto& settings = settings_object();
 
     // 2. Check if we can run script with settings. If this returns "do not run" then return NormalCompletion(empty).
-    if (m_settings_object.can_run_script() == RunScriptDecision::DoNotRun)
+    if (settings.can_run_script() == RunScriptDecision::DoNotRun)
         return JS::normal_completion({});
 
     // 3. Prepare to run script given settings.
-    m_settings_object.prepare_to_run_script();
+    settings.prepare_to_run_script();
 
     // 4. Let evaluationStatus be null.
     JS::Completion evaluation_status;
@@ -107,7 +108,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
         // 1. If rethrow errors is true and script's muted errors is false, then:
         if (rethrow_errors == RethrowErrors::Yes && m_muted_errors == MutedErrors::No) {
             // 1. Clean up after running script with settings.
-            m_settings_object.clean_up_after_running_script();
+            settings.clean_up_after_running_script();
 
             // 2. Rethrow evaluationStatus.[[Value]].
             return JS::throw_completion(*evaluation_status.value());
@@ -116,7 +117,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
         // 2. If rethrow errors is true and script's muted errors is true, then:
         if (rethrow_errors == RethrowErrors::Yes && m_muted_errors == MutedErrors::Yes) {
             // 1. Clean up after running script with settings.
-            m_settings_object.clean_up_after_running_script();
+            settings.clean_up_after_running_script();
 
             // 2. Throw a "NetworkError" DOMException.
             return Bindings::throw_dom_exception_if_needed(global_object, [] {
@@ -131,14 +132,14 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
         report_exception(evaluation_status);
 
         // 2. Clean up after running script with settings.
-        m_settings_object.clean_up_after_running_script();
+        settings.clean_up_after_running_script();
 
         // 3. Return evaluationStatus.
         return evaluation_status;
     }
 
     // 8. Clean up after running script with settings.
-    m_settings_object.clean_up_after_running_script();
+    settings.clean_up_after_running_script();
 
     // 9. If evaluationStatus is a normal completion, then return evaluationStatus.
     VERIFY(!evaluation_status.is_abrupt());
@@ -149,8 +150,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
 }
 
 ClassicScript::ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object)
-    : Script(move(base_url), move(filename))
-    , m_settings_object(environment_settings_object)
+    : Script(move(base_url), move(filename), environment_settings_object)
 {
 }
 
