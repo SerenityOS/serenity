@@ -8,7 +8,8 @@
 
 extern "C" {
 
-char const _ctype_[256] = {
+char const _ctype_[1 + 256] = {
+    0,
     _C, _C, _C, _C, _C, _C, _C, _C,
     _C, _C | _S, _C | _S, _C | _S, _C | _S, _C | _S, _C, _C,
     _C, _C, _C, _C, _C, _C, _C, _C,

@@ -10,6 +10,10 @@
 
 __BEGIN_DECLS
 
+#ifndef EOF
+#    define EOF (-1)
+#endif
+
 /* Do what newlib does to appease GCC's --with-newlib option. */
 #define _U 01
 #define _L 02
@@ -20,16 +24,21 @@ __BEGIN_DECLS
 #define _X 0100
 #define _B 0200
 
-extern char const _ctype_[256] __attribute__((visibility("default")));
+/**
+ * newlib has a 257 byte _ctype_ array to enable compiler tricks to catch
+ * people passing char instead of int. We don't engage in those tricks,
+ * but still claim to be newlib to the toolchains
+ */
+extern char const _ctype_[1 + 256] __attribute__((visibility("default")));
 
 static inline int __inline_isalnum(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_U | _L | _N);
+    return _ctype_[(unsigned char)(c) + 1] & (_U | _L | _N);
 }
 
 static inline int __inline_isalpha(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_U | _L);
+    return _ctype_[(unsigned char)(c) + 1] & (_U | _L);
 }
 
 static inline int __inline_isascii(int c)
@@ -39,52 +48,52 @@ static inline int __inline_isascii(int c)
 
 static inline int __inline_iscntrl(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_C);
+    return _ctype_[(unsigned char)(c) + 1] & (_C);
 }
 
 static inline int __inline_isdigit(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_N);
+    return _ctype_[(unsigned char)(c) + 1] & (_N);
 }
 
 static inline int __inline_isxdigit(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_N | _X);
+    return _ctype_[(unsigned char)(c) + 1] & (_N | _X);
 }
 
 static inline int __inline_isspace(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_S);
+    return _ctype_[(unsigned char)(c) + 1] & (_S);
 }
 
 static inline int __inline_ispunct(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_P);
+    return _ctype_[(unsigned char)(c) + 1] & (_P);
 }
 
 static inline int __inline_isprint(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B);
+    return _ctype_[(unsigned char)(c) + 1] & (_P | _U | _L | _N | _B);
 }
 
 static inline int __inline_isgraph(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_P | _U | _L | _N);
+    return _ctype_[(unsigned char)(c) + 1] & (_P | _U | _L | _N);
 }
 
 static inline int __inline_islower(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_L);
+    return _ctype_[(unsigned char)(c) + 1] & (_L);
 }
 
 static inline int __inline_isupper(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_U);
+    return _ctype_[(unsigned char)(c) + 1] & (_U);
 }
 
 static inline int __inline_isblank(int c)
 {
-    return _ctype_[(unsigned char)(c)] & (_B) || (c == '\t');
+    return _ctype_[(unsigned char)(c) + 1] & (_B) || (c == '\t');
 }
 
 static inline int __inline_toascii(int c)
