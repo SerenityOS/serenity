@@ -92,11 +92,6 @@ public:
         return FixedArray<T>(m_size, elements);
     }
 
-    FixedArray<T> must_clone_but_fixme_should_propagate_errors() const
-    {
-        return MUST(try_clone());
-    }
-
     // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
     FixedArray(FixedArray<T> const&) = delete;
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
