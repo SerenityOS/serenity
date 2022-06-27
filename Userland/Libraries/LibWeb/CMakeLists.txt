@@ -74,6 +74,7 @@ set(SOURCES
     DOM/AbortSignal.cpp
     DOM/Attribute.cpp
     DOM/Attribute.idl
+    DOM/CDATASection.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
