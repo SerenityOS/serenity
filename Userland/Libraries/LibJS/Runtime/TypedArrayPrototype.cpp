@@ -7,6 +7,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -56,6 +57,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.filter, filter, 1, attr);
     define_native_function(vm.names.map, map, 1, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toSorted, to_sorted, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -1508,6 +1510,53 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 
     // 7. Return R.
     return js_string(vm, builder.to_string());
+}
+
+// 1.2.2.1.4 %TypedArray%.prototype.toSorted ( comparefn ) https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toSorted
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
+{
+    auto comparefn = vm.argument(0);
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
+    if (!comparefn.is_undefined() && !comparefn.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn);
+
+    // 2. Let O be the this value.
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 3. Perform ? ValidateTypedArray(O).
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
+
+    // 4. Let buffer be obj.[[ViewedArrayBuffer]].
+    auto* array_buffer = typed_array->viewed_array_buffer();
+    VERIFY(array_buffer);
+
+    // 5. Let len be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+    MarkedVector<Value> arguments(vm.heap());
+    arguments.empend(length);
+    auto* return_array = TRY(typed_array_create_same_type(global_object, *typed_array, move(arguments)));
+
+    // 7. NOTE: The following closure performs a numeric comparison rather than the string comparison used in  Array.prototype.toSorted
+    // 8. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and buffer and performs the following steps when called:
+    Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
+        // a. Return ? CompareTypedArrayElements(x, y, comparefn, buffer).
+        return TRY(compare_typed_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function(), *return_array->viewed_array_buffer()));
+    };
+
+    // 9. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
+    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, false));
+
+    // 10. Let j be 0.
+    // 11. Repeat, while j < len,
+    for (size_t j = 0; j < length; j++) {
+        // Perform ! Set(A, ! ToString(𝔽(j)), sortedList[j], true).
+        MUST(return_array->create_data_property_or_throw(j, sorted_list[j]));
+        // b. Set j to j + 1.
+    }
+
+    return return_array;
 }
 
 }
