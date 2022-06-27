@@ -935,15 +935,8 @@ bool ISO8601Parser::parse_time_zone_iana_name()
         transaction.commit();
         return true;
     };
-    StateTransaction transaction { *this };
-    if (parse_etc_gmt_with_offset()) {
-        // no-op.
-    } else if (!parse_time_zone_iana_name_tail()) {
-        return false;
-    }
-    m_state.parse_result.time_zone_iana_name = transaction.parsed_string_view();
-    transaction.commit();
-    return true;
+    return parse_etc_gmt_with_offset()
+        || parse_time_zone_iana_name_tail();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TimeZoneIdentifier
@@ -958,6 +951,7 @@ bool ISO8601Parser::parse_time_zone_identifier()
     } else if (!parse_time_zone_utc_offset_name()) {
         return false;
     }
+    m_state.parse_result.time_zone_identifier = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
