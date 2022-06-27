@@ -605,10 +605,18 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        enum_generator.append(R"~~~(
+        // NOTE: Attribute setters return undefined instead of throwing when the string doesn't match an enum value.
+        if constexpr (!IsSame<Attribute, RemoveConst<ParameterType>>) {
+            enum_generator.append(R"~~~(
     @else@
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
 )~~~");
+        } else {
+            enum_generator.append(R"~~~(
+    @else@
+        return JS::js_undefined();
+)~~~");
+        }
 
         if (optional) {
             enum_generator.append(R"~~~(
