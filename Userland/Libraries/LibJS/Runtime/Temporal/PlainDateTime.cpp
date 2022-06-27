@@ -374,8 +374,8 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
         // a. Set adjustedDate to BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
         adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
 
-        // b. Set timeDifference to ? BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
-        time_difference = TRY(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
+        // b. Set timeDifference to ! BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
+        time_difference = MUST(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
     }
 
     // 8. Let date1 be ? CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
