@@ -1,7 +1,7 @@
-From 1cf9ec98aa817c13b94b42e4df80804a6757aa8a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:20:46 +0200
-Subject: [PATCH 6/9] [compiler-rt] Build crtbegin.o/crtend.o for SerenityOS
+Subject: [PATCH] [compiler-rt] Build crtbegin.o/crtend.o for SerenityOS
 
 ---
  compiler-rt/cmake/config-ix.cmake | 2 +-
@@ -20,6 +20,3 @@ index fc62d5ecc..7a47b7f71 100644
    set(COMPILER_RT_HAS_CRT TRUE)
  else()
    set(COMPILER_RT_HAS_CRT FALSE)
--- 
-2.35.3
-
