@@ -21,6 +21,18 @@ String HttpRequest::method_name() const
         return "HEAD";
     case Method::POST:
         return "POST";
+    case Method::DELETE:
+        return "DELETE";
+    case Method::PATCH:
+        return "PATCH";
+    case Method::OPTIONS:
+        return "OPTIONS";
+    case Method::TRACE:
+        return "TRACE";
+    case Method::CONNECT:
+        return "CONNECT";
+    case Method::PUT:
+        return "PUT";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -155,6 +167,18 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
         request.m_method = Method::HEAD;
     else if (method == "POST")
         request.m_method = Method::POST;
+    else if (method == "DELETE")
+        request.set_method(HTTP::HttpRequest::Method::DELETE);
+    else if (method == "PATCH")
+        request.set_method(HTTP::HttpRequest::Method::PATCH);
+    else if (method == "OPTIONS")
+        request.set_method(HTTP::HttpRequest::Method::OPTIONS);
+    else if (method == "TRACE")
+        request.set_method(HTTP::HttpRequest::Method::TRACE);
+    else if (method == "CONNECT")
+        request.set_method(HTTP::HttpRequest::Method::CONNECT);
+    else if (method == "PUT")
+        request.set_method(HTTP::HttpRequest::Method::PUT);
     else
         return {};
 
