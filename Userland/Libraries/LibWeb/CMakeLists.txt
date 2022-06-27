@@ -226,6 +226,7 @@ set(SOURCES
     HTML/TextMetrics.cpp
     HTML/Timer.cpp
     HTML/Window.cpp
+    HTML/WindowEventHandlers.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp

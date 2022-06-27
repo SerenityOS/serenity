@@ -17,6 +17,7 @@
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/WindowEventHandlers.h>
 
 namespace Web {
 namespace Bindings {
@@ -140,6 +141,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
+    ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
     NonnullRefPtr<HTML::Window> m_impl;
