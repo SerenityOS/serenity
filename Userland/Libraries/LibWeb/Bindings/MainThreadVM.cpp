@@ -55,8 +55,7 @@ JS::VM& main_thread_vm()
         vm->host_promise_rejection_tracker = [](JS::Promise& promise, JS::Promise::RejectionOperation operation) {
             // 1. Let script be the running script.
             //    The running script is the script in the [[HostDefined]] field in the ScriptOrModule component of the running JavaScript execution context.
-            // FIXME: This currently assumes there's only a ClassicScript.
-            HTML::ClassicScript* script { nullptr };
+            HTML::Script* script { nullptr };
             vm->running_execution_context().script_or_module.visit(
                 [&script](WeakPtr<JS::Script>& js_script) {
                     script = verify_cast<HTML::ClassicScript>(js_script->host_defined());
@@ -67,19 +66,17 @@ JS::VM& main_thread_vm()
                 [](Empty) {
                 });
 
-            // If there's no script, we're out of luck. Return.
-            // FIXME: This can happen from JS::NativeFunction, which makes its callee contexts [[ScriptOrModule]] null.
-            if (!script) {
-                dbgln("FIXME: Unable to process unhandled promise rejection in host_promise_rejection_tracker as the running script is null.");
-                return;
+            // 2. If script is a classic script and script's muted errors is true, then return.
+            // NOTE: is<T>() returns false if nullptr is passed.
+            if (is<HTML::ClassicScript>(script)) {
+                auto const& classic_script = static_cast<HTML::ClassicScript const&>(*script);
+                if (classic_script.muted_errors() == HTML::ClassicScript::MutedErrors::Yes)
+                    return;
             }
 
-            // 2. If script's muted errors is true, terminate these steps.
-            if (script->muted_errors() == HTML::ClassicScript::MutedErrors::Yes)
-                return;
-
-            // 3. Let settings object be script's settings object.
-            auto& settings_object = script->settings_object();
+            // 3. Let settings object be the current settings object.
+            // 4. If script is not null, then set settings object to script's settings object.
+            auto& settings_object = script ? script->settings_object() : HTML::current_settings_object();
 
             switch (operation) {
             case JS::Promise::RejectionOperation::Reject:
