@@ -1,7 +1,7 @@
-From 70cbf6e9ed46f0d39f43ac4a43b9bd2cc10da6c3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:09:50 +0200
-Subject: [PATCH 3/9] [Driver] Add support for SerenityOS
+Subject: [PATCH] [Driver] Add support for SerenityOS
 
 Adds support for the `$arch-pc-serenity` target to the Clang front end.
 This makes the compiler look for libraries and headers in the right
@@ -590,6 +590,3 @@ index 000000000..d414f8366
 +} // end namespace clang
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
--- 
-2.35.3
-

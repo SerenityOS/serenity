@@ -1,8 +1,8 @@
-From 539a12f2955a737f550be655c56a1a993eaa1ae2 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <akaster@serenityos.org>
 Date: Fri, 4 Mar 2022 15:13:42 -0700
-Subject: [PATCH 9/9] [compiler-rt/llvm] Enable profile instrumentation
- for SerenityOS
+Subject: [PATCH] [compiler-rt/llvm] Enable profile instrumentation for
+ SerenityOS
 
 Treat SerenityOS the same as other *NIX platforms that behave close
 enough to linux to use the pre-canned InstrProfiling implementation.
@@ -17,7 +17,7 @@ OS ABI for userspace binaries to 3, or GNU/Linux.
  4 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index 7a47b7f..8d4211d 100644
+index 7a47b7f71..8d4211deb 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
 @@ -738,7 +738,7 @@ else()
@@ -30,7 +30,7 @@ index 7a47b7f..8d4211d 100644
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index 592c09b..1833682 100644
+index 592c09b49..1833682d7 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -7,7 +7,8 @@
@@ -44,7 +44,7 @@ index 592c09b..1833682 100644
  #include <elf.h>
  #include <link.h>
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index 3e9b3ca..d257013 100644
+index 3e9b3ca0a..d257013dd 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -8,7 +8,7 @@
@@ -57,7 +57,7 @@ index 3e9b3ca..d257013 100644
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
-index 6868408..eaa1b64 100644
+index 6868408ef..eaa1b64d2 100644
 --- a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
 +++ b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
 @@ -857,7 +857,8 @@ static bool needsRuntimeRegistrationOfSectionRange(const Triple &TT) {
@@ -70,6 +70,3 @@ index 6868408..eaa1b64 100644
      return false;
  
    return true;
--- 
-2.32.0
-

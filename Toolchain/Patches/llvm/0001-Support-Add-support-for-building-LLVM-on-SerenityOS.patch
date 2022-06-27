@@ -1,7 +1,7 @@
-From 9ff3d5362c71dfa9b6aba1dd65a33bb6d8971164 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 09:54:22 +0200
-Subject: [PATCH 1/9] [Support] Add support for building LLVM on SerenityOS
+Subject: [PATCH] [Support] Add support for building LLVM on SerenityOS
 
 Adds SerenityOS `#ifdef`s for platform-specific code.
 
@@ -76,6 +76,3 @@ index 089342030..3ffe064e5 100644
  ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
                              bool WaitUntilTerminates, std::string *ErrMsg,
                              Optional<ProcessStatistics> *ProcStat) {
--- 
-2.35.3
-

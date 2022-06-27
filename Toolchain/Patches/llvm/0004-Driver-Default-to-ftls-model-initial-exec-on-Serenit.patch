@@ -1,8 +1,7 @@
-From 50e7b15efa5f7e2ff57e998879fee28fff4a5305 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:12:54 +0200
-Subject: [PATCH 4/9] [Driver] Default to -ftls-model=initial-exec on
- SerenityOS
+Subject: [PATCH] [Driver] Default to -ftls-model=initial-exec on SerenityOS
 
 This is a hack to make Clang use the initial-exec TLS model instead of
 the default local-exec when building code for Serenity.
@@ -31,6 +30,3 @@ index f2f18e901..39d6c18fe 100644
  
    if (Args.hasFlag(options::OPT_fnew_infallible,
                     options::OPT_fno_new_infallible, false))
--- 
-2.35.3
-
