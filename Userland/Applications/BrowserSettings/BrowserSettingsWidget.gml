@@ -25,8 +25,7 @@
             }
 
             @GUI::Widget {
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::Widget {
                     layout: @GUI::HorizontalBoxLayout {
@@ -44,21 +43,22 @@
                         placeholder: "https://example.com"
                     }
                 }
+
                 @GUI::Widget {
-                     layout: @GUI::HorizontalBoxLayout {
-                         spacing: 16
-                     }
+                    layout: @GUI::HorizontalBoxLayout {
+                        spacing: 16
+                    }
 
-                     @GUI::Label {
-                         text: "New Tab:"
-                         text_alignment: "CenterLeft"
-                         fixed_width: 45
-                     }
+                    @GUI::Label {
+                        text: "New Tab:"
+                        text_alignment: "CenterLeft"
+                        fixed_width: 45
+                    }
 
-                     @GUI::TextBox {
-                         name: "new_tab_url_textbox"
-                         placeholder: "https://example.com"
-                     }
+                    @GUI::TextBox {
+                        name: "new_tab_url_textbox"
+                        placeholder: "https://example.com"
+                    }
                 }
             }
         }
