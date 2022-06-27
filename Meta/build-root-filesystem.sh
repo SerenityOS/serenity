@@ -202,6 +202,10 @@ ln -sf checksum mnt/bin/sha256sum
 ln -sf checksum mnt/bin/sha512sum
 echo "done"
 
+printf "rewriting manpage links... "
+find mnt/usr/share/man -iname '*.md' -print0 | xargs -0 sed -i -E 's/\.\.\/man(.*)\.md/help:\/\/man\/\1/'
+echo "done"
+
 # Run local sync script, if it exists
 if [ -f "${SERENITY_SOURCE_DIR}/sync-local.sh" ]; then
     sh "${SERENITY_SOURCE_DIR}/sync-local.sh"
