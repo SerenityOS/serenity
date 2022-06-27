@@ -10,6 +10,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Page/Page.h>
 
@@ -232,7 +233,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
             // This algorithm results in promise rejections being marked as handled or not handled. These concepts parallel handled and not handled script errors.
             // If a rejection is still not handled after this, then the rejection may be reported to a developer console.
             if (not_handled)
-                dbgln("WARNING: A promise was rejected without any handlers. promise={:p}, result={}", &promise, promise.result().to_string_without_side_effects());
+                HTML::print_error_from_value(promise.result(), ErrorInPromise::Yes);
         }
     });
 }

@@ -10,6 +10,12 @@
 
 namespace Web::HTML {
 
+enum class ErrorInPromise {
+    No,
+    Yes,
+};
+
+void print_error_from_value(JS::Value, ErrorInPromise);
 void report_exception(JS::Completion const&);
 
 template<typename T>
