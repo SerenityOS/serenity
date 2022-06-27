@@ -354,14 +354,14 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 1. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
     auto time_difference = difference_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 
-    // 2. Let timeSign be ! DurationSign(0, 0, 0, timeDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
-    auto time_sign = duration_sign(0, 0, 0, time_difference.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
+    // 2. Let timeSign be ! DurationSign(0, 0, 0, 0, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
+    auto time_sign = duration_sign(0, 0, 0, 0, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 
     // 3. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 4. Let adjustedDate be BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
-    auto adjusted_date = balance_iso_date(year1, month1, day1 + time_difference.days);
+    // 4. Let adjustedDate be BalanceISODate(y1, mon1, d1).
+    auto adjusted_date = balance_iso_date(year1, month1, day1);
 
     // 5. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
