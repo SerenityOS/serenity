@@ -353,7 +353,7 @@ private:
     explicit Document(const AK::URL&);
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
 

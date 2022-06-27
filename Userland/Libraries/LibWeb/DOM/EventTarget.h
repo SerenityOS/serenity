@@ -86,4 +86,6 @@ private:
     JS::ThrowCompletionOr<void> process_event_handler_for_event(FlyString const& name, Event& event);
 };
 
+bool is_window_reflecting_body_element_event_handler(FlyString const& name);
+
 }

@@ -54,7 +54,7 @@ protected:
 
 private:
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
     enum class ContentEditableState {
         True,
