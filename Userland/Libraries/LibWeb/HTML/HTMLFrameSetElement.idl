@@ -1,3 +1,4 @@
+#import <DOM/EventHandler.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLFrameSetElement : HTMLElement {
@@ -6,3 +7,5 @@ interface HTMLFrameSetElement : HTMLElement {
     [Reflect] attribute DOMString rows;
 
 };
+
+HTMLFrameSetElement includes WindowEventHandlers;
