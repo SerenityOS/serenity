@@ -199,6 +199,14 @@ Widget::Widget()
 
 Widget::~Widget() = default;
 
+void Widget::layout_relevant_change_occured()
+{
+    if (auto* parent = parent_widget())
+        parent->layout_relevant_change_occured();
+    else
+        invalidate_layout();
+}
+
 void Widget::child_event(Core::ChildEvent& event)
 {
     if (event.type() == Event::ChildAdded) {
@@ -207,6 +215,7 @@ void Widget::child_event(Core::ChildEvent& event)
                 layout()->insert_widget_before(verify_cast<Widget>(*event.child()), verify_cast<Widget>(*event.insertion_before_child()));
             else
                 layout()->add_widget(verify_cast<Widget>(*event.child()));
+            layout_relevant_change_occured();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_add_widget({}, verify_cast<Widget>(*event.child()));
@@ -215,8 +224,7 @@ void Widget::child_event(Core::ChildEvent& event)
         if (layout()) {
             if (event.child() && is<Widget>(*event.child()))
                 layout()->remove_widget(verify_cast<Widget>(*event.child()));
-            else
-                invalidate_layout();
+            layout_relevant_change_occured();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
             window()->did_remove_widget({}, verify_cast<Widget>(*event.child()));
@@ -791,7 +799,7 @@ void Widget::set_min_size(UISize const& size)
     if (m_min_size == size)
         return;
     m_min_size = size;
-    invalidate_layout();
+    layout_relevant_change_occured();
 }
 
 void Widget::set_max_size(UISize const& size)
@@ -800,7 +808,7 @@ void Widget::set_max_size(UISize const& size)
     if (m_max_size == size)
         return;
     m_max_size = size;
-    invalidate_layout();
+    layout_relevant_change_occured();
 }
 
 void Widget::set_preferred_size(UISize const& size)
@@ -808,7 +816,7 @@ void Widget::set_preferred_size(UISize const& size)
     if (m_preferred_size == size)
         return;
     m_preferred_size = size;
-    invalidate_layout();
+    layout_relevant_change_occured();
 }
 
 Optional<UISize> Widget::calculated_preferred_size() const
@@ -840,8 +848,7 @@ void Widget::set_visible(bool visible)
     if (visible == m_visible)
         return;
     m_visible = visible;
-    if (auto* parent = parent_widget())
-        parent->invalidate_layout();
+    layout_relevant_change_occured();
     if (m_visible)
         update();
     if (!m_visible && is_focused())
