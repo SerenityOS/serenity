@@ -52,7 +52,7 @@ void GroupBox::paint_event(PaintEvent& event)
 void GroupBox::fonts_change_event(FontsChangeEvent& event)
 {
     Widget::fonts_change_event(event);
-    invalidate_layout();
+    layout_relevant_change_occured();
 }
 
 void GroupBox::set_title(StringView title)
