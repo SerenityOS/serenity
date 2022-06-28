@@ -13,6 +13,8 @@ namespace GUI {
 
 AbstractScrollableWidget::AbstractScrollableWidget()
 {
+    REGISTER_READONLY_SIZE_PROPERTY("min_content_size", min_content_size);
+
     m_vertical_scrollbar = add<AbstractScrollableWidgetScrollbar>(*this, Orientation::Vertical);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this](int) {
