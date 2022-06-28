@@ -45,11 +45,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath exec"));
 
-    Vector<String> exec_environment_strings;
     Vector<StringView> exec_environment;
-    if (auto* term = getenv("TERM")) {
-        exec_environment_strings.append(String::formatted("TERM={}", term));
-        exec_environment.append(exec_environment_strings.last());
+    for (size_t i = 0; environ[i]; ++i) {
+        StringView env_view { environ[i] };
+        auto maybe_needle = env_view.find('=');
+
+        if (!maybe_needle.has_value())
+            continue;
+
+        if (env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
+            continue;
+
+        exec_environment.append(env_view);
     }
 
     Vector<String> exec_arguments;
