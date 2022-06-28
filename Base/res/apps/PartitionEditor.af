@@ -1,0 +1,4 @@
+[App]
+Name=Partition Editor
+Executable=/bin/PartitionEditor
+Category=Utilities
