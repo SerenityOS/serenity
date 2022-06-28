@@ -1,13 +1,13 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-playground.png) Playground - GUI Markup Language (GML) editor
+![Icon](/res/icons/16x16/app-gml-playground.png) GML Playground - GUI Markup Language (GML) editor
 
-[Open](file:///bin/Playground)
+[Open](file:///bin/GMLPlayground)
 
 ## Synopsis
 
 ```**sh
-$ Playground [file]
+$ GMLPlayground [file]
 ```
 
 ## Arguments
@@ -16,7 +16,7 @@ $ Playground [file]
 
 ## Description
 
-Playground facilitates development of graphical user interfaces (GUI)
+GML Playground facilitates development of graphical user interfaces (GUI)
 for Serenity applications using GUI Markup Language (GML) to compose
 a layout for GUI widgets and set widget attributes.
 
@@ -26,7 +26,7 @@ window, allowing rapid prototyping and development of application GUIs.
 ## Examples
 
 ```sh
-$ Playground /home/anon/example.gml
+$ GMLPlayground /home/anon/example.gml
 ```
 
 ## See also

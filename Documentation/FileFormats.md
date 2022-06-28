@@ -70,7 +70,7 @@ Most prominently, the first four bytes contain the filemagic: `!Fnt`.
 These files are human-readable, have no easily detectable filemagic, and define GUI designs and layouts.
 The format is strongly influenced by QML, the Qt Modeling Language.
 
-See the [GML manpage(s)](../Base/usr/share/man/man5/GML.md), [Playground(1)](../Userland/DevTools/Playground/), and the [GML support in LibGUI](../Userland/Libraries/LibGUI/GML/).
+See the [GML manpage(s)](../Base/usr/share/man/man5/GML.md), [GML Playground(1)](../Userland/DevTools/GMLPlayground/), and the [GML support in LibGUI](../Userland/Libraries/LibGUI/GML/).
 
 ## Inter Process Communication (`*.ipc` files)
 

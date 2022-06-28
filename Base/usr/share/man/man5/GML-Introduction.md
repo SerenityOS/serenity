@@ -19,7 +19,7 @@ Or right clicking on a folder in the TreeView and using
 ## See also
 
 -   [gml-format(1)](help://man/1/gml-format) formats your GML files.
--   [GML Playground(1)](help://man/1/Playground) is an interactive GML creation tool.
+-   [GML Playground(1)](help://man/1/GMLPlayground) is an interactive GML creation tool.
 
 ### List of GML manpages
 
