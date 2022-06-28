@@ -17,6 +17,7 @@ public:
         Partition,
         StartBlock,
         EndBlock,
+        TotalBlocks,
         __Count,
     };
 

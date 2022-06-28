@@ -20,6 +20,8 @@ String PartitionModel::column_name(int column) const
         return "Start Block";
     case Column::EndBlock:
         return "End Block";
+    case Column::TotalBlocks:
+        return "Total Blocks";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -43,6 +45,8 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
             return partition.start_block();
         case Column::EndBlock:
             return partition.end_block();
+        case Column::TotalBlocks:
+            return partition.end_block() - partition.start_block() + 1;
         default:
             VERIFY_NOT_REACHED();
         }
