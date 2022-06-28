@@ -164,7 +164,7 @@ This isn't figured out yet, for now we're doing the first approach in select pla
 
 Currently:
 
-    auto app_icon = GUI::Icon::default_icon("app-playground");
+    auto app_icon = GUI::Icon::default_icon("app-gml-playground");
 
 or
 
