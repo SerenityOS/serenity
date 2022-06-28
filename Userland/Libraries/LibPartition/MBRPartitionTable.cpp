@@ -82,7 +82,7 @@ MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::File> device_file, u32 
         if (entry.offset == 0x00) {
             continue;
         }
-        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length), entry.type));
+        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length) - 1, entry.type));
     }
     m_valid = true;
 }
@@ -106,7 +106,7 @@ MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::File> device_file)
         if (entry.offset == 0x00) {
             continue;
         }
-        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length), entry.type));
+        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length) - 1, entry.type));
     }
     m_valid = true;
 }

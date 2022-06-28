@@ -77,7 +77,7 @@ EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<Core::File> device)
         if (entry.offset == 0x00) {
             continue;
         }
-        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length), entry.type));
+        MUST(m_partitions.try_empend(entry.offset, (entry.offset + entry.length) - 1, entry.type));
     }
 }
 

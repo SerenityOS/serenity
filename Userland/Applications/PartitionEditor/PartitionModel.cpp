@@ -42,9 +42,6 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
         case Column::StartBlock:
             return partition.start_block();
         case Column::EndBlock:
-            // FIXME: Either MBR end block is off by one (if supposed to be exclusive bound)
-            //        or GPT end block is off by one (if supposed to be inclusive bound).
-            //        This is an issue in LibPartition.
             return partition.end_block();
         default:
             VERIFY_NOT_REACHED();
