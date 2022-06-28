@@ -109,6 +109,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_title(builder.to_string());
     };
 
+    editor->on_change = [&] {
+        preview->remove_all_children();
+        preview->load_from_gml(editor->text(), [](const String& class_name) -> RefPtr<Core::Object> {
+            return UnregisteredWidget::construct(class_name);
+        });
+    };
+
+    editor->on_modified_change = [&](bool modified) {
+        window->set_modified(modified);
+        update_title();
+    };
+
     if (String(path).is_empty()) {
         editor->set_text(R"~~~(@GUI::Frame {
     layout: @GUI::VerticalBoxLayout {
@@ -133,18 +145,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->set_text(file->read_all());
         update_title();
     }
-
-    editor->on_change = [&] {
-        preview->remove_all_children();
-        preview->load_from_gml(editor->text(), [](const String& class_name) -> RefPtr<Core::Object> {
-            return UnregisteredWidget::construct(class_name);
-        });
-    };
-
-    editor->on_modified_change = [&](bool modified) {
-        window->set_modified(modified);
-        update_title();
-    };
 
     auto file_menu = TRY(window->try_add_menu("&File"));
 
