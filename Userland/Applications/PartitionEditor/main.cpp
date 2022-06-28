@@ -14,6 +14,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TableView.h>
+#include <unistd.h>
 
 static Vector<String> get_device_paths()
 {
@@ -46,7 +47,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 400);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    // FIXME: Abort and show a dialog if not running as root.
+    if (getuid() != 0) {
+        auto error_message = "PartitionEditor must be run as root in order to open raw block devices and read partition tables."sv;
+        GUI::MessageBox::show_error(window, error_message);
+        return Error::from_string_view(error_message);
+    }
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
     widget->load_from_gml(partition_editor_window_gml);
