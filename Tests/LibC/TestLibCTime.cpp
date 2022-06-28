@@ -119,3 +119,34 @@ TEST_CASE(tzset)
     EXPECT_EQ(tzname[0], "CET"sv);
     EXPECT_EQ(tzname[1], "CEST"sv);
 }
+
+TEST_CASE(localtime)
+{
+    TimeZoneGuard guard("UTC");
+
+    // Minimum valid: Thu Jan  1 00:00:00 -2147481748;
+    time_t minimum_possible_epoch = -67768040609740800;
+    auto minimum_tm = localtime(&minimum_possible_epoch);
+
+    EXPECT_EQ(minimum_tm->tm_sec, 0);
+    EXPECT_EQ(minimum_tm->tm_min, 0);
+    EXPECT_EQ(minimum_tm->tm_hour, 0);
+    EXPECT_EQ(minimum_tm->tm_mday, 1);
+    EXPECT_EQ(minimum_tm->tm_mon, 0);
+    EXPECT_EQ(minimum_tm->tm_year, -2147481748 - 1900);
+    EXPECT_EQ(minimum_tm->tm_wday, 4);
+    EXPECT_EQ(minimum_tm->tm_yday, 0);
+
+    // Maximum allowed: Wed Dec 31 23:59:59 2147485547
+    time_t max_possible_epoch = 67768036191676799;
+    auto maximum_tm = localtime(&max_possible_epoch);
+
+    EXPECT_EQ(maximum_tm->tm_sec, 59);
+    EXPECT_EQ(maximum_tm->tm_min, 59);
+    EXPECT_EQ(maximum_tm->tm_hour, 23);
+    EXPECT_EQ(maximum_tm->tm_mday, 31);
+    EXPECT_EQ(maximum_tm->tm_mon, 11);
+    EXPECT_EQ(maximum_tm->tm_year, 2147485547 - 1900);
+    EXPECT_EQ(maximum_tm->tm_wday, 3);
+    EXPECT_EQ(maximum_tm->tm_yday, 364);
+}

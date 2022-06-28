@@ -102,7 +102,12 @@ static struct tm* time_to_tm(struct tm* tm, time_t t)
         return nullptr;
     }
 
-    i64 year = 1970;
+    // In gregorian calendar, there is a 400 years cycle in which there are 97 leap and 303 common years.
+    constexpr time_t seconds_in_400_years = 12622780800;
+    i64 amount_of_400_year_cycles = t / seconds_in_400_years;
+    t %= seconds_in_400_years;
+
+    i64 year = 1970 + 400 * amount_of_400_year_cycles;
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;
     for (; t < 0; --year)
