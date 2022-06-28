@@ -274,3 +274,10 @@ TEST_CASE(is_negative)
     EXPECT_EQ(result.to_nanoseconds(), 5);
     EXPECT(!result.is_negative());
 }
+
+TEST_CASE(day_of_week)
+{
+    EXPECT_EQ(day_of_week(-2147481748, 1, 1), 4u);
+    EXPECT_EQ(day_of_week(1970, 1, 1), 4u);
+    EXPECT_EQ(day_of_week(2147485547, 12, 31), 3u);
+}

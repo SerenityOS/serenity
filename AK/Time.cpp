@@ -18,7 +18,7 @@
 
 namespace AK {
 
-int days_in_month(int year, unsigned month)
+int days_in_month(i64 year, unsigned month)
 {
     VERIFY(month >= 1 && month <= 12);
     if (month == 2)
@@ -28,14 +28,25 @@ int days_in_month(int year, unsigned month)
     return is_long_month ? 31 : 30;
 }
 
-unsigned day_of_week(int year, unsigned month, int day)
+unsigned day_of_week(i64 year, unsigned month, int day)
 {
-    VERIFY(month >= 1 && month <= 12);
-    constexpr Array seek_table = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
-    if (month < 3)
-        --year;
+    // Based on John Conway's algorithm
+    // https://en.wikipedia.org/wiki/Doomsday_rule
 
-    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
+    VERIFY(month >= 1 && month <= 12);
+
+    // Determining anchor day of the current century
+    unsigned anchor_day = (2 + 5 * (year % 4) + 4 * (year % 100) + 6 * (year % 400)) % 7;
+
+    // Doomsday for every month
+    constexpr Array seek_table = { 3, 28, 14, 4, 9, 6, 11, 8, 5, 10, 7, 12 };
+
+    // Both January and February might need a shift in leap years
+    unsigned day_shift = 0;
+    if (month < 2 && is_leap_year(year))
+        day_shift = 1;
+
+    return (anchor_day + day - (seek_table[month - 1] + day_shift) + 7) % 7;
 }
 
 Time Time::from_ticks(clock_t ticks, time_t ticks_per_second)

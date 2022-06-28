@@ -26,7 +26,7 @@ concept TimeSpecType = requires(T t)
     t.tv_nsec;
 };
 
-constexpr bool is_leap_year(int year)
+constexpr bool is_leap_year(i64 year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
@@ -35,7 +35,7 @@ constexpr bool is_leap_year(int year)
 // The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
 // Day may be negative or larger than the number of days
 // in the given month.
-unsigned day_of_week(int year, unsigned month, int day);
+unsigned day_of_week(i64 year, unsigned month, int day);
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is Jan 1 is day 0.
@@ -56,9 +56,9 @@ constexpr int day_of_year(int year, unsigned month, int day)
 }
 
 // Month starts at 1. Month must be >= 1 and <= 12.
-int days_in_month(int year, unsigned month);
+int days_in_month(i64 year, unsigned month);
 
-constexpr int days_in_year(int year)
+constexpr int days_in_year(i64 year)
 {
     return 365 + (is_leap_year(year) ? 1 : 0);
 }

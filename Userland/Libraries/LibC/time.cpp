@@ -102,7 +102,7 @@ static struct tm* time_to_tm(struct tm* tm, time_t t)
         return nullptr;
     }
 
-    int year = 1970;
+    i64 year = 1970;
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;
     for (; t < 0; --year)
