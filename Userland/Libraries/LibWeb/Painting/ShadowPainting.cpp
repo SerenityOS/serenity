@@ -147,7 +147,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
 
         aa_corner_painter.fill_rect_with_rounded_corners(shadow_bitmap_rect.shrunken(double_radius, double_radius, double_radius, double_radius), box_shadow_data.color, top_left_shadow_corner, top_right_shadow_corner, bottom_right_shadow_corner, bottom_left_shadow_corner);
         Gfx::StackBlurFilter filter(*shadow_bitmap);
-        filter.process_rgba(box_shadow_data.blur_radius);
+        filter.process_rgba(box_shadow_data.blur_radius, box_shadow_data.color);
 
         auto paint_shadow_infill = [&] {
             if (!border_radii.has_any_radius())
@@ -342,7 +342,7 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
 
         // Blur
         Gfx::StackBlurFilter filter(*shadow_bitmap);
-        filter.process_rgba(layer.blur_radius);
+        filter.process_rgba(layer.blur_radius, layer.color);
 
         auto draw_rect = Gfx::enclosing_int_rect(fragment.absolute_rect());
         Gfx::IntPoint draw_location {

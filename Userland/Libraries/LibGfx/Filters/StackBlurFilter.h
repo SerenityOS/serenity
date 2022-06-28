@@ -18,7 +18,7 @@ public:
     }
 
     // Note: The radius is a u8 for reason! This implementation can only handle radii from 0 to 255.
-    void process_rgba(u8 radius);
+    void process_rgba(u8 radius, Color fill_color = Color::NamedColor::White);
 
 private:
     Bitmap& m_bitmap;

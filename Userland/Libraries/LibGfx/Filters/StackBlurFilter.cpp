@@ -96,14 +96,14 @@ private:
 
 // This is an implementation of StackBlur by Mario Klingemann (https://observablehq.com/@jobleonard/mario-klingemans-stackblur)
 // (Link is to a secondary source as the original site is now down)
-FLATTEN void StackBlurFilter::process_rgba(u8 radius)
+FLATTEN void StackBlurFilter::process_rgba(u8 radius, Color fill_color)
 {
     // TODO: Implement a plain RGB version of this (if required)
 
     if (radius == 0)
         return;
 
-    constexpr auto transparent_white = Color(Color::White).with_alpha(0);
+    fill_color = fill_color.with_alpha(0);
 
     uint width = m_bitmap.width();
     uint height = m_bitmap.height();
@@ -115,7 +115,7 @@ FLATTEN void StackBlurFilter::process_rgba(u8 radius)
     auto get_pixel = [&](int x, int y) {
         auto color = m_bitmap.get_pixel<StorageFormat::BGRA8888>(x, y);
         if (color.alpha() == 0)
-            return transparent_white;
+            return fill_color;
         return color;
     };
 
@@ -179,7 +179,7 @@ FLATTEN void StackBlurFilter::process_rgba(u8 radius)
             if (alpha != 0)
                 set_pixel(x, y, Color((red_sum * sum_mult) >> sum_shift, (green_sum * sum_mult) >> sum_shift, (blue_sum * sum_mult) >> sum_shift, alpha));
             else
-                set_pixel(x, y, transparent_white);
+                set_pixel(x, y, fill_color);
 
             red_sum -= red_out_sum;
             green_sum -= green_out_sum;
@@ -266,7 +266,7 @@ FLATTEN void StackBlurFilter::process_rgba(u8 radius)
             if (alpha != 0)
                 set_pixel(x, y, Color((red_sum * sum_mult) >> sum_shift, (green_sum * sum_mult) >> sum_shift, (blue_sum * sum_mult) >> sum_shift, alpha));
             else
-                set_pixel(x, y, transparent_white);
+                set_pixel(x, y, fill_color);
 
             red_sum -= red_out_sum;
             green_sum -= green_out_sum;
