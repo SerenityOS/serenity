@@ -7,7 +7,7 @@
  */
 
 #include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/Filters/FastBoxBlurFilter.h>
+#include <LibGfx/Filters/StackBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Painting/BorderPainting.h>
@@ -146,9 +146,8 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
         Gfx::AntiAliasingPainter aa_corner_painter { corner_painter };
 
         aa_corner_painter.fill_rect_with_rounded_corners(shadow_bitmap_rect.shrunken(double_radius, double_radius, double_radius, double_radius), box_shadow_data.color, top_left_shadow_corner, top_right_shadow_corner, bottom_right_shadow_corner, bottom_left_shadow_corner);
-        // FIXME: Make fast box blur faster
-        Gfx::FastBoxBlurFilter filter(*shadow_bitmap);
-        filter.apply_three_passes(box_shadow_data.blur_radius);
+        Gfx::StackBlurFilter filter(*shadow_bitmap);
+        filter.process_rgba(box_shadow_data.blur_radius);
 
         auto paint_shadow_infill = [&] {
             if (!border_radii.has_any_radius())
@@ -342,8 +341,8 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
         shadow_painter.draw_text_run(baseline_start, Utf8View(fragment.text()), context.painter().font(), layer.color);
 
         // Blur
-        Gfx::FastBoxBlurFilter filter(*shadow_bitmap);
-        filter.apply_three_passes(layer.blur_radius);
+        Gfx::StackBlurFilter filter(*shadow_bitmap);
+        filter.process_rgba(layer.blur_radius);
 
         auto draw_rect = Gfx::enclosing_int_rect(fragment.absolute_rect());
         Gfx::IntPoint draw_location {
