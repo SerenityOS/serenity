@@ -294,6 +294,18 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
         [this] { return this->getter(); },                       \
         {});
 
+#define REGISTER_READONLY_SIZE_PROPERTY(property_name, getter) \
+    register_property(                                         \
+        property_name,                                         \
+        [this] {                                               \
+            auto size = this->getter();                        \
+            JsonArray size_array;                              \
+            size_array.append(size.width());                   \
+            size_array.append(size.height());                  \
+            return size_array;                                 \
+        },                                                     \
+        {});
+
 #define REGISTER_RECT_PROPERTY(property_name, getter, setter)          \
     register_property(                                                 \
         property_name,                                                 \
