@@ -54,9 +54,13 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
                 painter.fill_rect(rect, color);
         };
 
+        // Our blur cannot handle radii over 255 so there's no point trying (255 is silly big anyway)
+        auto blur_radius = clamp(box_shadow_data.blur_radius, 0, 255);
+
         // If there's no blurring, nor rounded corners, we can save a lot of effort.
-        if (box_shadow_data.blur_radius == 0 && !border_radii.has_any_radius()) {
-            fill_rect_masked(painter, content_rect.inflated(box_shadow_data.spread_distance, box_shadow_data.spread_distance, box_shadow_data.spread_distance, box_shadow_data.spread_distance).translated(box_shadow_data.offset_x, box_shadow_data.offset_y), content_rect, box_shadow_data.color);
+        auto non_blurred_shadow_rect = content_rect.inflated(box_shadow_data.spread_distance, box_shadow_data.spread_distance, box_shadow_data.spread_distance, box_shadow_data.spread_distance);
+        if (blur_radius == 0 && !border_radii.has_any_radius()) {
+            fill_rect_masked(painter, non_blurred_shadow_rect.translated(box_shadow_data.offset_x, box_shadow_data.offset_y), content_rect, box_shadow_data.color);
             continue;
         }
 
@@ -77,7 +81,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
         spread_corner(bottom_right_shadow_corner);
         spread_corner(bottom_left_shadow_corner);
 
-        auto expansion = box_shadow_data.spread_distance - (box_shadow_data.blur_radius * 2);
+        auto expansion = box_shadow_data.spread_distance - (blur_radius * 2);
         Gfx::IntRect inner_bounding_rect = {
             content_rect.x() + box_shadow_data.offset_x - expansion,
             content_rect.y() + box_shadow_data.offset_y - expansion,
@@ -89,14 +93,33 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
         // all vertical strips of the shadow are identical, and the same goes for horizontal ones.
         // So instead, we generate a shadow bitmap that is just large enough to include the corners and 1px of
         // non-corner, and then we repeatedly blit sections of it. This is similar to a NinePatch on Android.
-        auto double_radius = box_shadow_data.blur_radius * 2;
-        auto blurred_edge_thickness = box_shadow_data.blur_radius * 4;
+        auto double_radius = blur_radius * 2;
+        auto blurred_edge_thickness = blur_radius * 4;
 
         auto default_corner_size = Gfx::IntSize { double_radius, double_radius };
         auto top_left_corner_size = top_left_shadow_corner ? top_left_shadow_corner.as_rect().size() : default_corner_size;
         auto top_right_corner_size = top_right_shadow_corner ? top_right_shadow_corner.as_rect().size() : default_corner_size;
         auto bottom_left_corner_size = bottom_left_shadow_corner ? bottom_left_shadow_corner.as_rect().size() : default_corner_size;
         auto bottom_right_corner_size = bottom_right_shadow_corner ? bottom_right_shadow_corner.as_rect().size() : default_corner_size;
+
+        auto max_edge_width = non_blurred_shadow_rect.width() / 2;
+        auto max_edge_height = non_blurred_shadow_rect.height() / 2;
+        auto extra_edge_width = non_blurred_shadow_rect.width() % 2;
+        auto extra_edge_height = non_blurred_shadow_rect.height() % 2;
+
+        auto clip_corner_size = [&](auto& size, int x_bonus = 0, int y_bonus = 0) {
+            size.set_width(min(size.width(), max_edge_width + x_bonus));
+            size.set_height(min(size.height(), max_edge_height + y_bonus));
+        };
+
+        if (!top_left_corner)
+            clip_corner_size(top_left_corner_size, extra_edge_width, extra_edge_height);
+        if (!top_right_corner)
+            clip_corner_size(top_right_corner_size, 0, extra_edge_height);
+        if (!bottom_left_corner)
+            clip_corner_size(bottom_left_corner_size, extra_edge_width);
+        if (!bottom_right_corner)
+            clip_corner_size(bottom_right_corner_size);
 
         auto shadow_bitmap_rect = Gfx::IntRect(
             0, 0,
@@ -131,10 +154,15 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
             bottom_left_corner_size.height() + double_radius
         };
 
-        Gfx::IntRect left_edge_rect { 0, top_left_corner_rect.height(), blurred_edge_thickness, 1 };
-        Gfx::IntRect right_edge_rect { shadow_bitmap_rect.width() - blurred_edge_thickness, top_right_corner_rect.height(), blurred_edge_thickness, 1 };
-        Gfx::IntRect top_edge_rect { top_left_corner_rect.width(), 0, 1, blurred_edge_thickness };
-        Gfx::IntRect bottom_edge_rect { bottom_left_corner_rect.width(), shadow_bitmap_rect.height() - blurred_edge_thickness, 1, blurred_edge_thickness };
+        auto horizontal_edge_width = min(max_edge_height, double_radius) + double_radius;
+        auto vertical_edge_width = min(max_edge_width, double_radius) + double_radius;
+        auto horizontal_top_edge_width = min(max_edge_height + extra_edge_height, double_radius) + double_radius;
+        auto vertical_left_edge_width = min(max_edge_width + extra_edge_width, double_radius) + double_radius;
+
+        Gfx::IntRect left_edge_rect { 0, top_left_corner_rect.height(), vertical_left_edge_width, 1 };
+        Gfx::IntRect right_edge_rect { shadow_bitmap_rect.width() - vertical_edge_width, top_right_corner_rect.height(), vertical_edge_width, 1 };
+        Gfx::IntRect top_edge_rect { top_left_corner_rect.width(), 0, 1, horizontal_top_edge_width };
+        Gfx::IntRect bottom_edge_rect { bottom_left_corner_rect.width(), shadow_bitmap_rect.height() - horizontal_edge_width, 1, horizontal_edge_width };
 
         auto shadows_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, shadow_bitmap_rect.size());
         if (shadows_bitmap.is_error()) {
@@ -147,7 +175,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
 
         aa_corner_painter.fill_rect_with_rounded_corners(shadow_bitmap_rect.shrunken(double_radius, double_radius, double_radius, double_radius), box_shadow_data.color, top_left_shadow_corner, top_right_shadow_corner, bottom_right_shadow_corner, bottom_left_shadow_corner);
         Gfx::StackBlurFilter filter(*shadow_bitmap);
-        filter.process_rgba(box_shadow_data.blur_radius, box_shadow_data.color);
+        filter.process_rgba(blur_radius, box_shadow_data.color);
 
         auto paint_shadow_infill = [&] {
             if (!border_radii.has_any_radius())
@@ -201,9 +229,9 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
         };
 
         auto left_start = inner_bounding_rect.left() - blurred_edge_thickness;
-        auto right_start = inner_bounding_rect.left() + inner_bounding_rect.width();
+        auto right_start = inner_bounding_rect.left() + inner_bounding_rect.width() + (blurred_edge_thickness - vertical_edge_width);
         auto top_start = inner_bounding_rect.top() - blurred_edge_thickness;
-        auto bottom_start = inner_bounding_rect.top() + inner_bounding_rect.height();
+        auto bottom_start = inner_bounding_rect.top() + inner_bounding_rect.height() + (blurred_edge_thickness - horizontal_edge_width);
 
         // Note: The +1s in a few of the following translations are due to the -1s Gfx::Rect::right() and Gfx::Rect::bottom().
         auto top_left_corner_blit_pos = inner_bounding_rect.top_left().translated(-blurred_edge_thickness, -blurred_edge_thickness);
