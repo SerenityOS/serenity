@@ -17,8 +17,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> command;
     Core::ArgsParser args_parser;
     uid_t as_user_uid = 0;
+    bool preserve_env = false;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
+    args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E');
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(arguments);
 
@@ -53,7 +55,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!maybe_needle.has_value())
             continue;
 
-        if (env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
+        // FIXME: Allow a custom selection of variables once ArgsParser supports options with optional parameters.
+        if (!preserve_env && env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
             continue;
 
         exec_environment.append(env_view);
