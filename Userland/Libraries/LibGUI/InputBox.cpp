@@ -44,19 +44,19 @@ void InputBox::build(InputType input_type)
     int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = max(text_width, title_width);
 
-    set_rect(x(), y(), max_width + 140, 66);
-
     widget.set_layout<VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
+    widget.set_preferred_height(SpecialDimension::Fit);
 
     widget.layout()->set_margins(6);
     widget.layout()->set_spacing(6);
 
     auto& label_editor_container = widget.add<Widget>();
     label_editor_container.set_layout<HorizontalBoxLayout>();
+    label_editor_container.set_preferred_height(SpecialDimension::Fit);
 
     auto& label = label_editor_container.add<Label>(m_prompt);
-    label.set_fixed_size(text_width, 16);
+    label.set_preferred_width(text_width);
 
     switch (input_type) {
     case InputType::Text:
@@ -73,13 +73,13 @@ void InputBox::build(InputType input_type)
         m_text_editor->set_placeholder(m_placeholder);
 
     auto& button_container_outer = widget.add<Widget>();
-    button_container_outer.set_fixed_height(22);
+    button_container_outer.set_preferred_height(SpecialDimension::Fit);
     button_container_outer.set_layout<VerticalBoxLayout>();
 
     auto& button_container_inner = button_container_outer.add<Widget>();
     button_container_inner.set_layout<HorizontalBoxLayout>();
+    button_container_inner.set_preferred_height(SpecialDimension::Fit);
     button_container_inner.layout()->set_spacing(6);
-    button_container_inner.layout()->set_margins({ 4, 0, 4, 4 });
     button_container_inner.layout()->add_spacer();
 
     m_ok_button = button_container_inner.add<DialogButton>();
@@ -102,6 +102,8 @@ void InputBox::build(InputType input_type)
         m_cancel_button->click();
     };
     m_text_editor->set_focus(true);
+
+    set_rect(x(), y(), max_width + 140, widget.effective_preferred_size().height().as_int());
 }
 
 }
