@@ -230,7 +230,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
             static_cast<int>(layer.spread_distance.to_px(layout_box())),
             layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
-    Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), normalized_border_radii_data(), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, absolute_border_box_rect().to_rounded<int>(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
 BorderRadiiData PaintableBox::normalized_border_radii_data() const
