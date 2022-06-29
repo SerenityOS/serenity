@@ -597,7 +597,7 @@ void ImageEditor::save_project()
 
 void ImageEditor::save_project_as()
 {
-    auto response = FileSystemAccessClient::Client::the().try_save_file(window(), "untitled", "pp");
+    auto response = FileSystemAccessClient::Client::the().try_save_file(window(), m_title, "pp");
     if (response.is_error())
         return;
     auto file = response.value();
