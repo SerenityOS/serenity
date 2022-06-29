@@ -90,6 +90,7 @@ Window::Window(Core::Object* parent)
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
     REGISTER_SIZE_PROPERTY("base_size", base_size, set_base_size);
     REGISTER_SIZE_PROPERTY("size_increment", size_increment, set_size_increment);
+    REGISTER_BOOL_PROPERTY("obey_widget_min_size", is_obeying_widget_min_size, set_obey_widget_min_size);
 }
 
 Window::~Window()
@@ -1018,6 +1019,14 @@ void Window::set_forced_shadow(bool shadow)
     ConnectionToWindowServer::the().async_set_forced_shadow(m_window_id, shadow);
 }
 
+void Window::set_obey_widget_min_size(bool obey_widget_min_size)
+{
+    if (m_obey_widget_min_size != obey_widget_min_size) {
+        m_obey_widget_min_size = obey_widget_min_size;
+        schedule_relayout();
+    }
+}
+
 void Window::set_maximized(bool maximized)
 {
     m_maximized = maximized;
@@ -1033,8 +1042,15 @@ void Window::schedule_relayout()
         return;
     m_layout_pending = true;
     deferred_invoke([this] {
-        if (main_widget())
+        if (main_widget()) {
             main_widget()->do_layout();
+            if (m_obey_widget_min_size) {
+                auto min_size = main_widget()->effective_min_size();
+                set_minimum_size(
+                    (min_size.width() == GUI::SpecialDimension::Shrink ? 0 : min_size.width().as_int()),
+                    (min_size.height() == GUI::SpecialDimension::Shrink ? 0 : min_size.height().as_int()));
+            }
+        }
         update();
         m_layout_pending = false;
     });
