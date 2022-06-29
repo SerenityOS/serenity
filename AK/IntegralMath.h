@@ -24,6 +24,17 @@ constexpr T log2(T x)
     return x ? (8 * sizeof(T) - 1) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x)) : 0;
 }
 
+template<Integral T>
+constexpr T ceil_log2(T x)
+{
+    if (!x)
+        return 0;
+
+    T log = AK::log2(x);
+    log += (x & ((1 << (log - 1)) - 1)) != 0;
+    return log;
+}
+
 template<Integral I>
 constexpr I pow(I base, I exponent)
 {
