@@ -14,6 +14,8 @@
             fixed_height: 32
             fixed_width: 32
         }
+
+        @GUI::Layout::Spacer {}
     }
 
     @GUI::Widget {

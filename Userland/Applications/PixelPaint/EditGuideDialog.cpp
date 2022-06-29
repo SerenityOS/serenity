@@ -20,7 +20,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
 {
     set_title("Create new Guide");
     set_icon(parent_window->icon());
-    resize(200, 120);
+    resize(200, 130);
     set_resizable(false);
 
     auto& main_widget = set_main_widget<GUI::Widget>();

@@ -45,16 +45,14 @@
 
         @GUI::Widget {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "apply_button"
             text: "Apply"
-            max_width: 75
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            max_width: 75
         }
     }
 }
