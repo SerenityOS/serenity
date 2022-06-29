@@ -102,7 +102,7 @@ void ImageEditor::set_title(String title)
 void ImageEditor::set_path(String path)
 {
     m_path = move(path);
-    set_title(LexicalPath::basename(m_path));
+    set_title(LexicalPath::title(m_path));
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
