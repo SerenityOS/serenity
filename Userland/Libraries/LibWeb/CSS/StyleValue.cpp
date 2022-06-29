@@ -478,10 +478,13 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
 
             // Other side isn't a percentage, so the easiest way to handle it without duplicating all the logic, is just to swap `this` and `other`.
             CalculationResult new_value = other;
-            if (op == SumOperation::Add)
+            if (op == SumOperation::Add) {
                 new_value.add(*this, layout_node, percentage_basis);
-            else
-                new_value.subtract(*this, layout_node, percentage_basis);
+            } else {
+                // Turn 'this - other' into '-other + this', as 'A + B == B + A', but 'A - B != B - A'
+                new_value.multiply_by({ Number { Number::Type::Integer, -1.0f } }, layout_node);
+                new_value.add(*this, layout_node, percentage_basis);
+            }
 
             *this = new_value;
         });
