@@ -125,6 +125,7 @@ namespace JS {
     P(dayOfYear)                             \
     P(dayPeriod)                             \
     P(days)                                  \
+    P(daysDisplay)                           \
     P(daysInMonth)                           \
     P(daysInWeek)                            \
     P(daysInYear)                            \
@@ -256,6 +257,7 @@ namespace JS {
     P(hour12)                                \
     P(hourCycle)                             \
     P(hours)                                 \
+    P(hoursDisplay)                          \
     P(hoursInDay)                            \
     P(hypot)                                 \
     P(id)                                    \
@@ -320,8 +322,10 @@ namespace JS {
     P(message)                               \
     P(microsecond)                           \
     P(microseconds)                          \
+    P(microsecondsDisplay)                   \
     P(millisecond)                           \
     P(milliseconds)                          \
+    P(millisecondsDisplay)                   \
     P(min)                                   \
     P(minimize)                              \
     P(maximumFractionDigits)                 \
@@ -331,15 +335,18 @@ namespace JS {
     P(minimumSignificantDigits)              \
     P(minute)                                \
     P(minutes)                               \
+    P(minutesDisplay)                        \
     P(month)                                 \
     P(monthCode)                             \
     P(monthDayFromFields)                    \
     P(months)                                \
+    P(monthsDisplay)                         \
     P(monthsInYear)                          \
     P(multiline)                             \
     P(name)                                  \
     P(nanosecond)                            \
     P(nanoseconds)                           \
+    P(nanosecondsDisplay)                    \
     P(negated)                               \
     P(next)                                  \
     P(normalize)                             \
@@ -395,6 +402,7 @@ namespace JS {
     P(seal)                                  \
     P(second)                                \
     P(seconds)                               \
+    P(secondsDisplay)                        \
     P(segment)                               \
     P(sensitivity)                           \
     P(set)                                   \
@@ -522,6 +530,7 @@ namespace JS {
     P(weekOfYear)                            \
     P(weekday)                               \
     P(weeks)                                 \
+    P(weeksDisplay)                          \
     P(with)                                  \
     P(withCalendar)                          \
     P(withPlainDate)                         \
@@ -531,6 +540,7 @@ namespace JS {
     P(year)                                  \
     P(yearMonthFromFields)                   \
     P(years)                                 \
+    P(yearsDisplay)                          \
     P(zonedDateTime)                         \
     P(zonedDateTimeISO)
 
