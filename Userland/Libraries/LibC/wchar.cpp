@@ -531,6 +531,23 @@ int wcwidth(wchar_t wc)
     return 1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcswidth.html
+int wcswidth(wchar_t const* pwcs, size_t n)
+{
+    int len = 0;
+
+    for (size_t i = 0; i < n && pwcs[i]; i++) {
+        int char_len = wcwidth(pwcs[i]);
+
+        if (char_len == -1)
+            return -1;
+
+        len += char_len;
+    }
+
+    return len;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsnrtombs.html
 size_t wcsnrtombs(char* dest, wchar_t const** src, size_t nwc, size_t len, mbstate_t* ps)
 {
