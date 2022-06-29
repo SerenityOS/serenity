@@ -113,6 +113,7 @@ private:
     NonnullRefPtr<GUI::Action> create_save_as_action();
     NonnullRefPtr<GUI::Action> create_show_in_file_manager_action();
     NonnullRefPtr<GUI::Action> create_copy_relative_path_action();
+    NonnullRefPtr<GUI::Action> create_copy_full_path_action();
     NonnullRefPtr<GUI::Action> create_add_editor_tab_widget_action();
     NonnullRefPtr<GUI::Action> create_add_editor_action();
     NonnullRefPtr<GUI::Action> create_add_terminal_action();
@@ -221,6 +222,7 @@ private:
     RefPtr<GUI::Action> m_open_selected_in_new_tab_action;
     RefPtr<GUI::Action> m_show_in_file_manager_action;
     RefPtr<GUI::Action> m_copy_relative_path_action;
+    RefPtr<GUI::Action> m_copy_full_path_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_tree_view_rename_action;
     RefPtr<GUI::Action> m_new_project_action;
