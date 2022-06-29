@@ -121,6 +121,8 @@ int pause(void);
 int chroot(char const*);
 int getdtablesize(void);
 int nice(int incr);
+int brk(void* addr);
+void* sbrk(intptr_t incr);
 
 enum {
     _PC_NAME_MAX,
