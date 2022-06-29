@@ -41,15 +41,13 @@
                 spacing: 6
             }
 
-            @GUI::Frame {
-                preferred_height: "fit"
+            @GUI::Label {
                 background_role: "Base"
+                shape: "Container"
+                shadow: "Sunken"
+                thickness: 2
                 fill_with_background_color: true
-                layout: @GUI::VerticalBoxLayout {}
-
-                @GUI::Label {
-                    name: "terminal_font_label"
-                }
+                name: "terminal_font_label"
             }
 
             @GUI::Button {
@@ -62,7 +60,7 @@
 
     @GUI::GroupBox {
         title: "Cursor settings"
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
         }

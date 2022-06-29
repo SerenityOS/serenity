@@ -40,7 +40,7 @@
             }
 
             @GUI::Widget {
-                shrink_to_fit: true
+                preferred_height: "fit"
                 layout: @GUI::HorizontalBoxLayout {
                     spacing: 4
                     margins: [0, 2, 0, 2]

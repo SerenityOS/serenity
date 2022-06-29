@@ -65,6 +65,7 @@ private:
             for (size_t column = 0; column < columns; ++column) {
                 if (index < columns * rows) {
                     auto& textbox = horizontal_container.template add<GUI::TextBox>();
+                    textbox.set_min_width(22);
                     textbox.on_change = [&, row = row, column = column] {
                         auto& element = m_matrix.elements()[row][column];
                         char* endptr = nullptr;
