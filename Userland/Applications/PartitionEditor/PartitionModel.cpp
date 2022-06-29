@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumberFormat.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
 #include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/GUIDPartitionTable.h>
@@ -22,6 +23,8 @@ String PartitionModel::column_name(int column) const
         return "End Block";
     case Column::TotalBlocks:
         return "Total Blocks";
+    case Column::Size:
+        return "Size";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -47,6 +50,8 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
             return partition.end_block();
         case Column::TotalBlocks:
             return partition.end_block() - partition.start_block() + 1;
+        case Column::Size:
+            return human_readable_size((partition.end_block() - partition.start_block() + 1) * m_partition_table->block_size());
         default:
             VERIFY_NOT_REACHED();
         }

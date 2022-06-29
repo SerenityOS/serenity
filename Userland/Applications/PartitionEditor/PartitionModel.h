@@ -18,6 +18,7 @@ public:
         StartBlock,
         EndBlock,
         TotalBlocks,
+        Size,
         __Count,
     };
 
