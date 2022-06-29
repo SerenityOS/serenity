@@ -23,7 +23,8 @@ Label::Label(String text)
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
     REGISTER_TEXT_WRAPPING_PROPERTY("text_wrapping", text_wrapping, set_text_wrapping);
 
-    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow });
+    set_min_height(22);
 
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
