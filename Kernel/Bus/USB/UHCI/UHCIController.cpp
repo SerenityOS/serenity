@@ -411,7 +411,7 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     QueueHead* transfer_queue = allocate_queue_head();
     if (!transfer_queue) {
         free_descriptor_chain(data_descriptor_chain);
-        return 0;
+        return ENOMEM;
     }
 
     transfer_queue->attach_transfer_descriptor_chain(setup_td);
@@ -453,7 +453,7 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
     QueueHead* transfer_queue = allocate_queue_head();
     if (!transfer_queue) {
         free_descriptor_chain(data_descriptor_chain);
-        return 0;
+        return ENOMEM;
     }
 
     transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
