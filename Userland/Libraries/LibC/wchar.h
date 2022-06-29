@@ -63,6 +63,7 @@ float wcstof(wchar_t const*, wchar_t**);
 double wcstod(wchar_t const*, wchar_t**);
 long double wcstold(wchar_t const*, wchar_t**);
 int wcwidth(wchar_t);
+int wcswidth(wchar_t const*, size_t);
 size_t wcsrtombs(char*, wchar_t const**, size_t, mbstate_t*);
 size_t mbsrtowcs(wchar_t*, char const**, size_t, mbstate_t*);
 int wmemcmp(wchar_t const*, wchar_t const*, size_t);
