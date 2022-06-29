@@ -183,6 +183,7 @@ namespace JS {
     P(formatRange)                           \
     P(formatRangeToParts)                    \
     P(formatToParts)                         \
+    P(fractionalDigits)                      \
     P(fractionalSecondDigits)                \
     P(freeze)                                \
     P(from)                                  \

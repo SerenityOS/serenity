@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Intl/CollatorConstructor.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
+#include <LibJS/Runtime/Intl/DurationFormatConstructor.h>
 #include <LibJS/Runtime/Intl/Intl.h>
 #include <LibJS/Runtime/Intl/ListFormatConstructor.h>
 #include <LibJS/Runtime/Intl/LocaleConstructor.h>
@@ -45,6 +46,7 @@ void Intl::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.Collator, global_object.intl_collator_constructor(), attr);
     define_direct_property(vm.names.DateTimeFormat, global_object.intl_date_time_format_constructor(), attr);
     define_direct_property(vm.names.DisplayNames, global_object.intl_display_names_constructor(), attr);
+    define_direct_property(vm.names.DurationFormat, global_object.intl_duration_format_constructor(), attr);
     define_direct_property(vm.names.ListFormat, global_object.intl_list_format_constructor(), attr);
     define_direct_property(vm.names.Locale, global_object.intl_locale_constructor(), attr);
     define_direct_property(vm.names.NumberFormat, global_object.intl_number_format_constructor(), attr);
