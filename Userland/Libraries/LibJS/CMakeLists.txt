@@ -104,6 +104,9 @@ set(SOURCES
     Runtime/Intl/DisplayNames.cpp
     Runtime/Intl/DisplayNamesConstructor.cpp
     Runtime/Intl/DisplayNamesPrototype.cpp
+    Runtime/Intl/DurationFormat.cpp
+    Runtime/Intl/DurationFormatConstructor.cpp
+    Runtime/Intl/DurationFormatPrototype.cpp
     Runtime/Intl/Intl.cpp
     Runtime/Intl/ListFormat.cpp
     Runtime/Intl/ListFormatConstructor.cpp
