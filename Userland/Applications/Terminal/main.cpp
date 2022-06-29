@@ -161,7 +161,7 @@ static ErrorOr<void> run_command(String command, bool keep_open)
         arguments.append("-c");
         arguments.append(command);
     }
-    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin" }));
+    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm", "PAGER=more", "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin" }));
     TRY(Core::System::exec(shell, arguments, Core::System::SearchInPath::No, env.span()));
     VERIFY_NOT_REACHED();
 }
