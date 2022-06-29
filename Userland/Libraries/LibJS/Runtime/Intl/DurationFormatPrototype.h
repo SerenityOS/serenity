@@ -18,6 +18,9 @@ public:
     explicit DurationFormatPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DurationFormatPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 
 }
