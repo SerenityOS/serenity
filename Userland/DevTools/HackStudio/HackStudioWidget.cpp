@@ -17,7 +17,6 @@
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "HackStudio.h"
-#include "HackStudioWidget.h"
 #include "Locator.h"
 #include "Project.h"
 #include "ProjectDeclarations.h"
@@ -473,6 +472,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_open_selected_action = create_open_selected_action();
     m_open_selected_in_new_tab_action = create_open_selected_in_new_tab_action();
     m_show_in_file_manager_action = create_show_in_file_manager_action();
+    m_copy_relative_path_action = create_copy_relative_path_action();
 
     m_new_directory_action = create_new_directory_action();
     m_delete_action = create_delete_action();
@@ -493,6 +493,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     project_tree_view_context_menu->add_action(*m_open_selected_in_new_tab_action);
     project_tree_view_context_menu->add_action(*m_show_in_file_manager_action);
+    project_tree_view_context_menu->add_action(*m_copy_relative_path_action);
     // TODO: Cut, copy, duplicate with new name...
     project_tree_view_context_menu->add_separator();
     project_tree_view_context_menu->add_action(*m_tree_view_rename_action);
@@ -609,6 +610,20 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action(
     show_in_file_manager_action->set_icon(GUI::Icon::default_icon("app-file-manager").bitmap_for_size(16));
 
     return show_in_file_manager_action;
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_relative_path_action()
+{
+    auto copy_relative_path_action = GUI::Action::create("Copy &Relative Path", [this](const GUI::Action&) {
+        auto paths = selected_file_paths();
+        VERIFY(!paths.is_empty());
+        auto paths_string = String::join("\n", paths);
+        GUI::Clipboard::the().set_plain_text(paths_string);
+    });
+    copy_relative_path_action->set_enabled(true);
+    copy_relative_path_action->set_icon(GUI::Icon::default_icon("hard-disk").bitmap_for_size(16));
+
+    return copy_relative_path_action;
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
