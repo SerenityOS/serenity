@@ -8,6 +8,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
+#include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
@@ -663,6 +664,19 @@ constexpr T pow(T x, T y)
     }
 
     return exp2<T>(y * log2<T>(x));
+}
+
+template<FloatingPoint T>
+constexpr T ceil(T num)
+{
+    if (is_constant_evaluated()) {
+        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+            return num;
+        return (static_cast<double>(static_cast<i64>(num)) == num)
+            ? static_cast<i64>(num)
+            : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
+    }
+    return __builtin_ceil(num);
 }
 
 #undef CONSTEXPR_STATE
