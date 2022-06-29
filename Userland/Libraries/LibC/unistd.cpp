@@ -1002,4 +1002,18 @@ int nice(int incr)
     dbgln("FIXME: nice was called with: {}, not implemented", incr);
     return incr;
 }
+
+int brk(void* addr)
+{
+    dbgln("TODO: brk({:#x})", addr);
+    errno = ENOMEM;
+    return -1;
+}
+
+void* sbrk(intptr_t incr)
+{
+    dbgln("TODO: sbrk({:#x})", incr);
+    errno = ENOMEM;
+    return reinterpret_cast<void*>(-1);
+}
 }
