@@ -552,6 +552,9 @@ ErrorOr<void> Plan9FS::read_and_dispatch_one_message()
     TRY(do_read(reinterpret_cast<u8*>(&header), sizeof(header)));
 
     auto buffer = TRY(KBuffer::try_create_with_size(header.size, Memory::Region::Access::ReadWrite));
+    if (header.size < sizeof(header)) {
+        return EIO;
+    }
     // Copy the already read header into the buffer.
     memcpy(buffer->data(), &header, sizeof(header));
     TRY(do_read(buffer->data() + sizeof(header), header.size - sizeof(header)));
