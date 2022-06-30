@@ -25,7 +25,34 @@ void DurationFormatPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DurationFormat"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.format, format, 1, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+}
+
+// 1.4.3 Intl.DurationFormat.prototype.format ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.format
+JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
+{
+    // 1. Let df be this value.
+    // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
+    auto* duration_format = TRY(typed_this_object(global_object));
+
+    // 3. Let record be ? ToDurationRecord(duration).
+    auto record = TRY(to_duration_record(global_object, vm.argument(0)));
+
+    // 4. Let formatted be ? PartitionDurationFormatPattern(df, record).
+    auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
+
+    // 5. Let result be a new empty String.
+    StringBuilder result;
+
+    // 6. For each element part in formatted, in List order, do
+    for (auto const& part : formatted) {
+        // a. Set result to the string-concatenation of result and part.[[Value]].
+        result.append(part.value);
+    }
+
+    // 7. Return result.
+    return js_string(vm, result.build());
 }
 
 // 1.4.5 Intl.DurationFormat.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.resolvedOptions
