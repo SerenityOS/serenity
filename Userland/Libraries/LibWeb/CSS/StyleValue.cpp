@@ -1393,7 +1393,7 @@ void ImageStyleValue::resource_did_load()
     m_bitmap = resource()->bitmap();
     // FIXME: Do less than a full repaint if possible?
     if (m_document && m_document->browsing_context())
-        m_document->browsing_context()->set_needs_display({});
+        m_document->browsing_context()->set_needs_display();
 }
 
 String ImageStyleValue::to_string() const
