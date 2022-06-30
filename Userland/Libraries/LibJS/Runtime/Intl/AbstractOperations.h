@@ -59,6 +59,12 @@ constexpr auto sanctioned_single_unit_identifiers()
     return AK::Array { "acre"sv, "bit"sv, "byte"sv, "celsius"sv, "centimeter"sv, "day"sv, "degree"sv, "fahrenheit"sv, "fluid-ounce"sv, "foot"sv, "gallon"sv, "gigabit"sv, "gigabyte"sv, "gram"sv, "hectare"sv, "hour"sv, "inch"sv, "kilobit"sv, "kilobyte"sv, "kilogram"sv, "kilometer"sv, "liter"sv, "megabit"sv, "megabyte"sv, "meter"sv, "mile"sv, "mile-scandinavian"sv, "milliliter"sv, "millimeter"sv, "millisecond"sv, "minute"sv, "month"sv, "ounce"sv, "percent"sv, "petabyte"sv, "pound"sv, "second"sv, "stone"sv, "terabit"sv, "terabyte"sv, "week"sv, "yard"sv, "year"sv };
 }
 
+// Additional single units used in ECMAScript required by the Intl.DurationFormat proposal
+constexpr auto extra_sanctioned_single_unit_identifiers()
+{
+    return AK::Array { "microsecond"sv, "nanosecond"sv };
+}
+
 Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale);
 String canonicalize_unicode_locale_id(Unicode::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
