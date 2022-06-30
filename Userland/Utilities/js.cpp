@@ -73,6 +73,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/WeakMap.h>
+#include <LibJS/Runtime/WeakRef.h>
 #include <LibJS/Runtime/WeakSet.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
@@ -427,6 +428,13 @@ static void print_weak_set(JS::WeakSet const& weak_set, HashTable<JS::Object*>&)
     print_type("WeakSet");
     js_out(" ({})", weak_set.values().size());
     // Note: We could tell you what's actually inside, but not in insertion order.
+}
+
+static void print_weak_ref(JS::WeakRef const& weak_ref, HashTable<JS::Object*>& seen_objects)
+{
+    print_type("WeakRef");
+    js_out(" ");
+    print_value(weak_ref.value().visit([](Empty) -> JS::Value { return JS::js_undefined(); }, [](auto* value) -> JS::Value { return value; }), seen_objects);
 }
 
 static void print_promise(JS::Promise const& promise, HashTable<JS::Object*>& seen_objects)
@@ -1002,6 +1010,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_weak_map(static_cast<JS::WeakMap&>(object), seen_objects);
         if (is<JS::WeakSet>(object))
             return print_weak_set(static_cast<JS::WeakSet&>(object), seen_objects);
+        if (is<JS::WeakRef>(object))
+            return print_weak_ref(static_cast<JS::WeakRef&>(object), seen_objects);
         if (is<JS::DataView>(object))
             return print_data_view(static_cast<JS::DataView&>(object), seen_objects);
         if (is<JS::ProxyObject>(object))
