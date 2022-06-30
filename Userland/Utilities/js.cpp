@@ -38,6 +38,7 @@
 #include <LibJS/Runtime/Intl/Collator.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
+#include <LibJS/Runtime/Intl/DurationFormat.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
@@ -893,6 +894,64 @@ static void print_intl_segments(JS::Object const& object, HashTable<JS::Object*>
     print_value(&segments.segments_segmenter(), seen_objects);
 }
 
+static void print_intl_duration_format(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& duration_format = static_cast<JS::Intl::DurationFormat const&>(object);
+    print_type("Intl.DurationFormat");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), duration_format.locale()), seen_objects);
+    out("\n  dataLocale: ");
+    print_value(js_string(object.vm(), duration_format.data_locale()), seen_objects);
+    out("\n  numberingSystem: ");
+    print_value(js_string(object.vm(), duration_format.numbering_system()), seen_objects);
+    out("\n  style: ");
+    print_value(js_string(object.vm(), duration_format.style_string()), seen_objects);
+    out("\n  years: ");
+    print_value(js_string(object.vm(), duration_format.years_style_string()), seen_objects);
+    out("\n  yearsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.years_display_string()), seen_objects);
+    out("\n  months: ");
+    print_value(js_string(object.vm(), duration_format.months_style_string()), seen_objects);
+    out("\n  monthsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.months_display_string()), seen_objects);
+    out("\n  weeks: ");
+    print_value(js_string(object.vm(), duration_format.weeks_style_string()), seen_objects);
+    out("\n  weeksDisplay: ");
+    print_value(js_string(object.vm(), duration_format.weeks_display_string()), seen_objects);
+    out("\n  days: ");
+    print_value(js_string(object.vm(), duration_format.days_style_string()), seen_objects);
+    out("\n  daysDisplay: ");
+    print_value(js_string(object.vm(), duration_format.days_display_string()), seen_objects);
+    out("\n  hours: ");
+    print_value(js_string(object.vm(), duration_format.hours_style_string()), seen_objects);
+    out("\n  hoursDisplay: ");
+    print_value(js_string(object.vm(), duration_format.hours_display_string()), seen_objects);
+    out("\n  minutes: ");
+    print_value(js_string(object.vm(), duration_format.minutes_style_string()), seen_objects);
+    out("\n  minutesDisplay: ");
+    print_value(js_string(object.vm(), duration_format.minutes_display_string()), seen_objects);
+    out("\n  seconds: ");
+    print_value(js_string(object.vm(), duration_format.seconds_style_string()), seen_objects);
+    out("\n  secondsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.seconds_display_string()), seen_objects);
+    out("\n  milliseconds: ");
+    print_value(js_string(object.vm(), duration_format.milliseconds_style_string()), seen_objects);
+    out("\n  millisecondsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.milliseconds_display_string()), seen_objects);
+    out("\n  microseconds: ");
+    print_value(js_string(object.vm(), duration_format.microseconds_style_string()), seen_objects);
+    out("\n  microsecondsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.microseconds_display_string()), seen_objects);
+    out("\n  nanoseconds: ");
+    print_value(js_string(object.vm(), duration_format.nanoseconds_style_string()), seen_objects);
+    out("\n  nanosecondsDisplay: ");
+    print_value(js_string(object.vm(), duration_format.nanoseconds_display_string()), seen_objects);
+    if (duration_format.has_fractional_digits()) {
+        out("\n  fractionalDigits: ");
+        print_value(JS::Value(duration_format.fractional_digits()), seen_objects);
+    }
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -1001,6 +1060,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_segmenter(object, seen_objects);
         if (is<JS::Intl::Segments>(object))
             return print_intl_segments(object, seen_objects);
+        if (is<JS::Intl::DurationFormat>(object))
+            return print_intl_duration_format(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
