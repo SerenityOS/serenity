@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2021, Xavier Defrang <xavier.defrang@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
