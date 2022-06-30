@@ -259,6 +259,12 @@ static void initialize_libc(DynamicObject& libc)
     VERIFY(res.has_value());
     *((char***)res.value().address.as_ptr()) = s_envp;
 
+    // __stack_chk_guard should be initialized before anything significant (read: global constructors) is running.
+    // This is not done in __libc_init, as we definitely have to return from that, and it might affect Loader as well.
+    res = libc.lookup_symbol("__stack_chk_guard"sv);
+    VERIFY(res.has_value());
+    arc4random_buf(res.value().address.as_ptr(), sizeof(size_t));
+
     res = libc.lookup_symbol("__environ_is_malloced"sv);
     VERIFY(res.has_value());
     *((bool*)res.value().address.as_ptr()) = false;
