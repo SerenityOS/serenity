@@ -268,7 +268,7 @@ static void print_separator(bool& first)
     first = false;
 }
 
-static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
+static void print_array(JS::Array const& array, HashTable<JS::Object*>& seen_objects)
 {
     js_out("[");
     bool first = true;
@@ -288,7 +288,7 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
     js_out("]");
 }
 
-static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_objects)
+static void print_object(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     js_out("{{");
     bool first = true;
@@ -388,7 +388,7 @@ static void print_map(JS::Map const& map, HashTable<JS::Object*>& seen_objects)
     print_type("Map");
     js_out(" {{");
     bool first = true;
-    for (auto& entry : map) {
+    for (auto const& entry : map) {
         print_separator(first);
         print_value(entry.key, seen_objects);
         js_out(" => ");
@@ -404,7 +404,7 @@ static void print_set(JS::Set const& set, HashTable<JS::Object*>& seen_objects)
     print_type("Set");
     js_out(" {{");
     bool first = true;
-    for (auto& entry : set) {
+    for (auto const& entry : set) {
         print_separator(first);
         print_value(entry.key, seen_objects);
     }
@@ -787,7 +787,7 @@ static void print_intl_date_time_format(JS::Intl::DateTimeFormat& date_time_form
     });
 }
 
-static void print_intl_relative_time_format(JS::Intl::RelativeTimeFormat& date_time_format, HashTable<JS::Object*>& seen_objects)
+static void print_intl_relative_time_format(JS::Intl::RelativeTimeFormat const& date_time_format, HashTable<JS::Object*>& seen_objects)
 {
     print_type("Intl.RelativeTimeFormat");
     js_out("\n  locale: ");
