@@ -738,10 +738,10 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
-        generator.switch_to_basic_block(end_block);
-        generator.emit<Bytecode::Op::Load>(result_reg);
     }
 
+    generator.switch_to_basic_block(end_block);
+    generator.emit<Bytecode::Op::Load>(result_reg);
     return {};
 }
 
@@ -789,10 +789,10 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evalua
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
-        generator.switch_to_basic_block(end_block);
-        generator.emit<Bytecode::Op::Load>(result_reg);
     }
 
+    generator.switch_to_basic_block(end_block);
+    generator.emit<Bytecode::Op::Load>(result_reg);
     return {};
 }
 
@@ -895,15 +895,15 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { *test_block_ptr },
             {});
-
-        generator.switch_to_basic_block(end_block);
-        generator.emit<Bytecode::Op::Load>(result_reg);
     }
 
     if (has_lexical_environment)
         generator.end_variable_scope();
 
     generator.end_breakable_scope();
+
+    generator.switch_to_basic_block(end_block);
+    generator.emit<Bytecode::Op::Load>(result_reg);
     return {};
 }
 
