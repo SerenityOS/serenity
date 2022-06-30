@@ -1210,6 +1210,7 @@ private:
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
+    u8 m_currently_handled_signal { 0 };
     u32 m_signal_mask { 0 };
     FlatPtr m_alternative_signal_stack { 0 };
     FlatPtr m_alternative_signal_stack_size { 0 };
