@@ -40,7 +40,7 @@ RefPtr<GUI::Window> ConnectionFromClient::create_dummy_child_window(i32 window_s
     auto rect = GUI::ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
     window->set_rect(rect);
     window->show();
-    GUI::ConnectionToWindowServer::the().async_set_window_parent_from_client(window_server_client_id, parent_window_id, window->window_id());
+    GUI::ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, window->window_id());
 
     return window;
 }
