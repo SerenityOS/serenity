@@ -35,10 +35,10 @@ Result Client::try_request_file_read_only_approved(GUI::Window* parent_window, S
     auto child_window_server_client_id = expose_window_server_client_id();
     auto parent_window_id = parent_window->window_id();
 
-    GUI::ConnectionToWindowServer::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
 
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
     if (path.starts_with('/')) {
@@ -60,10 +60,10 @@ Result Client::try_request_file(GUI::Window* parent_window, String const& path, 
     auto child_window_server_client_id = expose_window_server_client_id();
     auto parent_window_id = parent_window->window_id();
 
-    GUI::ConnectionToWindowServer::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
 
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
     if (path.starts_with('/')) {
@@ -85,10 +85,10 @@ Result Client::try_open_file(GUI::Window* parent_window, String const& window_ti
     auto child_window_server_client_id = expose_window_server_client_id();
     auto parent_window_id = parent_window->window_id();
 
-    GUI::ConnectionToWindowServer::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
 
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
     async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, window_title, path, requested_access);
@@ -105,10 +105,10 @@ Result Client::try_save_file(GUI::Window* parent_window, String const& name, Str
     auto child_window_server_client_id = expose_window_server_client_id();
     auto parent_window_id = parent_window->window_id();
 
-    GUI::ConnectionToWindowServer::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
 
     ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
     async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
