@@ -64,6 +64,7 @@ enum class NumericSymbol : u8 {
     NaN,
     PercentSign,
     PlusSign,
+    TimeSeparator,
 };
 
 Optional<StringView> get_default_number_system(StringView locale);

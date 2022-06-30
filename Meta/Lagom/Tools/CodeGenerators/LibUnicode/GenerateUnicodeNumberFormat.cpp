@@ -523,6 +523,8 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             return Unicode::NumericSymbol::PercentSign;
         if (numeric_symbol == "plusSign"sv)
             return Unicode::NumericSymbol::PlusSign;
+        if (numeric_symbol == "timeSeparator"sv)
+            return Unicode::NumericSymbol::TimeSeparator;
         return {};
     };
 
