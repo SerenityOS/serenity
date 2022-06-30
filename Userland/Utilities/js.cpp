@@ -81,9 +81,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-RefPtr<JS::VM> vm;
-Vector<String> repl_statements;
-JS::Handle<JS::Value> last_value = JS::make_handle(JS::js_undefined());
+RefPtr<JS::VM> g_vm;
+Vector<String> g_repl_statements;
+JS::Handle<JS::Value> g_last_value = JS::make_handle(JS::js_undefined());
 
 class ReplObject final : public JS::GlobalObject {
     JS_OBJECT(ReplObject, JS::GlobalObject);
@@ -355,8 +355,8 @@ static void print_date(JS::Date const& date, HashTable<JS::Object*>&)
 
 static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
-    auto name = object.get_without_side_effects(vm->names.name).value_or(JS::js_undefined());
-    auto message = object.get_without_side_effects(vm->names.message).value_or(JS::js_undefined());
+    auto name = object.get_without_side_effects(g_vm->names.name).value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects(g_vm->names.message).value_or(JS::js_undefined());
     if (name.is_accessor() || message.is_accessor()) {
         print_value(&object, seen_objects);
     } else {
@@ -1066,16 +1066,16 @@ static void print(JS::Value value)
 static bool write_to_file(String const& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    for (size_t i = 0; i < repl_statements.size(); i++) {
-        auto line = repl_statements[i];
-        if (line.length() && i != repl_statements.size() - 1) {
+    for (size_t i = 0; i < g_repl_statements.size(); i++) {
+        auto line = g_repl_statements[i];
+        if (line.length() && i != g_repl_statements.size() - 1) {
             ssize_t nwritten = write(fd, line.characters(), line.length());
             if (nwritten < 0) {
                 close(fd);
                 return false;
             }
         }
-        if (i != repl_statements.size() - 1) {
+        if (i != g_repl_statements.size() - 1) {
             char ch = '\n';
             ssize_t nwritten = write(fd, &ch, 1);
             if (nwritten != 1) {
@@ -1105,7 +1105,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = vm->throw_completion<JS::InternalError>(interpreter.global_object(), executable_result.error().to_string());
+                result = g_vm->throw_completion<JS::InternalError>(interpreter.global_object(), executable_result.error().to_string());
                 return ReturnEarly::No;
             }
 
@@ -1201,7 +1201,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     };
 
     if (!result.is_error())
-        last_value = JS::make_handle(result.value());
+        g_last_value = JS::make_handle(result.value());
 
     if (result.is_error()) {
         VERIFY(result.throw_completion().value().has_value());
@@ -1280,7 +1280,7 @@ void ReplObject::initialize_global_object()
     define_native_accessor(
         "_",
         [](JS::VM&, JS::GlobalObject&) {
-            return last_value.value();
+            return g_last_value.value();
         },
         [](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
             VERIFY(is<ReplObject>(global_object));
@@ -1385,7 +1385,7 @@ static void repl(JS::Interpreter& interpreter)
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
 
-        repl_statements.append(piece);
+        g_repl_statements.append(piece);
         parse_and_run(interpreter, piece, "REPL");
     }
 }
@@ -1502,14 +1502,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool syntax_highlight = !disable_syntax_highlight;
 
-    vm = JS::VM::create();
-    vm->enable_default_host_import_module_dynamically_hook();
+    g_vm = JS::VM::create();
+    g_vm->enable_default_host_import_module_dynamically_hook();
 
     // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
     // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
     // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
     // might want to revisit at a later point and disable warnings for promises created this way.
-    vm->on_promise_unhandled_rejection = [](auto& promise) {
+    g_vm->on_promise_unhandled_rejection = [](auto& promise) {
         // FIXME: Optionally make print_value() to print to stderr
         js_out("WARNING: A promise was rejected without any handlers");
         js_out(" (result: ");
@@ -1517,7 +1517,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         print_value(promise.result(), seen_objects);
         js_outln(")");
     };
-    vm->on_promise_rejection_handled = [](auto& promise) {
+    g_vm->on_promise_rejection_handled = [](auto& promise) {
         // FIXME: Optionally make print_value() to print to stderr
         js_out("WARNING: A handler was added to an already rejected promise");
         js_out(" (result: ");
@@ -1531,7 +1531,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (evaluate_script.is_empty() && script_paths.is_empty()) {
         s_print_last_result = true;
-        interpreter = JS::Interpreter::create<ReplObject>(*vm);
+        interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
@@ -1701,7 +1701,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             switch (mode) {
             case CompleteProperty: {
-                auto reference_or_error = vm->resolve_binding(variable_name, &global_environment);
+                auto reference_or_error = g_vm->resolve_binding(variable_name, &global_environment);
                 if (reference_or_error.is_error())
                     return {};
                 auto value_or_error = reference_or_error.value().get_value(interpreter->global_object());
@@ -1741,7 +1741,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         repl(*interpreter);
         s_editor->save_history(s_history_path);
     } else {
-        interpreter = JS::Interpreter::create<ScriptObject>(*vm);
+        interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
