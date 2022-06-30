@@ -45,6 +45,8 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
 
     E2FSCK="e2fsck"
+elif [ "$(uname -s)" = "SerenityOS" ]; then
+    E2FSCK="/usr/local/sbin/e2fsck"
 else
     E2FSCK="/usr/sbin/e2fsck"
 
