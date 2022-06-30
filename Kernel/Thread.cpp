@@ -1052,6 +1052,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     ScopedAddressSpaceSwitcher switcher(m_process);
 
+    m_currently_handled_signal = signal;
+
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = m_signal_action_masks[signal].value_or(action.mask);
     if ((action.flags & SA_NODEFER) == SA_NODEFER)

@@ -104,6 +104,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     auto saved_ax = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
 
     Thread::current()->m_signal_mask = ucontext.uc_sigmask;
+    Thread::current()->m_currently_handled_signal = 0;
 #if ARCH(X86_64)
     auto sp = registers.rsp;
 #elif ARCH(I386)

@@ -474,7 +474,15 @@ bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
         if (m_did_unblock)
             return false;
 
-        auto matching_pending_signal = bit_scan_forward(thread().pending_signals() & m_pending_set);
+        auto pending_signals = thread().pending_signals() & m_pending_set;
+
+        // Also unblock if we have just "handled" that signal and are in the procecss
+        // of running their signal handler (i.e. we just unmarked the signal as pending).
+        if (thread().m_currently_handled_signal)
+            pending_signals |= (1 << (thread().m_currently_handled_signal - 1)) & m_pending_set;
+
+        auto matching_pending_signal = bit_scan_forward(pending_signals);
+
         if (matching_pending_signal == 0)
             return false;
 
