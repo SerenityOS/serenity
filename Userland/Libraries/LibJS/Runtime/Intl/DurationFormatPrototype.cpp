@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DurationFormatPrototype.h>
 
@@ -26,6 +27,7 @@ void DurationFormatPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.format, format, 1, attr);
+    define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -53,6 +55,46 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
 
     // 7. Return result.
     return js_string(vm, result.build());
+}
+
+// 1.4.4 Intl.DurationFormat.prototype.formatToParts ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.formatToParts
+JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
+{
+    // 1. Let df be this value.
+    // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
+    auto* duration_format = TRY(typed_this_object(global_object));
+
+    // 3. Let record be ? ToDurationRecord(duration).
+    auto record = TRY(to_duration_record(global_object, vm.argument(0)));
+
+    // 4. Let formatted be ? PartitionDurationFormatPattern(df, record).
+    auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
+
+    // 5. Let result be ! ArrayCreate(0).
+    auto* result = MUST(Array::create(global_object, 0));
+
+    // 6. Let n be 0.
+    // 7. For each element part in formatted, in List order, do
+    for (size_t n = 0; n < formatted.size(); ++n) {
+        auto const& part = formatted[n];
+
+        // a. Let obj be ! OrdinaryObjectCreate(%ObjectPrototype%).
+        auto* object = Object::create(global_object, global_object.object_prototype());
+
+        // b. Perform ! CreateDataPropertyOrThrow(obj, "type", part.[[Type]]).
+        MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
+
+        // c. Perform ! CreateDataPropertyOrThrow(obj, "value", part.[[Value]]).
+        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, part.value)));
+
+        // d. Perform ! CreateDataPropertyOrThrow(result, ! ToString(n), obj).
+        MUST(result->create_data_property_or_throw(n, object));
+
+        // e. Increment n by 1.
+    }
+
+    // 7. Return result.
+    return result;
 }
 
 // 1.4.5 Intl.DurationFormat.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.resolvedOptions
