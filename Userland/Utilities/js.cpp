@@ -923,12 +923,25 @@ static void print_intl_duration_format(JS::Intl::DurationFormat const& duration_
     }
 }
 
-static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+static void print_boolean_object(JS::BooleanObject const& boolean_object, HashTable<JS::Object*>& seen_objects)
 {
-    // BooleanObject, NumberObject, StringObject
-    print_type(name);
+    print_type("Boolean");
     js_out(" ");
-    print_value(&object, seen_objects);
+    print_value(JS::Value(boolean_object.boolean()), seen_objects);
+}
+
+static void print_number_object(JS::NumberObject const& number_object, HashTable<JS::Object*>& seen_objects)
+{
+    print_type("Number");
+    js_out(" ");
+    print_value(JS::Value(number_object.number()), seen_objects);
+}
+
+static void print_string_object(JS::StringObject const& string_object, HashTable<JS::Object*>& seen_objects)
+{
+    print_type("String");
+    js_out(" ");
+    print_value(&string_object.primitive_string(), seen_objects);
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
@@ -985,12 +998,12 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_async_generator(static_cast<JS::AsyncGenerator&>(object), seen_objects);
         if (object.is_typed_array())
             return print_typed_array(static_cast<JS::TypedArrayBase&>(object), seen_objects);
-        if (is<JS::StringObject>(object))
-            return print_primitive_wrapper_object("String", object, seen_objects);
-        if (is<JS::NumberObject>(object))
-            return print_primitive_wrapper_object("Number", object, seen_objects);
         if (is<JS::BooleanObject>(object))
-            return print_primitive_wrapper_object("Boolean", object, seen_objects);
+            return print_boolean_object(static_cast<JS::BooleanObject&>(object), seen_objects);
+        if (is<JS::NumberObject>(object))
+            return print_number_object(static_cast<JS::NumberObject&>(object), seen_objects);
+        if (is<JS::StringObject>(object))
+            return print_string_object(static_cast<JS::StringObject&>(object), seen_objects);
         if (is<JS::Temporal::Calendar>(object))
             return print_temporal_calendar(static_cast<JS::Temporal::Calendar&>(object), seen_objects);
         if (is<JS::Temporal::Duration>(object))
