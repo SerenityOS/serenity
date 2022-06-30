@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/DurationFormat.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
 namespace JS::Intl {
 
@@ -121,6 +121,59 @@ StringView DurationFormat::display_to_string(Display display)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+// 1.1.1 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
+ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& global_object, Value input)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If Type(input) is not Object, throw a TypeError exception.
+    if (!input.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, input);
+    auto& input_object = input.as_object();
+
+    // 2. Let result be a new Record.
+    Temporal::DurationRecord result;
+
+    // 3. Let any be false.
+    auto any = false;
+
+    // 4. For each row in Table 1, except the header row, in table order, do
+    for (auto const& duration_instances_component : duration_instances_components) {
+        // a. Let valueSlot be the Value Slot value.
+        auto value_slot = duration_instances_component.value_slot;
+
+        // b. Let unit be the Unit value.
+        auto unit = duration_instances_component.unit;
+
+        // c. Let value be ? Get(input, unit).
+        auto value = TRY(input_object.get(FlyString(unit)));
+
+        double value_number;
+        // d. If value is not undefined, then
+        if (!value.is_undefined()) {
+            // i. Set any to true.
+            any = true;
+            // ii. Set value to ? ToIntegerWithoutRounding(value).
+            value_number = TRY(Temporal::to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
+        }
+        // e. Else,
+        else {
+            // i. Set value to 0.
+            value_number = 0;
+        }
+
+        // f. Set the field of result whose name is valueSlot to value.
+        result.*value_slot = value_number;
+    }
+
+    // 5. If any is false, throw a TypeError exception.
+    if (!any)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+
+    // 6. Return result.
+    return result;
 }
 
 // 1.1.2 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
