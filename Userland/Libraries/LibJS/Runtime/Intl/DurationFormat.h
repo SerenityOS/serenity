@@ -8,7 +8,9 @@
 
 #include <AK/Array.h>
 #include <AK/String.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 
 namespace JS::Intl {
 
@@ -160,6 +162,7 @@ private:
 };
 
 struct DurationInstanceComponent {
+    double Temporal::DurationRecord::*value_slot;
     void (DurationFormat::*set_style_slot)(StringView);
     void (DurationFormat::*set_display_slot)(StringView);
     StringView unit;
@@ -172,16 +175,16 @@ static constexpr AK::Array<StringView, 3> date_values = { "long"sv, "short"sv, "
 static constexpr AK::Array<StringView, 5> time_values = { "long"sv, "short"sv, "narrow"sv, "numeric"sv, "2-digit"sv };
 static constexpr AK::Array<StringView, 4> sub_second_values = { "long"sv, "short"sv, "narrow"sv, "numeric"sv };
 static constexpr AK::Array<DurationInstanceComponent, 10> duration_instances_components {
-    DurationInstanceComponent { &DurationFormat::set_years_style, &DurationFormat::set_years_display, "years"sv, date_values, "narrow"sv },
-    DurationInstanceComponent { &DurationFormat::set_months_style, &DurationFormat::set_months_display, "months"sv, date_values, "narrow"sv },
-    DurationInstanceComponent { &DurationFormat::set_weeks_style, &DurationFormat::set_weeks_display, "weeks"sv, date_values, "narrow"sv },
-    DurationInstanceComponent { &DurationFormat::set_days_style, &DurationFormat::set_days_display, "days"sv, date_values, "narrow"sv },
-    DurationInstanceComponent { &DurationFormat::set_hours_style, &DurationFormat::set_hours_display, "hours"sv, time_values, "numeric"sv },
-    DurationInstanceComponent { &DurationFormat::set_minutes_style, &DurationFormat::set_minutes_display, "minutes"sv, time_values, "numeric"sv },
-    DurationInstanceComponent { &DurationFormat::set_seconds_style, &DurationFormat::set_seconds_display, "seconds"sv, time_values, "numeric"sv },
-    DurationInstanceComponent { &DurationFormat::set_milliseconds_style, &DurationFormat::set_milliseconds_display, "milliseconds"sv, sub_second_values, "numeric"sv },
-    DurationInstanceComponent { &DurationFormat::set_microseconds_style, &DurationFormat::set_microseconds_display, "microseconds"sv, sub_second_values, "numeric"sv },
-    DurationInstanceComponent { &DurationFormat::set_nanoseconds_style, &DurationFormat::set_nanoseconds_display, "nanoseconds"sv, sub_second_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::years, &DurationFormat::set_years_style, &DurationFormat::set_years_display, "years"sv, date_values, "narrow"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::months, &DurationFormat::set_months_style, &DurationFormat::set_months_display, "months"sv, date_values, "narrow"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::weeks, &DurationFormat::set_weeks_style, &DurationFormat::set_weeks_display, "weeks"sv, date_values, "narrow"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::days, &DurationFormat::set_days_style, &DurationFormat::set_days_display, "days"sv, date_values, "narrow"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::hours, &DurationFormat::set_hours_style, &DurationFormat::set_hours_display, "hours"sv, time_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::minutes, &DurationFormat::set_minutes_style, &DurationFormat::set_minutes_display, "minutes"sv, time_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::seconds, &DurationFormat::set_seconds_style, &DurationFormat::set_seconds_display, "seconds"sv, time_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::milliseconds, &DurationFormat::set_milliseconds_style, &DurationFormat::set_milliseconds_display, "milliseconds"sv, sub_second_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::microseconds, &DurationFormat::set_microseconds_style, &DurationFormat::set_microseconds_display, "microseconds"sv, sub_second_values, "numeric"sv },
+    DurationInstanceComponent { &Temporal::DurationRecord::nanoseconds, &DurationFormat::set_nanoseconds_style, &DurationFormat::set_nanoseconds_display, "nanoseconds"sv, sub_second_values, "numeric"sv },
 };
 
 struct DurationUnitOptions {
@@ -189,6 +192,7 @@ struct DurationUnitOptions {
     String display;
 };
 
+ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& global_object, Value input);
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& global_object, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, Optional<String> const& previous_style);
 
 }
