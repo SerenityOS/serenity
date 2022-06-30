@@ -897,13 +897,13 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
             {});
     }
 
+    generator.switch_to_basic_block(end_block);
+    generator.emit<Bytecode::Op::Load>(result_reg);
+
     if (has_lexical_environment)
         generator.end_variable_scope();
 
     generator.end_breakable_scope();
-
-    generator.switch_to_basic_block(end_block);
-    generator.emit<Bytecode::Op::Load>(result_reg);
     return {};
 }
 
