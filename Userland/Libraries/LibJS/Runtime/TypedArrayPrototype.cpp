@@ -57,6 +57,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.filter, filter, 1, attr);
     define_native_function(vm.names.map, map, 1, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toReversed, to_reversed, 0, attr);
     define_native_function(vm.names.toSorted, to_sorted, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
@@ -1512,7 +1513,44 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     return js_string(vm, builder.to_string());
 }
 
-// 1.2.2.1.4 %TypedArray%.prototype.toSorted ( comparefn ) https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toSorted
+// 1.2.2.1.3 %TypedArray%.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toReversed
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_reversed)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
+
+    // 3. Let length be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 4. Let A be ? TypedArrayCreateSameType(O, « 𝔽(length) »).
+    MarkedVector<Value> arguments(vm.heap());
+    arguments.empend(length);
+    auto* return_array = TRY(typed_array_create_same_type(global_object, *typed_array, move(arguments)));
+
+    // 5. Let k be 0.
+    // 6. Repeat, while k < length
+    for (size_t k = 0; k < length; k++) {
+        // a. Let from be ! ToString(𝔽(length - k - 1)).
+        auto from = PropertyKey { length - k - 1 };
+
+        // b. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        // c. Let fromValue be ! Get(O, from).
+        auto from_value = MUST(typed_array->get(from));
+
+        // d. Perform ! Set(A, Pk, fromValue, true).
+        MUST(return_array->set(property_key, from_value, Object::ShouldThrowExceptions::Yes));
+
+        // e. Set k to k + 1.
+    }
+
+    // 7. Return A.
+    return return_array;
+}
+
+// 1.2.2.1.4 %TypedArray%.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toSorted
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
 {
     auto comparefn = vm.argument(0);
