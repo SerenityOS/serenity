@@ -8,6 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -115,6 +116,31 @@ static ErrorOr<void> mount_all()
             all_ok = false;
     }
 
+    auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d", Core::DirIterator::SkipDots);
+
+    if (fstab_directory_iterator.has_error() && fstab_directory_iterator.error() != ENOENT) {
+        dbgln("Failed to open /etc/fstab.d: {}", fstab_directory_iterator.error_string());
+    } else if (!fstab_directory_iterator.has_error()) {
+        while (fstab_directory_iterator.has_next()) {
+            auto path = fstab_directory_iterator.next_full_path();
+            auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+
+            if (file_or_error.is_error()) {
+                dbgln("Failed to open '{}': {}", path, file_or_error.error());
+                continue;
+            }
+
+            auto file = file_or_error.release_value();
+
+            while (file->can_read_line()) {
+                auto line = file->read_line();
+
+                if (!mount_by_line(line))
+                    all_ok = false;
+            }
+        }
+    }
+
     if (all_ok)
         return {};
     else
@@ -174,7 +200,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
-    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');
+    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
     args_parser.parse(arguments);
 
     if (should_mount_all) {

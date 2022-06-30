@@ -16,7 +16,7 @@ If invoked without any arguments, `mount` prints a list of all currently mounted
 filesystems.
 
 If invoked as `mount -a`, `mount` mounts all the filesystems configured in
-`/etc/fstab`. This is normally done on system startup by
+`/etc/fstab` and `/etc/fstab.d/*`. This is normally done on system startup by
 [`SystemServer`(7)](help://man/7/SystemServer).
 
 Otherwise, `mount` performs a single filesystem mount. Source should be a path
@@ -36,6 +36,7 @@ Additionally, the name `defaults` is accepted and ignored.
 ## Files
 
 * `/etc/fstab` - read by `mount -a` on startup to find out which filesystems to mount.
+* `/etc/fstab.d` - directory with drop-in additions to the normal `fstab` file, also read by `mount -a`.
 * `/proc/df` - read by `mount` to get information about mounted filesystems.
 
 ## Examples
