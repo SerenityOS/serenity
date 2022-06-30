@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Brandon Pruitt  <brapru@pm.me>
  * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

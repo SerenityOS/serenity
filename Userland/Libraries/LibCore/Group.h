@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
