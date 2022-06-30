@@ -72,6 +72,7 @@
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/WeakMap.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
@@ -411,6 +412,13 @@ static void print_set(JS::Set const& set, HashTable<JS::Object*>& seen_objects)
     if (!first)
         js_out(" ");
     js_out("}}");
+}
+
+static void print_weak_map(JS::WeakMap const& weak_map, HashTable<JS::Object*>&)
+{
+    print_type("WeakMap");
+    js_out(" ({})", weak_map.values().size());
+    // Note: We could tell you what's actually inside, but not in insertion order.
 }
 
 static void print_promise(JS::Promise const& promise, HashTable<JS::Object*>& seen_objects)
@@ -982,6 +990,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_map(static_cast<JS::Map&>(object), seen_objects);
         if (is<JS::Set>(object))
             return print_set(static_cast<JS::Set&>(object), seen_objects);
+        if (is<JS::WeakMap>(object))
+            return print_weak_map(static_cast<JS::WeakMap&>(object), seen_objects);
         if (is<JS::DataView>(object))
             return print_data_view(static_cast<JS::DataView&>(object), seen_objects);
         if (is<JS::ProxyObject>(object))
