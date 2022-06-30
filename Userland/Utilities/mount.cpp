@@ -64,6 +64,42 @@ static int get_source_fd(StringView source)
     return fd_or_error.release_value();
 }
 
+static bool mount_by_line(String const& line)
+{
+    // Skip comments and blank lines.
+    if (line.is_empty() || line.starts_with("#"))
+        return true;
+
+    Vector<String> parts = line.split('\t');
+    if (parts.size() < 3) {
+        warnln("Invalid fstab entry: {}", line);
+        return false;
+    }
+
+    auto mountpoint = parts[1];
+    auto fstype = parts[2];
+    int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
+
+    if (mountpoint == "/") {
+        dbgln("Skipping mounting root");
+        return true;
+    }
+
+    auto filename = parts[0];
+
+    int fd = get_source_fd(filename);
+
+    dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
+
+    auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
+    if (error_or_void.is_error()) {
+        warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
 static ErrorOr<void> mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
@@ -75,38 +111,8 @@ static ErrorOr<void> mount_all()
     while (fstab->can_read_line()) {
         auto line = fstab->read_line();
 
-        // Skip comments and blank lines.
-        if (line.is_empty() || line.starts_with("#"))
-            continue;
-
-        Vector<String> parts = line.split('\t');
-        if (parts.size() < 3) {
-            warnln("Invalid fstab entry: {}", line);
+        if (!mount_by_line(line))
             all_ok = false;
-            continue;
-        }
-
-        auto mountpoint = parts[1];
-        auto fstype = parts[2];
-        int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
-
-        if (mountpoint == "/") {
-            dbgln("Skipping mounting root");
-            continue;
-        }
-
-        auto filename = parts[0];
-
-        int fd = get_source_fd(filename);
-
-        dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
-
-        auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
-        if (error_or_void.is_error()) {
-            warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
-            all_ok = false;
-            continue;
-        }
     }
 
     if (all_ok)
