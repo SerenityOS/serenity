@@ -182,9 +182,14 @@ cleanup() {
             if [ $USE_FUSE2FS -eq 1 ]; then
                 fusermount -u mnt || (sleep 1 && sync && fusermount -u mnt)
             else
-                umount mnt || ( sleep 1 && sync && umount mnt )
+                if [ ! "$(uname -s)" = "FreeBSD" ]; then
+                    umount mnt || ( sleep 1 && sync && umount mnt )
+                fi
             fi
-            rmdir mnt
+            # disable on freebsd
+            if [ ! "$(uname -s)" = "FreeBSD" ]; then
+               rmdir mnt
+            fi
         else
             rm -rf mnt
         fi
