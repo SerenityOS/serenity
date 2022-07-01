@@ -166,7 +166,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto gateway = AK::IPv4Address::from_string(value_gateway_address);
-        if (!gateway.has_value()) {
+        if (action_add && !gateway.has_value()) {
             warnln("Invalid gateway IPv4 address: '{}'", value_gateway_address);
             return 1;
         }
@@ -185,15 +185,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         rt.rt_dev = const_cast<char*>(value_interface.characters_without_null_termination());
         rt.rt_gateway.sa_family = AF_INET;
         ((sockaddr_in&)rt.rt_dst).sin_addr.s_addr = destination.value().to_in_addr_t();
-        ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = gateway.value().to_in_addr_t();
+        ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = gateway.value_or(IPv4Address {}).to_in_addr_t();
         ((sockaddr_in&)rt.rt_genmask).sin_addr.s_addr = genmask.value().to_in_addr_t();
         rt.rt_flags = RTF_UP;
 
         if (!value_host_address.is_empty())
             rt.rt_flags |= RTF_HOST;
 
-        if (gateway.has_value())
-            rt.rt_flags |= RTF_GATEWAY;
+        rt.rt_flags |= RTF_GATEWAY;
 
         if (action_add)
             TRY(Core::System::ioctl(fd, SIOCADDRT, &rt));
