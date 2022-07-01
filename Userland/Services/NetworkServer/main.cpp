@@ -22,6 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/bin/DHCPClient", "x"));
     TRY(Core::System::unveil("/etc/Network.ini", "r"));
     TRY(Core::System::unveil("/bin/ifconfig", "x"));
+    TRY(Core::System::unveil("/bin/killall", "x"));
     TRY(Core::System::unveil("/bin/route", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -88,6 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         for (auto& iface : interfaces_with_dhcp_enabled)
             args.append(const_cast<char*>(iface.characters()));
         args.append(nullptr);
+        MUST(Core::command("killall", { "DHCPClient" }, {}));
         auto dhcp_client_pid = TRY(Core::System::posix_spawnp("DHCPClient", nullptr, nullptr, args.data(), environ));
         TRY(Core::System::disown(dhcp_client_pid));
     }
