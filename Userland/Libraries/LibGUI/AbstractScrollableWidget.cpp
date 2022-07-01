@@ -149,6 +149,7 @@ void AbstractScrollableWidget::update_scrollbar_ranges()
 
     m_vertical_scrollbar->set_range(0, excess_size().height());
     m_vertical_scrollbar->set_page_step(visible_content_rect().height() - m_vertical_scrollbar->step());
+    update_scrollbar_visibility();
 }
 
 void AbstractScrollableWidget::update_scrollbar_visibility()
@@ -168,7 +169,6 @@ void AbstractScrollableWidget::update_scrollbar_visibility()
         if (horizontal_scrollbar_should_be_visible)
             vertical_buffer -= m_horizontal_scrollbar->height();
         vertical_scrollbar_should_be_visible = vertical_buffer < 0;
-
         m_horizontal_scrollbar->set_visible(horizontal_scrollbar_should_be_visible);
         m_vertical_scrollbar->set_visible(vertical_scrollbar_should_be_visible);
     }
