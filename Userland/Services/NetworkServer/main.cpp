@@ -73,8 +73,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 // FIXME: Do this asynchronously
                 dbgln("Setting up interface {} statically ({}/{})", ifname, config.ipv4_address, config.ipv4_netmask);
                 MUST(Core::command("ifconfig", { "-a", ifname.characters(), "-i", config.ipv4_address.characters(), "-m", config.ipv4_netmask.characters() }, {}));
-                if (config.ipv4_gateway != "0.0.0.0")
+                if (config.ipv4_gateway != "0.0.0.0") {
+                    MUST(Core::command("route", { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
                     MUST(Core::command("route", { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
+                }
             }
         }
     });
