@@ -14,7 +14,7 @@ namespace Web::DOM {
 
 class StaticNodeList : public NodeList {
 public:
-    static NonnullRefPtr<NodeList> create(NonnullRefPtrVector<Node>&& static_nodes)
+    static NonnullRefPtr<NodeList> create(NonnullRefPtrVector<Node> static_nodes)
     {
         return adopt_ref(*new StaticNodeList(move(static_nodes)));
     }
