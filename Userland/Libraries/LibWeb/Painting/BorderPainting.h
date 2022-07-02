@@ -28,6 +28,12 @@ struct BorderRadiusData {
     {
         return static_cast<int>(horizontal_radius) > 0 && static_cast<int>(vertical_radius) > 0;
     }
+
+    inline void shrink(float horizontal, float vertical)
+    {
+        horizontal_radius = max(0, horizontal_radius - horizontal);
+        vertical_radius = max(0, vertical_radius - vertical);
+    }
 };
 
 struct BorderRadiiData {
@@ -39,6 +45,14 @@ struct BorderRadiiData {
     inline bool has_any_radius() const
     {
         return top_left || top_right || bottom_right || bottom_left;
+    }
+
+    inline void shrink(float top, float right, float bottom, float left)
+    {
+        top_left.shrink(left, top);
+        top_right.shrink(right, top);
+        bottom_right.shrink(right, bottom);
+        bottom_left.shrink(left, bottom);
     }
 };
 
