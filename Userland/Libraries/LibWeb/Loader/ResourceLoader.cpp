@@ -138,7 +138,7 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     auto& url = request.url();
     request.start_timer();
@@ -283,8 +283,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         if (timeout.has_value() && timeout.value() > 0) {
             auto timer = Core::Timer::create_single_shot(timeout.value(), nullptr);
-            timer->on_timeout = [timer, protocol_request]() mutable {
+            timer->on_timeout = [timer, protocol_request, timeout_callback = move(timeout_callback)]() mutable {
                 protocol_request->stop();
+                if (timeout_callback)
+                    timeout_callback();
             };
             timer->start();
         }
@@ -328,11 +330,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     LoadRequest request;
     request.set_url(url);
-    load(request, move(success_callback), move(error_callback), timeout);
+    load(request, move(success_callback), move(error_callback), timeout, move(timeout_callback));
 }
 
 bool ResourceLoader::is_port_blocked(int port)
