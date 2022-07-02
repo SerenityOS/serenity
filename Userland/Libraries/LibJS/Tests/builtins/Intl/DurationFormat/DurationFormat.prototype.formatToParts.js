@@ -138,7 +138,7 @@ describe("correct behavior", () => {
             new Intl.DurationFormat("en", {
                 style: "narrow",
                 nanoseconds: "numeric",
-                fractionalDigits: 7,
+                fractionalDigits: 3,
             }).formatToParts(duration)
         ).toEqual([
             { type: "element", value: "1y" },
@@ -240,7 +240,7 @@ describe("correct behavior", () => {
             new Intl.DurationFormat("de", {
                 style: "narrow",
                 nanoseconds: "numeric",
-                fractionalDigits: 7,
+                fractionalDigits: 3,
             }).formatToParts(duration)
         ).toEqual([
             { type: "element", value: "1 J" },

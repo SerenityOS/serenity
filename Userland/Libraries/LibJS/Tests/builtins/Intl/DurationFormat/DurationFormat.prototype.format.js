@@ -38,7 +38,7 @@ describe("correct behavior", () => {
             new Intl.DurationFormat("en", {
                 style: "narrow",
                 nanoseconds: "numeric",
-                fractionalDigits: 7,
+                fractionalDigits: 3,
             }).format(duration)
         ).toBe("1y, 2m, 3w, 3d, 4h, 5m, 6s, 7ms, and 8.009μs");
 
@@ -58,7 +58,7 @@ describe("correct behavior", () => {
             new Intl.DurationFormat("de", {
                 style: "narrow",
                 nanoseconds: "numeric",
-                fractionalDigits: 7,
+                fractionalDigits: 3,
             }).format(duration)
         ).toBe("1 J, 2 M, 3 W, 3 T, 4 Std., 5 Min., 6 Sek., 7 ms und 8,009 μs");
     });
