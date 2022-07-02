@@ -3414,6 +3414,7 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
         auto value = var.value->run(shell);
         if (shell && shell->has_any_error())
             break;
+        value = value->resolve_without_cast(shell);
 
         shell->set_local_variable(name, value.release_nonnull());
     }
@@ -3701,6 +3702,14 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
     default:
         return { resolve_slices(shell, "", m_slices) };
     }
+}
+
+NonnullRefPtr<Value> SpecialVariableValue::resolve_without_cast(RefPtr<Shell> shell)
+{
+    if (!shell)
+        return *this;
+
+    return make_ref_counted<ListValue>(resolve_as_list(shell));
 }
 
 TildeValue::~TildeValue()
