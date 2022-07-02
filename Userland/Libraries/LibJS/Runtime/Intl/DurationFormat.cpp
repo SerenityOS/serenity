@@ -378,7 +378,10 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
             // iii. Perform ! CreateDataPropertyOrThrow(nfOpts, "maximumFractionDigits", durationFormat.[[FractionalDigits]]).
             MUST(number_format_options->create_data_property_or_throw(vm.names.maximumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
 
-            // iv. Set done to true.
+            // iv. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumFractionDigits", durationFormat.[[FractionalDigits]]).
+            MUST(number_format_options->create_data_property_or_throw(vm.names.minimumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
+
+            // v. Set done to true.
             done = true;
         }
         // l. Else,
