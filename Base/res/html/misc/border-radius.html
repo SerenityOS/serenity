@@ -203,6 +203,26 @@
             width: 150px;
             height: 100px;
         }
+
+        .solid-color {
+            background: red content-box;
+        }
+
+        .image {
+            background: center / contain  url(car.png) content-box;
+        }
+
+        .image-layers {
+            background: center / contain url(car.png) content-box, center / contain url(old-computer.png);
+        }
+
+        .box-background-clip {
+            width: 100px;
+            height: 100px;
+            border: 10px solid black;
+            border-radius: 50px;
+            padding: 10px;
+        }
     </style>
 </head>
 
@@ -276,6 +296,18 @@
 
     <p>This is an <code>&lt;img&gt;</code> tag with a border radius</p>
     <img src="old-computer.png" style="border-radius: 20px; width: 200px">
+    <br>
+    <br>
+
+    <p>These use a border-radius + a background clip (the radius of the inner background should shrink)</p>
+    <em>Solid color</em>
+    <div class="box-background-clip solid-color"></div>
+    <br>
+    <em>Background image</em>
+    <div class="box-background-clip image"></div>
+    <br>
+    <em>Background image layers</em>
+    <div class="box-background-clip image-layers"></div>
     <br>
     <br>
 
