@@ -437,6 +437,25 @@ Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
     return interpreter_load_result;
 }
 
+void Process::clear_signal_handlers_for_exec()
+{
+    // Comments are as they are presented in the POSIX specification, but slightly out of order.
+    for (size_t signal = 0; signal < m_signal_action_data.size(); signal++) {
+        // Except for SIGCHLD, signals set to be ignored by the calling process image shall be set to be ignored by the new process image.
+        // If the SIGCHLD signal is set to be ignored by the calling process image, it is unspecified whether the SIGCHLD signal is set
+        // to be ignored or to the default action in the new process image.
+        if (signal != SIGCHLD && m_signal_action_data[signal].handler_or_sigaction.get() == reinterpret_cast<FlatPtr>(SIG_IGN)) {
+            m_signal_action_data[signal] = {};
+            m_signal_action_data[signal].handler_or_sigaction.set(reinterpret_cast<FlatPtr>(SIG_IGN));
+            continue;
+        }
+
+        // Signals set to the default action in the calling process image shall be set to the default action in the new process image.
+        // Signals set to be caught by the calling process image shall be set to the default action in the new process image.
+        m_signal_action_data[signal] = {};
+    }
+}
+
 ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
     RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
@@ -531,6 +550,8 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto* current_thread = Thread::current();
     current_thread->reset_signals_for_exec();
+
+    clear_signal_handlers_for_exec();
 
     clear_futex_queues_on_exec();
 

@@ -570,6 +570,7 @@ private:
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
+    void clear_signal_handlers_for_exec();
     void clear_futex_queues_on_exec();
 
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
