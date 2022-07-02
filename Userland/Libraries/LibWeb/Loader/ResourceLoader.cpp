@@ -282,7 +282,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         }
 
         if (timeout.has_value() && timeout.value() > 0) {
-            auto timer = Core::Timer::construct(timeout.value(), nullptr);
+            auto timer = Core::Timer::create_single_shot(timeout.value(), nullptr);
             timer->on_timeout = [timer, protocol_request]() mutable {
                 protocol_request->stop();
             };
