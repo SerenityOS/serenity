@@ -63,3 +63,58 @@ describe("correct behavior", () => {
         ).toBe("1 J, 2 M, 3 W, 3 T, 4 Std., 5 Min., 6 Sek., 7 ms und 8,009 μs");
     });
 });
+
+describe("errors", () => {
+    test("non-object duration records", () => {
+        [-100, Infinity, NaN, "hello", 152n, Symbol("foo")].forEach(value => {
+            expect(() => {
+                new Intl.DurationFormat().format(value);
+            }).toThrowWithMessage(TypeError, "is not an object");
+        });
+    });
+
+    test("empty duration record", () => {
+        expect(() => {
+            new Intl.DurationFormat().format({});
+        }).toThrowWithMessage(TypeError, "Invalid duration-like object");
+
+        expect(() => {
+            new Intl.DurationFormat().format({ foo: 123 });
+        }).toThrowWithMessage(TypeError, "Invalid duration-like object");
+    });
+
+    test("non-integral duration fields", () => {
+        [
+            "years",
+            "months",
+            "weeks",
+            "days",
+            "hours",
+            "minutes",
+            "seconds",
+            "milliseconds",
+            "microseconds",
+            "nanoseconds",
+        ].forEach(field => {
+            expect(() => {
+                new Intl.DurationFormat().format({ [field]: 1.5 });
+            }).toThrowWithMessage(
+                RangeError,
+                `Invalid value for duration property '${field}': must be an integer, got 1.5`
+            );
+
+            expect(() => {
+                new Intl.DurationFormat().format({ [field]: -Infinity });
+            }).toThrowWithMessage(
+                RangeError,
+                `Invalid value for duration property '${field}': must be an integer, got -Infinity`
+            );
+        });
+    });
+
+    test("inconsistent field signs", () => {
+        expect(() => {
+            new Intl.DurationFormat().format({ years: 1, months: -1 });
+        }).toThrowWithMessage(RangeError, "Invalid duration-like object");
+    });
+});

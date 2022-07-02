@@ -41,19 +41,23 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     // 3. Let record be ? ToDurationRecord(duration).
     auto record = TRY(to_duration_record(global_object, vm.argument(0)));
 
-    // 4. Let formatted be ? PartitionDurationFormatPattern(df, record).
+    // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
+    if (!is_valid_duration_record(record))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+
+    // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
     auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
 
-    // 5. Let result be a new empty String.
+    // 6. Let result be a new empty String.
     StringBuilder result;
 
-    // 6. For each element part in formatted, in List order, do
+    // 7. For each element part in formatted, in List order, do
     for (auto const& part : formatted) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
         result.append(part.value);
     }
 
-    // 7. Return result.
+    // 8. Return result.
     return js_string(vm, result.build());
 }
 
@@ -67,14 +71,18 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     // 3. Let record be ? ToDurationRecord(duration).
     auto record = TRY(to_duration_record(global_object, vm.argument(0)));
 
-    // 4. Let formatted be ? PartitionDurationFormatPattern(df, record).
+    // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
+    if (!is_valid_duration_record(record))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+
+    // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
     auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
 
-    // 5. Let result be ! ArrayCreate(0).
+    // 6. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(global_object, 0));
 
-    // 6. Let n be 0.
-    // 7. For each element part in formatted, in List order, do
+    // 7. Let n be 0.
+    // 8. For each element part in formatted, in List order, do
     for (size_t n = 0; n < formatted.size(); ++n) {
         auto const& part = formatted[n];
 
@@ -93,7 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
         // e. Increment n by 1.
     }
 
-    // 7. Return result.
+    // 9. Return result.
     return result;
 }
 
