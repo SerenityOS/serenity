@@ -19,7 +19,7 @@ int fcntl(int fd, int cmd, ...)
 {
     va_list ap;
     va_start(ap, cmd);
-    u32 extra_arg = va_arg(ap, u32);
+    uintptr_t extra_arg = va_arg(ap, uintptr_t);
     int rc = syscall(SC_fcntl, fd, cmd, extra_arg);
     va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
