@@ -7,6 +7,7 @@ env:
   # runner.workspace = /home/runner/work/serenity
   # github.workspace = /home/runner/work/serenity/serenity
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
 
 concurrency:
   group: ${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
@@ -95,7 +96,7 @@ jobs:
         env:
           CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
         with:
-          path: /home/runner/.ccache
+          path: ${{ github.workspace }}/.ccache
           # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
           # We want to always reuse the last cache, but upload a new one.
           # This is achieved by using the "prefix-timestamp" format,
