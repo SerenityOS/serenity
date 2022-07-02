@@ -20,28 +20,44 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 {
     auto& painter = context.painter();
 
-    auto get_box = [&](CSS::BackgroundBox box) {
-        auto box_rect = border_rect;
-        switch (box) {
+    struct BackgroundBox {
+        Gfx::FloatRect rect;
+        BorderRadiiData radii;
+
+        inline void shrink(float top, float right, float bottom, float left)
+        {
+            rect.shrink(top, right, bottom, left);
+            radii.shrink(top, right, bottom, left);
+        }
+    };
+
+    BackgroundBox border_box {
+        border_rect,
+        border_radii
+    };
+
+    auto get_box = [&](CSS::BackgroundBox box_clip) {
+        auto box = border_box;
+        switch (box_clip) {
         case CSS::BackgroundBox::ContentBox: {
             auto& padding = layout_node.box_model().padding;
-            box_rect.shrink(padding.top, padding.right, padding.bottom, padding.left);
+            box.shrink(padding.top, padding.right, padding.bottom, padding.left);
             [[fallthrough]];
         }
         case CSS::BackgroundBox::PaddingBox: {
             auto& border = layout_node.box_model().border;
-            box_rect.shrink(border.top, border.right, border.bottom, border.left);
+            box.shrink(border.top, border.right, border.bottom, border.left);
             [[fallthrough]];
         }
         case CSS::BackgroundBox::BorderBox:
         default:
-            return box_rect;
+            return box;
         }
     };
 
-    auto color_rect = border_rect;
+    auto color_box = border_box;
     if (background_layers && !background_layers->is_empty())
-        color_rect = get_box(background_layers->last().clip);
+        color_box = get_box(background_layers->last().clip);
 
     auto layer_is_paintable = [&](auto& layer) {
         return layer.image && layer.image->bitmap();
@@ -57,24 +73,9 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
     }
 
-    Optional<BorderRadiusCornerClipper> corner_radius_clipper {};
-
-    if (border_radii.has_any_radius()) {
-        if (!has_paintable_layers) {
-            Gfx::AntiAliasingPainter aa_painter { painter };
-            aa_painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(),
-                background_color, border_radii.top_left.as_corner(), border_radii.top_right.as_corner(), border_radii.bottom_right.as_corner(), border_radii.bottom_left.as_corner());
-            return;
-        }
-        auto clipper = BorderRadiusCornerClipper::create(border_rect.to_rounded<int>(), border_radii);
-        if (!clipper.is_error())
-            corner_radius_clipper = clipper.release_value();
-    }
-
-    if (corner_radius_clipper.has_value())
-        corner_radius_clipper->sample_under_corners(painter);
-
-    painter.fill_rect(color_rect.to_rounded<int>(), background_color);
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    aa_painter.fill_rect_with_rounded_corners(color_box.rect.to_rounded<int>(),
+        background_color, color_box.radii.top_left.as_corner(), color_box.radii.top_right.as_corner(), color_box.radii.bottom_right.as_corner(), color_box.radii.bottom_left.as_corner());
 
     if (!has_paintable_layers)
         return;
@@ -84,12 +85,21 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         // TODO: Gradients!
         if (!layer_is_paintable(layer))
             continue;
+        Gfx::PainterStateSaver state { painter };
         auto& image = *layer.image->bitmap();
 
         // Clip
-        auto clip_rect = get_box(layer.clip);
-        painter.save();
-        painter.add_clip_rect(clip_rect.to_rounded<int>());
+        Optional<BorderRadiusCornerClipper> corner_radius_clipper {};
+        auto clip_box = get_box(layer.clip);
+        auto clip_rect = clip_box.rect.to_rounded<int>();
+        if (clip_box.radii.has_any_radius()) {
+            auto clipper = BorderRadiusCornerClipper::create(clip_rect, clip_box.radii);
+            if (!clipper.is_error()) {
+                corner_radius_clipper = clipper.release_value();
+                corner_radius_clipper->sample_under_corners(painter);
+            }
+        }
+        painter.add_clip_rect(clip_rect);
 
         Gfx::FloatRect background_positioning_area;
 
@@ -100,7 +110,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         case CSS::BackgroundAttachment::Local:
         case CSS::BackgroundAttachment::Scroll:
-            background_positioning_area = get_box(layer.origin);
+            background_positioning_area = get_box(layer.origin).rect;
             break;
         }
 
@@ -283,11 +293,9 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             image_y += y_step;
         }
 
-        painter.restore();
+        if (corner_radius_clipper.has_value())
+            corner_radius_clipper->blit_corner_clipping(painter);
     }
-
-    if (corner_radius_clipper.has_value())
-        corner_radius_clipper->blit_corner_clipping(painter);
 }
 
 }
