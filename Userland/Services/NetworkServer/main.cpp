@@ -54,7 +54,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         InterfaceConfig config;
         if (!groups.contains_slow(ifname)) {
-            dbgln("Config for interface {} doesn't exist, not enabling it", ifname);
+            dbgln("Config for interface {} doesn't exist, enabling DHCP for it", ifname);
+            interfaces_with_dhcp_enabled.append(ifname);
         } else {
             config.enabled = config_file->read_bool_entry(ifname, "Enabled", true);
             config.dhcp_enabled = config_file->read_bool_entry(ifname, "DHCP", false);
