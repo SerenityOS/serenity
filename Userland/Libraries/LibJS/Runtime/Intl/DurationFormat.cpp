@@ -130,7 +130,7 @@ StringView DurationFormat::display_to_string(Display display)
     }
 }
 
-// 1.1.1 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
+// 1.1.3 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
 ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& global_object, Value input)
 {
     auto& vm = global_object.vm();
@@ -183,7 +183,62 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& glo
     return result;
 }
 
-// 1.1.2 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
+// 1.1.4 DurationSign ( record ), https://tc39.es/proposal-intl-duration-format/#sec-durationsign
+i8 duration_sign(Temporal::DurationRecord const& record)
+{
+    // 1. For each row in Table 1, except the header row, in table order, do
+    for (auto const& duration_instances_component : duration_instances_components) {
+        // a. Let valueSlot be the Value Slot value.
+        auto value_slot = duration_instances_component.value_slot;
+
+        // b. Let v be value of the valueSlot slot of record.
+        auto value = record.*value_slot;
+
+        // c. If v < 0, return -1.
+        if (value < 0)
+            return -1;
+
+        // d. If v > 0, return 1.
+        if (value > 0)
+            return 1;
+    }
+
+    // 2. Return 0.
+    return 0;
+}
+
+// 1.1.5 IsValidDurationRecord ( record ), https://tc39.es/proposal-intl-duration-format/#sec-isvaliddurationrecord
+bool is_valid_duration_record(Temporal::DurationRecord const& record)
+{
+    // 1. Let sign be ! DurationSign(record).
+    auto sign = duration_sign(record);
+
+    // 2. For each row in Table 1, except the header row, in table order, do
+    for (auto const& duration_instances_component : duration_instances_components) {
+        // a. Let valueSlot be the Value Slot value.
+        auto value_slot = duration_instances_component.value_slot;
+
+        // b. Let v be value of the valueSlot slot of record.
+        auto value = record.*value_slot;
+
+        // c. If 𝔽(v) is not finite, return false.
+        if (!isfinite(value))
+            return false;
+
+        // d. If v < 0 and sign > 0, return false.
+        if (value < 0 && sign > 0)
+            return false;
+
+        // e. If v > 0 and sign < 0, return false.
+        if (value > 0 && sign < 0)
+            return false;
+    }
+
+    // 3. Return true.
+    return true;
+}
+
+// 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& global_object, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, Optional<String> const& previous_style)
 {
     auto& vm = global_object.vm();
@@ -252,7 +307,7 @@ static String convert_number_format_pattern_to_duration_format_template(Unicode:
     return result;
 }
 
-// 1.1.3 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
+// 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
 ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(GlobalObject& global_object, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& vm = global_object.vm();
