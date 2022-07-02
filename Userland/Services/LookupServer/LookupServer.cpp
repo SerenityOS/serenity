@@ -196,7 +196,10 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
         int retries = 3;
         Vector<Answer> upstream_answers;
         do {
-            upstream_answers = TRY(lookup(name, nameserver, did_get_response, record_type));
+            auto upstream_answers_or_error = lookup(name, nameserver, did_get_response, record_type);
+            if (upstream_answers_or_error.is_error())
+                continue;
+            upstream_answers = upstream_answers_or_error.release_value();
             if (did_get_response)
                 break;
         } while (--retries);
