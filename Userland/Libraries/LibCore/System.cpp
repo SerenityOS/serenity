@@ -248,7 +248,7 @@ ErrorOr<int> fcntl(int fd, int command, ...)
 {
     va_list ap;
     va_start(ap, command);
-    u32 extra_arg = va_arg(ap, u32);
+    uintptr_t extra_arg = va_arg(ap, uintptr_t);
     int rc = ::fcntl(fd, command, extra_arg);
     va_end(ap);
     if (rc < 0)

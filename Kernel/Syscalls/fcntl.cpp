@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
+ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, uintptr_t arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
