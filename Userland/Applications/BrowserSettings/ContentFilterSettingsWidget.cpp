@@ -18,7 +18,7 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 
-static bool default_enable_content_filtering = true;
+static constexpr bool s_default_enable_content_filtering = true;
 
 static String filter_list_file_path()
 {
@@ -157,5 +157,5 @@ void ContentFilterSettingsWidget::apply_settings()
 void ContentFilterSettingsWidget::reset_default_values()
 {
     m_domain_list_model->reset_default_values();
-    m_enable_content_filtering_checkbox->set_checked(default_enable_content_filtering);
+    m_enable_content_filtering_checkbox->set_checked(s_default_enable_content_filtering);
 }
