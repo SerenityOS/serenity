@@ -638,7 +638,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                 xhr.set_status(status_code.value_or(0));
                 xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
             },
-            m_timeout);
+            m_timeout,
+            [weak_this = make_weak_ptr()] {
+                auto strong_this = weak_this.strong_ref();
+                if (!strong_this)
+                    return;
+                auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
+                xhr.dispatch_event(DOM::Event::create(EventNames::timeout));
+            });
     } else {
         TODO();
     }
