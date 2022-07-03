@@ -48,6 +48,7 @@
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
 #include <LibWebSocket/WebSocket.h>
+#include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
@@ -189,9 +190,9 @@ public:
     {
     }
 
-    virtual void page_did_invalidate(Gfx::IntRect const&) override
+    virtual void page_did_invalidate(Gfx::IntRect const& rect) override
     {
-        m_view.update();
+        m_view.viewport()->update();
     }
 
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override
@@ -262,6 +263,8 @@ private:
 
 WebView::WebView()
 {
+    setMouseTracking(true);
+
     m_page_client = HeadlessBrowserPageClient::create(*this);
 
     m_page_client->setup_palette(Gfx::load_system_theme("/home/kling/src/serenity/Base/res/themes/Default.ini"));
@@ -277,6 +280,65 @@ WebView::~WebView()
 void WebView::load(String const& url)
 {
     m_page_client->load(AK::URL(url));
+}
+
+unsigned get_button_from_qt_event(QMouseEvent const& event)
+{
+    if (event.button() == Qt::MouseButton::LeftButton)
+        return 1;
+    if (event.button() == Qt::MouseButton::RightButton)
+        return 2;
+    if (event.button() == Qt::MouseButton::MiddleButton)
+        return 4;
+    return 0;
+}
+
+unsigned get_buttons_from_qt_event(QMouseEvent const& event)
+{
+    unsigned buttons = 0;
+    if (event.buttons() & Qt::MouseButton::LeftButton)
+        buttons |= 1;
+    if (event.buttons() & Qt::MouseButton::RightButton)
+        buttons |= 2;
+    if (event.buttons() & Qt::MouseButton::MiddleButton)
+        buttons |= 4;
+    return buttons;
+}
+
+unsigned get_modifiers_from_qt_event(QMouseEvent const& event)
+{
+    unsigned modifiers = 0;
+    if (event.modifiers() & Qt::Modifier::ALT)
+        modifiers |= 1;
+    if (event.modifiers() & Qt::Modifier::CTRL)
+        modifiers |= 2;
+    if (event.modifiers() & Qt::Modifier::SHIFT)
+        modifiers |= 4;
+    return modifiers;
+}
+
+void WebView::mouseMoveEvent(QMouseEvent* event)
+{
+    Gfx::IntPoint position(event->x(), event->y());
+    auto buttons = get_buttons_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_event(*event);
+    m_page_client->page().handle_mousemove(position, buttons, modifiers);
+}
+
+void WebView::mousePressEvent(QMouseEvent* event)
+{
+    Gfx::IntPoint position(event->x(), event->y());
+    auto button = get_button_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_event(*event);
+    m_page_client->page().handle_mousedown(position, button, modifiers);
+}
+
+void WebView::mouseReleaseEvent(QMouseEvent* event)
+{
+    Gfx::IntPoint position(event->x(), event->y());
+    auto button = get_button_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_event(*event);
+    m_page_client->page().handle_mouseup(position, button, modifiers);
 }
 
 void WebView::paintEvent(QPaintEvent* event)
