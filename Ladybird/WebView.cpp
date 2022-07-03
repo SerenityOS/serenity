@@ -138,8 +138,9 @@ public:
     {
     }
 
-    virtual void page_did_start_loading(AK::URL const&) override
+    virtual void page_did_start_loading(AK::URL const& url) override
     {
+        emit m_view.loadStarted(url.to_string().characters());
     }
 
     virtual void page_did_finish_loading(AK::URL const&) override

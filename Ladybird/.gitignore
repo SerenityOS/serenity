@@ -1,8 +1,5 @@
 .qmake.stash
 Makefile
-WebView.o
 ladybird
-main.o
-moc_WebView.cpp
-moc_WebView.o
-moc_predefs.h
+*.o
+moc_*
