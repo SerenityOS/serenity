@@ -97,4 +97,11 @@ describe("errors", () => {
             Array.prototype.toSpliced.call(a, 0, 0, "foo");
         }).toThrowWithMessage(TypeError, "Maximum array size exceeded");
     });
+
+    test("invalid array length", () => {
+        const a = { length: 2 ** 32 - 1 };
+        expect(() => {
+            Array.prototype.toSpliced.call(a, 0, 0, "foo");
+        }).toThrowWithMessage(RangeError, "Invalid array length");
+    });
 });

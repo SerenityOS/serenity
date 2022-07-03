@@ -1924,13 +1924,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     auto new_length_double = static_cast<double>(length) + static_cast<double>(insert_count) - static_cast<double>(actual_delete_count);
 
     // 12. If newLen > 2^53 - 1, throw a TypeError exception.
-    // FIXME: ArrayCreate throws for any length > 2^32 - 1, so there's no point in letting
-    //        values up to 2^53 - 1 through (spec issue). This also prevents a potential
-    //        overflow when casting from double to size_t, which is 32 bits on x86.
-    if (new_length_double > NumericLimits<u32>::max())
+    if (new_length_double > MAX_ARRAY_LIKE_INDEX)
         return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
 
-    auto new_length = static_cast<size_t>(new_length_double);
+    auto new_length = static_cast<u64>(new_length_double);
 
     // 13. Let A be ? ArrayCreate(𝔽(newLen)).
     auto* array = TRY(Array::create(global_object, new_length));
