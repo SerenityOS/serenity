@@ -514,6 +514,8 @@ void CustomColorWidget::set_color(Color color)
 {
     m_color_field->set_color(color);
     m_color_field->set_hue(color.to_hsv().hue);
+
+    m_color_slider->set_value(color.to_hsv().hue);
 }
 
 ColorField::ColorField(Color color)
