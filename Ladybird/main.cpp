@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
 #include "WebView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>

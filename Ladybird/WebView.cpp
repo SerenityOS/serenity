@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,6 +50,7 @@
 #include <LibWebSocket/WebSocket.h>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QScrollBar>
 
 class HeadlessBrowserPageClient final : public Web::PageClient {
 public:
@@ -198,6 +200,16 @@ public:
 
     virtual void page_did_layout() override
     {
+        auto* layout_root = this->layout_root();
+        VERIFY(layout_root);
+        Gfx::IntSize content_size;
+        if (layout_root->paint_box()->has_overflow())
+            content_size = enclosing_int_rect(layout_root->paint_box()->scrollable_overflow_rect().value()).size();
+        else
+            content_size = enclosing_int_rect(layout_root->paint_box()->absolute_rect()).size();
+
+        m_view.verticalScrollBar()->setMaximum(content_size.height() - m_viewport_rect.height());
+        m_view.horizontalScrollBar()->setMaximum(content_size.width() - m_viewport_rect.width());
     }
 
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override
@@ -273,9 +285,9 @@ void WebView::paintEvent(QPaintEvent* event)
     painter.setClipRect(event->rect());
 
     auto output_rect = m_page_client->viewport_rect();
+    output_rect.set_x(horizontalScrollBar()->value());
+    output_rect.set_y(verticalScrollBar()->value());
     auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
-
-    dbgln("paintEvent: {}", output_rect);
 
     m_page_client->paint(output_rect, output_bitmap);
 
@@ -285,7 +297,7 @@ void WebView::paintEvent(QPaintEvent* event)
 
 void WebView::resizeEvent(QResizeEvent* event)
 {
-    Gfx::IntRect rect(0, 0, event->size().width(), event->size().height());
+    Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), event->size().width(), event->size().height());
     m_page_client->set_viewport_rect(rect);
 }
 
