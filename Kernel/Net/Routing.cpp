@@ -76,7 +76,7 @@ protected:
         });
         if (!maybe_mac_address.has_value())
             return true;
-        return blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
+        return !blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
     }
 };
 
