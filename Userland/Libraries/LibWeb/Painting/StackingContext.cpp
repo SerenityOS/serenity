@@ -288,9 +288,20 @@ Gfx::FloatPoint StackingContext::transform_origin() const
 
 Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
+    if (!m_box.is_visible())
+        return {};
+    if (m_box.computed_values().z_index().value_or(0) < 0)
+        return {};
+
     auto transform_origin = this->transform_origin();
     auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
     auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
+
+    // FIXME: Support more overflow variations.
+    if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        if (!paintable().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+            return {};
+    }
 
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
@@ -298,10 +309,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 7. the child stacking contexts with positive stack levels (least positive first).
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (!child.m_box.is_visible())
-            continue;
-        if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
@@ -310,12 +317,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     Optional<HitTestResult> result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto& paint_box) {
+        // FIXME: Support more overflow variations.
+        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                return TraversalDecision::SkipChildrenAndContinue;
+        }
+
         auto& layout_box = paint_box.layout_box();
         if (layout_box.is_positioned() && !paint_box.stacking_context()) {
             if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     if (result.has_value())
         return result;
@@ -329,12 +342,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 
     // 4. the non-positioned floats.
     paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+        // FIXME: Support more overflow variations.
+        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                return TraversalDecision::SkipChildrenAndContinue;
+        }
+
         auto& layout_box = paint_box.layout_box();
         if (layout_box.is_floating()) {
             if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     if (result.has_value())
         return result;
@@ -342,12 +361,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box.children_are_inline()) {
         paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+            // FIXME: Support more overflow variations.
+            if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+                if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                    return TraversalDecision::SkipChildrenAndContinue;
+            }
+
             auto& layout_box = paint_box.layout_box();
             if (!layout_box.is_absolutely_positioned() && !layout_box.is_floating()) {
                 if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                     result = move(candidate);
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         if (result.has_value())
             return result;
@@ -356,10 +381,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 2. the child stacking contexts with negative stack levels (most negative first).
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            continue;
-        if (!child.m_box.is_visible())
-            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
