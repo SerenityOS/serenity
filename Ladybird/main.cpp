@@ -11,6 +11,7 @@
 #include <LibMain/Main.h>
 #include <QApplication>
 #include <QMainWindow>
+#include <QStatusBar>
 #include <QWidget>
 
 extern void initialize_web_engine();
@@ -35,6 +36,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     WebView view;
     window.setCentralWidget(&view);
+
+    QObject::connect(&view, &WebView::linkHovered, window.statusBar(), &QStatusBar::showMessage);
+    QObject::connect(&view, &WebView::linkUnhovered, window.statusBar(), &QStatusBar::clearMessage);
 
     auto qt_event_loop_driver = Core::Timer::create_repeating(50, [&] {
         app.processEvents();
