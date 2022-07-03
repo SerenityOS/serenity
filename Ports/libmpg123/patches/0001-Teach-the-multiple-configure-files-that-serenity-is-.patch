@@ -4,10 +4,8 @@ Date: Sat, 26 Mar 2022 13:15:31 -0300
 Subject: [PATCH] Teach the multiple configure files that serenity is a thing
 
 ---
- configure     |  4 ++--
- configure.ac  |  4 ++--
- m4/libtool.m4 | 18 +++++++++---------
- 3 files changed, 13 insertions(+), 13 deletions(-)
+ configure | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/configure b/configure
 index d3404be..809a412 100755
@@ -27,106 +25,3 @@ index d3404be..809a412 100755
      cpu_type="x86-64"
    ;;
    *-*-linux*|*-*-kfreebsd*-gnu)
-diff --git a/configure.ac b/configure.ac
-index 3ca8766..fcffff9 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -709,11 +709,11 @@ case $host in
-     cpu_type="x86"
-     newoldwritesample=enabled
-   ;;
--  i686-*-linux*|i686-*-kfreebsd*-gnu)
-+  i686-*-linux*|i686-*-kfreebsd*-gnu|i686-*-serenity*)
-     cpu_type="x86"
-     newoldwritesample=enabled
-   ;;
--  x86_64-*-linux*|x86_64-*-kfreebsd*-gnu)
-+  x86_64-*-linux*|x86_64-*-kfreebsd*-gnu|x86_64-*-serenity*)
-     cpu_type="x86-64"
-   ;;
-   *-*-linux*|*-*-kfreebsd*-gnu)
-diff --git a/m4/libtool.m4 b/m4/libtool.m4
-index a6d21ae..44d3c98 100644
---- a/m4/libtool.m4
-+++ b/m4/libtool.m4
-@@ -2836,7 +2836,7 @@ linux*android*)
-   ;;
- 
- # This must be glibc/ELF.
--linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
-+linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | serenity*)
-   version_type=linux # correct to gnu/linux during the next big refactor
-   need_lib_prefix=no
-   need_version=no
-@@ -3553,7 +3553,7 @@ irix5* | irix6* | nonstopux*)
-   ;;
- 
- # This must be glibc/ELF.
--linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
-+linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | serenity*)
-   lt_cv_deplibs_check_method=pass_all
-   ;;
- 
-@@ -4372,7 +4372,7 @@ m4_if([$1], [CXX], [
- 	    ;;
- 	esac
- 	;;
--      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
-+      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | serenity*)
- 	case $cc_basename in
- 	  KCC*)
- 	    # KAI C++ Compiler
-@@ -4696,7 +4696,7 @@ m4_if([$1], [CXX], [
-       _LT_TAGVAR(lt_prog_compiler_static, $1)='-non_shared'
-       ;;
- 
--    linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
-+    linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | serenity*)
-       case $cc_basename in
-       # old Intel for x86_64, which still supported -KPIC.
-       ecc*)
-@@ -4954,7 +4954,7 @@ m4_if([$1], [CXX], [
-       ;;
-     esac
-     ;;
--  linux* | k*bsd*-gnu | gnu*)
-+  linux* | k*bsd*-gnu | gnu* | serenity*)
-     _LT_TAGVAR(link_all_deplibs, $1)=no
-     ;;
-   *)
-@@ -5019,7 +5019,7 @@ dnl Note also adjust exclude_expsyms for C++ above.
-   openbsd* | bitrig*)
-     with_gnu_ld=no
-     ;;
--  linux* | k*bsd*-gnu | gnu*)
-+  linux* | k*bsd*-gnu | gnu* | serenity*)
-     _LT_TAGVAR(link_all_deplibs, $1)=no
-     ;;
-   esac
-@@ -5197,7 +5197,7 @@ _LT_EOF
-       _LT_TAGVAR(archive_expsym_cmds, $1)='sed "s|^|_|" $export_symbols >$output_objdir/$soname.expsym~$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-h,$soname $wl--retain-symbols-file,$output_objdir/$soname.expsym $wl--image-base,`expr ${RANDOM-$$} % 4096 / 2 \* 262144 + 1342177280` -o $lib'
-       ;;
- 
--    gnu* | linux* | tpf* | k*bsd*-gnu | kopensolaris*-gnu)
-+    gnu* | linux* | tpf* | k*bsd*-gnu | kopensolaris*-gnu | serenity*)
-       tmp_diet=no
-       if test linux-dietlibc = "$host_os"; then
- 	case $cc_basename in
-@@ -5809,7 +5809,7 @@ _LT_EOF
-       _LT_TAGVAR(link_all_deplibs, $1)=yes
-       ;;
- 
--    linux*)
-+    linux* | serenity*)
-       case $cc_basename in
-       tcc*)
- 	# Fabrice Bellard et al's Tiny C Compiler
-@@ -6952,7 +6952,7 @@ if test yes != "$_lt_caught_CXX_error"; then
-         _LT_TAGVAR(inherit_rpath, $1)=yes
-         ;;
- 
--      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
-+      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu* | serenity*)
-         case $cc_basename in
-           KCC*)
- 	    # Kuck and Associates, Inc. (KAI) C++ Compiler
