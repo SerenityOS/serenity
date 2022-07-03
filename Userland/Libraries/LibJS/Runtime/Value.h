@@ -132,7 +132,7 @@ public:
     }
 
     template<typename T>
-    requires(SameAs<RemoveCVReference<T>, bool>) explicit Value(T value)
+    requires(IsSameIgnoringCV<T, bool>) explicit Value(T value)
         : m_type(Type::Boolean)
     {
         m_value.as_bool = value;
@@ -150,18 +150,12 @@ public:
         }
     }
 
-    explicit Value(unsigned long value)
-    {
-        if (value > NumericLimits<i32>::max()) {
-            m_value.as_double = static_cast<double>(value);
-            m_type = Type::Double;
-        } else {
-            m_value.as_i32 = static_cast<i32>(value);
-            m_type = Type::Int32;
-        }
-    }
-
-    explicit Value(unsigned value)
+    // NOTE: A couple of integral types are excluded here:
+    // - i32 has its own dedicated Value constructor
+    // - i64 cannot safely be cast to a double
+    // - bool isn't a number type and has its own dedicated Value constructor
+    template<typename T>
+    requires(IsIntegral<T> && !IsSameIgnoringCV<T, i32> && !IsSameIgnoringCV<T, i64> && !IsSameIgnoringCV<T, bool>) explicit Value(T value)
     {
         if (value > NumericLimits<i32>::max()) {
             m_value.as_double = static_cast<double>(value);
