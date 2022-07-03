@@ -431,7 +431,7 @@ public:
         static ErrorOr<NonnullRefPtr<HTTPSHeadlessRequest>> create(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
-            auto underlying_socket = TRY(TLS::TLSv12::connect(url.host(), url.port().value_or(80)));
+            auto underlying_socket = TRY(TLS::TLSv12::connect(url.host(), url.port().value_or(443)));
             TRY(underlying_socket->set_blocking(false));
             auto socket = TRY(Core::Stream::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
 
