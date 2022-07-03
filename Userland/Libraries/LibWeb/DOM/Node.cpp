@@ -680,7 +680,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
         document_copy->set_content_type(document_->content_type());
         document_copy->set_url(document_->url());
         document_copy->set_origin(document_->origin());
-        // FIXME: Set type ("xml" or "html")
+        document_copy->set_document_type(document_->document_type());
         document_copy->set_quirks_mode(document_->mode());
         copy = move(document_copy);
     } else if (is<DocumentType>(this)) {

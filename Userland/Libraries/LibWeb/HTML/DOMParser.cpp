@@ -25,7 +25,8 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
     // 2. Switch on type:
     if (type == Bindings::DOMParserSupportedType::Text_Html) {
         // -> "text/html"
-        // FIXME: 1. Set document's type to "html".
+        // 1. Set document's type to "html".
+        document->set_document_type(DOM::Document::Type::HTML);
 
         // 2. Create an HTML parser parser, associated with document.
         // 3. Place string into the input stream for parser. The encoding confidence is irrelevant.

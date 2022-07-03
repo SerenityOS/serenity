@@ -53,7 +53,6 @@ ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(String c
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
 NonnullRefPtr<Document> DOMImplementation::create_html_document(String const& title) const
 {
-    // FIXME: This should specifically be a HTML document.
     auto html_document = Document::create();
 
     html_document->set_content_type("text/html");
