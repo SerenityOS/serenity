@@ -752,10 +752,7 @@ bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
 {
-    if (layout_node)
-        m_mouse_event_tracking_layout_node = layout_node->make_weak_ptr();
-    else
-        m_mouse_event_tracking_layout_node = nullptr;
+    m_mouse_event_tracking_layout_node = layout_node;
 }
 
 }

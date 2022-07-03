@@ -792,10 +792,7 @@ void Node::removed_last_ref()
 
 void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
 {
-    if (layout_node)
-        m_layout_node = layout_node->make_weak_ptr();
-    else
-        m_layout_node = nullptr;
+    m_layout_node = layout_node;
 }
 
 EventTarget* Node::get_parent(Event const&)
