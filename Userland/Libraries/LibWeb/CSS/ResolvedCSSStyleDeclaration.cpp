@@ -420,7 +420,6 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
             .property_id = property_id,
             .value = style->property(property_id),
         };
-        return {};
     }
 
     auto& layout_node = *m_element->layout_node();
