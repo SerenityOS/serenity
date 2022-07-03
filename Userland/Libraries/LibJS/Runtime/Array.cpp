@@ -17,7 +17,7 @@
 namespace JS {
 
 // 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
-ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t length, Object* prototype)
+ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, u64 length, Object* prototype)
 {
     auto& vm = global_object.vm();
 

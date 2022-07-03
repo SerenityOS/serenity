@@ -21,7 +21,7 @@ class Array : public Object {
     JS_OBJECT(Array, Object);
 
 public:
-    static ThrowCompletionOr<Array*> create(GlobalObject&, size_t length, Object* prototype = nullptr);
+    static ThrowCompletionOr<Array*> create(GlobalObject&, u64 length, Object* prototype = nullptr);
     static Array* create_from(GlobalObject&, Vector<Value> const&);
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
