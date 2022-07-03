@@ -28,6 +28,10 @@ public:
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
 
+signals:
+    void linkHovered(QString, int timeout = 0);
+    void linkUnhovered();
+
 private:
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
 };

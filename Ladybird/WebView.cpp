@@ -182,15 +182,17 @@ public:
     {
     }
 
-    virtual void page_did_hover_link(AK::URL const&) override
+    virtual void page_did_hover_link(AK::URL const& url) override
     {
+        emit m_view.linkHovered(url.to_string().characters());
     }
 
     virtual void page_did_unhover_link() override
     {
+        emit m_view.linkUnhovered();
     }
 
-    virtual void page_did_invalidate(Gfx::IntRect const& rect) override
+    virtual void page_did_invalidate(Gfx::IntRect const&) override
     {
         m_view.viewport()->update();
     }
