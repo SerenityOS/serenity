@@ -61,6 +61,13 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
         return;
     m_selection = move(selection);
 
+    // Note: Non-visible nodes don't have style data and such, and will hit assertions if inspection is attempted.
+    if (!json->get("visible").to_bool(true)) {
+        clear_style_json();
+        clear_node_box_model();
+        return;
+    }
+
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_selection.dom_node_id, m_selection.pseudo_element);
     if (maybe_inspected_node_properties.has_value()) {
         auto inspected_node_properties = maybe_inspected_node_properties.value();
@@ -200,6 +207,14 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
 
     m_element_size_view->set_node_content_width(json_object.get("content_width").to_float());
     m_element_size_view->set_node_content_height(json_object.get("content_height").to_float());
+    m_element_size_view->set_box_model(m_node_box_sizing);
+}
+
+void InspectorWidget::clear_node_box_model()
+{
+    m_node_box_sizing = Web::Layout::BoxModelMetrics {};
+    m_element_size_view->set_node_content_width(0);
+    m_element_size_view->set_node_content_height(0);
     m_element_size_view->set_box_model(m_node_box_sizing);
 }
 
