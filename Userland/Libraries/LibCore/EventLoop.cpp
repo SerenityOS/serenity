@@ -209,10 +209,15 @@ public:
     void send_response(JsonObject const& response)
     {
         auto serialized = response.to_string();
-        u32 length = serialized.length();
+        auto bytes_to_send = serialized.bytes();
+        u32 length = bytes_to_send.size();
         // FIXME: Propagate errors
-        MUST(m_socket->write({ (u8 const*)&length, sizeof(length) }));
-        MUST(m_socket->write(serialized.bytes()));
+        auto sent = MUST(m_socket->write({ (u8 const*)&length, sizeof(length) }));
+        VERIFY(sent == sizeof(length));
+        while (!bytes_to_send.is_empty()) {
+            size_t bytes_sent = MUST(m_socket->write(bytes_to_send));
+            bytes_to_send = bytes_to_send.slice(bytes_sent);
+        }
     }
 
     void handle_request(JsonObject const& request)
