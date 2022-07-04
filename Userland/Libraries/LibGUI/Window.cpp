@@ -137,6 +137,8 @@ void Window::show()
         unsetenv("__libgui_launch_origin_rect");
     }
 
+    update_min_size();
+
     ConnectionToWindowServer::the().async_create_window(
         m_window_id,
         m_rect_when_windowless,
@@ -1036,21 +1038,24 @@ void Window::set_maximized(bool maximized)
     ConnectionToWindowServer::the().async_set_maximized(m_window_id, maximized);
 }
 
+void Window::update_min_size()
+{
+    if (main_widget()) {
+        main_widget()->do_layout();
+        if (m_obey_widget_min_size) {
+            auto min_size = main_widget()->effective_min_size();
+            set_minimum_size(MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()));
+        }
+    }
+}
+
 void Window::schedule_relayout()
 {
-    if (m_layout_pending)
+    if (m_layout_pending || !is_visible())
         return;
     m_layout_pending = true;
     deferred_invoke([this] {
-        if (main_widget()) {
-            main_widget()->do_layout();
-            if (m_obey_widget_min_size) {
-                auto min_size = main_widget()->effective_min_size();
-                set_minimum_size(
-                    (min_size.width() == GUI::SpecialDimension::Shrink ? 0 : min_size.width().as_int()),
-                    (min_size.height() == GUI::SpecialDimension::Shrink ? 0 : min_size.height().as_int()));
-            }
-        }
+        update_min_size();
         update();
         m_layout_pending = false;
     });
