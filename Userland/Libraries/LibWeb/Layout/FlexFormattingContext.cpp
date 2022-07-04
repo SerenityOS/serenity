@@ -959,7 +959,9 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
     if (has_definite_cross_size(item.box)) {
-        item.hypothetical_cross_size = resolved_definite_cross_size(item.box);
+        auto clamp_min = has_cross_min_size(item.box) ? specified_cross_min_size(item.box) : 0;
+        auto clamp_max = has_cross_max_size(item.box) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+        item.hypothetical_cross_size = css_clamp(resolved_definite_cross_size(item.box), clamp_min, clamp_max);
         return;
     }
 
