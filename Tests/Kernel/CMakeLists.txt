@@ -43,6 +43,7 @@ set(LIBTEST_BASED_SOURCES
     TestProcFS.cpp
     TestProcFSWrite.cpp
     TestSigAltStack.cpp
+    TestSigHandler.cpp
     TestSigWait.cpp
 )
 
