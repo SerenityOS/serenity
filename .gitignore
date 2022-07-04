@@ -110,3 +110,6 @@ dist
 
 # Generated files
 out/
+
+# Even though we're a binary package, it doesn't matter right now to have fixed versions.
+package-lock.json
