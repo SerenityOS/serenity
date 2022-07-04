@@ -40,3 +40,17 @@ TEST_CASE(flush_on_exit)
         EXPECT_EQ(strcmp(test_str, buf), 0);
     }
 }
+
+TEST_CASE(sprintf_sign)
+{
+    char buf1[128];
+    int ret1 = sprintf(buf1, "%+d", 12);
+    EXPECT_EQ(ret1, 3);
+
+    char buf2[128];
+    int ret2 = sprintf(buf2, "%+d", -12);
+    EXPECT_EQ(ret2, 3);
+
+    EXPECT_EQ(buf1, "+12"sv);
+    EXPECT_EQ(buf2, "-12"sv);
+}
