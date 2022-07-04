@@ -71,7 +71,7 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size, S
     m_elf_image = adopt_own(*new ELF::Image((u8*)m_file_data, m_file_size));
     m_valid = validate();
     if (m_valid)
-        m_tls_size_of_current_object = calculate_tls_size();
+        find_tls_size_and_alignment();
     else
         dbgln("Image validation failed for file {}", m_filename);
 }
@@ -105,15 +105,18 @@ DynamicObject const& DynamicLoader::dynamic_object() const
     return *m_cached_dynamic_object;
 }
 
-size_t DynamicLoader::calculate_tls_size() const
+void DynamicLoader::find_tls_size_and_alignment()
 {
-    size_t tls_size = 0;
-    image().for_each_program_header([&tls_size](auto program_header) {
+    image().for_each_program_header([this](auto program_header) {
         if (program_header.type() == PT_TLS) {
-            tls_size = program_header.size_in_memory();
+            m_tls_size_of_current_object = program_header.size_in_memory();
+            auto alignment = program_header.alignment();
+            VERIFY(!alignment || is_power_of_two(alignment));
+            m_tls_alignment_of_current_object = alignment > 1 ? alignment : 0; // No need to reserve extra space for single byte alignment
+            return IterationDecision::Break;
         }
+        return IterationDecision::Continue;
     });
-    return tls_size;
 }
 
 bool DynamicLoader::validate()

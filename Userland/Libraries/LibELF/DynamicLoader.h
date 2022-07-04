@@ -67,6 +67,7 @@ public:
 
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
     size_t tls_size_of_current_object() const { return m_tls_size_of_current_object; }
+    size_t tls_alignment_of_current_object() const { return m_tls_alignment_of_current_object; }
     size_t tls_offset() const { return m_tls_offset; }
     const ELF::Image& image() const { return *m_elf_image; }
 
@@ -134,7 +135,7 @@ private:
     };
     RelocationResult do_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak should_initialize_weak);
     void do_relr_relocations();
-    size_t calculate_tls_size() const;
+    void find_tls_size_and_alignment();
     ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 
     String m_filename;
@@ -157,6 +158,7 @@ private:
 
     ssize_t m_tls_offset { 0 };
     size_t m_tls_size_of_current_object { 0 };
+    size_t m_tls_alignment_of_current_object { 0 };
 
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
 
