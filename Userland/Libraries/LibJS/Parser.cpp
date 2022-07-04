@@ -4582,4 +4582,7 @@ Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<To
     return result;
 }
 
+template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u8, Optional<Position> const&);
+template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u8, Optional<Position> const&);
+
 }
