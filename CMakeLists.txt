@@ -152,13 +152,15 @@ if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(all_the_debug_macros)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
+set(CMAKE_STAGING_PREFIX "${CMAKE_BINARY_DIR}/Root")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/Root")
+set(CMAKE_INSTALL_DATAROOTDIR res)
+set(CMAKE_INSTALL_INCLUDEDIR usr/include)
+set(CMAKE_INSTALL_LIBDIR usr/lib)
+
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h DESTINATION usr/include/AK)
-
-set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/AK")
 
 # We disable it completely because it makes cmake very spammy.
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
