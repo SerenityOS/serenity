@@ -47,6 +47,9 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
+    Optional<UISize> calculated_min_size() const override;
+    Optional<UISize> calculated_preferred_size() const override;
+
     ErrorOr<void> try_add_widget(Widget&);
 
     void add_widget(Widget&);

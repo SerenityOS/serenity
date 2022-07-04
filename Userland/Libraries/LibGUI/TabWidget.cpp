@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
@@ -688,6 +689,34 @@ void TabWidget::set_container_margins(GUI::Margins const& margins)
 {
     m_container_margins = margins;
     update();
+}
+
+Optional<UISize> TabWidget::calculated_min_size() const
+{
+    if (!m_active_widget)
+        return {};
+    auto content_min_size = m_active_widget->effective_min_size();
+    UIDimension width = MUST(content_min_size.width().shrink_value()), height = MUST(content_min_size.height().shrink_value());
+    width.add_if_int(container_margins().vertical_total()
+        + (first_is_one_of(m_tab_position, TabPosition::Left, TabPosition::Right) ? bar_rect().width() : 0));
+    height.add_if_int(container_margins().vertical_total()
+        + (first_is_one_of(m_tab_position, TabPosition::Top, TabPosition::Bottom) ? bar_rect().height() : 0));
+
+    return UISize { width, height };
+}
+
+Optional<UISize> TabWidget::calculated_preferred_size() const
+{
+    if (!m_active_widget)
+        return {};
+    auto content_preferred_size = m_active_widget->effective_preferred_size();
+    UIDimension width = MUST(content_preferred_size.width().shrink_value()), height = MUST(content_preferred_size.height().shrink_value());
+    width.add_if_int(container_margins().vertical_total()
+        + (first_is_one_of(m_tab_position, TabPosition::Left, TabPosition::Right) ? bar_rect().width() : 0));
+    height.add_if_int(
+        container_margins().vertical_total()
+        + (first_is_one_of(m_tab_position, TabPosition::Top, TabPosition::Bottom) ? bar_rect().height() : 0));
+    return UISize { width, height };
 }
 
 void TabWidget::drag_tab(size_t index)
