@@ -29,16 +29,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
     auto bottom_right_corner = border_radii.bottom_right.as_corner();
     auto bottom_left_corner = border_radii.bottom_left.as_corner();
 
-    Optional<BorderRadiusCornerClipper> corner_radius_clipper {};
-
-    if (border_radii.has_any_radius()) {
-        auto clipper = BorderRadiusCornerClipper::create(content_rect, border_radii, CornerClip::Inside);
-        if (!clipper.is_error())
-            corner_radius_clipper = clipper.release_value();
-    }
-
-    if (corner_radius_clipper.has_value())
-        corner_radius_clipper->sample_under_corners(painter);
+    ScopedCornerRadiusClip corner_clipper { painter, content_rect, border_radii, CornerClip::Inside };
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& box_shadow_data : box_shadow_layers.in_reverse()) {
@@ -326,9 +317,6 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
             paint_shadow(bottom_left);
         }
     }
-
-    if (corner_radius_clipper.has_value())
-        corner_radius_clipper->blit_corner_clipping(painter);
 }
 
 void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fragment, Vector<ShadowData> const& shadow_layers)
