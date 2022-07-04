@@ -311,6 +311,27 @@
     <br>
     <br>
 
+    <p>The all have a border-radius +/- overflow: hidden, which clips their child elements<p>
+    <em>Lorem ipsum, <b>without</b> overflow: hidden</em>
+    <div style="width: 200px; height: 200px; border-radius: 30%; background-color: brown">
+        <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+    </div>
+    <br>
+    <em>Lorem ipsum, <b>with</b> overflow: hidden</em>
+    <div style="width: 200px; height: 200px; border-radius: 30%; background-color: brown; overflow: hidden;">
+        <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span>
+    </div>
+    <br>
+    <em>An image inside a inline-block <code>&lt;a&gt;</code> tag, with a border-radius of 50% and overflow: hidden</em>
+    <br>
+    (this is commonly used for avatars and occurs GitHub a few times)
+    <br>
+    <a style="display: inline-block; border-radius: 50%; overflow: hidden; width: 100px; height: 100px;">
+        <img src="car.png" style="width: 100px; height: 100px">
+    </a>
+    <br>
+    <br>
+
     <p>The boxes are 50x50px</p>
     <em>All round 10px</em>
     <div class="box box-1"></div>
