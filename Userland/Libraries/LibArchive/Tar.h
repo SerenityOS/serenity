@@ -13,6 +13,16 @@
 #include <string.h>
 #include <sys/types.h>
 
+// glibc before 2.28 defines these from sys/types.h, but we don't want
+// TarFileHeader::major() and TarFileHeader::minor() to use those macros
+#ifdef minor
+#    undef minor
+#endif
+
+#ifdef major
+#    undef major
+#endif
+
 namespace Archive {
 
 enum class TarFileType : char {
