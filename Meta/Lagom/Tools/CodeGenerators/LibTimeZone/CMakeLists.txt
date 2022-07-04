@@ -1,1 +1,1 @@
-lagom_tool(GenerateTimeZoneData SOURCES GenerateTimeZoneData.cpp LIBS LagomMain)
+lagom_tool(GenerateTimeZoneData SOURCES GenerateTimeZoneData.cpp LIBS LibMain)
