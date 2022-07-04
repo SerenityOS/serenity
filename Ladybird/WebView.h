@@ -10,6 +10,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <LibGfx/Forward.h>
 #include <QAbstractScrollArea>
 
 class HeadlessBrowserPageClient;
@@ -35,5 +36,7 @@ signals:
     void title_changed(QString);
 
 private:
+    Gfx::IntPoint to_content(Gfx::IntPoint) const;
+
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
 };

@@ -337,7 +337,7 @@ void WebView::mouseMoveEvent(QMouseEvent* event)
     Gfx::IntPoint position(event->x(), event->y());
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
-    m_page_client->page().handle_mousemove(position, buttons, modifiers);
+    m_page_client->page().handle_mousemove(to_content(position), buttons, modifiers);
 }
 
 void WebView::mousePressEvent(QMouseEvent* event)
@@ -345,7 +345,7 @@ void WebView::mousePressEvent(QMouseEvent* event)
     Gfx::IntPoint position(event->x(), event->y());
     auto button = get_button_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
-    m_page_client->page().handle_mousedown(position, button, modifiers);
+    m_page_client->page().handle_mousedown(to_content(position), button, modifiers);
 }
 
 void WebView::mouseReleaseEvent(QMouseEvent* event)
@@ -353,7 +353,12 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
     Gfx::IntPoint position(event->x(), event->y());
     auto button = get_button_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
-    m_page_client->page().handle_mouseup(position, button, modifiers);
+    m_page_client->page().handle_mouseup(to_content(position), button, modifiers);
+}
+
+Gfx::IntPoint WebView::to_content(Gfx::IntPoint viewport_position) const
+{
+    return viewport_position.translated(horizontalScrollBar()->value(), verticalScrollBar()->value());
 }
 
 void WebView::paintEvent(QPaintEvent* event)
