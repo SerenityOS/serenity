@@ -5,7 +5,6 @@
 BrowserWindow::BrowserWindow()
 {
     m_toolbar = new QToolBar;
-    m_toolbar->setFixedHeight(28);
     m_location_edit = new QLineEdit;
     m_toolbar->addWidget(m_location_edit);
 
