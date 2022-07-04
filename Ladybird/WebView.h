@@ -32,6 +32,7 @@ signals:
     void linkHovered(QString, int timeout = 0);
     void linkUnhovered();
     void loadStarted(QString);
+    void title_changed(QString);
 
 private:
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
