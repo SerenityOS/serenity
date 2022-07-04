@@ -1,11 +1,12 @@
 @GUI::Widget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
-        margins: [5]
+        margins: [4]
+        spacing: 6
     }
 
     @GUI::Widget {
-        fixed_height: 44
+        preferred_height: "fit"
         layout: @GUI::HorizontalBoxLayout {
             spacing: 10
         }
@@ -21,7 +22,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 18
+        preferred_height: "fit"
         layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
@@ -37,7 +38,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 18
+        preferred_height: "fit"
         layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
@@ -53,7 +54,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 18
+        preferred_height: "fit"
         layout: @GUI::HorizontalBoxLayout {}
 
         @GUI::Label {
@@ -79,27 +80,28 @@
     }
 
     @GUI::Widget {
-        fixed_height: 32
-        layout: @GUI::HorizontalBoxLayout {}
-
-        @GUI::Button {
-            name: "debug_button"
-            text: "Debug in Hack Studio"
-            fixed_width: 150
+        preferred_height: "fit"
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 6
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
+            name: "debug_button"
+            text: "Debug in Hack Studio"
+            fixed_width: 160
+        }
+
+        @GUI::DialogButton {
             name: "save_backtrace_button"
             text: "Save Backtrace"
-            fixed_width: 150
+            fixed_width: 160
         }
 
         @GUI::Layout::Spacer {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "close_button"
             text: "Close"
-            fixed_width: 70
         }
     }
 }
