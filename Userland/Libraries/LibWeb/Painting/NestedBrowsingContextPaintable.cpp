@@ -8,6 +8,7 @@
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/NestedBrowsingContextPaintable.h>
 
 namespace Web::Painting {
@@ -32,6 +33,9 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
+        auto clip_rect = absolute_rect().to_rounded<int>();
+        ScopedCornerRadiusClip corner_clip { context.painter(), clip_rect, normalized_border_radii_data() };
+
         auto* hosted_document = layout_box().dom_node().content_document_without_origin_check();
         if (!hosted_document)
             return;
@@ -42,7 +46,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         context.painter().save();
         auto old_viewport_rect = context.viewport_rect();
 
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
+        context.painter().add_clip_rect(clip_rect);
         context.painter().translate(absolute_x(), absolute_y());
 
         context.set_viewport_rect({ {}, layout_box().dom_node().nested_browsing_context()->size() });
