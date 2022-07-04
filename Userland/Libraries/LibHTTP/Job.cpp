@@ -6,7 +6,7 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 #include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
