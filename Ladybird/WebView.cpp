@@ -52,6 +52,17 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
+#include <stdlib.h>
+
+String s_serenity_resource_root = [] {
+    auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
+    if (source_dir) {
+        return String::formatted("{}/Base", source_dir);
+    }
+    auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
+    VERIFY(home);
+    return String::formatted("{}/.lagom", home);
+}();
 
 class HeadlessBrowserPageClient final : public Web::PageClient {
 public:
@@ -271,7 +282,7 @@ WebView::WebView()
 
     m_page_client = HeadlessBrowserPageClient::create(*this);
 
-    m_page_client->setup_palette(Gfx::load_system_theme("/home/kling/src/serenity/Base/res/themes/Default.ini"));
+    m_page_client->setup_palette(Gfx::load_system_theme(String::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)));
 
     // FIXME: Allow passing these values as arguments
     m_page_client->set_viewport_rect({ 0, 0, 800, 600 });
@@ -794,12 +805,13 @@ void initialize_web_engine()
     Web::ResourceLoader::initialize(HeadlessRequestServer::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
 
-    Web::FrameLoader::set_default_favicon_path("/home/kling/src/serenity/Base/res/icons/16x16/app-browser.png");
+    Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
+    dbgln("Set favoicon path to {}", String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
-    Gfx::FontDatabase::set_default_fonts_lookup_path("/home/kling/src/serenity/Base/res/fonts");
+    Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("{}/res/fonts", s_serenity_resource_root));
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    Web::FrameLoader::set_error_page_url("file:///home/kling/src/serenity/Base/res/html/error.html");
+    Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 }

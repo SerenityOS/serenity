@@ -3,3 +3,5 @@ Makefile
 ladybird
 *.o
 moc_*
+Build
+build
