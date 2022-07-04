@@ -95,6 +95,16 @@ public:
             return m_top + m_bottom;
     }
 
+    [[nodiscard]] int horizontal_total() const
+    {
+        return m_left + m_right;
+    }
+
+    [[nodiscard]] int vertical_total() const
+    {
+        return m_top + m_bottom;
+    }
+
 private:
     int m_top { 0 };
     int m_right { 0 };
