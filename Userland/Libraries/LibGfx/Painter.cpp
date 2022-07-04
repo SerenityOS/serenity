@@ -2399,7 +2399,7 @@ void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& st
 
         // FIXME: this is probably not the real space taken for complex emojis
         x += font.glyphs_horizontal_kerning(last_code_point, code_point);
-        draw_glyph_or_emoji({ round_to<int>(x), y }, code_point_iterator, font, color);
+        draw_glyph_or_emoji({ static_cast<int>(x), y }, code_point_iterator, font, color);
         x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
         last_code_point = code_point;
     }
