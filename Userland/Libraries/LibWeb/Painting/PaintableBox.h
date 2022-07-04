@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/Painting/BorderPainting.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
@@ -135,6 +136,9 @@ private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
+
+    mutable bool m_clipping_overflow { false };
+    Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 };
 
 class PaintableWithLines : public PaintableBox {
