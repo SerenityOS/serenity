@@ -130,8 +130,9 @@ public:
         return m_preferred_color_scheme;
     }
 
-    virtual void page_did_change_title(String const&) override
+    virtual void page_did_change_title(String const& title) override
     {
+        emit m_view.title_changed(title.characters());
     }
 
     virtual void page_did_set_document_in_top_level_browsing_context(Web::DOM::Document*) override

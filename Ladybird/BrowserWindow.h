@@ -15,6 +15,7 @@ public:
 
 public slots:
     void location_edit_return_pressed();
+    void page_title_changed(QString);
 
 private:
     QToolBar* m_toolbar { nullptr };
