@@ -245,9 +245,10 @@ BorderRadiiData PaintableBox::normalized_border_radii_data() const
 void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
 {
     // FIXME: Support more overflow variations.
+    auto clip_rect = absolute_padding_box_rect().to_rounded<int>();
     if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
         context.painter().save();
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_border_box_rect()));
+        context.painter().add_clip_rect(clip_rect);
     }
 }
 
