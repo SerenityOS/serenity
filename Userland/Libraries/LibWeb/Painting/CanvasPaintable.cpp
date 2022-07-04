@@ -31,14 +31,17 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
+        auto canvas_rect = absolute_rect().to_rounded<int>();
+        ScopedCornerRadiusClip corner_clip { context.painter(), canvas_rect, normalized_border_radii_data() };
+
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+        if (!context.viewport_rect().intersects(canvas_rect))
             return;
 
         if (layout_box().dom_node().bitmap()) {
             // FIXME: Remove this const_cast.
             const_cast<HTML::HTMLCanvasElement&>(layout_box().dom_node()).present();
-            context.painter().draw_scaled_bitmap(absolute_rect().to_rounded<int>(), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            context.painter().draw_scaled_bitmap(canvas_rect, *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
         }
     }
 }
