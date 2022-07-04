@@ -57,6 +57,7 @@ ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(m_tabs.size());
+    layout_relevant_change_occured();
     return {};
 }
 
@@ -82,6 +83,8 @@ void TabWidget::remove_widget(Widget& widget)
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(m_tabs.size());
+
+    layout_relevant_change_occured();
 }
 
 void TabWidget::remove_all_tabs_except(Widget& widget)
@@ -98,6 +101,8 @@ void TabWidget::remove_all_tabs_except(Widget& widget)
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(1);
+
+    layout_relevant_change_occured();
 }
 
 void TabWidget::update_focus_policy()
@@ -130,6 +135,8 @@ void TabWidget::set_active_widget(Widget* widget)
                 on_change(*m_active_widget);
         });
     }
+
+    layout_relevant_change_occured();
 
     update_bar();
 }
@@ -688,6 +695,7 @@ void TabWidget::doubleclick_event(MouseEvent& mouse_event)
 void TabWidget::set_container_margins(GUI::Margins const& margins)
 {
     m_container_margins = margins;
+    layout_relevant_change_occured();
     update();
 }
 
