@@ -231,6 +231,8 @@ protected:
     virtual void leave_event(Core::Event&);
 
 private:
+    void update_min_size();
+
     void update_cursor();
     void focus_a_widget_if_possible(FocusSource);
 
