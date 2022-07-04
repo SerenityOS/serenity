@@ -1,10 +1,10 @@
 # Ladybird Web Browser
 
-The Ladybird Web Browser is a browser using the SerenityOS LibWeb engine with a QT GUI.
+The Ladybird Web Browser is a browser using the SerenityOS LibWeb engine with a Qt GUI.
 
 ## Build Prerequisites
 
-QT6 development packages and a c++20-enabled compiler are required. On Debian/Ubuntu required packages include, but are not limited to:
+Qt6 development packages and a c++20-enabled compiler are required. On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
 sudo apt install build-essential cmake ninja-build qt6-base-dev qt6-tools-dev-tools
@@ -12,7 +12,7 @@ sudo apt install build-essential cmake ninja-build qt6-base-dev qt6-tools-dev-to
 
 For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
 
-For Ubuntu 20.04 and above, ensure that the QT6 Wayland packages are available:
+For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
 
 ```
 sudo apt install qt6-wayland
