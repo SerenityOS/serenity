@@ -666,7 +666,17 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, Match
 
 ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched)
 {
-    auto is_space_or_line_terminator = [](u32 code_point) {
+    if (matches_character_class(character_class, ch, input.regex_options & AllFlags::Insensitive)) {
+        if (inverse)
+            inverse_matched = true;
+        else
+            advance_string_position(state, input.view, ch);
+    }
+}
+
+bool OpCode_Compare::matches_character_class(CharClass character_class, u32 ch, bool insensitive)
+{
+    constexpr auto is_space_or_line_terminator = [](u32 code_point) {
         static auto space_separator = Unicode::general_category_from_string("Space_Separator"sv);
         if (!space_separator.has_value())
             return is_ascii_space(code_point);
@@ -680,106 +690,34 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
 
     switch (character_class) {
     case CharClass::Alnum:
-        if (is_ascii_alphanumeric(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_alphanumeric(ch);
     case CharClass::Alpha:
-        if (is_ascii_alpha(ch))
-            advance_string_position(state, input.view, ch);
-        break;
+        return is_ascii_alpha(ch);
     case CharClass::Blank:
-        if (is_ascii_blank(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_blank(ch);
     case CharClass::Cntrl:
-        if (is_ascii_control(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_control(ch);
     case CharClass::Digit:
-        if (is_ascii_digit(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_digit(ch);
     case CharClass::Graph:
-        if (is_ascii_graphical(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_graphical(ch);
     case CharClass::Lower:
-        if (is_ascii_lower_alpha(ch) || ((input.regex_options & AllFlags::Insensitive) && is_ascii_upper_alpha(ch))) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_lower_alpha(ch) || (insensitive && is_ascii_upper_alpha(ch));
     case CharClass::Print:
-        if (is_ascii_printable(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_printable(ch);
     case CharClass::Punct:
-        if (is_ascii_punctuation(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_punctuation(ch);
     case CharClass::Space:
-        if (is_space_or_line_terminator(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_space_or_line_terminator(ch);
     case CharClass::Upper:
-        if (is_ascii_upper_alpha(ch) || ((input.regex_options & AllFlags::Insensitive) && is_ascii_lower_alpha(ch))) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_upper_alpha(ch) || (insensitive && is_ascii_lower_alpha(ch));
     case CharClass::Word:
-        if (is_ascii_alphanumeric(ch) || ch == '_') {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_alphanumeric(ch) || ch == '_';
     case CharClass::Xdigit:
-        if (is_ascii_hex_digit(ch)) {
-            if (inverse)
-                inverse_matched = true;
-            else
-                advance_string_position(state, input.view, ch);
-        }
-        break;
+        return is_ascii_hex_digit(ch);
     }
+
+    VERIFY_NOT_REACHED();
 }
 
 ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched)

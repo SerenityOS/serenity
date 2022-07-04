@@ -745,6 +745,7 @@ public:
     String arguments_string() const override;
     Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
+    static bool matches_character_class(CharClass, u32, bool insensitive);
 
 private:
     ALWAYS_INLINE static void compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);

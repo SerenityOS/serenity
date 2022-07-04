@@ -921,6 +921,7 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "a*b"sv, "aaaaa"sv, false },
         Tuple { "a+b"sv, "aaaaa"sv, false },
         Tuple { "\\\\(\\d+)"sv, "\\\\"sv, false }, // Rewrite bug turning a+ to a*, see #10952.
+        Tuple { "[a-z.]+\\."sv, "..."sv, true },   // Rewrite bug, incorrect interpretation of Compare.
         // Alternative fuse
         Tuple { "(abcfoo|abcbar|abcbaz).*x"sv, "abcbarx"sv, true },
         Tuple { "(a|a)"sv, "a"sv, true },
