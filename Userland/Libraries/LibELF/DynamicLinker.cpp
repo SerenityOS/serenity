@@ -96,6 +96,8 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
     s_loaders.set(get_library_name(filename), *loader);
 
     s_current_tls_offset -= loader->tls_size_of_current_object();
+    if (loader->tls_alignment_of_current_object())
+        s_current_tls_offset = align_down_to(s_current_tls_offset, loader->tls_alignment_of_current_object());
     loader->set_tls_offset(s_current_tls_offset);
 
     // This actually maps the library at the intended and final place.
@@ -196,8 +198,8 @@ static void allocate_tls()
 {
     s_total_tls_size = 0;
     for (auto const& data : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
-        s_total_tls_size += data.value->tls_size_of_current_object();
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}, TLS Alignment: {}", data.key, data.value->tls_size_of_current_object(), data.value->tls_alignment_of_current_object());
+        s_total_tls_size += data.value->tls_size_of_current_object() + data.value->tls_alignment_of_current_object();
     }
 
     if (!s_total_tls_size)
@@ -393,7 +395,7 @@ static Optional<DlErrorMessage> verify_tls_for_dlopen(DynamicLoader const& loade
     if (loader.tls_size_of_current_object() == 0)
         return {};
 
-    if (s_total_tls_size + loader.tls_size_of_current_object() > s_allocated_tls_block_size)
+    if (s_total_tls_size + loader.tls_size_of_current_object() + loader.tls_alignment_of_current_object() > s_allocated_tls_block_size)
         return DlErrorMessage("TLS size too large");
 
     bool tls_data_is_all_zero = true;
@@ -461,7 +463,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     if (result.is_error())
         return result.error();
 
-    s_total_tls_size += result1.value()->tls_size_of_current_object();
+    s_total_tls_size += result1.value()->tls_size_of_current_object() + result1.value()->tls_alignment_of_current_object();
 
     auto object = s_global_objects.get(library_name);
     if (!object.has_value())
@@ -586,7 +588,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "loaded all dependencies");
     for ([[maybe_unused]] auto& lib : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size_of_current_object(), lib.value->tls_offset());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls alignment: {}, tls offset: {}", lib.key, lib.value->tls_size_of_current_object(), lib.value->tls_alignment_of_current_object(), lib.value->tls_offset());
     }
 
     allocate_tls();
