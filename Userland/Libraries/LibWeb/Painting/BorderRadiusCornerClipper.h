@@ -18,7 +18,12 @@ enum class CornerClip {
 
 class BorderRadiusCornerClipper {
 public:
-    static ErrorOr<BorderRadiusCornerClipper> create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip = CornerClip::Outside);
+    enum class UseCachedBitmap {
+        Yes,
+        No
+    };
+
+    static ErrorOr<BorderRadiusCornerClipper> create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip = CornerClip::Outside, UseCachedBitmap use_cached_bitmap = UseCachedBitmap::Yes);
 
     void sample_under_corners(Gfx::Painter& page_painter);
     void blit_corner_clipping(Gfx::Painter& page_painter);

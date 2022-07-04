@@ -10,7 +10,7 @@
 
 namespace Web::Painting {
 
-ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
+ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip, UseCachedBitmap use_cached_bitmap)
 {
     VERIFY(border_radii.has_any_radius());
 
@@ -28,9 +28,14 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRec
             top_right.vertical_radius + bottom_right.vertical_radius)
     };
 
-    auto corner_bitmap = get_cached_corner_bitmap(corners_bitmap_size);
-    if (!corner_bitmap)
-        return Error::from_errno(ENOMEM);
+    RefPtr<Gfx::Bitmap> corner_bitmap;
+    if (use_cached_bitmap == UseCachedBitmap::Yes) {
+        corner_bitmap = get_cached_corner_bitmap(corners_bitmap_size);
+        if (!corner_bitmap)
+            return Error::from_errno(ENOMEM);
+    } else {
+        corner_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size));
+    }
 
     CornerData corner_data {
         .corner_radii = {
