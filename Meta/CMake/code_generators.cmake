@@ -37,7 +37,7 @@ function(compile_ipc source output)
     #       https://cmake.org/cmake/help/v3.23/command/cmake_path.html#relative-path
     string(LENGTH ${SerenityOS_SOURCE_DIR} root_source_dir_length)
     string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${root_source_dir_length} -1 current_source_dir_relative)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${output} DESTINATION usr/include${current_source_dir_relative} OPTIONAL)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${output} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${current_source_dir_relative}" OPTIONAL)
 endfunction()
 
 function(generate_state_machine source header)
