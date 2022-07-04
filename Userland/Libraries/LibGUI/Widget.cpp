@@ -407,6 +407,7 @@ void Widget::set_layout(NonnullRefPtr<Layout> layout)
     } else {
         update();
     }
+    layout_relevant_change_occured();
 }
 
 void Widget::do_layout()
@@ -1018,6 +1019,7 @@ void Widget::set_palette(Palette const& palette)
 void Widget::set_title(String title)
 {
     m_title = move(title);
+    layout_relevant_change_occured();
     // For tab widget children, our change in title also affects the parent.
     if (parent_widget())
         parent_widget()->update();
@@ -1060,7 +1062,7 @@ void Widget::set_grabbable_margins(Margins const& margins)
     if (m_grabbable_margins == margins)
         return;
     m_grabbable_margins = margins;
-    invalidate_layout();
+    layout_relevant_change_occured();
 }
 
 Gfx::IntRect Widget::relative_non_grabbable_rect() const
