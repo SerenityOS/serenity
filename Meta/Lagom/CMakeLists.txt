@@ -23,6 +23,7 @@ get_filename_component(
     SERENITY_PROJECT_ROOT "${PROJECT_SOURCE_DIR}/../.."
     ABSOLUTE CACHE
 )
+set(SerenityOS_SOURCE_DIR "${SERENITY_PROJECT_ROOT}" CACHE STRING "")
 
 list(APPEND CMAKE_MODULE_PATH "${SERENITY_PROJECT_ROOT}/Meta/CMake")
 
@@ -137,8 +138,11 @@ configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
 include_directories(../../)
 include_directories(../../Userland/)
 include_directories(../../Userland/Libraries/)
+include_directories(../../Userland/Services)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR}/Libraries)
+include_directories(${CMAKE_BINARY_DIR}/Services)
 
 # install rules, think about moving to its own helper cmake file
 include(CMakePackageConfigHelpers)
@@ -222,6 +226,31 @@ function(lagom_test source)
     )
 endfunction()
 
+function(serenity_bin name)
+    add_executable(${name} ${SOURCES} ${GENERATED_SOURCES})
+    add_executable(Lagom::${name} ALIAS ${name})
+    install(
+        TARGETS ${target_name}
+        EXPORT LagomTargets
+        RUNTIME #
+            COMPONENT Lagom_Runtime
+        LIBRARY #
+            COMPONENT Lagom_Runtime
+            NAMELINK_COMPONENT Lagom_Development
+        ARCHIVE #
+            COMPONENT Lagom_Development
+        INCLUDES #
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+endfunction()
+
+function(serenity_lib name fs_name)
+    lagom_lib(name fs_name SOURCES ${SOURCES} ${GENERATED_SOURCES})
+endfunction()
+
+add_custom_target(components ALL)
+option(BUILD_EVERYTHING "Build all optional components" ON)
+
 if (NOT TARGET all_generated)
     # Meta target to run all code-gen steps in the build.
     add_custom_target(all_generated)
@@ -304,6 +333,12 @@ if (BUILD_LAGOM)
     file(GLOB LIBCRYPTO_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*/*.cpp")
     lagom_lib(Crypto crypto
         SOURCES ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES}
+    )
+
+    file(GLOB LIBDNS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibDNS/*.cpp")
+    lagom_lib(DNS dns
+        SOURCES ${LIBDNS_SOURCES}
+        LIBS LibIPC
     )
 
     # ELF
@@ -525,6 +560,9 @@ if (BUILD_LAGOM)
         SOURCES ${LIBXML_SOURCES})
 
     if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
+        # Lagom Services
+        add_subdirectory("${SERENITY_PROJECT_ROOT}/Userland/Services" "${CMAKE_CURRENT_BINARY_DIR}/Services")
+
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp LibCore)
@@ -766,4 +804,6 @@ endif()
 
 if (ENABLE_FUZZERS)
     add_subdirectory(Fuzzers)
+else()
+    export_components("${CMAKE_BINARY_DIR}/components.ini")
 endif()
