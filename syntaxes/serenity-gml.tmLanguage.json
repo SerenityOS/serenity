@@ -15,8 +15,7 @@
 			"patterns": [
 				{
 					"name": "meta.type.object.serenity-gml",
-					"begin": "(@)(\\p{L}[\\p{L}0-9_$]*)(?:(::)(\\p{L}[\\p{L}0-9_$]*))?\\s*(\\{)",
-					"end": "(\\})",
+					"begin": "(@)(\\p{L}[\\p{L}0-9_$]*)((?:::\\p{L}[\\p{L}0-9_$]*)*)\\s*(\\{)",
 					"beginCaptures": {
 						"1": {
 							"name": "punctuation.at-sign.serenity-gml"
@@ -25,15 +24,32 @@
 							"name": "entity.name.type.serenity-gml"
 						},
 						"3": {
-							"name": "punctuation.separator.namespace.serenity-gml"
+							"patterns": [
+								{
+									"comment": "FIXME: Direct whileCaptures don't seem to work",
+									"begin": "",
+									"while": "(::)(\\p{L}[\\p{L}0-9_$]*)",
+									"patterns": [
+										{
+											"match": "(::)(\\p{L}[\\p{L}0-9_$]*)",
+											"captures": {
+												"1": {
+													"name": "punctuation.separator.namespace.serenity-gml"
+												},
+												"2": {
+													"name": "entity.name.type.serenity-gml"
+												}
+											}
+										}
+									]
+								}
+							]
 						},
 						"4": {
-							"name": "entity.name.type.serenity-gml"
-						},
-						"5": {
 							"name": "punctuation.braces.begin.serenity-gml"
 						}
 					},
+					"end": "(\\})",
 					"endCaptures": {
 						"1": {
 							"name": "punctuation.braces.end.serenity-gml"
@@ -53,7 +69,7 @@
 				},
 				{
 					"name": "meta.type.object.serenity-gml",
-					"match": "(@)(\\p{L}[\\p{L}0-9_$]*)(?:(::)(\\p{L}[\\p{L}0-9_$]*))?",
+					"match": "(@)(\\p{L}[\\p{L}0-9_$]*)((?:::\\p{L}[\\p{L}0-9_$]*)*)",
 					"captures": {
 						"1": {
 							"name": "punctuation.at-sign.serenity-gml"
@@ -62,11 +78,26 @@
 							"name": "entity.name.type.serenity-gml"
 						},
 						"3": {
-							"name": "punctuation.separator.namespace.serenity-gml"
+							"patterns": [
+								{
+									"begin": "",
+									"while": "(::)(\\p{L}[\\p{L}0-9_$]*)",
+									"patterns": [
+										{
+											"match": "(::)(\\p{L}[\\p{L}0-9_$]*)",
+											"captures": {
+												"1": {
+													"name": "punctuation.separator.namespace.serenity-gml"
+												},
+												"2": {
+													"name": "entity.name.type.serenity-gml"
+												}
+											}
+										}
+									]
+								}
+							]
 						},
-						"4": {
-							"name": "entity.name.type.serenity-gml"
-						}
 					}
 				}
 			]

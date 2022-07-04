@@ -26,3 +26,4 @@
 
 - [IDL] Fix an issue with Unions in dictionaries 
 - [IDL] Fix ExtendedAttributes before optional arguments
+-  [GML] Allow object lookups of arbitrary namespace depth
