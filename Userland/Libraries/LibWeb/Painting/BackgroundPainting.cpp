@@ -89,17 +89,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         auto& image = *layer.image->bitmap();
 
         // Clip
-        Optional<BorderRadiusCornerClipper> corner_radius_clipper {};
         auto clip_box = get_box(layer.clip);
         auto clip_rect = clip_box.rect.to_rounded<int>();
-        if (clip_box.radii.has_any_radius()) {
-            auto clipper = BorderRadiusCornerClipper::create(clip_rect, clip_box.radii);
-            if (!clipper.is_error()) {
-                corner_radius_clipper = clipper.release_value();
-                corner_radius_clipper->sample_under_corners(painter);
-            }
-        }
         painter.add_clip_rect(clip_rect);
+        ScopedCornerRadiusClip corner_clip { painter, clip_rect, clip_box.radii };
 
         Gfx::FloatRect background_positioning_area;
 
@@ -292,9 +285,6 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 break;
             image_y += y_step;
         }
-
-        if (corner_radius_clipper.has_value())
-            corner_radius_clipper->blit_corner_clipping(painter);
     }
 }
 
