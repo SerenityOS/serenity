@@ -201,10 +201,12 @@ Widget::~Widget() = default;
 
 void Widget::layout_relevant_change_occured()
 {
-    if (auto* parent = parent_widget())
-        parent->layout_relevant_change_occured();
-    else
-        invalidate_layout();
+    if (is_visible()) {
+        if (auto* parent = parent_widget())
+            parent->layout_relevant_change_occured();
+        else if (window())
+            window()->schedule_relayout();
+    }
 }
 
 void Widget::child_event(Core::ChildEvent& event)
