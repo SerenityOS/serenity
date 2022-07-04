@@ -32,7 +32,7 @@ The SerenityOS project tries to maximize hackability, accountability, and fun(!)
 
 ## Does SerenityOS have a package manager?
 
-No, SerenityOS does not have a package manager. The project uses a monorepo approach, meaning that all software is built in the same style and using the same tools. There is no reason to have something like a package manager because of this.
+No, SerenityOS does not have a package manager. The project uses a monorepo approach, meaning that all software is built in the same style and using the same tools. Because of this, there is no reason to have something like a package manager.
 
 *However* there are ports which can be found in the [Ports directory](../Ports). A port is a piece of software that can optionally be installed, might have not been built by us but supports running on SerenityOS. They act quite similar to packages, coming with an install script each.
 
