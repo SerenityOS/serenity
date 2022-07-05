@@ -622,7 +622,8 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
         i++;
     }
 
-    m_undo_selection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(m_glyph_map_widget->selection().start(), m_glyph_map_widget->selection().size(), m_glyph_map_widget->active_glyph(), *m_edited_font)));
+    auto selection = m_glyph_map_widget->selection().normalized();
+    m_undo_selection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *m_edited_font)));
     m_undo_stack->clear();
 
     update_statusbar();
