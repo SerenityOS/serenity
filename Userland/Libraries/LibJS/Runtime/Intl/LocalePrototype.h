@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +26,7 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(base_name);
     JS_DECLARE_NATIVE_FUNCTION(calendar);
+    JS_DECLARE_NATIVE_FUNCTION(calendars);
     JS_DECLARE_NATIVE_FUNCTION(case_first);
     JS_DECLARE_NATIVE_FUNCTION(collation);
     JS_DECLARE_NATIVE_FUNCTION(hour_cycle);

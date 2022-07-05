@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/LocalePrototype.h>
@@ -34,6 +35,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
 
     define_native_accessor(vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(vm.names.calendar, calendar, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.calendars, calendars, {}, Attribute::Configurable);
     define_native_accessor(vm.names.caseFirst, case_first, {}, Attribute::Configurable);
     define_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
     define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
@@ -198,5 +200,18 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     // 6. Return the substring of locale corresponding to the unicode_region_subtag production of the unicode_language_id.
     return js_string(vm, *locale->language_id.region);
 }
+
+#define JS_ENUMERATE_LOCALE_INFO_PROPERTIES \
+    __JS_ENUMERATE(calendars)
+
+// 1.4.16 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
+#define __JS_ENUMERATE(keyword)                                      \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)              \
+    {                                                                \
+        auto* locale_object = TRY(typed_this_object(global_object)); \
+        return keyword##_of_locale(global_object, *locale_object);   \
+    }
+JS_ENUMERATE_LOCALE_INFO_PROPERTIES
+#undef __JS_ENUMERATE
 
 }
