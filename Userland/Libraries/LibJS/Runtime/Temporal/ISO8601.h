@@ -145,7 +145,7 @@ public:
     [[nodiscard]] bool parse_calendar_name();
     [[nodiscard]] bool parse_calendar();
     [[nodiscard]] bool parse_time_spec();
-    [[nodiscard]] bool parse_time_hour_minute_basic_format_not_ambiguous();
+    [[nodiscard]] bool parse_time_hour_minute_basic_format_not_ambiguous_with_month_day();
     [[nodiscard]] bool parse_time_spec_with_optional_time_zone_not_ambiguous();
     [[nodiscard]] bool parse_time_spec_separator();
     [[nodiscard]] bool parse_date_time();

@@ -1065,10 +1065,10 @@ bool ISO8601Parser::parse_time_spec()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeHourMinuteBasicFormatNotAmbiguous
-bool ISO8601Parser::parse_time_hour_minute_basic_format_not_ambiguous()
+// https://tc39.es/proposal-temporal/#prod-TimeHourMinuteBasicFormatNotAmbiguousWithMonthDay
+bool ISO8601Parser::parse_time_hour_minute_basic_format_not_ambiguous_with_month_day()
 {
-    // TimeHourMinuteBasicFormatNotAmbiguous :
+    // TimeHourMinuteBasicFormatNotAmbiguousWithMonthDay :
     //     TimeHourNotValidMonth TimeMinute
     //     TimeHour TimeMinuteNotValidDay
     //     TimeHourNotThirtyOneDayMonth TimeMinuteThirtyOneOnly
@@ -1111,7 +1111,7 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
     //     TimeHour TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth[opt] TimeZoneBracketedAnnotation[opt]
     //     TimeHourNotValidMonth TimeZone
     //     TimeHour : TimeMinute TimeZone[opt]
-    //     TimeHourMinuteBasicFormatNotAmbiguous TimeZoneBracketedAnnotation[opt]
+    //     TimeHourMinuteBasicFormatNotAmbiguousWithMonthDay TimeZoneBracketedAnnotation[opt]
     //     TimeHour TimeMinute TimeZoneNumericUTCOffsetNotAmbiguousWithMonth TimeZoneBracketedAnnotation[opt]
     //     TimeHour : TimeMinute : TimeSecond TimeFraction[opt] TimeZone[opt]
     //     TimeHour TimeMinute TimeSecondNotValidMonth TimeZone[opt]
@@ -1172,7 +1172,7 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
     }
     {
         StateTransaction transaction { *this };
-        if (parse_time_hour_minute_basic_format_not_ambiguous()) {
+        if (parse_time_hour_minute_basic_format_not_ambiguous_with_month_day()) {
             (void)parse_time_zone_bracketed_annotation();
             transaction.commit();
             return true;
