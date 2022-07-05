@@ -159,6 +159,10 @@ template<typename ValueType>
 class ExceptionOr;
 }
 
+namespace Web::DOMParsing {
+class XMLSerializer;
+}
+
 namespace Web::Encoding {
 class TextEncoder;
 }
@@ -600,6 +604,7 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+class XMLSerializerWrapper;
 enum class CanPlayTypeResult;
 enum class DOMParserSupportedType;
 enum class ResizeObserverBoxOptions;

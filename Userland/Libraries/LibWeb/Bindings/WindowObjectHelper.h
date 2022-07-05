@@ -355,6 +355,8 @@
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
+#include <LibWeb/Bindings/XMLSerializerConstructor.h>
+#include <LibWeb/Bindings/XMLSerializerPrototype.h>
 
 #define ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(interface_name, constructor_name, prototype_name)                                \
     {                                                                                                                                \
@@ -539,6 +541,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Worker)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget)                                          \
+    ADD_WINDOW_OBJECT_INTERFACE(XMLSerializer)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(Window)                                                             \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Audio, AudioConstructor, HTMLAudioElementPrototype) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype) \

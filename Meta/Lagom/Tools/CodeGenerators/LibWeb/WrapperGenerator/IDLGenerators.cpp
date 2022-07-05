@@ -1901,6 +1901,7 @@ void generate_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::DOMParsing;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -2816,6 +2817,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::DOMParsing;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3093,6 +3095,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::DOMParsing;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3542,6 +3545,7 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::DOMParsing;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3655,6 +3659,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
+using namespace Web::DOMParsing;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
