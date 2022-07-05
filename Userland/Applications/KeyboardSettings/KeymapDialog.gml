@@ -9,21 +9,21 @@
     }
 
     @GUI::Widget {
-        fixed_height: 24
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 6
+        }
+        preferred_height: "fit"
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "ok_button"
             text: "OK"
-            fixed_width: 75
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            fixed_width: 75
         }
     }
 }
