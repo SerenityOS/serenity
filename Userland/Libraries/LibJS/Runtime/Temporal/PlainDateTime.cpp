@@ -148,10 +148,13 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         if (is<ZonedDateTime>(item_object)) {
             auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
 
-            // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
+            // i. Perform ? ToTemporalOverflow(options).
+            (void)TRY(to_temporal_overflow(global_object, options));
+
+            // ii. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
             auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds()).release_value();
 
-            // ii. Return ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
+            // iii. Return ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
             return builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar());
         }
 
@@ -159,7 +162,10 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         if (is<PlainDate>(item_object)) {
             auto& plain_date = static_cast<PlainDate&>(item_object);
 
-            // i. Return ? CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], 0, 0, 0, 0, 0, 0, item.[[Calendar]]).
+            // i. Perform ? ToTemporalOverflow(options).
+            (void)TRY(to_temporal_overflow(global_object, options));
+
+            // ii. Return ? CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], 0, 0, 0, 0, 0, 0, item.[[Calendar]]).
             return create_temporal_date_time(global_object, plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day(), 0, 0, 0, 0, 0, 0, plain_date.calendar());
         }
 
