@@ -48,6 +48,7 @@
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
 #include <LibWebSocket/WebSocket.h>
+#include <QIcon>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
@@ -210,8 +211,11 @@ public:
         m_view.viewport()->update();
     }
 
-    virtual void page_did_change_favicon(Gfx::Bitmap const&) override
+    virtual void page_did_change_favicon(Gfx::Bitmap const& bitmap) override
     {
+        ByteBuffer bytebuffer = bitmap.serialize_to_byte_buffer();
+        QPixmap icon = QPixmap::fromImage(QImage(bytebuffer.bytes().data(), bitmap.width(), bitmap.height(), QImage::Format_ARGB32));
+        emit m_view.favicon_changed(QIcon(icon));
     }
 
     virtual void page_did_layout() override
