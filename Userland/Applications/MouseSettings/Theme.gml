@@ -1,7 +1,7 @@
 @GUI::Frame {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
-        margins: [10]
+        margins: [8]
     }
 
     @GUI::GroupBox {
