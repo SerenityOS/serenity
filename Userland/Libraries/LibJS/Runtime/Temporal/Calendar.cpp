@@ -227,11 +227,11 @@ ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& ca
     // 2. Let result be ? Invoke(calendar, "month", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(global_object, vm.names.month, &date_like));
 
-    // 3. If result is undefined, throw a RangeError exception.
+    // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
 
-    // 4. Return ? ToPositiveInteger(result).
+    // 3. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(global_object, result));
 }
 
@@ -261,11 +261,11 @@ ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& cale
     // 2. Let result be ? Invoke(calendar, "day", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(global_object, vm.names.day, &date_like));
 
-    // 3. If result is undefined, throw a RangeError exception.
+    // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
 
-    // 4. Return ? ToPositiveInteger(result).
+    // 3. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(global_object, result));
 }
 
