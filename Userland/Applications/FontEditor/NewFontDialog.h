@@ -9,7 +9,6 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
-#include <LibGfx/Font/BitmapFont.h>
 
 class NewFontDialog final : public GUI::WizardDialog {
     C_OBJECT(NewFontDialog);
@@ -39,10 +38,6 @@ private:
         String family;
         bool is_fixed_width;
     } m_new_font_metadata;
-
-    RefPtr<GUI::WizardPage> m_font_selection_page;
-    RefPtr<GUI::ComboBox> m_select_font_combobox;
-    RefPtr<GUI::Button> m_browse_button;
 
     RefPtr<GUI::WizardPage> m_font_properties_page;
     RefPtr<GUI::TextBox> m_name_textbox;
