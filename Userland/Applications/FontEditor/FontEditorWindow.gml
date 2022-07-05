@@ -17,23 +17,25 @@
 
         @GUI::Widget {
             name: "left_column_container"
+            preferred_width: "shrink"
             layout: @GUI::VerticalBoxLayout {}
 
-            @GUI::Widget {
-                name: "glyph_editor_container"
-                layout: @GUI::VerticalBoxLayout {}
+            @FontEditor::GlyphEditorWidget {
+                name: "glyph_editor_widget"
             }
 
             @GUI::Widget {
-                shrink_to_fit: true
+                preferred_height: "shrink"
                 layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::SpinBox {
                     name: "glyph_editor_width_spinbox"
+                    preferred_width: "fit"
                 }
 
                 @GUI::CheckBox {
                     name: "glyph_editor_present_checkbox"
+                    preferred_width: "fit"
                     text: "Present"
                     focus_policy: "TabFocus"
                 }
@@ -64,21 +66,19 @@
                 @GUI::Widget {
                     layout: @GUI::VerticalBoxLayout {}
 
-                    @GUI::Widget {
-                        name: "glyph_map_container"
-                        layout: @GUI::VerticalBoxLayout {}
+                    @GUI::GlyphMapWidget {
+                        name: "glyph_map_widget"
                     }
 
                     @GUI::GroupBox {
                         name: "font_metadata_groupbox"
                         title: "Metadata"
-                        shrink_to_fit: true
+                        preferred_height: "shrink"
                         layout: @GUI::VerticalBoxLayout {
                             margins: [6, 6, 6, 6]
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -94,7 +94,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -110,7 +109,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -127,7 +125,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -144,7 +141,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -162,7 +158,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -179,7 +174,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {
@@ -196,7 +190,6 @@
                         }
 
                         @GUI::Widget {
-                            fixed_height: 22
                             layout: @GUI::HorizontalBoxLayout {}
 
                             @GUI::Label {

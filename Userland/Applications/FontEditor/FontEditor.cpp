@@ -23,6 +23,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ItemListModel.h>
@@ -40,9 +41,10 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/FontStyleMapping.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
+
+namespace FontEditor {
 
 static constexpr Array pangrams = {
     "quick fox jumps nightly above wizard",
@@ -387,13 +389,9 @@ FontEditorWidget::FontEditorWidget()
 
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
-    m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
-    m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
 
-    auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
-    m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
-    m_glyph_map_widget = glyph_map_container.add<GUI::GlyphMapWidget>();
-
+    m_glyph_map_widget = find_descendant_of_type_named<GUI::GlyphMapWidget>("glyph_map_widget");
+    m_glyph_editor_widget = find_descendant_of_type_named<GlyphEditorWidget>("glyph_editor_widget");
     m_glyph_editor_widget->on_glyph_altered = [this](int glyph) {
         m_glyph_map_widget->update_glyph(glyph);
         update_preview();
@@ -569,7 +567,7 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
 
     m_glyph_map_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->initialize(*m_edited_font);
-    did_resize_glyph_editor();
+    m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 
     m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
     m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width(), GUI::AllowCallback::No);
@@ -899,16 +897,6 @@ void FontEditorWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
-void FontEditorWidget::did_resize_glyph_editor()
-{
-    constexpr int button_width = 22;
-    constexpr int buttons_per_bar = 4;
-    constexpr int spacing = (buttons_per_bar - 1) * 2 + 10;
-    constexpr int glyph_toolbars_width = button_width * buttons_per_bar + spacing;
-    m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
-    m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
-}
-
 void FontEditorWidget::set_scale(i32 scale)
 {
     m_glyph_editor_widget->set_scale(scale);
@@ -918,7 +906,7 @@ void FontEditorWidget::set_scale_and_save(i32 scale)
 {
     set_scale(scale);
     Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
-    did_resize_glyph_editor();
+    m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 }
 
 void FontEditorWidget::copy_selected_glyphs()
@@ -1010,4 +998,6 @@ void FontEditorWidget::delete_selected_glyphs()
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
     update_statusbar();
+}
+
 }

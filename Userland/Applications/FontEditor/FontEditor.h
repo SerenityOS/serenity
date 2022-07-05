@@ -15,6 +15,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font/BitmapFont.h>
 
+namespace FontEditor {
+
 class GlyphEditorWidget;
 
 class FontEditorWidget final : public GUI::Widget {
@@ -63,7 +65,6 @@ private:
     void undo();
     void redo();
     void did_modify_font();
-    void did_resize_glyph_editor();
     void update_statusbar();
     void update_preview();
     void set_scale(i32);
@@ -123,8 +124,6 @@ private:
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
 
     RefPtr<GUI::Statusbar> m_statusbar;
-    RefPtr<GUI::Widget> m_left_column_container;
-    RefPtr<GUI::Widget> m_glyph_editor_container;
     RefPtr<GUI::Widget> m_unicode_block_container;
     RefPtr<GUI::ComboBox> m_weight_combobox;
     RefPtr<GUI::ComboBox> m_slope_combobox;
@@ -156,3 +155,5 @@ private:
     bool m_unicode_blocks { true };
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };
+
+}

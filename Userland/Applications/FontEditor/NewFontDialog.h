@@ -52,7 +52,6 @@ private:
     RefPtr<GUI::SpinBox> m_presentation_spinbox;
 
     RefPtr<GUI::WizardPage> m_glyph_properties_page;
-    RefPtr<GUI::Widget> m_glyph_editor_container;
     RefPtr<GUI::SpinBox> m_glyph_height_spinbox;
     RefPtr<GUI::SpinBox> m_glyph_width_spinbox;
     RefPtr<GUI::SpinBox> m_baseline_spinbox;
