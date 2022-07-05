@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
     auto& interface = IDL::Parser(path, data, import_base_path).parse();
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebGL", "WebSockets", "XHR")) {
+    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "DOMParsing", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebGL", "WebSockets", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
