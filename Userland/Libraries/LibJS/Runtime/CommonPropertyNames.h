@@ -476,6 +476,7 @@ namespace JS {
     P(timeStyle)                             \
     P(timeZone)                              \
     P(timeZoneName)                          \
+    P(timeZones)                             \
     P(toDateString)                          \
     P(toExponential)                         \
     P(toFixed)                               \

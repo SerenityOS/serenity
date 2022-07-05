@@ -38,6 +38,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(language);
     JS_DECLARE_NATIVE_FUNCTION(script);
     JS_DECLARE_NATIVE_FUNCTION(region);
+    JS_DECLARE_NATIVE_FUNCTION(time_zones);
 };
 
 }
