@@ -19,14 +19,14 @@ public:
         , m_font(font)
     {
     }
-    NonnullRefPtr<UndoSelection> save_state()
+    ErrorOr<NonnullRefPtr<UndoSelection>> save_state()
     {
-        auto state = adopt_ref(*new UndoSelection(m_start, m_size, m_active_glyph, *m_font));
+        auto state = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(m_start, m_size, m_active_glyph, *m_font)));
         size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * font().glyph_height();
         auto* rows = font().rows() + m_start * bytes_per_glyph;
         auto* widths = font().widths() + m_start;
-        state->m_data.append(&rows[0], bytes_per_glyph * m_size);
-        state->m_data.append(&widths[0], m_size);
+        TRY(state->m_data.try_append(&rows[0], bytes_per_glyph * m_size));
+        TRY(state->m_data.try_append(&widths[0], m_size));
         return state;
     }
     void restore_state(UndoSelection const& state)
@@ -61,20 +61,29 @@ private:
 
 class SelectionUndoCommand : public GUI::Command {
 public:
-    SelectionUndoCommand(UndoSelection& selection)
-        : m_undo_state(selection.save_state())
+    SelectionUndoCommand(UndoSelection& selection, NonnullRefPtr<UndoSelection> undo_state)
+        : m_undo_state(undo_state)
         , m_undo_selection(selection)
     {
     }
     virtual void undo() override
     {
-        if (!m_redo_state)
-            m_redo_state = m_undo_state->save_state();
+        if (!m_redo_state) {
+            if (auto maybe_state = m_undo_state->save_state(); !maybe_state.is_error()) {
+                auto state = maybe_state.release_value();
+                m_redo_state = move(state);
+            } else {
+                warnln("Failed to save redo state: {}", maybe_state.error());
+            }
+        }
         m_undo_selection.restore_state(*m_undo_state);
     }
     virtual void redo() override
     {
-        m_undo_selection.restore_state(*m_redo_state);
+        if (m_redo_state)
+            m_undo_selection.restore_state(*m_redo_state);
+        else
+            warnln("Failed to restore state");
     }
 
 private:
