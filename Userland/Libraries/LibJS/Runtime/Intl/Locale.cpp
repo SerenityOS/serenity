@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Locale.h>
+#include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
@@ -143,6 +145,26 @@ Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& lo
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+}
+
+// 1.1.6 TimeZonesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-time-zones-of-locale
+// NOTE: Our implementation takes a region rather than a Locale object to avoid needlessly parsing the locale twice.
+Array* time_zones_of_locale(GlobalObject& global_object, StringView region)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let locale be loc.[[Locale]].
+    // 2. Assert: locale matches the unicode_locale_id production.
+    // 3. Let region be the substring of locale corresponding to the unicode_region_subtag production of the unicode_language_id.
+
+    // 4. Let list be a List of unique canonical time zone identifiers, which must be String values indicating a canonical Zone name of the IANA Time Zone Database, ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn, of those in common use in region. If no time zones are commonly used in region, let list be a new empty List.
+    auto list = TimeZone::time_zones_in_region(region);
+    quick_sort(list);
+
+    // 5. Return ! CreateArrayFromList( list ).
+    return Array::create_from<StringView>(global_object, list, [&vm](auto value) {
+        return js_string(vm, value);
+    });
 }
 
 }

@@ -47,6 +47,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
     define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
     define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.timeZones, time_zones, {}, Attribute::Configurable);
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
@@ -222,5 +223,23 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     }
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
+
+// 1.4.20 get Intl.Locale.prototype.timeZones, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.timeZones
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = TRY(typed_this_object(global_object));
+
+    // 3. Let locale be loc.[[Locale]].
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+
+    // 4. If the unicode_language_id production of locale does not contain the ["-" unicode_region_subtag] sequence, return undefined.
+    if (!locale.has_value() || !locale->language_id.region.has_value())
+        return js_undefined();
+
+    // 5. Return ! TimeZonesOfLocale(loc).
+    return time_zones_of_locale(global_object, locale->language_id.region.value());
+}
 
 }
