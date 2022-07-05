@@ -79,5 +79,6 @@ Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* time_zones_of_locale(GlobalObject& global_object, StringView region);
+StringView character_direction_of_locale(Locale const& locale);
 
 }
