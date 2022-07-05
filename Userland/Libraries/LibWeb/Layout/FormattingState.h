@@ -107,6 +107,8 @@ struct FormattingState {
     };
     HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
 
+    HashMap<Box const*, float> mutable flex_item_size_cache;
+
     FormattingState const* m_parent { nullptr };
     FormattingState const& m_root;
 };
