@@ -22,7 +22,7 @@ MulticastDNS::MulticastDNS(Object* parent)
     : Core::UDPServer(parent)
     , m_hostname("courage.local")
 {
-    char buffer[HOST_NAME_MAX];
+    char buffer[_POSIX_HOST_NAME_MAX];
     if (gethostname(buffer, sizeof(buffer)) < 0) {
         perror("gethostname");
     } else {

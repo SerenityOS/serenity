@@ -126,7 +126,7 @@ void LookupServer::load_etc_hosts()
 
 static String get_hostname()
 {
-    char buffer[HOST_NAME_MAX];
+    char buffer[_POSIX_HOST_NAME_MAX];
     VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
     return buffer;
 }
