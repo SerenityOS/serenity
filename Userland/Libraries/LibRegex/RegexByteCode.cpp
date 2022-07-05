@@ -538,9 +538,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                     to = to_ascii_lowercase(to);
                     needle = to_ascii_lowercase(needle);
                 }
-                if (needle > range.to)
+                if (needle > to)
                     return 1;
-                if (needle < range.from)
+                if (needle < from)
                     return -1;
                 return 0;
             });
