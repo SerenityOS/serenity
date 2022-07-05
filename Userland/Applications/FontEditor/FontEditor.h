@@ -49,8 +49,6 @@ public:
     bool is_showing_unicode_blocks() { return m_unicode_blocks; }
     void set_show_unicode_blocks(bool);
 
-    Function<void()> on_initialize;
-
 private:
     FontEditorWidget();
 
@@ -58,6 +56,7 @@ private:
     ErrorOr<void> create_models();
     ErrorOr<void> create_toolbars();
     ErrorOr<void> create_undo_stack();
+    ErrorOr<RefPtr<GUI::Window>> create_preview_window();
 
     virtual void drop_event(GUI::DropEvent&) override;
 
@@ -124,7 +123,6 @@ private:
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
 
     RefPtr<GUI::Statusbar> m_statusbar;
-    RefPtr<GUI::Window> m_font_preview_window;
     RefPtr<GUI::Widget> m_left_column_container;
     RefPtr<GUI::Widget> m_glyph_editor_container;
     RefPtr<GUI::Widget> m_unicode_block_container;
@@ -145,6 +143,10 @@ private:
     RefPtr<GUI::Model> m_unicode_block_model;
     RefPtr<GUI::FilteringProxyModel> m_filter_model;
     RefPtr<GUI::Menu> m_context_menu;
+
+    RefPtr<GUI::Label> m_preview_label;
+    RefPtr<GUI::TextBox> m_preview_textbox;
+    RefPtr<GUI::Window> m_font_preview_window;
 
     String m_path;
     Vector<String> m_font_weight_list;

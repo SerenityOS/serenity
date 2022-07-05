@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
+#include <Applications/FontEditor/FontPreviewWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -56,55 +57,33 @@ static constexpr Array pangrams = {
     "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"
 };
 
-static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
+ErrorOr<RefPtr<GUI::Window>> FontEditorWidget::create_preview_window()
 {
-    auto window = GUI::Window::construct(&editor);
+    auto window = TRY(GUI::Window::try_create(this));
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Preview");
     window->resize(400, 150);
-    window->set_minimum_size(200, 100);
-    window->center_within(*editor.window());
+    window->center_within(*this->window());
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
-    main_widget.layout()->set_margins(2);
-    main_widget.layout()->set_spacing(4);
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->load_from_gml(font_preview_window_gml);
 
-    auto& preview_box = main_widget.add<GUI::GroupBox>();
-    preview_box.set_layout<GUI::VerticalBoxLayout>();
-    preview_box.layout()->set_margins(8);
+    m_preview_label = find_descendant_of_type_named<GUI::Label>("preview_label");
+    m_preview_label->set_font(edited_font());
 
-    auto& preview_label = preview_box.add<GUI::Label>();
-    preview_label.set_font(editor.edited_font());
-
-    editor.on_initialize = [&] {
-        preview_label.set_font(editor.edited_font());
+    m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
+    m_preview_textbox->on_change = [&] {
+        auto preview = String::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()));
+        m_preview_label->set_text(preview);
     };
+    m_preview_textbox->set_text(pangrams[0]);
 
-    auto& textbox_button_container = main_widget.add<GUI::Widget>();
-    textbox_button_container.set_layout<GUI::HorizontalBoxLayout>();
-    textbox_button_container.set_fixed_height(22);
-
-    auto& preview_textbox = textbox_button_container.add<GUI::TextBox>();
-    preview_textbox.set_text(pangrams[0]);
-    preview_textbox.set_placeholder("Preview text");
-
-    preview_textbox.on_change = [&] {
-        auto preview = String::formatted("{}\n{}",
-            preview_textbox.text(),
-            Unicode::to_unicode_uppercase_full(preview_textbox.text()));
-        preview_label.set_text(preview);
-    };
-
-    auto& reload_button = textbox_button_container.add<GUI::Button>();
-    reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors());
-    reload_button.set_fixed_width(22);
+    auto& reload_button = *find_descendant_of_type_named<GUI::Button>("reload_button");
     reload_button.on_click = [&](auto) {
         static size_t i = 1;
         if (i >= pangrams.size())
             i = 0;
-        preview_textbox.set_text(pangrams[i]);
+        m_preview_textbox->set_text(pangrams[i]);
         i++;
     };
 
@@ -196,13 +175,16 @@ ErrorOr<void> FontEditorWidget::create_actions()
         m_undo_selection->set_size(selection.size());
     });
 
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        if (!m_font_preview_window)
-            m_font_preview_window = create_font_preview_window(*this);
-        m_font_preview_window->show();
-        m_font_preview_window->move_to_front();
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png")), [&](auto&) {
+        if (!m_font_preview_window) {
+            if (auto maybe_window = create_preview_window(); maybe_window.is_error())
+                warnln("Failed to create preview window: {}", maybe_window.error());
+            else
+                m_font_preview_window = maybe_window.release_value();
+        }
+        if (m_font_preview_window)
+            m_font_preview_window->show();
     });
-    m_open_preview_action->set_checked(false);
     m_open_preview_action->set_status_tip("Preview the current font");
 
     bool show_metadata = Config::read_bool("FontEditor", "Layout", "ShowMetadata", true);
@@ -582,6 +564,9 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
     m_path = path;
     m_edited_font = edited_font;
 
+    if (m_preview_label)
+        m_preview_label->set_font(*m_edited_font);
+
     m_glyph_map_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->initialize(*m_edited_font);
     did_resize_glyph_editor();
@@ -635,9 +620,6 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
         m_glyph_editor_widget->set_glyph(glyph);
         update_title();
     });
-
-    if (on_initialize)
-        on_initialize();
 
     return {};
 }
