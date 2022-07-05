@@ -286,6 +286,8 @@ WebView::WebView()
 
     // FIXME: Allow passing these values as arguments
     m_page_client->set_viewport_rect({ 0, 0, 800, 600 });
+
+    m_inverse_pixel_scaling_ratio = 1.0 / devicePixelRatio();
 }
 
 WebView::~WebView()
@@ -334,7 +336,7 @@ unsigned get_modifiers_from_qt_event(QMouseEvent const& event)
 
 void WebView::mouseMoveEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->x(), event->y());
+    Gfx::IntPoint position(event->x() / m_inverse_pixel_scaling_ratio, event->y() / m_inverse_pixel_scaling_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
     m_page_client->page().handle_mousemove(to_content(position), buttons, modifiers);
@@ -342,7 +344,7 @@ void WebView::mouseMoveEvent(QMouseEvent* event)
 
 void WebView::mousePressEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->x(), event->y());
+    Gfx::IntPoint position(event->x() / m_inverse_pixel_scaling_ratio, event->y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
     m_page_client->page().handle_mousedown(to_content(position), button, modifiers);
@@ -350,7 +352,7 @@ void WebView::mousePressEvent(QMouseEvent* event)
 
 void WebView::mouseReleaseEvent(QMouseEvent* event)
 {
-    Gfx::IntPoint position(event->x(), event->y());
+    Gfx::IntPoint position(event->x() / m_inverse_pixel_scaling_ratio, event->y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_event(*event);
     m_page_client->page().handle_mouseup(to_content(position), button, modifiers);
@@ -366,6 +368,8 @@ void WebView::paintEvent(QPaintEvent* event)
     QPainter painter(viewport());
     painter.setClipRect(event->rect());
 
+    painter.scale(m_inverse_pixel_scaling_ratio, m_inverse_pixel_scaling_ratio);
+
     auto output_rect = m_page_client->viewport_rect();
     output_rect.set_x(horizontalScrollBar()->value());
     output_rect.set_y(verticalScrollBar()->value());
@@ -379,7 +383,9 @@ void WebView::paintEvent(QPaintEvent* event)
 
 void WebView::resizeEvent(QResizeEvent* event)
 {
-    Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), event->size().width(), event->size().height());
+    auto scaled_width = int(event->size().width() / m_inverse_pixel_scaling_ratio);
+    auto scaled_height = int(event->size().height() / m_inverse_pixel_scaling_ratio);
+    Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
     m_page_client->set_viewport_rect(rect);
 }
 
