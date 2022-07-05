@@ -258,6 +258,7 @@ namespace JS {
     P(hour)                                  \
     P(hour12)                                \
     P(hourCycle)                             \
+    P(hourCycles)                            \
     P(hours)                                 \
     P(hoursDisplay)                          \
     P(hoursInDay)                            \

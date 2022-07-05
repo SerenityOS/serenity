@@ -107,4 +107,23 @@ Array* collations_of_locale(GlobalObject& global_object, Locale const& locale_ob
     return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
 }
 
+// 1.1.4 HourCyclesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-hour-cycles-of-locale
+Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale_object)
+{
+    // 1. Let restricted be loc.[[HourCycle]].
+    Optional<String> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<String> {};
+
+    // 2. Let locale be loc.[[Locale]].
+    auto const& locale = locale_object.locale();
+
+    // 3. Assert: locale matches the unicode_locale_id production.
+    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+
+    // 4. Let list be a List of 1 or more unique hour cycle identifiers, which must be lower case String values indicating either the 12-hour format ("h11", "h12") or the 24-hour format ("h23", "h24"), sorted in descending preference of those in common use for date and time formatting in locale.
+    auto list = Unicode::get_keywords_for_locale(locale, "hc"sv);
+
+    // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
+    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+}
+
 }
