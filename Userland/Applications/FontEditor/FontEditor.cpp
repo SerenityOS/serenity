@@ -739,6 +739,24 @@ bool FontEditorWidget::open_file(String const& path)
     return true;
 }
 
+void FontEditorWidget::push_undo()
+{
+    auto maybe_state = m_undo_selection->save_state();
+    if (maybe_state.is_error()) {
+        warnln("Failed to save undo state: {}", maybe_state.error());
+        return;
+    }
+    auto state = maybe_state.release_value();
+    auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(state));
+    if (maybe_command.is_error()) {
+        warnln("Failed to make undo command: {}", maybe_command.error());
+        return;
+    }
+    auto command = maybe_command.release_value();
+    if (auto maybe_push = m_undo_stack->try_push(move(command)); maybe_push.is_error())
+        warnln("Failed to push undo stack: {}", maybe_push.error());
+}
+
 void FontEditorWidget::reset_selection_and_push_undo()
 {
     auto selection = m_glyph_map_widget->selection().normalized();
@@ -749,7 +767,7 @@ void FontEditorWidget::reset_selection_and_push_undo()
         m_glyph_map_widget->set_selection(start, 1);
         m_glyph_map_widget->update();
     }
-    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+    push_undo();
 }
 
 void FontEditorWidget::undo()
@@ -963,7 +981,7 @@ void FontEditorWidget::paste_glyphs()
     auto selection = m_glyph_map_widget->selection().normalized();
     auto range_bound_glyph_count = min(glyph_count, 1 + m_range.last - selection.start());
     m_undo_selection->set_size(range_bound_glyph_count);
-    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+    push_undo();
 
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
     size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
@@ -993,7 +1011,7 @@ void FontEditorWidget::paste_glyphs()
 
 void FontEditorWidget::delete_selected_glyphs()
 {
-    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+    push_undo();
 
     auto selection = m_glyph_map_widget->selection().normalized();
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_edited_font->glyph_height();
