@@ -37,6 +37,7 @@ set(SOURCES
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
+    Tab.cpp
 )
 
 add_executable(ladybird ${SOURCES})
