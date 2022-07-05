@@ -207,8 +207,7 @@ public:
 
     virtual void page_did_change_favicon(Gfx::Bitmap const& bitmap) override
     {
-        ByteBuffer bytebuffer = bitmap.serialize_to_byte_buffer();
-        QPixmap icon = QPixmap::fromImage(QImage(bytebuffer.bytes().data(), bitmap.width(), bitmap.height(), QImage::Format_ARGB32));
+        QPixmap icon = QPixmap::fromImage(QImage(bitmap.scanline_u8(0), bitmap.width(), bitmap.height(), bitmap.pitch(), QImage::Format_ARGB32));
         emit m_view.favicon_changed(QIcon(icon));
     }
 
