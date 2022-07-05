@@ -769,36 +769,13 @@ bool ISO8601Parser::parse_time_zone_utc_offset()
 bool ISO8601Parser::parse_time_zone_numeric_utc_offset_not_ambiguous()
 {
     // TimeZoneNumericUTCOffsetNotAmbiguous :
-    //     + TimeZoneUTCOffsetHour
-    //     U+2212 TimeZoneUTCOffsetHour
-    //     TimeZoneUTCOffsetSign TimeZoneUTCOffsetHour : TimeZoneUTCOffsetMinute
-    //     TimeZoneUTCOffsetSign TimeZoneUTCOffsetHour TimeZoneUTCOffsetMinute
-    //     TimeZoneUTCOffsetSign TimeZoneUTCOffsetHour : TimeZoneUTCOffsetMinute : TimeZoneUTCOffsetSecond TimeZoneUTCOffsetFraction[opt]
-    //     TimeZoneUTCOffsetSign TimeZoneUTCOffsetHour TimeZoneUTCOffsetMinute TimeZoneUTCOffsetSecond TimeZoneUTCOffsetFraction[opt]
+    //     TimeZoneNumericUTCOffset but not - TimeZoneUTCOffsetHour
     StateTransaction transaction { *this };
-    if (m_state.lexer.consume_specific('+') || m_state.lexer.consume_specific("\xE2\x88\x92"sv)) {
-        if (!parse_time_zone_utc_offset_hour())
-            return false;
-    } else {
-        if (!parse_time_zone_utc_offset_sign())
-            return false;
-        if (!parse_time_zone_utc_offset_hour())
-            return false;
-        if (m_state.lexer.consume_specific(':')) {
-            if (!parse_time_zone_utc_offset_minute())
-                return false;
-            if (m_state.lexer.consume_specific(':')) {
-                if (!parse_time_zone_utc_offset_second())
-                    return false;
-                (void)parse_time_zone_utc_offset_fraction();
-            }
-        } else {
-            if (!parse_time_zone_utc_offset_minute())
-                return false;
-            if (parse_time_zone_utc_offset_second())
-                (void)parse_time_zone_utc_offset_fraction();
-        }
-    }
+    if (!parse_time_zone_numeric_utc_offset())
+        return false;
+    auto parsed = *m_state.parse_result.time_zone_numeric_utc_offset;
+    if (parsed.length() == 3 && parsed[0] == '-')
+        return false;
     transaction.commit();
     return true;
 }
