@@ -20,6 +20,7 @@ public:
     ~UndoStack() = default;
 
     void push(NonnullOwnPtr<Command>);
+    ErrorOr<void> try_push(NonnullOwnPtr<Command>);
 
     bool can_undo() const;
     bool can_redo() const;
