@@ -143,24 +143,24 @@ static String slugify(String const& text)
     String slug = text.to_lowercase();
     // Reverse-engineered through github, using:
     // find AK/ Base/ Documentation/ Kernel/ Meta/ Ports/ Tests/ Userland/ -name '*.md' | xargs grep --color=always -Pin '^##+ .*[^a-z0-9 ?()`_:/!&|.$'"'"',<>"+-]' README.md
-    slug = slug.replace(" ", "-", true)
-               .replace("!", "", true)
-               .replace("?", "", true)
-               .replace("(", "", true)
-               .replace(")", "", true)
-               .replace(":", "", true)
-               .replace("/", "-", true)
-               .replace("&", "", true)
-               .replace("|", "", true)
-               .replace(".", "", true)
-               .replace("$", "", true)
-               .replace("'", "", true)
-               .replace(",", "", true)
-               .replace("\"", "", true)
-               .replace("+", "", true)
-               .replace("\\", "", true)
-               .replace("<", "", true)
-               .replace(">", "", true);
+    slug = slug.replace(" ", "-", ReplaceMode::All)
+               .replace("!", "", ReplaceMode::All)
+               .replace("?", "", ReplaceMode::All)
+               .replace("(", "", ReplaceMode::All)
+               .replace(")", "", ReplaceMode::All)
+               .replace(":", "", ReplaceMode::All)
+               .replace("/", "-", ReplaceMode::All)
+               .replace("&", "", ReplaceMode::All)
+               .replace("|", "", ReplaceMode::All)
+               .replace(".", "", ReplaceMode::All)
+               .replace("$", "", ReplaceMode::All)
+               .replace("'", "", ReplaceMode::All)
+               .replace(",", "", ReplaceMode::All)
+               .replace("\"", "", ReplaceMode::All)
+               .replace("+", "", ReplaceMode::All)
+               .replace("\\", "", ReplaceMode::All)
+               .replace("<", "", ReplaceMode::All)
+               .replace(">", "", ReplaceMode::All);
     // What about "="?
     return slug;
 }

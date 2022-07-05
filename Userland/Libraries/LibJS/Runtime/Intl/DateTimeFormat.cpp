@@ -217,7 +217,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
             return {};
 
         // e. Let pattern be the string connector with the substring "{0}" replaced with timeFormat.[[pattern]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-        auto pattern = connector->pattern.replace("{0}"sv, time_format.pattern).replace("{1}"sv, date_format.pattern);
+        auto pattern = connector->pattern.replace("{0}"sv, time_format.pattern, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
 
         // f. Set format.[[pattern]] to pattern.
         format.pattern = move(pattern);
@@ -225,7 +225,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
         // g. If timeFormat has a [[pattern12]] field, then
         if (time_format.pattern12.has_value()) {
             // i. Let pattern12 be the string connector with the substring "{0}" replaced with timeFormat.[[pattern12]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-            auto pattern12 = connector->pattern.replace("{0}"sv, *time_format.pattern12).replace("{1}"sv, date_format.pattern);
+            auto pattern12 = connector->pattern.replace("{0}"sv, *time_format.pattern12, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
 
             // ii. Set format.[[pattern12]] to pattern12.
             format.pattern12 = move(pattern12);
@@ -1075,11 +1075,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto const& pattern = date_time_format.pattern();
 
         if (range_pattern->start_range.contains("{0}"sv)) {
-            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern);
-            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern);
+            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
         } else {
-            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern);
-            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern);
+            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
         }
 
         // FIXME: The above is not sufficient. For example, if the start date is days before the end date, and only the timeStyle

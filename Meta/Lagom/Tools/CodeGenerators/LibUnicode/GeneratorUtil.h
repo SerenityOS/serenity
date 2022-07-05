@@ -464,7 +464,7 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
         String mapping_name;
 
         if constexpr (IsNullPointer<IdentifierFormatter>)
-            mapping_name = name.replace("-"sv, "_"sv, true);
+            mapping_name = name.replace("-"sv, "_"sv, ReplaceMode::All);
         else
             mapping_name = format_identifier(type, name);
 

@@ -166,20 +166,20 @@ TEST_CASE(replace)
 {
     String test_string = "Well, hello Friends!";
 
-    test_string = test_string.replace("Friends", "Testers");
+    test_string = test_string.replace("Friends", "Testers", ReplaceMode::FirstOnly);
     EXPECT(test_string == "Well, hello Testers!");
 
-    test_string = test_string.replace("ell", "e're", true);
+    test_string = test_string.replace("ell", "e're", ReplaceMode::All);
     EXPECT(test_string == "We're, he'reo Testers!");
 
-    test_string = test_string.replace("!", " :^)");
+    test_string = test_string.replace("!", " :^)", ReplaceMode::FirstOnly);
     EXPECT(test_string == "We're, he'reo Testers :^)");
 
     test_string = String("111._.111._.111");
-    test_string = test_string.replace("111", "|||", true);
+    test_string = test_string.replace("111", "|||", ReplaceMode::All);
     EXPECT(test_string == "|||._.|||._.|||");
 
-    test_string = test_string.replace("|||", "111");
+    test_string = test_string.replace("|||", "111", ReplaceMode::FirstOnly);
     EXPECT(test_string == "111._.|||._.|||");
 }
 

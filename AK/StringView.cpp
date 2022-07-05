@@ -228,9 +228,9 @@ bool StringView::operator==(String const& string) const
 
 String StringView::to_string() const { return String { *this }; }
 
-String StringView::replace(StringView needle, StringView replacement, bool all_occurrences) const
+String StringView::replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const
 {
-    return StringUtils::replace(*this, needle, replacement, all_occurrences);
+    return StringUtils::replace(*this, needle, replacement, replace_mode);
 }
 #endif
 

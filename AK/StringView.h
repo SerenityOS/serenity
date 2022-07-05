@@ -268,7 +268,7 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const;
+    [[nodiscard]] String replace(StringView needle, StringView replacement, ReplaceMode) const;
 #endif
     [[nodiscard]] size_t count(StringView needle) const
     {

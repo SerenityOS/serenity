@@ -246,7 +246,7 @@ static Optional<String> format_time_zone_offset(StringView locale, CalendarPatte
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
     auto result = replace_digits_for_number_system(*number_system, builder.build());
-    return formats->gmt_format.replace("{0}"sv, result);
+    return formats->gmt_format.replace("{0}"sv, result, ReplaceMode::FirstOnly);
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology

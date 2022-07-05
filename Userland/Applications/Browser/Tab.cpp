@@ -43,7 +43,7 @@ namespace Browser {
 URL url_from_user_input(String const& input)
 {
     if (input.starts_with("?") && !g_search_engine.is_empty())
-        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1))));
+        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
 
     URL url_with_http_schema = URL(String::formatted("http://{}", input));
     if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())

@@ -1183,7 +1183,7 @@ void Window::set_modified(bool modified)
 
 String Window::computed_title() const
 {
-    String title = m_title.replace("[*]", is_modified() ? " (*)" : "");
+    String title = m_title.replace("[*]", is_modified() ? " (*)" : "", ReplaceMode::FirstOnly);
     if (client() && client()->is_unresponsive())
         return String::formatted("{} (Not responding)", title);
     return title;
