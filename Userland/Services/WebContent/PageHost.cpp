@@ -53,6 +53,8 @@ Gfx::Palette PageHost::palette() const
 void PageHost::set_palette_impl(Gfx::PaletteImpl const& impl)
 {
     m_palette_impl = impl;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style();
 }
 
 void PageHost::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
