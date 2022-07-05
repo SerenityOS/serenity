@@ -267,7 +267,8 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     });
 
     Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
-    if (!node) {
+    // Note: Nodes without layout (aka non-visible nodes, don't have style computed)
+    if (!node || !node->layout_node()) {
         return { false, "", "", "", "" };
     }
 
