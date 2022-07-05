@@ -100,20 +100,27 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
         if (is<ZonedDateTime>(item_object)) {
             auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
 
-            // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
+            // i. Perform ? ToTemporalOverflow(options).
+            (void)TRY(to_temporal_overflow(global_object, options));
+
+            // ii. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
             auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds()).release_value();
 
-            // ii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
+            // iii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
             auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar()));
 
-            // iii. Return ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainDateTime.[[Calendar]]).
+            // iv. Return ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainDateTime.[[Calendar]]).
             return create_temporal_date(global_object, plain_date_time->iso_year(), plain_date_time->iso_month(), plain_date_time->iso_day(), plain_date_time->calendar());
         }
 
         // c. If item has an [[InitializedTemporalDateTime]] internal slot, then
         if (is<PlainDateTime>(item_object)) {
             auto& date_time_item = static_cast<PlainDateTime&>(item_object);
-            // i. Return ! CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
+
+            // i. Perform ? ToTemporalOverflow(options).
+            (void)TRY(to_temporal_overflow(global_object, options));
+
+            // ii. Return ! CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
             return create_temporal_date(global_object, date_time_item.iso_year(), date_time_item.iso_month(), date_time_item.iso_day(), date_time_item.calendar());
         }
 
