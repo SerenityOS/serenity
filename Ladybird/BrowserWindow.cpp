@@ -1,55 +1,75 @@
+/*
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
 #include "BrowserWindow.h"
 #include "WebView.h"
 #include <LibCore/EventLoop.h>
 #include <QAction>
 #include <QStatusBar>
 
-extern String s_serenity_resource_root;
-
 BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     : m_event_loop(event_loop)
 {
-    m_toolbar = new QToolBar;
+    m_tabs_container = new QTabWidget;
+    m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
+    m_tabs_container->setMovable(true);
+    m_tabs_container->setTabsClosable(true);
 
-    auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
-    auto* reload_action = new QAction(QIcon(reload_icon_path), "Reload");
-    reload_action->setShortcut(QKeySequence("Ctrl+R"));
-    m_toolbar->addAction(reload_action);
+    auto menu = menuBar()->addMenu("File");
+    auto new_tab_action = menu->addAction("New Tab", QKeySequence(Qt::CTRL | Qt::Key_T));
+    auto quit_action = menu->addAction("Quit", QKeySequence(Qt::CTRL | Qt::Key_Q));
 
-    m_location_edit = new QLineEdit;
-    m_toolbar->addWidget(m_location_edit);
+    QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
+    QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
+    QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
+        setWindowTitle(m_tabs_container->tabText(index));
+        setWindowIcon(m_tabs_container->tabIcon(index));
+    });
 
-    addToolBar(m_toolbar);
+    new_tab();
 
-    m_view = new WebView;
-    setCentralWidget(m_view);
-
-    QObject::connect(m_view, &WebView::linkHovered, statusBar(), &QStatusBar::showMessage);
-    QObject::connect(m_view, &WebView::linkUnhovered, statusBar(), &QStatusBar::clearMessage);
-
-    QObject::connect(m_view, &WebView::loadStarted, m_location_edit, &QLineEdit::setText);
-    QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &BrowserWindow::location_edit_return_pressed);
-    QObject::connect(m_view, &WebView::title_changed, this, &BrowserWindow::page_title_changed);
-    QObject::connect(m_view, &WebView::favicon_changed, this, &BrowserWindow::page_favicon_changed);
-
-    QObject::connect(reload_action, &QAction::triggered, this, &BrowserWindow::reload);
+    setCentralWidget(m_tabs_container);
 }
 
-void BrowserWindow::location_edit_return_pressed()
+void BrowserWindow::new_tab()
 {
-    view().load(m_location_edit->text().toUtf8().data());
+    auto tab = make<Tab>(this);
+    auto tab_ptr = tab.ptr();
+    m_tabs.append(std::move(tab));
+
+    if (m_current_tab == nullptr) {
+        m_current_tab = tab_ptr;
+    }
+
+    m_tabs_container->addTab(tab_ptr, "New Tab");
+
+    QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
+    QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 }
 
-void BrowserWindow::page_title_changed(QString title)
+int BrowserWindow::tab_index(Tab* tab)
 {
-    if (title.isEmpty())
+    return m_tabs_container->indexOf(tab);
+}
+
+void BrowserWindow::tab_title_changed(int index, QString const& title)
+{
+    if (title.isEmpty()) {
+        m_tabs_container->setTabText(index, "...");
         setWindowTitle("Ladybird");
-    else
+    } else {
+        m_tabs_container->setTabText(index, title);
         setWindowTitle(QString("%1 - Ladybird").arg(title));
+    }
 }
 
-void BrowserWindow::page_favicon_changed(QIcon icon)
+void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
+    m_tabs_container->setTabIcon(index, icon);
     setWindowIcon(icon);
 }
 
@@ -61,9 +81,4 @@ void BrowserWindow::closeEvent(QCloseEvent* event)
     //        multiple windows, we'll only want to fire off the quit event when
     //        all of the browser windows have closed.
     m_event_loop.quit(0);
-}
-
-void BrowserWindow::reload()
-{
-    view().reload();
 }
