@@ -27,7 +27,7 @@ Requires the metadata-fields `count` (count of glyphs copied) and `first_glyph` 
 
 The data contains codepoint (encoded as host-endian u32), width and height (as u8's) and glyph bitmap data. It is encoded in width times height many bytes, either 0 (clear) or 1 (set).
 
-Implemented in `FontEditor::copy_selected_glyphs` and `FontEditor::paste_glyphs`, in [`Userland/Applications/FontEditor/FontEditor.cpp`](../Userland/Applications/FontEditor/FontEditor.cpp).
+Implemented in `FontEditor::copy_selected_glyphs` and `FontEditor::paste_glyphs`, in [`Userland/Applications/FontEditor/MainWidget.cpp`](../Userland/Applications/FontEditor/MainWidget.cpp).
 
 ## image/x-serenityos (Clipboard-only)
 

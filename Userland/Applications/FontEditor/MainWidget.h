@@ -19,12 +19,12 @@ namespace FontEditor {
 
 class GlyphEditorWidget;
 
-class FontEditorWidget final : public GUI::Widget {
-    C_OBJECT(FontEditorWidget)
+class MainWidget final : public GUI::Widget {
+    C_OBJECT(MainWidget)
 public:
-    static ErrorOr<NonnullRefPtr<FontEditorWidget>> try_create()
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create()
     {
-        NonnullRefPtr<FontEditorWidget> font_editor = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FontEditorWidget()));
+        NonnullRefPtr<MainWidget> font_editor = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget()));
         TRY(font_editor->create_actions());
         TRY(font_editor->create_models());
         TRY(font_editor->create_toolbars());
@@ -32,7 +32,7 @@ public:
         return font_editor;
     }
 
-    virtual ~FontEditorWidget() override = default;
+    virtual ~MainWidget() override = default;
 
     ErrorOr<void> initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
@@ -52,7 +52,7 @@ public:
     void set_show_unicode_blocks(bool);
 
 private:
-    FontEditorWidget();
+    MainWidget();
 
     ErrorOr<void> create_actions();
     ErrorOr<void> create_models();

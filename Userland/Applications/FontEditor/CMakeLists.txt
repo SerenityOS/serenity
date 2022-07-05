@@ -11,7 +11,7 @@ compile_gml(NewFontDialogPage1.gml NewFontDialogPage1GML.h new_font_dialog_page_
 compile_gml(NewFontDialogPage2.gml NewFontDialogPage2GML.h new_font_dialog_page_2_gml)
 
 set(SOURCES
-    FontEditor.cpp
+    MainWidget.cpp
     FontEditorWindowGML.h
     FontPreviewWindowGML.h
     GlyphEditorWidget.cpp
