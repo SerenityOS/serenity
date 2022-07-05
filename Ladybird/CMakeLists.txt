@@ -30,19 +30,20 @@ include(${Lagom_SOURCE_DIR}/../CMake/lagom_compile_options.cmake)
 add_compile_options(-Wno-expansion-to-defined)
 
 set(CMAKE_AUTOMOC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 # FIXME: Stop using deprecated declarations from QT :^)
 add_compile_options(-Wno-deprecated-declarations)
 
 set(SOURCES
     BrowserWindow.cpp
+    RequestManagerQt.cpp
     main.cpp
     WebView.cpp
 )
 
 add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE Qt6::Widgets Lagom::Web Lagom::HTTP Lagom::WebSocket Lagom::Main)
+target_link_libraries(ladybird PRIVATE Qt6::Widgets Qt::Network Lagom::Web Lagom::WebSocket Lagom::Main)
 
 get_filename_component(
     SERENITY_SOURCE_DIR "${Lagom_SOURCE_DIR}/../.."
