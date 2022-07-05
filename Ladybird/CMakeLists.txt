@@ -32,9 +32,6 @@ add_compile_options(-Wno-expansion-to-defined)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
-# FIXME: Stop using deprecated declarations from QT :^)
-add_compile_options(-Wno-deprecated-declarations)
-
 set(SOURCES
     BrowserWindow.cpp
     RequestManagerQt.cpp
