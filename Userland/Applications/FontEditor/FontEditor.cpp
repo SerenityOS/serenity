@@ -421,17 +421,6 @@ FontEditorWidget::FontEditorWidget()
     };
 
     m_glyph_map_widget->on_context_menu_request = [this](auto& event) {
-        if (!m_context_menu) {
-            m_context_menu = GUI::Menu::construct();
-            m_context_menu->add_action(*m_cut_action);
-            m_context_menu->add_action(*m_copy_action);
-            m_context_menu->add_action(*m_paste_action);
-            m_context_menu->add_action(*m_delete_action);
-            m_context_menu->add_separator();
-            m_context_menu->add_action(*m_select_all_action);
-            m_context_menu->add_separator();
-            m_context_menu->add_action(*m_copy_text_action);
-        }
         m_context_menu->popup(event.screen_position());
     };
 
@@ -648,6 +637,8 @@ ErrorOr<void> FontEditorWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(*m_select_all_action));
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(*m_copy_text_action));
+
+    m_context_menu = edit_menu;
 
     auto go_menu = TRY(window.try_add_menu("&Go"));
     TRY(go_menu->try_add_action(*m_previous_glyph_action));
