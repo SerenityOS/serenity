@@ -187,7 +187,7 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
                 lhs_negated_char_classes.set(static_cast<CharClass>(pair.value));
             break;
         case CharacterCompareType::CharRange: {
-            auto range = bit_cast<CharRange>(pair.value);
+            auto range = CharRange(pair.value);
             if (!current_lhs_inversion_state())
                 lhs_ranges.insert(range.from, range.to);
             else
@@ -257,7 +257,7 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
                 return true;
             break;
         case CharacterCompareType::CharRange: {
-            auto range = bit_cast<CharRange>(pair.value);
+            auto range = CharRange(pair.value);
             if (!current_lhs_inversion_state() && range_contains(range))
                 return true;
             break;
