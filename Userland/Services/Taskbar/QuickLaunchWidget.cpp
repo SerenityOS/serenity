@@ -137,7 +137,7 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 
 static String sanitize_entry_name(String const& name)
 {
-    return name.replace(" ", "", true).replace("=", "", true);
+    return name.replace(" ", "", ReplaceMode::All).replace("=", "", ReplaceMode::All);
 }
 
 void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)

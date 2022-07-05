@@ -57,7 +57,7 @@ constexpr auto s_list_pattern_list_index_type = "u8"sv;
 
 static String format_identifier(StringView owner, String identifier)
 {
-    identifier = identifier.replace("-"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);

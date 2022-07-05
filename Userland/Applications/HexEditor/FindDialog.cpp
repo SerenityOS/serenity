@@ -79,7 +79,7 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 
     case OPTION_HEX_VALUE: {
-        auto decoded = decode_hex(text_value.replace(" ", "", true));
+        auto decoded = decode_hex(text_value.replace(" ", "", ReplaceMode::All));
         if (decoded.is_error())
             return String::formatted("Input is invalid: {}", decoded.error().string_literal());
 

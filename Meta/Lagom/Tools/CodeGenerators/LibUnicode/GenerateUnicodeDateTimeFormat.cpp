@@ -1088,14 +1088,14 @@ static void generate_missing_patterns(Calendar& calendar, CalendarPatternList& f
         auto time_pattern = locale_data.unique_strings.get(time_format);
         auto date_pattern = locale_data.unique_strings.get(date_format);
 
-        auto new_pattern = pattern.replace("{0}", time_pattern).replace("{1}", date_pattern);
+        auto new_pattern = pattern.replace("{0}", time_pattern, ReplaceMode::FirstOnly).replace("{1}", date_pattern, ReplaceMode::FirstOnly);
         return locale_data.unique_strings.ensure(move(new_pattern));
     };
 
     auto inject_fractional_second_digits = [&](auto format) {
         auto pattern = locale_data.unique_strings.get(format);
 
-        auto new_pattern = pattern.replace("{second}"sv, "{second}{decimal}{fractionalSecondDigits}"sv);
+        auto new_pattern = pattern.replace("{second}"sv, "{second}{decimal}{fractionalSecondDigits}"sv, ReplaceMode::FirstOnly);
         return locale_data.unique_strings.ensure(move(new_pattern));
     };
 
@@ -1606,8 +1606,8 @@ static ErrorOr<void> parse_all_locales(String core_path, String dates_path, Unic
 
 static String format_identifier(StringView owner, String identifier)
 {
-    identifier = identifier.replace("-"sv, "_"sv, true);
-    identifier = identifier.replace("/"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
+    identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);

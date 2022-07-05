@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (pager)
         pager_command = pager;
     else
-        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''"), StringView(section).replace("'", "'\\''"));
+        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''", ReplaceMode::FirstOnly), StringView(section).replace("'", "'\\''", ReplaceMode::FirstOnly));
     pid_t pager_pid = TRY(pipe_to_pager(pager_command));
 
     auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));

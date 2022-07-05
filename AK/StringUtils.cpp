@@ -476,13 +476,13 @@ String invert_case(StringView str)
     return builder.to_string();
 }
 
-String replace(StringView str, StringView needle, StringView replacement, bool all_occurrences)
+String replace(StringView str, StringView needle, StringView replacement, ReplaceMode replace_mode)
 {
     if (str.is_empty())
         return str;
 
     Vector<size_t> positions;
-    if (all_occurrences) {
+    if (replace_mode == ReplaceMode::All) {
         positions = str.find_all(needle);
         if (!positions.size())
             return str;

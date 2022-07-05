@@ -126,7 +126,7 @@ static Optional<String> resolve_library(String const& name, DynamicObject const&
     search_paths.append("/usr/local/lib"sv);
 
     for (auto const& search_path : search_paths) {
-        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath())));
+        LexicalPath library_path(search_path.replace("$ORIGIN"sv, LexicalPath::dirname(parent_object.filepath()), ReplaceMode::FirstOnly));
         String library_name = library_path.append(name).string();
 
         if (access(library_name.characters(), F_OK) == 0)

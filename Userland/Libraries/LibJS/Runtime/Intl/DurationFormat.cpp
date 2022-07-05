@@ -299,10 +299,10 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& g
 //  here, but at some point we should split the the NumberFormat exporter to export both formats of the data.
 static String convert_number_format_pattern_to_duration_format_template(Unicode::NumberFormat const& number_format)
 {
-    auto result = number_format.zero_format.replace("{number}", "{0}");
+    auto result = number_format.zero_format.replace("{number}", "{0}", ReplaceMode::FirstOnly);
 
     for (size_t i = 0; i < number_format.identifiers.size(); ++i)
-        result = result.replace(String::formatted("{{unitIdentifier:{}}}", i), number_format.identifiers[i]);
+        result = result.replace(String::formatted("{{unitIdentifier:{}}}", i), number_format.identifiers[i], ReplaceMode::FirstOnly);
 
     return result;
 }

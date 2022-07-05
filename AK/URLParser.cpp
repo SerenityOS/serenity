@@ -245,7 +245,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
     // NOTE: This replaces all tab and newline characters with nothing.
     if (processed_input.contains("\t") || processed_input.contains("\n")) {
         report_validation_error();
-        processed_input = processed_input.replace("\t", "", true).replace("\n", "", true);
+        processed_input = processed_input.replace("\t", "", ReplaceMode::All).replace("\n", "", ReplaceMode::All);
     }
 
     State state = state_override.value_or(State::SchemeStart);

@@ -816,7 +816,7 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
     Optional<String> secondary_tag;
 
     if (script.has_value() && region.has_value())
-        secondary_tag = patterns->locale_separator.replace("{0}"sv, *script).replace("{1}"sv, *region);
+        secondary_tag = patterns->locale_separator.replace("{0}"sv, *script, ReplaceMode::FirstOnly).replace("{1}"sv, *region, ReplaceMode::FirstOnly);
     else if (script.has_value())
         secondary_tag = *script;
     else if (region.has_value())
@@ -825,7 +825,7 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
     if (!secondary_tag.has_value())
         return primary_tag;
 
-    return patterns->locale_pattern.replace("{0}"sv, primary_tag).replace("{1}"sv, *secondary_tag);
+    return patterns->locale_pattern.replace("{0}"sv, primary_tag, ReplaceMode::FirstOnly).replace("{1}"sv, *secondary_tag, ReplaceMode::FirstOnly);
 }
 
 Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }

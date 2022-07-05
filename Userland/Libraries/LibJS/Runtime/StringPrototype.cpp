@@ -970,7 +970,7 @@ static ThrowCompletionOr<Value> create_html(GlobalObject& global_object, Value s
         builder.append(' ');
         builder.append(attribute);
         builder.append("=\"");
-        builder.append(value_string.replace("\"", "&quot;", true));
+        builder.append(value_string.replace("\"", "&quot;", ReplaceMode::All));
         builder.append('"');
     }
     builder.append('>');

@@ -68,7 +68,7 @@ private:
 
         while (iterator.has_next()) {
             auto name = iterator.next_path();
-            auto basename = name.replace(".json", "");
+            auto basename = name.replace(".json", "", ReplaceMode::FirstOnly);
             if (!selected_keymaps.find(basename).is_end())
                 continue;
             m_character_map_files.append(basename);

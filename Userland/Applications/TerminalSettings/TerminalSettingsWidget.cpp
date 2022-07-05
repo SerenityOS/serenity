@@ -124,7 +124,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_path();
-        color_scheme_names.append(path.replace(".ini", ""));
+        color_scheme_names.append(path.replace(".ini", "", ReplaceMode::FirstOnly));
     }
     quick_sort(color_scheme_names);
     auto& color_scheme_combo = *find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");

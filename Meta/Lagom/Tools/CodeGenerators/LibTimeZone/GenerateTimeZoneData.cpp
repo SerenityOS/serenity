@@ -211,7 +211,7 @@ static void parse_dst_rule(StringView segment, TimeZoneOffset& time_zone)
 
 static void parse_format(StringView format, TimeZoneData& time_zone_data, TimeZoneOffset& time_zone)
 {
-    auto formats = format.replace("%s"sv, "{}"sv).split('/');
+    auto formats = format.replace("%s"sv, "{}"sv, ReplaceMode::FirstOnly).split('/');
     VERIFY(formats.size() <= 2);
 
     time_zone.standard_format = time_zone_data.unique_strings.ensure(formats[0]);
@@ -422,8 +422,8 @@ static String format_identifier(StringView owner, String identifier)
         }
     }
 
-    identifier = identifier.replace("-"sv, "_"sv, true);
-    identifier = identifier.replace("/"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
+    identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
@@ -690,7 +690,7 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
 
     auto format_name = [](auto format, auto offset) -> String {
         if (offset == 0)
-            return s_string_list[format].replace("{}"sv, ""sv);
+            return s_string_list[format].replace("{}"sv, ""sv, ReplaceMode::FirstOnly);
         return String::formatted(s_string_list[format], s_string_list[offset]);
     };
 

@@ -146,8 +146,8 @@ struct UnicodeData {
 
 static String sanitize_entry(String const& entry)
 {
-    auto sanitized = entry.replace("-", "_", true);
-    sanitized = sanitized.replace(" ", "_", true);
+    auto sanitized = entry.replace("-", "_", ReplaceMode::All);
+    sanitized = sanitized.replace(" ", "_", ReplaceMode::All);
 
     StringBuilder builder;
     bool next_is_upper = true;
@@ -229,7 +229,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
 
             if (!casing.locale.is_empty())
                 casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
-            casing.condition = casing.condition.replace("_", "", true);
+            casing.condition = casing.condition.replace("_", "", ReplaceMode::All);
 
             if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
                 unicode_data.conditions.append(casing.condition);

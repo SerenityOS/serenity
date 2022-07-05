@@ -276,16 +276,16 @@ static DOM::ExceptionOr<String> serialize_an_attribute_value(String const& attri
     auto final_attribute_value = attribute_value;
 
     // 1. "&" with "&amp;"
-    final_attribute_value = final_attribute_value.replace("&"sv, "&amp;"sv, true);
+    final_attribute_value = final_attribute_value.replace("&"sv, "&amp;"sv, ReplaceMode::All);
 
     // 2. """ with "&quot;"
-    final_attribute_value = final_attribute_value.replace("\""sv, "&quot;"sv, true);
+    final_attribute_value = final_attribute_value.replace("\""sv, "&quot;"sv, ReplaceMode::All);
 
     // 3. "<" with "&lt;"
-    final_attribute_value = final_attribute_value.replace("<"sv, "&lt;"sv, true);
+    final_attribute_value = final_attribute_value.replace("<"sv, "&lt;"sv, ReplaceMode::All);
 
     // 4. ">" with "&gt;"
-    final_attribute_value = final_attribute_value.replace(">"sv, "&gt;"sv, true);
+    final_attribute_value = final_attribute_value.replace(">"sv, "&gt;"sv, ReplaceMode::All);
 
     return final_attribute_value;
 }
@@ -736,13 +736,13 @@ static DOM::ExceptionOr<String> serialize_text(DOM::Text const& text, [[maybe_un
     String markup = text.data();
 
     // 3. Replace any occurrences of "&" in markup by "&amp;".
-    markup = markup.replace("&"sv, "&amp;"sv, true);
+    markup = markup.replace("&"sv, "&amp;"sv, ReplaceMode::All);
 
     // 4. Replace any occurrences of "<" in markup by "&lt;".
-    markup = markup.replace("<"sv, "&lt;"sv, true);
+    markup = markup.replace("<"sv, "&lt;"sv, ReplaceMode::All);
 
     // 5. Replace any occurrences of ">" in markup by "&gt;".
-    markup = markup.replace(">"sv, "&gt;"sv, true);
+    markup = markup.replace(">"sv, "&gt;"sv, ReplaceMode::All);
 
     // 6. Return the value of markup.
     return markup;

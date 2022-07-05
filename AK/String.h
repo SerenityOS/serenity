@@ -291,7 +291,7 @@ public:
         return { characters(), length() };
     }
 
-    [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const { return StringUtils::replace(*this, needle, replacement, all_occurrences); }
+    [[nodiscard]] String replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
     [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
     [[nodiscard]] String reverse() const;
 

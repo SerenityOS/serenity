@@ -105,7 +105,7 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
     }
 
     if (currency_key_with_spacing.has_value())
-        return base_pattern.replace(currency_key, *currency_key_with_spacing);
+        return base_pattern.replace(currency_key, *currency_key_with_spacing, ReplaceMode::FirstOnly);
 #endif
 
     return {};

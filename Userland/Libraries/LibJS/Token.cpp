@@ -213,7 +213,7 @@ String Token::string_value(StringValueStatus& status) const
 // 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/#sec-static-semantics-trv
 String Token::raw_template_value() const
 {
-    return value().replace("\r\n", "\n", true).replace("\r", "\n", true);
+    return value().replace("\r\n", "\n", ReplaceMode::All).replace("\r", "\n", ReplaceMode::All);
 }
 
 bool Token::bool_value() const
