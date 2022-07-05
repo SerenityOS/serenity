@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
@@ -51,6 +52,7 @@ void endpwent()
 struct passwd* getpwuid(uid_t uid)
 {
     setpwent();
+    ScopeGuard guard = [] { endpwent(); };
     while (auto* pw = getpwent()) {
         if (pw->pw_uid == uid)
             return pw;
@@ -61,6 +63,7 @@ struct passwd* getpwuid(uid_t uid)
 struct passwd* getpwnam(char const* name)
 {
     setpwent();
+    ScopeGuard guard = [] { endpwent(); };
     while (auto* pw = getpwent()) {
         if (!strcmp(pw->pw_name, name))
             return pw;
