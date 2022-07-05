@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/Forward.h>
@@ -72,5 +73,7 @@ private:
     Optional<String> m_numbering_system; // [[NumberingSystem]]
     bool m_numeric { false };            // [[Numeric]]
 };
+
+Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
 
 }
