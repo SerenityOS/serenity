@@ -18,8 +18,8 @@
 
 namespace {
 
-using StringIndexType = u8;
-constexpr auto s_string_index_type = "u8"sv;
+using StringIndexType = u16;
+constexpr auto s_string_index_type = "u16"sv;
 
 struct DateTime {
     u16 year { 0 };
@@ -67,6 +67,9 @@ struct TimeZoneData {
     Vector<String> dst_offset_names;
 
     HashMap<String, TimeZone::Location> time_zone_coordinates;
+
+    HashMap<String, Vector<StringIndexType>> time_zone_regions;
+    Vector<String> time_zone_region_names;
 };
 
 }
@@ -379,6 +382,7 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
             continue;
 
         auto segments = line.split_view('\t');
+        auto regions = segments[0];
         auto coordinates = segments[1];
         auto zone = segments[2];
 
@@ -389,6 +393,14 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
         auto longitude = parse_coordinate(coordinates.substring_view(index));
 
         time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
+
+        regions.for_each_split_view(',', false, [&](auto region) {
+            auto index = time_zone_data.unique_strings.ensure(zone);
+            time_zone_data.time_zone_regions.ensure(region).append(index);
+
+            if (!time_zone_data.time_zone_region_names.contains_slow(region))
+                time_zone_data.time_zone_region_names.append(region);
+        });
     }
 
     return {};
@@ -447,6 +459,7 @@ namespace TimeZone {
 
     generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
     generate_enum(generator, format_identifier, "DaylightSavingsRule"sv, {}, time_zone_data.dst_offset_names);
+    generate_enum(generator, format_identifier, "Region"sv, {}, time_zone_data.time_zone_region_names);
 
     generator.append(R"~~~(
 }
@@ -556,6 +569,26 @@ static constexpr Array<@type@, @size@> @name@ { {
             append_offsets(name, "DaylightSavingsOffset"sv, dst_offsets);
         });
 
+    generate_mapping(generator, time_zone_data.time_zone_region_names, s_string_index_type, "s_regional_time_zones"sv, "s_regional_time_zones_{}", format_identifier,
+        [&](auto const& name, auto const& value) {
+            auto const& time_zones = time_zone_data.time_zone_regions.find(value)->value;
+
+            generator.set("name", name);
+            generator.set("size", String::number(time_zones.size()));
+
+            generator.append(R"~~~(
+static constexpr Array<@string_index_type@, @size@> @name@ { {)~~~");
+
+            bool first = true;
+            for (auto const& time_zone : time_zones) {
+                generator.append(first ? " " : ", ");
+                generator.append(String::number(time_zone));
+                first = false;
+            }
+
+            generator.append(" } };");
+        });
+
     generator.set("size", String::number(time_zone_data.time_zone_names.size()));
     generator.append(R"~~~(
 static constexpr Array<Location, @size@> s_time_zone_locations { {
@@ -590,6 +623,7 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
 
     append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
+    append_string_conversions("Region"sv, "region"sv, time_zone_data.time_zone_region_names);
 
     generator.append(R"~~~(
 static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)
@@ -726,6 +760,25 @@ Optional<Location> get_time_zone_location(TimeZone time_zone)
     if (is_valid_coordinate(location.latitude) && is_valid_coordinate(location.longitude))
         return location;
     return {};
+}
+
+Vector<StringView> time_zones_in_region(StringView region)
+{
+    auto region_value = region_from_string(region);
+    if (!region_value.has_value())
+        return {};
+
+    auto region_index = to_underlying(*region_value);
+
+    auto const& regional_time_zones = s_regional_time_zones[region_index];
+
+    Vector<StringView> time_zones;
+    time_zones.ensure_capacity(regional_time_zones.size());
+
+    for (auto time_zone : regional_time_zones)
+        time_zones.unchecked_append(s_string_list[time_zone]);
+
+    return time_zones;
 }
 )~~~");
 

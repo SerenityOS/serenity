@@ -192,4 +192,8 @@ Optional<Location> get_time_zone_location(StringView time_zone)
     return {};
 }
 
+Optional<Region> __attribute__((weak)) region_from_string(StringView) { return {}; }
+StringView __attribute__((weak)) region_to_string(Region) { return {}; }
+Vector<StringView> __attribute__((weak)) time_zones_in_region(StringView) { return {}; }
+
 }
