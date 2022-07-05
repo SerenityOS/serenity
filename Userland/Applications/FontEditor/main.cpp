@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "FontEditor.h"
+#include "MainWidget.h"
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(640, 470);
 
-    auto font_editor = TRY(window->try_set_main_widget<FontEditor::FontEditorWidget>());
+    auto font_editor = TRY(window->try_set_main_widget<FontEditor::MainWidget>());
     TRY(font_editor->initialize_menubar(*window));
 
     if (path) {

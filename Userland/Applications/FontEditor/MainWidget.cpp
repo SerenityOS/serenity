@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "FontEditor.h"
+#include "MainWidget.h"
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/Array.h>
@@ -57,7 +57,7 @@ static constexpr Array pangrams = {
     "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"
 };
 
-ErrorOr<RefPtr<GUI::Window>> FontEditorWidget::create_preview_window()
+ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 {
     auto window = TRY(GUI::Window::try_create(this));
     window->set_window_type(GUI::WindowType::ToolWindow);
@@ -90,7 +90,7 @@ ErrorOr<RefPtr<GUI::Window>> FontEditorWidget::create_preview_window()
     return window;
 }
 
-ErrorOr<void> FontEditorWidget::create_actions()
+ErrorOr<void> MainWidget::create_actions()
 {
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png")), [&](auto&) {
         if (!request_close())
@@ -297,7 +297,7 @@ ErrorOr<void> FontEditorWidget::create_actions()
     return {};
 }
 
-ErrorOr<void> FontEditorWidget::create_toolbars()
+ErrorOr<void> MainWidget::create_toolbars()
 {
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     (void)TRY(toolbar.try_add_action(*m_new_action));
@@ -331,7 +331,7 @@ ErrorOr<void> FontEditorWidget::create_toolbars()
     return {};
 }
 
-ErrorOr<void> FontEditorWidget::create_models()
+ErrorOr<void> MainWidget::create_models()
 {
     for (auto& it : Gfx::font_slope_names)
         TRY(m_font_slope_list.try_append(it.name));
@@ -368,7 +368,7 @@ ErrorOr<void> FontEditorWidget::create_models()
     return {};
 }
 
-ErrorOr<void> FontEditorWidget::create_undo_stack()
+ErrorOr<void> MainWidget::create_undo_stack()
 {
     m_undo_stack = TRY(try_make<GUI::UndoStack>());
     m_undo_stack->on_state_change = [this] {
@@ -381,7 +381,7 @@ ErrorOr<void> FontEditorWidget::create_undo_stack()
     return {};
 }
 
-FontEditorWidget::FontEditorWidget()
+MainWidget::MainWidget()
 {
     load_from_gml(font_editor_window_gml);
 
@@ -542,7 +542,7 @@ FontEditorWidget::FontEditorWidget()
     };
 }
 
-ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
     if (m_edited_font == edited_font)
         return {};
@@ -609,7 +609,7 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
     return {};
 }
 
-ErrorOr<void> FontEditorWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"));
     TRY(file_menu->try_add_action(*m_new_action));
@@ -663,7 +663,7 @@ ErrorOr<void> FontEditorWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
-bool FontEditorWidget::save_file(String const& path)
+bool MainWidget::save_file(String const& path)
 {
     auto saved_font = m_edited_font->masked_character_set();
     auto ret_val = saved_font->write_to_file(path);
@@ -678,7 +678,7 @@ bool FontEditorWidget::save_file(String const& path)
     return true;
 }
 
-void FontEditorWidget::set_show_font_metadata(bool show)
+void MainWidget::set_show_font_metadata(bool show)
 {
     if (m_font_metadata == show)
         return;
@@ -686,7 +686,7 @@ void FontEditorWidget::set_show_font_metadata(bool show)
     m_font_metadata_groupbox->set_visible(m_font_metadata);
 }
 
-void FontEditorWidget::set_show_unicode_blocks(bool show)
+void MainWidget::set_show_unicode_blocks(bool show)
 {
     if (m_unicode_blocks == show)
         return;
@@ -694,7 +694,7 @@ void FontEditorWidget::set_show_unicode_blocks(bool show)
     m_unicode_block_container->set_visible(m_unicode_blocks);
 }
 
-bool FontEditorWidget::open_file(String const& path)
+bool MainWidget::open_file(String const& path)
 {
     auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
     if (!bitmap_font) {
@@ -708,7 +708,7 @@ bool FontEditorWidget::open_file(String const& path)
     return true;
 }
 
-void FontEditorWidget::push_undo()
+void MainWidget::push_undo()
 {
     auto maybe_state = m_undo_selection->save_state();
     if (maybe_state.is_error()) {
@@ -726,7 +726,7 @@ void FontEditorWidget::push_undo()
         warnln("Failed to push undo stack: {}", maybe_push.error());
 }
 
-void FontEditorWidget::reset_selection_and_push_undo()
+void MainWidget::reset_selection_and_push_undo()
 {
     auto selection = m_glyph_map_widget->selection().normalized();
     if (selection.size() != 1) {
@@ -739,7 +739,7 @@ void FontEditorWidget::reset_selection_and_push_undo()
     push_undo();
 }
 
-void FontEditorWidget::undo()
+void MainWidget::undo()
 {
     if (!m_undo_stack->can_undo())
         return;
@@ -769,7 +769,7 @@ void FontEditorWidget::undo()
     update_statusbar();
 }
 
-void FontEditorWidget::redo()
+void MainWidget::redo()
 {
     if (!m_undo_stack->can_redo())
         return;
@@ -799,7 +799,7 @@ void FontEditorWidget::redo()
     update_statusbar();
 }
 
-bool FontEditorWidget::request_close()
+bool MainWidget::request_close()
 {
     if (!window()->is_modified())
         return true;
@@ -814,7 +814,7 @@ bool FontEditorWidget::request_close()
     return false;
 }
 
-void FontEditorWidget::update_title()
+void MainWidget::update_title()
 {
     StringBuilder title;
     if (m_path.is_empty())
@@ -825,7 +825,7 @@ void FontEditorWidget::update_title()
     window()->set_title(title.to_string());
 }
 
-void FontEditorWidget::did_modify_font()
+void MainWidget::did_modify_font()
 {
     if (!window() || window()->is_modified())
         return;
@@ -833,7 +833,7 @@ void FontEditorWidget::did_modify_font()
     update_title();
 }
 
-void FontEditorWidget::update_statusbar()
+void MainWidget::update_statusbar()
 {
     auto glyph = m_glyph_map_widget->active_glyph();
     StringBuilder builder;
@@ -863,13 +863,13 @@ void FontEditorWidget::update_statusbar()
     m_statusbar->set_text(builder.to_string());
 }
 
-void FontEditorWidget::update_preview()
+void MainWidget::update_preview()
 {
     if (m_font_preview_window)
         m_font_preview_window->update();
 }
 
-void FontEditorWidget::drop_event(GUI::DropEvent& event)
+void MainWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
 
@@ -886,19 +886,19 @@ void FontEditorWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
-void FontEditorWidget::set_scale(i32 scale)
+void MainWidget::set_scale(i32 scale)
 {
     m_glyph_editor_widget->set_scale(scale);
 }
 
-void FontEditorWidget::set_scale_and_save(i32 scale)
+void MainWidget::set_scale_and_save(i32 scale)
 {
     set_scale(scale);
     Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 }
 
-void FontEditorWidget::copy_selected_glyphs()
+void MainWidget::copy_selected_glyphs()
 {
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
     auto selection = m_glyph_map_widget->selection().normalized();
@@ -917,13 +917,13 @@ void FontEditorWidget::copy_selected_glyphs()
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
 }
 
-void FontEditorWidget::cut_selected_glyphs()
+void MainWidget::cut_selected_glyphs()
 {
     copy_selected_glyphs();
     delete_selected_glyphs();
 }
 
-void FontEditorWidget::paste_glyphs()
+void MainWidget::paste_glyphs()
 {
     auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
     if (!mime_type.starts_with("glyph/"))
@@ -968,7 +968,7 @@ void FontEditorWidget::paste_glyphs()
     update_statusbar();
 }
 
-void FontEditorWidget::delete_selected_glyphs()
+void MainWidget::delete_selected_glyphs()
 {
     push_undo();
 
