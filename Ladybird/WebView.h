@@ -34,6 +34,7 @@ signals:
     void linkUnhovered();
     void loadStarted(QString);
     void title_changed(QString);
+    void favicon_changed(QIcon);
 
 private:
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
