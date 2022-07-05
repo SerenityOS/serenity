@@ -167,4 +167,23 @@ Array* time_zones_of_locale(GlobalObject& global_object, StringView region)
     });
 }
 
+// 1.1.7 CharacterDirectionOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-character-direction-of-locale
+StringView character_direction_of_locale(Locale const& locale_object)
+{
+    // 1. Let locale be loc.[[Locale]].
+    auto const& locale = locale_object.locale();
+
+    // 2. Assert: locale matches the unicode_locale_id production.
+    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+
+    // 3. If the default general ordering of characters (characterOrder) within a line in locale is right-to-left, return "rtl".
+    // NOTE: LibUnicode handles both LTR and RTL character orders in this call, not just RTL. We then fallback to LTR
+    //       below if LibUnicode doesn't conclusively know the character order for this locale.
+    if (auto character_order = Unicode::character_order_for_locale(locale); character_order.has_value())
+        return Unicode::character_order_to_string(*character_order);
+
+    // 4. Return "ltr".
+    return "ltr"sv;
+}
+
 }

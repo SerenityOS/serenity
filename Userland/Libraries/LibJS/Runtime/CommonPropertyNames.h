@@ -139,6 +139,7 @@ namespace JS {
     P(deleteProperty)                        \
     P(deref)                                 \
     P(description)                           \
+    P(direction)                             \
     P(disambiguation)                        \
     P(done)                                  \
     P(dotAll)                                \
@@ -469,6 +470,7 @@ namespace JS {
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
+    P(textInfo)                              \
     P(then)                                  \
     P(time)                                  \
     P(timeEnd)                               \

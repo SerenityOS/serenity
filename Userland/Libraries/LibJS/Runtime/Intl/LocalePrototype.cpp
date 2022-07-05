@@ -48,6 +48,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
     define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
     define_native_accessor(vm.names.timeZones, time_zones, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.textInfo, text_info, {}, Attribute::Configurable);
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
@@ -240,6 +241,26 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
 
     // 5. Return ! TimeZonesOfLocale(loc).
     return time_zones_of_locale(global_object, locale->language_id.region.value());
+}
+
+// 1.4.21 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = TRY(typed_this_object(global_object));
+
+    // 3. Let info be ! ObjectCreate(%Object.prototype%).
+    auto* info = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Let dir be ! CharacterDirectionOfLocale(loc).
+    auto direction = character_direction_of_locale(*locale_object);
+
+    // 5. Perform ! CreateDataPropertyOrThrow(info, "direction", dir).
+    MUST(info->create_data_property_or_throw(vm.names.direction, js_string(vm, direction)));
+
+    // 6. Return info.
+    return info;
 }
 
 }
