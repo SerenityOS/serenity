@@ -38,6 +38,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.calendars, calendars, {}, Attribute::Configurable);
     define_native_accessor(vm.names.caseFirst, case_first, {}, Attribute::Configurable);
     define_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.collations, collations, {}, Attribute::Configurable);
     define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
@@ -202,9 +203,11 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 }
 
 #define JS_ENUMERATE_LOCALE_INFO_PROPERTIES \
-    __JS_ENUMERATE(calendars)
+    __JS_ENUMERATE(calendars)               \
+    __JS_ENUMERATE(collations)
 
 // 1.4.16 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
+// 1.4.17 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
 #define __JS_ENUMERATE(keyword)                                      \
     JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)              \
     {                                                                \

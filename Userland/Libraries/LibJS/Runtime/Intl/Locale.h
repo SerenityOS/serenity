@@ -75,5 +75,6 @@ private:
 };
 
 Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
 
 }
