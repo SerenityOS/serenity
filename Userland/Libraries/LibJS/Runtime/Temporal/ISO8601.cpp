@@ -765,10 +765,10 @@ bool ISO8601Parser::parse_time_zone_utc_offset()
         || parse_utc_designator();
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffsetNotAmbiguous
-bool ISO8601Parser::parse_time_zone_numeric_utc_offset_not_ambiguous()
+// https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth
+bool ISO8601Parser::parse_time_zone_numeric_utc_offset_not_ambiguous_with_day_of_month()
 {
-    // TimeZoneNumericUTCOffsetNotAmbiguous :
+    // TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth :
     //     TimeZoneNumericUTCOffset but not - TimeZoneUTCOffsetHour
     StateTransaction transaction { *this };
     if (!parse_time_zone_numeric_utc_offset())
@@ -784,10 +784,10 @@ bool ISO8601Parser::parse_time_zone_numeric_utc_offset_not_ambiguous()
 bool ISO8601Parser::parse_time_zone_numeric_utc_offset_not_ambiguous_allowed_negative_hour()
 {
     // TimeZoneNumericUTCOffsetNotAmbiguousAllowedNegativeHour :
-    //     TimeZoneNumericUTCOffsetNotAmbiguous
+    //     TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth
     //     - TimeHourNotValidMonth
     StateTransaction transaction { *this };
-    if (!parse_time_zone_numeric_utc_offset_not_ambiguous()) {
+    if (!parse_time_zone_numeric_utc_offset_not_ambiguous_with_day_of_month()) {
         if (!m_state.lexer.consume_specific('-'))
             return false;
         if (!parse_time_hour_not_valid_month())
@@ -1108,7 +1108,7 @@ bool ISO8601Parser::parse_time_hour_minute_basic_format_not_ambiguous()
 bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
 {
     // TimeSpecWithOptionalTimeZoneNotAmbiguous :
-    //     TimeHour TimeZoneNumericUTCOffsetNotAmbiguous[opt] TimeZoneBracketedAnnotation[opt]
+    //     TimeHour TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth[opt] TimeZoneBracketedAnnotation[opt]
     //     TimeHourNotValidMonth TimeZone
     //     TimeHour : TimeMinute TimeZone[opt]
     //     TimeHourMinuteBasicFormatNotAmbiguous TimeZoneBracketedAnnotation[opt]
@@ -1116,7 +1116,7 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
     //     TimeHour : TimeMinute : TimeSecond TimeFraction[opt] TimeZone[opt]
     //     TimeHour TimeMinute TimeSecondNotValidMonth TimeZone[opt]
     //     TimeHour TimeMinute TimeSecond TimeFraction TimeZone[opt]
-    // NOTE: Reverse order here because `TimeHour TimeZoneNumericUTCOffsetNotAmbiguous[opt] TimeZoneBracketedAnnotation[opt]` can
+    // NOTE: Reverse order here because `TimeHour TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth[opt] TimeZoneBracketedAnnotation[opt]` can
     // be a subset of `TimeHourNotValidMonth TimeZone`, so we'd not attempt to parse that but may not exhaust the input string.
     {
         StateTransaction transaction { *this };
@@ -1163,7 +1163,7 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
                     return true;
                 }
             } else {
-                (void)parse_time_zone_numeric_utc_offset_not_ambiguous();
+                (void)parse_time_zone_numeric_utc_offset_not_ambiguous_with_day_of_month();
                 (void)parse_time_zone_bracketed_annotation();
                 transaction.commit();
                 return true;
