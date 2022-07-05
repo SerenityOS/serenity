@@ -183,6 +183,10 @@ Optional<StringView> get_locale_narrow_date_field_mapping(StringView locale, Str
 
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, Style style);
 
+Optional<CharacterOrder> character_order_from_string(StringView character_order);
+StringView character_order_to_string(CharacterOrder character_order);
+Optional<CharacterOrder> character_order_for_locale(StringView locale);
+
 Optional<StringView> resolve_language_alias(StringView language);
 Optional<StringView> resolve_territory_alias(StringView territory);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
