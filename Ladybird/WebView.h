@@ -39,4 +39,6 @@ private:
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
 
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
+
+    qreal m_inverse_pixel_scaling_ratio { 1.0 };
 };
