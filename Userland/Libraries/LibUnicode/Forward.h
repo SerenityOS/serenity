@@ -14,6 +14,7 @@ enum class Block : u16;
 enum class CalendarFormatType : u8;
 enum class CalendarPatternStyle : u8;
 enum class CalendarSymbol : u8;
+enum class CharacterOrder : u8;
 enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
 enum class Currency : u16;

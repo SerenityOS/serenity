@@ -829,6 +829,9 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
 }
 
 Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }
+Optional<CharacterOrder> __attribute__((weak)) character_order_from_string(StringView) { return {}; }
+StringView __attribute__((weak)) character_order_to_string(CharacterOrder) { return {}; }
+Optional<CharacterOrder> __attribute__((weak)) character_order_for_locale(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_language_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_territory_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_script_tag_alias(StringView) { return {}; }
