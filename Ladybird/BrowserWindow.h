@@ -22,6 +22,9 @@ public slots:
     void page_title_changed(QString);
     void page_favicon_changed(QIcon);
 
+public slots:
+    void reload();
+
 private:
     QToolBar* m_toolbar { nullptr };
     QLineEdit* m_location_edit { nullptr };
