@@ -22,6 +22,7 @@ public:
     virtual ~WebView() override;
 
     void load(String const& url);
+    void reload();
 
     virtual void paintEvent(QPaintEvent*) override;
     virtual void resizeEvent(QResizeEvent*) override;

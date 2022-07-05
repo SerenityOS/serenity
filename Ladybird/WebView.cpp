@@ -298,6 +298,12 @@ WebView::~WebView()
 {
 }
 
+void WebView::reload()
+{
+    auto url = m_page_client->page().top_level_browsing_context().active_document()->url();
+    m_page_client->load(url);
+}
+
 void WebView::load(String const& url)
 {
     m_page_client->load(AK::URL(url));
