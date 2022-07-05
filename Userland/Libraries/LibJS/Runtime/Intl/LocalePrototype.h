@@ -33,6 +33,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(hour_cycle);
     JS_DECLARE_NATIVE_FUNCTION(hour_cycles);
     JS_DECLARE_NATIVE_FUNCTION(numbering_system);
+    JS_DECLARE_NATIVE_FUNCTION(numbering_systems);
     JS_DECLARE_NATIVE_FUNCTION(numeric);
     JS_DECLARE_NATIVE_FUNCTION(language);
     JS_DECLARE_NATIVE_FUNCTION(script);

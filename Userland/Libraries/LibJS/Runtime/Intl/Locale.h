@@ -77,5 +77,6 @@ private:
 Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale);
 
 }
