@@ -553,7 +553,7 @@ ErrorOr<void> FontEditorWidget::initialize(String const& path, RefPtr<Gfx::Bitma
         m_preview_label->set_font(*m_edited_font);
 
     m_glyph_map_widget->set_font(*m_edited_font);
-    m_glyph_editor_widget->initialize(*m_edited_font);
+    m_glyph_editor_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 
     m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
