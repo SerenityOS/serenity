@@ -98,6 +98,7 @@ namespace JS {
     P(clz32)                                 \
     P(codePointAt)                           \
     P(collation)                             \
+    P(collations)                            \
     P(compactDisplay)                        \
     P(compareExchange)                       \
     P(compile)                               \

@@ -87,4 +87,24 @@ Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale_obj
     return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
 }
 
+// 1.1.3 CollationsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-collations-of-locale
+Array* collations_of_locale(GlobalObject& global_object, Locale const& locale_object)
+{
+    // 1. Let restricted be loc.[[Collation]].
+    Optional<String> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<String> {};
+
+    // 2. Let locale be loc.[[Locale]].
+    auto const& locale = locale_object.locale();
+
+    // 3. Assert: locale matches the unicode_locale_id production.
+    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+
+    // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
+    // FIXME: Retrieve this data from the CLDR when we fully support collation. This matches Intl.supportedValuesOf.
+    Vector<StringView> list { "default"sv };
+
+    // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
+    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+}
+
 }
