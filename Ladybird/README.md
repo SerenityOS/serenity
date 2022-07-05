@@ -10,6 +10,12 @@ Qt6 development packages and a c++20-enabled compiler are required. On Debian/Ub
 sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools
 ```
 
+On Arch Linux/Manjaro:
+
+```
+sudo pacman -S base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
+```
+
 For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
