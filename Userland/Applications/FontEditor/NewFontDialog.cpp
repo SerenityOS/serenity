@@ -23,16 +23,15 @@
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 
-namespace GUI {
+namespace FontEditor {
 
-class GlyphPreviewWidget final : public Frame {
+class GlyphPreviewWidget final : public GUI::Frame {
     C_OBJECT(GlyphPreviewWidget)
 public:
     void set_preview_size(int width, int height)
     {
         m_width = width;
         m_height = height;
-        m_glyph_width = width;
         for (int i = 10; i > 0; i--) {
             if ((frame_thickness() * 2 + (m_width * i) - 1) <= 250
                 && (frame_thickness() * 2 + (m_height * i) - 1) <= 205) {
@@ -53,10 +52,10 @@ private:
     {
         set_preview_size(m_width, m_height);
     }
-    virtual void paint_event(PaintEvent& event) override
+    virtual void paint_event(GUI::PaintEvent& event) override
     {
-        Frame::paint_event(event);
-        Painter painter(*this);
+        GUI::Frame::paint_event(event);
+        GUI::Painter painter(*this);
         painter.add_clip_rect(frame_inner_rect());
         painter.add_clip_rect(event.rect());
         painter.fill_rect(frame_inner_rect(), palette().base());
@@ -75,7 +74,7 @@ private:
         for (int y = 0; y < m_height; ++y) {
             for (int x = 0; x < m_width; ++x) {
                 Gfx::IntRect rect { x * m_scale, y * m_scale, m_scale, m_scale };
-                if (x >= m_glyph_width) {
+                if (x >= m_width) {
                     painter.fill_rect(rect, palette().threed_shadow1());
                 } else {
                     if (m_bits[x][y])
@@ -84,19 +83,19 @@ private:
             }
         }
     }
-    virtual void mousedown_event(MouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
         draw_at_mouse(event);
     }
-    virtual void mousemove_event(MouseEvent& event) override
+    virtual void mousemove_event(GUI::MouseEvent& event) override
     {
         if (event.buttons() & (GUI::MouseButton::Primary | GUI::MouseButton::Secondary))
             draw_at_mouse(event);
     }
-    void draw_at_mouse(MouseEvent const& event)
+    void draw_at_mouse(GUI::MouseEvent const& event)
     {
-        bool set = event.buttons() & MouseButton::Primary;
-        bool unset = event.buttons() & MouseButton::Secondary;
+        bool set = event.buttons() & GUI::MouseButton::Primary;
+        bool unset = event.buttons() & GUI::MouseButton::Secondary;
         if (!(set ^ unset))
             return;
         int x = (event.x() - 1) / m_scale;
@@ -114,13 +113,14 @@ private:
     int m_scale { 10 };
     int m_width { 20 };
     int m_height { 20 };
-    int m_glyph_width { 20 };
     int m_mean_line { 2 };
     int m_baseline { 16 };
     u8 m_bits[Gfx::GlyphBitmap::max_width()][Gfx::GlyphBitmap::max_height()] {};
 };
 
 }
+
+REGISTER_WIDGET(FontEditor, GlyphPreviewWidget);
 
 NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     : GUI::WizardDialog(parent_window)
@@ -159,7 +159,6 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     m_glyph_properties_page->body_widget().load_from_gml(new_font_dialog_page_2_gml);
     m_glyph_properties_page->set_is_final_page(true);
 
-    m_glyph_editor_container = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_glyph_height_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");
     m_glyph_width_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("width_spinbox");
     m_baseline_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
@@ -178,23 +177,15 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     m_spacing_spinbox->set_value(1);
     m_fixed_width_checkbox->set_checked(false);
 
-    auto& preview_editor = m_glyph_editor_container->add<GUI::GlyphPreviewWidget>();
-    preview_editor.set_preview_size(20, 20);
-    m_glyph_editor_container->set_fixed_height(20 * 20 + preview_editor.frame_thickness() * 4);
+    auto& preview_editor = *m_glyph_properties_page->body_widget().find_descendant_of_type_named<FontEditor::GlyphPreviewWidget>("glyph_preview_widget");
 
     m_glyph_width_spinbox->on_change = [&](int value) {
         preview_editor.set_preview_size(value, m_glyph_height_spinbox->value());
-        deferred_invoke([&] {
-            m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
-        });
     };
     m_glyph_height_spinbox->on_change = [&](int value) {
         preview_editor.set_preview_size(m_glyph_width_spinbox->value(), value);
         m_mean_line_spinbox->set_max(max(value - 2, 0));
         m_baseline_spinbox->set_max(max(value - 2, 0));
-        deferred_invoke([&] {
-            m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
-        });
     };
     m_baseline_spinbox->on_change = [&](int value) {
         preview_editor.set_baseline(value);

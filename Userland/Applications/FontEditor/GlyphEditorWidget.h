@@ -11,6 +11,8 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/Font/BitmapFont.h>
 
+namespace FontEditor {
+
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)
 public:
@@ -71,3 +73,5 @@ private:
     Mode m_mode { Paint };
     bool m_is_clicking_valid_cell { false };
 };
+
+}
