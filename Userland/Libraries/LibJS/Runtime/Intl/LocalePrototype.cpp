@@ -42,6 +42,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
     define_native_accessor(vm.names.hourCycles, hour_cycles, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.numberingSystems, numbering_systems, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
     define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
     define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
@@ -206,11 +207,13 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 #define JS_ENUMERATE_LOCALE_INFO_PROPERTIES \
     __JS_ENUMERATE(calendars)               \
     __JS_ENUMERATE(collations)              \
-    __JS_ENUMERATE(hour_cycles)
+    __JS_ENUMERATE(hour_cycles)             \
+    __JS_ENUMERATE(numbering_systems)
 
 // 1.4.16 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
 // 1.4.17 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
 // 1.4.18 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
+// 1.4.19 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
 #define __JS_ENUMERATE(keyword)                                      \
     JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)              \
     {                                                                \

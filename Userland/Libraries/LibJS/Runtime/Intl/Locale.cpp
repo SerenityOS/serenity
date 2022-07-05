@@ -126,4 +126,23 @@ Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale_o
     return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
 }
 
+// 1.1.5 NumberingSystemsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-numbering-systems-of-locale
+Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale_object)
+{
+    // 1. Let restricted be loc.[[NumberingSystem]].
+    Optional<String> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<String> {};
+
+    // 2. Let locale be loc.[[Locale]].
+    auto const& locale = locale_object.locale();
+
+    // 3. Assert: locale matches the unicode_locale_id production.
+    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+
+    // 4. Let list be a List of 1 or more unique canonical numbering system identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for formatting numeric values in locale.
+    auto list = Unicode::get_keywords_for_locale(locale, "nu"sv);
+
+    // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
+    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+}
+
 }

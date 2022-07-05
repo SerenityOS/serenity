@@ -355,6 +355,7 @@ namespace JS {
     P(notation)                              \
     P(now)                                   \
     P(numberingSystem)                       \
+    P(numberingSystems)                      \
     P(numeric)                               \
     P(of)                                    \
     P(offset)                                \
