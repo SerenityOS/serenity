@@ -47,13 +47,6 @@ void endgrent()
         fclose(s_stream);
         s_stream = nullptr;
     }
-
-    memset(&s_group, 0, sizeof(s_group));
-
-    s_name = {};
-    s_passwd = {};
-    s_members = {};
-    s_members_ptrs = {};
 }
 
 struct group* getgrgid(gid_t gid)
