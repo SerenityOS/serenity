@@ -17,11 +17,23 @@
 
 class GlyphEditorWidget;
 
-class FontEditorWidget final
-    : public GUI::Widget {
+class FontEditorWidget final : public GUI::Widget {
     C_OBJECT(FontEditorWidget)
 public:
+    static ErrorOr<NonnullRefPtr<FontEditorWidget>> try_create()
+    {
+        NonnullRefPtr<FontEditorWidget> font_editor = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FontEditorWidget()));
+        TRY(font_editor->create_actions());
+        TRY(font_editor->create_models());
+        TRY(font_editor->create_toolbars());
+        TRY(font_editor->create_undo_stack());
+        return font_editor;
+    }
+
     virtual ~FontEditorWidget() override = default;
+
+    ErrorOr<void> initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
     bool open_file(String const&);
     bool save_file(String const&);
@@ -30,8 +42,6 @@ public:
 
     String const& path() { return m_path; }
     Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
-    void initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
-    void initialize_menubar(GUI::Window&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }
     void set_show_font_metadata(bool);
@@ -43,6 +53,11 @@ public:
 
 private:
     FontEditorWidget();
+
+    ErrorOr<void> create_actions();
+    ErrorOr<void> create_models();
+    ErrorOr<void> create_toolbars();
+    ErrorOr<void> create_undo_stack();
 
     virtual void drop_event(GUI::DropEvent&) override;
 

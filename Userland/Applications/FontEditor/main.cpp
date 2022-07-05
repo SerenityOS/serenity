@@ -36,14 +36,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app_icon = GUI::Icon::default_icon("app-font-editor");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-font-editor"));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(640, 470);
 
     auto font_editor = TRY(window->try_set_main_widget<FontEditorWidget>());
-    font_editor->initialize_menubar(*window);
+    TRY(font_editor->initialize_menubar(*window));
 
     if (path) {
         auto success = font_editor->open_file(path);
@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
     } else {
         auto mutable_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone())->unmasked_character_set();
-        font_editor->initialize({}, move(mutable_font));
+        TRY(font_editor->initialize({}, move(mutable_font)));
     }
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
