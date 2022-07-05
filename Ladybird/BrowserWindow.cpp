@@ -1,8 +1,10 @@
 #include "BrowserWindow.h"
 #include "WebView.h"
+#include <LibCore/EventLoop.h>
 #include <QStatusBar>
 
-BrowserWindow::BrowserWindow()
+BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
+    : m_event_loop(event_loop)
 {
     m_toolbar = new QToolBar;
     m_location_edit = new QLineEdit;
@@ -38,4 +40,14 @@ void BrowserWindow::page_title_changed(QString title)
 void BrowserWindow::page_favicon_changed(QIcon icon)
 {
     setWindowIcon(icon);
+}
+
+void BrowserWindow::closeEvent(QCloseEvent* event)
+{
+    QWidget::closeEvent(event);
+
+    // FIXME: Ladybird only supports one window at the moment. When we support
+    //        multiple windows, we'll only want to fire off the quit event when
+    //        all of the browser windows have closed.
+    m_event_loop.quit(0);
 }
