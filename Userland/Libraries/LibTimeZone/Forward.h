@@ -11,6 +11,7 @@
 namespace TimeZone {
 
 enum class DaylightSavingsRule : u8;
+enum class Region : u8;
 enum class TimeZone : u16;
 
 }

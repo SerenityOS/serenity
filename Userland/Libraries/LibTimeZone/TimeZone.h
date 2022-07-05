@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibTimeZone/Forward.h>
 
 namespace TimeZone {
@@ -67,5 +68,9 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone
 
 Optional<Location> get_time_zone_location(TimeZone time_zone);
 Optional<Location> get_time_zone_location(StringView time_zone);
+
+Optional<Region> region_from_string(StringView region);
+StringView region_to_string(Region region);
+Vector<StringView> time_zones_in_region(StringView region);
 
 }
