@@ -18,7 +18,7 @@ REGISTER_WIDGET(FontEditor, GlyphEditorWidget);
 
 namespace FontEditor {
 
-void GlyphEditorWidget::initialize(Gfx::BitmapFont& mutable_font)
+void GlyphEditorWidget::set_font(Gfx::BitmapFont& mutable_font)
 {
     if (m_font == mutable_font)
         return;
