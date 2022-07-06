@@ -7,6 +7,9 @@
 
 #pragma once
 
+#define AK_DONT_REPLACE_STD
+
+#include "History.h"
 #include "WebView.h"
 #include <QBoxLayout>
 #include <QLineEdit>
@@ -20,10 +23,15 @@ public:
 
     WebView& view() { return *m_view; }
 
+    void navigate(QString const&);
+
 public slots:
     void location_edit_return_pressed();
     void page_title_changed(QString);
     void page_favicon_changed(QIcon);
+    void back();
+    void forward();
+    void home();
     void reload();
 
 signals:
@@ -36,6 +44,13 @@ private:
     QLineEdit* m_location_edit { nullptr };
     WebView* m_view { nullptr };
     QMainWindow* m_window { nullptr };
+    Browser::History m_history;
+    QString m_title;
+
+    OwnPtr<QAction> m_back_action;
+    OwnPtr<QAction> m_forward_action;
+    OwnPtr<QAction> m_home_action;
+    OwnPtr<QAction> m_reload_action;
 
     int tab_index();
 };
