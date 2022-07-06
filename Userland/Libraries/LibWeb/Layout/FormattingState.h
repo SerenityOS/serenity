@@ -111,6 +111,13 @@ struct FormattingState {
 
     FormattingState const* m_parent { nullptr };
     FormattingState const& m_root;
+
+    struct LookupCache {
+        NodeWithStyleAndBoxModelMetrics const* box { nullptr };
+        NodeState* state { nullptr };
+        bool is_mutable { false };
+    };
+    LookupCache m_lookup_cache;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);
