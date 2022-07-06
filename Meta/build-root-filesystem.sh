@@ -33,11 +33,11 @@ if ! command -v rsync >/dev/null; then
 fi
 
 if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
-    rsync -aH --chown=0:0 --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --chown=0:0 --inplace Root/ mnt/
+    rsync -aH --chown=0:0 --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    rsync -aH --chown=0:0 --inplace --update Root/ mnt/
 else
-    rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --inplace Root/ mnt/
+    rsync -aH --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    rsync -aH --inplace --update Root/ mnt/
     chown -R 0:0 mnt/
 fi
 
