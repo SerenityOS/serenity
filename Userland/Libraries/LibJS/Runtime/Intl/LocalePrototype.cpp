@@ -49,6 +49,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
     define_native_accessor(vm.names.timeZones, time_zones, {}, Attribute::Configurable);
     define_native_accessor(vm.names.textInfo, text_info, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.weekInfo, week_info, {}, Attribute::Configurable);
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
@@ -260,6 +261,35 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     MUST(info->create_data_property_or_throw(vm.names.direction, js_string(vm, direction)));
 
     // 6. Return info.
+    return info;
+}
+
+// 1.4.22 get Intl.Locale.prototype.weekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.weekInfo
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    [[maybe_unused]] auto* locale_object = TRY(typed_this_object(global_object));
+
+    // 3. Let info be ! ObjectCreate(%Object.prototype%).
+    auto* info = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Let wi be ! WeekInfoOfLocale(loc).
+    auto week_info = week_info_of_locale(*locale_object);
+
+    // 5. Let we be ! CreateArrayFromList( wi.[[Weekend]] ).
+    auto weekend = Array::create_from<u8>(global_object, week_info.weekend, [](auto day) { return Value(day); });
+
+    // 6. Perform ! CreateDataPropertyOrThrow(info, "firstDay", wi.[[FirstDay]]).
+    MUST(info->create_data_property_or_throw(vm.names.firstDay, Value(week_info.first_day)));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(info, "weekend", we).
+    MUST(info->create_data_property_or_throw(vm.names.weekend, weekend));
+
+    // 8. Perform ! CreateDataPropertyOrThrow(info, "minimalDays", wi.[[MinimalDays]]).
+    MUST(info->create_data_property_or_throw(vm.names.minimalDays, Value(week_info.minimal_days)));
+
+    // 9. Return info.
     return info;
 }
 

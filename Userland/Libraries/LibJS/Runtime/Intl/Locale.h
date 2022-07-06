@@ -74,11 +74,19 @@ private:
     bool m_numeric { false };            // [[Numeric]]
 };
 
+// Table 1: WeekInfo Record Fields, https://tc39.es/proposal-intl-locale-info/#table-locale-weekinfo-record
+struct WeekInfo {
+    u8 minimal_days { 0 }; // [[MinimalDays]]
+    u8 first_day { 0 };    // [[FirstDay]]
+    Vector<u8> weekend;    // [[Weekend]]
+};
+
 Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale);
 Array* time_zones_of_locale(GlobalObject& global_object, StringView region);
 StringView character_direction_of_locale(Locale const& locale);
+WeekInfo week_info_of_locale(Locale const& locale);
 
 }
