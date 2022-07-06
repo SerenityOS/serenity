@@ -17,6 +17,7 @@ InlineLevelIterator::InlineLevelIterator(Layout::InlineFormattingContext& inline
     : m_inline_formatting_context(inline_formatting_context)
     , m_formatting_state(formatting_state)
     , m_container(container)
+    , m_container_state(formatting_state.get(container))
     , m_next_node(container.first_child())
     , m_layout_mode(layout_mode)
 {
@@ -31,12 +32,11 @@ void InlineLevelIterator::enter_node_with_box_model_metrics(Layout::NodeWithStyl
     // FIXME: It's really weird that *this* is where we assign box model metrics for these layout nodes..
 
     auto& node_state = m_formatting_state.get_mutable(node);
-    auto const& container_state = m_formatting_state.get(m_container);
     auto const& computed_values = node.computed_values();
 
-    node_state.margin_left = computed_values.margin().left.resolved(node, CSS::Length::make_px(container_state.content_width)).to_px(node);
+    node_state.margin_left = computed_values.margin().left.resolved(node, CSS::Length::make_px(m_container_state.content_width)).to_px(node);
     node_state.border_left = computed_values.border_left().width;
-    node_state.padding_left = computed_values.padding().left.resolved(node, CSS::Length::make_px(container_state.content_width)).to_px(node);
+    node_state.padding_left = computed_values.padding().left.resolved(node, CSS::Length::make_px(m_container_state.content_width)).to_px(node);
 
     m_extra_leading_metrics->margin += node_state.margin_left;
     m_extra_leading_metrics->border += node_state.border_left;
@@ -52,12 +52,11 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
 
     auto& node = m_box_model_node_stack.last();
     auto& node_state = m_formatting_state.get_mutable(node);
-    auto const& container_state = m_formatting_state.get(m_container);
     auto const& computed_values = node.computed_values();
 
-    node_state.margin_right = computed_values.margin().right.resolved(node, CSS::Length::make_px(container_state.content_width)).to_px(node);
+    node_state.margin_right = computed_values.margin().right.resolved(node, CSS::Length::make_px(m_container_state.content_width)).to_px(node);
     node_state.border_right = computed_values.border_right().width;
-    node_state.padding_right = computed_values.padding().right.resolved(node, CSS::Length::make_px(container_state.content_width)).to_px(node);
+    node_state.padding_right = computed_values.padding().right.resolved(node, CSS::Length::make_px(m_container_state.content_width)).to_px(node);
 
     m_extra_trailing_metrics->margin += node_state.margin_right;
     m_extra_trailing_metrics->border += node_state.border_right;

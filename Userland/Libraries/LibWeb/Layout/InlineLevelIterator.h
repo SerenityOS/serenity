@@ -68,6 +68,7 @@ private:
     Layout::InlineFormattingContext& m_inline_formatting_context;
     Layout::FormattingState& m_formatting_state;
     Layout::BlockContainer const& m_container;
+    Layout::FormattingState::NodeState const& m_container_state;
     Layout::Node const* m_current_node { nullptr };
     Layout::Node const* m_next_node { nullptr };
     LayoutMode const m_layout_mode;
