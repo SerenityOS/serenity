@@ -47,6 +47,9 @@ public:
     static float opacity() { return 1.0f; }
     static CSS::Length border_radius() { return Length::make_px(0); }
     static Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() { return CSS::VerticalAlign::Baseline; }
+    static CSS::LengthBox inset() { return { CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() }; }
+    static CSS::LengthBox margin() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
+    static CSS::LengthBox padding() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
 };
 
 struct BackgroundLayerData {
@@ -235,9 +238,9 @@ protected:
         Optional<CSS::LengthPercentage> height;
         Optional<CSS::LengthPercentage> min_height;
         Optional<CSS::LengthPercentage> max_height;
-        CSS::LengthBox inset;
-        CSS::LengthBox margin;
-        CSS::LengthBox padding;
+        CSS::LengthBox inset { InitialValues::inset() };
+        CSS::LengthBox margin { InitialValues::margin() };
+        CSS::LengthBox padding { InitialValues::padding() };
         BorderData border_left;
         BorderData border_top;
         BorderData border_right;
