@@ -57,6 +57,7 @@ private:
     struct FlexLine {
         Vector<FlexItem*> items;
         float cross_size { 0 };
+        float remaining_free_space { 0 };
     };
 
     bool has_definite_main_size(Box const&) const;
