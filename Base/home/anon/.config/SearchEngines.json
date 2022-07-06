@@ -4,6 +4,10 @@
         "url_format": "https://www.bing.com/search?q={}"
     },
     {
+        "title": "Brave",
+        "url_format": "https://search.brave.com/search?q={}"
+    },
+    {
         "title": "DuckDuckGo",
         "url_format": "https://duckduckgo.com/?q={}"
     },
@@ -18,6 +22,10 @@
     {
         "title": "Google",
         "url_format": "https://google.com/search?q={}"
+    },
+    {
+        "title": "Mojeek",
+        "url_format": "https://www.mojeek.com/search?q={}"
     },
     {
         "title": "Yandex",
