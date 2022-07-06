@@ -29,6 +29,7 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
         setWindowTitle(m_tabs_container->tabText(index));
         setWindowIcon(m_tabs_container->tabIcon(index));
     });
+    QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
 
     new_tab();
 
@@ -46,9 +47,19 @@ void BrowserWindow::new_tab()
     }
 
     m_tabs_container->addTab(tab_ptr, "New Tab");
+    m_tabs_container->setCurrentWidget(tab_ptr);
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+}
+
+void BrowserWindow::close_tab(int index)
+{
+    auto* tab = m_tabs_container->widget(index);
+    m_tabs_container->removeTab(index);
+    m_tabs.remove_first_matching([&](auto& entry) {
+        return entry == tab;
+    });
 }
 
 int BrowserWindow::tab_index(Tab* tab)
