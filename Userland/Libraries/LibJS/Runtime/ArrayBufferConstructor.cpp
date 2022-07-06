@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,63 +42,21 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
     return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
 }
 
-// 1.1.6 GetArrayBufferMaxByteLengthOption ( options ), https://tc39.es/proposal-resizablearraybuffer/#sec-getarraybuffermaxbytelengthoption
-static ThrowCompletionOr<Optional<size_t>> get_array_buffer_max_byte_length_option(VM& vm, GlobalObject& global_object, Value options)
-{
-    // 1. If Type(options) is not Object, return empty.
-    if (!options.is_object())
-        return Optional<size_t>();
-
-    // 2. Let maxByteLength be ? Get(options, "maxByteLength").
-    auto max_byte_length = TRY(options.get(global_object, vm.names.maxByteLength));
-
-    // 3. If maxByteLength is undefined, return empty.
-    if (max_byte_length.is_undefined())
-        return Optional<size_t>();
-
-    // 4. Return ? ToIndex(maxByteLength).
-    return TRY(max_byte_length.to_index(global_object));
-}
-
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-// 1.2.1 ArrayBuffer ( length [, options ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybuffer-constructor
 ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
+    auto byte_length_or_error = vm.argument(0).to_index(global_object());
 
-    // 1. If NewTarget is undefined, throw a TypeError exception.
-    // NOTE: See `ArrayBufferConstructor::call()`
-
-    // 2. Let byteLength be ? ToIndex(length).
-    auto byte_length_or_error = vm.argument(0).to_index(global_object);
     if (byte_length_or_error.is_error()) {
         auto error = byte_length_or_error.release_error();
         if (error.value()->is_object() && is<RangeError>(error.value()->as_object())) {
             // Re-throw more specific RangeError
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array buffer");
+            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
         }
         return error;
     }
-    auto byte_length = byte_length_or_error.release_value();
-
-    // 3. Let requestedMaxByteLength be ? GetArrayBufferMaxByteLengthOption(options).
-    auto options = vm.argument(1);
-    auto requested_max_byte_length_value = TRY(get_array_buffer_max_byte_length_option(vm, global_object, options));
-
-    // 4. If requestedMaxByteLength is empty, then
-    if (!requested_max_byte_length_value.has_value()) {
-        // a. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-        return TRY(allocate_array_buffer(global_object, new_target, byte_length));
-    }
-    auto requested_max_byte_length = requested_max_byte_length_value.release_value();
-
-    // 5. If byteLength > requestedMaxByteLength, throw a RangeError exception.
-    if (byte_length > requested_max_byte_length)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::ByteLengthBeyondRequestedMax);
-
-    // 6. Return ? AllocateArrayBuffer(NewTarget, byteLength, requestedMaxByteLength).
-    return TRY(allocate_array_buffer(global_object, new_target, byte_length, requested_max_byte_length));
+    return TRY(allocate_array_buffer(global_object(), new_target, byte_length_or_error.release_value()));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

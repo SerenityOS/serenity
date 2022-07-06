@@ -34,21 +34,17 @@ public:
     virtual ~ArrayBuffer() override = default;
 
     size_t byte_length() const { return buffer_impl().size(); }
-    size_t max_byte_length() const { return m_max_byte_length.value(); } // Will VERIFY() that it has value
     ByteBuffer& buffer() { return buffer_impl(); }
     ByteBuffer const& buffer() const { return buffer_impl(); }
 
     // Used by allocate_array_buffer() to attach the data block after construction
     void set_buffer(ByteBuffer buffer) { m_buffer = move(buffer); }
-    void set_max_byte_length(size_t max_byte_length) { m_max_byte_length = max_byte_length; }
 
     Value detach_key() const { return m_detach_key; }
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
 
     void detach_buffer() { m_buffer = Empty {}; }
     bool is_detached() const { return m_buffer.has<Empty>(); }
-
-    bool is_resizable_array_buffer() const;
 
     enum Order {
         SeqCst,
@@ -77,10 +73,9 @@ private:
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
-    Optional<size_t> m_max_byte_length;
 };
 
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length = {});
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length);
 ThrowCompletionOr<void> detach_array_buffer(GlobalObject&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
 

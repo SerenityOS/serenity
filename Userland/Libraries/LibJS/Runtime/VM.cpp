@@ -14,7 +14,6 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
@@ -112,23 +111,6 @@ VM::VM(OwnPtr<CustomData> custom_data)
 
     host_get_supported_import_assertions = [&] {
         return Vector<String> { "type" };
-    };
-
-    // 1.1.7 HostResizeArrayBuffer ( buffer, newByteLength ), https://tc39.es/proposal-resizablearraybuffer/#sec-hostresizearraybuffer
-    host_resize_array_buffer = [](GlobalObject& global_object, size_t new_byte_length) {
-        // The host-defined abstract operation HostResizeArrayBuffer takes arguments buffer (an ArrayBuffer) and newByteLength (a non-negative integer).
-        // The host-defined abstract operation HostResizeArrayBuffer takes arguments buffer (an ArrayBuffer object) and newByteLength.
-        // It gives the host an opportunity to perform implementation-defined resizing of buffer. If the host chooses not to handle resizing of buffer, it may return unhandled for the default behavior.
-        // The implementation of HostResizeArrayBuffer must conform to the following requirements:
-        //   * The abstract operation must return either NormalCompletion(handled), NormalCompletion(unhandled), or an abrupt throw completion.
-        //   * The abstract operation does not detach buffer.
-        //   * If the abstract operation completes normally with handled, buffer.[[ArrayBufferByteLength]] is newByteLength.
-        // The default implementation of HostResizeArrayBuffer is to return unhandled.
-
-        (void)global_object;
-        (void)new_byte_length;
-
-        return HostResizeArrayBufferResult::Unhandled;
     };
 
     // 19.2.1.2 HostEnsureCanCompileStrings ( callerRealm, calleeRealm ), https://tc39.es/ecma262/#sec-hostensurecancompilestrings

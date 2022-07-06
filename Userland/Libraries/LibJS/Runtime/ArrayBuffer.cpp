@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,16 +44,6 @@ ArrayBuffer::ArrayBuffer(ByteBuffer* buffer, Object& prototype)
 {
 }
 
-// 1.1.5 IsResizableArrayBuffer ( arrayBuffer ), https://tc39.es/proposal-resizablearraybuffer/#sec-isresizablearraybuffer
-bool ArrayBuffer::is_resizable_array_buffer() const
-{
-    // 1. Assert: Type(arrayBuffer) is Object and arrayBuffer has an [[ArrayBufferData]] internal slot.
-
-    // 2. If buffer has an [[ArrayBufferMaxByteLength]] internal slot, return true.
-    // 3. Return false.
-    return m_max_byte_length.has_value();
-}
-
 void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
@@ -62,38 +51,22 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-// 1.1.2 AllocateArrayBuffer ( constructor, byteLength [, maxByteLength ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length)
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length)
 {
-    // 1. Let slots be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
-    // 2. If maxByteLength is present, append [[ArrayBufferMaxByteLength]] to slots.
-
-    // 3. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", slots).
+    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
     auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(global_object, constructor, &GlobalObject::array_buffer_prototype, nullptr));
 
-    // 4. Let block be ? CreateByteDataBlock(byteLength).
+    // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
     if (block.is_error())
         return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    // 5. Set obj.[[ArrayBufferData]] to block.
+    // 3. Set obj.[[ArrayBufferData]] to block.
     obj->set_buffer(block.release_value());
 
-    // 6. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
-    // 7. If maxByteLength is present, then
-    if (max_byte_length.has_value()) {
-        // a. Assert: byteLength ≤ maxByteLength.
-        VERIFY(byte_length <= *max_byte_length);
-
-        // b. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
-        // c. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations reserve the right to throw if, for example, virtual memory cannot be reserved up front.
-
-        // d. Set obj.[[ArrayBufferMaxByteLength]] to maxByteLength.
-        obj->set_max_byte_length(*max_byte_length);
-    }
-
-    // 8. Return obj.
+    // 5. Return obj.
     return obj;
 }
 
