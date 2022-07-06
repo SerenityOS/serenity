@@ -42,6 +42,7 @@
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
 #include <LibWebSocket/WebSocket.h>
+#include <QCursor>
 #include <QIcon>
 #include <QMouseEvent>
 #include <QPaintEvent>
@@ -158,8 +159,20 @@ public:
     {
     }
 
-    virtual void page_did_request_cursor_change(Gfx::StandardCursor) override
+    virtual void page_did_request_cursor_change(Gfx::StandardCursor cursor) override
     {
+        switch (cursor) {
+        case Gfx::StandardCursor::Hand:
+            m_view.setCursor(Qt::PointingHandCursor);
+            break;
+        case Gfx::StandardCursor::IBeam:
+            m_view.setCursor(Qt::IBeamCursor);
+            break;
+        case Gfx::StandardCursor::Arrow:
+        default:
+            m_view.setCursor(Qt::ArrowCursor);
+            break;
+        }
     }
 
     virtual void page_did_request_context_menu(Gfx::IntPoint const&) override
