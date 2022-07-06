@@ -33,7 +33,7 @@ public:
 signals:
     void linkHovered(QString, int timeout = 0);
     void linkUnhovered();
-    void loadStarted(QString);
+    void loadStarted(const URL&);
     void title_changed(QString);
     void favicon_changed(QIcon);
 
