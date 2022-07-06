@@ -94,27 +94,40 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
 Optional<HourCycleRegion> __attribute__((weak)) hour_cycle_region_from_string(StringView) { return {}; }
 Vector<HourCycle> __attribute__((weak)) get_regional_hour_cycles(StringView) { return {}; }
 
-// https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
-Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale)
+template<typename GetRegionalValues>
+static auto find_regional_values_for_locale(StringView locale, GetRegionalValues&& get_regional_values)
 {
-    if (auto hour_cycles = get_regional_hour_cycles(locale); !hour_cycles.is_empty())
-        return hour_cycles;
+    auto has_value = [](auto const& container) {
+        if constexpr (requires { container.has_value(); })
+            return container.has_value();
+        else
+            return !container.is_empty();
+    };
 
-    auto return_default_hour_cycles = [&]() { return get_regional_hour_cycles("001"sv); };
+    if (auto regional_values = get_regional_values(locale); has_value(regional_values))
+        return regional_values;
+
+    auto return_default_values = [&]() { return get_regional_values("001"sv); };
 
     auto language = parse_unicode_language_id(locale);
     if (!language.has_value())
-        return return_default_hour_cycles();
+        return return_default_values();
 
     if (!language->region.has_value())
         language = add_likely_subtags(*language);
     if (!language.has_value() || !language->region.has_value())
-        return return_default_hour_cycles();
+        return return_default_values();
 
-    if (auto hour_cycles = get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
-        return hour_cycles;
+    if (auto regional_values = get_regional_values(*language->region); has_value(regional_values))
+        return regional_values;
 
-    return return_default_hour_cycles();
+    return return_default_values();
+}
+
+// https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale)
+{
+    return find_regional_values_for_locale(locale, get_regional_hour_cycles);
 }
 
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
@@ -122,6 +135,38 @@ Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
     if (auto hour_cycles = get_locale_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles.first();
     return {};
+}
+
+Optional<MinimumDaysRegion> __attribute__((weak)) minimum_days_region_from_string(StringView) { return {}; }
+Optional<u8> __attribute__((weak)) get_regional_minimum_days(StringView) { return {}; }
+
+Optional<u8> get_locale_minimum_days(StringView locale)
+{
+    return find_regional_values_for_locale(locale, get_regional_minimum_days);
+}
+
+Optional<FirstDayRegion> __attribute__((weak)) first_day_region_from_string(StringView) { return {}; }
+Optional<Weekday> __attribute__((weak)) get_regional_first_day(StringView) { return {}; }
+
+Optional<Weekday> get_locale_first_day(StringView locale)
+{
+    return find_regional_values_for_locale(locale, get_regional_first_day);
+}
+
+Optional<WeekendStartRegion> __attribute__((weak)) weekend_start_region_from_string(StringView) { return {}; }
+Optional<Weekday> __attribute__((weak)) get_regional_weekend_start(StringView) { return {}; }
+
+Optional<Weekday> get_locale_weekend_start(StringView locale)
+{
+    return find_regional_values_for_locale(locale, get_regional_weekend_start);
+}
+
+Optional<WeekendEndRegion> __attribute__((weak)) weekend_end_region_from_string(StringView) { return {}; }
+Optional<Weekday> __attribute__((weak)) get_regional_weekend_end(StringView) { return {}; }
+
+Optional<Weekday> get_locale_weekend_end(StringView locale)
+{
+    return find_regional_values_for_locale(locale, get_regional_weekend_end);
 }
 
 String combine_skeletons(StringView first, StringView second)
