@@ -7,6 +7,7 @@
 #include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashFunctions.h>
@@ -565,6 +566,18 @@ struct UnicodeLocaleData {
     HashMap<String, HourCycleListIndexType> hour_cycles;
     Vector<String> hour_cycle_regions;
 
+    HashMap<String, u8> minimum_days;
+    Vector<String> minimum_days_regions;
+
+    HashMap<String, Unicode::Weekday> first_day;
+    Vector<String> first_day_regions;
+
+    HashMap<String, Unicode::Weekday> weekend_start;
+    Vector<String> weekend_start_regions;
+
+    HashMap<String, Unicode::Weekday> weekend_end;
+    Vector<String> weekend_end_regions;
+
     HashMap<String, Vector<TimeZone::TimeZone>> meta_zones;
     Vector<String> time_zones { "UTC"sv };
 
@@ -635,6 +648,71 @@ static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& loca
 
         if (!locale_data.hour_cycle_regions.contains_slow(key))
             locale_data.hour_cycle_regions.append(key);
+    });
+
+    return {};
+}
+
+static ErrorOr<void> parse_week_data(String core_path, UnicodeLocaleData& locale_data)
+{
+    // https://unicode.org/reports/tr35/tr35-dates.html#Week_Data
+    LexicalPath week_data_path(move(core_path));
+    week_data_path = week_data_path.append("supplemental"sv);
+    week_data_path = week_data_path.append("weekData.json"sv);
+
+    auto week_data = TRY(read_json_file(week_data_path.string()));
+    auto const& supplemental_object = week_data.as_object().get("supplemental"sv);
+    auto const& week_data_object = supplemental_object.as_object().get("weekData"sv);
+
+    auto parse_weekday = [](StringView day) -> Unicode::Weekday {
+        if (day == "sun"sv)
+            return Unicode::Weekday::Sunday;
+        if (day == "mon"sv)
+            return Unicode::Weekday::Monday;
+        if (day == "tue"sv)
+            return Unicode::Weekday::Tuesday;
+        if (day == "wed"sv)
+            return Unicode::Weekday::Wednesday;
+        if (day == "thu"sv)
+            return Unicode::Weekday::Thursday;
+        if (day == "fri"sv)
+            return Unicode::Weekday::Friday;
+        if (day == "sat"sv)
+            return Unicode::Weekday::Saturday;
+        VERIFY_NOT_REACHED();
+    };
+
+    auto parse_regional_weekdays = [&](auto const& region, auto const& weekday, auto& weekdays_map, auto& weekday_regions) {
+        if (region.ends_with("alt-variant"sv))
+            return;
+
+        weekdays_map.set(region, parse_weekday(weekday));
+
+        if (!weekday_regions.contains_slow(region))
+            weekday_regions.append(region);
+    };
+
+    auto const& minimum_days_object = week_data_object.as_object().get("minDays"sv);
+    auto const& first_day_object = week_data_object.as_object().get("firstDay"sv);
+    auto const& weekend_start_object = week_data_object.as_object().get("weekendStart"sv);
+    auto const& weekend_end_object = week_data_object.as_object().get("weekendEnd"sv);
+
+    minimum_days_object.as_object().for_each_member([&](auto const& region, auto const& value) {
+        auto minimum_days = value.as_string().template to_uint<u8>();
+        locale_data.minimum_days.set(region, *minimum_days);
+
+        if (!locale_data.minimum_days_regions.contains_slow(region))
+            locale_data.minimum_days_regions.append(region);
+    });
+
+    first_day_object.as_object().for_each_member([&](auto const& region, auto const& value) {
+        parse_regional_weekdays(region, value.as_string(), locale_data.first_day, locale_data.first_day_regions);
+    });
+    weekend_start_object.as_object().for_each_member([&](auto const& region, auto const& value) {
+        parse_regional_weekdays(region, value.as_string(), locale_data.weekend_start, locale_data.weekend_start_regions);
+    });
+    weekend_end_object.as_object().for_each_member([&](auto const& region, auto const& value) {
+        parse_regional_weekdays(region, value.as_string(), locale_data.weekend_end, locale_data.weekend_end_regions);
     });
 
     return {};
@@ -1568,6 +1646,7 @@ static ErrorOr<void> parse_day_periods(String core_path, UnicodeLocaleData& loca
 static ErrorOr<void> parse_all_locales(String core_path, String dates_path, UnicodeLocaleData& locale_data)
 {
     TRY(parse_hour_cycles(core_path, locale_data));
+    TRY(parse_week_data(core_path, locale_data));
     TRY(parse_meta_zones(core_path, locale_data));
 
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
@@ -1631,6 +1710,10 @@ namespace Unicode {
 
     generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars);
     generate_enum(generator, format_identifier, "HourCycleRegion"sv, {}, locale_data.hour_cycle_regions);
+    generate_enum(generator, format_identifier, "MinimumDaysRegion"sv, {}, locale_data.minimum_days_regions);
+    generate_enum(generator, format_identifier, "FirstDayRegion"sv, {}, locale_data.first_day_regions);
+    generate_enum(generator, format_identifier, "WeekendStartRegion"sv, {}, locale_data.weekend_start_regions);
+    generate_enum(generator, format_identifier, "WeekendEndRegion"sv, {}, locale_data.weekend_end_regions);
 
     generator.append(R"~~~(
 }
@@ -1912,6 +1995,10 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_time_zone_format_index_type, "s_locale_time_zone_formats"sv, [](auto const& locale) { return locale.time_zone_formats; });
     append_mapping(locales, locale_data.locales, s_day_period_index_type, "s_locale_day_periods"sv, [](auto const& locale) { return locale.day_periods; });
     append_mapping(locale_data.hour_cycle_regions, locale_data.hour_cycles, s_hour_cycle_list_index_type, "s_hour_cycles"sv, [](auto const& hour_cycles) { return hour_cycles; });
+    append_mapping(locale_data.minimum_days_regions, locale_data.minimum_days, "u8"sv, "s_minimum_days"sv, [](auto minimum_days) { return minimum_days; });
+    append_mapping(locale_data.first_day_regions, locale_data.first_day, "u8"sv, "s_first_day"sv, [](auto first_day) { return to_underlying(first_day); });
+    append_mapping(locale_data.weekend_start_regions, locale_data.weekend_start, "u8"sv, "s_weekend_start"sv, [](auto weekend_start) { return to_underlying(weekend_start); });
+    append_mapping(locale_data.weekend_end_regions, locale_data.weekend_end, "u8"sv, "s_weekend_end"sv, [](auto weekend_end) { return to_underlying(weekend_end); });
     generator.append("\n");
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
@@ -1927,6 +2014,10 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     };
 
     append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, locale_data.hour_cycle_regions);
+    append_from_string("MinimumDaysRegion"sv, "minimum_days_region"sv, locale_data.minimum_days_regions);
+    append_from_string("FirstDayRegion"sv, "first_day_region"sv, locale_data.first_day_regions);
+    append_from_string("WeekendStartRegion"sv, "weekend_start_region"sv, locale_data.weekend_start_regions);
+    append_from_string("WeekendEndRegion"sv, "weekend_end_region"sv, locale_data.weekend_end_regions);
 
     generator.append(R"~~~(
 static Optional<Calendar> keyword_to_calendar(KeywordCalendar keyword)
@@ -1965,7 +2056,33 @@ Vector<HourCycle> get_regional_hour_cycles(StringView region)
 
     return hour_cycles;
 }
+)~~~");
 
+    auto append_regional_lookup = [&](StringView return_type, StringView lookup_type) {
+        generator.set("return_type", return_type);
+        generator.set("lookup_type", lookup_type);
+
+        generator.append(R"~~~(
+Optional<@return_type@> get_regional_@lookup_type@(StringView region)
+{
+    auto region_value = @lookup_type@_region_from_string(region);
+    if (!region_value.has_value())
+        return {};
+
+    auto region_index = to_underlying(*region_value);
+    auto @lookup_type@ = s_@lookup_type@.at(region_index);
+
+    return static_cast<@return_type@>(@lookup_type@);
+}
+)~~~");
+    };
+
+    append_regional_lookup("u8"sv, "minimum_days"sv);
+    append_regional_lookup("Unicode::Weekday"sv, "first_day"sv);
+    append_regional_lookup("Unicode::Weekday"sv, "weekend_start"sv);
+    append_regional_lookup("Unicode::Weekday"sv, "weekend_end"sv);
+
+    generator.append(R"~~~(
 static CalendarData const* find_calendar_data(StringView locale, StringView calendar)
 {
     auto locale_value = locale_from_string(locale);
