@@ -67,6 +67,6 @@ int Tab::tab_index()
 {
     // FIXME: I hear you like footguns...
     //        There has to be a better way of doing this
-    auto browser_window = reinterpret_cast<BrowserWindow *>(m_window);
+    auto browser_window = reinterpret_cast<BrowserWindow*>(m_window);
     return browser_window->tab_index(this);
 }

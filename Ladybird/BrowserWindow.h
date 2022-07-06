@@ -5,7 +5,7 @@
  */
 
 #include "Tab.h"
-#include <AK/Vector.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
@@ -33,10 +33,11 @@ public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
     void new_tab();
+    void close_tab(int index);
 
 private:
     QTabWidget* m_tabs_container { nullptr };
-    Vector<NonnullOwnPtr<Tab>> m_tabs;
+    NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
 
     Core::EventLoop& m_event_loop;
