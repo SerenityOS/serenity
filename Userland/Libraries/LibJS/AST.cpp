@@ -4092,6 +4092,7 @@ Completion DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) c
     if (false) {
         // a. Perform an implementation-defined debugging action.
         // b. Return a new implementation-defined Completion Record.
+        VERIFY_NOT_REACHED();
     }
     // 2. Else,
     else {
