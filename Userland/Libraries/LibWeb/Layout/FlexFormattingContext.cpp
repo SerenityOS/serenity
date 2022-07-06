@@ -1116,9 +1116,16 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
+            if (is_direction_reverse())
+                space_before_first_item = m_available_space->main.value_or(NumericLimits<float>::max());
+            else
+                space_before_first_item = 0;
             break;
         case CSS::JustifyContent::FlexEnd:
-            space_before_first_item = m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space;
+            if (is_direction_reverse())
+                space_before_first_item = 0;
+            else
+                space_before_first_item = m_available_space->main.value_or(NumericLimits<float>::max());
             break;
         case CSS::JustifyContent::Center:
             space_before_first_item = (m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space) / 2.0f;
@@ -1134,9 +1141,34 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         // FIXME: Support reverse
         float main_offset = space_before_first_item;
-        for (auto& flex_item : flex_line.items) {
-            flex_item->main_offset = main_offset + flex_item->margins.main_before + flex_item->borders.main_before + flex_item->padding.main_before;
-            main_offset += flex_item->margins.main_before + flex_item->borders.main_before + flex_item->padding.main_before + flex_item->main_size + flex_item->margins.main_after + flex_item->borders.main_after + flex_item->padding.main_after + space_between_items;
+
+        auto place_item = [&](FlexItem& item) {
+            auto amount_of_main_size_used = item.main_size
+                + item.margins.main_before
+                + item.borders.main_before
+                + item.padding.main_before
+                + item.margins.main_after
+                + item.borders.main_after
+                + item.padding.main_after
+                + space_between_items;
+
+            if (is_direction_reverse()) {
+                item.main_offset = main_offset - item.main_size - item.margins.main_after - item.borders.main_after - item.padding.main_after;
+                main_offset -= amount_of_main_size_used;
+            } else {
+                item.main_offset = main_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
+                main_offset += amount_of_main_size_used;
+            }
+        };
+
+        if (is_direction_reverse()) {
+            for (auto& item : flex_line.items.in_reverse()) {
+                place_item(*item);
+            }
+        } else {
+            for (auto& item : flex_line.items) {
+                place_item(*item);
+            }
         }
     }
 }
