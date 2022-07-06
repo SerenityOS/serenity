@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibTimeZone/TimeZone.h>
+#include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
@@ -184,6 +185,66 @@ StringView character_direction_of_locale(Locale const& locale_object)
 
     // 4. Return "ltr".
     return "ltr"sv;
+}
+
+static u8 weekday_to_integer(Optional<Unicode::Weekday> weekday, Unicode::Weekday falllback)
+{
+    // NOTE: This fallback will be used if LibUnicode data generation is disabled. Its value should
+    //       be that of the default region ("001") in the CLDR.
+    switch (weekday.value_or(falllback)) {
+    case Unicode::Weekday::Monday:
+        return 1;
+    case Unicode::Weekday::Tuesday:
+        return 2;
+    case Unicode::Weekday::Wednesday:
+        return 3;
+    case Unicode::Weekday::Thursday:
+        return 4;
+    case Unicode::Weekday::Friday:
+        return 5;
+    case Unicode::Weekday::Saturday:
+        return 6;
+    case Unicode::Weekday::Sunday:
+        return 7;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+static Vector<u8> weekend_of_locale(StringView locale)
+{
+    auto weekend_start = weekday_to_integer(Unicode::get_locale_weekend_start(locale), Unicode::Weekday::Saturday);
+    auto weekend_end = weekday_to_integer(Unicode::get_locale_weekend_end(locale), Unicode::Weekday::Sunday);
+
+    // There currently aren't any regions in the CLDR which wrap around from Sunday (7) to Monday (1).
+    // If this changes, this logic will need to be updated to handle that.
+    VERIFY(weekend_start <= weekend_end);
+
+    Vector<u8> weekend;
+    weekend.ensure_capacity(weekend_end - weekend_start + 1);
+
+    for (auto day = weekend_start; day <= weekend_end; ++day)
+        weekend.unchecked_append(day);
+
+    return weekend;
+}
+
+// 1.1.8 WeekInfoOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-week-info-of-locale
+WeekInfo week_info_of_locale(Locale const& locale_object)
+{
+    // 1. Let locale be loc.[[Locale]].
+    auto const& locale = locale_object.locale();
+
+    // 2. Assert: locale matches the unicode_locale_id production.
+    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+
+    // 3. Return a record whose fields are defined by Table 1, with values based on locale.
+    WeekInfo week_info {};
+    week_info.minimal_days = Unicode::get_locale_minimum_days(locale).value_or(1);
+    week_info.first_day = weekday_to_integer(Unicode::get_locale_first_day(locale), Unicode::Weekday::Monday);
+    week_info.weekend = weekend_of_locale(locale);
+
+    return week_info;
 }
 
 }

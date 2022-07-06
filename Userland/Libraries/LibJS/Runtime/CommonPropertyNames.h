@@ -174,6 +174,7 @@ namespace JS {
     P(findLast)                              \
     P(findLastIndex)                         \
     P(findIndex)                             \
+    P(firstDay)                              \
     P(fixed)                                 \
     P(flags)                                 \
     P(flat)                                  \
@@ -331,6 +332,7 @@ namespace JS {
     P(milliseconds)                          \
     P(millisecondsDisplay)                   \
     P(min)                                   \
+    P(minimalDays)                           \
     P(minimize)                              \
     P(maximumFractionDigits)                 \
     P(maximumSignificantDigits)              \
@@ -534,8 +536,10 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
+    P(weekInfo)                              \
     P(weekOfYear)                            \
     P(weekday)                               \
+    P(weekend)                               \
     P(weeks)                                 \
     P(weeksDisplay)                          \
     P(with)                                  \

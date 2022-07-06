@@ -40,6 +40,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(region);
     JS_DECLARE_NATIVE_FUNCTION(time_zones);
     JS_DECLARE_NATIVE_FUNCTION(text_info);
+    JS_DECLARE_NATIVE_FUNCTION(week_info);
 };
 
 }
