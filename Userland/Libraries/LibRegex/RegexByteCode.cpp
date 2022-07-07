@@ -531,16 +531,15 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto ch = input.view.substring_view(state.string_position, 1)[0];
 
             auto const* matching_range = binary_search(range_data, ch, nullptr, [insensitive = input.regex_options & AllFlags::Insensitive](auto needle, CharRange range) {
-                auto from = range.from;
-                auto to = range.to;
+                auto upper_case_needle = needle;
+                auto lower_case_needle = needle;
                 if (insensitive) {
-                    from = to_ascii_lowercase(from);
-                    to = to_ascii_lowercase(to);
-                    needle = to_ascii_lowercase(needle);
+                    upper_case_needle = to_ascii_uppercase(needle);
+                    lower_case_needle = to_ascii_lowercase(needle);
                 }
-                if (needle > to)
+                if (lower_case_needle > range.to && upper_case_needle > range.to)
                     return 1;
-                if (needle < from)
+                if (lower_case_needle < range.from && upper_case_needle < range.from)
                     return -1;
                 return 0;
             });
