@@ -10,6 +10,8 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
+#include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibUnicode/Locale.h>
@@ -141,7 +143,8 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    // FIXME: We do not yet support Intl.PluralRules.
+    auto* plural_rules = MUST(construct(global_object, *global_object.intl_plural_rules_constructor(), js_string(vm, locale)));
+    relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.
     return &relative_time_format;

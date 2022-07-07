@@ -58,7 +58,7 @@ struct AK::Formatter<RelativeTimeFormat> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, RelativeTimeFormat const& format)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ TimeUnit::{}, Style::{}, RelativeTimeFormat::Plurality::{}, {}, {} }}",
+            "{{ TimeUnit::{}, Style::{}, PluralCategory::{}, {}, {} }}",
             format.time_unit,
             format.style,
             format.plurality,
@@ -204,6 +204,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/RelativeTimeFormat.h>
+#include <LibUnicode/UnicodePluralRules.h>
 #include <LibUnicode/UnicodeRelativeTimeFormat.h>
 
 namespace Unicode {
@@ -224,7 +225,7 @@ struct RelativeTimeFormatImpl {
 
     TimeUnit time_unit;
     Style style;
-    RelativeTimeFormat::Plurality plurality;
+    PluralCategory plurality;
     @string_index_type@ tense_or_number { 0 };
     @string_index_type@ pattern { 0 };
 };

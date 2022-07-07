@@ -27,16 +27,7 @@ enum class TimeUnit {
 };
 
 struct RelativeTimeFormat {
-    enum class Plurality {
-        Zero,
-        One,
-        Two,
-        Few,
-        Many,
-        Other,
-    };
-
-    Plurality plurality { Plurality::Other };
+    PluralCategory plurality;
     StringView pattern;
 };
 
