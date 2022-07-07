@@ -182,6 +182,8 @@ class LengthPercentage : public PercentageOr<Length> {
 public:
     using PercentageOr<Length>::PercentageOr;
 
+    bool is_auto() const { return is_length() && length().is_auto(); }
+
     bool is_length() const { return is_t(); }
     Length const& length() const { return get_t(); }
     virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value) const override;
