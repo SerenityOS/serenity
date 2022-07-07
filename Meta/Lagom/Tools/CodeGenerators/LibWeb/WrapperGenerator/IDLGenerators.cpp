@@ -52,6 +52,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "WebGLRenderingContext")
         return true;
+    if (type.name == "URLSearchParams")
+        return true;
     return false;
 }
 

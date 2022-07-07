@@ -1,5 +1,8 @@
 #import <XHR/XMLHttpRequestEventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <URL/URLSearchParams.idl>
+
+typedef (URLSearchParams or USVString) XMLHttpRequestBodyInit;
 
 enum XMLHttpRequestResponseType {
   "",
@@ -30,7 +33,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     undefined open(DOMString method, DOMString url);
     undefined open(ByteString method, USVString url, boolean async, optional USVString? username = {}, optional USVString? password = {});
     undefined setRequestHeader(DOMString name, DOMString value);
-    undefined send(optional USVString body = {});
+    undefined send(optional XMLHttpRequestBodyInit? body = null);
 
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();
