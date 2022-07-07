@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -426,6 +427,21 @@ static bool is_header_value(String const& header_value)
     return true;
 }
 
+static XMLHttpRequest::BodyWithType safely_extract_body(XMLHttpRequestBodyInit& body)
+{
+    if (body.has<NonnullRefPtr<URL::URLSearchParams>>()) {
+        return {
+            body.get<NonnullRefPtr<URL::URLSearchParams>>()->to_string().to_byte_buffer(),
+            "application/x-www-form-urlencoded;charset=UTF-8"
+        };
+    }
+    VERIFY(body.has<String>());
+    return {
+        body.get<String>().to_byte_buffer(),
+        "text/plain;charset=UTF-8"
+    };
+}
+
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
 DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, String const& value)
 {
@@ -547,7 +563,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
+DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> body)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -558,6 +574,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
     // If this’s request method is `GET` or `HEAD`, then set body to null.
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
+
+    auto body_with_type = body.has_value() ? safely_extract_body(body.value()) : XMLHttpRequest::BodyWithType {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
@@ -578,8 +596,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
-    if (!body.is_null())
-        request.set_body(body.to_byte_buffer());
+    if (!body_with_type.body.is_empty()) {
+        request.set_body(body_with_type.body);
+        if (!body_with_type.type.is_empty())
+            request.set_header("Content-Type", body_with_type.type);
+    }
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,11 +16,14 @@
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
 
 static constexpr Array<u8, 4> http_whitespace_bytes = { '\t', '\n', '\r', ' ' };
+
+using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
@@ -32,6 +36,11 @@ public:
         HeadersReceived = 2,
         Loading = 3,
         Done = 4,
+    };
+
+    struct BodyWithType {
+        ByteBuffer body;
+        String type;
     };
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;
@@ -58,7 +67,7 @@ public:
 
     DOM::ExceptionOr<void> open(String const& method, String const& url);
     DOM::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    DOM::ExceptionOr<void> send(String body);
+    DOM::ExceptionOr<void> send(Optional<XMLHttpRequestBodyInit> body);
 
     DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
