@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
+#include <LibUnicode/PluralRules.h>
 
 namespace JS::Intl {
 
@@ -58,11 +59,14 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(plural_rules->max_significant_digits())));
 
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
-    // FIXME: Implement this when the data is available in LibUnicode.
-    MarkedVector<Value> plural_categories { vm.heap() };
+    auto available_categories = Unicode::available_plural_categories(plural_rules->locale(), plural_rules->type());
+
+    auto* plural_categories = Array::create_from<Unicode::PluralCategory>(global_object, available_categories, [&](auto category) {
+        return js_string(vm, Unicode::plural_category_to_string(category));
+    });
 
     // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
-    MUST(options->create_data_property_or_throw(vm.names.pluralCategories, Array::create_from(global_object, plural_categories)));
+    MUST(options->create_data_property_or_throw(vm.names.pluralCategories, plural_categories));
 
     // 7. Return options.
     return options;
