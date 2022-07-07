@@ -84,6 +84,12 @@ shift
 
 : "${workdir:=$port-$version}"
 
+PORT_META_DIR="$(pwd)"
+PORT_BUILD_DIR="${SERENITY_BUILD_DIR}/Ports/${port}"
+
+mkdir -p "${PORT_BUILD_DIR}"
+cd "${PORT_BUILD_DIR}"
+
 cleanup_git() {
     echo "WARNING: Reverting changes to $workdir as we are in dev mode!"
     run git clean -xffd >/dev/null 2>&1
@@ -295,7 +301,7 @@ fetch() {
         for f in $files; do
             IFS=$OLDIFS
             read url filename auth_sum<<< $(echo "$f")
-            do_download_file "$url" "$filename"
+            do_download_file "$url" "${PORT_META_DIR}/${filename}"
         done
 
         verification_failed=0
@@ -309,11 +315,11 @@ fetch() {
             # check sha256sum if given
             if [ "$auth_type" = "sha256" ]; then
                 echo "Expecting ${auth_type}sum: $auth_sum"
-                calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
+                calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
                 echo "${auth_type}sum($filename) = '$calc_sum'"
                 if [ "$calc_sum" != "$auth_sum" ]; then
                     # remove downloaded file to re-download on next run
-                    rm -f $filename
+                    rm -f "${PORT_META_DIR}/${filename}"
                     echo "${auth_type}sums mismatching, removed erronous download."
                     if [ $tried_download_again -eq 1 ]; then
                         echo "Please run script again."
@@ -331,7 +337,7 @@ fetch() {
             if $NO_GPG; then
                 echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
             else
-                if $(gpg --verify "${auth_opts[@]}"); then
+                if $(cd "${PORT_META_DIR}" && gpg --verify "${auth_opts[@]}"); then
                     echo "- Signature check OK."
                 else
                     echo "- Signature check NOT OK"
@@ -366,26 +372,27 @@ fetch() {
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
                 *.tar.gz|*.tgz)
-                    run_nocd tar -xzf "$filename"
+                    run_nocd tar -xzf "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
                     ;;
                 *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|.tbz*|*.txz|*.tgz)
-                    run_nocd tar -xf "$filename"
+                    run_nocd tar -xf "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
                     ;;
                 *.gz)
-                    run_nocd gunzip "$filename"
+                    run_nocd gunzip "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
                     ;;
                 *.zip)
-                    run_nocd bsdtar xf "$filename" || run_nocd unzip -qo "$filename"
+                    run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
                     ;;
                 *.asc)
-                    run_nocd gpg --import "$filename" || true
+                    run_nocd gpg --import "${PORT_META_DIR}/${filename}" || true
                     ;;
                 *)
                     echo "Note: no case for file $filename."
+                    cp "${PORT_META_DIR}/${filename}" ./
                     ;;
             esac
         fi
@@ -404,8 +411,8 @@ func_defined pre_patch || pre_patch() {
 
 func_defined patch_internal || patch_internal() {
     # patch if it was not yet patched (applying patches multiple times doesn't work!)
-    if [ -z "${IN_SERENITY_PORT_DEV:-}" ] && [ -d patches ]; then
-        for filepath in patches/*.patch; do
+    if [ -z "${IN_SERENITY_PORT_DEV:-}" ] && [ -d "${PORT_META_DIR}/patches" ]; then
+        for filepath in "${PORT_META_DIR}"/patches/*.patch; do
             filename=$(basename $filepath)
             if [ ! -f "$workdir"/.${filename}_applied ]; then
                 run patch -p"$patchlevel" < "$filepath"
@@ -446,7 +453,7 @@ func_defined clean_dist || clean_dist() {
     for f in $files; do
         IFS=$OLDIFS
         read url filename hash <<< $(echo "$f")
-        rm -f "$filename"
+        rm -f "${PORT_META_DIR}/${filename}"
     done
 }
 func_defined clean_all || clean_all() {
@@ -460,7 +467,7 @@ func_defined clean_all || clean_all() {
     for f in $files; do
         IFS=$OLDIFS
         read url filename hash <<< $(echo "$f")
-        rm -f "$filename"
+        rm -f "${PORT_META_DIR}/${filename}"
     done
 }
 addtodb() {
@@ -495,7 +502,7 @@ package_install_state() {
 installdepends() {
     for depend in "${depends[@]}"; do
         if [ -z "$(package_install_state $depend)" ]; then
-            (cd "../$depend" && ./package.sh --auto)
+            (cd "${PORT_META_DIR}/../$depend" && ./package.sh --auto)
         fi
     done
 }
@@ -619,12 +626,12 @@ do_shell() {
 }
 
 do_generate_patch_readme() {
-    if [ ! -d patches ]; then
+    if [ ! -d "${PORT_META_DIR}/patches" ]; then
         >&2 echo "Error: Port $port does not have any patches"
         exit 1
     fi
 
-    if [ -f patches/ReadMe.md  ]; then
+    if [ -f "${PORT_META_DIR}/patches/ReadMe.md"  ]; then
         read -N1 -rp \
             "A ReadMe.md already exists, overwrite? (N/y) " should_overwrite
         echo
@@ -638,10 +645,10 @@ do_generate_patch_readme() {
     rm -fr "$tempdir"
     mkdir "$tempdir"
 
-    echo "# Patches for $port on SerenityOS" > patches/ReadMe.md
-    echo >> patches/ReadMe.md
+    pushd "${PORT_META_DIR}/patches"
 
-    pushd patches
+    echo "# Patches for $port on SerenityOS" > ReadMe.md
+    echo >> ReadMe.md
 
     local count=0
     for patch in *.patch; do
@@ -734,13 +741,13 @@ do_dev() {
         git config receive.denyCurrentBranch ignore
         # Import patches as commits, or ask the user to commit them
         # if they're not git patches already.
-        if [ -d ../patches ] && [ -n "$(find ../patches -maxdepth 1 -name '*.patch' -print -quit)" ]; then
-            for patch in ../patches/*.patch; do
+        if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
+            for patch in "${PORT_META_DIR}"/patches/*.patch; do
                 if [ -f "$workdir/.$(basename $patch).applied" ]; then
                     continue
                 fi
 
-                echo "Importing patch $patch..."
+                echo "Importing patch $(basename "${patch}")..."
                 git am --keep-cr "$patch" >/dev/null 2>&1 || {
                     git am --abort >/dev/null 2>&1 || true
                     if git apply < $patch; then
@@ -752,7 +759,6 @@ do_dev() {
                         fi
                         main_author=''
                         co_authors=()
-                        patch_name_in_parent_directory="patches/$(basename "$patch")"
                         while read -r line; do
                             author="$(echo "$line" | cut -f2 -d'	')"
                             if [[ -z "$main_author" ]]; then
@@ -760,10 +766,10 @@ do_dev() {
                             else
                                 co_authors+=("$author")
                             fi
-                        done < <(git -C .. shortlog -esn -- "$patch_name_in_parent_directory")
+                        done < <(git -C "${PORT_META_DIR}" shortlog -esn -- "patches/$(basename "$patch")")
 
                         if [[ -n "$main_author" ]]; then
-                            date="$(git -C .. log --format=%ad -n1 -- "$patch_name_in_parent_directory")"
+                            date="$(git -C "${PORT_META_DIR}" log --format=%ad -n1 -- "patches/$(basename "$patch")")"
                             >&2 echo -n "- This patch was authored by $main_author"
                             if [[ ${#co_authors[@]} -ne 0 ]]; then
                                 >&2 echo -n " (and ${co_authors[*]})"
@@ -833,8 +839,8 @@ do_dev() {
     # If the hashes are the same, we have no patches, otherwise generate patches
     if [ "$first_hash" != "$current_hash" ]; then
         >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
-        rm -fr patches/*.patch
-        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath patches)"
+        rm -fr "${PORT_META_DIR}"/patches/*.patch
+        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath "${PORT_META_DIR}/patches")"
         do_generate_patch_readme
     fi
 }
