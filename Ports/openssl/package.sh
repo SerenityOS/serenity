@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openssl
 branch='1.1.1'
-version="${branch}p"
+version="${branch}q"
 useconfigure=true
 configscript=Configure
-files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz bf61b62aaa66c7c7639942a94de4c9ae8280c08f17d4eac2e44644d9fc8ace6f"
+files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca"
 auth_type=sha256
 
 depends=("zlib")
