@@ -74,7 +74,7 @@ In order to so, create a new file anywhere, for example `license-template.creato
 
 ```
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
