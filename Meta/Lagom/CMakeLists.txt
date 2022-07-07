@@ -503,6 +503,7 @@ if (BUILD_LAGOM)
         SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
     )
     target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
+    target_compile_options(LibUnicode PRIVATE -Wno-parentheses-equality)
     target_link_libraries(LibUnicode LibTimeZone)
 
     # WASM
