@@ -221,7 +221,7 @@ struct RawFormatResult : public FormatResult {
 };
 
 int currency_digits(StringView currency);
-FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number);
+FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number);
 Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number);
 Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, String formatted_string, int exponent);
 String format_numeric(GlobalObject& global_object, NumberFormat& number_format, Value number);
