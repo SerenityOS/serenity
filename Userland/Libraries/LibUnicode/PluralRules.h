@@ -61,5 +61,6 @@ Optional<PluralCategory> plural_category_from_string(StringView category);
 StringView plural_category_to_string(PluralCategory category);
 
 PluralCategory determine_plural_category(StringView locale, PluralForm form, PluralOperands operands);
+Span<PluralCategory const> available_plural_categories(StringView locale, PluralForm form);
 
 }

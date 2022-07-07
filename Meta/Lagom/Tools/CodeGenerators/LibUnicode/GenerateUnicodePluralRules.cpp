@@ -503,6 +503,21 @@ static constexpr Array<PluralCategoryFunction, @size@> s_@form@_functions { {)~~
 )~~~");
     };
 
+    auto append_categories = [&](auto const& name, auto const& rules) {
+        generator.set("name", name);
+        generator.set("size", String::number(rules.size() + 1));
+
+        generator.append(R"~~~(
+static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)~~~");
+
+        for (auto [category, condition] : rules) {
+            generator.set("category"sv, format_identifier({}, category));
+            generator.append(", PluralCategory::@category@"sv);
+        }
+
+        generator.append("} };");
+    };
+
     append_string_conversions("PluralCategory"sv, "plural_category"sv, locale_data.categories);
 
     for (auto [locale, rules] : locale_data.locales) {
@@ -512,6 +527,18 @@ static constexpr Array<PluralCategoryFunction, @size@> s_@form@_functions { {)~~
 
     append_lookup_table("cardinal"sv);
     append_lookup_table("ordinal"sv);
+
+    generate_mapping(generator, locales, "PluralCategory"sv, "s_cardinal_categories"sv, "s_cardinal_categories_{}", format_identifier,
+        [&](auto const& name, auto const& locale) {
+            auto& rules = locale_data.locales.find(locale)->value;
+            append_categories(name, rules.rules_for_form("cardinal"sv));
+        });
+
+    generate_mapping(generator, locales, "PluralCategory"sv, "s_ordinal_categories"sv, "s_ordinal_categories_{}", format_identifier,
+        [&](auto const& name, auto const& locale) {
+            auto& rules = locale_data.locales.find(locale)->value;
+            append_categories(name, rules.rules_for_form("ordinal"sv));
+        });
 
     generator.append(R"~~~(
 PluralCategory determine_plural_category(StringView locale, PluralForm form, PluralOperands operands)
@@ -533,6 +560,24 @@ PluralCategory determine_plural_category(StringView locale, PluralForm form, Plu
     }
 
     return decider(move(operands));
+}
+
+Span<PluralCategory const> available_plural_categories(StringView locale, PluralForm form)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+
+    switch (form) {
+    case PluralForm::Cardinal:
+        return s_cardinal_categories[locale_index];
+    case PluralForm::Ordinal:
+        return s_ordinal_categories[locale_index];
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 }
