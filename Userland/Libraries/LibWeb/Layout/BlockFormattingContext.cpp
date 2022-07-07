@@ -767,16 +767,21 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         image_height = list_style_image->rect().height();
     }
 
+    int default_marker_width = max(4, marker.font().glyph_height() - 4);
+
     if (marker.text().is_empty()) {
-        marker_state.content_width = image_width + 4;
+        marker_state.content_width = image_width + default_marker_width;
     } else {
         auto text_width = marker.font().width(marker.text());
         marker_state.content_width = image_width + text_width;
     }
 
-    marker_state.content_height = max(image_height, marker.line_height());
+    marker_state.content_height = max(image_height, marker.font().glyph_height() + 1);
 
-    marker_state.offset = { -(marker_state.content_width + 4), 0 };
+    marker_state.offset = {
+        -(marker_state.content_width + default_marker_width),
+        max(0.f, (marker.line_height() - marker_state.content_height) / 2.f)
+    };
 
     if (marker_state.content_height > list_item_state.content_height)
         list_item_state.content_height = marker_state.content_height;
