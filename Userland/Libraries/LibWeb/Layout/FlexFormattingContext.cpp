@@ -1456,40 +1456,78 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container(La
     return sum_of_flex_line_cross_sizes;
 }
 
-float FlexFormattingContext::calculate_main_min_content_contribution(FlexItem const& flex_item) const
+// https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions
+float FlexFormattingContext::calculate_main_min_content_contribution(FlexItem const& item) const
 {
-    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto const& box_state = m_state.get(flex_item.box);
-    if (is_row_layout())
-        return box_state.margin_box_left() + intrinsic_sizes.min_content_size.width() + box_state.margin_box_right();
-    return box_state.margin_box_top() + intrinsic_sizes.min_content_size.height() + box_state.margin_box_bottom();
+    // The main-size min-content contribution of a flex item is
+    // the larger of its outer min-content size and outer preferred size if that is not auto,
+    // clamped by its min/max main size.
+    auto outer_min_content_size = [&]() -> float {
+        auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(item.box);
+        auto inner_main_size = is_row_layout() ? intrinsic_sizes.min_content_size.width() : intrinsic_sizes.min_content_size.height();
+        auto outer_main_size = inner_main_size
+            + item.margins.main_before + item.margins.main_after
+            + item.borders.main_before + item.borders.main_after
+            + item.padding.main_before + item.padding.main_after;
+        return outer_main_size;
+    }();
+
+    if (!has_definite_main_size(item.box)) {
+        return outer_min_content_size;
+    }
+
+    auto clamp_min = has_main_min_size(item.box) ? specified_main_min_size(item.box) : 0;
+    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : NumericLimits<float>::max();
+    auto unclamped_preferred_size = resolved_definite_main_size(item.box);
+    auto clamped_preferred_size = css_clamp(unclamped_preferred_size, clamp_min, clamp_max);
+    return max(outer_min_content_size, clamped_preferred_size);
 }
 
-float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem const& flex_item) const
+// https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions
+float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem const& item) const
 {
-    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto const& box_state = m_state.get(flex_item.box);
-    if (is_row_layout())
-        return box_state.margin_box_left() + intrinsic_sizes.max_content_size.width() + box_state.margin_box_right();
-    return box_state.margin_box_top() + intrinsic_sizes.max_content_size.height() + box_state.margin_box_bottom();
+    // The main-size max-content contribution of a flex item is the larger of its outer max-content size and outer preferred size if that is not auto, clamped by its min/max main size.
+    auto outer_max_content_size = [&]() -> float {
+        auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(item.box);
+        auto inner_main_size = is_row_layout() ? intrinsic_sizes.max_content_size.width() : intrinsic_sizes.max_content_size.height();
+        auto outer_main_size = inner_main_size
+            + item.margins.main_before + item.margins.main_after
+            + item.borders.main_before + item.borders.main_after
+            + item.padding.main_before + item.padding.main_after;
+        return outer_main_size;
+    }();
+
+    if (!has_definite_main_size(item.box)) {
+        return outer_max_content_size;
+    }
+
+    auto clamp_min = has_main_min_size(item.box) ? specified_main_min_size(item.box) : 0;
+    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : NumericLimits<float>::max();
+    auto unclamped_preferred_size = resolved_definite_main_size(item.box);
+    auto clamped_preferred_size = css_clamp(unclamped_preferred_size, clamp_min, clamp_max);
+    return max(outer_max_content_size, clamped_preferred_size);
 }
 
 float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem const& flex_item) const
 {
     auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto const& box_state = m_state.get(flex_item.box);
-    if (is_row_layout())
-        return box_state.margin_box_top() + intrinsic_sizes.min_content_size.height() + box_state.margin_box_bottom();
-    return box_state.margin_box_left() + intrinsic_sizes.min_content_size.width() + box_state.margin_box_right();
+    auto inner_cross_size = is_row_layout() ? intrinsic_sizes.min_content_size.height() : intrinsic_sizes.min_content_size.width();
+    auto outer_cross_size = inner_cross_size
+        + flex_item.margins.cross_before + flex_item.margins.cross_after
+        + flex_item.borders.cross_before + flex_item.borders.cross_after
+        + flex_item.padding.cross_before + flex_item.padding.cross_after;
+    return outer_cross_size;
 }
 
 float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem const& flex_item) const
 {
     auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto const& box_state = m_state.get(flex_item.box);
-    if (is_row_layout())
-        return box_state.margin_box_top() + intrinsic_sizes.max_content_size.height() + box_state.margin_box_bottom();
-    return box_state.margin_box_left() + intrinsic_sizes.max_content_size.width() + box_state.margin_box_right();
+    auto inner_cross_size = is_row_layout() ? intrinsic_sizes.max_content_size.height() : intrinsic_sizes.max_content_size.width();
+    auto outer_cross_size = inner_cross_size
+        + flex_item.margins.cross_before + flex_item.margins.cross_after
+        + flex_item.borders.cross_before + flex_item.borders.cross_after
+        + flex_item.padding.cross_before + flex_item.padding.cross_after;
+    return outer_cross_size;
 }
 
 }
