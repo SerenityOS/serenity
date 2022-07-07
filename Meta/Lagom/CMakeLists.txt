@@ -100,22 +100,12 @@ if (ENABLE_FUZZERS)
     add_compile_options(-fno-omit-frame-pointer)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
-    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
-    # FIXME: Re-enable this check when the warning stops triggering, or document why we can't stop it from triggering.
-    # For now, there is a lot of unused private fields in LibWeb that trigger this that could be removed.
-    # See issue #14137 for details
-    add_compile_options(-Wno-unused-private-field)
 
-    if (ENABLE_FUZZERS_LIBFUZZER)
+if (ENABLE_FUZZERS_LIBFUZZER)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
         add_compile_options(-fsanitize=fuzzer)
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
-    endif()
-
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Wno-expansion-to-defined)
-    if (ENABLE_FUZZERS_LIBFUZZER)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         message(FATAL_ERROR
             "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
             "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain "
