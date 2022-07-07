@@ -277,9 +277,9 @@ float FlexFormattingContext::resolved_definite_cross_size(Box const& box) const
     else
         VERIFY(box.has_definite_width());
     auto const& cross_value = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
-    if (cross_value->is_length())
-        return cross_value->length().to_px(box);
-    return cross_value->resolved(box, CSS::Length::make_px(specified_cross_size(flex_container()))).to_px(box);
+    if (cross_value.is_length())
+        return cross_value.length().to_px(box);
+    return cross_value.resolved(box, CSS::Length::make_px(specified_cross_size(flex_container()))).to_px(box);
 }
 
 float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
@@ -289,9 +289,9 @@ float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
     else
         VERIFY(box.has_definite_height());
     auto const& cross_value = is_row_layout() ? box.computed_values().width() : box.computed_values().height();
-    if (cross_value->is_length())
-        return cross_value->length().to_px(box);
-    return cross_value->resolved(box, CSS::Length::make_px(specified_main_size(flex_container()))).to_px(box);
+    if (cross_value.is_length())
+        return cross_value.length().to_px(box);
+    return cross_value.resolved(box, CSS::Length::make_px(specified_main_size(flex_container()))).to_px(box);
 }
 
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
@@ -315,9 +315,7 @@ float FlexFormattingContext::specified_main_size_of_child_box(Box const& child_b
 {
     auto main_size_of_parent = specified_main_size(flex_container());
     auto& value = is_row_layout() ? child_box.computed_values().width() : child_box.computed_values().height();
-    if (!value.has_value())
-        return 0;
-    return value->resolved(child_box, CSS::Length::make_px(main_size_of_parent)).to_px(child_box);
+    return value.resolved(child_box, CSS::Length::make_px(main_size_of_parent)).to_px(child_box);
 }
 
 float FlexFormattingContext::specified_main_min_size(Box const& box) const
@@ -371,7 +369,7 @@ float FlexFormattingContext::calculated_main_size(Box const& box) const
 bool FlexFormattingContext::is_cross_auto(Box const& box) const
 {
     auto& cross_length = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
-    return cross_length.has_value() && cross_length->is_length() && cross_length->length().is_auto();
+    return cross_length.is_auto();
 }
 
 bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
@@ -1195,7 +1193,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
     } else {
         // Flex container has indefinite cross size.
         auto cross_size_value = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
-        if (!cross_size_value.has_value() || (cross_size_value->is_length() && cross_size_value->length().is_auto()) || cross_size_value->is_percentage()) {
+        if (cross_size_value.is_auto() || cross_size_value.is_percentage()) {
             // If a content-based cross size is needed, use the sum of the flex lines' cross sizes.
             float sum_of_flex_lines_cross_sizes = 0;
             for (auto& flex_line : m_flex_lines) {
@@ -1203,12 +1201,12 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
             }
             cross_size = sum_of_flex_lines_cross_sizes;
 
-            if (cross_size_value->is_percentage()) {
+            if (cross_size_value.is_percentage()) {
                 // FIXME: Handle percentage values here! Right now we're just treating them as "auto"
             }
         } else {
             // Otherwise, resolve the indefinite size at this point.
-            cross_size = cross_size_value->resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
+            cross_size = cross_size_value.resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
         }
     }
     set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));

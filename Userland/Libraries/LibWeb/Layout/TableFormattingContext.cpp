@@ -29,7 +29,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
 
     compute_width(box);
     auto table_width = CSS::Length::make_px(box_state.content_width);
-    auto table_width_is_auto = box.computed_values().width().has_value() && box.computed_values().width()->is_length() && box.computed_values().width()->length().is_auto();
+    auto table_width_is_auto = box.computed_values().width().is_auto();
 
     float total_content_width = 0;
     float total_content_height = 0;
@@ -94,7 +94,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
             content_height += row_state.content_height;
         });
 
-        if (row_group_box.computed_values().width().has_value() && row_group_box.computed_values().width()->is_length() && row_group_box.computed_values().width()->length().is_auto())
+        if (row_group_box.computed_values().width().is_auto())
             row_group_box_state.content_width = content_width;
         row_group_box_state.content_height = content_height;
 
@@ -117,7 +117,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
         auto const& computed_values = cell.computed_values();
-        auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(cell, table_width).resolved(cell) : CSS::Length::make_auto();
+        auto specified_width = computed_values.width().resolved(cell, table_width).resolved(cell);
 
         compute_width(cell, specified_width.is_auto() ? LayoutMode::MinContent : LayoutMode::Normal);
         (void)layout_inside(cell, LayoutMode::Normal);
@@ -166,7 +166,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& col
     float tallest_cell_height = 0;
     float content_width = 0;
     auto* table = row.first_ancestor_of_type<TableBox>();
-    bool use_auto_layout = !table || (!table->computed_values().width().has_value() || (table->computed_values().width()->is_length() && table->computed_values().width()->length().is_auto()));
+    bool use_auto_layout = !table || table->computed_values().width().is_auto();
 
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);

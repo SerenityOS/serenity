@@ -124,7 +124,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         auto const& containing_block_state = m_state.get(containing_block());
 
         auto& width_value = inline_block.computed_values().width();
-        if (!width_value.has_value() || (width_value->is_length() && width_value->length().is_auto())) {
+        if (width_value.is_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
             auto available_width = containing_block_state.content_width
@@ -139,17 +139,17 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             box_state.content_width = width;
         } else {
             auto container_width = CSS::Length::make_px(containing_block_state.content_width);
-            box_state.content_width = width_value->resolved(box, container_width).to_px(inline_block);
+            box_state.content_width = width_value.resolved(box, container_width).to_px(inline_block);
         }
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
         auto& height_value = inline_block.computed_values().height();
-        if (!height_value.has_value() || (height_value->is_length() && height_value->length().is_auto())) {
+        if (height_value.is_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
             BlockFormattingContext::compute_height(inline_block, m_state);
         } else {
             auto container_height = CSS::Length::make_px(containing_block_state.content_height);
-            box_state.content_height = height_value->resolved(box, container_height).to_px(inline_block);
+            box_state.content_height = height_value.resolved(box, container_height).to_px(inline_block);
         }
 
         independent_formatting_context->parent_context_did_dimension_child_root_box();

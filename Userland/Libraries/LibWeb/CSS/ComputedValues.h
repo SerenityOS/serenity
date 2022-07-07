@@ -50,6 +50,12 @@ public:
     static CSS::LengthBox inset() { return { CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() }; }
     static CSS::LengthBox margin() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
     static CSS::LengthBox padding() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
+    static CSS::Length width() { return CSS::Length::make_auto(); }
+    static CSS::Length min_width() { return CSS::Length::make_auto(); }
+    static CSS::Length max_width() { return CSS::Length::make_auto(); }
+    static CSS::Length height() { return CSS::Length::make_auto(); }
+    static CSS::Length min_height() { return CSS::Length::make_auto(); }
+    static CSS::Length max_height() { return CSS::Length::make_auto(); }
 };
 
 struct BackgroundLayerData {
@@ -150,12 +156,12 @@ public:
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    Optional<CSS::LengthPercentage> const& width() const { return m_noninherited.width; }
-    Optional<CSS::LengthPercentage> const& min_width() const { return m_noninherited.min_width; }
-    Optional<CSS::LengthPercentage> const& max_width() const { return m_noninherited.max_width; }
-    Optional<CSS::LengthPercentage> const& height() const { return m_noninherited.height; }
-    Optional<CSS::LengthPercentage> const& min_height() const { return m_noninherited.min_height; }
-    Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
+    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
+    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
+    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
+    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
+    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
+    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
 
     CSS::LengthBox const& inset() const { return m_noninherited.inset; }
@@ -232,12 +238,12 @@ protected:
         Color text_decoration_color { InitialValues::color() };
         Vector<ShadowData> text_shadow {};
         CSS::Position position { InitialValues::position() };
-        Optional<CSS::LengthPercentage> width;
-        Optional<CSS::LengthPercentage> min_width;
-        Optional<CSS::LengthPercentage> max_width;
-        Optional<CSS::LengthPercentage> height;
-        Optional<CSS::LengthPercentage> min_height;
-        Optional<CSS::LengthPercentage> max_height;
+        CSS::LengthPercentage width { InitialValues::width() };
+        CSS::LengthPercentage min_width { InitialValues::min_width() };
+        CSS::LengthPercentage max_width { InitialValues::max_width() };
+        CSS::LengthPercentage height { InitialValues::height() };
+        CSS::LengthPercentage min_height { InitialValues::min_height() };
+        CSS::LengthPercentage max_height { InitialValues::max_height() };
         CSS::LengthBox inset { InitialValues::inset() };
         CSS::LengthBox margin { InitialValues::margin() };
         CSS::LengthBox padding { InitialValues::padding() };

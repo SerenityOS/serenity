@@ -37,8 +37,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode)
                 auto& layout_node = static_cast<Layout::Node&>(*(svg_element->layout_node()));
 
                 // FIXME: Allow for relative lengths here
-                geometry_box_state.content_width = layout_node.computed_values().width().value().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
-                geometry_box_state.content_height = layout_node.computed_values().height().value().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
+                geometry_box_state.content_width = layout_node.computed_values().width().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
+                geometry_box_state.content_height = layout_node.computed_values().height().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
 
                 return IterationDecision::Continue;
             }

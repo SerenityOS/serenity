@@ -205,25 +205,17 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return StyleValueList::create(move(box_shadow), StyleValueList::Separator::Comma);
     }
     case CSS::PropertyID::Width:
-        return style_value_for_length_percentage(layout_node.computed_values().width().value_or(Length::make_auto()));
+        return style_value_for_length_percentage(layout_node.computed_values().width());
     case CSS::PropertyID::MinWidth:
-        if (!layout_node.computed_values().min_width().has_value())
-            return IdentifierStyleValue::create(CSS::ValueID::Auto);
-        return style_value_for_length_percentage(layout_node.computed_values().min_width().value());
+        return style_value_for_length_percentage(layout_node.computed_values().min_width());
     case CSS::PropertyID::MaxWidth:
-        if (!layout_node.computed_values().max_width().has_value())
-            return IdentifierStyleValue::create(CSS::ValueID::None);
-        return style_value_for_length_percentage(layout_node.computed_values().max_width().value());
+        return style_value_for_length_percentage(layout_node.computed_values().max_width());
     case CSS::PropertyID::Height:
-        return style_value_for_length_percentage(layout_node.computed_values().height().value_or(Length::make_auto()));
+        return style_value_for_length_percentage(layout_node.computed_values().height());
     case CSS::PropertyID::MinHeight:
-        if (!layout_node.computed_values().min_height().has_value())
-            return IdentifierStyleValue::create(CSS::ValueID::Auto);
-        return style_value_for_length_percentage(layout_node.computed_values().min_height().value());
+        return style_value_for_length_percentage(layout_node.computed_values().min_height());
     case CSS::PropertyID::MaxHeight:
-        if (!layout_node.computed_values().max_height().has_value())
-            return IdentifierStyleValue::create(CSS::ValueID::None);
-        return style_value_for_length_percentage(layout_node.computed_values().max_height().value());
+        return style_value_for_length_percentage(layout_node.computed_values().max_height());
     case CSS::PropertyID::Margin: {
         auto margin = layout_node.computed_values().margin();
         auto values = NonnullRefPtrVector<StyleValue> {};
