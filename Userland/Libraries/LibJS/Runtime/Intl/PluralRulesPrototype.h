@@ -20,6 +20,7 @@ public:
     virtual ~PluralRulesPrototype() override = default;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(select);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 

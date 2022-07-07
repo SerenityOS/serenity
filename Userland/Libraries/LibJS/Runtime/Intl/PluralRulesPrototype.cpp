@@ -28,7 +28,23 @@ void PluralRulesPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.PluralRules"sv), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.select, select, 1, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+}
+
+// 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select
+JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
+{
+    // 1. Let pr be the this value.
+    // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
+    auto* plural_rules = TRY(typed_this_object(global_object));
+
+    // 3. Let n be ? ToNumber(value).
+    auto number = TRY(vm.argument(0).to_number(global_object));
+
+    // 4. Return ! ResolvePlural(pr, n).
+    auto plurality = resolve_plural(global_object, *plural_rules, number);
+    return js_string(vm, Unicode::plural_category_to_string(plurality));
 }
 
 // 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions

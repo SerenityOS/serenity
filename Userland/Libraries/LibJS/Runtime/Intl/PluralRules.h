@@ -29,4 +29,8 @@ private:
     Unicode::PluralForm m_type { Unicode::PluralForm::Cardinal }; // [[Type]]
 };
 
+Unicode::PluralOperands get_operands(String const& string);
+Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralForm type, Value number, Unicode::PluralOperands operands);
+Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules const& plural_rules, Value number);
+
 }

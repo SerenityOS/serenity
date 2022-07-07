@@ -408,6 +408,7 @@ namespace JS {
     P(seconds)                               \
     P(secondsDisplay)                        \
     P(segment)                               \
+    P(select)                                \
     P(sensitivity)                           \
     P(set)                                   \
     P(setBigInt64)                           \
