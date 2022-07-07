@@ -170,6 +170,11 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
         item.margins.main_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+
+        item.margins.main_before_is_auto = item.box.computed_values().margin().left.is_auto();
+        item.margins.main_after_is_auto = item.box.computed_values().margin().right.is_auto();
+        item.margins.cross_before_is_auto = item.box.computed_values().margin().top.is_auto();
+        item.margins.cross_after_is_auto = item.box.computed_values().margin().bottom.is_auto();
     } else {
         item.borders.main_before = item.box.computed_values().border_top().width;
         item.borders.main_after = item.box.computed_values().border_bottom().width;
@@ -185,6 +190,11 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
         item.margins.main_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+
+        item.margins.main_before_is_auto = item.box.computed_values().margin().top.is_auto();
+        item.margins.main_after_is_auto = item.box.computed_values().margin().bottom.is_auto();
+        item.margins.cross_before_is_auto = item.box.computed_values().margin().left.is_auto();
+        item.margins.cross_after_is_auto = item.box.computed_values().margin().right.is_auto();
     }
 };
 
@@ -1067,9 +1077,17 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
     // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
     for (auto& flex_line : m_flex_lines) {
         for (auto& flex_item : flex_line.items) {
-            if (is_cross_auto(flex_item->box) && flex_container().computed_values().align_items() == CSS::AlignItems::Stretch) {
-                flex_item->cross_size = flex_line.cross_size;
+            //  If a flex item has align-self: stretch, its computed cross size property is auto,
+            //  and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line,
+            //  clamped according to the item’s used min and max cross sizes.
+            if (flex_item->box.computed_values().align_items() == CSS::AlignItems::Stretch
+                && is_cross_auto(flex_item->box)
+                && !flex_item->margins.cross_before_is_auto
+                && !flex_item->margins.cross_after_is_auto) {
+                // FIXME: Clamp to the item's used min and max cross sizes.
+                flex_item->cross_size = flex_line.cross_size - flex_item->margins.cross_before - flex_item->margins.cross_after;
             } else {
+                // Otherwise, the used cross size is the item’s hypothetical cross size.
                 flex_item->cross_size = flex_item->hypothetical_cross_size;
             }
         }

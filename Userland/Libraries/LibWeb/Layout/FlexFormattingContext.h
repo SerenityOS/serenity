@@ -30,6 +30,11 @@ private:
         float main_after { 0 };
         float cross_before { 0 };
         float cross_after { 0 };
+
+        bool main_before_is_auto { false };
+        bool main_after_is_auto { false };
+        bool cross_before_is_auto { false };
+        bool cross_after_is_auto { false };
     };
 
     struct FlexItem {
