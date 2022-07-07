@@ -56,4 +56,10 @@ PluralCategory __attribute__((weak)) determine_plural_category(StringView, Plura
     return PluralCategory::Other;
 }
 
+Span<PluralCategory const> __attribute__((weak)) available_plural_categories(StringView, PluralForm)
+{
+    static constexpr Array<PluralCategory, 1> categories { { PluralCategory::Other } };
+    return categories.span();
+}
+
 }
