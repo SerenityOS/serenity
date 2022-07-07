@@ -19,9 +19,15 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
 
-    auto menu = menuBar()->addMenu("File");
-    auto new_tab_action = menu->addAction("New Tab", QKeySequence(Qt::CTRL | Qt::Key_T));
-    auto quit_action = menu->addAction("Quit", QKeySequence(Qt::CTRL | Qt::Key_Q));
+    auto* menu = menuBar()->addMenu("File");
+
+    auto* new_tab_action = new QAction("New Tab");
+    new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
+    menu->addAction(new_tab_action);
+
+    auto* quit_action = new QAction("Quit");
+    quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
+    menu->addAction(quit_action);
 
     QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
