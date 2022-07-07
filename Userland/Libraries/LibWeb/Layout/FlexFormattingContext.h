@@ -140,6 +140,8 @@ private:
     [[nodiscard]] float calculate_main_min_content_contribution(FlexItem const&) const;
     [[nodiscard]] float calculate_main_max_content_contribution(FlexItem const&) const;
 
+    CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
+
     FormattingState::NodeState& m_flex_container_state;
 
     Vector<FlexLine> m_flex_lines;

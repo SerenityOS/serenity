@@ -568,13 +568,35 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
     return BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
 }
 
+// https://drafts.csswg.org/css-flexbox-1/#propdef-flex-basis
+CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem const& item) const
+{
+    auto flex_basis = item.box.computed_values().flex_basis();
+
+    if (flex_basis.type == CSS::FlexBasis::Auto) {
+        // https://drafts.csswg.org/css-flexbox-1/#valdef-flex-basis-auto
+        // When specified on a flex item, the auto keyword retrieves the value of the main size property as the used flex-basis.
+        // If that value is itself auto, then the used value is content.
+        auto const& main_size = is_row_layout() ? item.box.computed_values().width() : item.box.computed_values().height();
+
+        if (main_size.is_auto()) {
+            flex_basis.type = CSS::FlexBasis::Content;
+        } else {
+            flex_basis.type = CSS::FlexBasis::LengthPercentage;
+            flex_basis.length_percentage = main_size;
+        }
+    }
+
+    return flex_basis;
+}
+
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(FlexItem& flex_item)
 {
     auto& child_box = flex_item.box;
 
     flex_item.flex_base_size = [&] {
-        auto const& used_flex_basis = child_box.computed_values().flex_basis();
+        auto used_flex_basis = used_flex_basis_for_item(flex_item);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (used_flex_basis.is_definite()) {
@@ -590,9 +612,9 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    - a definite cross size,
         if (flex_item.box.has_intrinsic_aspect_ratio()
             && used_flex_basis.type == CSS::FlexBasis::Content
-            && has_definite_cross_size(child_box)) {
-            TODO();
+            && has_definite_cross_size(flex_item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
+            return resolved_definite_cross_size(flex_item.box) * flex_item.box.intrinsic_aspect_ratio().value();
         }
 
         // C. If the used flex basis is content or depends on its available space,
