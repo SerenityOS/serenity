@@ -690,6 +690,7 @@ TEST_CASE(ECMA262_match)
         { "a|$"sv, "x"sv, true, (ECMAScriptFlags)regex::AllFlags::Global }, // #11940, Global (not the 'g' flag) regexps should attempt to match the zero-length end of the string too.
         { "foo\nbar"sv, "foo\nbar"sv, true }, // #12126, ECMA262 regexp should match literal newlines without the 's' flag.
         { "foo[^]bar"sv, "foo\nbar"sv, true }, // #12126, ECMA262 regexp should match newline with [^].
+        { "^[_A-Z]+$"sv, "_aA"sv, true, ECMAScriptFlags::Insensitive } // Insensitive lookup table: characters in a range do not necessarily lie in the same range after being converted to lowercase.
     };
     // clang-format on
 
