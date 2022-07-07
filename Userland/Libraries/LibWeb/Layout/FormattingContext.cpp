@@ -164,10 +164,9 @@ float FormattingContext::greatest_child_width(Box const& box)
 
 FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_widths(Box const& box)
 {
-    auto [min_content, max_content] = calculate_intrinsic_sizes(box);
     return {
-        .preferred_width = max_content.width(),
-        .preferred_minimum_width = min_content.width(),
+        .preferred_width = calculate_max_content_width(box),
+        .preferred_minimum_width = calculate_min_content_width(box),
     };
 }
 
@@ -889,18 +888,6 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
     return cached_box_sizes;
 }
 
-FormattingContext::MinAndMaxContentSize FormattingContext::calculate_min_and_max_content_width(Layout::Box const& box) const
-{
-    auto const& sizes = calculate_intrinsic_sizes(box);
-    return { sizes.min_content_size.width(), sizes.max_content_size.width() };
-}
-
-FormattingContext::MinAndMaxContentSize FormattingContext::calculate_min_and_max_content_height(Layout::Box const& box) const
-{
-    auto const& sizes = calculate_intrinsic_sizes(box);
-    return { sizes.min_content_size.height(), sizes.max_content_size.height() };
-}
-
 float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const
 {
     // If the available space in a given axis is definite, equal to clamp(min-content size, stretch-fit size, max-content size)
@@ -920,14 +907,12 @@ float FormattingContext::calculate_fit_content_size(float min_content_size, floa
 
 float FormattingContext::calculate_fit_content_width(Layout::Box const& box, Optional<float> available_space) const
 {
-    auto [min_content_size, max_content_size] = calculate_min_and_max_content_width(box);
-    return calculate_fit_content_size(min_content_size, max_content_size, available_space);
+    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), available_space);
 }
 
 float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Optional<float> available_space) const
 {
-    auto [min_content_size, max_content_size] = calculate_min_and_max_content_height(box);
-    return calculate_fit_content_size(min_content_size, max_content_size, available_space);
+    return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), available_space);
 }
 
 float FormattingContext::calculate_auto_height(FormattingState const& state, Box const& box)
@@ -938,4 +923,25 @@ float FormattingContext::calculate_auto_height(FormattingState const& state, Box
 
     return compute_auto_height_for_block_level_element(state, box);
 }
+
+float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
+{
+    return calculate_intrinsic_sizes(box).min_content_size.width();
+}
+
+float FormattingContext::calculate_max_content_width(Layout::Box const& box) const
+{
+    return calculate_intrinsic_sizes(box).max_content_size.width();
+}
+
+float FormattingContext::calculate_min_content_height(Layout::Box const& box) const
+{
+    return calculate_intrinsic_sizes(box).min_content_size.height();
+}
+
+float FormattingContext::calculate_max_content_height(Layout::Box const& box) const
+{
+    return calculate_intrinsic_sizes(box).max_content_size.height();
+}
+
 }

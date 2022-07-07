@@ -45,13 +45,10 @@ public:
 
     virtual void parent_context_did_dimension_child_root_box() { }
 
-    struct MinAndMaxContentSize {
-        float min_content_size { 0 };
-        float max_content_size { 0 };
-    };
-
-    MinAndMaxContentSize calculate_min_and_max_content_width(Layout::Box const&) const;
-    MinAndMaxContentSize calculate_min_and_max_content_height(Layout::Box const&) const;
+    float calculate_min_content_width(Layout::Box const&) const;
+    float calculate_max_content_width(Layout::Box const&) const;
+    float calculate_min_content_height(Layout::Box const&) const;
+    float calculate_max_content_height(Layout::Box const&) const;
 
     float calculate_fit_content_height(Layout::Box const&, Optional<float> available_height) const;
     float calculate_fit_content_width(Layout::Box const&, Optional<float> available_width) const;

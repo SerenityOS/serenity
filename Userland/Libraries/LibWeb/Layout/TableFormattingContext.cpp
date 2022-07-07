@@ -123,7 +123,8 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
         (void)layout_inside(cell, LayoutMode::Normal);
 
         if (cell.colspan() == 1) {
-            auto [min_width, max_width] = calculate_min_and_max_content_width(cell);
+            auto min_width = calculate_min_content_width(cell);
+            auto max_width = calculate_max_content_width(cell);
             min_width = max(min_width, cell_state.border_box_width());
             max_width = max(max_width, cell_state.border_box_width());
             column_widths[column_index].min = max(column_widths[column_index].min, min_width);
@@ -137,7 +138,8 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
         size_t colspan = cell.colspan();
         if (colspan > 1) {
             auto& cell_state = m_state.get_mutable(cell);
-            auto [min_width, max_width] = calculate_min_and_max_content_width(cell);
+            auto min_width = calculate_min_content_width(cell);
+            auto max_width = calculate_max_content_width(cell);
             float missing_min = max(min_width, cell_state.border_box_width());
             float missing_max = max(max_width, cell_state.border_box_width());
             for (size_t i = 0; i < colspan; ++i) {

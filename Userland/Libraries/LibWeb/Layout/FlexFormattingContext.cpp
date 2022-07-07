@@ -689,8 +689,8 @@ float FlexFormattingContext::content_size_suggestion(FlexItem const& item) const
 {
     // FIXME: Apply clamps
     if (is_row_layout())
-        return calculate_min_and_max_content_width(item.box).min_content_size;
-    return calculate_min_and_max_content_height(item.box).min_content_size;
+        return calculate_min_content_width(item.box);
+    return calculate_min_content_height(item.box);
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#transferred-size-suggestion
