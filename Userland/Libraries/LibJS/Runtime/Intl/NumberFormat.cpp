@@ -344,7 +344,7 @@ int currency_digits(StringView currency)
 }
 
 // 15.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
-FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number)
+FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number)
 {
     // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
     bool is_negative = is_less_than(number, 0) || number.is_negative_zero();
