@@ -29,7 +29,11 @@ enable_ccache() {
         ccache_tooldir="${SERENITY_BUILD_DIR}/ccache"
         mkdir -p "$ccache_tooldir"
         for tool in cc clang gcc c++ clang++ g++; do
-            ln -sf "$(command -v ccache)" "${ccache_tooldir}/${SERENITY_ARCH}-pc-serenity-${tool}"
+            name="${SERENITY_ARCH}-pc-serenity-${tool}"
+            if ! command -v "${name}" >/dev/null; then
+                continue
+            fi
+            ln -sf "$(command -v ccache)" "${ccache_tooldir}/${name}"
         done
         export PATH="${ccache_tooldir}:$PATH"
     fi
