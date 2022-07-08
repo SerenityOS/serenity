@@ -316,6 +316,9 @@ WebView::WebView()
     m_page_client->set_viewport_rect({ 0, 0, 800, 600 });
 
     m_inverse_pixel_scaling_ratio = 1.0 / devicePixelRatio();
+
+    verticalScrollBar()->setSingleStep(24);
+    horizontalScrollBar()->setSingleStep(24);
 }
 
 WebView::~WebView()
