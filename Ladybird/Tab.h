@@ -25,6 +25,8 @@ public:
 
     void navigate(QString const&);
 
+    void debug_request(String const& request, String const& argument);
+
 public slots:
     void location_edit_return_pressed();
     void page_title_changed(QString);

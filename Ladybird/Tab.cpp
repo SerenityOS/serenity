@@ -123,3 +123,8 @@ int Tab::tab_index()
     auto browser_window = reinterpret_cast<BrowserWindow*>(m_window);
     return browser_window->tab_index(this);
 }
+
+void Tab::debug_request(String const& request, String const& argument)
+{
+    m_view->debug_request(request, argument);
+}

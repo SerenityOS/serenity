@@ -30,14 +30,19 @@
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Rect.h>
 #include <LibMain/Main.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
@@ -101,7 +106,7 @@ public:
         }
 
         Web::PaintContext context(painter, palette(), content_rect.top_left());
-        context.set_should_show_line_box_borders(false);
+        context.set_should_show_line_box_borders(m_should_show_line_box_borders);
         context.set_viewport_rect(content_rect);
         context.set_has_focus(true);
         layout_root->paint_all_phases(context);
@@ -279,6 +284,8 @@ public:
         request->on_file_request_finish(file);
     }
 
+    void set_should_show_line_box_borders(bool state) { m_should_show_line_box_borders = state; }
+
 private:
     HeadlessBrowserPageClient(WebView& view)
         : m_view(view)
@@ -292,6 +299,7 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_viewport_rect { 0, 0, 800, 600 };
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
+    bool m_should_show_line_box_borders { false };
 };
 
 WebView::WebView()
@@ -577,12 +585,78 @@ void initialize_web_engine()
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
 
     Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-    dbgln("Set favoicon path to {}", String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
+    dbgln("Set favicon path to {}", String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
-    Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("{}/res/fonts", s_serenity_resource_root));
+    // Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("{}/res/fonts", s_serenity_resource_root));
+    Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("/home/kling/.local/share/fonts", s_serenity_resource_root));
 
-    Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
-    Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
+    Gfx::FontDatabase::set_default_font_query("Calibri 14 400 0");
+    Gfx::FontDatabase::set_fixed_width_font_query("Consolas 14 400 0");
 
     Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
+}
+
+void WebView::debug_request(String const& request, String const& argument)
+{
+    auto& page = m_page_client->page();
+
+    if (request == "dump-dom-tree") {
+        if (auto* doc = page.top_level_browsing_context().active_document())
+            Web::dump_tree(*doc);
+    }
+
+    if (request == "dump-layout-tree") {
+        if (auto* doc = page.top_level_browsing_context().active_document()) {
+            if (auto* icb = doc->layout_node())
+                Web::dump_tree(*icb);
+        }
+    }
+
+    if (request == "dump-stacking-context-tree") {
+        if (auto* doc = page.top_level_browsing_context().active_document()) {
+            if (auto* icb = doc->layout_node()) {
+                if (auto* stacking_context = icb->paint_box()->stacking_context())
+                    stacking_context->dump();
+            }
+        }
+    }
+
+    if (request == "dump-style-sheets") {
+        if (auto* doc = page.top_level_browsing_context().active_document()) {
+            for (auto& sheet : doc->style_sheets().sheets()) {
+                Web::dump_sheet(sheet);
+            }
+        }
+    }
+
+    if (request == "collect-garbage") {
+        Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+    }
+
+    if (request == "set-line-box-borders") {
+        bool state = argument == "on";
+        m_page_client->set_should_show_line_box_borders(state);
+        page.top_level_browsing_context().set_needs_display(page.top_level_browsing_context().viewport_rect());
+    }
+
+    if (request == "clear-cache") {
+        Web::ResourceLoader::the().clear_cache();
+    }
+
+    if (request == "spoof-user-agent") {
+        Web::ResourceLoader::the().set_user_agent(argument);
+    }
+
+    if (request == "same-origin-policy") {
+        page.set_same_origin_policy_enabled(argument == "on");
+    }
+
+    if (request == "scripting") {
+        page.set_is_scripting_enabled(argument == "on");
+    }
+
+    if (request == "dump-local-storage") {
+        if (auto* doc = page.top_level_browsing_context().active_document())
+            doc->window().local_storage()->dump();
+    }
 }
