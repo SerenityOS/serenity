@@ -24,7 +24,7 @@ HardwareScreenBackend::HardwareScreenBackend(String device)
 
 ErrorOr<void> HardwareScreenBackend::open()
 {
-    m_framebuffer_fd = TRY(Core::System::open(m_device.characters(), O_RDWR | O_CLOEXEC));
+    m_framebuffer_fd = TRY(Core::System::open(m_device, O_RDWR | O_CLOEXEC));
 
     GraphicsConnectorProperties properties;
     if (graphics_connector_get_properties(m_framebuffer_fd, &properties) < 0)
