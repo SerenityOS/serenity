@@ -1463,8 +1463,7 @@ float FlexFormattingContext::calculate_main_min_content_contribution(FlexItem co
     // the larger of its outer min-content size and outer preferred size if that is not auto,
     // clamped by its min/max main size.
     auto outer_min_content_size = [&]() -> float {
-        auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(item.box);
-        auto inner_main_size = is_row_layout() ? intrinsic_sizes.min_content_size.width() : intrinsic_sizes.min_content_size.height();
+        auto inner_main_size = is_row_layout() ? calculate_min_content_width(item.box) : calculate_min_content_height(item.box);
         auto outer_main_size = inner_main_size
             + item.margins.main_before + item.margins.main_after
             + item.borders.main_before + item.borders.main_after
@@ -1488,8 +1487,7 @@ float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem co
 {
     // The main-size max-content contribution of a flex item is the larger of its outer max-content size and outer preferred size if that is not auto, clamped by its min/max main size.
     auto outer_max_content_size = [&]() -> float {
-        auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(item.box);
-        auto inner_main_size = is_row_layout() ? intrinsic_sizes.max_content_size.width() : intrinsic_sizes.max_content_size.height();
+        auto inner_main_size = is_row_layout() ? calculate_max_content_width(item.box) : calculate_max_content_height(item.box);
         auto outer_main_size = inner_main_size
             + item.margins.main_before + item.margins.main_after
             + item.borders.main_before + item.borders.main_after
@@ -1510,8 +1508,7 @@ float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem co
 
 float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem const& flex_item) const
 {
-    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto inner_cross_size = is_row_layout() ? intrinsic_sizes.min_content_size.height() : intrinsic_sizes.min_content_size.width();
+    auto inner_cross_size = is_row_layout() ? calculate_min_content_height(flex_item.box) : calculate_min_content_width(flex_item.box);
     auto outer_cross_size = inner_cross_size
         + flex_item.margins.cross_before + flex_item.margins.cross_after
         + flex_item.borders.cross_before + flex_item.borders.cross_after
@@ -1521,8 +1518,7 @@ float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem c
 
 float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem const& flex_item) const
 {
-    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
-    auto inner_cross_size = is_row_layout() ? intrinsic_sizes.max_content_size.height() : intrinsic_sizes.max_content_size.width();
+    auto inner_cross_size = is_row_layout() ? calculate_max_content_height(flex_item.box) : calculate_max_content_width(flex_item.box);
     auto outer_cross_size = inner_cross_size
         + flex_item.margins.cross_before + flex_item.margins.cross_after
         + flex_item.borders.cross_before + flex_item.borders.cross_after

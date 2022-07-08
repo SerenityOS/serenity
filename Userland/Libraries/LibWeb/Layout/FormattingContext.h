@@ -59,7 +59,6 @@ protected:
     FormattingContext(Type, FormattingState&, Box const&, FormattingContext* parent = nullptr);
 
     float calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const;
-    FormattingState::IntrinsicSizes calculate_intrinsic_sizes(Layout::Box const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
     void compute_inset(Box const& box);

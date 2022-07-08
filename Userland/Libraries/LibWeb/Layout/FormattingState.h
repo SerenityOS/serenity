@@ -102,10 +102,13 @@ struct FormattingState {
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
     struct IntrinsicSizes {
-        Gfx::FloatSize min_content_size;
-        Gfx::FloatSize max_content_size;
+        Optional<float> min_content_width;
+        Optional<float> max_content_width;
+        Optional<float> min_content_height;
+        Optional<float> max_content_height;
     };
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
+
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
 
     HashMap<Box const*, float> mutable flex_item_size_cache;
 

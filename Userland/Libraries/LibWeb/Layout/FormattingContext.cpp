@@ -812,82 +812,6 @@ void FormattingContext::compute_inset(Box const& box)
     resolve_two_opposing_insets(computed_values.inset().top, computed_values.inset().bottom, box_state.inset_top, box_state.inset_bottom, containing_block_state.content_height);
 }
 
-FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
-{
-    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
-
-    if (box.has_intrinsic_width() && box.has_intrinsic_height()) {
-        auto const& replaced_box = static_cast<ReplacedBox const&>(box);
-        Gfx::FloatSize size { replaced_box.intrinsic_width().value_or(0), replaced_box.intrinsic_height().value_or(0) };
-        return FormattingState::IntrinsicSizes {
-            .min_content_size = size,
-            .max_content_size = size,
-        };
-    }
-
-    auto& root_state = m_state.m_root;
-
-    // If we have cached intrinsic sizes for this box, use them.
-    auto it = root_state.intrinsic_sizes.find(&box);
-    if (it != root_state.intrinsic_sizes.end())
-        return it->value;
-
-    // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
-
-    FormattingState::IntrinsicSizes cached_box_sizes;
-    auto const& containing_block = *box.containing_block();
-    {
-        FormattingState throwaway_state(&m_state);
-        auto& containing_block_state = throwaway_state.get_mutable(containing_block);
-        containing_block_state.content_width = INFINITY;
-        containing_block_state.content_height = INFINITY;
-        auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
-        VERIFY(independent_formatting_context);
-
-        independent_formatting_context->run(box, LayoutMode::MaxContent);
-
-        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
-            auto const& box_state = throwaway_state.get(box);
-            cached_box_sizes.max_content_size = { box_state.content_width, box_state.content_height };
-        } else {
-            cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-            cached_box_sizes.max_content_size.set_height(calculate_auto_height(throwaway_state, box));
-        }
-    }
-
-    {
-        FormattingState throwaway_state(&m_state);
-        auto& containing_block_state = throwaway_state.get_mutable(containing_block);
-        containing_block_state.content_width = 0;
-        containing_block_state.content_height = 0;
-        auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
-        VERIFY(independent_formatting_context);
-        independent_formatting_context->run(box, LayoutMode::MinContent);
-        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
-            auto const& box_state = throwaway_state.get(box);
-            cached_box_sizes.min_content_size = { box_state.content_width, box_state.content_height };
-        } else {
-            cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-            cached_box_sizes.min_content_size.set_height(calculate_auto_height(throwaway_state, box));
-        }
-    }
-
-    if (cached_box_sizes.min_content_size.width() > cached_box_sizes.max_content_size.width()) {
-        float tmp = cached_box_sizes.min_content_size.width();
-        cached_box_sizes.min_content_size.set_width(cached_box_sizes.max_content_size.width());
-        cached_box_sizes.max_content_size.set_width(tmp);
-    }
-
-    if (cached_box_sizes.min_content_size.height() > cached_box_sizes.max_content_size.height()) {
-        float tmp = cached_box_sizes.min_content_size.height();
-        cached_box_sizes.min_content_size.set_height(cached_box_sizes.max_content_size.height());
-        cached_box_sizes.max_content_size.set_height(tmp);
-    }
-
-    root_state.intrinsic_sizes.set(&box, cached_box_sizes);
-    return cached_box_sizes;
-}
-
 float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const
 {
     // If the available space in a given axis is definite, equal to clamp(min-content size, stretch-fit size, max-content size)
@@ -926,22 +850,113 @@ float FormattingContext::calculate_auto_height(FormattingState const& state, Box
 
 float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
 {
-    return calculate_intrinsic_sizes(box).min_content_size.width();
+    if (box.has_intrinsic_width())
+        return *box.intrinsic_width();
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    if (cache.min_content_width.has_value())
+        return *cache.min_content_width;
+
+    FormattingState throwaway_state(&m_state);
+    auto const& containing_block = *box.containing_block();
+    auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+    containing_block_state.content_width = 0;
+    auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::MinContent);
+    if (context->type() == FormattingContext::Type::Flex) {
+        auto const& box_state = throwaway_state.get(box);
+        cache.min_content_width = box_state.content_width;
+    } else {
+        cache.min_content_width = context->greatest_child_width(box);
+    }
+    return *cache.min_content_width;
 }
 
 float FormattingContext::calculate_max_content_width(Layout::Box const& box) const
 {
-    return calculate_intrinsic_sizes(box).max_content_size.width();
+    if (box.has_intrinsic_width())
+        return *box.intrinsic_width();
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    if (cache.max_content_width.has_value())
+        return *cache.max_content_width;
+
+    FormattingState throwaway_state(&m_state);
+    auto const& containing_block = *box.containing_block();
+    auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+    containing_block_state.content_width = INFINITY;
+    auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::MaxContent);
+    if (context->type() == FormattingContext::Type::Flex) {
+        auto const& box_state = throwaway_state.get(box);
+        cache.max_content_width = box_state.content_width;
+    } else {
+        cache.max_content_width = context->greatest_child_width(box);
+    }
+
+    return *cache.max_content_width;
 }
 
 float FormattingContext::calculate_min_content_height(Layout::Box const& box) const
 {
-    return calculate_intrinsic_sizes(box).min_content_size.height();
+    if (box.has_intrinsic_height())
+        return *box.intrinsic_height();
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    if (cache.min_content_height.has_value())
+        return *cache.min_content_height;
+
+    FormattingState throwaway_state(&m_state);
+    auto const& containing_block = *box.containing_block();
+    auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+    containing_block_state.content_height = 0;
+    auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::MinContent);
+    if (context->type() == FormattingContext::Type::Flex) {
+        auto const& box_state = throwaway_state.get(box);
+        cache.min_content_height = box_state.content_height;
+    } else {
+        cache.min_content_height = calculate_auto_height(throwaway_state, box);
+    }
+
+    return *cache.min_content_height;
 }
 
 float FormattingContext::calculate_max_content_height(Layout::Box const& box) const
 {
-    return calculate_intrinsic_sizes(box).max_content_size.height();
+    if (box.has_intrinsic_height())
+        return *box.intrinsic_height();
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    if (cache.max_content_height.has_value())
+        return *cache.max_content_height;
+
+    FormattingState throwaway_state(&m_state);
+    auto const& containing_block = *box.containing_block();
+    auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+    containing_block_state.content_height = INFINITY;
+    auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::MaxContent);
+    if (context->type() == FormattingContext::Type::Flex) {
+        auto const& box_state = throwaway_state.get(box);
+        cache.max_content_height = box_state.content_height;
+    } else {
+        cache.max_content_height = calculate_auto_height(throwaway_state, box);
+    }
+
+    return *cache.max_content_height;
 }
 
 }
