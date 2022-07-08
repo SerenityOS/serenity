@@ -407,6 +407,10 @@ void WebView::resizeEvent(QResizeEvent* event)
     auto scaled_width = int(event->size().width() / m_inverse_pixel_scaling_ratio);
     auto scaled_height = int(event->size().height() / m_inverse_pixel_scaling_ratio);
     Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
+    if (verticalScrollBar()->isVisible())
+        rect.set_width(rect.width() - verticalScrollBar()->width());
+    if (horizontalScrollBar()->isVisible())
+        rect.set_height(rect.height() - horizontalScrollBar()->height());
     m_page_client->set_viewport_rect(rect);
 }
 
