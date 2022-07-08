@@ -80,6 +80,9 @@ public:
 
     void load(AK::URL const& url)
     {
+        if (!url.is_valid())
+            return;
+
         page().load(url);
     }
 
