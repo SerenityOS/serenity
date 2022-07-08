@@ -96,6 +96,12 @@ Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralFor
 // 16.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/ecma402/#sec-resolveplural
 Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules const& plural_rules, Value number)
 {
+    return resolve_plural(global_object, plural_rules, plural_rules.type(), number);
+}
+
+// Non-standard overload of ResolvePlural to allow using the AO without an Intl.PluralRules object.
+Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormatBase const& number_format, Unicode::PluralForm type, Value number)
+{
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
     // 3. Assert: Type(n) is Number.
@@ -107,13 +113,12 @@ Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules 
     }
 
     // 5. Let locale be pluralRules.[[Locale]].
-    auto const& locale = plural_rules.locale();
+    auto const& locale = number_format.locale();
 
     // 6. Let type be pluralRules.[[Type]].
-    auto type = plural_rules.type();
 
     // 7. Let res be ! FormatNumericToString(pluralRules, n).
-    auto result = format_numeric_to_string(global_object, plural_rules, number);
+    auto result = format_numeric_to_string(global_object, number_format, number);
 
     // 8. Let s be res.[[FormattedString]].
     auto const& string = result.formatted_string;
