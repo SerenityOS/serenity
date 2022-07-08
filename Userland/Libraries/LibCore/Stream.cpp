@@ -185,7 +185,7 @@ ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
     VERIFY(m_fd == -1);
     auto flags = open_mode_to_options(m_mode);
 
-    m_fd = TRY(System::open(filename.characters_without_null_termination(), flags, permissions));
+    m_fd = TRY(System::open(filename, flags, permissions));
     return {};
 }
 
