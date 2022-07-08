@@ -25,6 +25,10 @@ enum class PluralCategory : u8 {
     Two,
     Few,
     Many,
+
+    // https://unicode.org/reports/tr35/tr35-numbers.html#Explicit_0_1_rules
+    ExactlyZero,
+    ExactlyOne,
 };
 
 // https://unicode.org/reports/tr35/tr35-numbers.html#Plural_Operand_Meanings
@@ -81,6 +85,10 @@ constexpr PluralCategory plural_category_from_string(StringView category)
         return PluralCategory::Few;
     if (category == "many"sv)
         return PluralCategory::Many;
+    if (category == "0"sv)
+        return PluralCategory::ExactlyZero;
+    if (category == "1"sv)
+        return PluralCategory::ExactlyOne;
     VERIFY_NOT_REACHED();
 }
 
@@ -100,6 +108,10 @@ constexpr StringView plural_category_to_string(PluralCategory category)
         return "few"sv;
     case PluralCategory::Many:
         return "many"sv;
+    case PluralCategory::ExactlyZero:
+        return "0"sv;
+    case PluralCategory::ExactlyOne:
+        return "1"sv;
     }
 
     VERIFY_NOT_REACHED();
