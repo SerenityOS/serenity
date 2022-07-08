@@ -18,6 +18,15 @@ enum class PluralForm {
     Ordinal,
 };
 
+enum class PluralCategory : u8 {
+    Other,
+    Zero,
+    One,
+    Two,
+    Few,
+    Many,
+};
+
 // https://unicode.org/reports/tr35/tr35-numbers.html#Plural_Operand_Meanings
 struct PluralOperands {
     static constexpr StringView symbol_to_variable_name(char symbol)
@@ -57,8 +66,44 @@ struct PluralOperands {
 PluralForm plural_form_from_string(StringView plural_form);
 StringView plural_form_to_string(PluralForm plural_form);
 
-Optional<PluralCategory> plural_category_from_string(StringView category);
-StringView plural_category_to_string(PluralCategory category);
+// NOTE: This must be defined inline to be callable from the code generators.
+constexpr PluralCategory plural_category_from_string(StringView category)
+{
+    if (category == "other"sv)
+        return PluralCategory::Other;
+    if (category == "zero"sv)
+        return PluralCategory::Zero;
+    if (category == "one"sv)
+        return PluralCategory::One;
+    if (category == "two"sv)
+        return PluralCategory::Two;
+    if (category == "few"sv)
+        return PluralCategory::Few;
+    if (category == "many"sv)
+        return PluralCategory::Many;
+    VERIFY_NOT_REACHED();
+}
+
+// NOTE: This must be defined inline to be callable from the code generators.
+constexpr StringView plural_category_to_string(PluralCategory category)
+{
+    switch (category) {
+    case PluralCategory::Other:
+        return "other"sv;
+    case PluralCategory::Zero:
+        return "zero"sv;
+    case PluralCategory::One:
+        return "one"sv;
+    case PluralCategory::Two:
+        return "two"sv;
+    case PluralCategory::Few:
+        return "few"sv;
+    case PluralCategory::Many:
+        return "many"sv;
+    }
+
+    VERIFY_NOT_REACHED();
+}
 
 PluralCategory determine_plural_category(StringView locale, PluralForm form, PluralOperands operands);
 Span<PluralCategory const> available_plural_categories(StringView locale, PluralForm form);

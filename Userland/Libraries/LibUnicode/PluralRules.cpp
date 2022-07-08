@@ -6,17 +6,7 @@
 
 #include <LibUnicode/PluralRules.h>
 
-#if ENABLE_UNICODE_DATA
-#    include <LibUnicode/UnicodePluralRules.h>
-#endif
-
 namespace Unicode {
-
-#if !ENABLE_UNICODE_DATA
-enum class PluralCategory : u8 {
-    Other,
-};
-#endif
 
 PluralForm plural_form_from_string(StringView plural_form)
 {
@@ -37,18 +27,6 @@ StringView plural_form_to_string(PluralForm plural_form)
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-Optional<PluralCategory> __attribute__((weak)) plural_category_from_string(StringView category)
-{
-    VERIFY(category == "other"sv);
-    return PluralCategory::Other;
-}
-
-StringView __attribute__((weak)) plural_category_to_string(PluralCategory category)
-{
-    VERIFY(category == PluralCategory::Other);
-    return "other"sv;
 }
 
 PluralCategory __attribute__((weak)) determine_plural_category(StringView, PluralForm, PluralOperands)
