@@ -103,7 +103,7 @@ Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules 
     // 4. If n is not a finite Number, then
     if (!number.is_finite_number()) {
         // a. Return "other".
-        return Unicode::plural_category_from_string("other"sv).value();
+        return Unicode::PluralCategory::Other;
     }
 
     // 5. Let locale be pluralRules.[[Locale]].

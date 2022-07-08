@@ -203,8 +203,8 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/PluralRules.h>
 #include <LibUnicode/RelativeTimeFormat.h>
-#include <LibUnicode/UnicodePluralRules.h>
 #include <LibUnicode/UnicodeRelativeTimeFormat.h>
 
 namespace Unicode {

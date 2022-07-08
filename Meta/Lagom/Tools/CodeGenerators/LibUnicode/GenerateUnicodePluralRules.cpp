@@ -207,7 +207,6 @@ struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
 
     HashMap<String, Locale> locales;
-    Vector<String> categories;
 };
 
 static Relation parse_relation(StringView relation)
@@ -342,9 +341,6 @@ static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringVie
 
                 auto category = key.substring_view(rule_prefix.length());
                 parse_condition(category, condition.as_string(), locale->rules_for_form(form));
-
-                if (!locale_data.categories.contains_slow(category))
-                    locale_data.categories.append(category);
             });
         });
     });
@@ -385,7 +381,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -397,8 +393,6 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 
 namespace Unicode {
 )~~~");
-
-    generate_enum(generator, format_identifier, "PluralCategory"sv, {}, locale_data.categories);
 
     generator.append(R"~~~(
 }
@@ -418,8 +412,6 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 
     generator.append(R"~~~(
 #include <AK/Array.h>
-#include <AK/BinarySearch.h>
-#include <AK/StringView.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/PluralRules.h>
 #include <LibUnicode/UnicodeLocale.h>
@@ -436,17 +428,6 @@ static PluralCategory default_category(PluralOperands)
 }
 
 )~~~");
-
-    auto append_string_conversions = [&](StringView enum_title, StringView enum_snake, auto const& values) {
-        HashValueMap<String> hashes;
-        hashes.ensure_capacity(values.size());
-
-        for (auto const& value : values)
-            hashes.set(value.hash(), format_identifier(enum_title, value));
-
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
-        generate_value_to_string(generator, "{}_to_string"sv, enum_title, enum_snake, format_identifier, values);
-    };
 
     auto append_rules = [&](auto form, auto const& locale, auto const& rules) {
         if (rules.is_empty())
@@ -517,8 +498,6 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
 
         generator.append("} };");
     };
-
-    append_string_conversions("PluralCategory"sv, "plural_category"sv, locale_data.categories);
 
     for (auto [locale, rules] : locale_data.locales) {
         append_rules("cardinal"sv, locale, rules.cardinal_rules);
