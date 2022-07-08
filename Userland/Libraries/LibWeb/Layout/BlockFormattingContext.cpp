@@ -432,11 +432,15 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
         OwnPtr<FormattingContext> independent_formatting_context;
         if (child_box.can_have_children()) {
-            independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
-            if (independent_formatting_context)
-                independent_formatting_context->run(child_box, layout_mode);
-            else
-                layout_block_level_children(verify_cast<BlockContainer>(child_box), layout_mode);
+            if (child_box.children_are_inline()) {
+                layout_inline_children(verify_cast<BlockContainer>(child_box), layout_mode);
+            } else {
+                independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
+                if (independent_formatting_context)
+                    independent_formatting_context->run(child_box, layout_mode);
+                else
+                    layout_block_level_children(verify_cast<BlockContainer>(child_box), layout_mode);
+            }
         }
 
         compute_height(child_box, m_state);
