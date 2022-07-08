@@ -220,8 +220,13 @@ public:
 
     virtual void page_did_change_favicon(Gfx::Bitmap const& bitmap) override
     {
-        QPixmap icon = QPixmap::fromImage(QImage(bitmap.scanline_u8(0), bitmap.width(), bitmap.height(), bitmap.pitch(), QImage::Format_ARGB32));
-        emit m_view.favicon_changed(QIcon(icon));
+        auto qimage = QImage(bitmap.scanline_u8(0), bitmap.width(), bitmap.height(), QImage::Format_ARGB32);
+        if (qimage.isNull())
+            return;
+        auto qpixmap = QPixmap::fromImage(qimage);
+        if (qpixmap.isNull())
+            return;
+        emit m_view.favicon_changed(QIcon(qpixmap));
     }
 
     virtual void page_did_layout() override
