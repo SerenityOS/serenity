@@ -11,6 +11,8 @@
 #include <QAction>
 #include <QStatusBar>
 
+extern String s_serenity_resource_root;
+
 BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     : m_event_loop(event_loop)
 {
@@ -19,15 +21,111 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
 
-    auto* menu = menuBar()->addMenu("File");
+    auto* menu = menuBar()->addMenu("&File");
 
-    auto* new_tab_action = new QAction("New Tab");
+    auto* new_tab_action = new QAction("New &Tab");
     new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     menu->addAction(new_tab_action);
 
-    auto* quit_action = new QAction("Quit");
+    auto* quit_action = new QAction("&Quit");
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
+
+    auto* debug_menu = menuBar()->addMenu("&Debug");
+
+    auto* dump_dom_tree_action = new QAction("Dump DOM Tree");
+    dump_dom_tree_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_dom_tree_action);
+    QObject::connect(dump_dom_tree_action, &QAction::triggered, this, [this] {
+        debug_request("dump-dom-tree");
+    });
+
+    auto* dump_layout_tree_action = new QAction("Dump Layout Tree");
+    dump_layout_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_layout_tree_action);
+    QObject::connect(dump_layout_tree_action, &QAction::triggered, this, [this] {
+        debug_request("dump-layout-tree");
+    });
+
+    auto* dump_stacking_context_tree_action = new QAction("Dump Stacking Context Tree");
+    dump_stacking_context_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layers.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_stacking_context_tree_action);
+    QObject::connect(dump_stacking_context_tree_action, &QAction::triggered, this, [this] {
+        debug_request("dump-stacking-context-tree");
+    });
+
+    auto* dump_style_sheets_action = new QAction("Dump Style Sheets");
+    dump_style_sheets_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_style_sheets_action);
+    QObject::connect(dump_style_sheets_action, &QAction::triggered, this, [this] {
+        debug_request("dump-style-sheets");
+    });
+
+    auto* dump_history_action = new QAction("Dump History");
+    dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_history_action);
+    QObject::connect(dump_history_action, &QAction::triggered, this, [this] {
+        debug_request("dump-history");
+    });
+
+    auto* dump_cookies_action = new QAction("Dump Cookies");
+    dump_cookies_action->setIcon(QIcon(QString("%1/res/icons/browser/cookie.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_cookies_action);
+    QObject::connect(dump_cookies_action, &QAction::triggered, this, [this] {
+        debug_request("dump-cookies");
+    });
+
+    auto* dump_local_storage_action = new QAction("Dump Local Storage");
+    dump_local_storage_action->setIcon(QIcon(QString("%1/res/icons/browser/local-storage.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_local_storage_action);
+    QObject::connect(dump_local_storage_action, &QAction::triggered, this, [this] {
+        debug_request("dump-local-storage");
+    });
+
+    debug_menu->addSeparator();
+
+    auto* show_line_box_borders_action = new QAction("Show Line Box Borders");
+    show_line_box_borders_action->setCheckable(true);
+    debug_menu->addAction(show_line_box_borders_action);
+    QObject::connect(show_line_box_borders_action, &QAction::triggered, this, [this, show_line_box_borders_action] {
+        bool state = show_line_box_borders_action->isChecked();
+        debug_request("set-line-box-borders", state ? "on" : "off");
+    });
+
+    debug_menu->addSeparator();
+
+    auto* collect_garbage_action = new QAction("Collect Garbage");
+    collect_garbage_action->setIcon(QIcon(QString("%1/res/icons/16x16/trash-can.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(collect_garbage_action);
+    QObject::connect(collect_garbage_action, &QAction::triggered, this, [this] {
+        debug_request("collect-garbage");
+    });
+
+    auto* clear_cache_action = new QAction("Clear Cache");
+    clear_cache_action->setIcon(QIcon(QString("%1/res/icons/browser/clear-cache.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(clear_cache_action);
+    QObject::connect(clear_cache_action, &QAction::triggered, this, [this] {
+        debug_request("clear-cache");
+    });
+
+    debug_menu->addSeparator();
+
+    auto* enable_scripting_action = new QAction("Enable Scripting");
+    enable_scripting_action->setCheckable(true);
+    enable_scripting_action->setChecked(true);
+    debug_menu->addAction(enable_scripting_action);
+    QObject::connect(enable_scripting_action, &QAction::triggered, this, [this, enable_scripting_action] {
+        bool state = enable_scripting_action->isChecked();
+        debug_request("scripting", state ? "on" : "off");
+    });
+
+    auto* enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy");
+    enable_same_origin_policy_action->setCheckable(true);
+    debug_menu->addAction(enable_same_origin_policy_action);
+    QObject::connect(enable_same_origin_policy_action, &QAction::triggered, this, [this, enable_same_origin_policy_action] {
+        bool state = enable_same_origin_policy_action->isChecked();
+        debug_request("same-origin-policy", state ? "on" : "off");
+    });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
@@ -40,6 +138,13 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     new_tab();
 
     setCentralWidget(m_tabs_container);
+}
+
+void BrowserWindow::debug_request(String const& request, String const& argument)
+{
+    if (!m_current_tab)
+        return;
+    m_current_tab->debug_request(request, argument);
 }
 
 void BrowserWindow::new_tab()

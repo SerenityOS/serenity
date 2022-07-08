@@ -67,7 +67,7 @@ Tab::Tab(QMainWindow* window)
     QObject::connect(focus_location_edit_action, &QAction::triggered, m_location_edit, &QLineEdit::selectAll);
 }
 
-void Tab::navigate(const QString& url)
+void Tab::navigate(QString const& url)
 {
     view().load(url.toUtf8().data());
 }
@@ -122,4 +122,9 @@ int Tab::tab_index()
     //        There has to be a better way of doing this
     auto browser_window = reinterpret_cast<BrowserWindow*>(m_window);
     return browser_window->tab_index(this);
+}
+
+void Tab::debug_request(String const& request, String const& argument)
+{
+    m_view->debug_request(request, argument);
 }

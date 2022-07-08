@@ -23,7 +23,9 @@ public:
 
     WebView& view() { return *m_view; }
 
-    void navigate(const QString&);
+    void navigate(QString const&);
+
+    void debug_request(String const& request, String const& argument);
 
 public slots:
     void location_edit_return_pressed();
