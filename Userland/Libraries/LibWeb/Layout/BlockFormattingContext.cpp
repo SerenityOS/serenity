@@ -396,6 +396,22 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 
     InlineFormattingContext context(m_state, block_container, *this);
     context.run(block_container, layout_mode);
+
+    float max_line_width = 0;
+    float content_height = 0;
+
+    auto& block_container_state = m_state.get_mutable(block_container);
+
+    for (auto& line_box : block_container_state.line_boxes) {
+        max_line_width = max(max_line_width, line_box.width());
+        content_height += line_box.height();
+    }
+
+    if (layout_mode != LayoutMode::Normal) {
+        block_container_state.content_width = max_line_width;
+    }
+
+    block_container_state.content_height = content_height;
 }
 
 void BlockFormattingContext::layout_block_level_children(BlockContainer const& block_container, LayoutMode layout_mode)

@@ -66,24 +66,7 @@ float InlineFormattingContext::available_space_for_line(float y) const
 void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 {
     VERIFY(containing_block().children_are_inline());
-
     generate_line_boxes(layout_mode);
-
-    float max_line_width = 0;
-    float content_height = 0;
-
-    for (auto& line_box : m_state.get(containing_block()).line_boxes) {
-        max_line_width = max(max_line_width, line_box.width());
-        content_height += line_box.height();
-    }
-
-    auto& containing_block_state = m_state.get_mutable(containing_block());
-
-    if (layout_mode != LayoutMode::Normal) {
-        containing_block_state.content_width = max_line_width;
-    }
-
-    containing_block_state.content_height = content_height;
 }
 
 void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode layout_mode)
