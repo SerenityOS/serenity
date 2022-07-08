@@ -228,7 +228,7 @@ String format_numeric(GlobalObject& global_object, NumberFormat& number_format, 
 Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, Value number);
 RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision);
 RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction);
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern);
+Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
 int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number);
 int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);

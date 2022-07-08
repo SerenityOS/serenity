@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibUnicode/CurrencyCode.h>
 #include <math.h>
 #include <stdlib.h>
@@ -469,7 +470,7 @@ Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, N
     Unicode::NumberFormat found_pattern {};
 
     // 6. Let pattern be GetNumberFormatPattern(numberFormat, x).
-    auto pattern = get_number_format_pattern(number_format, number, found_pattern);
+    auto pattern = get_number_format_pattern(global_object, number_format, number, found_pattern);
     if (!pattern.has_value())
         return {};
 
@@ -1027,17 +1028,8 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
 }
 
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern)
+Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern)
 {
-    auto as_number = [&]() {
-        if (number.is_number())
-            return number.as_double();
-
-        // FIXME: This should be okay for now as our naive Unicode::select_pattern_with_plurality implementation
-        //        checks against just a few specific small values. But revisit this if precision becomes a concern.
-        return number.as_bigint().big_integer().to_double();
-    };
-
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
     // 3. Let dataLocaleData be localeData.[[<dataLocale>]].
@@ -1063,7 +1055,11 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
         auto formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
-        patterns = Unicode::select_pattern_with_plurality(formats, as_number());
+        auto plurality = resolve_plural(global_object, number_format, Unicode::PluralForm::Cardinal, number);
+
+        if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end())
+            patterns = move(*it);
+
         break;
     }
 
@@ -1082,10 +1078,10 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         // Handling of other [[CurrencyDisplay]] options will occur after [[SignDisplay]].
         if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
             auto formats = Unicode::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), Unicode::CompactNumberFormatType::CurrencyUnit);
+            auto plurality = resolve_plural(global_object, number_format, Unicode::PluralForm::Cardinal, number);
 
-            auto maybe_patterns = Unicode::select_pattern_with_plurality(formats, as_number());
-            if (maybe_patterns.has_value()) {
-                patterns = maybe_patterns.release_value();
+            if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end()) {
+                patterns = move(*it);
                 break;
             }
         }
