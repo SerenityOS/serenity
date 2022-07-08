@@ -248,7 +248,9 @@ public:
             content_size = enclosing_int_rect(layout_root->paint_box()->absolute_rect()).size();
 
         m_view.verticalScrollBar()->setMaximum(content_size.height() - m_viewport_rect.height());
+        m_view.verticalScrollBar()->setPageStep(m_viewport_rect.height());
         m_view.horizontalScrollBar()->setMaximum(content_size.width() - m_viewport_rect.width());
+        m_view.horizontalScrollBar()->setPageStep(m_viewport_rect.width());
     }
 
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override
