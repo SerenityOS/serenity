@@ -342,6 +342,24 @@ Date:  Mon Mar 21 22:59:48 2022 +0200
 Kernel: Add an extremely primitive version of KASLR
 ```
 
+### Kernel -ftrivial-auto-var-init
+
+As of GCC 12, both Clang and GCC now support the `-ftrivial-auto-var-init`
+compiler flag. The flag will cause the compiler to automatically initialize
+all variables to a pattern based on it's type. The goal being here is to
+eradicate an entire bug class of issues that can originate from uninitialized
+variables.
+
+It was first enabled for the SerenityOS Kernel in the following [commit](https://github.com/SerenityOS/serenity/commit/458244c0c1c8f077030fa0d8964fad8d75c60d4a):
+
+```
+From 458244c0c1c8f077030fa0d8964fad8d75c60d4a Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <bgianf@serenityos.org>
+Date: Fri, 24 Jun 2022 00:34:38 -0700
+
+Kernel: Enable -ftrivial-auto-var-init as a security mitigation
+```
+
 ## See also
 
 * [`unveil`(2)](help://man/2/unveil)
