@@ -32,5 +32,6 @@ private:
 Unicode::PluralOperands get_operands(String const& string);
 Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralForm type, Value number, Unicode::PluralOperands operands);
 Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules const& plural_rules, Value number);
+Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormatBase const& number_format, Unicode::PluralForm type, Value number);
 
 }
