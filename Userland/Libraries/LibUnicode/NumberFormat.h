@@ -11,6 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
+#include <LibUnicode/PluralRules.h>
 
 namespace Unicode {
 
@@ -36,19 +37,9 @@ enum class CompactNumberFormatType : u8 {
 };
 
 struct NumberFormat {
-    enum class Plurality : u8 {
-        Other,
-        Zero,
-        Single,
-        One,
-        Two,
-        Few,
-        Many,
-    };
-
     u8 magnitude { 0 };
     u8 exponent { 0 };
-    Plurality plurality { Plurality::Other };
+    PluralCategory plurality { PluralCategory::Other };
     StringView zero_format {};
     StringView positive_format {};
     StringView negative_format {};
@@ -94,20 +85,20 @@ Optional<FormatType> select_pattern_with_plurality(Vector<FormatType> const& for
     };
 
     if (number == 0) {
-        if (auto patterns = find_plurality(FormatType::Plurality::Zero); patterns.has_value())
+        if (auto patterns = find_plurality(PluralCategory::Zero); patterns.has_value())
             return patterns;
     } else if (number == 1) {
-        if (auto patterns = find_plurality(FormatType::Plurality::One); patterns.has_value())
+        if (auto patterns = find_plurality(PluralCategory::One); patterns.has_value())
             return patterns;
     } else if (number == 2) {
-        if (auto patterns = find_plurality(FormatType::Plurality::Two); patterns.has_value())
+        if (auto patterns = find_plurality(PluralCategory::Two); patterns.has_value())
             return patterns;
     } else if (number > 2) {
-        if (auto patterns = find_plurality(FormatType::Plurality::Many); patterns.has_value())
+        if (auto patterns = find_plurality(PluralCategory::Many); patterns.has_value())
             return patterns;
     }
 
-    return find_plurality(FormatType::Plurality::Other);
+    return find_plurality(PluralCategory::Other);
 }
 
 }

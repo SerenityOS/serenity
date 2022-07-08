@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
+#include <LibUnicode/PluralRules.h>
 #include <math.h>
 
 using StringIndexType = u16;
@@ -57,29 +58,10 @@ enum class NumberFormatType {
 struct NumberFormat : public Unicode::NumberFormat {
     using Base = Unicode::NumberFormat;
 
-    static Base::Plurality plurality_from_string(StringView plurality)
-    {
-        if (plurality == "other"sv)
-            return Base::Plurality::Other;
-        if (plurality == "1"sv)
-            return Base::Plurality::Single;
-        if (plurality == "zero"sv)
-            return Base::Plurality::Zero;
-        if (plurality == "one"sv)
-            return Base::Plurality::One;
-        if (plurality == "two"sv)
-            return Base::Plurality::Two;
-        if (plurality == "few"sv)
-            return Base::Plurality::Few;
-        if (plurality == "many"sv)
-            return Base::Plurality::Many;
-        VERIFY_NOT_REACHED();
-    }
-
     unsigned hash() const
     {
         auto hash = pair_int_hash(magnitude, exponent);
-        hash = pair_int_hash(hash, static_cast<u8>(plurality));
+        hash = pair_int_hash(hash, to_underlying(plurality));
         hash = pair_int_hash(hash, zero_format_index);
         hash = pair_int_hash(hash, positive_format_index);
         hash = pair_int_hash(hash, negative_format_index);
@@ -118,7 +100,7 @@ struct AK::Formatter<NumberFormat> : Formatter<FormatString> {
             "{{ {}, {}, {}, {}, {}, {}, {{ {} }} }}",
             format.magnitude,
             format.exponent,
-            static_cast<u8>(format.plurality),
+            to_underlying(format.plurality),
             format.zero_format_index,
             format.positive_format_index,
             format.negative_format_index,
@@ -496,7 +478,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
                 VERIFY(split_key[0] == "unitPattern"sv);
             }
 
-            format.plurality = NumberFormat::plurality_from_string(split_key[2]);
+            format.plurality = Unicode::plural_category_from_string(split_key[2]);
             parse_number_pattern(move(patterns), locale_data, NumberFormatType::Compact, format);
 
             auto format_index = locale_data.unique_formats.ensure(move(format));
@@ -675,7 +657,7 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
                 NumberFormat format {};
 
                 auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
-                format.plurality = NumberFormat::plurality_from_string(plurality);
+                format.plurality = Unicode::plural_category_from_string(plurality);
 
                 auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
                 zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, locale_data, format);
@@ -807,6 +789,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
+#include <LibUnicode/PluralRules.h>
 #include <LibUnicode/UnicodeLocale.h>
 #include <LibUnicode/UnicodeNumberFormat.h>
 
@@ -822,7 +805,7 @@ struct NumberFormatImpl {
 
         number_format.magnitude = magnitude;
         number_format.exponent = exponent;
-        number_format.plurality = static_cast<NumberFormat::Plurality>(plurality);
+        number_format.plurality = static_cast<PluralCategory>(plurality);
         number_format.zero_format = s_string_list[zero_format];
         number_format.positive_format = s_string_list[positive_format];
         number_format.negative_format = s_string_list[negative_format];
