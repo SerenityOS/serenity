@@ -153,7 +153,7 @@ ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address c
         }
         if (update == UpdateTable::Delete) {
             for (auto& route : table) {
-                dbgln("candidate: {} {} {} {} {}", route.destination, route.gateway, route.netmask, route.flags, route.adapter);
+                dbgln_if(ROUTING_DEBUG, "candidate: {} {} {} {} {}", route.destination, route.gateway, route.netmask, route.flags, route.adapter);
                 if (route.matches(*route_entry)) {
                     // FIXME: Remove all entries, not only the first one.
                     table.remove(route);
