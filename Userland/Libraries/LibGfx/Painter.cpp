@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
@@ -40,6 +40,11 @@
 #endif
 
 namespace Gfx {
+
+static bool should_paint_as_space(u32 code_point)
+{
+    return is_ascii_space(code_point) || code_point == 0xa0;
+}
 
 template<BitmapFormat format = BitmapFormat::Invalid>
 ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
@@ -1435,7 +1440,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     u32 last_code_point { 0 };
     for (auto it = text.begin(); it != text.end(); ++it) {
         auto code_point = *it;
-        if (code_point == ' ') {
+        if (should_paint_as_space(code_point)) {
             point.translate_by(space_width, 0);
             last_code_point = code_point;
             continue;
@@ -2391,7 +2396,7 @@ void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& st
 
     for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
         auto code_point = *code_point_iterator;
-        if (code_point == ' ') {
+        if (should_paint_as_space(code_point)) {
             x += space_width + font.glyph_spacing();
             last_code_point = code_point;
             continue;
