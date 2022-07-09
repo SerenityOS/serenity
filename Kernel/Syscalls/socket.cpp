@@ -160,7 +160,7 @@ ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
-    if (how & ~SHUT_RDWR)
+    if (how != SHUT_RD && how != SHUT_WR && how != SHUT_RDWR)
         return EINVAL;
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
