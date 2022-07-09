@@ -51,10 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath exec id"));
 
-    if (!account.login()) {
-        perror("Core::Account::login");
-        return 1;
-    }
+    TRY(account.login());
 
     if (simulate_login)
         TRY(Core::System::chdir(account.home_directory()));

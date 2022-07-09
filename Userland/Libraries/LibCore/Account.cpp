@@ -157,18 +157,13 @@ ErrorOr<void> Account::create_user_temporary_directory_if_needed() const
     return {};
 }
 
-bool Account::login() const
+ErrorOr<void> Account::login() const
 {
-    if (setgroups(m_extra_gids.size(), m_extra_gids.data()) < 0)
-        return false;
+    TRY(Core::System::setgroups(m_extra_gids));
+    TRY(Core::System::setgid(m_gid));
+    TRY(Core::System::setuid(m_uid));
 
-    if (setgid(m_gid) < 0)
-        return false;
-
-    if (setuid(m_uid) < 0)
-        return false;
-
-    return true;
+    return {};
 }
 
 void Account::set_password(SecretString const& password)

@@ -38,7 +38,7 @@ public:
     static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);
 
     bool authenticate(SecretString const& password) const;
-    bool login() const;
+    ErrorOr<void> login() const;
 
     ErrorOr<void> create_user_temporary_directory_if_needed() const;
 
