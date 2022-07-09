@@ -586,11 +586,10 @@ public:
             Connect = 1 << 5,
             SocketFlags = Accept | Connect,
 
-            WriteNotOpen = 1 << 6,
-            WriteError = 1 << 7,
-            WriteHangUp = 1 << 8,
-            ReadHangUp = 1 << 9,
-            Exception = WriteNotOpen | WriteError | WriteHangUp | ReadHangUp,
+            WriteError = 1 << 6,
+            WriteHangUp = 1 << 7,
+            ReadHangUp = 1 << 8,
+            Exception = WriteError | WriteHangUp | ReadHangUp,
         };
 
         virtual Type blocker_type() const override { return Type::File; }
