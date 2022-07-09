@@ -51,7 +51,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
         for (size_t i = 0; i < params.nfds; i++) {
             auto& pfd = fds_copy[i];
             auto description = TRY(fds.open_file_description(pfd.fd));
-            BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
+            BlockFlags block_flags = BlockFlags::WriteError | BlockFlags::WriteHangUp; // always want POLLERR, POLLHUP, POLLNVAL
             if (pfd.events & POLLIN)
                 block_flags |= BlockFlags::Read;
             if (pfd.events & POLLOUT)
@@ -60,6 +60,8 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
                 block_flags |= BlockFlags::ReadPriority;
             if (pfd.events & POLLWRBAND)
                 block_flags |= BlockFlags::WritePriority;
+            if (pfd.events & POLLRDHUP)
+                block_flags |= BlockFlags::ReadHangUp;
             fds_info.unchecked_append({ move(description), block_flags });
         }
         return {};
@@ -91,9 +93,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
         if (fds_entry.unblocked_flags == BlockFlags::None)
             continue;
 
-        if (has_any_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
-            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp))
-                pfd.revents |= POLLRDHUP;
+        if (has_any_flag(fds_entry.unblocked_flags, BlockFlags::WriteError | BlockFlags::WriteHangUp)) {
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))
                 pfd.revents |= POLLERR;
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
@@ -114,6 +114,10 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WritePriority)) {
                 VERIFY(pfd.events & POLLWRBAND);
                 pfd.revents |= POLLWRBAND;
+            }
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp)) {
+                VERIFY(pfd.events & POLLRDHUP);
+                pfd.revents |= POLLRDHUP;
             }
         }
         if (pfd.revents)
