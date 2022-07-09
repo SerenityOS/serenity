@@ -50,6 +50,8 @@ set(SERENITY_TOOLCHAIN_FILE "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" CACHE PAT
 # Support non-cross builds by stuffing this in a variable
 set(SERENITY_TOOLCHAIN_FILE_ARG "-DCMAKE_TOOLCHAIN_FILE:STRING=${SERENITY_TOOLCHAIN_FILE}")
 
+configure_file("${SERENITY_SOURCE_DIR}/Toolchain/CMake/meson-cross-file-${SERENITY_TOOLCHAIN}.txt.in" "${SERENITY_BUILD_DIR}/meson-cross-file.txt" @ONLY)
+
 # Allow the Ninja generators to output messages as they happen by assigning
 # these jobs to the 'console' job pool
 set(console_access "")
