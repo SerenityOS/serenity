@@ -664,3 +664,11 @@ void WebView::debug_request(String const& request, String const& argument)
             doc->window().local_storage()->dump();
     }
 }
+
+String WebView::source() const
+{
+    auto* document = m_page_client->page().top_level_browsing_context().active_document();
+    if (!document)
+        return String::empty();
+    return document->source();
+}
