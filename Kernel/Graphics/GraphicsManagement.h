@@ -13,8 +13,8 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Graphics/Generic/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
-#include <Kernel/Graphics/VGA/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
 
@@ -47,15 +47,15 @@ private:
     void enable_vga_text_mode_console_cursor();
 
     bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
-    bool determine_and_initialize_isa_graphics_device();
+
+    void initialize_preset_resolution_generic_display_connector();
+
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 
     // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"
     RefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
 
-    // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
-    RefPtr<VGACompatibleAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
 
     SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes;

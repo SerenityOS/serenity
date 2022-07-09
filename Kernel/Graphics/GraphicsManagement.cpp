@@ -13,9 +13,6 @@
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
-#include <Kernel/Graphics/VGA/ISAAdapter.h>
-#include <Kernel/Graphics/VGA/PCIAdapter.h>
-#include <Kernel/Graphics/VGA/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -126,36 +123,10 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_device()
-{
-    dmesgln("Graphics: Using a ISA VGA compatible generic adapter");
-    auto adapter = ISAVGAAdapter::initialize();
-    m_graphics_devices.append(*adapter);
-    m_vga_adapter = adapter;
-    return true;
-}
-
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     RefPtr<GenericGraphicsAdapter> adapter;
-
-    auto create_bootloader_framebuffer_device = [&]() {
-        if (multiboot_framebuffer_addr.is_null()) {
-            // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
-            // is not present, as there is likely never a valid framebuffer at this physical address.
-            dmesgln("Graphics: Bootloader did not set up a framebuffer");
-        } else if (multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB");
-        } else {
-            dmesgln("Graphics: Using a preset resolution from the bootloader");
-            adapter = PCIVGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
-                multiboot_framebuffer_addr,
-                multiboot_framebuffer_width,
-                multiboot_framebuffer_height,
-                multiboot_framebuffer_pitch);
-        }
-    };
 
     if (!adapter) {
         switch (device_identifier.hardware_id().vendor_id) {
@@ -178,26 +149,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
             adapter = VMWareGraphicsAdapter::try_initialize(device_identifier);
             break;
         default:
-            if (!is_vga_compatible_pci_device(device_identifier))
-                break;
-            //  Note: Although technically possible that a system has a
-            //  non-compatible VGA graphics device that was initialized by the
-            //  Multiboot bootloader to provide a framebuffer, in practice we
-            //  probably want to support these devices natively instead of
-            //  initializing them as some sort of a generic GenericGraphicsAdapter. For now,
-            //  the only known example of this sort of device is qxl in QEMU. For VGA
-            //  compatible devices we don't have a special driver for (e.g. ati-vga,
-            //  qxl-vga, cirrus-vga, vmware-svga in QEMU), it's much more likely that
-            //  these devices will be supported by the Multiboot loader that will
-            //  utilize VESA BIOS extensions (that we don't currently) of these cards
-            //  support, so we want to utilize the provided framebuffer of these
-            //  devices, if possible.
-            if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address())) {
-                create_bootloader_framebuffer_device();
-            } else {
-                dmesgln("Graphics: Using a PCI VGA compatible generic adapter");
-                adapter = PCIVGACompatibleAdapter::initialize(device_identifier);
-            }
             break;
         }
     }
@@ -205,14 +156,19 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     if (!adapter)
         return false;
     m_graphics_devices.append(*adapter);
-
-    // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
-    // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
-    if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address()) && adapter->vga_compatible()) {
-        dbgln("Graphics adapter @ {} is operating in VGA mode", device_identifier.address());
-        m_vga_adapter = static_ptr_cast<VGACompatibleAdapter>(adapter);
-    }
     return true;
+}
+
+UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_display_connector()
+{
+    VERIFY(!multiboot_framebuffer_addr.is_null());
+    VERIFY(multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB);
+    dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
+    m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
+        multiboot_framebuffer_addr,
+        multiboot_framebuffer_width,
+        multiboot_framebuffer_height,
+        multiboot_framebuffer_pitch);
 }
 
 UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
@@ -272,17 +228,12 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     }
 
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-        dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
-        m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
-            multiboot_framebuffer_addr,
-            multiboot_framebuffer_width,
-            multiboot_framebuffer_height,
-            multiboot_framebuffer_pitch);
+        initialize_preset_resolution_generic_display_connector();
         return true;
     }
 
     if (PCI::Access::is_disabled()) {
-        determine_and_initialize_isa_graphics_device();
+        dmesgln("Graphics: Using an assumed-to-exist ISA VGA compatible generic adapter");
         return true;
     }
 
@@ -294,6 +245,18 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
             return;
         determine_and_initialize_graphics_device(device_identifier);
     }));
+
+    // Note: If we failed to find any graphics device to be used natively, but the
+    // bootloader prepared a framebuffer for us to use, then just create a DisplayConnector
+    // for it so the user can still use the system in graphics mode.
+    // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
+    // is not present, as there is likely never a valid framebuffer at this physical address.
+    // Note: We only support RGB framebuffers. Any other format besides RGBX (and RGBA) or BGRX (and BGRA) is obsolete
+    // and is not useful for us.
+    if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        initialize_preset_resolution_generic_display_connector();
+        return true;
+    }
 
     if (!m_console) {
         // If no graphics driver was instantiated and we had a bootloader provided
