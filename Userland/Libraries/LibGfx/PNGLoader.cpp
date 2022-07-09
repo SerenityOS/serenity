@@ -20,8 +20,6 @@
 
 namespace Gfx {
 
-static constexpr Array<u8, 8> png_header = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
-
 struct PNG_IHDR {
     NetworkOrdered<u32> width;
     NetworkOrdered<u32> height;
@@ -166,19 +164,6 @@ private:
 
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
-{
-    int p = a + b - c;
-    int pa = abs(p - a);
-    int pb = abs(p - b);
-    int pc = abs(p - c);
-    if (pa <= pb && pa <= pc)
-        return a;
-    if (pb <= pc)
-        return b;
-    return c;
-}
-
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
     u8 v[4];
@@ -264,11 +249,11 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
                 a = pixels[i - 1];
                 c = pixels_y_minus_1[i - 1];
             }
-            x.v[0] += paeth_predictor(a.v[0], b.v[0], c.v[0]);
-            x.v[1] += paeth_predictor(a.v[1], b.v[1], c.v[1]);
-            x.v[2] += paeth_predictor(a.v[2], b.v[2], c.v[2]);
+            x.v[0] += PNG::paeth_predictor(a.v[0], b.v[0], c.v[0]);
+            x.v[1] += PNG::paeth_predictor(a.v[1], b.v[1], c.v[1]);
+            x.v[2] += PNG::paeth_predictor(a.v[2], b.v[2], c.v[2]);
             if constexpr (has_alpha)
-                x.v[3] += paeth_predictor(a.v[3], b.v[3], c.v[3]);
+                x.v[3] += PNG::paeth_predictor(a.v[3], b.v[3], c.v[3]);
         }
     }
 }
@@ -513,13 +498,13 @@ static bool decode_png_header(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::HeaderDecoded)
         return true;
 
-    if (!context.data || context.data_size < sizeof(png_header)) {
+    if (!context.data || context.data_size < sizeof(PNG::header)) {
         dbgln_if(PNG_DEBUG, "Missing PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
-    if (memcmp(context.data, png_header.span().data(), sizeof(png_header)) != 0) {
+    if (memcmp(context.data, PNG::header.span().data(), sizeof(PNG::header)) != 0) {
         dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
@@ -539,8 +524,8 @@ static bool decode_png_size(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(png_header);
-    size_t data_remaining = context.data_size - sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(PNG::header);
+    size_t data_remaining = context.data_size - sizeof(PNG::header);
 
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
@@ -567,8 +552,8 @@ static bool decode_png_chunks(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(png_header);
-    int data_remaining = context.data_size - sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(PNG::header);
+    int data_remaining = context.data_size - sizeof(PNG::header);
 
     context.compressed_data.ensure_capacity(context.data_size);
 

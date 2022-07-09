@@ -112,8 +112,7 @@ void PNGWriter::add_chunk(PNGChunk& png_chunk)
 
 void PNGWriter::add_png_header()
 {
-    const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
-    m_data.append(png_header, sizeof(png_header));
+    m_data.append(PNG::header.data(), PNG::header.size());
 }
 
 void PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
