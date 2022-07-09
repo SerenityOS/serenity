@@ -23,7 +23,6 @@ launcher_command="/usr/local/bin/freedink --software-rendering --truecolor --ref
 install() {
     target_dir="${SERENITY_INSTALL_ROOT}${resource_path}"
     run_nocd mkdir -p ${target_dir}
-    run_nocd tar zxvf ${freedink_data}.tar.gz
     run_nocd cp -R ${freedink_data}/* ${target_dir}
 }
 
