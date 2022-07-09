@@ -391,14 +391,14 @@ static bool is_forbidden_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-method
 static bool is_method(String const& method)
 {
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$)~~~" };
     return regex.has_match(method);
 }
 
 // https://fetch.spec.whatwg.org/#header-name
 static bool is_header_name(String const& header_name)
 {
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
+    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$)~~~" };
     return regex.has_match(header_name);
 }
 
