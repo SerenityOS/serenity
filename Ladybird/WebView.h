@@ -32,6 +32,8 @@ public:
 
     void debug_request(String const& request, String const& argument);
 
+    String source() const;
+
 signals:
     void linkHovered(QString, int timeout = 0);
     void linkUnhovered();
