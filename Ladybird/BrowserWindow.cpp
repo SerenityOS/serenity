@@ -9,6 +9,7 @@
 #include "WebView.h"
 #include <LibCore/EventLoop.h>
 #include <QAction>
+#include <QPlainTextEdit>
 #include <QStatusBar>
 
 extern String s_serenity_resource_root;
@@ -30,6 +31,24 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     auto* quit_action = new QAction("&Quit");
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
+
+    auto* inspect_menu = menuBar()->addMenu("&Inspect");
+
+    auto* view_source_action = new QAction("View &Source");
+    view_source_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-html.png").arg(s_serenity_resource_root.characters())));
+    view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
+    inspect_menu->addAction(view_source_action);
+    QObject::connect(view_source_action, &QAction::triggered, this, [this] {
+        if (m_current_tab) {
+            auto source = m_current_tab->view().source();
+
+            auto* text_edit = new QPlainTextEdit;
+            text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
+            text_edit->resize(800, 600);
+            text_edit->setPlainText(source.characters());
+            text_edit->show();
+        }
+    });
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
