@@ -35,20 +35,8 @@ void LineBuilder::begin_new_line(bool increment_y)
 {
     if (increment_y)
         m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
-
-    switch (m_containing_block_state.width_constraint) {
-    case SizeConstraint::MinContent:
-        m_available_width_for_current_line = 0;
-        break;
-    case SizeConstraint::MaxContent:
-        m_available_width_for_current_line = INFINITY;
-        break;
-    default:
-        m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
-        break;
-    }
+    m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
     m_max_height_on_current_line = 0;
-
     m_last_line_needs_update = true;
 }
 
@@ -126,7 +114,7 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
     float x_offset = m_context.leftmost_x_offset_at(m_current_y);
-    float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
+    float excess_horizontal_space = m_context.effective_containing_block_width() - line_box.width();
 
     switch (text_align) {
     case CSS::TextAlign::Center:

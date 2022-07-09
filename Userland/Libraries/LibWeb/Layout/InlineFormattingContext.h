@@ -30,11 +30,14 @@ public:
     float leftmost_x_offset_at(float y) const;
     float available_space_for_line(float y) const;
 
+    float effective_containing_block_width() const { return m_effective_containing_block_width; }
+
 private:
     void generate_line_boxes(LayoutMode);
-    void apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, CSS::TextJustify, LineBox&, bool is_last_line);
+    void apply_justification_to_fragments(CSS::TextJustify, LineBox&, bool is_last_line);
 
     FormattingState::NodeState const& m_containing_block_state;
+    float m_effective_containing_block_width { 0 };
 };
 
 }

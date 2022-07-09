@@ -24,6 +24,17 @@ InlineFormattingContext::InlineFormattingContext(FormattingState& state, BlockCo
     : FormattingContext(Type::Inline, state, containing_block, &parent)
     , m_containing_block_state(state.get(containing_block))
 {
+    switch (m_containing_block_state.width_constraint) {
+    case SizeConstraint::MinContent:
+        m_effective_containing_block_width = 0;
+        break;
+    case SizeConstraint::MaxContent:
+        m_effective_containing_block_width = INFINITY;
+        break;
+    default:
+        m_effective_containing_block_width = m_containing_block_state.content_width;
+        break;
+    }
 }
 
 InlineFormattingContext::~InlineFormattingContext() = default;
@@ -50,6 +61,11 @@ float InlineFormattingContext::leftmost_x_offset_at(float y) const
 
 float InlineFormattingContext::available_space_for_line(float y) const
 {
+    if (m_effective_containing_block_width == 0)
+        return 0;
+    if (!isfinite(m_effective_containing_block_width))
+        return INFINITY;
+
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
@@ -58,7 +74,7 @@ float InlineFormattingContext::available_space_for_line(float y) const
     auto const& root_block_state = m_state.get(parent().root());
 
     space.left = max(space.left, m_containing_block_state.offset.x()) - m_containing_block_state.offset.x();
-    space.right = min(root_block_state.content_width - space.right, m_containing_block_state.offset.x() + m_containing_block_state.content_width);
+    space.right = min(root_block_state.content_width - space.right, m_containing_block_state.offset.x() + m_effective_containing_block_width);
 
     return space.right - space.left;
 }
@@ -71,7 +87,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
 void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode layout_mode)
 {
-    auto width_of_containing_block = CSS::Length::make_px(m_containing_block_state.content_width);
+    auto width_of_containing_block = CSS::Length::make_px(m_effective_containing_block_width);
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
 
@@ -120,7 +136,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             box_state.content_width = width;
         } else {
-            auto container_width = CSS::Length::make_px(m_containing_block_state.content_width);
+            auto container_width = CSS::Length::make_px(m_effective_containing_block_width);
             box_state.content_width = width_value.resolved(box, container_width).to_px(inline_block);
         }
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
@@ -144,7 +160,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     dump_tree(box);
 }
 
-void InlineFormattingContext::apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, CSS::TextJustify text_justify, LineBox& line_box, bool is_last_line)
+void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify text_justify, LineBox& line_box, bool is_last_line)
 {
     switch (text_justify) {
     case CSS::TextJustify::None:
@@ -156,11 +172,11 @@ void InlineFormattingContext::apply_justification_to_fragments(FormattingState::
         break;
     }
 
-    float excess_horizontal_space = containing_block_state.content_width - line_box.width();
+    float excess_horizontal_space = m_effective_containing_block_width - line_box.width();
 
     // Only justify the text if the excess horizontal space is less than or
     // equal to 10%, or if we are not looking at the last line box.
-    if (is_last_line && excess_horizontal_space / containing_block_state.content_width > text_justification_threshold)
+    if (is_last_line && excess_horizontal_space / m_effective_containing_block_width > text_justification_threshold)
         return;
 
     float excess_horizontal_space_including_whitespace = excess_horizontal_space;
@@ -276,7 +292,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         for (size_t i = 0; i < line_boxes.size(); i++) {
             auto& line_box = line_boxes[i];
             auto is_last_line = i == line_boxes.size() - 1;
-            apply_justification_to_fragments(m_containing_block_state, text_justify, line_box, is_last_line);
+            apply_justification_to_fragments(text_justify, line_box, is_last_line);
         }
     }
 }
