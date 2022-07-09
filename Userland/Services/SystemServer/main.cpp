@@ -275,8 +275,8 @@ static void populate_devtmpfs_devices_based_on_devctl()
             break;
         }
         case 30: {
-            if (is_block_device) {
-                create_devtmpfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+            if (!is_block_device) {
+                create_devtmpfs_char_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
             }
             break;
         }
