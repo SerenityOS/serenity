@@ -668,7 +668,7 @@ public:
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
-            NonnullRefPtr<OpenFileDescription> description;
+            RefPtr<OpenFileDescription> description;
             BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };
