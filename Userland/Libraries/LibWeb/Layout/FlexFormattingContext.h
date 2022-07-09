@@ -145,6 +145,9 @@ private:
     [[nodiscard]] float calculate_min_content_cross_size(FlexItem const&) const;
     [[nodiscard]] float calculate_max_content_cross_size(FlexItem const&) const;
 
+    [[nodiscard]] float calculate_fit_content_main_size(FlexItem const&) const;
+    [[nodiscard]] float calculate_fit_content_cross_size(FlexItem const&) const;
+
     CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
 
     FormattingState::NodeState& m_flex_container_state;

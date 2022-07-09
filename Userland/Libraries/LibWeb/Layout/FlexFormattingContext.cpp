@@ -78,7 +78,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
         determine_flex_base_size_and_hypothetical_main_size(flex_item);
     }
 
-    if (layout_mode == LayoutMode::MinContent || layout_mode == LayoutMode::MaxContent) {
+    if (m_flex_container_state.width_constraint != SizeConstraint::None || m_flex_container_state.height_constraint != SizeConstraint::None) {
         // We're computing intrinsic size for the flex container.
         determine_intrinsic_size_of_flex_container(layout_mode);
 
@@ -740,7 +740,7 @@ float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) co
 void FlexFormattingContext::determine_main_size_of_flex_container(bool const main_is_constrained, float const main_min_size, float const main_max_size)
 {
     // FIXME: This function should make use of our ability to calculate the flex container's
-    //        intrinsic max-content sizes via LayoutMode::MaxContent.
+    //        intrinsic max-content sizes.
 
     if (!main_is_constrained || !m_available_space->main.has_value()) {
         // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
@@ -1348,7 +1348,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
     // The min-content main size of a single-line flex container is calculated identically to the max-content main size,
     // except that the flex items’ min-content contributions are used instead of their max-content contributions.
     // However, for a multi-line container, it is simply the largest min-content contribution of all the non-collapsed flex items in the flex container.
-    if (!is_single_line() && layout_mode == LayoutMode::MinContent) {
+    if (!is_single_line() && (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent)) {
         float largest_contribution = 0;
         for (auto const& flex_item : m_flex_items) {
             // FIXME: Skip collapsed flex items.
@@ -1368,7 +1368,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
     //    This is the item’s max-content flex fraction.
     for (auto& flex_item : m_flex_items) {
         float contribution;
-        if (layout_mode == LayoutMode::MinContent)
+        if (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent)
             contribution = calculate_main_min_content_contribution(flex_item);
         else
             contribution = calculate_main_max_content_contribution(flex_item);
@@ -1433,9 +1433,9 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container(La
         float largest_contribution = 0;
         for (auto& flex_item : m_flex_items) {
             float contribution;
-            if (layout_mode == LayoutMode::MinContent)
+            if (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent)
                 contribution = calculate_cross_min_content_contribution(flex_item);
-            else if (layout_mode == LayoutMode::MaxContent)
+            else if (m_flex_container_state.width_constraint == SizeConstraint::MaxContent || m_flex_container_state.height_constraint == SizeConstraint::MaxContent)
                 contribution = calculate_cross_max_content_contribution(flex_item);
             largest_contribution = max(largest_contribution, contribution);
         }
@@ -1527,6 +1527,16 @@ float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem c
 float FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
 {
     return is_row_layout() ? calculate_min_content_width(item.box) : calculate_min_content_height(item.box);
+}
+
+float FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
+{
+    return is_row_layout() ? calculate_fit_content_width(item.box, m_available_space->main) : calculate_fit_content_height(item.box, m_available_space->main);
+}
+
+float FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const& item) const
+{
+    return is_row_layout() ? calculate_fit_content_height(item.box, m_available_space->cross) : calculate_fit_content_width(item.box, m_available_space->cross);
 }
 
 float FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const

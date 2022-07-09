@@ -64,7 +64,7 @@ void BlockFormattingContext::parent_context_did_dimension_child_root_box()
 
     // Right-side floats: offset_from_edge is from right edge (float_containing_block_width) to the left content edge of floating_box.
     for (auto& floating_box : m_right_floats.all_boxes) {
-        auto float_containing_block_width = m_state.get(*floating_box->box.containing_block()).content_width;
+        auto float_containing_block_width = containing_block_width_for(floating_box->box);
         auto& box_state = m_state.get_mutable(floating_box->box);
         box_state.offset.set_x(float_containing_block_width - floating_box->offset_from_edge);
     }
@@ -96,19 +96,7 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
     }
 
     auto const& computed_values = box.computed_values();
-    float width_of_containing_block;
-    switch (layout_mode) {
-    case LayoutMode::Normal:
-        width_of_containing_block = m_state.get(*box.containing_block()).content_width;
-        break;
-    case LayoutMode::MinContent:
-        width_of_containing_block = 0;
-        break;
-    case LayoutMode::MaxContent:
-        width_of_containing_block = INFINITY;
-        break;
-    }
-
+    float width_of_containing_block = containing_block_width_for(box);
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto zero_value = CSS::Length::make_px(0);
@@ -244,26 +232,12 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
     box_state.padding_right = padding_right.to_px(box);
 }
 
-void BlockFormattingContext::compute_width_for_floating_box(Box const& box, LayoutMode layout_mode)
+void BlockFormattingContext::compute_width_for_floating_box(Box const& box, LayoutMode)
 {
     // 10.3.5 Floating, non-replaced elements
     auto& computed_values = box.computed_values();
-    auto& containing_block = *box.containing_block();
 
-    float width_of_containing_block = 0;
-
-    switch (layout_mode) {
-    case LayoutMode::Normal:
-        width_of_containing_block = m_state.get(containing_block).content_width;
-        break;
-    case LayoutMode::MinContent:
-        width_of_containing_block = 0;
-        break;
-    case LayoutMode::MaxContent:
-        width_of_containing_block = INFINITY;
-        break;
-    }
-
+    float width_of_containing_block = containing_block_width_for(box);
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto zero_value = CSS::Length::make_px(0);
 
@@ -338,8 +312,7 @@ float BlockFormattingContext::compute_theoretical_height(FormattingState const& 
 {
     auto const& computed_values = box.computed_values();
     auto const& containing_block = *box.containing_block();
-    auto const& containing_block_state = state.get(containing_block);
-    auto containing_block_height = CSS::Length::make_px(containing_block_state.content_height);
+    auto containing_block_height = CSS::Length::make_px(containing_block_height_for(box, state));
 
     auto is_absolute = [](Optional<CSS::LengthPercentage> const& length_percentage) {
         return length_percentage.has_value() && length_percentage->is_length() && length_percentage->length().is_absolute();
@@ -372,8 +345,7 @@ float BlockFormattingContext::compute_theoretical_height(FormattingState const& 
 void BlockFormattingContext::compute_height(Box const& box, FormattingState& state)
 {
     auto const& computed_values = box.computed_values();
-    auto const& containing_block = *box.containing_block();
-    auto width_of_containing_block_as_length = CSS::Length::make_px(state.get(containing_block).content_width);
+    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
 
     // First, resolve the top/bottom parts of the surrounding box model.
 
@@ -394,23 +366,29 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 {
     VERIFY(block_container.children_are_inline());
 
+    auto& block_container_state = m_state.get_mutable(block_container);
+
+    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+        block_container_state.content_width = containing_block_width_for(block_container);
+        block_container_state.content_height = containing_block_height_for(block_container);
+    }
+
     InlineFormattingContext context(m_state, block_container, *this);
     context.run(block_container, layout_mode);
 
     float max_line_width = 0;
     float content_height = 0;
 
-    auto& block_container_state = m_state.get_mutable(block_container);
-
     for (auto& line_box : block_container_state.line_boxes) {
         max_line_width = max(max_line_width, line_box.width());
         content_height += line_box.height();
     }
 
-    if (layout_mode != LayoutMode::Normal) {
+    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         block_container_state.content_width = max_line_width;
     }
 
+    // FIXME: This is weird. Figure out a way to make callers responsible for setting the content height.
     block_container_state.content_height = content_height;
 }
 
@@ -419,6 +397,16 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     VERIFY(!block_container.children_are_inline());
 
     float content_height = 0;
+
+    float original_width = 0;
+    float original_height = 0;
+    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+        auto& block_container_state = m_state.get_mutable(block_container);
+        original_width = block_container_state.content_width;
+        original_height = block_container_state.content_height;
+        block_container_state.content_width = containing_block_width_for(block_container);
+        block_container_state.content_height = containing_block_height_for(block_container);
+    }
 
     block_container.for_each_child_of_type<Box>([&](Box& child_box) {
         auto& box_state = m_state.get_mutable(child_box);
@@ -478,12 +466,16 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         return IterationDecision::Continue;
     });
 
-    if (layout_mode != LayoutMode::Normal) {
-        auto& width = block_container.computed_values().width();
-        if (width.is_auto()) {
-            auto& block_container_state = m_state.get_mutable(block_container);
+    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+        auto& block_container_state = m_state.get_mutable(block_container);
+        if (block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.content_width = greatest_child_width(block_container);
-        }
+        else
+            block_container_state.content_width = original_width;
+        if (block_container_state.height_constraint != SizeConstraint::None)
+            block_container_state.content_height = content_height;
+        else
+            block_container_state.content_height = original_height;
     }
 }
 
@@ -491,7 +483,7 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, 
 {
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(m_state.get(containing_block).content_width);
+    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box));
 
     box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
     box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
@@ -584,10 +576,9 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box const& child_box, BlockContainer const& containing_block)
 {
     auto& box_state = m_state.get_mutable(child_box);
-    auto const& containing_block_state = m_state.get(containing_block);
 
     float x = 0;
-    float available_width_within_containing_block = containing_block_state.content_width;
+    float available_width_within_containing_block = containing_block_width_for(child_box);
 
     if ((!m_left_floats.current_boxes.is_empty() || !m_right_floats.current_boxes.is_empty())
         && creates_block_formatting_context(child_box)) {
@@ -652,19 +643,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     VERIFY(box.is_floating());
 
     auto& box_state = m_state.get_mutable(box);
-    float width_of_containing_block = 0;
-
-    switch (layout_mode) {
-    case LayoutMode::Normal:
-        width_of_containing_block = m_state.get(containing_block).content_width;
-        break;
-    case LayoutMode::MinContent:
-        width_of_containing_block = 0;
-        break;
-    case LayoutMode::MaxContent:
-        width_of_containing_block = INFINITY;
-        break;
-    }
+    float width_of_containing_block = containing_block_width_for(box);
 
     compute_width(box, layout_mode);
     (void)layout_inside(box, layout_mode);
@@ -674,7 +653,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
         float y_offset = box_state.margin_box_top();
-        line_builder->break_if_needed(layout_mode, box_state.margin_box_width());
+        line_builder->break_if_needed(box_state.margin_box_width());
         box_state.offset.set_y(line_builder->current_y() + y_offset);
         line_builder->adjust_last_line_after_inserting_floating_box({}, box.computed_values().float_(), box_state.margin_box_width());
     } else {

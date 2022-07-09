@@ -14,6 +14,12 @@
 
 namespace Web::Layout {
 
+enum class SizeConstraint {
+    None,
+    MinContent,
+    MaxContent,
+};
+
 struct FormattingState {
     FormattingState()
         : m_root(*this)
@@ -38,6 +44,9 @@ struct FormattingState {
         float content_width { 0 };
         float content_height { 0 };
         Gfx::FloatPoint offset;
+
+        SizeConstraint width_constraint { SizeConstraint::None };
+        SizeConstraint height_constraint { SizeConstraint::None };
 
         float margin_left { 0 };
         float margin_right { 0 };

@@ -55,6 +55,12 @@ public:
 
     virtual float greatest_child_width(Box const&);
 
+    float containing_block_width_for(Box const& box) const { return containing_block_width_for(box, m_state); }
+    float containing_block_height_for(Box const& box) const { return containing_block_height_for(box, m_state); }
+
+    static float containing_block_width_for(Box const&, FormattingState const&);
+    static float containing_block_height_for(Box const&, FormattingState const&);
+
 protected:
     FormattingContext(Type, FormattingState&, Box const&, FormattingContext* parent = nullptr);
 

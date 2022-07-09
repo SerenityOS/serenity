@@ -21,20 +21,13 @@
 namespace Web::Layout {
 
 enum class LayoutMode {
-    // Normal layout.
-    // - We use the containing block's used width.
-    // - Content flows into the available space, line breaks inserted where necessary.
+    // Normal layout. No min-content or max-content constraints applied.
     Normal,
 
-    // MinContent layout is used for discovering the min-content intrinsic size of a box.
-    // - We act as if the containing block has 0 used width.
-    // - Every line-breaking opportunity is taken.
-    MinContent,
-
-    // MaxContent layout is used for discovering the max-content intrinsic size of a box.
-    // - We act as if the containing block has infinite used width.
-    // - Only forced line-breaking opportunities are taken.
-    MaxContent,
+    // Intrinsic size determination.
+    // Boxes honor min-content and max-content constraints (set via FormattingState::NodeState::{width,height}_constraint)
+    // by considering their containing block to be 0-sized or infinitely large in the relevant axis.
+    IntrinsicSizeDetermination,
 };
 
 class Node : public TreeNode<Node> {

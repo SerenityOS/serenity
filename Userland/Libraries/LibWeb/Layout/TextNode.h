@@ -37,7 +37,7 @@ public:
         Optional<Chunk> next();
 
     private:
-        Optional<Chunk> try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit = false) const;
+        Optional<Chunk> try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline) const;
 
         const LayoutMode m_layout_mode;
         bool const m_wrap_lines;

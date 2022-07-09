@@ -219,7 +219,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.border_box_width());
+            line_builder.break_if_needed(item.border_box_width());
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
         }
@@ -236,7 +236,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
 
-            if (text_node.computed_values().white_space() != CSS::WhiteSpace::Nowrap && line_builder.break_if_needed(layout_mode, item.border_box_width())) {
+            if (text_node.computed_values().white_space() != CSS::WhiteSpace::Nowrap && line_builder.break_if_needed(item.border_box_width())) {
                 // If whitespace caused us to break, we swallow the whitespace instead of
                 // putting it on the next line.
 

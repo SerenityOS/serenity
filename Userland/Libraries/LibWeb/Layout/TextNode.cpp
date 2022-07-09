@@ -111,12 +111,12 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
 
             // Otherwise, commit the newline!
             ++m_iterator;
-            auto result = try_commit_chunk(start_of_chunk, m_iterator, true, true);
+            auto result = try_commit_chunk(start_of_chunk, m_iterator, true);
             VERIFY(result.has_value());
             return result.release_value();
         }
 
-        if (m_wrap_lines || m_layout_mode == LayoutMode::MinContent) {
+        if (m_wrap_lines) {
             if (is_ascii_space(*m_iterator)) {
                 // Whitespace encountered, and we're allowed to break on whitespace.
                 // If we have accumulated some code points in the current chunk, commit them now and continue with the whitespace next time.
@@ -136,18 +136,15 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
 
     if (start_of_chunk != m_utf8_view.end()) {
         // Try to output whatever's left at the end of the text node.
-        if (auto result = try_commit_chunk(start_of_chunk, m_utf8_view.end(), false, true); result.has_value())
+        if (auto result = try_commit_chunk(start_of_chunk, m_utf8_view.end(), false); result.has_value())
             return result.release_value();
     }
 
     return {};
 }
 
-Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit) const
+Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline) const
 {
-    if (m_layout_mode == LayoutMode::MaxContent && !must_commit)
-        return {};
-
     auto byte_offset = m_utf8_view.byte_offset_of(start);
     auto byte_length = m_utf8_view.byte_offset_of(end) - byte_offset;
 

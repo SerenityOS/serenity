@@ -23,9 +23,9 @@ public:
     void append_text_chunk(TextNode const&, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height);
 
     // Returns whether a line break occurred.
-    bool break_if_needed(LayoutMode layout_mode, float next_item_width)
+    bool break_if_needed(float next_item_width)
     {
-        if (should_break(layout_mode, next_item_width)) {
+        if (should_break(next_item_width)) {
             break_line();
             return true;
         }
@@ -45,7 +45,7 @@ public:
 private:
     void begin_new_line(bool increment_y);
 
-    bool should_break(LayoutMode, float next_item_width);
+    bool should_break(float next_item_width);
 
     LineBox& ensure_last_line_box();
 

@@ -119,7 +119,13 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
         auto const& computed_values = cell.computed_values();
         auto specified_width = computed_values.width().resolved(cell, table_width).resolved(cell);
 
-        compute_width(cell, specified_width.is_auto() ? LayoutMode::MinContent : LayoutMode::Normal);
+        if (specified_width.is_auto()) {
+            auto width = calculate_max_content_width(cell);
+            cell_state.content_width = width;
+        } else {
+            compute_width(cell, LayoutMode::Normal);
+        }
+
         (void)layout_inside(cell, LayoutMode::Normal);
 
         if (cell.colspan() == 1) {
