@@ -76,21 +76,24 @@ auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
 bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
-    // 1. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
+
+    // 2. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
     auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)->big_integer();
 
-    // 2. If ns ≤ nsMinInstant - nsPerDay, then
+    // 3. If ns ≤ nsMinInstant - nsPerDay, then
     if (ns <= DATETIME_NANOSECONDS_MIN) {
         // a. Return false.
         return false;
     }
 
-    // 3. If ns ≥ nsMaxInstant + nsPerDay, then
+    // 4. If ns ≥ nsMaxInstant + nsPerDay, then
     if (ns >= DATETIME_NANOSECONDS_MAX) {
         // a. Return false.
         return false;
     }
-    // 4. Return true.
+    // 5. Return true.
     return true;
 }
 
