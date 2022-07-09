@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
 
 namespace Kernel {
-class KCOVDevice final : public BlockDevice {
+class KCOVDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
@@ -32,7 +32,6 @@ protected:
 
     virtual bool can_read(OpenFileDescription const&, u64) const override final { return true; }
     virtual bool can_write(OpenFileDescription const&, u64) const override final { return true; }
-    virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return EINVAL; }
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
