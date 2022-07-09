@@ -84,9 +84,15 @@ ZlibCompressor::~ZlibCompressor()
 
 void ZlibCompressor::write_header(ZlibCompressionMethod compression_method, ZlibCompressionLevel compression_level)
 {
+    u8 compression_info = 0;
+    if (compression_method == ZlibCompressionMethod::Deflate) {
+        compression_info = AK::log2(DeflateCompressor::window_size) - 8;
+        VERIFY(compression_info <= 7);
+    }
+
     ZlibHeader header {
         .compression_method = compression_method,
-        .compression_info = 0,
+        .compression_info = compression_info,
         .check_bits = 0,
         .present_dictionary = false,
         .compression_level = compression_level,
