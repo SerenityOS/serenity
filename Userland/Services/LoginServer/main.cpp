@@ -23,8 +23,8 @@ static void child_process(Core::Account const& account)
         exit(1);
     }
 
-    if (!account.login()) {
-        dbgln("failed to switch users: {}", strerror(errno));
+    if (auto const result = account.login(); result.is_error()) {
+        dbgln("failed to switch users: {}", result.error());
         exit(1);
     }
 
