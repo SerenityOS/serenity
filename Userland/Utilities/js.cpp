@@ -1338,6 +1338,9 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     js_outln("REPL commands:");
     js_outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
     js_outln("    help(): display this menu");
+    js_outln("    loadINI(file): load the given file as INI.");
+    js_outln("    loadJSON(file): load the given file as JSON.");
+    js_outln("    print(value): pretty-print the given JS value.");
     js_outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
