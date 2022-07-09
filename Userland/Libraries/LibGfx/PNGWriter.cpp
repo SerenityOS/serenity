@@ -116,13 +116,13 @@ void PNGWriter::add_png_header()
     m_data.append(png_header, sizeof(png_header));
 }
 
-void PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, u8 color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
+void PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
     PNGChunk png_chunk { "IHDR" };
     png_chunk.add_as_big_endian(width);
     png_chunk.add_as_big_endian(height);
     png_chunk.add_u8(bit_depth);
-    png_chunk.add_u8(color_type);
+    png_chunk.add_u8(to_underlying(color_type));
     png_chunk.add_u8(compression_method);
     png_chunk.add_u8(filter_method);
     png_chunk.add_u8(interlace_method);
@@ -170,7 +170,7 @@ ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
 {
     PNGWriter writer;
     writer.add_png_header();
-    writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, 6, 0, 0, 0);
+    writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0);
     writer.add_IDAT_chunk(bitmap);
     writer.add_IEND_chunk();
     // FIXME: Handle OOM failure.
