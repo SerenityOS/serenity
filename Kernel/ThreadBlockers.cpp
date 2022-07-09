@@ -360,6 +360,10 @@ bool Thread::SelectBlocker::setup_blocker()
 
         if (!should_block)
             continue;
+        if (!fd_entry.description) {
+            should_block = false;
+            continue;
+        }
         if (!fd_entry.description->blocker_set().add_blocker(*this, &fd_entry))
             should_block = false;
     }
@@ -371,8 +375,10 @@ Thread::SelectBlocker::~SelectBlocker() = default;
 void Thread::SelectBlocker::finalize()
 {
     Thread::FileBlocker::finalize();
-    for (auto& fd_entry : m_fds)
-        fd_entry.description->blocker_set().remove_blocker(*this);
+    for (auto& fd_entry : m_fds) {
+        if (fd_entry.description)
+            fd_entry.description->blocker_set().remove_blocker(*this);
+    }
 }
 
 void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
@@ -397,6 +403,7 @@ bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker,
         if (m_did_unblock)
             return false;
 
+        VERIFY(fd_info.description);
         auto unblock_flags = fd_info.description->should_unblock(fd_info.block_flags);
         if (unblock_flags == BlockFlags::None)
             return false;
@@ -420,6 +427,11 @@ size_t Thread::SelectBlocker::collect_unblocked_flags()
     size_t count = 0;
     for (auto& fd_entry : m_fds) {
         VERIFY(fd_entry.block_flags != FileBlocker::BlockFlags::None);
+
+        if (!fd_entry.description) {
+            count++;
+            continue;
+        }
 
         // unblock will have set at least the first descriptor's unblock
         // flags that triggered the unblock. Make sure we don't discard that
