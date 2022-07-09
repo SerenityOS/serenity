@@ -43,4 +43,14 @@ ALWAYS_INLINE u8 paeth_predictor(u8 a, u8 b, u8 c)
     return c;
 }
 
+ALWAYS_INLINE AK::SIMD::u8x4 paeth_predictor(AK::SIMD::u8x4 a, AK::SIMD::u8x4 b, AK::SIMD::u8x4 c)
+{
+    return AK::SIMD::u8x4 {
+        paeth_predictor(a[0], b[0], c[0]),
+        paeth_predictor(a[1], b[1], c[1]),
+        paeth_predictor(a[2], b[2], c[2]),
+        paeth_predictor(a[3], b[3], c[3]),
+    };
+}
+
 };
