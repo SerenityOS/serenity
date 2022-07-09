@@ -522,27 +522,8 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
 {
     VERIFY(!has_definite_main_size(item.box));
 
-    if (has_definite_cross_size(item.box)) {
-        // For indefinite main sizes, we perform a throwaway layout and then measure it.
-        FormattingState throwaway_state(&m_state);
-        auto& box_state = throwaway_state.get_mutable(item.box);
-
-        // Item has definite cross size, layout with that as the used cross size.
-        auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
-        // NOTE: Flex items should always create an independent formatting context!
-        VERIFY(independent_formatting_context);
-
-        if (is_row_layout()) {
-            box_state.content_height = resolved_definite_cross_size(item.box);
-        } else {
-            box_state.content_width = resolved_definite_cross_size(item.box);
-        }
-        independent_formatting_context->run(item.box, LayoutMode::Normal);
-
-        if (is_row_layout())
-            return box_state.content_width;
-        return BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
-    }
+    if (has_definite_cross_size(item.box))
+        return calculate_max_content_main_size(item);
 
     // Item has indefinite cross size, layout with "fit-content"
 
