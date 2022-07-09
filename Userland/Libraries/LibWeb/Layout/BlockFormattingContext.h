@@ -46,6 +46,8 @@ public:
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, LineBuilder* = nullptr);
 
+    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& content_height);
+
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 

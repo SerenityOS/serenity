@@ -392,90 +392,84 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     block_container_state.content_height = content_height;
 }
 
+void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& content_height)
+{
+    auto& box_state = m_state.get_mutable(box);
+
+    if (box.is_absolutely_positioned()) {
+        m_absolutely_positioned_boxes.append(box);
+        return;
+    }
+
+    // NOTE: ListItemMarkerBoxes are placed by their corresponding ListItemBox.
+    if (is<ListItemMarkerBox>(box))
+        return;
+
+    if (box.is_floating()) {
+        layout_floating_box(box, block_container, layout_mode);
+        content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
+        return;
+    }
+
+    compute_width(box, layout_mode);
+    if (is<ReplacedBox>(box) || is<BlockContainer>(box))
+        place_block_level_element_in_normal_flow_vertically(box, block_container);
+
+    if (box.has_definite_height()) {
+        compute_height(box, m_state);
+    }
+
+    OwnPtr<FormattingContext> independent_formatting_context;
+    if (box.can_have_children()) {
+        if (box.children_are_inline()) {
+            layout_inline_children(verify_cast<BlockContainer>(box), layout_mode);
+        } else {
+            independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
+            if (independent_formatting_context)
+                independent_formatting_context->run(box, layout_mode);
+            else
+                layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode);
+        }
+    }
+
+    compute_height(box, m_state);
+
+    compute_inset(box);
+
+    if (is<ReplacedBox>(box) || is<BlockContainer>(box))
+        place_block_level_element_in_normal_flow_horizontally(box, block_container);
+
+    if (is<ListItemBox>(box)) {
+        layout_list_item_marker(static_cast<ListItemBox const&>(box));
+    }
+
+    content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
+
+    if (independent_formatting_context)
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
+}
+
 void BlockFormattingContext::layout_block_level_children(BlockContainer const& block_container, LayoutMode layout_mode)
 {
     VERIFY(!block_container.children_are_inline());
 
     float content_height = 0;
 
-    float original_width = 0;
-    float original_height = 0;
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        original_width = block_container_state.content_width;
-        original_height = block_container_state.content_height;
         block_container_state.content_width = containing_block_width_for(block_container);
         block_container_state.content_height = containing_block_height_for(block_container);
     }
 
-    block_container.for_each_child_of_type<Box>([&](Box& child_box) {
-        auto& box_state = m_state.get_mutable(child_box);
-
-        if (child_box.is_absolutely_positioned()) {
-            m_absolutely_positioned_boxes.append(child_box);
-            return IterationDecision::Continue;
-        }
-
-        // NOTE: ListItemMarkerBoxes are placed by their corresponding ListItemBox.
-        if (is<ListItemMarkerBox>(child_box))
-            return IterationDecision::Continue;
-
-        if (child_box.is_floating()) {
-            layout_floating_box(child_box, block_container, layout_mode);
-            content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
-            return IterationDecision::Continue;
-        }
-
-        compute_width(child_box, layout_mode);
-        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
-            place_block_level_element_in_normal_flow_vertically(child_box, block_container);
-
-        if (child_box.has_definite_height()) {
-            compute_height(child_box, m_state);
-        }
-
-        OwnPtr<FormattingContext> independent_formatting_context;
-        if (child_box.can_have_children()) {
-            if (child_box.children_are_inline()) {
-                layout_inline_children(verify_cast<BlockContainer>(child_box), layout_mode);
-            } else {
-                independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
-                if (independent_formatting_context)
-                    independent_formatting_context->run(child_box, layout_mode);
-                else
-                    layout_block_level_children(verify_cast<BlockContainer>(child_box), layout_mode);
-            }
-        }
-
-        compute_height(child_box, m_state);
-
-        compute_inset(child_box);
-
-        if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
-            place_block_level_element_in_normal_flow_horizontally(child_box, block_container);
-
-        if (is<ListItemBox>(child_box)) {
-            layout_list_item_marker(static_cast<ListItemBox const&>(child_box));
-        }
-
-        content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
-
-        if (independent_formatting_context)
-            independent_formatting_context->parent_context_did_dimension_child_root_box();
-
+    block_container.for_each_child_of_type<Box>([&](Box& box) {
+        layout_block_level_box(box, block_container, layout_mode, content_height);
         return IterationDecision::Continue;
     });
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        if (block_container_state.width_constraint != SizeConstraint::None)
-            block_container_state.content_width = greatest_child_width(block_container);
-        else
-            block_container_state.content_width = original_width;
-        if (block_container_state.height_constraint != SizeConstraint::None)
-            block_container_state.content_height = content_height;
-        else
-            block_container_state.content_height = original_height;
+        block_container_state.content_width = greatest_child_width(block_container);
+        block_container_state.content_height = content_height;
     }
 }
 
