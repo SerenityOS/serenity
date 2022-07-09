@@ -455,7 +455,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         // a. Let name be parseResult.[[Name]].
         auto name = parse_result.name.release_value();
 
-        // b. If ParseText(StringToCodePoints(name, TimeZoneNumericUTCOffset)) is a List of errors, then
+        // b. If ParseText(StringToCodePoints(name), TimeZoneNumericUTCOffset) is a List of errors, then
         if (!is_valid_time_zone_numeric_utc_offset_syntax(name)) {
             // i. If IsValidTimeZoneName(name) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(name))
