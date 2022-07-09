@@ -256,12 +256,14 @@ ErrorOr<void> Socket::shutdown(int how)
         return set_so_error(ENOTCONN);
     if (m_role == Role::Listener)
         return set_so_error(ENOTCONN);
-    if (!m_shut_down_for_writing && (how & SHUT_WR))
+    if (!m_shut_down_for_writing && (how == SHUT_WR || how == SHUT_RDWR)) {
         shut_down_for_writing();
-    if (!m_shut_down_for_reading && (how & SHUT_RD))
+        m_shut_down_for_writing = true;
+    }
+    if (!m_shut_down_for_reading && (how == SHUT_RD || how == SHUT_RDWR)) {
         shut_down_for_reading();
-    m_shut_down_for_reading |= (how & SHUT_RD) != 0;
-    m_shut_down_for_writing |= (how & SHUT_WR) != 0;
+        m_shut_down_for_reading = true;
+    }
     return {};
 }
 
