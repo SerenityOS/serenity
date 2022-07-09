@@ -227,7 +227,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return true;
     }
 
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
