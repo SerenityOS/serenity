@@ -122,13 +122,6 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 
-ErrorOr<void> setgroups(Span<gid_t const> gids)
-{
-    if (::setgroups(gids.size(), gids.data()) < 0)
-        return Error::from_syscall("setgroups"sv, -errno);
-    return {};
-}
-
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags)
 {
     if (target.is_null() || fs_type.is_null())
@@ -1215,6 +1208,13 @@ ErrorOr<Vector<gid_t>> getgroups()
     if (::getgroups(count, groups.data()) < 0)
         return Error::from_syscall("getgroups"sv, -errno);
     return groups;
+}
+
+ErrorOr<void> setgroups(Span<gid_t const> gids)
+{
+    if (::setgroups(gids.size(), gids.data()) < 0)
+        return Error::from_syscall("setgroups"sv, -errno);
+    return {};
 }
 
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
