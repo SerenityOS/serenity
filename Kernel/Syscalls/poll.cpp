@@ -97,7 +97,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))
                 pfd.revents |= POLLERR;
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
-                pfd.revents |= POLLNVAL;
+                pfd.revents |= POLLHUP;
         } else {
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::Read)) {
                 VERIFY(pfd.events & POLLIN);
