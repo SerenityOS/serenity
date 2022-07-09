@@ -99,7 +99,6 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
     JS_DECLARE_NATIVE_FUNCTION(repl_help);
-    JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
     JS_DECLARE_NATIVE_FUNCTION(load_ini);
     JS_DECLARE_NATIVE_FUNCTION(load_json);
@@ -116,7 +115,6 @@ public:
     virtual ~ScriptObject() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(load_file);
     JS_DECLARE_NATIVE_FUNCTION(load_ini);
     JS_DECLARE_NATIVE_FUNCTION(load_json);
     JS_DECLARE_NATIVE_FUNCTION(print);
@@ -1252,24 +1250,6 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     return true;
 }
 
-static JS::ThrowCompletionOr<JS::Value> load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
-{
-    auto filename = TRY(vm.argument(0).to_string(global_object));
-    auto file = Core::File::construct(filename);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
-    auto file_contents = file->read_all();
-    auto source = StringView { file_contents };
-    auto script_or_error = JS::Script::parse(source, vm.interpreter().realm(), filename);
-    if (script_or_error.is_error()) {
-        auto& error = script_or_error.error()[0];
-        return vm.throw_completion<JS::SyntaxError>(global_object, error.to_string());
-    }
-    // FIXME: Use eval()-like semantics and execute in current scope?
-    TRY(vm.interpreter().run(script_or_error.value()));
-    return JS::js_undefined();
-}
-
 static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
     auto filename = TRY(vm.argument(0).to_string(global_object));
@@ -1310,7 +1290,6 @@ void ReplObject::initialize_global_object()
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function("exit", exit_interpreter, 0, attr);
     define_native_function("help", repl_help, 0, attr);
-    define_native_function("load", load_file, 1, attr);
     define_native_function("save", save_to_file, 1, attr);
     define_native_function("loadINI", load_ini, 1, attr);
     define_native_function("loadJSON", load_json, 1, attr);
@@ -1359,14 +1338,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     js_outln("REPL commands:");
     js_outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
     js_outln("    help(): display this menu");
-    js_outln("    load(file): load given JS file into running session. For example: load(\"foo.js\")");
     js_outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
-{
-    return load_file_impl(vm, global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_ini)
@@ -1390,15 +1363,9 @@ void ScriptObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("load", load_file, 1, attr);
     define_native_function("loadINI", load_ini, 1, attr);
     define_native_function("loadJSON", load_json, 1, attr);
     define_native_function("print", print, 1, attr);
-}
-
-JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
-{
-    return load_file_impl(vm, global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_ini)
