@@ -136,12 +136,7 @@ void NetworkSettingsWidget::on_switch_enabled_or_dhcp()
 void NetworkSettingsWidget::apply_settings()
 {
     auto config_file = Core::ConfigFile::open_for_system("Network", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
-    bool may_need_to_reboot = false;
     for (auto const& adapter_data : m_network_adapters) {
-        // FIXME: Setting Enabled=false starts working only after a reboot. Fix this on the NetworkServer side.
-        if (!m_current_adapter_data->enabled)
-            may_need_to_reboot = true;
-
         auto netmask = IPv4Address::netmask_from_cidr(adapter_data.value.cidr).to_string();
         config_file->write_bool_entry(adapter_data.key, "Enabled", adapter_data.value.enabled);
         config_file->write_bool_entry(adapter_data.key, "DHCP", adapter_data.value.dhcp);
@@ -161,9 +156,6 @@ void NetworkSettingsWidget::apply_settings()
     }
 
     GUI::Process::spawn_or_show_error(window(), "/bin/NetworkServer"sv);
-
-    if (may_need_to_reboot)
-        GUI::MessageBox::show(window(), "You may need to reboot for changes to take effect."sv, "Network Settings"sv, GUI::MessageBox::Type::Warning);
 }
 
 }
