@@ -1351,7 +1351,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
         else
             contribution = calculate_main_max_content_contribution(flex_item);
 
-        float flex_fraction = contribution - flex_item.flex_base_size;
+        float flex_fraction = contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after);
         if (flex_fraction >= 0)
             flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
         else
