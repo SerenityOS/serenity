@@ -1,17 +1,39 @@
 ## Name
 
-font - Bitmap Font File format
+font - Bitmap Font File format (.font)
 
 ## Synopsis
 
-The .font file format stores bitmap fonts in SerenityOS's own binary format.
+Font files contain bitmap definitions of fonts (Gfx::BitmapFont).
 
 ## Description
 
-These files contain bitmap definitions of fonts, either varying-width or fixed-width.
+Bitmap fonts can be either varying-width or fixed-width.
 
-The first four bytes contain the filemagic: `!Fnt` (0x21466e74).
+There is a list of features:
+
+- The first four bytes contain the filemagic: !Fnt (0x21466e74).
+- Question mark '?' is used as a fallback for unknown glyph or emoji.
+- Gfx::BitmapFont supports read from and write to the font files (as well as read directly from the memory).
+
+## Structure
+
+| size       | member name         |
+|------------|---------------------|
+| [4 bytes]  | filemagic           |
+| [1 byte]   | glyph width         |
+| [1 byte]   | glyph height        |
+| [2 bytes]  | range mask size     |
+| [1 byte]   | variable width flag |
+| [1 byte]   | glyph spacing       |
+| [1 byte]   | baseline            |
+| [1 byte]   | mean line           |
+| [1 byte]   | presentation size   |
+| [2 bytes]  | weight              |
+| [1 byte]   | slope               |
+| [32 bytes] | name                |
+| [32 bytes] | family              |
 
 ## See also
 
-- Format header definition in `Gfx::FontFileHeader` in [`Userland/Libraries/LibGfx/Font/BitmapFont.cpp`](../../../../../Userland/Libraries/LibGfx/Font/BitmapFont.cpp).
+- Userland/Libraries/LibGfx/Font/BitmapFont.cpp (format header definition in Gfx::FontFileHeader)
