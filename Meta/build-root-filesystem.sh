@@ -131,7 +131,7 @@ chmod 1777 mnt/tmp
 echo "done"
 
 printf "creating utmp file... "
-touch mnt/var/run/utmp
+echo "{}" > mnt/var/run/utmp
 chown 0:$utmp_gid mnt/var/run/utmp
 chmod 664 mnt/var/run/utmp
 echo "done"
