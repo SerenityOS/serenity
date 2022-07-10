@@ -46,7 +46,7 @@ private:
     explicit AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&&, AllocationStrategy, Optional<CommittedPhysicalPageSet>);
     explicit AnonymousVMObject(PhysicalAddress, FixedArray<RefPtr<PhysicalPage>>&&);
     explicit AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&&);
-    explicit AnonymousVMObject(AnonymousVMObject const&, NonnullRefPtr<SharedCommittedCowPages>, FixedArray<RefPtr<PhysicalPage>>&&);
+    explicit AnonymousVMObject(WeakPtr<AnonymousVMObject>, NonnullRefPtr<SharedCommittedCowPages>, FixedArray<RefPtr<PhysicalPage>>&&);
 
     virtual StringView class_name() const override { return "AnonymousVMObject"sv; }
 
@@ -82,6 +82,7 @@ private:
         CommittedPhysicalPageSet m_committed_pages;
     };
 
+    WeakPtr<AnonymousVMObject> m_cow_parent;
     RefPtr<SharedCommittedCowPages> m_shared_committed_cow_pages;
 
     bool m_purgeable { false };

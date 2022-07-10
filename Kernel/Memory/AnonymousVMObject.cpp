@@ -124,7 +124,8 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_phys
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_shared_cow(AnonymousVMObject const& other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
 {
-    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(other, move(shared_committed_cow_pages), move(new_physical_pages))));
+    auto weak_parent = TRY(other.try_make_weak_ptr<AnonymousVMObject>());
+    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(move(weak_parent), move(shared_committed_cow_pages), move(new_physical_pages))));
 
     TRY(vmobject->ensure_cow_map());
 
@@ -159,14 +160,25 @@ AnonymousVMObject::AnonymousVMObject(FixedArray<RefPtr<PhysicalPage>>&& new_phys
 {
 }
 
-AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
+AnonymousVMObject::AnonymousVMObject(WeakPtr<AnonymousVMObject> other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
     : VMObject(move(new_physical_pages))
+    , m_cow_parent(move(other))
     , m_shared_committed_cow_pages(move(shared_committed_cow_pages))
-    , m_purgeable(other.m_purgeable)
+    , m_purgeable(m_cow_parent.strong_ref()->m_purgeable)
 {
 }
 
-AnonymousVMObject::~AnonymousVMObject() = default;
+AnonymousVMObject::~AnonymousVMObject()
+{
+    if (!m_shared_committed_cow_pages || m_shared_committed_cow_pages->is_empty())
+        return;
+    auto cow_parent = m_cow_parent.strong_ref();
+    if (!cow_parent)
+        return;
+    SpinlockLocker lock(cow_parent->m_lock);
+    if (cow_parent->m_shared_committed_cow_pages == m_shared_committed_cow_pages)
+        cow_parent->m_shared_committed_cow_pages.clear();
+}
 
 size_t AnonymousVMObject::purge()
 {
