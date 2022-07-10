@@ -459,7 +459,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
 
         if (compare_type == CharacterCompareType::Inverse) {
-            inverse = true;
+            inverse = !inverse;
             continue;
 
         } else if (compare_type == CharacterCompareType::TemporaryInverse) {
