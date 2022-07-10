@@ -163,8 +163,8 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     ByteBuffer uncompressed_block_data;
     uncompressed_block_data.ensure_capacity(bitmap.size_in_bytes() + bitmap.height());
 
-    Pixel const dummy_scanline[bitmap.width()] {};
-    auto* scanline_minus_1 = dummy_scanline;
+    Pixel dummy_scanline[bitmap.width()];
+    auto const* scanline_minus_1 = dummy_scanline;
 
     for (int y = 0; y < bitmap.height(); ++y) {
         auto* scanline = reinterpret_cast<Pixel const*>(bitmap.scanline(y));
