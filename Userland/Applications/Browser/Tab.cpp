@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Maciej Zygmanowski <sppmacd@pm.me>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -146,7 +147,12 @@ Tab::Tab(BrowserWindow& window)
         m_go_forward_context_menu->popup(context_menu_event.screen_position());
     };
 
-    toolbar.add_action(window.go_home_action());
+    auto& go_home_button = toolbar.add_action(window.go_home_action());
+    go_home_button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
+    go_home_button.on_middle_mouse_click = [&](auto) {
+        on_tab_open_request(Browser::url_from_user_input(g_home_url));
+    };
+
     toolbar.add_action(window.reload_action());
 
     m_location_box = toolbar.add<GUI::UrlBox>();
