@@ -20,3 +20,12 @@ TEST_CASE(char_data_ending)
         return Test::Crash::Failure::DidNotCrash;
     });
 }
+
+TEST_CASE(character_reference_integer_overflow)
+{
+    EXPECT_NO_CRASH("parsing character references that do not fit in 32 bits should not crash", [] {
+        XML::Parser parser("<G>&#6666666666");
+        (void)parser.parse();
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}
