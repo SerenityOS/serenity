@@ -517,6 +517,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
     file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
     file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
+    file(GLOB LIBWEB_SUBSUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*/*.cpp")
     list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
     list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
 
@@ -533,7 +534,7 @@ if (BUILD_LAGOM)
     )
 
     lagom_lib(Web web
-        SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
+        SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
         LIBS LibMarkdown LibGemini LibGfx LibGL LibJS LibTextCodec LibWasm LibXML
     )
     generate_js_wrappers(LibWeb)
