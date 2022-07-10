@@ -1501,7 +1501,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
 {
     ReflowDeferrer defer(*this);
     VERIFY(is_editable());
-    if (has_selection() && !is_indenting_selection())
+    if (has_selection())
         delete_selection();
 
     // Check if adding a newline leaves the previous line as just whitespace.
@@ -1510,8 +1510,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         && clear_length > 0
         && current_line().leading_spaces() == clear_length;
 
-    if (!is_indenting_selection())
-        execute<InsertTextCommand>(text, m_cursor);
+    execute<InsertTextCommand>(text, m_cursor);
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
         auto const original_cursor_position = cursor();
