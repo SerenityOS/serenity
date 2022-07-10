@@ -7,7 +7,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/Fetch/AbstractOperations.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
@@ -125,7 +124,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
         // 8. If the code point at position within input is U+0022 ("), then:
         if (lexer.peek() == '"') {
             // 1. Set parameterValue to the result of collecting an HTTP quoted string from input, given position and the extract-value flag.
-            parameter_value = collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::Yes);
+            parameter_value = Fetch::collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::Yes);
 
             // 2. Collect a sequence of code points that are not U+003B (;) from input, given position.
             // NOTE: This uses the predicate version as the ignore_until(char) version will also ignore the ';'.
