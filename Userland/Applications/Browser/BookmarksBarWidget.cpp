@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -200,10 +201,16 @@ void BookmarksBarWidget::model_did_update(unsigned)
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
         button.set_tooltip(url);
+        button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
 
         button.on_click = [title, url, this](auto) {
             if (on_bookmark_click)
                 on_bookmark_click(url, OpenInNewTab::No);
+        };
+
+        button.on_middle_mouse_click = [title, url, this](auto) {
+            if (on_bookmark_click)
+                on_bookmark_click(url, OpenInNewTab::Yes);
         };
 
         button.on_context_menu_request = [this, url](auto& context_menu_event) {
