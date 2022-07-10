@@ -840,6 +840,47 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
         bool invert_for_next_iteration = false;
         bool is_currently_inverted = false;
 
+        auto flush_tables = [&] {
+            auto append_table = [&](auto& table) {
+                ++argument_count;
+                arguments.append(to_underlying(CharacterCompareType::LookupTable));
+                auto size_index = arguments.size();
+                arguments.append(0);
+                Optional<CharRange> active_range;
+                size_t range_count = 0;
+                for (auto& range : table) {
+                    if (!active_range.has_value()) {
+                        active_range = range;
+                        continue;
+                    }
+
+                    if (range.from <= active_range->to + 1 && range.to + 1 >= active_range->from) {
+                        active_range = CharRange { min(range.from, active_range->from), max(range.to, active_range->to) };
+                    } else {
+                        ++range_count;
+                        arguments.append(active_range.release_value());
+                        active_range = range;
+                    }
+                }
+                if (active_range.has_value()) {
+                    ++range_count;
+                    arguments.append(active_range.release_value());
+                }
+                arguments[size_index] = range_count;
+            };
+
+            auto contains_regular_table = !table.is_empty();
+            auto contains_inverted_table = !inverted_table.is_empty();
+            if (contains_regular_table)
+                append_table(table);
+
+            if (contains_inverted_table) {
+                ++argument_count;
+                arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
+                append_table(inverted_table);
+            }
+        };
+
         for (auto& value : pairs) {
             auto should_invert_after_this_iteration = invert_for_next_iteration;
             invert_for_next_iteration = false;
@@ -861,8 +902,9 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 is_currently_inverted = !is_currently_inverted;
                 break;
             case LookupTableInsertionOutcome::PermanentInversionNeeded:
-                swap(current_table, current_inverted_table);
-                is_currently_inverted = !is_currently_inverted;
+                flush_tables();
+                arguments.append(to_underlying(CharacterCompareType::Inverse));
+                ++argument_count;
                 break;
             case LookupTableInsertionOutcome::CannotPlaceInTable:
                 if (is_currently_inverted) {
@@ -880,42 +922,8 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 is_currently_inverted = !is_currently_inverted;
             }
         }
-        auto append_table = [&](auto& table) {
-            ++argument_count;
-            arguments.append(to_underlying(CharacterCompareType::LookupTable));
-            auto size_index = arguments.size();
-            arguments.append(0);
-            Optional<CharRange> active_range;
-            size_t range_count = 0;
-            for (auto& range : table) {
-                if (!active_range.has_value()) {
-                    active_range = range;
-                    continue;
-                }
 
-                if (range.from <= active_range->to + 1 && range.to + 1 >= active_range->from) {
-                    active_range = CharRange { min(range.from, active_range->from), max(range.to, active_range->to) };
-                } else {
-                    ++range_count;
-                    arguments.append(active_range.release_value());
-                    active_range = range;
-                }
-            }
-            if (active_range.has_value()) {
-                ++range_count;
-                arguments.append(active_range.release_value());
-            }
-            arguments[size_index] = range_count;
-        };
-
-        if (!table.is_empty())
-            append_table(table);
-
-        if (!inverted_table.is_empty()) {
-            ++argument_count;
-            arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
-            append_table(inverted_table);
-        }
+        flush_tables();
     }
 
     target.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
