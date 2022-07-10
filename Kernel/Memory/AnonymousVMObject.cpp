@@ -31,7 +31,14 @@ ErrorOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // commit the number of pages that we need to potentially allocate
     // so that the parent is still guaranteed to be able to have all
     // non-volatile memory available.
-    size_t new_cow_pages_needed = page_count();
+    size_t new_cow_pages_needed = 0;
+    for (auto const& page : m_physical_pages) {
+        if (!page->is_shared_zero_page())
+            ++new_cow_pages_needed;
+    }
+
+    if (new_cow_pages_needed == 0)
+        return TRY(try_create_with_size(size(), AllocationStrategy::None));
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
