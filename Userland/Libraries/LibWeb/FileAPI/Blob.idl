@@ -1,0 +1,23 @@
+[Exposed=(Window,Worker), Serializable]
+interface Blob {
+    constructor(optional sequence<BlobPart> blobParts, optional BlobPropertyBag options = {});
+
+    readonly attribute unsigned long long size;
+    readonly attribute DOMString type;
+
+    // slice Blob into byte-ranged chunks
+    Blob slice(optional long long start, optional long long end, optional DOMString contentType);
+
+    // read from the Blob.
+    [NewObject] Promise<USVString> text();
+    [NewObject] Promise<ArrayBuffer> arrayBuffer();
+};
+
+enum EndingType { "transparent", "native" };
+
+dictionary BlobPropertyBag {
+    DOMString type = "";
+    EndingType endings = "transparent";
+};
+
+typedef (BufferSource or Blob or USVString) BlobPart;

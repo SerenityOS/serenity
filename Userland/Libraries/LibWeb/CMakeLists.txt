@@ -125,6 +125,7 @@ set(SOURCES
     Fetch/Infrastructure/HTTP/Requests.cpp
     Fetch/Infrastructure/HTTP/Responses.cpp
     Fetch/Infrastructure/HTTP/Statuses.cpp
+    FileAPI/Blob.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
