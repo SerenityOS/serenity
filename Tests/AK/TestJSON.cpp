@@ -126,7 +126,7 @@ TEST_CASE(json_u64_roundtrip)
 TEST_CASE(json_parse_empty_string)
 {
     auto value = JsonValue::from_string("");
-    EXPECT_EQ(value.value().is_null(), true);
+    EXPECT_EQ(value.is_error(), true);
 }
 
 TEST_CASE(json_parse_long_decimals)

@@ -236,8 +236,6 @@ void JsonValue::clear()
 #ifndef KERNEL
 ErrorOr<JsonValue> JsonValue::from_string(StringView input)
 {
-    if (input.is_empty())
-        return JsonValue();
     return JsonParser(input).parse();
 }
 #endif
