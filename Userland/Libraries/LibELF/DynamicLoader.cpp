@@ -347,7 +347,6 @@ void DynamicLoader::load_program_headers()
     // (symbol tables/relocation information, executable instructions, read-only data)
     // and one of which is copied (modifiable data).
     // These are allocated in-line to cut down on the malloc calls.
-    Vector<ProgramHeaderRegion, 4> load_regions;
     Vector<ProgramHeaderRegion, 3> map_regions;
     Vector<ProgramHeaderRegion, 1> copy_regions;
     Optional<ProgramHeaderRegion> relro_region;
@@ -362,7 +361,6 @@ void DynamicLoader::load_program_headers()
         } else if (region.is_load()) {
             if (region.size_in_memory() == 0)
                 return;
-            load_regions.append(region);
             if (region.is_writable()) {
                 copy_regions.append(region);
             } else {
@@ -382,7 +380,6 @@ void DynamicLoader::load_program_headers()
         return a.desired_load_address().as_ptr() < b.desired_load_address().as_ptr();
     };
 
-    quick_sort(load_regions, compare_load_address);
     quick_sort(map_regions, compare_load_address);
     quick_sort(copy_regions, compare_load_address);
 
