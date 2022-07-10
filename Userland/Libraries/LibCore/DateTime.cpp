@@ -251,7 +251,11 @@ String DateTime::to_string(StringView format) const
                 format_time_zone_offset(true);
                 break;
             case 'Z': {
+#ifndef __FreeBSD__
                 auto const* timezone_name = tzname[daylight];
+#else
+                auto const* timezone_name = tzname[0];
+#endif
                 builder.append({ timezone_name, strlen(timezone_name) });
                 break;
             }
