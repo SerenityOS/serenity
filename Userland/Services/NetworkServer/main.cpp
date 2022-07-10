@@ -83,8 +83,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
                     MUST(Core::command("route"sv, { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
                 }
             }
+        } else {
+            // FIXME: Propagate errors
+            dbgln("Disabling interface {}", ifname);
+            MUST(Core::command("route", { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
+            MUST(Core::command("ifconfig", { "-a", ifname.characters(), "-i", "0.0.0.0", "-m", "0.0.0.0" }, {}));
         }
     });
+
     if (!interfaces_with_dhcp_enabled.is_empty()) {
         dbgln("Running DHCPClient for interfaces: {}", interfaces_with_dhcp_enabled);
         Vector<char*> args;
