@@ -484,8 +484,8 @@ void Tab::update_bookmark_button(String const& url)
 
 void Tab::did_become_active()
 {
-    BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, unsigned modifiers) {
-        if (modifiers & Mod_Ctrl)
+    BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, auto open_in_new_tab) {
+        if (open_in_new_tab == BookmarksBarWidget::OpenInNewTab::Yes)
             on_tab_open_request(url);
         else
             load(url);

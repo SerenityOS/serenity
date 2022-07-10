@@ -26,7 +26,12 @@ public:
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
-    Function<void(String const& url, unsigned modifiers)> on_bookmark_click;
+    enum class OpenInNewTab {
+        Yes,
+        No
+    };
+
+    Function<void(String const& url, OpenInNewTab)> on_bookmark_click;
     Function<void(String const&, String const&)> on_bookmark_hover;
 
     bool contains_bookmark(String const& url);
