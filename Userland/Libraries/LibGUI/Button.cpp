@@ -141,6 +141,17 @@ void Button::click(unsigned modifiers)
         m_action->activate(this);
 }
 
+void Button::middle_mouse_click(unsigned int modifiers)
+{
+    if (!is_enabled())
+        return;
+
+    NonnullRefPtr protector = *this;
+
+    if (on_middle_mouse_click)
+        on_middle_mouse_click(modifiers);
+}
+
 void Button::context_menu_event(ContextMenuEvent& context_menu_event)
 {
     if (!is_enabled())
