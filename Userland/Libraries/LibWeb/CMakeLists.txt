@@ -118,6 +118,7 @@ set(SOURCES
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
     Fetch/AbstractOperations.cpp
+    Fetch/Infrastructure/URL.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
