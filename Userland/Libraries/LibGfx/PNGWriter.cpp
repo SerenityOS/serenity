@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Pierre Hoffmeister
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2022, Karol Kosek <krkk@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -155,7 +156,7 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
+void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
 {
     PNGChunk png_chunk { "IDAT" };
     png_chunk.reserve(bitmap.size_in_bytes());
@@ -250,7 +251,7 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         uncompressed_block_data.append(best_filter.buffer);
     }
 
-    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data);
+    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data, compression_level);
     if (!maybe_zlib_buffer.has_value()) {
         // FIXME: Handle errors.
         VERIFY_NOT_REACHED();
@@ -261,12 +262,12 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     add_chunk(png_chunk);
 }
 
-ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
+ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
 {
     PNGWriter writer;
     writer.add_png_header();
     writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0);
-    writer.add_IDAT_chunk(bitmap);
+    writer.add_IDAT_chunk(bitmap, compression_level);
     writer.add_IEND_chunk();
     // FIXME: Handle OOM failure.
     return ByteBuffer::copy(writer.m_data).release_value_but_fixme_should_propagate_errors();
