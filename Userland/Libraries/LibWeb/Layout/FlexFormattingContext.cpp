@@ -732,7 +732,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             if (max_content_flex_fraction > 0) {
                 max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
             } else {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
+                max_content_flex_fraction /= flex_item.scaled_flex_shrink_factor;
             }
             flex_item.max_content_flex_fraction = max_content_flex_fraction;
 
@@ -748,7 +748,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             if (flex_item.max_content_flex_fraction > 0) {
                 product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow();
             } else {
-                product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
+                product = largest_max_content_flex_fraction * flex_item.scaled_flex_shrink_factor;
             }
             result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after + product;
         }
@@ -1355,7 +1355,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
         if (flex_fraction >= 0)
             flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
         else
-            flex_fraction /= max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
+            flex_fraction /= flex_item.scaled_flex_shrink_factor;
 
         // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
         flex_item.max_content_flex_fraction = flex_fraction;
@@ -1388,7 +1388,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
             if (flex_item->max_content_flex_fraction >= 0) {
                 product = largest_flex_fraction * flex_item->box.computed_values().flex_grow();
             } else {
-                product = largest_flex_fraction * max(flex_item->box.computed_values().flex_shrink(), 1.0f) * flex_item->flex_base_size;
+                product = largest_flex_fraction * flex_item->scaled_flex_shrink_factor;
             }
             sum += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after + product;
         }
