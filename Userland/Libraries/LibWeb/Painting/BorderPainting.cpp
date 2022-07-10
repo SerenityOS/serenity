@@ -361,18 +361,25 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
         });
     };
 
+    // FIXME: Corners should actually split between the two colors, if both are provided (and differ)
+    auto pick_corner_color = [](auto const& border, auto const& adjacent_border) {
+        if (border.width > 0)
+            return border.color;
+        return adjacent_border.color;
+    };
+
     // Blit the corners into to their corresponding locations:
     if (top_left)
-        blit_corner(border_rect.top_left(), top_left.as_rect(), borders_data.top.color);
+        blit_corner(border_rect.top_left(), top_left.as_rect(), pick_corner_color(borders_data.top, borders_data.left));
 
     if (top_right)
-        blit_corner(border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width() - top_right.horizontal_radius, 0), borders_data.top.color);
+        blit_corner(border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
 
     if (bottom_right)
-        blit_corner(border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width() - bottom_right.horizontal_radius, corner_mask_rect.height() - bottom_right.vertical_radius), borders_data.bottom.color);
+        blit_corner(border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width() - bottom_right.horizontal_radius, corner_mask_rect.height() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
 
     if (bottom_left)
-        blit_corner(border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height() - bottom_left.vertical_radius), borders_data.bottom.color);
+        blit_corner(border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
 }
 
 }
