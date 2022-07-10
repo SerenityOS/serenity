@@ -868,6 +868,8 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Tab) {
+        if (!is_editable())
+            return;
         if (has_selection()) {
             if (event.modifiers() == Mod_Shift) {
                 unindent_selection();
