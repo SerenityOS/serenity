@@ -163,7 +163,8 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
             inverse = !inverse;
             break;
         case CharacterCompareType::TemporaryInverse:
-            temporary_inverse = !temporary_inverse;
+            temporary_inverse = true;
+            reset_temporary_inverse = true;
             break;
         case CharacterCompareType::AnyChar:
             // Special case: if not inverted, AnyChar is always in the range.
@@ -237,7 +238,8 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
             inverse = !inverse;
             break;
         case CharacterCompareType::TemporaryInverse:
-            temporary_inverse = !temporary_inverse;
+            temporary_inverse = true;
+            reset_temporary_inverse = true;
             break;
         case CharacterCompareType::AnyChar:
             // Special case: if not inverted, AnyChar is always in the range.
