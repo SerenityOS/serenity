@@ -758,26 +758,26 @@ ErrorOr<Variant<Parser::EntityReference, String>, ParseError> Parser::parse_refe
     auto name_result = parse_name();
     if (name_result.is_error()) {
         TRY(expect("#"));
-        u32 code_point;
+        Optional<u32> code_point;
         if (m_lexer.consume_specific('x')) {
             auto hex = TRY(expect_many(
                 ranges_for_search<Range('0', '9'), Range('a', 'f'), Range('A', 'F')>(),
                 "any of [0-9a-fA-F]"));
-            code_point = *AK::StringUtils::convert_to_uint_from_hex<u32>(hex);
+            code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(hex);
         } else {
             auto decimal = TRY(expect_many(
                 ranges_for_search<Range('0', '9')>(),
                 "any of [0-9]"));
-            code_point = *decimal.to_uint<u32>();
+            code_point = decimal.to_uint<u32>();
         }
 
-        if (!s_characters.contains(code_point))
+        if (!code_point.has_value() || !s_characters.contains(*code_point))
             return parse_error(reference_start, "Invalid character reference");
 
         TRY(expect(";"));
 
         StringBuilder builder;
-        builder.append_code_point(code_point);
+        builder.append_code_point(*code_point);
 
         rollback.disarm();
         return builder.to_string();
