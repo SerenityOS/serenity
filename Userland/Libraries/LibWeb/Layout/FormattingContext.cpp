@@ -28,6 +28,11 @@ FormattingContext::FormattingContext(Type type, FormattingState& state, Box cons
 
 FormattingContext::~FormattingContext() = default;
 
+void FormattingContext::run_intrinsic_size_determination(Box const& box)
+{
+    run(box, LayoutMode::IntrinsicSizeDetermination);
+}
+
 bool FormattingContext::creates_block_formatting_context(Box const& box)
 {
     if (box.is_root_element())
@@ -863,7 +868,7 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizeDetermination);
+    context->run_intrinsic_size_determination(box);
     if (context->type() == FormattingContext::Type::Flex) {
         cache.min_content_width = box_state.content_width;
     } else {
@@ -893,7 +898,7 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizeDetermination);
+    context->run_intrinsic_size_determination(box);
     if (context->type() == FormattingContext::Type::Flex) {
         cache.max_content_width = box_state.content_width;
     } else {
@@ -924,7 +929,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizeDetermination);
+    context->run_intrinsic_size_determination(box);
     if (context->type() == FormattingContext::Type::Flex) {
         cache.min_content_height = box_state.content_height;
     } else {
@@ -955,7 +960,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run(box, LayoutMode::IntrinsicSizeDetermination);
+    context->run_intrinsic_size_determination(box);
     if (context->type() == FormattingContext::Type::Flex) {
         cache.max_content_height = box_state.content_height;
     } else {

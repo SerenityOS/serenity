@@ -369,8 +369,10 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     auto& block_container_state = m_state.get_mutable(block_container);
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
-        block_container_state.content_width = containing_block_width_for(block_container);
-        block_container_state.content_height = containing_block_height_for(block_container);
+        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+            block_container_state.content_width = containing_block_width_for(block_container);
+        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+            block_container_state.content_height = containing_block_height_for(block_container);
     }
 
     InlineFormattingContext context(m_state, block_container, *this);
@@ -385,7 +387,8 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     }
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
-        block_container_state.content_width = max_line_width;
+        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+            block_container_state.content_width = max_line_width;
     }
 
     // FIXME: This is weird. Figure out a way to make callers responsible for setting the content height.
@@ -449,6 +452,19 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
+void BlockFormattingContext::run_intrinsic_size_determination(Box const& box)
+{
+    auto& box_state = m_state.get_mutable(box);
+
+    if (box.has_definite_width())
+        box_state.content_width = box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box);
+
+    if (box.has_definite_height())
+        box_state.content_height = box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box);
+
+    run(box, LayoutMode::IntrinsicSizeDetermination);
+}
+
 void BlockFormattingContext::layout_block_level_children(BlockContainer const& block_container, LayoutMode layout_mode)
 {
     VERIFY(!block_container.children_are_inline());
@@ -457,8 +473,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        block_container_state.content_width = containing_block_width_for(block_container);
-        block_container_state.content_height = containing_block_height_for(block_container);
+        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+            block_container_state.content_width = containing_block_width_for(block_container);
+        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+            block_container_state.content_height = containing_block_height_for(block_container);
     }
 
     block_container.for_each_child_of_type<Box>([&](Box& box) {
@@ -468,8 +486,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        block_container_state.content_width = greatest_child_width(block_container);
-        block_container_state.content_height = content_height;
+        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+            block_container_state.content_width = greatest_child_width(block_container);
+        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+            block_container_state.content_height = content_height;
     }
 }
 
