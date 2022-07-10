@@ -21,8 +21,6 @@
 
 namespace Web::XHR {
 
-static constexpr Array<u8, 4> http_whitespace_bytes = { '\t', '\n', '\r', ' ' };
-
 using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final
