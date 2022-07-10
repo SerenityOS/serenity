@@ -175,6 +175,10 @@ struct Header;
 class HeaderList;
 }
 
+namespace Web::FileAPI {
+class Blob;
+}
+
 namespace Web::Geometry {
 class DOMPoint;
 class DOMPointReadOnly;
@@ -423,6 +427,7 @@ class AbstractRangeWrapper;
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
+class BlobWrapper;
 struct CallbackType;
 class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
@@ -621,6 +626,7 @@ class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
 class XMLSerializerWrapper;
 enum class CanPlayTypeResult;
+enum class EndingType;
 enum class DOMParserSupportedType;
 enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;

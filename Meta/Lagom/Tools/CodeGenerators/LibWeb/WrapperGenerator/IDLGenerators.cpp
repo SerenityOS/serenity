@@ -54,6 +54,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "URLSearchParams")
         return true;
+    if (type.name == "Blob")
+        return true;
     return false;
 }
 
@@ -1973,6 +1975,7 @@ void generate_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::FileAPI;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -2849,6 +2852,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/DOM/@name@.h>
 #elif __has_include(<LibWeb/Encoding/@name@.h>)
 #    include <LibWeb/Encoding/@name@.h>
+#elif __has_include(<LibWeb/FileAPI/@name@.h>)
+#    include <LibWeb/FileAPI/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -2889,6 +2894,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::FileAPI;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3167,6 +3173,7 @@ using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::FileAPI;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3617,6 +3624,7 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::FileAPI;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
@@ -3731,6 +3739,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
+using namespace Web::FileAPI;
 using namespace Web::Geometry;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
