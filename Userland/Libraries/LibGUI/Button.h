@@ -30,12 +30,14 @@ public:
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(unsigned modifiers)> on_click;
+    Function<void(unsigned modifiers)> on_middle_mouse_click;
     Function<void(ContextMenuEvent&)> on_context_menu_request;
 
     void set_button_style(Gfx::ButtonStyle style) { m_button_style = style; }
     Gfx::ButtonStyle button_style() const { return m_button_style; }
 
     virtual void click(unsigned modifiers = 0) override;
+    virtual void middle_mouse_click(unsigned modifiers = 0) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
 
     Action* action() { return m_action; }

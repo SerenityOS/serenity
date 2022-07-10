@@ -140,6 +140,9 @@ void AbstractButton::mouseup_event(MouseEvent& event)
             case MouseButton::Primary:
                 click(event.modifiers());
                 break;
+            case MouseButton::Middle:
+                middle_mouse_click(event.modifiers());
+                break;
             default:
                 VERIFY_NOT_REACHED();
             }
