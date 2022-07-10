@@ -286,7 +286,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     int fd = -1;
 #if defined(__serenity__)
     fd = ::anon_create(round_up_to_power_of_two(size, PAGE_SIZE), options);
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__FreeBSD__)
     // FIXME: Support more options on Linux.
     auto linux_options = ((options & O_CLOEXEC) > 0) ? MFD_CLOEXEC : 0;
     fd = memfd_create("", linux_options);
