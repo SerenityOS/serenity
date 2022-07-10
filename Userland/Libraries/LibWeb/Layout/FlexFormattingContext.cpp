@@ -581,10 +581,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (used_flex_basis.is_definite()) {
-            auto specified_base_size = get_pixel_size(m_state, child_box, used_flex_basis.length_percentage.value());
-            if (specified_base_size == 0)
-                return calculated_main_size(flex_item.box);
-            return specified_base_size;
+            return get_pixel_size(m_state, child_box, used_flex_basis.length_percentage.value());
         }
 
         // B. If the flex item has ...
