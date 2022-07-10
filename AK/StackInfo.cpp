@@ -29,11 +29,11 @@ StackInfo::StackInfo()
     int rc;
     pthread_attr_t attr = {};
     if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
-        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
+        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
     }
     if ((rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size)) != 0) {
-        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
+        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);
