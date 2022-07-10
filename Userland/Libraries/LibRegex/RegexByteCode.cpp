@@ -486,8 +486,12 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto input_view = input.view.substring_view(state.string_position, 1)[0];
-            if (input_view != '\n' || (input.regex_options.has_flag_set(AllFlags::SingleLine) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)))
-                advance_string_position(state, input.view, input_view);
+            if (input_view != '\n' || (input.regex_options.has_flag_set(AllFlags::SingleLine) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline))) {
+                if (current_inversion_state())
+                    inverse_matched = true;
+                else
+                    advance_string_position(state, input.view, input_view);
+            }
 
         } else if (compare_type == CharacterCompareType::String) {
             VERIFY(!current_inversion_state());
@@ -507,8 +511,10 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
             auto view = input.view.construct_as_same(data, str, utf16);
             offset += length;
-            if (!compare_string(input, state, view, had_zero_length_match))
-                return ExecutionResult::Failed_ExecuteLowPrioForks;
+            if (compare_string(input, state, view, had_zero_length_match)) {
+                if (current_inversion_state())
+                    inverse_matched = true;
+            }
 
         } else if (compare_type == CharacterCompareType::CharClass) {
 
@@ -575,8 +581,10 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (input.view.length() < state.string_position + str.length())
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            if (!compare_string(input, state, str, had_zero_length_match))
-                return ExecutionResult::Failed_ExecuteLowPrioForks;
+            if (compare_string(input, state, str, had_zero_length_match)) {
+                if (current_inversion_state())
+                    inverse_matched = true;
+            }
 
         } else if (compare_type == CharacterCompareType::Property) {
             auto property = static_cast<Unicode::Property>(m_bytecode->at(offset++));
@@ -600,7 +608,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             break;
         }
 
-        if (current_inversion_state() && !inverse_matched) {
+        if (current_inversion_state() && !inverse && !inverse_matched) {
             advance_string_position(state, input.view);
             inverse_matched = true;
         }

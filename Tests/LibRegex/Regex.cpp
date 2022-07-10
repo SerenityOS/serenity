@@ -1040,11 +1040,23 @@ TEST_CASE(single_match_flag)
 
 TEST_CASE(inversion_state_in_char_class)
 {
-    // #13755, /[\S\s]/.exec("hello") should be [ "h" ], not null.
-    Regex<ECMA262> re("[\\S\\s]", ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
+    {
+        // #13755, /[\S\s]/.exec("hello") should be [ "h" ], not null.
+        Regex<ECMA262> re("[\\S\\s]", ECMAScriptFlags::Global | (ECMAScriptFlags)regex::AllFlags::SingleMatch);
 
-    auto result = re.match("hello");
-    EXPECT_EQ(result.success, true);
-    EXPECT_EQ(result.matches.size(), 1u);
-    EXPECT_EQ(result.matches.first().view.to_string(), "h"sv);
+        auto result = re.match("hello");
+        EXPECT_EQ(result.success, true);
+        EXPECT_EQ(result.matches.size(), 1u);
+        EXPECT_EQ(result.matches.first().view.to_string(), "h"sv);
+    }
+    {
+        Regex<ECMA262> re("^(?:([^\\s!\"#%-,\\./;->@\\[-\\^`\\{-~]+(?=([=~}\\s/.)|]))))"sv, ECMAScriptFlags::Global);
+
+        auto result = re.match("slideNumbers}}"sv);
+        EXPECT_EQ(result.success, true);
+        EXPECT_EQ(result.matches.size(), 1u);
+        EXPECT_EQ(result.matches.first().view.to_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[0].view.to_string(), "slideNumbers"sv);
+        EXPECT_EQ(result.capture_group_matches.first()[1].view.to_string(), "}"sv);
+    }
 }
