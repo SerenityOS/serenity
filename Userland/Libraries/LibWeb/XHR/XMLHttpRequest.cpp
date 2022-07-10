@@ -413,7 +413,7 @@ static String normalize_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
 static String normalize_header_value(String const& header_value)
 {
-    return header_value.trim(StringView { http_whitespace_bytes });
+    return header_value.trim(Fetch::HTTP_WHITESPACE);
 }
 
 // https://fetch.spec.whatwg.org/#header-value

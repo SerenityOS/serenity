@@ -8,6 +8,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/Fetch/AbstractOperations.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::MimeSniff {
@@ -53,13 +54,8 @@ static bool contains_only_http_token_code_points(StringView string)
 // https://mimesniff.spec.whatwg.org/#parse-a-mime-type
 Optional<MimeType> MimeType::from_string(StringView string)
 {
-    // https://fetch.spec.whatwg.org/#http-whitespace
-    // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
-    // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-    constexpr auto http_whitespace = "\n\r\t "sv;
-
     // 1. Remove any leading and trailing HTTP whitespace from input.
-    auto trimmed_string = string.trim(http_whitespace, TrimMode::Both);
+    auto trimmed_string = string.trim(Fetch::HTTP_WHITESPACE, TrimMode::Both);
 
     // 2. Let position be a position variable for input, initially pointing at the start of input.
     GenericLexer lexer(trimmed_string);
@@ -82,7 +78,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
     auto subtype = lexer.consume_until(';');
 
     // 8. Remove any trailing HTTP whitespace from subtype.
-    subtype = subtype.trim(http_whitespace, TrimMode::Right);
+    subtype = subtype.trim(Fetch::HTTP_WHITESPACE, TrimMode::Right);
 
     // 9. If subtype is the empty string or does not solely contain HTTP token code points, then return failure.
     if (subtype.is_empty() || !contains_only_http_token_code_points(subtype))
@@ -97,7 +93,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
         lexer.ignore(1);
 
         // 2. Collect a sequence of code points that are HTTP whitespace from input given position.
-        lexer.ignore_while(is_any_of(http_whitespace));
+        lexer.ignore_while(is_any_of(Fetch::HTTP_WHITESPACE));
 
         // 3. Let parameterName be the result of collecting a sequence of code points that are not U+003B (;) or U+003D (=) from input, given position.
         auto parameter_name = lexer.consume_until([](char ch) {
@@ -144,7 +140,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
             parameter_value = lexer.consume_until(';');
 
             // 2. Remove any trailing HTTP whitespace from parameterValue.
-            parameter_value = parameter_value.trim(http_whitespace, TrimMode::Right);
+            parameter_value = parameter_value.trim(Fetch::HTTP_WHITESPACE, TrimMode::Right);
 
             // 3. If parameterValue is the empty string, then continue.
             if (parameter_value.is_empty())

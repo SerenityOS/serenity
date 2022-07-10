@@ -15,4 +15,8 @@ namespace Web::Fetch {
 // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
 inline constexpr StringView HTTP_TAB_OR_SPACE = "\t "sv;
 
+// https://fetch.spec.whatwg.org/#http-whitespace
+// HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
+inline constexpr StringView HTTP_WHITESPACE = "\n\r\t "sv;
+
 }
