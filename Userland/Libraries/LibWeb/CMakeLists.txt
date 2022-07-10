@@ -117,7 +117,7 @@ set(SOURCES
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
-    Fetch/AbstractOperations.cpp
+    Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/URL.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp

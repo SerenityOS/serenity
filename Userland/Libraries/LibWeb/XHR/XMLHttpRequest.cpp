@@ -23,7 +23,6 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/Fetch/AbstractOperations.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>

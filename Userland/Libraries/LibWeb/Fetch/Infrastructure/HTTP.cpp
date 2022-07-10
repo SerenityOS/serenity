@@ -7,7 +7,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/Fetch/AbstractOperations.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP.h>
 
 namespace Web::Fetch {
 
