@@ -34,6 +34,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());
 
+    // Kill all previously running DHCPServers that may manage to re-assign the IP
+    // address before we clear it manually.
+    MUST(Core::command("killall", { "DHCPClient" }, {}));
+
     auto groups = config_file->groups();
     dbgln("Interfaces to configure: {}", groups);
 
@@ -89,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         for (auto& iface : interfaces_with_dhcp_enabled)
             args.append(const_cast<char*>(iface.characters()));
         args.append(nullptr);
-        MUST(Core::command("killall", { "DHCPClient" }, {}));
+
         auto dhcp_client_pid = TRY(Core::System::posix_spawnp("DHCPClient"sv, nullptr, nullptr, args.data(), environ));
         TRY(Core::System::disown(dhcp_client_pid));
     }
