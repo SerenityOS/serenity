@@ -7,6 +7,7 @@
  */
 
 #include "Image.h"
+#include "ExportPNGDialog.h"
 #include "Layer.h"
 #include "Selection.h"
 #include <AK/Base64.h>
@@ -201,12 +202,12 @@ ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_ch
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_png_to_file(Core::File& file, ExportPNGOptions options) const
 {
-    auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
+    auto bitmap_format = options.preserve_transparency ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
-    auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
+    auto encoded_data = Gfx::PNGWriter::encode(*bitmap, options.compression_level);
     if (!file.write(encoded_data.data(), encoded_data.size()))
         return Error::from_errno(file.error());
 

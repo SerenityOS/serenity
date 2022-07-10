@@ -10,6 +10,7 @@
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
+#include "ExportPNGDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
 #include "LevelsDialog.h"
@@ -189,10 +190,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "png");
                 if (response.is_error())
                     return;
-                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
-                if (result.is_error())
-                    GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
+                auto dialog = ExportPNGDialog::construct(response.value(), editor->image(), &window);
+                dialog->exec();
             }));
 
     m_export_submenu->add_action(

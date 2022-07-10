@@ -14,6 +14,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
+#include <LibCompress/Zlib.h>
 #include <LibCore/File.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
@@ -68,10 +69,15 @@ public:
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
+    struct ExportPNGOptions {
+        bool preserve_transparency;
+        Compress::ZlibCompressionLevel compression_level;
+    };
+
     void serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
     ErrorOr<void> write_to_file(String const& file_path) const;
     ErrorOr<void> export_bmp_to_file(Core::File&, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_png_to_file(Core::File&, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(Core::File&, ExportPNGOptions) const;
     ErrorOr<void> export_qoi_to_file(Core::File&) const;
 
     void move_layer_to_front(Layer&);
