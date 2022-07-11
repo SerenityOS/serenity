@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Gradients</title>
+    <style>
+        .box {
+            width: 200px;
+            height: 200px;
+            margin: 20px;
+            border: 1px solid black;
+        }
+
+        .grad-0 {
+            background-image: linear-gradient(to top, red, yellow);
+        }
+
+        .grad-1 {
+            background-image: linear-gradient(to bottom, red, yellow);
+        }
+
+        .grad-2 {
+            background-image: linear-gradient(to left, red, yellow);
+        }
+
+        .grad-3 {
+            background-image: linear-gradient(to right, red, yellow);
+        }
+
+        .grad-4 {
+            background-image: linear-gradient(to top, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+            linear-gradient(to bottom, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+            linear-gradient(to left, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+        }
+
+        .grad-5 {
+            background-image: linear-gradient(to top, blue, 30%, orange, 10%, red);
+        }
+
+        .grad-6 {
+            background-image: linear-gradient(to top, blue 30%, 30%, orange 20%, 10%, red);
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Gradients!</h1>
+    <div class="box grad-0"></div>
+    <div class="box grad-1"></div>
+    <div class="box grad-2"></div>
+    <div class="box grad-3"></div>
+    <div class="box grad-4"></div>
+    <div class="box grad-5"></div>
+    <div class="box grad-6"></div>
+  </body>
+  <script>
+    const boxes = document.querySelectorAll(".box");
+    const backgroundMap = {};
+    for (const rule of document.styleSheets[0].cssRules) {
+        backgroundMap[rule.selectorText] = rule.style.backgroundImage;
+    }
+    boxes.forEach(box => {
+        const grad = box.classList[1];
+        console.log(grad)
+        const el = document.createElement('code');
+        el.innerText = backgroundMap['.'+grad];
+        box.parentNode.insertBefore(el, box)
+    })
+  </script>
+</html>
