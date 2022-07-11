@@ -25,10 +25,7 @@ namespace regex {
 
 class RegexStringView {
 public:
-    RegexStringView(char const* chars)
-        : m_view(StringView { chars })
-    {
-    }
+    RegexStringView() = default;
 
     RegexStringView(String const& string)
         : m_view(string.view())
@@ -448,7 +445,7 @@ public:
     }
 
 private:
-    Variant<StringView, Utf8View, Utf16View, Utf32View> m_view;
+    Variant<StringView, Utf8View, Utf16View, Utf32View> m_view { StringView {} };
     bool m_unicode { false };
 };
 
@@ -498,7 +495,7 @@ public:
         left_column = 0;
     }
 
-    RegexStringView view { nullptr };
+    RegexStringView view {};
     Optional<FlyString> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
@@ -510,7 +507,7 @@ public:
 };
 
 struct MatchInput {
-    RegexStringView view { nullptr };
+    RegexStringView view {};
     AllOptions regex_options {};
     size_t start_offset { 0 }; // For Stateful matches, saved and restored from Regex::start_offset.
 
