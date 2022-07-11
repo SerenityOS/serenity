@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/AttributeWrapper.h>
 #include <LibWeb/Bindings/CharacterDataWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
@@ -351,6 +352,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::Text>(node)));
     if (is<DOM::CharacterData>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::CharacterData>(node)));
+    if (is<DOM::Attribute>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::Attribute>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(global_object, node));
 }
 
