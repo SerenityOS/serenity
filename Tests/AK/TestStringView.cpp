@@ -181,12 +181,6 @@ TEST_CASE(constexpr_stuff)
         constexpr StringView test_constexpr { "foo"sv };
         do_test();
     }
-
-    {
-        // Can initialize from char const*.
-        constexpr StringView test_constexpr { "foo" };
-        do_test();
-    }
 #undef do_test
 }
 
