@@ -54,6 +54,14 @@ private:
     void shift_argv();
     bool find_next_option();
 
+    StringView current_arg() const
+    {
+        auto const* arg_ptr = m_argv[m_arg_index];
+        if (arg_ptr == NULL)
+            return {};
+        return { arg_ptr, strlen(arg_ptr) };
+    }
+
     size_t m_argc { 0 };
     char* const* m_argv { nullptr };
     StringView m_short_options;
@@ -98,7 +106,7 @@ int OptionParser::getopt()
     int res = -1;
 
     bool found_an_option = find_next_option();
-    StringView arg = m_argv[m_arg_index];
+    auto arg = current_arg();
 
     if (!found_an_option) {
         res = -1;
@@ -154,7 +162,7 @@ bool OptionParser::lookup_short_option(char option, int& needs_value) const
 
 int OptionParser::handle_short_option()
 {
-    StringView arg = m_argv[m_arg_index];
+    StringView arg = current_arg();
     VERIFY(arg.starts_with('-'));
 
     if (s_index_into_multioption_argument == 0) {
@@ -237,7 +245,7 @@ option const* OptionParser::lookup_long_option(char* raw) const
 
 int OptionParser::handle_long_option()
 {
-    VERIFY(StringView(m_argv[m_arg_index]).starts_with("--"));
+    VERIFY(current_arg().starts_with("--"sv));
 
     // We cannot set optopt to anything sensible for long options, so set it to 0.
     optopt = 0;
@@ -311,7 +319,7 @@ void OptionParser::shift_argv()
 bool OptionParser::find_next_option()
 {
     for (m_arg_index = optind; m_arg_index < m_argc && m_argv[m_arg_index]; m_arg_index++) {
-        StringView arg = m_argv[m_arg_index];
+        StringView arg = current_arg();
         // Anything that doesn't start with a "-" is not an option.
         if (!arg.starts_with('-')) {
             if (m_stop_on_first_non_option)
