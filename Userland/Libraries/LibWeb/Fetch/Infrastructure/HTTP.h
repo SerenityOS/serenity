@@ -20,6 +20,18 @@ inline constexpr StringView HTTP_TAB_OR_SPACE = "\t "sv;
 // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
 inline constexpr StringView HTTP_WHITESPACE = "\n\r\t "sv;
 
+// https://fetch.spec.whatwg.org/#http-newline-byte
+// An HTTP newline byte is 0x0A (LF) or 0x0D (CR).
+inline constexpr Array HTTP_NEWLINE_BYTES = {
+    0x0A, 0x0D
+};
+
+// https://fetch.spec.whatwg.org/#http-tab-or-space-byte
+// An HTTP tab or space byte is 0x09 (HT) or 0x20 (SP).
+inline constexpr Array HTTP_TAB_OR_SPACE_BYTES = {
+    0x09, 0x20
+};
+
 enum class HttpQuotedStringExtractValue {
     No,
     Yes,

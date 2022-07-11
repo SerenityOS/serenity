@@ -169,6 +169,11 @@ namespace Web::Encoding {
 class TextEncoder;
 }
 
+namespace Web::Fetch {
+struct Header;
+class HeaderList;
+}
+
 namespace Web::Geometry {
 class DOMPoint;
 class DOMPointReadOnly;
