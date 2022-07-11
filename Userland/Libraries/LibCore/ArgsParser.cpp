@@ -275,8 +275,12 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
     for (auto& opt : m_options) {
         if (opt.hide_mode != OptionHideMode::None)
             continue;
+
+        // FIXME: We allow opt.value_name to be empty even if the option
+        //        requires an argument. This should be disallowed as it will
+        //        currently display a blank name after the option.
         if (opt.requires_argument)
-            out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
+            out(file, " [{} {}]", opt.name_for_display(), opt.value_name ?: "");
         else
             out(file, " [{}]", opt.name_for_display());
     }
