@@ -118,7 +118,7 @@ public:
             if (!result.is_error())
                 break;
             if (result.error() != QueueStatus::Full)
-                return Error::from_string_literal("Unexpected error while enqueuing"sv);
+                return Error::from_string_literal("Unexpected error while enqueuing");
 
             wait_function();
         }
@@ -208,7 +208,7 @@ private:
         SharedMemorySPCQ* shared_queue = is_new ? new (raw_mapping) SharedMemorySPCQ() : reinterpret_cast<SharedMemorySPCQ*>(raw_mapping);
 
         if (!shared_queue)
-            return Error::from_string_literal("Unexpected error when creating shared queue from raw memory"sv);
+            return Error::from_string_literal("Unexpected error when creating shared queue from raw memory");
 
         return SharedSingleProducerCircularQueue<T, Size> { move(name), adopt_ref(*new (nothrow) RefCountedSharedMemorySPCQ(shared_queue, fd)) };
     }

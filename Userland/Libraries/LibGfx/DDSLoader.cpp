@@ -998,15 +998,15 @@ size_t DDSImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("DDSImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("DDSImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == DDSLoadingContext::State::Error)
-        return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < DDSLoadingContext::State::BitmapDecoded) {
         bool success = decode_dds(*m_context);
         if (!success)
-            return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
     }
 
     VERIFY(m_context->bitmap);

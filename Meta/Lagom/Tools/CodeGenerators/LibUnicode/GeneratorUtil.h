@@ -211,7 +211,7 @@ struct CanonicalLanguageID {
             if (segments.size() == ++index)
                 return language_id;
         } else {
-            return Error::from_string_literal("Expected language subtag"sv);
+            return Error::from_string_literal("Expected language subtag");
         }
 
         if (Unicode::is_unicode_script_subtag(segments[index])) {
@@ -228,7 +228,7 @@ struct CanonicalLanguageID {
 
         while (index < segments.size()) {
             if (!Unicode::is_unicode_variant_subtag(segments[index]))
-                return Error::from_string_literal("Expected variant subtag"sv);
+                return Error::from_string_literal("Expected variant subtag");
             language_id.variants.append(unique_strings.ensure(segments[index++]));
         }
 
@@ -244,7 +244,7 @@ struct CanonicalLanguageID {
 inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView path, Core::Stream::OpenMode mode)
 {
     if (path.is_empty())
-        return Error::from_string_literal("Provided path is empty, please provide all command line options"sv);
+        return Error::from_string_literal("Provided path is empty, please provide all command line options");
 
     auto file = TRY(Core::Stream::File::open(path, mode));
     return Core::Stream::BufferedFile::create(move(file));
@@ -273,8 +273,12 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView s
         lexical_path = lexical_path.append(subpath);
 
     Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (iterator.has_error())
-        return Error::from_string_literal(iterator.error_string());
+    if (iterator.has_error()) {
+        // FIXME: Make Core::DirIterator return a StringView for its error
+        //        string.
+        auto const* error_string_ptr = iterator.error_string();
+        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
+    }
 
     return iterator;
 }
@@ -282,8 +286,12 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView s
 inline ErrorOr<String> next_path_from_dir_iterator(Core::DirIterator& iterator)
 {
     auto next_path = iterator.next_full_path();
-    if (iterator.has_error())
-        return Error::from_string_literal(iterator.error_string());
+    if (iterator.has_error()) {
+        // FIXME: Make Core::DirIterator return a StringView for its error
+        //        string.
+        auto const* error_string_ptr = iterator.error_string();
+        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
+    }
 
     return next_path;
 }

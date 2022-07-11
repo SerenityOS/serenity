@@ -22,7 +22,7 @@ ErrorOr<CommandResult> command(String const& command_string, Optional<LexicalPat
 {
     auto parts = command_string.split(' ');
     if (parts.is_empty())
-        return Error::from_string_literal("empty command"sv);
+        return Error::from_string_literal("empty command");
     auto program = parts[0];
     parts.remove(0);
     return command(program, parts, chdir);

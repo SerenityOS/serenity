@@ -89,7 +89,7 @@ ErrorOr<Icon> Icon::try_create_default_icon(StringView name)
 
     if (!bitmap16 && !bitmap32) {
         dbgln("Default icon not found: {}", name);
-        return Error::from_string_literal("Default icon not found"sv);
+        return Error::from_string_literal("Default icon not found");
     }
 
     return Icon(move(bitmap16), move(bitmap32));

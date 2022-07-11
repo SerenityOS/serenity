@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (account.has_password()) {
             auto password = TRY(Core::get_password());
             if (!account.authenticate(password))
-                return Error::from_string_literal("Incorrect or disabled password."sv);
+                return Error::from_string_literal("Incorrect or disabled password.");
         }
     }
 

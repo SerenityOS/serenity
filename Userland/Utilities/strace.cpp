@@ -848,7 +848,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int status;
     if (g_pid == -1) {
         if (child_argv.is_empty())
-            return Error::from_string_literal("Expected either a pid or some arguments"sv);
+            return Error::from_string_literal("Expected either a pid or some arguments");
 
         auto pid = TRY(Core::System::fork());
 

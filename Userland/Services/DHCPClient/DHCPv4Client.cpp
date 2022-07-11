@@ -184,7 +184,7 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
 
     if (json.is_error() || !json.value().is_array()) {
         dbgln("Error: No network adapters available");
-        return Error::from_string_literal("No network adapters available"sv);
+        return Error::from_string_literal("No network adapters available");
     }
 
     Vector<InterfaceDescriptor> ifnames_to_immediately_discover, ifnames_to_attempt_later;

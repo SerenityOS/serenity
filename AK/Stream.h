@@ -45,7 +45,7 @@ public:
     {
         if (!handle_any_error())
             return {};
-        return Error::from_string_literal("Stream error"sv);
+        return Error::from_string_literal("Stream error");
     }
 
     virtual void set_recoverable_error() const { m_recoverable_error = true; }

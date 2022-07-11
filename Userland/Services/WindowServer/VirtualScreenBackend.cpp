@@ -39,7 +39,7 @@ ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GraphicsHeadModeSettin
         mode_setting.horizontal_stride = static_cast<int>(mode_setting.horizontal_active * sizeof(Gfx::ARGB32));
     m_pitch = mode_setting.horizontal_stride;
     if (static_cast<int>(mode_setting.horizontal_active * sizeof(Gfx::ARGB32)) != mode_setting.horizontal_stride)
-        return Error::from_string_literal("Unsupported pitch"sv);
+        return Error::from_string_literal("Unsupported pitch");
 
     m_width = mode_setting.horizontal_active;
     return {};

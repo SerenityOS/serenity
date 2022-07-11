@@ -73,14 +73,14 @@ ErrorOr<Account> Account::self([[maybe_unused]] Read options)
 
     auto pwd = TRY(Core::System::getpwuid(getuid()));
     if (!pwd.has_value())
-        return Error::from_string_literal("No such user"sv);
+        return Error::from_string_literal("No such user");
 
     spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
     if (options != Read::PasswdOnly) {
         auto maybe_spwd = TRY(Core::System::getspnam({ pwd->pw_name, strlen(pwd->pw_name) }));
         if (!maybe_spwd.has_value())
-            return Error::from_string_literal("No shadow entry for user"sv);
+            return Error::from_string_literal("No shadow entry for user");
         spwd = maybe_spwd.release_value();
     }
 #endif
@@ -92,14 +92,14 @@ ErrorOr<Account> Account::from_name(char const* username, [[maybe_unused]] Read 
 {
     auto pwd = TRY(Core::System::getpwnam({ username, strlen(username) }));
     if (!pwd.has_value())
-        return Error::from_string_literal("No such user"sv);
+        return Error::from_string_literal("No such user");
 
     spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
     if (options != Read::PasswdOnly) {
         auto maybe_spwd = TRY(Core::System::getspnam({ pwd->pw_name, strlen(pwd->pw_name) }));
         if (!maybe_spwd.has_value())
-            return Error::from_string_literal("No shadow entry for user"sv);
+            return Error::from_string_literal("No shadow entry for user");
         spwd = maybe_spwd.release_value();
     }
 #endif
@@ -110,14 +110,14 @@ ErrorOr<Account> Account::from_uid(uid_t uid, [[maybe_unused]] Read options)
 {
     auto pwd = TRY(Core::System::getpwuid(uid));
     if (!pwd.has_value())
-        return Error::from_string_literal("No such user"sv);
+        return Error::from_string_literal("No such user");
 
     spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
     if (options != Read::PasswdOnly) {
         auto maybe_spwd = TRY(Core::System::getspnam({ pwd->pw_name, strlen(pwd->pw_name) }));
         if (!maybe_spwd.has_value())
-            return Error::from_string_literal("No shadow entry for user"sv);
+            return Error::from_string_literal("No shadow entry for user");
         spwd = maybe_spwd.release_value();
     }
 #endif

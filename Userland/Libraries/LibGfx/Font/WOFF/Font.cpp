@@ -60,12 +60,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 {
     // https://www.w3.org/TR/WOFF/#WOFFHeader
     if (buffer.size() < WOFF_HEADER_SIZE)
-        return Error::from_string_literal("WOFF file too small"sv);
+        return Error::from_string_literal("WOFF file too small");
 
     // The signature field in the WOFF header MUST contain the "magic number" 0x774F4646. If the field does not contain this value, user agents MUST reject the file as invalid.
     u32 signature = be_u32(buffer.data());
     if (signature != WOFF_SIGNATURE)
-        return Error::from_string_literal("Invalid WOFF signature"sv);
+        return Error::from_string_literal("Invalid WOFF signature");
     // The flavor field corresponds to the "sfnt version" field found at the beginning of an sfnt file,
     // indicating the type of font data contained. Although only fonts of type 0x00010000 (the version number 1.0 as a 16.16 fixed-point value, indicating TrueType glyph data)
     // and 0x4F54544F (the tag 'OTTO', indicating CFF glyph data) are widely supported at present,
@@ -85,17 +85,17 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     u32 priv_offset = be_u32(buffer.offset(36)); // Offset to private data block, from beginning of WOFF file.
     u32 priv_length = be_u32(buffer.offset(40)); // Length of private data block.
     if (length > buffer.size())
-        return Error::from_string_literal("Invalid WOFF length"sv);
+        return Error::from_string_literal("Invalid WOFF length");
     if (reserved != 0)
-        return Error::from_string_literal("Invalid WOFF reserved field"sv);
+        return Error::from_string_literal("Invalid WOFF reserved field");
     if (meta_length == 0 && meta_offset != 0)
-        return Error::from_string_literal("Invalid WOFF meta block offset"sv);
+        return Error::from_string_literal("Invalid WOFF meta block offset");
     if (priv_length == 0 && priv_offset != 0)
-        return Error::from_string_literal("Invalid WOFF private block offset"sv);
+        return Error::from_string_literal("Invalid WOFF private block offset");
     if (WOFF_HEADER_SIZE + num_tables * WOFF_TABLE_SIZE > length)
-        return Error::from_string_literal("Truncated WOFF table directory"sv);
+        return Error::from_string_literal("Truncated WOFF table directory");
     if (total_sfnt_size > 10 * MiB)
-        return Error::from_string_literal("Uncompressed font is more than 10 MiB"sv);
+        return Error::from_string_literal("Uncompressed font is more than 10 MiB");
     auto font_buffer = TRY(ByteBuffer::create_zeroed(total_sfnt_size));
 
     // ISO-IEC 14496-22:2019 4.5.1 Offset table
@@ -116,19 +116,19 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         u32 orig_checksum = be_u32(buffer.offset(base_offset + 16));
 
         if ((size_t)offset + comp_length > length)
-            return Error::from_string_literal("Truncated WOFF table"sv);
+            return Error::from_string_literal("Truncated WOFF table");
         if (font_buffer_offset + orig_length > font_buffer.size())
-            return Error::from_string_literal("Uncompressed WOFF table too big"sv);
+            return Error::from_string_literal("Uncompressed WOFF table too big");
         if (comp_length < orig_length) {
             auto decompressed = Compress::Zlib::decompress_all(buffer.slice(offset, comp_length));
             if (!decompressed.has_value())
-                return Error::from_string_literal("Could not decompress WOFF table"sv);
+                return Error::from_string_literal("Could not decompress WOFF table");
             if (orig_length != decompressed->size())
-                return Error::from_string_literal("Invalid decompressed WOFF table length"sv);
+                return Error::from_string_literal("Invalid decompressed WOFF table length");
             font_buffer.overwrite(font_buffer_offset, decompressed->data(), orig_length);
         } else {
             if (comp_length != orig_length)
-                return Error::from_string_literal("Invalid uncompressed WOFF table length"sv);
+                return Error::from_string_literal("Invalid uncompressed WOFF table length");
             font_buffer.overwrite(font_buffer_offset, buffer.data() + offset, orig_length);
         }
 

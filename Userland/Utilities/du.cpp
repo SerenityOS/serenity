@@ -128,7 +128,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
-            return Error::from_string_literal("An error occurred. See previous error."sv);
+            return Error::from_string_literal("An error occurred. See previous error.");
         }
 
         while (di.has_next()) {
