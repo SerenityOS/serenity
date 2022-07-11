@@ -143,6 +143,12 @@ LengthStyleValue const& StyleValue::as_length() const
     return static_cast<LengthStyleValue const&>(*this);
 }
 
+LinearGradientStyleValue const& StyleValue::as_linear_gradient() const
+{
+    VERIFY(is_linear_gradient());
+    return static_cast<LinearGradientStyleValue const&>(*this);
+}
+
 ListStyleStyleValue const& StyleValue::as_list_style() const
 {
     VERIFY(is_list_style());
@@ -1400,6 +1406,124 @@ bool ImageStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     return m_url == other.as_image().m_url;
+}
+
+String LinearGradientStyleValue::to_string() const
+{
+    StringBuilder builder;
+    auto side_or_corner_to_string = [](SideOrCorner value) {
+        switch (value) {
+        case SideOrCorner::Top:
+            return "top"sv;
+        case SideOrCorner::Bottom:
+            return "bottom"sv;
+        case SideOrCorner::Left:
+            return "left"sv;
+        case SideOrCorner::Right:
+            return "right"sv;
+        case SideOrCorner::TopLeft:
+            return "top left"sv;
+        case SideOrCorner::TopRight:
+            return "top right"sv;
+        case SideOrCorner::BottomLeft:
+            return "bottom left"sv;
+        case SideOrCorner::BottomRight:
+            return "bottom right"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    builder.append("linear-gradient("sv);
+    m_direction.visit(
+        [&](SideOrCorner side_or_corner) {
+            builder.appendff("to {}, "sv, side_or_corner_to_string(side_or_corner));
+        },
+        [&](Angle const& angle) {
+            builder.appendff("{}, "sv, angle.to_string());
+        });
+
+    bool first = true;
+    for (auto const& element : m_color_stop_list) {
+        if (!first)
+            builder.append(", "sv);
+
+        if (element.transition_hint.has_value()) {
+            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
+        }
+
+        serialize_a_srgb_value(builder, element.color_stop.color);
+        if (element.color_stop.length.has_value()) {
+            builder.appendff(" {}"sv, element.color_stop.length->to_string());
+        }
+        first = false;
+    }
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+static bool operator==(LinearGradientStyleValue::GradientDirection a, LinearGradientStyleValue::GradientDirection b)
+{
+    if (a.has<SideOrCorner>() && b.has<SideOrCorner>())
+        return a.get<SideOrCorner>() == b.get<SideOrCorner>();
+    if (a.has<Angle>() && b.has<Angle>())
+        return a.get<Angle>() == b.get<Angle>();
+    return false;
+}
+
+static bool operator==(GradientColorHint a, GradientColorHint b)
+{
+    return a.value == b.value;
+}
+
+static bool operator==(GradientColorStop a, GradientColorStop b)
+{
+    return a.color == b.color && a.length == b.length;
+}
+
+static bool operator==(ColorStopListElement a, ColorStopListElement b)
+{
+    return a.transition_hint == b.transition_hint && a.color_stop == b.color_stop;
+}
+
+bool LinearGradientStyleValue::equals(StyleValue const& other_) const
+{
+    if (type() != other_.type())
+        return false;
+    auto& other = other_.as_linear_gradient();
+
+    if (m_direction != other.m_direction || m_color_stop_list.size() != other.m_color_stop_list.size())
+        return false;
+
+    for (size_t i = 0; i < m_color_stop_list.size(); i++) {
+        if (m_color_stop_list[i] != other.m_color_stop_list[i])
+            return false;
+    }
+    return true;
+}
+
+float LinearGradientStyleValue::angle(Gfx::FloatRect const& background_box) const
+{
+    (void)background_box;
+    return m_direction.visit(
+        [&](SideOrCorner side_or_corner) {
+            switch (side_or_corner) {
+            case SideOrCorner::Top:
+                return 0.0f;
+            case SideOrCorner::Bottom:
+                return 180.0f;
+            case SideOrCorner::Left:
+                return 270.0f;
+            case SideOrCorner::Right:
+                return 90.0f;
+            default:
+                // FIXME: Angle gradients towards corners
+                return 0.0f;
+            }
+        },
+        [&](Angle const& angle) {
+            return angle.to_degrees();
+        });
 }
 
 bool InheritStyleValue::equals(StyleValue const& other) const
