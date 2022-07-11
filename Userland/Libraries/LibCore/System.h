@@ -26,7 +26,7 @@
 #include <time.h>
 #include <utime.h>
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 #    include <shadow.h>
 #endif
 
@@ -78,7 +78,7 @@ ALWAYS_INLINE ErrorOr<void> unveil(std::nullptr_t, std::nullptr_t)
     return unveil(StringView {}, StringView {});
 }
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 ErrorOr<Optional<struct spwd>> getspent();
 ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 #endif
@@ -157,7 +157,9 @@ ErrorOr<void> unlink(StringView path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
+#ifndef AK_OS_ANDROID
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
+#endif
 enum class SearchInPath {
     No,
     Yes,

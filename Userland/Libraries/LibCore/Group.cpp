@@ -11,7 +11,7 @@
 
 namespace Core {
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 ErrorOr<void> Group::add_group(Group& group)
 {
     if (group.name().is_empty())

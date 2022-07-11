@@ -13,7 +13,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
-#include <LibSystem/syscall.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -25,6 +24,7 @@
 #include <unistd.h>
 
 #ifdef __serenity__
+#    include <LibSystem/syscall.h>
 #    include <serenity.h>
 #endif
 
@@ -182,7 +182,7 @@ ErrorOr<void> profiling_free_buffer(pid_t pid)
 }
 #endif
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 ErrorOr<Optional<struct spwd>> getspent()
 {
     errno = 0;
@@ -917,17 +917,19 @@ ErrorOr<struct utsname> uname()
     return uts;
 }
 
+#ifndef AK_OS_ANDROID
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 {
-#ifdef __serenity__
+#    ifdef __serenity__
     int rc = syscall(SC_adjtime, delta, old_delta);
     HANDLE_SYSCALL_RETURN_VALUE("adjtime", rc, {});
-#else
+#    else
     if (::adjtime(delta, old_delta) < 0)
         return Error::from_syscall("adjtime"sv, -errno);
     return {};
-#endif
+#    endif
 }
+#endif
 
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
 {
