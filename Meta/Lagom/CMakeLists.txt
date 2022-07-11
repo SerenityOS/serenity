@@ -148,7 +148,7 @@ include_directories(${CMAKE_BINARY_DIR}/Services)
 include(CMakePackageConfigHelpers)
 
 # find_package(<package>) call for consumers to find this project
-set(package Lagom)
+set(package Lagom CACHE STRING "")
 
 # Allow package maintainers to freely override the path for the configs
 set(Lagom_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
@@ -176,7 +176,7 @@ function(lagom_lib library fs_name)
 
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
-    if (NOT ENABLE_FUZZERS)
+    if (NOT ENABLE_FUZZERS AND NOT CMAKE_CROSSCOMPILING)
         # alias for parity with exports
         add_library(Lagom::${library} ALIAS ${target_name})
     endif()
@@ -260,11 +260,14 @@ endif()
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
+if (ANDROID)
+    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
+endif()
 lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
     LIBS Threads::Threads
 )
-if (NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+if (NOT APPLE AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     target_link_libraries(LibCore crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 
@@ -298,8 +301,8 @@ install(
 # Code Generators and other host tools
 # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
 # Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
-if (ENABLE_FUZZERS)
-    find_package(Lagom REQUIRED)
+if (ENABLE_FUZZERS OR CMAKE_CROSSCOMPILING)
+    find_package(LagomTools REQUIRED)
 else()
     add_subdirectory(Tools)
 endif()

@@ -48,7 +48,8 @@ jobs:
           cmake -GNinja -B tools-build \
               -DBUILD_LAGOM=OFF \
               -DENABLE_LAGOM_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=tool-install
+              -DCMAKE_INSTALL_PREFIX=tool-install \
+              -Dpackage=LagomTools
           ninja -C tools-build install
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
