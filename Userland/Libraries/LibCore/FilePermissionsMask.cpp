@@ -41,7 +41,7 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_numeric_notation(StringVi
 {
     mode_t mode = AK::StringUtils::convert_to_uint_from_octal<u16>(string).value_or(01000);
     if (mode > 0777)
-        return Error::from_string_literal("invalid octal representation"sv);
+        return Error::from_string_literal("invalid octal representation");
     return FilePermissionsMask().assign_permissions(mode);
 }
 
@@ -73,9 +73,9 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
                 else if (ch == '=')
                     operation = Operation::Assign;
                 else if (classes == 0)
-                    return Error::from_string_literal("invalid class: expected 'u', 'g', 'o' or 'a'"sv);
+                    return Error::from_string_literal("invalid class: expected 'u', 'g', 'o' or 'a'");
                 else
-                    return Error::from_string_literal("invalid operation: expected '+', '-' or '='"sv);
+                    return Error::from_string_literal("invalid operation: expected '+', '-' or '='");
 
                 // if an operation was specified without a class, assume all
                 if (classes == 0)
@@ -106,7 +106,7 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
             else if (ch == 'x')
                 write_bits = 1;
             else
-                return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'"sv);
+                return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'");
 
             mode_t clear_bits = operation == Operation::Assign ? 7 : write_bits;
 

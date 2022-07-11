@@ -91,7 +91,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, u16 port, Opt
 
     tls_socket->try_disambiguate_error();
     // FIXME: Should return richer information here.
-    return AK::Error::from_string_literal(alert_name(static_cast<AlertDescription>(256 - result)));
+    return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
 }
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream::Socket& underlying_stream, Options options)
@@ -112,7 +112,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream:
 
     tls_socket->try_disambiguate_error();
     // FIXME: Should return richer information here.
-    return AK::Error::from_string_literal(alert_name(static_cast<AlertDescription>(256 - result)));
+    return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
 }
 
 void TLSv12::setup_connection()

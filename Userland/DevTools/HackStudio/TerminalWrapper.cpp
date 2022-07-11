@@ -49,7 +49,7 @@ ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<Strin
 
             VERIFY(m_child_exit_status.has_value());
             if (m_child_exit_status.value() != 0)
-                return Error::from_string_literal(failure_message.value_or("Command execution failed"sv));
+                return Error::from_string_view(failure_message.value_or("Command execution failed"sv));
         }
 
         return {};

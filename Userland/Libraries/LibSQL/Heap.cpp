@@ -35,11 +35,11 @@ ErrorOr<void> Heap::open()
     if (stat(name().characters(), &stat_buffer) != 0) {
         if (errno != ENOENT) {
             warnln("Heap::open({}): could not stat: {}"sv, name(), strerror(errno));
-            return Error::from_string_literal("Heap::open(): could not stat file"sv);
+            return Error::from_string_literal("Heap::open(): could not stat file");
         }
     } else if (!S_ISREG(stat_buffer.st_mode)) {
         warnln("Heap::open({}): can only use regular files"sv, name());
-        return Error::from_string_literal("Heap::open(): can only use regular files"sv);
+        return Error::from_string_literal("Heap::open(): can only use regular files");
     } else {
         file_size = stat_buffer.st_size;
     }
@@ -49,7 +49,7 @@ ErrorOr<void> Heap::open()
     auto file_or_error = Core::File::open(name(), Core::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {
         warnln("Heap::open({}): could not open: {}"sv, name(), file_or_error.error());
-        return Error::from_string_literal("Heap::open(): could not open file"sv);
+        return Error::from_string_literal("Heap::open(): could not open file");
     }
     m_file = file_or_error.value();
     if (file_size > 0) {
@@ -68,7 +68,7 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
 {
     if (m_file.is_null()) {
         warnln("Heap({})::read_block({}): Heap file not opened"sv, name(), block);
-        return Error::from_string_literal("Heap()::read_block(): Heap file not opened"sv);
+        return Error::from_string_literal("Heap()::read_block(): Heap file not opened");
     }
     auto buffer_or_empty = m_write_ahead_log.get(block);
     if (buffer_or_empty.has_value())
@@ -76,14 +76,14 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
 
     if (block >= m_next_block) {
         warnln("Heap({})::read_block({}): block # out of range (>= {})"sv, name(), block, m_next_block);
-        return Error::from_string_literal("Heap()::read_block(): block # out of range"sv);
+        return Error::from_string_literal("Heap()::read_block(): block # out of range");
     }
     dbgln_if(SQL_DEBUG, "Read heap block {}", block);
     TRY(seek_block(block));
     auto ret = m_file->read(BLOCKSIZE);
     if (ret.is_empty()) {
         warnln("Heap({})::read_block({}): Could not read block"sv, name(), block);
-        return Error::from_string_literal("Heap()::read_block(): Could not read block"sv);
+        return Error::from_string_literal("Heap()::read_block(): Could not read block");
     }
     dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
         *ret.offset_pointer(0), *ret.offset_pointer(1),
@@ -97,23 +97,23 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
 {
     if (m_file.is_null()) {
         warnln("Heap({})::write_block({}): Heap file not opened"sv, name(), block);
-        return Error::from_string_literal("Heap()::write_block(): Heap file not opened"sv);
+        return Error::from_string_literal("Heap()::write_block(): Heap file not opened");
     }
     if (block > m_next_block) {
         warnln("Heap({})::write_block({}): block # out of range (> {})"sv, name(), block, m_next_block);
-        return Error::from_string_literal("Heap()::write_block(): block # out of range"sv);
+        return Error::from_string_literal("Heap()::write_block(): block # out of range");
     }
     TRY(seek_block(block));
     dbgln_if(SQL_DEBUG, "Write heap block {} size {}", block, buffer.size());
     if (buffer.size() > BLOCKSIZE) {
         warnln("Heap({})::write_block({}): Oversized block ({} > {})"sv, name(), block, buffer.size(), BLOCKSIZE);
-        return Error::from_string_literal("Heap()::write_block(): Oversized block"sv);
+        return Error::from_string_literal("Heap()::write_block(): Oversized block");
     }
     auto sz = buffer.size();
     if (sz < BLOCKSIZE) {
         if (buffer.try_resize(BLOCKSIZE).is_error()) {
             warnln("Heap({})::write_block({}): Could not align block of size {} to {}"sv, name(), block, buffer.size(), BLOCKSIZE);
-            return Error::from_string_literal("Heap()::write_block(): Could not align block"sv);
+            return Error::from_string_literal("Heap()::write_block(): Could not align block");
         }
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }
@@ -128,28 +128,28 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
         return {};
     }
     warnln("Heap({})::write_block({}): Could not full write block"sv, name(), block);
-    return Error::from_string_literal("Heap()::write_block(): Could not full write block"sv);
+    return Error::from_string_literal("Heap()::write_block(): Could not full write block");
 }
 
 ErrorOr<void> Heap::seek_block(u32 block)
 {
     if (m_file.is_null()) {
         warnln("Heap({})::seek_block({}): Heap file not opened"sv, name(), block);
-        return Error::from_string_literal("Heap()::seek_block(): Heap file not opened"sv);
+        return Error::from_string_literal("Heap()::seek_block(): Heap file not opened");
     }
     if (block == m_end_of_file) {
         off_t pos;
         if (!m_file->seek(0, Core::SeekMode::FromEndPosition, &pos)) {
             warnln("Heap({})::seek_block({}): Error seeking end of file: {}"sv, name(), block, m_file->error_string());
-            return Error::from_string_literal("Heap()::seek_block(): Error seeking end of file"sv);
+            return Error::from_string_literal("Heap()::seek_block(): Error seeking end of file");
         }
     } else if (block > m_end_of_file) {
         warnln("Heap({})::seek_block({}): Cannot seek beyond end of file at block {}"sv, name(), block, m_end_of_file);
-        return Error::from_string_literal("Heap()::seek_block(): Cannot seek beyond end of file"sv);
+        return Error::from_string_literal("Heap()::seek_block(): Cannot seek beyond end of file");
     } else {
         if (!m_file->seek(block * BLOCKSIZE)) {
             warnln("Heap({})::seek_block({}): Error seeking: {}"sv, name(), block, m_file->error_string());
-            return Error::from_string_literal("Heap()::seek_block(): Error seeking: {}"sv);
+            return Error::from_string_literal("Heap()::seek_block(): Error seeking: {}");
         }
     }
     return {};
@@ -206,7 +206,7 @@ ErrorOr<void> Heap::read_zero_block()
     auto file_id = StringView(file_id_buffer);
     if (file_id != FILE_ID) {
         warnln("{}: Zero page corrupt. This is probably not a {} heap file"sv, name(), FILE_ID);
-        return Error::from_string_literal("Heap()::read_zero_block(): Zero page corrupt. This is probably not a SerenitySQL heap file"sv);
+        return Error::from_string_literal("Heap()::read_zero_block(): Zero page corrupt. This is probably not a SerenitySQL heap file");
     }
     dbgln_if(SQL_DEBUG, "Read zero block from {}", name());
     memcpy(&m_version, buffer.offset_pointer(VERSION_OFFSET), sizeof(u32));

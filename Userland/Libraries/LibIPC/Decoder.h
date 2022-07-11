@@ -58,7 +58,7 @@ public:
         u32 size;
         TRY(decode(size));
         if (size > NumericLimits<i32>::max())
-            return Error::from_string_literal("IPC: Invalid HashMap size"sv);
+            return Error::from_string_literal("IPC: Invalid HashMap size");
 
         for (size_t i = 0; i < size; ++i) {
             K key;
@@ -76,7 +76,7 @@ public:
         u32 size;
         TRY(decode(size));
         if (size > NumericLimits<i32>::max())
-            return Error::from_string_literal("IPC: Invalid HashMap size"sv);
+            return Error::from_string_literal("IPC: Invalid HashMap size");
 
         for (size_t i = 0; i < size; ++i) {
             K key;
@@ -109,7 +109,7 @@ public:
         u64 size;
         TRY(decode(size));
         if (size > NumericLimits<i32>::max())
-            return Error::from_string_literal("IPC: Invalid Vector size"sv);
+            return Error::from_string_literal("IPC: Invalid Vector size");
         VERIFY(vector.is_empty());
         TRY(vector.try_ensure_capacity(size));
         for (size_t i = 0; i < size; ++i) {

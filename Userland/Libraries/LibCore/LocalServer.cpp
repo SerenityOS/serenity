@@ -35,7 +35,7 @@ LocalServer::~LocalServer()
 ErrorOr<void> LocalServer::take_over_from_system_server(String const& socket_path)
 {
     if (m_listening)
-        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening"sv);
+        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening");
 
     auto socket = TRY(take_over_socket_from_system_server(socket_path));
     m_fd = TRY(socket->release_fd());

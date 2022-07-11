@@ -1356,13 +1356,13 @@ size_t BMPImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("BMPImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("BMPImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == BMPLoadingContext::State::Error)
-        return Error::from_string_literal("BMPImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("BMPImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < BMPLoadingContext::State::PixelDataDecoded && !decode_bmp_pixel_data(*m_context))
-        return Error::from_string_literal("BMPImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("BMPImageDecoderPlugin: Decoding failed");
 
     VERIFY(m_context->bitmap);
     return ImageFrameDescriptor { m_context->bitmap, 0 };

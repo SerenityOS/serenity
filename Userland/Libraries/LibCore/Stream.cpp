@@ -336,7 +336,8 @@ ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
             return Error::from_syscall("getaddrinfo", -errno);
         }
 
-        return Error::from_string_literal(gai_strerror(rc));
+        auto const* error_string = gai_strerror(rc);
+        return Error::from_string_view({ error_string, strlen(error_string) });
     }
 
     auto* socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);

@@ -277,7 +277,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(Socket& under
             auto reply = TRY(send_connect_request_message(underlying, version, target, target_port, command));
             if (reply != Reply::Succeeded) {
                 underlying.close();
-                return Error::from_string_literal(reply_response_name(reply));
+                return Error::from_string_view(reply_response_name(reply));
             }
 
             return adopt_nonnull_own_or_enomem(new SOCKSProxyClient {
@@ -296,7 +296,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(Socket& under
             auto reply = TRY(send_connect_request_message(underlying, version, target, target_port, command));
             if (reply != Reply::Succeeded) {
                 underlying.close();
-                return Error::from_string_literal(reply_response_name(reply));
+                return Error::from_string_view(reply_response_name(reply));
             }
 
             return adopt_nonnull_own_or_enomem(new SOCKSProxyClient {
