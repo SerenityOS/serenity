@@ -6,7 +6,9 @@
 
 #include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/MutationType.h>
 #include <LibWeb/DOM/Range.h>
+#include <LibWeb/DOM/StaticNodeList.h>
 
 namespace Web::DOM {
 
@@ -59,7 +61,8 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
     if (offset + count > length)
         count = length - offset;
 
-    // FIXME: 4. Queue a mutation record of "characterData" for node with null, null, node’s data, « », « », null, and null.
+    // 4. Queue a mutation record of "characterData" for node with null, null, node’s data, « », « », null, and null.
+    queue_mutation_record(MutationType::characterData, {}, {}, m_data, StaticNodeList::create({}), StaticNodeList::create({}), nullptr, nullptr);
 
     // 5. Insert data into node’s data after offset code units.
     // 6. Let delete offset be offset + data’s length.
