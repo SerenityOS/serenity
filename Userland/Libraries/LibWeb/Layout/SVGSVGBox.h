@@ -21,6 +21,8 @@ public:
     virtual bool can_have_children() const override { return true; }
 
     virtual RefPtr<Painting::Paintable> create_paintable() const override;
+
+    virtual void prepare_for_replaced_layout() override;
 };
 
 }
