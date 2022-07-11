@@ -58,6 +58,7 @@ enum class FlexBasis {
     Auto,
 };
 
+// Note: The sides must be before the corners in this enum (as this order is used in parsing).
 enum class SideOrCorner {
     Top,
     Bottom,
