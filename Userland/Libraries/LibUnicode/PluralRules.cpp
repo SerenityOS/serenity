@@ -40,4 +40,9 @@ Span<PluralCategory const> __attribute__((weak)) available_plural_categories(Str
     return categories.span();
 }
 
+PluralCategory __attribute__((weak)) determine_plural_range(StringView, PluralCategory, PluralCategory)
+{
+    return PluralCategory::Other;
+}
+
 }

@@ -184,13 +184,22 @@ struct Condition {
     Vector<Vector<Relation>> relations;
 };
 
+struct Range {
+    String start;
+    String end;
+    String category;
+};
+
+using Conditions = HashMap<String, Condition>;
+using Ranges = Vector<Range>;
+
 struct Locale {
     static String generated_method_name(StringView form, StringView locale)
     {
         return String::formatted("{}_plurality_{}", form, format_identifier({}, locale));
     }
 
-    HashMap<String, Condition>& rules_for_form(StringView form)
+    Conditions& rules_for_form(StringView form)
     {
         if (form == "cardinal")
             return cardinal_rules;
@@ -199,8 +208,9 @@ struct Locale {
         VERIFY_NOT_REACHED();
     }
 
-    HashMap<String, Condition> cardinal_rules;
-    HashMap<String, Condition> ordinal_rules;
+    Conditions cardinal_rules;
+    Conditions ordinal_rules;
+    Ranges plural_ranges;
 };
 
 struct UnicodeLocaleData {
@@ -276,7 +286,7 @@ static Relation parse_relation(StringView relation)
 //
 // The "sample" being series of integer or decimal values that fit the specified condition. The
 // condition may be one or more binary expressions, chained together with "and" or "or" operators.
-static void parse_condition(StringView category, StringView rule, HashMap<String, Condition>& rules)
+static void parse_condition(StringView category, StringView rule, Conditions& rules)
 {
     static constexpr auto other_category = "other"sv;
     static constexpr auto disjunction_keyword = " or "sv;
@@ -348,6 +358,43 @@ static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringVie
     return {};
 }
 
+// https://unicode.org/reports/tr35/tr35-numbers.html#Plural_Ranges
+static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, UnicodeLocaleData& locale_data)
+{
+    static constexpr auto start_segment = "-start-"sv;
+    static constexpr auto end_segment = "-end-"sv;
+
+    LexicalPath plural_ranges_path(move(core_supplemental_path));
+    plural_ranges_path = plural_ranges_path.append("pluralRanges.json"sv);
+
+    auto plural_ranges = TRY(read_json_file(plural_ranges_path.string()));
+    auto const& supplemental_object = plural_ranges.as_object().get("supplemental"sv);
+    auto const& plurals_object = supplemental_object.as_object().get("plurals"sv);
+
+    plurals_object.as_object().for_each_member([&](auto const& loc, auto const& ranges_object) {
+        auto locale = locale_data.locales.get(loc);
+        if (!locale.has_value())
+            return;
+
+        ranges_object.as_object().for_each_member([&](auto const& range, auto const& category) {
+            auto start_index = range.find(start_segment);
+            VERIFY(start_index.has_value());
+
+            auto end_index = range.find(end_segment);
+            VERIFY(end_index.has_value());
+
+            *start_index += start_segment.length();
+
+            auto start = range.substring(*start_index, *end_index - *start_index);
+            auto end = range.substring(*end_index + end_segment.length());
+
+            locale->plural_ranges.empend(move(start), move(end), category.as_string());
+        });
+    });
+
+    return {};
+}
+
 static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
@@ -378,6 +425,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
     TRY(parse_plural_rules(core_supplemental_path.string(), "plurals.json"sv, locale_data));
     TRY(parse_plural_rules(core_supplemental_path.string(), "ordinals.json"sv, locale_data));
+    TRY(parse_plural_ranges(core_supplemental_path.string(), locale_data));
     return {};
 }
 
@@ -421,10 +469,16 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 namespace Unicode {
 
 using PluralCategoryFunction = PluralCategory(*)(PluralOperands);
+using PluralRangeFunction = PluralCategory(*)(PluralCategory, PluralCategory);
 
 static PluralCategory default_category(PluralOperands)
 {
     return PluralCategory::Other;
+}
+
+static PluralCategory default_range(PluralCategory, PluralCategory end)
+{
+    return end;
 }
 
 )~~~");
@@ -459,19 +513,47 @@ static PluralCategory @method@([[maybe_unused]] PluralOperands ops)
 )~~~");
     };
 
-    auto append_lookup_table = [&](auto form) {
+    auto append_ranges = [&](auto const& locale, auto const& ranges) {
+        if (ranges.is_empty())
+            return;
+
+        generator.set("method"sv, Locale::generated_method_name("range"sv, locale));
+
+        generator.append(R"~~~(
+static PluralCategory @method@(PluralCategory start, PluralCategory end)
+{)~~~");
+
+        for (auto const& range : ranges) {
+            generator.set("start"sv, format_identifier({}, range.start));
+            generator.set("end"sv, format_identifier({}, range.end));
+            generator.set("category"sv, format_identifier({}, range.category));
+
+            generator.append(R"~~~(
+    if (start == PluralCategory::@start@ && end == PluralCategory::@end@)
+        return PluralCategory::@category@;)~~~");
+        }
+
+        generator.append(R"~~~(
+    return end;
+}
+)~~~");
+    };
+
+    auto append_lookup_table = [&](auto type, auto form, auto default_, auto data_for_locale) {
+        generator.set("type"sv, type);
         generator.set("form"sv, form);
+        generator.set("default"sv, default_);
         generator.set("size"sv, String::number(locales.size()));
 
         generator.append(R"~~~(
-static constexpr Array<PluralCategoryFunction, @size@> s_@form@_functions { {)~~~");
+static constexpr Array<@type@, @size@> s_@form@_functions { {)~~~");
 
         for (auto const& locale : locales) {
-            auto& rules = locale_data.locales.find(locale)->value;
+            auto& rules = data_for_locale(locale_data.locales.find(locale)->value, form);
 
-            if (rules.rules_for_form(form).is_empty()) {
+            if (rules.is_empty()) {
                 generator.append(R"~~~(
-    default_category,)~~~");
+    @default@,)~~~");
             } else {
                 generator.set("method"sv, Locale::generated_method_name(form, locale));
                 generator.append(R"~~~(
@@ -502,10 +584,12 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
     for (auto [locale, rules] : locale_data.locales) {
         append_rules("cardinal"sv, locale, rules.cardinal_rules);
         append_rules("ordinal"sv, locale, rules.ordinal_rules);
+        append_ranges(locale, rules.plural_ranges);
     }
 
-    append_lookup_table("cardinal"sv);
-    append_lookup_table("ordinal"sv);
+    append_lookup_table("PluralCategoryFunction"sv, "cardinal"sv, "default_category"sv, [](auto& rules, auto form) -> Conditions& { return rules.rules_for_form(form); });
+    append_lookup_table("PluralCategoryFunction"sv, "ordinal"sv, "default_category"sv, [](auto& rules, auto form) -> Conditions& { return rules.rules_for_form(form); });
+    append_lookup_table("PluralRangeFunction"sv, "range"sv, "default_range"sv, [](auto& rules, auto) -> Ranges& { return rules.plural_ranges; });
 
     generate_mapping(generator, locales, "PluralCategory"sv, "s_cardinal_categories"sv, "s_cardinal_categories_{}", format_identifier,
         [&](auto const& name, auto const& locale) {
@@ -557,6 +641,18 @@ Span<PluralCategory const> available_plural_categories(StringView locale, Plural
     }
 
     VERIFY_NOT_REACHED();
+}
+
+PluralCategory determine_plural_range(StringView locale, PluralCategory start, PluralCategory end)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return PluralCategory::Other;
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+
+    PluralRangeFunction decider = s_range_functions[locale_index];
+    return decider(start, end);
 }
 
 }
