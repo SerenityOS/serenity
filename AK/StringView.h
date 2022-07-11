@@ -33,11 +33,6 @@ public:
     {
         VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE constexpr StringView(char const* cstring)
-        : m_characters(cstring)
-        , m_length(cstring ? __builtin_strlen(cstring) : 0)
-    {
-    }
     ALWAYS_INLINE StringView(ReadonlyBytes bytes)
         : m_characters(reinterpret_cast<char const*>(bytes.data()))
         , m_length(bytes.size())
