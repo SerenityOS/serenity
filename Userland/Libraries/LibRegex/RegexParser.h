@@ -101,7 +101,7 @@ protected:
         Lexer& lexer;
         Token current_token;
         Error error = Error::NoError;
-        Token error_token { TokenType::Eof, 0, StringView(nullptr) };
+        Token error_token { TokenType::Eof, 0, {} };
         ByteCode bytecode;
         size_t capture_groups_count { 0 };
         size_t named_capture_groups_count { 0 };

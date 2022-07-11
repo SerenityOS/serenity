@@ -23,7 +23,7 @@ HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
     : m_source(source)
-    , m_current_token(TokenType::Eof, {}, StringView(nullptr), StringView(nullptr), filename, 0, 0, 0)
+    , m_current_token(TokenType::Eof, {}, {}, {}, filename, 0, 0, 0)
     , m_filename(filename)
     , m_line_number(line_number)
     , m_line_column(line_column)

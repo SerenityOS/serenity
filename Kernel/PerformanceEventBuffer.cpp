@@ -348,7 +348,7 @@ ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, Proces
     ErrorOr<void> result;
     process.for_each_thread([&](auto& thread) {
         result = append_with_ip_and_bp(process.pid(), thread.tid().value(),
-            0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
+            0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, {});
         return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
     });
     TRY(result);

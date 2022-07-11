@@ -32,7 +32,7 @@ char const* Token::name() const
 }
 
 Lexer::Lexer()
-    : GenericLexer(StringView { nullptr })
+    : GenericLexer(StringView {})
 {
 }
 
@@ -62,7 +62,7 @@ char Lexer::consume()
 void Lexer::reset()
 {
     m_index = 0;
-    m_current_token = { TokenType::Eof, 0, StringView(nullptr) };
+    m_current_token = { TokenType::Eof, 0, {} };
     m_previous_position = 0;
 }
 
@@ -178,7 +178,7 @@ Token Lexer::next()
         return emit_token(TokenType::Char);
     }
 
-    return Token(TokenType::Eof, m_index, nullptr);
+    return Token(TokenType::Eof, m_index, {});
 }
 
 }

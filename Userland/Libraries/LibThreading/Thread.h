@@ -34,7 +34,7 @@ public:
     pthread_t tid() const { return m_tid; }
 
 private:
-    explicit Thread(Function<intptr_t()> action, StringView thread_name = nullptr);
+    explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     String m_thread_name;

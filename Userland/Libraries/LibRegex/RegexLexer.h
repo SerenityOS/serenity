@@ -61,7 +61,7 @@ public:
 private:
     TokenType m_type { TokenType::Eof };
     size_t m_position { 0 };
-    StringView m_value { nullptr };
+    StringView m_value {};
 };
 
 class Lexer : public GenericLexer {
@@ -77,7 +77,7 @@ public:
 
 private:
     size_t m_previous_position { 0 };
-    Token m_current_token { TokenType::Eof, 0, StringView(nullptr) };
+    Token m_current_token { TokenType::Eof, 0, {} };
 };
 
 }
