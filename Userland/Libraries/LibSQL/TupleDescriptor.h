@@ -97,7 +97,7 @@ public:
         for (auto& element : *this) {
             elements.append(element.to_string());
         }
-        return String::formatted("[\n{}\n]", String::join("\n", elements));
+        return String::formatted("[\n{}\n]", String::join('\n', elements));
     }
 
     using Vector<TupleElementDescriptor>::operator==;

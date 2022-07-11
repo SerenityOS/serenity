@@ -207,11 +207,11 @@ int Shell::builtin_type(int argc, char const** argv)
             if (!dont_show_function_source) {
                 StringBuilder builder;
                 builder.append(fn.name);
-                builder.append("(");
+                builder.append('(');
                 for (size_t i = 0; i < fn.arguments.size(); i++) {
                     builder.append(fn.arguments[i]);
                     if (!(i == fn.arguments.size() - 1))
-                        builder.append(" ");
+                        builder.append(' ');
                 }
                 builder.append(") {\n"sv);
                 if (fn.body) {
@@ -448,7 +448,7 @@ int Shell::builtin_export(int argc, char const** argv)
             if (value) {
                 auto values = value->resolve_as_list(*this);
                 StringBuilder builder;
-                builder.join(" ", values);
+                builder.join(' ', values);
                 parts.append(builder.to_string());
             } else {
                 // Ignore the export.

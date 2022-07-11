@@ -305,7 +305,7 @@ private:
                     break;
                 }
             }
-            builder.append("]");
+            builder.append(']');
             return { builder.to_string() };
         }
 

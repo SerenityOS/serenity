@@ -226,9 +226,9 @@ public:
                 "Size", Gfx::TextAlignment::CenterRight,
                 [](const JsonObject& object) {
                     StringBuilder size_builder;
-                    size_builder.append(" ");
+                    size_builder.append(' ');
                     size_builder.append(human_readable_size(object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64()));
-                    size_builder.append(" ");
+                    size_builder.append(' ');
                     return size_builder.to_string();
                 },
                 [](const JsonObject& object) {

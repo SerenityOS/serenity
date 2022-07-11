@@ -28,7 +28,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
     // Start reading file line by line
     for (auto object_line : file.lines()) {
         // Ignore file comments
-        if (object_line.starts_with("#"))
+        if (object_line.starts_with('#'))
             continue;
 
         if (object_line.starts_with("vt"sv)) {
@@ -59,7 +59,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         }
 
         // This line describes a vertex (a position in 3D space)
-        if (object_line.starts_with("v")) {
+        if (object_line.starts_with('v')) {
             auto vertex_line = object_line.split_view(' ');
             if (vertex_line.size() != 4) {
                 dbgln("Wavefront: Malformed vertex line. Aborting.");
@@ -74,7 +74,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         }
 
         // This line describes a face (a collection of 3+ vertices, aka a triangle or polygon)
-        if (object_line.starts_with("f")) {
+        if (object_line.starts_with('f')) {
             auto face_line = object_line.substring_view(2).split_view(' ');
             auto number_of_vertices = face_line.size();
             if (number_of_vertices < 3) {

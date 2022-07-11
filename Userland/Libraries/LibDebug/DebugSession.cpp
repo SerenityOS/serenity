@@ -438,7 +438,7 @@ void DebugSession::update_loaded_libs()
         if (!rc)
             return {};
         auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_string();
-        if (lib_name.starts_with("/"))
+        if (lib_name.starts_with('/'))
             return lib_name;
         return String::formatted("/usr/lib/{}", lib_name);
     };

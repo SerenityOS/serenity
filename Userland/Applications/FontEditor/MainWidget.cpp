@@ -849,7 +849,7 @@ void MainWidget::update_statusbar()
         builder.append_code_point(glyph);
     }
 
-    builder.append(")");
+    builder.append(')');
 
     auto glyph_name = Unicode::code_point_display_name(glyph);
     if (glyph_name.has_value()) {

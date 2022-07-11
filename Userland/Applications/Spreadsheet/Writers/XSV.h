@@ -140,7 +140,7 @@ private:
         auto string = String::formatted("{}", FormatIfSupported(entry));
 
         auto safe_to_write_normally = (m_behaviors & WriterBehavior::QuoteAll) == WriterBehavior::None
-            && !string.contains("\n")
+            && !string.contains('\n')
             && !string.contains(m_traits.separator);
 
         if (safe_to_write_normally) {

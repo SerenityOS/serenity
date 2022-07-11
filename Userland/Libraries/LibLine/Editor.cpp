@@ -1718,7 +1718,7 @@ String Style::to_string() const
                 : "ReplaceEachCodePointInSelection");
     }
 
-    builder.append("}");
+    builder.append('}');
 
     return builder.build();
 }

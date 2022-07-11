@@ -161,7 +161,7 @@ Optional<String> NewProjectDialog::get_available_project_name()
 Optional<String> NewProjectDialog::get_project_full_path()
 {
     // Do not permit forward-slashes in project names
-    if (m_name_input->text().contains("/"))
+    if (m_name_input->text().contains('/'))
         return {};
 
     auto create_in = m_create_in_input->text();

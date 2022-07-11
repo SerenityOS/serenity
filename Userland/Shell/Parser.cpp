@@ -1969,7 +1969,7 @@ RefPtr<AST::Node> Parser::parse_glob()
                 textbuilder.append(bareword->text());
             } else if (glob_after->is_tilde()) {
                 auto bareword = static_cast<AST::Tilde*>(glob_after.ptr());
-                textbuilder.append("~");
+                textbuilder.append('~');
                 textbuilder.append(bareword->text());
             } else {
                 return create<AST::SyntaxError>(String::formatted("Invalid node '{}' in glob position, escape shell special characters", glob_after->class_name()));

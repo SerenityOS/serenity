@@ -15,7 +15,7 @@ Language language_from_file(LexicalPath const& file)
         return Language::GitCommit;
 
     auto extension = file.extension();
-    VERIFY(!extension.starts_with("."));
+    VERIFY(!extension.starts_with('.'));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return Language::Cpp;
@@ -57,7 +57,7 @@ String language_name_from_file(LexicalPath const& file)
         return "GitCommit";
 
     auto extension = file.extension();
-    VERIFY(!extension.starts_with("."));
+    VERIFY(!extension.starts_with('.'));
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return "C++";

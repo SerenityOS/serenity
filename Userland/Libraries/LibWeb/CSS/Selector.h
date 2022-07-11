@@ -58,7 +58,7 @@ public:
                 // 3.
                 // - A is 1: Append "n" to result.
                 if (step_size == 1)
-                    result.append("n");
+                    result.append('n');
                 // - A is -1: Append "-n" to result.
                 else if (step_size == -1)
                     result.append("-n"sv);

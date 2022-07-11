@@ -61,9 +61,9 @@ private:
         StringBuilder builder;
         builder.append(action.text());
         if (action.shortcut().is_valid()) {
-            builder.append(" (");
+            builder.append(" ("sv);
             builder.append(action.shortcut().to_string());
-            builder.append(")");
+            builder.append(')');
         }
         return builder.to_string();
     }
