@@ -231,7 +231,7 @@ String Path::to_string() const
 
         builder.append(") "sv);
     }
-    builder.append("}");
+    builder.append('}');
     return builder.to_string();
 }
 

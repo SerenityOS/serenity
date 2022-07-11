@@ -58,7 +58,7 @@ UNMAP_AFTER_INIT NonnullOwnPtr<KString> CommandLine::build_commandline(StringVie
     StringBuilder builder;
     builder.append(cmdline_from_bootloader);
     if constexpr (!s_embedded_cmd_line.is_empty()) {
-        builder.append(" ");
+        builder.append(' ');
         builder.append(s_embedded_cmd_line);
     }
     return KString::must_create(builder.string_view());

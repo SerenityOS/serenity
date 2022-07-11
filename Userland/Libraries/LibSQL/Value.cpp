@@ -874,11 +874,11 @@ Vector<String> ContainerValueImpl::to_string_vector() const
 String ContainerValueImpl::to_string() const
 {
     StringBuilder builder;
-    builder.append("(");
+    builder.append('(');
     StringBuilder joined;
     joined.join(", "sv, to_string_vector());
     builder.append(joined.string_view());
-    builder.append(")");
+    builder.append(')');
     return builder.build();
 }
 

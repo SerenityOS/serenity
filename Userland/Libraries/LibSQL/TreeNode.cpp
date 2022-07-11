@@ -380,7 +380,7 @@ void TreeNode::dump_if(int flag, String&& msg)
     if (is_leaf()) {
         builder.append(", leaf"sv);
     }
-    builder.append(")");
+    builder.append(')');
     dbgln(builder.build());
 }
 

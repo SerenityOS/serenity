@@ -130,7 +130,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     if (Core::File::is_directory(real_path)) {
 
-        if (!request.resource().ends_with("/")) {
+        if (!request.resource().ends_with('/')) {
             StringBuilder red;
 
             red.append(requested_path);

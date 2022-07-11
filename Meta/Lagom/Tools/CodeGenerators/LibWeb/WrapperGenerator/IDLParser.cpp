@@ -60,7 +60,7 @@ static String convert_enumeration_value_to_cpp_enum_member(String const& value, 
         } else {
             auto non_alnum_string = lexer.consume_while([](auto c) { return !is_ascii_alphanumeric(c); });
             if (!non_alnum_string.is_empty())
-                builder.append("_");
+                builder.append('_');
         }
     }
 

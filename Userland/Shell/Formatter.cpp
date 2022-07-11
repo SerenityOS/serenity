@@ -41,7 +41,7 @@ String Formatter::format()
 
     auto string = current_builder().string_view();
 
-    if (!string.ends_with(" "))
+    if (!string.ends_with(' '))
         current_builder().append(m_trivia);
 
     return current_builder().to_string();

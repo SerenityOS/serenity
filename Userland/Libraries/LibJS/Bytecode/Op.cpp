@@ -1030,7 +1030,7 @@ String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& ex
         Vector<String> names;
         for (auto& it : m_variables)
             names.append(executable.get_string(it.key));
-        builder.append("}");
+        builder.append('}');
         builder.join(", "sv, names);
     }
     return builder.to_string();

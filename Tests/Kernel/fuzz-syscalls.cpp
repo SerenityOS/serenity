@@ -100,7 +100,7 @@ static void do_weird_call(size_t attempt, int syscall_fn, size_t arg1, size_t ar
             builder.append(", "sv);
         builder.appendff("{:p}", fake_params[i]);
     }
-    builder.append("]");
+    builder.append(']');
     dbgln("{}", builder.build());
 
     // Actually do the syscall ('fake_params' is passed indirectly, if any of arg1, arg2, or arg3 point to it.

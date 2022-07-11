@@ -201,7 +201,7 @@ void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* w
 
     StringBuilder path_builder;
     path_builder.append(output_directory_path.dirname());
-    path_builder.append("/");
+    path_builder.append('/');
     if (archive_name.is_empty()) {
         path_builder.append(output_directory_path.parent().basename());
         path_builder.append(".zip"sv);

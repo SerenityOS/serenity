@@ -36,11 +36,11 @@ String FetchCommand::DataItem::Section::serialize() const
         bool first = true;
         for (auto& field : headers.value()) {
             if (!first)
-                headers_builder.append(" ");
+                headers_builder.append(' ');
             headers_builder.append(field);
             first = false;
         }
-        headers_builder.append(")");
+        headers_builder.append(')');
         return headers_builder.build();
     }
     case SectionType::Text:
@@ -50,7 +50,7 @@ String FetchCommand::DataItem::Section::serialize() const
         bool first = true;
         for (int part : parts.value()) {
             if (!first)
-                sb.append(".");
+                sb.append('.');
             sb.appendff("{}", part);
             first = false;
         }
@@ -95,7 +95,7 @@ String FetchCommand::serialize()
     bool first = true;
     for (auto& sequence : sequence_set) {
         if (!first) {
-            sequence_builder.append(",");
+            sequence_builder.append(',');
         }
         sequence_builder.append(sequence.serialize());
         first = false;
@@ -105,7 +105,7 @@ String FetchCommand::serialize()
     first = true;
     for (auto& data_item : data_items) {
         if (!first) {
-            data_items_builder.append(" ");
+            data_items_builder.append(' ');
         }
         data_items_builder.append(data_item.serialize());
         first = false;
@@ -156,7 +156,7 @@ String SearchKey::serialize() const
         [&](Recent const&) { return String("RECENT"); },
         [&](SearchKeys const& x) {
             StringBuilder sb;
-            sb.append("(");
+            sb.append('(');
             bool first = true;
             for (const auto& item : x.keys) {
                 if (!first)

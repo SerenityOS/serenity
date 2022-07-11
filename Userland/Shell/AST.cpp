@@ -2665,7 +2665,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
@@ -2695,7 +2695,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
@@ -3052,7 +3052,7 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
 
         StringBuilder path_builder;
         path_builder.append(tilde_value);
-        path_builder.append("/");
+        path_builder.append('/');
         path_builder.append(bareword_value);
         auto path = path_builder.to_string();
 
@@ -3183,8 +3183,8 @@ RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", left);
-    builder.join(" ", right);
+    builder.join(' ', left);
+    builder.join(' ', right);
 
     return make_ref_counted<StringValue>(builder.to_string());
 }
@@ -3347,7 +3347,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::WriteAppend));
     return make_ref_counted<CommandValue>(move(command));
@@ -3377,7 +3377,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Write));
     return make_ref_counted<CommandValue>(move(command));
@@ -3724,7 +3724,7 @@ String TildeValue::resolve_as_string(RefPtr<Shell> shell)
 Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;
-    builder.append("~");
+    builder.append('~');
     builder.append(m_username);
 
     if (!shell)

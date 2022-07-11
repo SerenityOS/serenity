@@ -763,7 +763,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
             continue;
         }
 
-        if (argument.starts_with("-")) {
+        if (argument.starts_with('-')) {
             option_to_complete = argument;
             completing_option = true;
 

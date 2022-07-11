@@ -22,7 +22,7 @@ String Block::to_string() const
     StringBuilder builder;
 
     builder.append(m_token.bracket_string());
-    builder.join(" ", m_values);
+    builder.join(' ', m_values);
     builder.append(m_token.bracket_mirror_string());
 
     return builder.to_string();

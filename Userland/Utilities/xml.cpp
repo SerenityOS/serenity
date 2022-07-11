@@ -424,10 +424,10 @@ static void do_run_tests(XML::Document& document)
 
             StringBuilder path_builder;
             path_builder.append(base_path);
-            path_builder.append("/");
+            path_builder.append('/');
             for (auto& entry : bases.in_reverse()) {
                 path_builder.append(entry);
-                path_builder.append("/");
+                path_builder.append('/');
             }
             auto test_base_path = path_builder.to_string();
 

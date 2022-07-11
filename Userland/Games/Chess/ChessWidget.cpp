@@ -555,45 +555,45 @@ bool ChessWidget::import_pgn(StringView import_path)
         token = token.trim_whitespace();
 
         // FIXME: Parse all of these tokens when we start caring about them
-        if (token.ends_with("}")) {
+        if (token.ends_with('}')) {
             skip = false;
             continue;
         }
         if (skip)
             continue;
-        if (token.starts_with("{")) {
-            if (token.ends_with("}"))
+        if (token.starts_with('{')) {
+            if (token.ends_with('}'))
                 continue;
             skip = true;
             continue;
         }
-        if (token.ends_with(")")) {
+        if (token.ends_with(')')) {
             recursive_annotation = false;
             continue;
         }
         if (recursive_annotation)
             continue;
-        if (token.starts_with("(")) {
-            if (token.ends_with(")"))
+        if (token.starts_with('(')) {
+            if (token.ends_with(')'))
                 continue;
             recursive_annotation = true;
             continue;
         }
-        if (token.ends_with(">")) {
+        if (token.ends_with('>')) {
             future_expansion = false;
             continue;
         }
         if (future_expansion)
             continue;
-        if (token.starts_with("<")) {
-            if (token.ends_with(">"))
+        if (token.starts_with('<')) {
+            if (token.ends_with('>'))
                 continue;
             future_expansion = true;
             continue;
         }
-        if (token.starts_with("$"))
+        if (token.starts_with('$'))
             continue;
-        if (token.contains("*"))
+        if (token.contains('*'))
             break;
         // FIXME: When we become able to set more of the game state, fix these end results
         if (token.contains("1-0"sv)) {
@@ -607,7 +607,7 @@ bool ChessWidget::import_pgn(StringView import_path)
         if (token.contains("1/2-1/2"sv)) {
             break;
         }
-        if (!token.ends_with(".")) {
+        if (!token.ends_with('.')) {
             m_board.apply_move(Chess::Move::from_algebraic(token, turn, m_board));
             turn = Chess::opposing_color(turn);
         }

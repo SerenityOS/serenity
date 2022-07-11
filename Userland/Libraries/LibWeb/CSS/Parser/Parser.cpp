@@ -2513,7 +2513,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
             property_id = PropertyID::Custom;
         } else if (has_ignored_vendor_prefix(property_name)) {
             return {};
-        } else if (!property_name.starts_with("-")) {
+        } else if (!property_name.starts_with('-')) {
             dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS property '{}'", property_name);
             return {};
         }

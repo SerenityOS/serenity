@@ -619,7 +619,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_relative_path_action()
     auto copy_relative_path_action = GUI::Action::create("Copy &Relative Path", [this](const GUI::Action&) {
         auto paths = selected_file_paths();
         VERIFY(!paths.is_empty());
-        auto paths_string = String::join("\n", paths);
+        auto paths_string = String::join('\n', paths);
         GUI::Clipboard::the().set_plain_text(paths_string);
     });
     copy_relative_path_action->set_enabled(true);
@@ -636,7 +636,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_full_path_action()
         Vector<String> full_paths;
         for (auto& path : paths)
             full_paths.append(get_absolute_path(path));
-        auto paths_string = String::join("\n", full_paths);
+        auto paths_string = String::join('\n', full_paths);
         GUI::Clipboard::the().set_plain_text(paths_string);
     });
     copy_full_path_action->set_enabled(true);
@@ -1086,7 +1086,7 @@ String HackStudioWidget::get_full_path_of_serenity_source(String const& file)
         path_parts.remove(0);
     }
     StringBuilder relative_path_builder;
-    relative_path_builder.join("/", path_parts);
+    relative_path_builder.join('/', path_parts);
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     LexicalPath serenity_sources_base(SERENITY_LIBS_PREFIX);
     return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());

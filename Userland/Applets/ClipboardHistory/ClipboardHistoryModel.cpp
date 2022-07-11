@@ -73,13 +73,13 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
             return String::copy(data_and_type.data);
         if (data_and_type.mime_type == "image/x-serenityos") {
             StringBuilder builder;
-            builder.append("[");
+            builder.append('[');
             builder.append(data_and_type.metadata.get("width").value_or("?"));
             builder.append('x');
             builder.append(data_and_type.metadata.get("height").value_or("?"));
             builder.append('x');
             builder.append(bpp_for_format_resilient(data_and_type.metadata.get("format").value_or("0")));
-            builder.append("]");
+            builder.append(']');
             builder.append(" bitmap"sv);
             return builder.to_string();
         }

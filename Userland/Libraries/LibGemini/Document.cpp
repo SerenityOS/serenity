@@ -62,7 +62,7 @@ void Document::read_lines(StringView source)
             continue;
         }
 
-        if (line.starts_with("*")) {
+        if (line.starts_with('*')) {
             if (!m_inside_unordered_list)
                 m_lines.append(make<Control>(Control::UnorderedListStart));
             m_lines.append(make<UnorderedList>(move(line)));
@@ -72,12 +72,12 @@ void Document::read_lines(StringView source)
 
         close_list_if_needed();
 
-        if (line.starts_with("=>")) {
+        if (line.starts_with("=>"sv)) {
             m_lines.append(make<Link>(move(line), *this));
             continue;
         }
 
-        if (line.starts_with("#")) {
+        if (line.starts_with('#')) {
             size_t level = 0;
             while (line.length() > level && line[level] == '#')
                 ++level;
