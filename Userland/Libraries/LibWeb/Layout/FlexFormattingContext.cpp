@@ -1105,6 +1105,10 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
             if (is_main_axis_margin_second_auto(flex_item->box))
                 ++auto_margins;
+
+            used_main_space += flex_item->margins.main_before + flex_item->margins.main_after
+                + flex_item->borders.main_before + flex_item->borders.main_after
+                + flex_item->padding.main_before + flex_item->padding.main_after;
         }
 
         if (flex_line.remaining_free_space > 0) {
