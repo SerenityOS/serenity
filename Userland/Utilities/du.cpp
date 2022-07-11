@@ -120,7 +120,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
 
 ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, int max_depth, bool inside_dir)
 {
-    struct stat path_stat = TRY(Core::System::lstat(path.characters()));
+    struct stat path_stat = TRY(Core::System::lstat(path));
     off_t directory_size = 0;
     bool const is_directory = S_ISDIR(path_stat.st_mode);
     if (--max_depth >= 0 && is_directory) {

@@ -113,7 +113,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     Vector<u32> env_entries;
 
     for (auto const& variable : m_environment) {
-        m_cpu->push_string(variable.characters());
+        m_cpu->push_string(variable.view());
         env_entries.append(m_cpu->esp().value());
     }
 
