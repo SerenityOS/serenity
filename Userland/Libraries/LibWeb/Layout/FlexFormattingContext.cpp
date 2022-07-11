@@ -1484,22 +1484,46 @@ float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem co
 
 float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem const& flex_item) const
 {
-    auto inner_cross_size = calculate_min_content_cross_size(flex_item);
-    auto outer_cross_size = inner_cross_size
-        + flex_item.margins.cross_before + flex_item.margins.cross_after
-        + flex_item.borders.cross_before + flex_item.borders.cross_after
-        + flex_item.padding.cross_before + flex_item.padding.cross_after;
-    return outer_cross_size;
+    auto outer_min_cross_size = [&] {
+        auto inner_cross_size = calculate_min_content_cross_size(flex_item);
+        auto outer_cross_size = inner_cross_size
+            + flex_item.margins.cross_before + flex_item.margins.cross_after
+            + flex_item.borders.cross_before + flex_item.borders.cross_after
+            + flex_item.padding.cross_before + flex_item.padding.cross_after;
+        return outer_cross_size;
+    }();
+
+    if (!has_definite_cross_size(flex_item.box)) {
+        return outer_min_cross_size;
+    }
+
+    auto clamp_min = has_cross_min_size(flex_item.box) ? specified_cross_min_size(flex_item.box) : 0;
+    auto clamp_max = has_cross_max_size(flex_item.box) ? specified_cross_max_size(flex_item.box) : NumericLimits<float>::max();
+    auto unclamped_preferred_size = resolved_definite_cross_size(flex_item.box);
+    auto clamped_preferred_size = css_clamp(unclamped_preferred_size, clamp_min, clamp_max);
+    return max(outer_min_cross_size, clamped_preferred_size);
 }
 
 float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem const& flex_item) const
 {
-    auto inner_cross_size = calculate_max_content_cross_size(flex_item);
-    auto outer_cross_size = inner_cross_size
-        + flex_item.margins.cross_before + flex_item.margins.cross_after
-        + flex_item.borders.cross_before + flex_item.borders.cross_after
-        + flex_item.padding.cross_before + flex_item.padding.cross_after;
-    return outer_cross_size;
+    auto outer_max_content_size = [&] {
+        auto inner_cross_size = calculate_max_content_cross_size(flex_item);
+        auto outer_cross_size = inner_cross_size
+            + flex_item.margins.cross_before + flex_item.margins.cross_after
+            + flex_item.borders.cross_before + flex_item.borders.cross_after
+            + flex_item.padding.cross_before + flex_item.padding.cross_after;
+        return outer_cross_size;
+    }();
+
+    if (!has_definite_cross_size(flex_item.box)) {
+        return outer_max_content_size;
+    }
+
+    auto clamp_min = has_cross_min_size(flex_item.box) ? specified_cross_min_size(flex_item.box) : 0;
+    auto clamp_max = has_cross_max_size(flex_item.box) ? specified_cross_max_size(flex_item.box) : NumericLimits<float>::max();
+    auto unclamped_preferred_size = resolved_definite_cross_size(flex_item.box);
+    auto clamped_preferred_size = css_clamp(unclamped_preferred_size, clamp_min, clamp_max);
+    return max(outer_max_content_size, clamped_preferred_size);
 }
 
 float FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
