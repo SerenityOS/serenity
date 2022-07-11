@@ -86,8 +86,7 @@ struct Traits<GUI::PersistentModelIndex> : public GenericTraits<GUI::PersistentM
     {
         if (index.has_valid_handle())
             return Traits<GUI::ModelIndex>::hash(index.m_handle->m_index);
-        else
-            return 0;
+        return 0;
     }
 };
 

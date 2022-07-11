@@ -530,7 +530,7 @@ template<>
 struct AK::Formatter<Unicode::HourCycle> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Unicode::HourCycle hour_cycle)
     {
-        return Formatter<FormatString>::format(builder, "{}", to_underlying(hour_cycle));
+        return builder.put_u64(to_underlying(hour_cycle));
     }
 };
 
