@@ -130,4 +130,46 @@ Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormat
     return plural_rule_select(locale, type, number, move(operands));
 }
 
+// 1.1.5 PluralRuleSelectRange ( locale, type, xp, yp ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-pluralruleselectrange
+Unicode::PluralCategory plural_rule_select_range(StringView locale, Unicode::PluralForm, Unicode::PluralCategory start, Unicode::PluralCategory end)
+{
+    return Unicode::determine_plural_range(locale, start, end);
+}
+
+// 1.1.6 ResolvePluralRange ( pluralRules, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolvepluralrange
+ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& global_object, PluralRules const& plural_rules, Value start, Value end)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(pluralRules) is Object.
+    // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
+    // 3. Assert: Type(x) is Number.
+    // 4. Assert: Type(y) is Number.
+
+    // 5. If x is NaN or y is NaN, throw a RangeError exception.
+    if (start.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "start"sv);
+    if (end.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "end"sv);
+
+    // 6. If x > y, throw a RangeError exception.
+    if (start.as_double() > end.as_double())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlStartRangeAfterEndRange, start, end);
+
+    // 7. Let xp be ! ResolvePlural(pluralRules, x).
+    auto start_plurality = resolve_plural(global_object, plural_rules, start);
+
+    // 8. Let yp be ! ResolvePlural(pluralRules, y).
+    auto end_plurality = resolve_plural(global_object, plural_rules, end);
+
+    // 9. Let locale be pluralRules.[[Locale]].
+    auto const& locale = plural_rules.locale();
+
+    // 10. Let type be pluralRules.[[Type]].
+    auto type = plural_rules.type();
+
+    // 11. Return ! PluralRuleSelectRange(locale, type, xp, yp).
+    return plural_rule_select_range(locale, type, start_plurality, end_plurality);
+}
+
 }
