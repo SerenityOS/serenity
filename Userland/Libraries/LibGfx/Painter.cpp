@@ -255,7 +255,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
             for (int j = 0; j < clipped_rect.width(); ++j) {
                 auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
                 color.set_alpha(c_alpha);
-                dst[j] = color.value();
+                dst[j] = Color::from_argb(dst[j]).blend(color).value();
                 c_alpha += alpha_increment;
                 c += increment;
             }
@@ -268,7 +268,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
             auto color = gamma_accurate_blend(gradient_end, gradient_start, c);
             color.set_alpha(c_alpha);
             for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = color.value();
+                dst[j] = Color::from_argb(dst[j]).blend(color).value();
             }
             c_alpha += alpha_increment;
             c += increment;
