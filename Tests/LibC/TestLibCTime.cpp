@@ -41,7 +41,7 @@ TEST_CASE(asctime)
 
     time_t epoch = 0;
     auto result = asctime(localtime(&epoch));
-    EXPECT_EQ(expected_epoch, StringView(result));
+    EXPECT_EQ(expected_epoch, StringView(result, strlen(result)));
 }
 
 TEST_CASE(asctime_r)
@@ -51,7 +51,7 @@ TEST_CASE(asctime_r)
     char buffer[26] {};
     time_t epoch = 0;
     auto result = asctime_r(localtime(&epoch), buffer);
-    EXPECT_EQ(expected_epoch, StringView(result));
+    EXPECT_EQ(expected_epoch, StringView(result, strlen(result)));
 }
 
 TEST_CASE(ctime)
@@ -61,7 +61,7 @@ TEST_CASE(ctime)
     time_t epoch = 0;
     auto result = ctime(&epoch);
 
-    EXPECT_EQ(expected_epoch, StringView(result));
+    EXPECT_EQ(expected_epoch, StringView(result, strlen(result)));
 }
 
 TEST_CASE(ctime_r)
@@ -72,7 +72,7 @@ TEST_CASE(ctime_r)
     time_t epoch = 0;
     auto result = ctime_r(&epoch, buffer);
 
-    EXPECT_EQ(expected_epoch, StringView(result));
+    EXPECT_EQ(expected_epoch, StringView(result, strlen(result)));
 }
 
 TEST_CASE(tzset)

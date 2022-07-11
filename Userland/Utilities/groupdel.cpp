@@ -58,9 +58,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Create a temporary group file
     char temp_group[] = "/etc/group.XXXXXX";
+    StringView temp_group_view { temp_group, strlen(temp_group) };
 
     auto unlink_temp_files = [&] {
-        if (Core::System::unlink(temp_group).is_error())
+        if (Core::System::unlink(temp_group_view).is_error())
             perror("unlink");
     };
 
@@ -92,8 +93,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::chmod(temp_group, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
-    TRY(Core::System::rename(temp_group, "/etc/group"));
+    TRY(Core::System::chmod(temp_group_view, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
+    TRY(Core::System::rename(temp_group_view, "/etc/group"sv));
 
     unlink_temp_files_guard.disarm();
 

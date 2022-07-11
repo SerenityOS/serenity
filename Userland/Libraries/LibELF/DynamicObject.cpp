@@ -336,7 +336,8 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_val
 
 StringView DynamicObject::symbol_string_table_string(ElfW(Word) index) const
 {
-    return StringView { (char const*)base_address().offset(m_string_table_offset + index).as_ptr() };
+    auto const* symbol_string_table_ptr = reinterpret_cast<char const*>(base_address().offset(m_string_table_offset + index).as_ptr());
+    return StringView { symbol_string_table_ptr, strlen(symbol_string_table_ptr) };
 }
 
 char const* DynamicObject::raw_symbol_string_table_string(ElfW(Word) index) const

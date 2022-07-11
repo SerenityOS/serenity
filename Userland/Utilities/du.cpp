@@ -65,12 +65,13 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
         "time",
         0,
         "time-type",
-        [&du_option](StringView s) {
-            if (s == "mtime"sv || s == "modification"sv)
+        [&du_option](auto const* option_ptr) {
+            StringView option { option_ptr, strlen(option_ptr) };
+            if (option == "mtime"sv || option == "modification"sv)
                 du_option.time_type = DuOption::TimeType::Modification;
-            else if (s == "ctime"sv || s == "status"sv || s == "use"sv)
+            else if (option == "ctime"sv || option == "status"sv || option == "use"sv)
                 du_option.time_type = DuOption::TimeType::Status;
-            else if (s == "atime"sv || s == "access"sv)
+            else if (option == "atime"sv || option == "access"sv)
                 du_option.time_type = DuOption::TimeType::Access;
             else
                 return false;

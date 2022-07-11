@@ -487,19 +487,20 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
     __pthread_mutex_lock(&s_loader_lock);
     ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
 
+    StringView symbol_name_view { symbol_name, strlen(symbol_name) };
     Optional<DynamicObject::SymbolLookupResult> symbol;
 
     if (handle) {
         auto object = static_cast<DynamicObject*>(handle);
-        symbol = object->lookup_symbol(symbol_name);
+        symbol = object->lookup_symbol(symbol_name_view);
     } else {
         // When handle is 0 (RTLD_DEFAULT) we should look up the symbol in all global modules
         // https://pubs.opengroup.org/onlinepubs/009604499/functions/dlsym.html
-        symbol = DynamicLinker::lookup_global_symbol(symbol_name);
+        symbol = DynamicLinker::lookup_global_symbol(symbol_name_view);
     }
 
     if (!symbol.has_value())
-        return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name) };
+        return DlErrorMessage { String::formatted("Symbol {} not found", symbol_name_view) };
 
     if (symbol.value().type == STT_GNU_IFUNC)
         return (void*)reinterpret_cast<DynamicObject::IfuncResolver>(symbol.value().address.as_ptr())();
@@ -551,7 +552,7 @@ static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
 static void read_environment_variables()
 {
     for (char** env = s_envp; *env; ++env) {
-        StringView env_string { *env };
+        StringView env_string { *env, strlen(*env) };
         if (env_string == "_LOADER_BREAKPOINT=1"sv) {
             s_do_breakpoint_trap_before_entry = true;
         }

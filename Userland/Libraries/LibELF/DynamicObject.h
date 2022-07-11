@@ -488,8 +488,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return;
         ElfW(Word) offset = entry.val();
-        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
-        func(name);
+        func(symbol_string_table_string(offset));
     });
 }
 

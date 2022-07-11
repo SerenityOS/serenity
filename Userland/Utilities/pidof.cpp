@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         if (!strcmp(omit_pid_value, "%PPID")) {
             pid_to_omit = getppid();
         } else {
-            auto number = StringView(omit_pid_value).to_uint();
+            auto number = StringView { omit_pid_value, strlen(omit_pid_value) }.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for -o");
                 args_parser.print_usage(stderr, args.argv[0]);

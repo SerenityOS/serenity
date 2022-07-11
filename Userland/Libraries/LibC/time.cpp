@@ -377,7 +377,7 @@ void tzset()
     StringView time_zone;
 
     if (char* tz = getenv("TZ"); tz != nullptr)
-        time_zone = tz;
+        time_zone = { tz, strlen(tz) };
     else
         time_zone = TimeZone::system_time_zone();
 

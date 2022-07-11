@@ -324,7 +324,7 @@ static bool should_treat_expression_as_single_string(StringView arg_after)
 
 static OwnPtr<Condition> parse_simple_expression(char* argv[])
 {
-    StringView arg = argv[optind];
+    StringView arg { argv[optind], strlen(argv[optind]) };
     if (arg.is_null()) {
         return {};
     }
@@ -332,20 +332,24 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
     if (arg == "(") {
         optind++;
         auto command = parse_complex_expression(argv);
-        if (command && argv[optind] && StringView(argv[++optind]) == ")")
-            return command;
+        if (command && argv[optind]) {
+            auto const* next_option = argv[++optind];
+            if (StringView { next_option, strlen(next_option) } == ")")
+                return command;
+        }
+
         fatal_error("Unmatched \033[1m(");
     }
 
     // Try to read a unary op.
     if (arg.starts_with('-') && arg.length() == 2) {
         optind++;
-        if (should_treat_expression_as_single_string(argv[optind])) {
+        if (should_treat_expression_as_single_string({ argv[optind], strlen(argv[optind]) })) {
             --optind;
             return make<StringCompare>(move(arg), "", StringCompare::NotEqual);
         }
 
-        StringView value = argv[optind];
+        StringView value { argv[optind], strlen(argv[optind]) };
         switch (arg[1]) {
         case 'b':
             return make<FileIsOfKind>(value, FileIsOfKind::BlockDevice);
@@ -393,42 +397,49 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         }
     }
 
+    auto get_next_arg = [&argv]() -> StringView {
+        auto const* next_arg = argv[++optind];
+        if (next_arg == NULL)
+            return StringView {};
+        return StringView { next_arg, strlen(next_arg) };
+    };
+
     // Try to read a binary op, this is either a <string> op <string>, <integer> op <integer>, or <file> op <file>.
     auto lhs = arg;
-    arg = argv[++optind];
+    arg = get_next_arg();
 
     if (arg == "=") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<StringCompare>(lhs, rhs, StringCompare::Equal);
     } else if (arg == "!=") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<StringCompare>(lhs, rhs, StringCompare::NotEqual);
     } else if (arg == "-eq") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::Equal);
     } else if (arg == "-ge") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::GreaterOrEqual);
     } else if (arg == "-gt") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::Greater);
     } else if (arg == "-le") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::LessOrEqual);
     } else if (arg == "-lt") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::Less);
     } else if (arg == "-ne") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<NumericCompare>(lhs, rhs, NumericCompare::NotEqual);
     } else if (arg == "-ef") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<FileCompare>(lhs, rhs, FileCompare::Same);
     } else if (arg == "-nt") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<FileCompare>(lhs, rhs, FileCompare::ModificationTimestampGreater);
     } else if (arg == "-ot") {
-        StringView rhs = argv[++optind];
+        StringView rhs = get_next_arg();
         return make<FileCompare>(lhs, rhs, FileCompare::ModificationTimestampLess);
     } else if (arg == "-o" || arg == "-a") {
         // '-a' and '-o' are boolean ops, which are part of a complex expression
@@ -460,7 +471,8 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
         if (!command && argv[optind])
             fatal_error("expected an expression");
 
-        StringView arg = argv[++optind];
+        auto const* arg_ptr = argv[++optind];
+        StringView arg { arg_ptr, strlen(arg_ptr) };
 
         enum {
             AndOp,

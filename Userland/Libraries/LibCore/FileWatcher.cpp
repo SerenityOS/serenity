@@ -83,7 +83,7 @@ static String canonicalize_path(String path)
         return LexicalPath::canonicalized_path(move(path));
     char* cwd = getcwd(nullptr, 0);
     VERIFY(cwd);
-    return LexicalPath::join(cwd, move(path)).string();
+    return LexicalPath::join({ cwd, strlen(cwd) }, move(path)).string();
 }
 
 ErrorOr<bool> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type event_mask)

@@ -574,7 +574,8 @@ bool Node::is_root_element() const
 
 String Node::class_name() const
 {
-    return demangle(typeid(*this).name());
+    auto const* mangled_name = typeid(*this).name();
+    return demangle({ mangled_name, strlen(mangled_name) });
 }
 
 String Node::debug_description() const

@@ -31,7 +31,7 @@ static StringView test_default_arg(SourceLocation const& loc = SourceLocation::c
 TEST_CASE(default_arg_scenario)
 {
     auto actual_calling_function = test_default_arg();
-    auto expected_calling_function = StringView(__FUNCTION__);
+    auto expected_calling_function = StringView { __FUNCTION__, strlen(__FUNCTION__) };
 
     EXPECT_EQ(expected_calling_function, actual_calling_function);
 }

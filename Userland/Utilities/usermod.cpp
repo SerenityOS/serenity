@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (move_home) {
         TRY(Core::System::unveil(target_account.home_directory().characters(), "c"));
-        TRY(Core::System::unveil(new_home_directory, "wc"));
+        TRY(Core::System::unveil({ new_home_directory, strlen(new_home_directory) }, "wc"));
     }
 
     unveil(nullptr, nullptr);

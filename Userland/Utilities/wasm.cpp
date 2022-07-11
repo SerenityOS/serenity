@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .short_name = 'l',
         .value_name = "file",
         .accept_value = [&](char const* str) {
-            if (auto v = StringView { str }; !v.is_empty()) {
+            if (auto v = StringView { str, strlen(str) }; !v.is_empty()) {
                 modules_to_link_in.append(v);
                 return true;
             }
@@ -308,7 +308,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .short_name = 0,
         .value_name = "u64",
         .accept_value = [&](char const* str) -> bool {
-            if (auto v = StringView { str }.to_uint<u64>(); v.has_value()) {
+            if (auto v = StringView { str, strlen(str) }.to_uint<u64>(); v.has_value()) {
                 values_to_push.append(v.value());
                 return true;
             }

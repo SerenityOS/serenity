@@ -93,7 +93,7 @@ hostent* gethostbyname(char const* name)
 {
     h_errno = 0;
 
-    auto ipv4_address = IPv4Address::from_string(name);
+    auto ipv4_address = IPv4Address::from_string({ name, strlen(name) });
 
     if (ipv4_address.has_value()) {
         gethostbyname_name_buffer = ipv4_address.value().to_string();

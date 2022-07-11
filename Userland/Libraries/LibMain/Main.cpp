@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     Vector<StringView> arguments;
     arguments.ensure_capacity(argc);
     for (int i = 0; i < argc; ++i)
-        arguments.unchecked_append(argv[i]);
+        arguments.unchecked_append({ argv[i], strlen(argv[i]) });
 
     auto result = serenity_main({
         .argc = argc,

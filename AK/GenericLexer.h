@@ -92,7 +92,7 @@ public:
 
     constexpr bool consume_specific(char const* next)
     {
-        return consume_specific(StringView { next });
+        return consume_specific(StringView { next, __builtin_strlen(next) });
     }
 
     constexpr char consume_escaped_character(char escape_char = '\\', StringView escape_map = "n\nr\rt\tb\bf\f")

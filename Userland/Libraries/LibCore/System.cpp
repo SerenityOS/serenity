@@ -970,7 +970,8 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
     };
 
     if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-        StringView path = getenv("PATH");
+        auto const* path_ptr = getenv("PATH");
+        StringView path { path_ptr, strlen(path_ptr) };
         if (path.is_empty())
             path = "/bin:/usr/bin";
         auto parts = path.split_view(':');

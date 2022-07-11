@@ -416,7 +416,7 @@ static int do_file_system_object_long(char const* path)
             continue;
 
         StringBuilder builder;
-        builder.append(path);
+        builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_string();
@@ -460,7 +460,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
     for (size_t i = 0; i < files.size(); ++i) {
         auto& name = files[i].name;
         StringBuilder builder;
-        builder.append(path);
+        builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(name);
         if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
@@ -528,7 +528,7 @@ int do_file_system_object_short(char const* path)
             continue;
 
         StringBuilder builder;
-        builder.append(path);
+        builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_string();

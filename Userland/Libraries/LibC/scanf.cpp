@@ -386,8 +386,8 @@ private:
 
 extern "C" int vsscanf(char const* input, char const* format, va_list ap)
 {
-    GenericLexer format_lexer { format };
-    GenericLexer input_lexer { input };
+    GenericLexer format_lexer { { format, strlen(format) } };
+    GenericLexer input_lexer { { input, strlen(input) } };
 
     int elements_matched = 0;
 

@@ -31,7 +31,8 @@ static void print_location(SourceLocation const& location)
     static bool checked_env_for_deadly = false;
     if (!checked_env_for_deadly) {
         checked_env_for_deadly = true;
-        StringView options = getenv("UBSAN_OPTIONS");
+        auto const* options_ptr = getenv("UBSAN_OPTIONS");
+        auto options = options_ptr != NULL ? StringView { options_ptr, strlen(options_ptr) } : StringView {};
         // FIXME: Parse more options and complain about invalid options
         if (!options.is_null()) {
             if (options.contains("halt_on_error=1"))

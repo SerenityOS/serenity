@@ -31,7 +31,7 @@ template<typename Fmt, typename... Args>
 [[noreturn]] void fail(Fmt&& fmt, Args&&... args)
 {
     warn("ERROR: \e[31m");
-    warnln(StringView { fmt }, args...);
+    warnln(StringView { fmt, strlen(fmt) }, args...);
     warn("\e[0m");
     exit(2);
 }
