@@ -30,13 +30,16 @@ public:
     String const& name() const { return m_qualified_name.as_string(); }
 
     String const& value() const { return m_value; }
-    void set_value(String value) { m_value = move(value); }
+    void set_value(String value);
 
+    Element* owner_element();
     Element const* owner_element() const;
     void set_owner_element(Element const* owner_element);
 
     // Always returns true: https://dom.spec.whatwg.org/#dom-attr-specified
     constexpr bool specified() const { return true; }
+
+    void handle_attribute_changes(Element&, String const& old_value, String const& new_value);
 
 private:
     Attribute(Document&, FlyString local_name, String value, Element const*);
