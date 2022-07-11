@@ -327,13 +327,13 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
 }
 
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
-float FormattingContext::tentative_width_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::Length const& computed_width)
+float FormattingContext::tentative_width_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_width)
 {
     auto const& containing_block = *box.containing_block();
     auto height_of_containing_block = CSS::Length::make_px(state.get(containing_block).content_height);
     auto computed_height = box.computed_values().height().resolved(box, height_of_containing_block).resolved(box);
 
-    float used_width = computed_width.to_px(box);
+    float used_width = computed_width.resolved(box, CSS::Length::make_px(containing_block_width_for(box, state))).to_px(box);
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
@@ -347,7 +347,7 @@ float FormattingContext::tentative_width_for_replaced_element(FormattingState co
     //
     //     (used height) * (intrinsic ratio)
     if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio())
-        || (computed_width.is_auto() && box.has_intrinsic_aspect_ratio())) {
+        || (computed_width.is_auto() && !computed_height.is_auto() && box.has_intrinsic_aspect_ratio())) {
         return compute_height_for_replaced_element(state, box) * box.intrinsic_aspect_ratio().value();
     }
 
@@ -401,26 +401,26 @@ float FormattingContext::compute_width_for_replaced_element(FormattingState cons
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto computed_width = box.computed_values().width();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto used_width = tentative_width_for_replaced_element(state, box, specified_width);
+    auto used_width = tentative_width_for_replaced_element(state, box, computed_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = box.computed_values().max_width().resolved(box, width_of_containing_block_as_length).resolved(box);
-    if (!specified_max_width.is_auto()) {
-        if (used_width > specified_max_width.to_px(box)) {
-            used_width = tentative_width_for_replaced_element(state, box, specified_max_width);
+    auto computed_max_width = box.computed_values().max_width();
+    if (!computed_max_width.is_auto()) {
+        if (used_width > computed_max_width.resolved(box, width_of_containing_block_as_length).to_px(box)) {
+            used_width = tentative_width_for_replaced_element(state, box, computed_max_width);
         }
     }
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = box.computed_values().min_width().resolved(box, width_of_containing_block_as_length).resolved(box);
-    if (!specified_min_width.is_auto()) {
-        if (used_width < specified_min_width.to_px(box)) {
-            used_width = tentative_width_for_replaced_element(state, box, specified_min_width);
+    auto computed_min_width = box.computed_values().min_width();
+    if (!computed_min_width.is_auto()) {
+        if (used_width < computed_min_width.resolved(box, width_of_containing_block_as_length).to_px(box)) {
+            used_width = tentative_width_for_replaced_element(state, box, computed_min_width);
         }
     }
 
@@ -429,10 +429,9 @@ float FormattingContext::compute_width_for_replaced_element(FormattingState cons
 
 // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow, 'inline-block' replaced elements in normal flow and floating replaced elements
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
-float FormattingContext::tentative_height_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::Length const& computed_height)
+float FormattingContext::tentative_height_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_height)
 {
-    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
-    auto computed_width = box.computed_values().width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto computed_width = box.computed_values().width();
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
@@ -455,7 +454,7 @@ float FormattingContext::tentative_height_for_replaced_element(FormattingState c
     if (computed_height.is_auto())
         return 150;
 
-    return computed_height.to_px(box);
+    return computed_height.resolved(box, CSS::Length::make_px(containing_block_height_for(box, state))).to_px(box);
 }
 
 float FormattingContext::compute_height_for_replaced_element(FormattingState const& state, ReplacedBox const& box)
@@ -465,13 +464,13 @@ float FormattingContext::compute_height_for_replaced_element(FormattingState con
 
     auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
     auto height_of_containing_block_as_length = CSS::Length::make_px(containing_block_height_for(box, state));
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto specified_height = box.computed_values().height().resolved(box, height_of_containing_block_as_length).resolved(box);
+    auto computed_width = box.computed_values().width();
+    auto computed_height = box.computed_values().height();
 
-    float used_height = tentative_height_for_replaced_element(state, box, specified_height);
+    float used_height = tentative_height_for_replaced_element(state, box, computed_height);
 
-    if (specified_width.is_auto() && specified_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
-        float w = tentative_width_for_replaced_element(state, box, specified_width);
+    if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
+        float w = tentative_width_for_replaced_element(state, box, computed_width);
         float h = used_height;
         used_height = solve_replaced_size_constraint(state, w, h, box).height();
     }
