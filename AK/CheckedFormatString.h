@@ -147,7 +147,7 @@ template<typename... Args>
 struct CheckedFormatString {
     template<size_t N>
     consteval CheckedFormatString(char const (&fmt)[N])
-        : m_string { fmt }
+        : m_string { fmt, N - 1 }
     {
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK
         check_format_parameter_consistency<N, sizeof...(Args)>(fmt);
