@@ -622,11 +622,21 @@ private:
     HeadlessWebSocketClientManager() { }
 };
 
+static void platform_init()
+{
+#ifdef AK_OS_ANDROID
+    extern void android_platform_init();
+    android_platform_init();
+#endif
+}
+
 void initialize_web_engine()
 {
     Web::ImageDecoding::Decoder::initialize(HeadlessImageDecoderClient::create());
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
+
+    platform_init();
 
     Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
     dbgln("Set favicon path to {}", String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));

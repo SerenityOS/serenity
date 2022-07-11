@@ -6,6 +6,10 @@ project(ladybird
     DESCRIPTION "Ladybird Web Browser"
 )
 
+if (ANDROID)
+    set(BUILD_SHARED_LIBS OFF)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -25,12 +29,19 @@ include(cmake/EnableLLD.cmake)
 include(FetchContent)
 include(cmake/FetchLagom.cmake)
 
+get_filename_component(
+    SERENITY_SOURCE_DIR "${Lagom_SOURCE_DIR}/../.."
+    ABSOLUTE
+)
+
 # Lagom warnings
 include(${Lagom_SOURCE_DIR}/../CMake/lagom_compile_options.cmake)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 set(SOURCES
@@ -45,13 +56,23 @@ set(SOURCES
     Tab.cpp
 )
 
-add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE Qt6::Widgets Qt::Network Lagom::Web Lagom::WebSocket Lagom::Main)
-
-get_filename_component(
-    SERENITY_SOURCE_DIR "${Lagom_SOURCE_DIR}/../.."
-    ABSOLUTE
+qt_add_executable(ladybird ${SOURCES}
+    MANUAL_FINALIZATION
 )
+target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibWebSocket LibGL LibMain)
+
+set_target_properties(ladybird PROPERTIES
+    MACOSX_BUNDLE_GUI_IDENTIFIER org.serenityos.ladybird
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
+
+if (ANDROID)
+    include(cmake/AndroidExtras.cmake)
+endif()
 
 add_custom_target(run
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" "$<TARGET_FILE:ladybird>"
@@ -63,3 +84,10 @@ add_custom_target(debug
     USES_TERMINAL
 )
 
+qt_finalize_executable(ladybird)
+
+install(TARGETS ladybird
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION bundle
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
