@@ -103,4 +103,25 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
     return {};
 }
 
+// https://dom.spec.whatwg.org/#dom-characterdata-appenddata
+ExceptionOr<void> CharacterData::append_data(String const& data)
+{
+    // The appendData(data) method steps are to replace data with node this, offset this’s length, count 0, and data data.
+    return replace_data(m_data.length(), 0, data);
+}
+
+// https://dom.spec.whatwg.org/#dom-characterdata-insertdata
+ExceptionOr<void> CharacterData::insert_data(size_t offset, String const& data)
+{
+    // The insertData(offset, data) method steps are to replace data with node this, offset offset, count 0, and data data.
+    return replace_data(offset, 0, data);
+}
+
+// https://dom.spec.whatwg.org/#dom-characterdata-deletedata
+ExceptionOr<void> CharacterData::delete_data(size_t offset, size_t count)
+{
+    // The deleteData(offset, count) method steps are to replace data with node this, offset offset, count count, and data the empty string.
+    return replace_data(offset, count, String::empty());
+}
+
 }

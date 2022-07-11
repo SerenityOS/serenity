@@ -28,6 +28,9 @@ public:
     unsigned length() const { return m_data.length(); }
 
     ExceptionOr<String> substring_data(size_t offset, size_t count) const;
+    ExceptionOr<void> append_data(String const&);
+    ExceptionOr<void> insert_data(size_t offset, String const&);
+    ExceptionOr<void> delete_data(size_t offset, size_t count);
     ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
 
 protected:
