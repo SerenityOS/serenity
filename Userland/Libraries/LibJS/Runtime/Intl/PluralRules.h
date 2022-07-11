@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibUnicode/PluralRules.h>
@@ -33,5 +34,7 @@ Unicode::PluralOperands get_operands(String const& string);
 Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralForm type, Value number, Unicode::PluralOperands operands);
 Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules const& plural_rules, Value number);
 Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormatBase const& number_format, Unicode::PluralForm type, Value number);
+Unicode::PluralCategory plural_rule_select_range(StringView locale, Unicode::PluralForm, Unicode::PluralCategory start, Unicode::PluralCategory end);
+ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& global_object, PluralRules const& plural_rules, Value start, Value end);
 
 }

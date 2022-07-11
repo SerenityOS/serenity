@@ -29,6 +29,7 @@ void PluralRulesPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.select, select, 1, attr);
+    define_native_function(vm.names.selectRange, select_range, 2, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -44,6 +45,33 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 
     // 4. Return ! ResolvePlural(pr, n).
     auto plurality = resolve_plural(global_object, *plural_rules, number);
+    return js_string(vm, Unicode::plural_category_to_string(plurality));
+}
+
+// 1.4.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
+JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
+{
+    auto start = vm.argument(0);
+    auto end = vm.argument(1);
+
+    // 1. Let pr be the this value.
+    // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
+    auto* plural_rules = TRY(typed_this_object(global_object));
+
+    // 3. If start is undefined or end is undefined, throw a TypeError exception.
+    if (start.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "start"sv);
+    if (end.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "end"sv);
+
+    // 4. Let x be ? ToNumber(start).
+    auto x = TRY(start.to_number(global_object));
+
+    // 5. Let y be ? ToNumber(end).
+    auto y = TRY(end.to_number(global_object));
+
+    // 6. Return ? ResolvePluralRange(pr, x, y).
+    auto plurality = TRY(resolve_plural_range(global_object, *plural_rules, x, y));
     return js_string(vm, Unicode::plural_category_to_string(plurality));
 }
 
