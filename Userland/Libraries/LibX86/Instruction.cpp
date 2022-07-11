@@ -1206,25 +1206,25 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     build_0f(0xFF, "UD0", OP, &Interpreter::UD0);
 }
 
-static char const* register_name(RegisterIndex8);
-static char const* register_name(RegisterIndex16);
-static char const* register_name(RegisterIndex32);
-static char const* register_name(FpuRegisterIndex);
-static char const* register_name(SegmentRegister);
-static char const* register_name(MMXRegisterIndex);
-static char const* register_name(XMMRegisterIndex);
+static StringView register_name(RegisterIndex8);
+static StringView register_name(RegisterIndex16);
+static StringView register_name(RegisterIndex32);
+static StringView register_name(FpuRegisterIndex);
+static StringView register_name(SegmentRegister);
+static StringView register_name(MMXRegisterIndex);
+static StringView register_name(XMMRegisterIndex);
 
-char const* Instruction::reg8_name() const
+StringView Instruction::reg8_name() const
 {
     return register_name(static_cast<RegisterIndex8>(register_index()));
 }
 
-char const* Instruction::reg16_name() const
+StringView Instruction::reg16_name() const
 {
     return register_name(static_cast<RegisterIndex16>(register_index()));
 }
 
-char const* Instruction::reg32_name() const
+StringView Instruction::reg32_name() const
 {
     return register_name(static_cast<RegisterIndex32>(register_index()));
 }
@@ -2388,45 +2388,45 @@ String Instruction::mnemonic() const
     return m_descriptor->mnemonic;
 }
 
-char const* register_name(SegmentRegister index)
+StringView register_name(SegmentRegister index)
 {
-    static constexpr char const* names[] = { "es", "cs", "ss", "ds", "fs", "gs", "segr6", "segr7" };
+    static constexpr StringView names[] = { "es"sv, "cs"sv, "ss"sv, "ds"sv, "fs"sv, "gs"sv, "segr6"sv, "segr7"sv };
     return names[(int)index & 7];
 }
 
-char const* register_name(RegisterIndex8 register_index)
+StringView register_name(RegisterIndex8 register_index)
 {
-    static constexpr char const* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh" };
+    static constexpr StringView names[] = { "al"sv, "cl"sv, "dl"sv, "bl"sv, "ah"sv, "ch"sv, "dh"sv, "bh"sv };
     return names[register_index & 7];
 }
 
-char const* register_name(RegisterIndex16 register_index)
+StringView register_name(RegisterIndex16 register_index)
 {
-    static constexpr char const* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di" };
+    static constexpr StringView names[] = { "ax"sv, "cx"sv, "dx"sv, "bx"sv, "sp"sv, "bp"sv, "si"sv, "di"sv };
     return names[register_index & 7];
 }
 
-char const* register_name(RegisterIndex32 register_index)
+StringView register_name(RegisterIndex32 register_index)
 {
-    static constexpr char const* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+    static constexpr StringView names[] = { "eax"sv, "ecx"sv, "edx"sv, "ebx"sv, "esp"sv, "ebp"sv, "esi"sv, "edi"sv };
     return names[register_index & 7];
 }
 
-char const* register_name(FpuRegisterIndex register_index)
+StringView register_name(FpuRegisterIndex register_index)
 {
-    static constexpr char const* names[] = { "st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7" };
+    static constexpr StringView names[] = { "st0"sv, "st1"sv, "st2"sv, "st3"sv, "st4"sv, "st5"sv, "st6"sv, "st7"sv };
     return names[register_index & 7];
 }
 
-char const* register_name(MMXRegisterIndex register_index)
+StringView register_name(MMXRegisterIndex register_index)
 {
-    static constexpr char const* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
+    static constexpr StringView names[] = { "mm0"sv, "mm1"sv, "mm2"sv, "mm3"sv, "mm4"sv, "mm5"sv, "mm6"sv, "mm7"sv };
     return names[register_index & 7];
 }
 
-char const* register_name(XMMRegisterIndex register_index)
+StringView register_name(XMMRegisterIndex register_index)
 {
-    static constexpr char const* names[] = { "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7" };
+    static constexpr StringView names[] = { "xmm0"sv, "xmm1"sv, "xmm2"sv, "xmm3"sv, "xmm4"sv, "xmm5"sv, "xmm6"sv, "xmm7"sv };
     return names[register_index & 7];
 }
 

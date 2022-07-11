@@ -566,9 +566,9 @@ private:
 
     void to_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
 
-    char const* reg8_name() const;
-    char const* reg16_name() const;
-    char const* reg32_name() const;
+    StringView reg8_name() const;
+    StringView reg16_name() const;
+    StringView reg32_name() const;
 
     InstructionDescriptor* m_descriptor { nullptr };
     mutable MemoryOrRegisterReference m_modrm;
