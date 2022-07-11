@@ -15,7 +15,7 @@ ErrorOr<FlatPtr> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
     auto* events_buffer = current_perf_events_buffer();
     if (!events_buffer)
         return 0;
-    TRY(events_buffer->append(type, arg1, arg2, nullptr));
+    TRY(events_buffer->append(type, arg1, arg2, {}));
     return 0;
 }
 

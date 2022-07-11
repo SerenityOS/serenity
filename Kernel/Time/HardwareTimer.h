@@ -133,7 +133,7 @@ public:
     virtual bool is_shared_handler() const override { return false; }
     virtual bool is_sharing_with_others() const override { return false; }
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
-    virtual StringView controller() const override { return nullptr; }
+    virtual StringView controller() const override { return {}; }
     virtual bool eoi() override;
 
     virtual u32 frequency() const override { return (u32)m_frequency; }

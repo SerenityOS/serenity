@@ -32,8 +32,8 @@ void generate_iterator_implementation(IDL::Interface const&);
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    StringView path = nullptr;
-    StringView import_base_path = nullptr;
+    StringView path;
+    StringView import_base_path;
     bool header_mode = false;
     bool implementation_mode = false;
     bool constructor_header_mode = false;
