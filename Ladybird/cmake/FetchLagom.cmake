@@ -25,6 +25,7 @@ if (NOT lagom_POPULATED)
 
     # FIXME: Setting target_include_directories on Lagom libraries might make this unecessary?
     include_directories(${lagom_SOURCE_DIR}/Userland/Libraries)
+    include_directories(${lagom_BINARY_DIR}/Services)
     include_directories(${lagom_SOURCE_DIR})
     include_directories(${lagom_BINARY_DIR})
 
