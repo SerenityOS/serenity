@@ -90,7 +90,7 @@ struct AK::Formatter<DisplayPattern> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DisplayPattern const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {} }}",
+            "{{ {}, {} }}"sv,
             patterns.locale_pattern,
             patterns.locale_separator);
     }
@@ -135,7 +135,7 @@ struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, ListPatterns const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ ListPatternType::{}, Style::{}, {}, {}, {}, {} }}",
+            "{{ ListPatternType::{}, Style::{}, {}, {}, {}, {} }}"sv,
             format_identifier({}, patterns.type),
             format_identifier({}, patterns.style),
             patterns.start,
@@ -169,7 +169,7 @@ struct AK::Formatter<TextLayout> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TextLayout const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ CharacterOrder::{} }}",
+            "{{ CharacterOrder::{} }}"sv,
             format_identifier({}, patterns.character_order));
     }
 };
@@ -425,7 +425,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
         if (!desired_keywords.span().contains_slow(key))
             return;
 
-        auto const& name = value.as_object().get("_alias");
+        auto const& name = value.as_object().get("_alias"sv);
         locale_data.keyword_names.set(key, name.as_string());
 
         auto& keywords = locale_data.keywords.ensure(key);
@@ -1156,7 +1156,7 @@ struct TextLayout {
         bool first = true;
         generator.append(", {");
         for (auto const& item : list) {
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(item));
             first = false;
         }
@@ -1176,7 +1176,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto const& value = map.find(key)->value;
             auto mapping = mapping_getter(value);
 
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(mapping));
             first = false;
         }

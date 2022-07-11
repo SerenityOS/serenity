@@ -284,7 +284,7 @@ bool GLContextWidget::load_path(String const& filename)
     auto file = Core::File::construct(filename);
 
     if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
@@ -294,31 +294,31 @@ bool GLContextWidget::load_path(String const& filename)
 bool GLContextWidget::load_file(Core::File& file)
 {
     auto const& filename = file.filename();
-    if (!filename.ends_with(".obj")) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
+    if (!filename.ends_with(".obj"sv)) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     if (file.is_device()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     if (file.is_directory()) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     auto new_mesh = m_mesh_loader->load(file);
     if (new_mesh.is_null()) {
-        GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
     // Determine whether or not a texture for this model resides within the same directory
     StringBuilder builder;
     builder.append(filename.split('.').at(0));
-    builder.append(".bmp");
+    builder.append(".bmp"sv);
 
     String texture_path = Core::File::absolute_path(builder.string_view());
 
@@ -368,7 +368,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Construct the main window
     auto window = GUI::Window::construct();
-    auto app_icon = GUI::Icon::default_icon("app-3d-file-viewer");
+    auto app_icon = GUI::Icon::default_icon("app-3d-file-viewer"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("3D File Viewer");
     window->resize(640 + 4, 480 + 4);

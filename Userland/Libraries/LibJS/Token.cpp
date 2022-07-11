@@ -205,7 +205,7 @@ String Token::string_value(StringValueStatus& status) const
         }
 
         lexer.retreat();
-        builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"));
+        builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"sv));
     }
     return builder.to_string();
 }
@@ -213,7 +213,7 @@ String Token::string_value(StringValueStatus& status) const
 // 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/#sec-static-semantics-trv
 String Token::raw_template_value() const
 {
-    return value().replace("\r\n", "\n", ReplaceMode::All).replace("\r", "\n", ReplaceMode::All);
+    return value().replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All);
 }
 
 bool Token::bool_value() const

@@ -26,7 +26,7 @@ struct MemoryRegionInfo {
 
     StringView object_name() const
     {
-        if (region_name.contains("Loader.so"))
+        if (region_name.contains("Loader.so"sv))
             return "Loader.so"sv;
         auto maybe_colon_index = region_name.find(':');
         if (!maybe_colon_index.has_value())

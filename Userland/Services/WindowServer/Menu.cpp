@@ -61,7 +61,7 @@ static constexpr Gfx::CharacterBitmap s_submenu_arrow_bitmap {
     "   ###   "
     "   ##    "
     "   #     "
-    "         ",
+    "         "sv,
     9, 9
 };
 
@@ -204,9 +204,9 @@ void Menu::draw()
         bool can_go_up = m_scroll_offset > 0;
         bool can_go_down = m_scroll_offset < m_max_scroll_offset;
         Gfx::IntRect up_indicator_rect { frame_thickness(), frame_thickness(), content_width(), item_height() };
-        painter.draw_text(up_indicator_rect, "\xE2\xAC\x86", Gfx::TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        painter.draw_text(up_indicator_rect, "\xE2\xAC\x86"sv, Gfx::TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
         Gfx::IntRect down_indicator_rect { frame_thickness(), menu_window()->height() - item_height() - frame_thickness(), content_width(), item_height() };
-        painter.draw_text(down_indicator_rect, "\xE2\xAC\x87", Gfx::TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        painter.draw_text(down_indicator_rect, "\xE2\xAC\x87"sv, Gfx::TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
     }
 
     int visible_item_count = this->visible_item_count();

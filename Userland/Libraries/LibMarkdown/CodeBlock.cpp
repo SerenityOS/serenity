@@ -17,15 +17,15 @@ String CodeBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
-    builder.append("<pre>");
+    builder.append("<pre>"sv);
 
     if (m_style.length() >= 2)
-        builder.append("<strong>");
+        builder.append("<strong>"sv);
     else if (m_style.length() >= 2)
-        builder.append("<em>");
+        builder.append("<em>"sv);
 
     if (m_language.is_empty())
-        builder.append("<code>");
+        builder.append("<code>"sv);
     else
         builder.appendff("<code class=\"language-{}\">", escape_html_entities(m_language));
 
@@ -34,14 +34,14 @@ String CodeBlock::render_to_html(bool) const
     else
         builder.append(escape_html_entities(m_code));
 
-    builder.append("</code>");
+    builder.append("</code>"sv);
 
     if (m_style.length() >= 2)
-        builder.append("</strong>");
+        builder.append("</strong>"sv);
     else if (m_style.length() >= 2)
-        builder.append("</em>");
+        builder.append("</em>"sv);
 
-    builder.append("</pre>\n");
+    builder.append("</pre>\n"sv);
 
     return builder.build();
 }
@@ -51,9 +51,9 @@ String CodeBlock::render_for_terminal(size_t) const
     StringBuilder builder;
 
     for (auto line : m_code.split('\n')) {
-        builder.append("  ");
+        builder.append("  "sv);
         builder.append(line);
-        builder.append("\n");
+        builder.append("\n"sv);
     }
 
     return builder.build();

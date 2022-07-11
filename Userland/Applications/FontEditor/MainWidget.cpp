@@ -45,16 +45,16 @@
 namespace FontEditor {
 
 static constexpr Array pangrams = {
-    "quick fox jumps nightly above wizard",
-    "five quacking zephyrs jolt my wax bed",
-    "pack my box with five dozen liquor jugs",
-    "quick brown fox jumps over the lazy dog",
-    "waxy and quivering jocks fumble the pizza",
-    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
-    "byxfjärmat föl gick på duvshowen",
-    "         ",
-    "float Fox.quick(h){ is_brown && it_jumps_over(doges.lazy) }",
-    "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"
+    "quick fox jumps nightly above wizard"sv,
+    "five quacking zephyrs jolt my wax bed"sv,
+    "pack my box with five dozen liquor jugs"sv,
+    "quick brown fox jumps over the lazy dog"sv,
+    "waxy and quivering jocks fumble the pizza"sv,
+    "~#:[@_1%]*{$2.3}/4^(5'6\"sv)-&|7+8!=<9,0\\>?;"sv,
+    "byxfjärmat föl gick på duvshowen"sv,
+    "         "sv,
+    "float Fox.quick(h){ is_brown && it_jumps_over(doges.lazy) }"sv,
+    "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"sv
 };
 
 ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
@@ -92,7 +92,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
 ErrorOr<void> MainWidget::create_actions()
 {
-    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png")), [&](auto&) {
+    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"sv)), [&](auto&) {
         if (!request_close())
             return;
         auto new_font_wizard = NewFontDialog::construct(window());
@@ -115,7 +115,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (!request_close())
             return;
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/");
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
         if (!open_path.has_value())
             return;
         open_file(open_path.value());
@@ -175,7 +175,7 @@ ErrorOr<void> MainWidget::create_actions()
         m_undo_selection->set_size(selection.size());
     });
 
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png")), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
         if (!m_font_preview_window) {
             if (auto maybe_window = create_preview_window(); maybe_window.is_error())
                 warnln("Failed to create preview window: {}", maybe_window.error());
@@ -187,27 +187,27 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_open_preview_action->set_status_tip("Preview the current font");
 
-    bool show_metadata = Config::read_bool("FontEditor", "Layout", "ShowMetadata", true);
+    bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
     set_show_font_metadata(show_metadata);
     m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         set_show_font_metadata(action.is_checked());
-        Config::write_bool("FontEditor", "Layout", "ShowMetadata", action.is_checked());
+        Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
     m_show_metadata_action->set_checked(show_metadata);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
 
-    bool show_unicode_blocks = Config::read_bool("FontEditor", "Layout", "ShowUnicodeBlocks", true);
+    bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
     set_show_unicode_blocks(show_unicode_blocks);
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [&](auto& action) {
         set_show_unicode_blocks(action.is_checked());
-        Config::write_bool("FontEditor", "Layout", "ShowUnicodeBlocks", action.is_checked());
+        Config::write_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
 
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png")), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
@@ -220,17 +220,17 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
 
-    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png")), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
         m_glyph_map_widget->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png")), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
         m_glyph_map_widget->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
-    i32 scale = Config::read_i32("FontEditor", "GlyphEditor", "Scale", 10);
+    i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
     set_scale(scale);
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
         set_scale_and_save(5);
@@ -253,12 +253,12 @@ ErrorOr<void> MainWidget::create_actions()
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
 
-    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/pen.png")), [&](auto&) {
+    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/pen.png"sv)), [&](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     });
     m_paint_glyph_action->set_checked(true);
 
-    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png")), [&](auto&) {
+    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"sv)), [&](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
     });
 
@@ -274,15 +274,15 @@ ErrorOr<void> MainWidget::create_actions()
         m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Clockwise);
     });
 
-    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png")), [&](auto&) {
+    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), [&](auto&) {
         m_glyph_editor_widget->flip_horizontally();
     });
 
-    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png")), [&](auto&) {
+    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)), [&](auto&) {
         m_glyph_editor_widget->flip_vertically();
     });
 
-    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png")), [&](auto&) {
+    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
         StringBuilder builder;
         auto selection = m_glyph_map_widget->selection().normalized();
         for (auto code_point = selection.start(); code_point < selection.start() + selection.size(); ++code_point) {
@@ -348,7 +348,7 @@ ErrorOr<void> MainWidget::create_models()
 
     m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_unicode_block_model));
-    m_filter_model->set_filter_term("");
+    m_filter_model->set_filter_term(""sv);
 
     m_unicode_block_listview = find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
     m_unicode_block_listview->on_selection_change = [this, unicode_blocks] {
@@ -658,7 +658,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor")), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window)));
 
     return {};
 }
@@ -668,7 +668,7 @@ bool MainWidget::save_file(String const& path)
     auto saved_font = m_edited_font->masked_character_set();
     auto ret_val = saved_font->write_to_file(path);
     if (!ret_val) {
-        GUI::MessageBox::show(window(), "The font file could not be saved.", "Save failed", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), "The font file could not be saved."sv, "Save failed"sv, GUI::MessageBox::Type::Error);
         return false;
     }
     m_path = path;
@@ -699,7 +699,7 @@ bool MainWidget::open_file(String const& path)
     auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
     if (!bitmap_font) {
         String message = String::formatted("Couldn't load font: {}\n", path);
-        GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), message, "Font Editor"sv, GUI::MessageBox::Type::Error);
         return false;
     }
     auto new_font = bitmap_font->unmasked_character_set();
@@ -748,7 +748,7 @@ void MainWidget::undo()
     auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
-        m_search_textbox->set_text("");
+        m_search_textbox->set_text(""sv);
 
     deferred_invoke([this, glyph] {
         auto start = m_undo_selection->restored_start();
@@ -778,7 +778,7 @@ void MainWidget::redo()
     auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
-        m_search_textbox->set_text("");
+        m_search_textbox->set_text(""sv);
 
     deferred_invoke([this, glyph] {
         auto start = m_undo_selection->restored_start();
@@ -818,10 +818,10 @@ void MainWidget::update_title()
 {
     StringBuilder title;
     if (m_path.is_empty())
-        title.append("Untitled");
+        title.append("Untitled"sv);
     else
         title.append(m_path);
-    title.append("[*] - Font Editor");
+    title.append("[*] - Font Editor"sv);
     window()->set_title(title.to_string());
 }
 
@@ -894,7 +894,7 @@ void MainWidget::set_scale(i32 scale)
 void MainWidget::set_scale_and_save(i32 scale)
 {
     set_scale(scale);
-    Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
+    Config::write_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, scale);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 }
 
@@ -926,7 +926,7 @@ void MainWidget::cut_selected_glyphs()
 void MainWidget::paste_glyphs()
 {
     auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("glyph/"))
+    if (!mime_type.starts_with("glyph/"sv))
         return;
 
     auto glyph_count = metadata.get("count").value().to_uint().value_or(0);

@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-spider"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-spider"sv));
 
     Config::pledge_domain("Spider");
 
@@ -54,58 +54,58 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Spider");
 
-    auto mode = static_cast<Spider::Mode>(Config::read_i32("Spider", "Settings", "Mode", static_cast<int>(Spider::Mode::SingleSuit)));
+    auto mode = static_cast<Spider::Mode>(Config::read_i32("Spider"sv, "Settings"sv, "Mode"sv, static_cast<int>(Spider::Mode::SingleSuit)));
 
     auto update_mode = [&](Spider::Mode new_mode) {
         mode = new_mode;
-        Config::write_i32("Spider", "Settings", "Mode", static_cast<int>(mode));
+        Config::write_i32("Spider"sv, "Settings"sv, "Mode"sv, static_cast<int>(mode));
     };
 
     auto mode_id = [&]() {
         switch (mode) {
         case Spider::Mode::SingleSuit:
-            return "SingleSuit";
+            return "SingleSuit"sv;
         case Spider::Mode::TwoSuit:
-            return "TwoSuit";
+            return "TwoSuit"sv;
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
-    auto statistic_display = static_cast<StatisticDisplay>(Config::read_i32("Spider", "Settings", "StatisticDisplay", static_cast<int>(StatisticDisplay::HighScore)));
+    auto statistic_display = static_cast<StatisticDisplay>(Config::read_i32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, static_cast<int>(StatisticDisplay::HighScore)));
     auto update_statistic_display = [&](StatisticDisplay new_statistic_display) {
         statistic_display = new_statistic_display;
-        Config::write_i32("Spider", "Settings", "StatisticDisplay", static_cast<int>(statistic_display));
+        Config::write_i32("Spider"sv, "Settings"sv, "StatisticDisplay"sv, static_cast<int>(statistic_display));
     };
 
     auto high_score = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider", "HighScores", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider"sv, "HighScores"sv, mode_id(), 0));
     };
 
     auto update_high_score = [&](u32 new_high_score) {
-        Config::write_i32("Spider", "HighScores", mode_id(), static_cast<int>(new_high_score));
+        Config::write_i32("Spider"sv, "HighScores"sv, mode_id(), static_cast<int>(new_high_score));
     };
 
     auto best_time = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider", "BestTimes", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider"sv, "BestTimes"sv, mode_id(), 0));
     };
 
     auto update_best_time = [&](u32 new_best_time) {
-        Config::write_i32("Spider", "BestTimes", mode_id(), static_cast<int>(new_best_time));
+        Config::write_i32("Spider"sv, "BestTimes"sv, mode_id(), static_cast<int>(new_best_time));
     };
 
     auto total_wins = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider", "TotalWins", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider"sv, "TotalWins"sv, mode_id(), 0));
     };
     auto increment_total_wins = [&]() {
-        Config::write_i32("Spider", "TotalWins", mode_id(), static_cast<int>(total_wins() + 1));
+        Config::write_i32("Spider"sv, "TotalWins"sv, mode_id(), static_cast<int>(total_wins() + 1));
     };
 
     auto total_losses = [&]() {
-        return static_cast<u32>(Config::read_i32("Spider", "TotalLosses", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider"sv, "TotalLosses"sv, mode_id(), 0));
     };
     auto increment_total_losses = [&]() {
-        Config::write_i32("Spider", "TotalLosses", mode_id(), static_cast<int>(total_losses() + 1));
+        Config::write_i32("Spider"sv, "TotalLosses"sv, mode_id(), static_cast<int>(total_losses() + 1));
     };
 
     if (mode >= Spider::Mode::__Count)
@@ -196,8 +196,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto game_in_progress = timer->is_active();
         if (game_in_progress) {
             auto result = GUI::MessageBox::show(window,
-                "A game is still in progress, are you sure you would like to quit? Doing so will count as a loss.",
-                "Game in progress",
+                "A game is still in progress, are you sure you would like to quit? Doing so will count as a loss."sv,
+                "Game in progress"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNo);
 
@@ -233,7 +233,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     suit_actions.add_action(two_suit_action);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.setup(mode);
     })));
     TRY(game_menu->try_add_separator());

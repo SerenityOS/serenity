@@ -25,7 +25,7 @@ public:
 
     virtual ~CSSFontFaceRule() override = default;
 
-    virtual StringView class_name() const override { return "CSSFontFaceRule"; }
+    virtual StringView class_name() const override { return "CSSFontFaceRule"sv; }
     virtual Type type() const override { return Type::FontFace; }
 
     FontFace const& font_face() const { return m_font_face; }

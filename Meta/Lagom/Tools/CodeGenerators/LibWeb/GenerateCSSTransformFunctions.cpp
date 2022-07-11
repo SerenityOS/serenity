@@ -153,7 +153,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
 )~~~");
     transforms_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        auto parameters_string = value.as_object().get("parameters").as_string();
+        auto parameters_string = value.as_object().get("parameters"sv).as_string();
         GenericLexer lexer { parameters_string };
 
         VERIFY(lexer.consume_specific('<'));

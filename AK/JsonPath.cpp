@@ -34,12 +34,12 @@ JsonValue JsonPath::resolve(JsonValue const& top_root) const
 String JsonPath::to_string() const
 {
     StringBuilder builder;
-    builder.append("{ .");
+    builder.append("{ ."sv);
     for (auto const& el : *this) {
-        builder.append(" > ");
+        builder.append("sv > "sv);
         builder.append(el.to_string());
     }
-    builder.append(" }");
+    builder.append("sv }"sv);
     return builder.to_string();
 }
 

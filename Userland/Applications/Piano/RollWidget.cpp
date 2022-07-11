@@ -152,7 +152,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
         }
 
         Gfx::IntRect note_name_rect(3, y, 1, note_height);
-        char const* note_name = note_names[note % notes_per_octave];
+        auto note_name = note_names[note % notes_per_octave];
 
         painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
         note_name_rect.translate_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);

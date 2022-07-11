@@ -35,7 +35,7 @@ ATAPIDiscDevice::~ATAPIDiscDevice() = default;
 
 StringView ATAPIDiscDevice::class_name() const
 {
-    return "ATAPIDiscDevice";
+    return "ATAPIDiscDevice"sv;
 }
 
 }

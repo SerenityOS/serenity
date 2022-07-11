@@ -57,7 +57,7 @@ public:
     FindWidget const& find_widget() const { return *m_find_widget; }
 
 private:
-    static constexpr auto untitled_label = "(Untitled)";
+    static constexpr auto untitled_label = "(Untitled)"sv;
 
     EditorWrapper();
 

@@ -53,54 +53,54 @@ void MimeData::set_text(String const& text)
 
 String guess_mime_type_based_on_filename(StringView path)
 {
-    if (path.ends_with(".pbm", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
         return "image/x‑portable‑bitmap";
-    if (path.ends_with(".pgm", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
         return "image/x‑portable‑graymap";
-    if (path.ends_with(".png", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
         return "image/png";
-    if (path.ends_with(".ppm", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
         return "image/x‑portable‑pixmap";
-    if (path.ends_with(".gif", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive))
         return "image/gif";
-    if (path.ends_with(".bmp", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
         return "image/bmp";
-    if (path.ends_with(".jpg", CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
         return "image/jpeg";
-    if (path.ends_with(".qoi", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
         return "image/x-qoi";
-    if (path.ends_with(".svg", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
         return "image/svg+xml";
-    if (path.ends_with(".md", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
         return "text/markdown";
-    if (path.ends_with(".html", CaseSensitivity::CaseInsensitive) || path.ends_with(".htm", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
         return "text/html";
-    if (path.ends_with(".css", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
         return "text/css";
-    if (path.ends_with(".js", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".js"sv, CaseSensitivity::CaseInsensitive))
         return "application/javascript";
-    if (path.ends_with(".json", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".json"sv, CaseSensitivity::CaseInsensitive))
         return "application/json";
-    if (path.ends_with(".zip", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".zip"sv, CaseSensitivity::CaseInsensitive))
         return "application/zip";
-    if (path.ends_with(".md", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
         return "text/markdown";
-    if (path.ends_with("/", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with("/"sv, CaseSensitivity::CaseInsensitive))
         return "text/html";
-    if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".csv"sv, CaseSensitivity::CaseInsensitive))
         return "text/csv";
-    if (path.ends_with(".sheets", CaseSensitivity::CaseInsensitive))
+    if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
         return "application/x-sheets+json";
     // FIXME: Share this, TextEditor and HackStudio language detection somehow.
     auto basename = LexicalPath::basename(path);
-    if (path.ends_with(".cpp", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".c", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".hpp", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".h", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".gml", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".ini", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".ipc", CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".txt", CaseSensitivity::CaseInsensitive)
+    if (path.ends_with(".cpp"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".c"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".hpp"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".h"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".gml"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".ini"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".ipc"sv, CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".txt"sv, CaseSensitivity::CaseInsensitive)
         || basename == "CMakeLists.txt"
         || basename == ".history"
         || basename == ".shellrc")

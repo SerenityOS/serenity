@@ -474,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
     auto flag_##flag_name = TRY(regexp_object->get(vm.names.flagName)); \
     if (flag_##flag_name.to_boolean())                                  \
-        builder.append(#flag_char);
+        builder.append(#flag_char##sv);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 

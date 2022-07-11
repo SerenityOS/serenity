@@ -29,7 +29,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     for (auto const& cookie : cookie_list) {
         // If there is an unprocessed cookie in the cookie-list, output the characters %x3B and %x20 ("; ")
         if (!builder.is_empty())
-            builder.append("; ");
+            builder.append("; "sv);
 
         // Output the cookie's name, the %x3D ("=") character, and the cookie's value.
         builder.appendff("{}={}", cookie.name, cookie.value);
@@ -50,9 +50,9 @@ void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& pars
 
 void CookieJar::dump_cookies() const
 {
-    constexpr StringView key_color = "\033[34;1m";
-    constexpr StringView attribute_color = "\033[33m";
-    constexpr StringView no_color = "\033[0m";
+    constexpr auto key_color = "\033[34;1m"sv;
+    constexpr auto attribute_color = "\033[33m"sv;
+    constexpr auto no_color = "\033[0m"sv;
 
     StringBuilder builder;
     builder.appendff("{} cookies stored\n", m_cookies.size());

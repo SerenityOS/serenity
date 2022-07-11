@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath proc exec"));
 
-    auto app_icon = GUI::Icon::default_icon("app-settings");
+    auto app_icon = GUI::Icon::default_icon("app-settings"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Settings");

@@ -33,7 +33,7 @@ ENUMERATE_OBJECT_TYPES(DEFINE_ACCESSORS)
 static void append_indent(StringBuilder& builder, int indent)
 {
     for (int i = 0; i < indent; i++)
-        builder.append("  ");
+        builder.append("  "sv);
 }
 
 String StringObject::to_string(int) const
@@ -53,12 +53,12 @@ String NameObject::to_string(int) const
 String ArrayObject::to_string(int indent) const
 {
     StringBuilder builder;
-    builder.append("[\n");
+    builder.append("[\n"sv);
     bool first = true;
 
     for (auto& element : elements()) {
         if (!first)
-            builder.append(",\n");
+            builder.append(",\n"sv);
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("{}", element.to_string(indent));
@@ -73,12 +73,12 @@ String ArrayObject::to_string(int indent) const
 String DictObject::to_string(int indent) const
 {
     StringBuilder builder;
-    builder.append("<<\n");
+    builder.append("<<\n"sv);
     bool first = true;
 
     for (auto& [key, value] : map()) {
         if (!first)
-            builder.append(",\n");
+            builder.append(",\n"sv);
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("/{} ", key);
@@ -87,14 +87,14 @@ String DictObject::to_string(int indent) const
 
     builder.append('\n');
     append_indent(builder, indent);
-    builder.append(">>");
+    builder.append(">>"sv);
     return builder.to_string();
 }
 
 String StreamObject::to_string(int indent) const
 {
     StringBuilder builder;
-    builder.append("stream\n");
+    builder.append("stream\n"sv);
     append_indent(builder, indent);
     builder.appendff("{}\n", dict()->to_string(indent + 1));
     append_indent(builder, indent + 1);
@@ -113,7 +113,7 @@ String StreamObject::to_string(int indent) const
     }
 
     append_indent(builder, indent);
-    builder.append("endstream");
+    builder.append("endstream"sv);
     return builder.to_string();
 }
 
@@ -125,7 +125,7 @@ String IndirectValue::to_string(int indent) const
     builder.append(value().to_string(indent + 1));
     builder.append('\n');
     append_indent(builder, indent);
-    builder.append("endobj");
+    builder.append("endobj"sv);
     return builder.to_string();
 }
 

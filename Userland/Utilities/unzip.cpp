@@ -122,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!file_filters.is_empty()) {
             for (auto& filter : file_filters) {
                 // Convert underscore wildcards (usual unzip convention) to question marks (as used by StringUtils)
-                auto string_filter = filter.replace("_", "?", ReplaceMode::All);
+                auto string_filter = filter.replace("_"sv, "?"sv, ReplaceMode::All);
                 if (zip_member.name.matches(string_filter, CaseSensitivity::CaseSensitive)) {
                     keep_file = true;
                     break;

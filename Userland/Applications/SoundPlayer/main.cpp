@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
 
-    auto app_icon = GUI::Icon::default_icon("app-sound-player");
+    auto app_icon = GUI::Icon::default_icon("app-sound-player"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Sound Player");

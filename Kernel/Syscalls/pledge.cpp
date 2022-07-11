@@ -31,7 +31,7 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*>
         auto found_invalid_pledge = true;
         pledge_spec.for_each_split_view(' ', false, [&mask, &found_invalid_pledge](auto const& part) {
 #define __ENUMERATE_PLEDGE_PROMISE(x)   \
-    if (part == StringView { #x }) {    \
+    if (part == #x##sv) {               \
         mask |= (1u << (u32)Pledge::x); \
         return;                         \
     }

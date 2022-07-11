@@ -19,9 +19,9 @@ auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRe
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
     auto const& obj = json.as_object();
-    details->executable = obj.get("executable").to_string();
-    details->name = obj.get("name").to_string();
-    if (auto type_value = obj.get_ptr("type")) {
+    details->executable = obj.get("executable"sv).to_string();
+    details->name = obj.get("name"sv).to_string();
+    if (auto type_value = obj.get_ptr("type"sv)) {
         auto type_str = type_value->to_string();
         if (type_str == "app")
             details->launcher_type = LauncherType::Application;

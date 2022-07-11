@@ -95,7 +95,7 @@ static ErrorOr<void> chown_all_matching_device_nodes_under_specific_directory(St
         auto rc = stat(entry_name.characters(), &cur_file_stat);
         if (rc < 0)
             continue;
-        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
+        TRY(Core::System::chown(entry_name, 0, group.gr_gid));
     }
     return {};
 }
@@ -114,7 +114,7 @@ static ErrorOr<void> chown_all_matching_device_nodes(group const& group, unsigne
             continue;
         if (major(cur_file_stat.st_rdev) != major_number)
             continue;
-        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
+        TRY(Core::System::chown(entry_name, 0, group.gr_gid));
     }
     return {};
 }
@@ -370,35 +370,35 @@ static void populate_devtmpfs()
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
-    TRY(Core::System::mount(-1, "/proc", "proc", MS_NOSUID));
-    TRY(Core::System::mount(-1, "/sys", "sys", 0));
-    TRY(Core::System::mount(-1, "/dev", "dev", 0));
+    TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
+    TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
+    TRY(Core::System::mount(-1, "/dev"sv, "dev"sv, 0));
 
-    TRY(Core::System::mkdir("/dev/audio", 0755));
+    TRY(Core::System::mkdir("/dev/audio"sv, 0755));
 
-    TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
-    TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
-    TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
+    TRY(Core::System::symlink("/proc/self/fd/0"sv, "/dev/stdin"sv));
+    TRY(Core::System::symlink("/proc/self/fd/1"sv, "/dev/stdout"sv));
+    TRY(Core::System::symlink("/proc/self/fd/2"sv, "/dev/stderr"sv));
 
-    TRY(Core::System::mkdir("/dev/gpu", 0755));
+    TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
 
     populate_devtmpfs();
 
-    TRY(Core::System::mkdir("/dev/pts", 0755));
+    TRY(Core::System::mkdir("/dev/pts"sv, 0755));
 
-    TRY(Core::System::mount(-1, "/dev/pts", "devpts", 0));
+    TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
 
-    TRY(Core::System::symlink("/dev/random", "/dev/urandom"));
+    TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
 
-    TRY(Core::System::chmod("/dev/urandom", 0666));
+    TRY(Core::System::chmod("/dev/urandom"sv, 0666));
 
-    auto phys_group = TRY(Core::System::getgrnam("phys"));
+    auto phys_group = TRY(Core::System::getgrnam("phys"sv));
     VERIFY(phys_group.has_value());
     // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
     TRY(chown_all_matching_device_nodes(phys_group.value(), 29));
 
     auto const filter_chown_ENOENT = [](ErrorOr<void> result) -> ErrorOr<void> {
-        auto const chown_enoent = Error::from_syscall("chown", -ENOENT);
+        auto const chown_enoent = Error::from_syscall("chown"sv, -ENOENT);
         if (result.is_error() && result.error() == chown_enoent) {
             dbgln("{}", result.release_error());
             return {};
@@ -406,18 +406,18 @@ static ErrorOr<void> prepare_synthetic_filesystems()
         return result;
     };
 
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0", 0, phys_group.value().gr_gid)));
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0", 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0"sv, 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0"sv, 0, phys_group.value().gr_gid)));
 
-    auto tty_group = TRY(Core::System::getgrnam("tty"));
+    auto tty_group = TRY(Core::System::getgrnam("tty"sv));
     VERIFY(tty_group.has_value());
     // FIXME: Try to find a way to not hardcode the major number of tty nodes.
     TRY(chown_all_matching_device_nodes(tty_group.release_value(), 4));
 
-    auto audio_group = TRY(Core::System::getgrnam("audio"));
+    auto audio_group = TRY(Core::System::getgrnam("audio"sv));
     VERIFY(audio_group.has_value());
-    TRY(Core::System::chown("/dev/audio", 0, audio_group->gr_gid));
-    TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio", audio_group.release_value()));
+    TRY(Core::System::chown("/dev/audio"sv, 0, audio_group->gr_gid));
+    TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio"sv, audio_group.release_value()));
 
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making
@@ -426,7 +426,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     // This affects also every other process that inherits the file descriptors
     // from SystemServer, so it is important for other things (also for ProcFS
     // tests that are running in CI mode).
-    int stdin_new_fd = TRY(Core::System::open("/dev/null", O_NONBLOCK));
+    int stdin_new_fd = TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
 
     TRY(Core::System::dup2(stdin_new_fd, 0));
     TRY(Core::System::dup2(stdin_new_fd, 1));
@@ -442,7 +442,7 @@ static ErrorOr<void> mount_all_filesystems()
     pid_t pid = TRY(Core::System::fork());
 
     if (pid == 0)
-        TRY(Core::System::exec("/bin/mount", Vector<StringView> { "mount", "-a" }, Core::System::SearchInPath::No));
+        TRY(Core::System::exec("/bin/mount"sv, Vector { "mount"sv, "-a"sv }, Core::System::SearchInPath::No));
 
     wait(nullptr);
     return {};
@@ -453,7 +453,7 @@ static ErrorOr<void> create_tmp_coredump_directory()
     dbgln("Creating /tmp/coredump directory");
     auto old_umask = umask(0);
     // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
-    TRY(Core::System::mkdir("/tmp/coredump", 0777));
+    TRY(Core::System::mkdir("/tmp/coredump"sv, 0777));
     umask(old_umask);
     return {};
 }

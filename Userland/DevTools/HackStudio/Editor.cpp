@@ -61,7 +61,7 @@ Editor::Editor()
         if (success) {
             set_execution_position(cursor().line());
         } else {
-            GUI::MessageBox::show(window(), "Failed to set execution position", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Failed to set execution position"sv, "Error"sv, GUI::MessageBox::Type::Error);
         }
     });
 
@@ -161,13 +161,13 @@ void Editor::paint_event(GUI::PaintEvent& event)
                     if (line < first_visible_line || line > last_visible_line) {
                         continue;
                     }
-                    char const* sign = (line_offset < deletions) ? "!" : "+";
+                    auto sign = (line_offset < deletions) ? "!"sv : "+"sv;
                     painter.draw_text(gutter_icon_rect(line), sign, font(), Gfx::TextAlignment::Center);
                 }
                 if (additions < deletions) {
                     auto deletions_line = min(finish_line, line_count() - 1);
                     if (deletions_line <= last_visible_line) {
-                        painter.draw_text(gutter_icon_rect(deletions_line), "-", font(), Gfx::TextAlignment::Center);
+                        painter.draw_text(gutter_icon_rect(deletions_line), "-"sv, font(), Gfx::TextAlignment::Center);
                     }
                 }
             }
@@ -224,7 +224,7 @@ void Editor::show_documentation_tooltip_if_available(String const& hovered_token
     // is probably to tweak Markdown::Document::render_to_html() so we can inject styles
     // into the rendered HTML easily.
     html.append(man_document->render_to_html());
-    html.append("<style>body { background-color: #dac7b5; }</style>");
+    html.append("<style>body { background-color: #dac7b5; }</style>"sv);
     m_documentation_page_view->load_html(html.build(), {});
 
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
@@ -355,7 +355,7 @@ void Editor::drop_event(GUI::DropEvent& event)
             return;
         window()->move_to_front();
         if (urls.size() > 1) {
-            GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
             return;
         }
         set_current_editor_wrapper(static_cast<EditorWrapper*>(parent()));
@@ -433,13 +433,13 @@ void Editor::clear_execution_position()
 
 Gfx::Bitmap const& Editor::breakpoint_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/breakpoint.png").release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/breakpoint.png"sv).release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 
 Gfx::Bitmap const& Editor::current_position_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 
@@ -685,17 +685,17 @@ void Editor::handle_function_parameters_hint_request()
         StringBuilder html;
         for (size_t i = 0; i < params.size(); ++i) {
             if (i == argument_index)
-                html.append("<b>");
+                html.append("<b>"sv);
 
             html.appendff("{}", params[i]);
 
             if (i == argument_index)
-                html.append("</b>");
+                html.append("</b>"sv);
 
             if (i < params.size() - 1)
-                html.append(", ");
+                html.append(", "sv);
         }
-        html.append("<style>body { background-color: #dac7b5; }</style>");
+        html.append("<style>body { background-color: #dac7b5; }</style>"sv);
 
         m_parameter_hint_page_view->load_html(html.build(), {});
 

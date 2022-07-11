@@ -272,7 +272,7 @@ String BackgroundStyleValue::to_string() const
     StringBuilder builder;
     for (size_t i = 0; i < m_layer_count; i++) {
         if (i)
-            builder.append(", ");
+            builder.append(", "sv);
         if (i == m_layer_count - 1)
             builder.appendff("{} ", m_color->to_string());
         builder.appendff("{} {} {} {} {} {} {}", get_layer_value_string(m_image, i), get_layer_value_string(m_position, i), get_layer_value_string(m_size, i), get_layer_value_string(m_repeat, i), get_layer_value_string(m_attachment, i), get_layer_value_string(m_origin, i), get_layer_value_string(m_clip, i));
@@ -1530,7 +1530,7 @@ String ShadowStyleValue::to_string() const
     StringBuilder builder;
     builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
     if (m_placement == ShadowPlacement::Inner)
-        builder.append(" inset");
+        builder.append(" inset"sv);
     return builder.to_string();
 }
 
@@ -1582,7 +1582,7 @@ String TransformationStyleValue::to_string() const
     StringBuilder builder;
     builder.append(CSS::to_string(m_transform_function));
     builder.append('(');
-    builder.join(", ", m_values);
+    builder.join(", "sv, m_values);
     builder.append(')');
 
     return builder.to_string();

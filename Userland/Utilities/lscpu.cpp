@@ -16,35 +16,35 @@
 static void print_cache_info(StringView description, JsonObject const& cache_object)
 {
     outln("\t{}:", description);
-    outln("\t\tSize: {}", human_readable_size(cache_object.get("size").as_u32()));
-    outln("\t\tLine size: {}", human_readable_size(cache_object.get("line_size").as_u32()));
+    outln("\t\tSize: {}", human_readable_size(cache_object.get("size"sv).as_u32()));
+    outln("\t\tLine size: {}", human_readable_size(cache_object.get("line_size"sv).as_u32()));
 };
 
 static void print_cpu_info(JsonObject const& value)
 {
-    outln("CPU {}:", value.get("processor").as_u32());
-    outln("\tVendor ID: {}", value.get("vendor_id").as_string());
-    if (value.has("hypervisor_vendor_id"))
-        outln("\tHypervisor Vendor ID: {}", value.get("hypervisor_vendor_id").as_string());
-    outln("\tBrand: {}", value.get("brand").as_string());
-    outln("\tFamily: {}", value.get("family").as_u32());
-    outln("\tModel: {}", value.get("model").as_u32());
-    outln("\tStepping: {}", value.get("stepping").as_u32());
-    outln("\tType: {}", value.get("type").as_u32());
+    outln("CPU {}:", value.get("processor"sv).as_u32());
+    outln("\tVendor ID: {}", value.get("vendor_id"sv).as_string());
+    if (value.has("hypervisor_vendor_id"sv))
+        outln("\tHypervisor Vendor ID: {}", value.get("hypervisor_vendor_id"sv).as_string());
+    outln("\tBrand: {}", value.get("brand"sv).as_string());
+    outln("\tFamily: {}", value.get("family"sv).as_u32());
+    outln("\tModel: {}", value.get("model"sv).as_u32());
+    outln("\tStepping: {}", value.get("stepping"sv).as_u32());
+    outln("\tType: {}", value.get("type"sv).as_u32());
 
-    auto& caches = value.get("caches").as_object();
-    if (caches.has("l1_data"))
-        print_cache_info("L1 data cache", caches.get("l1_data").as_object());
-    if (caches.has("l1_instruction"))
-        print_cache_info("L1 instruction cache", caches.get("l1_instruction").as_object());
-    if (caches.has("l2"))
-        print_cache_info("L2 cache", caches.get("l2").as_object());
-    if (caches.has("l3"))
-        print_cache_info("L3 cache", caches.get("l3").as_object());
+    auto& caches = value.get("caches"sv).as_object();
+    if (caches.has("l1_data"sv))
+        print_cache_info("L1 data cache"sv, caches.get("l1_data"sv).as_object());
+    if (caches.has("l1_instruction"sv))
+        print_cache_info("L1 instruction cache"sv, caches.get("l1_instruction"sv).as_object());
+    if (caches.has("l2"sv))
+        print_cache_info("L2 cache"sv, caches.get("l2"sv).as_object());
+    if (caches.has("l3"sv))
+        print_cache_info("L3 cache"sv, caches.get("l3"sv).as_object());
 
     out("\tFeatures: ");
 
-    auto& features = value.get("features").as_array();
+    auto& features = value.get("features"sv).as_array();
 
     for (auto const& feature : features.values())
         out("{} ", feature.as_string());

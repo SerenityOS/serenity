@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!print_type) {
         out("{}", StringView(data_and_type.data));
         // Append a newline to text contents, unless the caller says otherwise.
-        if (data_and_type.mime_type.starts_with("text/") && !no_newline)
+        if (data_and_type.mime_type.starts_with("text/"sv) && !no_newline)
             outln();
     } else {
         outln("{}", data_and_type.mime_type);

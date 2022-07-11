@@ -38,7 +38,7 @@ public:
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
 
-    virtual DOM::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = "") = 0;
+    virtual DOM::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = ""sv) = 0;
     virtual DOM::ExceptionOr<String> remove_property(PropertyID) = 0;
 
     DOM::ExceptionOr<void> set_property(StringView property_name, StringView css_text, StringView priority);

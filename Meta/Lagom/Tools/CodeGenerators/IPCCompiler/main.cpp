@@ -49,7 +49,7 @@ struct Message {
     {
         StringBuilder builder;
         builder.append(pascal_case(name));
-        builder.append("Response");
+        builder.append("Response"sv);
         return builder.to_string();
     }
 };
@@ -69,12 +69,12 @@ static bool is_primitive_type(String const& type)
 static String message_name(String const& endpoint, String const& message, bool is_response)
 {
     StringBuilder builder;
-    builder.append("Messages::");
+    builder.append("Messages::"sv);
     builder.append(endpoint);
-    builder.append("::");
+    builder.append("::"sv);
     builder.append(pascal_case(message));
     if (is_response)
-        builder.append("Response");
+        builder.append("Response"sv);
     return builder.to_string();
 }
 
@@ -261,7 +261,7 @@ String constructor_for_message(String const& name, Vector<Parameter> const& para
     builder.append(name);
 
     if (parameters.is_empty()) {
-        builder.append("() {}");
+        builder.append("() {}"sv);
         return builder.to_string();
     }
     builder.append('(');
@@ -269,16 +269,16 @@ String constructor_for_message(String const& name, Vector<Parameter> const& para
         auto const& parameter = parameters[i];
         builder.appendff("{} {}", parameter.type, parameter.name);
         if (i != parameters.size() - 1)
-            builder.append(", ");
+            builder.append(", "sv);
     }
-    builder.append(") : ");
+    builder.append(") : "sv);
     for (size_t i = 0; i < parameters.size(); ++i) {
         auto const& parameter = parameters[i];
         builder.appendff("m_{}(move({}))", parameter.name, parameter.name);
         if (i != parameters.size() - 1)
-            builder.append(", ");
+            builder.append(", "sv);
     }
-    builder.append(" {}");
+    builder.append(" {}"sv);
     return builder.to_string();
 }
 
@@ -343,7 +343,7 @@ public:)~~~");
         auto const& parameter = parameters[i];
         builder.appendff("move({})", parameter.name);
         if (i != parameters.size() - 1)
-            builder.append(", ");
+            builder.append(", "sv);
     }
 
     message_generator.set("message.constructor_call_parameters", builder.build());
@@ -657,11 +657,11 @@ public:
             StringBuilder argument_generator;
             for (size_t i = 0; i < parameters.size(); ++i) {
                 auto const& parameter = parameters[i];
-                argument_generator.append("request.");
+                argument_generator.append("request."sv);
                 argument_generator.append(parameter.name);
-                argument_generator.append("()");
+                argument_generator.append("()"sv);
                 if (i != parameters.size() - 1)
-                    argument_generator.append(", ");
+                    argument_generator.append(", "sv);
             }
 
             message_generator.set("message.pascal_name", pascal_case(name));
@@ -722,7 +722,7 @@ public:
 
                 builder.append(type);
                 if (const_ref)
-                    builder.append(" const&");
+                    builder.append(" const&"sv);
 
                 return builder.to_string();
             };

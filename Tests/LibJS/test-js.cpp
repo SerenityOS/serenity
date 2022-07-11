@@ -104,18 +104,18 @@ TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, 
         ExplicitPass,
     } expectation { Pass };
 
-    if (dirname.ends_with("early"))
+    if (dirname.ends_with("early"sv))
         expectation = Early;
-    else if (dirname.ends_with("fail"))
+    else if (dirname.ends_with("fail"sv))
         expectation = Fail;
-    else if (dirname.ends_with("pass-explicit"))
+    else if (dirname.ends_with("pass-explicit"sv))
         expectation = ExplicitPass;
-    else if (dirname.ends_with("pass"))
+    else if (dirname.ends_with("pass"sv))
         expectation = Pass;
     else
         return Test::JS::RunFileHookResult::SkipFile;
 
-    auto program_type = path.basename().ends_with(".module.js") ? JS::Program::Type::Module : JS::Program::Type::Script;
+    auto program_type = path.basename().ends_with(".module.js"sv) ? JS::Program::Type::Module : JS::Program::Type::Script;
     bool parse_succeeded = false;
     if (program_type == JS::Program::Type::Module)
         parse_succeeded = !Test::JS::parse_module(test_file, interpreter.realm()).is_error();

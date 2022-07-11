@@ -45,7 +45,7 @@ template<>
 struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, AK::SourceLocation location)
     {
-        return AK::Formatter<FormatString>::format(builder, "[\x1b[34m{}\x1b[0m @ {}:{}]", location.function_name(), location.filename(), location.line_number());
+        return AK::Formatter<FormatString>::format(builder, "[\x1b[34m{}\x1b[0m @ {}:{}]"sv, location.function_name(), location.filename(), location.line_number());
     }
 };
 

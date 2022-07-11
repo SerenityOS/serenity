@@ -13,7 +13,7 @@
 namespace Kernel {
 
 static char s_cmd_line[1024];
-static constexpr StringView s_embedded_cmd_line = "";
+static constexpr StringView s_embedded_cmd_line = ""sv;
 static CommandLine* s_the;
 
 UNMAP_AFTER_INIT void CommandLine::early_initialize(char const* cmd_line)

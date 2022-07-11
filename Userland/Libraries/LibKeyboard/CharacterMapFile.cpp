@@ -14,11 +14,11 @@ namespace Keyboard {
 ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(String const& filename)
 {
     auto path = filename;
-    if (!path.ends_with(".json")) {
+    if (!path.ends_with(".json"sv)) {
         StringBuilder full_path;
-        full_path.append("/res/keymaps/");
+        full_path.append("/res/keymaps/"sv);
         full_path.append(filename);
-        full_path.append(".json");
+        full_path.append(".json"sv);
         path = full_path.to_string();
     }
 

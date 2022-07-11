@@ -302,7 +302,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 if (status_code.has_value())
                     error_builder.appendff("Load failed: {}", *status_code);
                 else
-                    error_builder.append("Load failed");
+                    error_builder.append("Load failed"sv);
                 log_failure(request, error_builder.string_view());
                 if (error_callback)
                     error_callback(error_builder.to_string(), {});

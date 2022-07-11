@@ -60,7 +60,7 @@ void Image::dump() const
         return;
     }
 
-    dbgln("    type:    {}", ELF::Image::object_file_type_to_string(header().e_type).value_or("(?)"));
+    dbgln("    type:    {}", ELF::Image::object_file_type_to_string(header().e_type).value_or("(?)"sv));
     dbgln("    machine: {}", header().e_machine);
     dbgln("    entry:   {:x}", header().e_entry);
     dbgln("    shoff:   {}", header().e_shoff);

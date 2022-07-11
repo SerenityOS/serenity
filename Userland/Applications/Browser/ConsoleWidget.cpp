@@ -25,7 +25,7 @@ ConsoleWidget::ConsoleWidget()
     set_fill_with_background_color(true);
 
     m_output_view = add<WebView::OutOfProcessWebView>();
-    m_output_view->load("data:text/html,<html></html>");
+    m_output_view->load("data:text/html,<html></html>"sv);
     // Wait until our output WebView is loaded, and then request any messages that occurred before we existed
     m_output_view->on_load_finish = [this](auto&) {
         if (on_request_messages)
@@ -130,9 +130,9 @@ void ConsoleWidget::handle_console_messages(i32 start_index, Vector<String> cons
 void ConsoleWidget::print_source_line(StringView source)
 {
     StringBuilder html;
-    html.append("<span class=\"repl-indicator\">");
-    html.append("&gt; ");
-    html.append("</span>");
+    html.append("<span class=\"repl-indicator\">"sv);
+    html.append("&gt; "sv);
+    html.append("</span>"sv);
 
     html.append(JS::MarkupGenerator::html_from_source(source));
 
@@ -147,7 +147,7 @@ void ConsoleWidget::print_html(StringView line)
     if (parent_id == 0) {
         builder.append(R"~~~(
         var parentGroup = document.body;
-)~~~");
+)~~~"sv);
     } else {
         builder.appendff(R"~~~(
         var parentGroup = document.getElementById("group_{}");
@@ -157,11 +157,11 @@ void ConsoleWidget::print_html(StringView line)
 
     builder.append(R"~~~(
         var p = document.createElement("p");
-        p.innerHTML = ")~~~");
+        p.innerHTML = ")~~~"sv);
     builder.append_escaped_for_json(line);
     builder.append(R"~~~("
         parentGroup.appendChild(p);
-)~~~");
+)~~~"sv);
     m_output_view->run_javascript(builder.string_view());
     // FIXME: Make it scroll to the bottom, using `window.scrollTo()` in the JS above.
     //        We used to call `m_output_view->scroll_to_bottom();` here, but that does not work because
@@ -174,7 +174,7 @@ void ConsoleWidget::clear_output()
     m_group_stack.clear();
     m_output_view->run_javascript(R"~~~(
         document.body.innerHTML = "";
-    )~~~");
+    )~~~"sv);
 }
 
 void ConsoleWidget::begin_group(StringView label, bool start_expanded)
@@ -184,7 +184,7 @@ void ConsoleWidget::begin_group(StringView label, bool start_expanded)
     if (parent_id == 0) {
         builder.append(R"~~~(
         var parentGroup = document.body;
-)~~~");
+)~~~"sv);
     } else {
         builder.appendff(R"~~~(
         var parentGroup = document.getElementById("group_{}");
@@ -206,10 +206,10 @@ void ConsoleWidget::begin_group(StringView label, bool start_expanded)
     builder.append(R"~~~(";
         group.appendChild(label);
         parentGroup.appendChild(group);
-)~~~");
+)~~~"sv);
 
     if (start_expanded)
-        builder.append("group.open = true;");
+        builder.append("group.open = true;"sv);
 
     m_output_view->run_javascript(builder.string_view());
     // FIXME: Scroll console to bottom - see note in print_html()

@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     {
         // FIXME: Map switched tty from screens.
         // FIXME: Gracefully cleanup the TTY graphics mode.
-        int tty_fd = TRY(Core::System::open("/dev/tty", O_RDWR));
+        int tty_fd = TRY(Core::System::open("/dev/tty"sv, O_RDWR));
         TRY(Core::System::ioctl(tty_fd, KDSETMODE, KD_GRAPHICS));
         TRY(Core::System::close(tty_fd));
     }
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
             while (di.has_next()) {
                 auto path = di.next_path();
-                if (!path.starts_with("connector"))
+                if (!path.starts_with("connector"sv))
                     continue;
                 auto full_path = String::formatted("/dev/gpu/{}", path);
                 if (!Core::File::is_device(full_path))

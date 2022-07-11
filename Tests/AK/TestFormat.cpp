@@ -204,7 +204,7 @@ template<>
 struct AK::Formatter<B> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, B)
     {
-        return Formatter<StringView>::format(builder, "B");
+        return Formatter<StringView>::format(builder, "B"sv);
     }
 };
 
@@ -288,7 +288,7 @@ template<>
 struct AK::Formatter<C> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, C c)
     {
-        return AK::Formatter<FormatString>::format(builder, "C(i={})", c.i);
+        return AK::Formatter<FormatString>::format(builder, "C(i={})"sv, c.i);
     }
 };
 

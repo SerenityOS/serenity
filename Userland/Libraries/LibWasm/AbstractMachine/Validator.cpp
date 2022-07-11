@@ -73,7 +73,7 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
             if (m_context.types.size() > index.value()) {
                 m_context.functions.append(m_context.types[index.value()]);
             } else {
-                result = Errors::invalid("TypeIndex");
+                result = Errors::invalid("TypeIndex"sv);
                 break;
             }
         }
@@ -171,7 +171,7 @@ ErrorOr<void, ValidationError> Validator::validate(StartSection const& section)
     TRY(validate(section.function().index()));
     FunctionType const& type = m_context.functions[section.function().index().value()];
     if (!type.parameters().is_empty() || !type.results().is_empty())
-        return Errors::invalid("start function signature");
+        return Errors::invalid("start function signature"sv);
     return {};
 }
 
@@ -186,10 +186,10 @@ ErrorOr<void, ValidationError> Validator::validate(DataSection const& section)
                 auto expression_result = TRY(validate(active.offset, { ValueType(ValueType::I32) }));
 
                 if (!expression_result.is_constant)
-                    return Errors::invalid("active data initializer");
+                    return Errors::invalid("active data initializer"sv);
 
                 if (expression_result.result_types.size() != 1 || !expression_result.result_types.first().is_of_kind(ValueType::I32))
-                    return Errors::invalid("active data initializer type", ValueType(ValueType::I32), expression_result.result_types);
+                    return Errors::invalid("active data initializer type"sv, ValueType(ValueType::I32), expression_result.result_types);
 
                 return {};
             }));
@@ -208,9 +208,9 @@ ErrorOr<void, ValidationError> Validator::validate(ElementSection const& section
                 TRY(validate(active.index));
                 auto expression_result = TRY(validate(active.expression, { ValueType(ValueType::I32) }));
                 if (!expression_result.is_constant)
-                    return Errors::invalid("active element initializer");
+                    return Errors::invalid("active element initializer"sv);
                 if (expression_result.result_types.size() != 1 || !expression_result.result_types.first().is_of_kind(ValueType::I32))
-                    return Errors::invalid("active element initializer type", ValueType(ValueType::I32), expression_result.result_types);
+                    return Errors::invalid("active element initializer type"sv, ValueType(ValueType::I32), expression_result.result_types);
                 return {};
             }));
     }
@@ -224,9 +224,9 @@ ErrorOr<void, ValidationError> Validator::validate(GlobalSection const& section)
         TRY(validate(type));
         auto expression_result = TRY(validate(entry.expression(), { type.type() }));
         if (!expression_result.is_constant)
-            return Errors::invalid("global variable initializer");
+            return Errors::invalid("global variable initializer"sv);
         if (expression_result.result_types.size() != 1 || !expression_result.result_types.first().is_of_kind(type.type().kind()))
-            return Errors::invalid("global variable initializer type", ValueType(ValueType::I32), expression_result.result_types);
+            return Errors::invalid("global variable initializer type"sv, ValueType(ValueType::I32), expression_result.result_types);
     }
 
     return {};
@@ -1338,7 +1338,7 @@ VALIDATE_INSTRUCTION(ref_func)
     TRY(validate(index));
 
     if (!m_context.references.contains(index))
-        return Errors::invalid("function reference");
+        return Errors::invalid("function reference"sv);
 
     is_constant = true;
     stack.append(ValueType(ValueType::FunctionReference));
@@ -1363,10 +1363,10 @@ VALIDATE_INSTRUCTION(select)
     auto arg0_type = stack.take_last();
     auto& arg1_type = stack.last();
     if (!index_type.is_of_kind(ValueType::I32))
-        return Errors::invalid("select index type", ValueType(ValueType::I32), index_type);
+        return Errors::invalid("select index type"sv, ValueType(ValueType::I32), index_type);
 
     if (arg0_type != arg1_type)
-        return Errors::invalid("select argument types", Vector { arg0_type, arg0_type }, Vector { arg0_type, arg1_type });
+        return Errors::invalid("select argument types"sv, Vector { arg0_type, arg0_type }, Vector { arg0_type, arg1_type });
 
     return {};
 }
@@ -1375,7 +1375,7 @@ VALIDATE_INSTRUCTION(select_typed)
 {
     auto& required_types = instruction.arguments().get<Vector<ValueType>>();
     if (required_types.size() != 1)
-        return Errors::invalid("select types", "exactly one type", required_types);
+        return Errors::invalid("select types"sv, "exactly one type"sv, required_types);
 
     if (stack.size() < 3)
         return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32), required_types.first(), required_types.first() });
@@ -1384,10 +1384,10 @@ VALIDATE_INSTRUCTION(select_typed)
     auto arg0_type = stack.take_last();
     auto& arg1_type = stack.last();
     if (!index_type.is_of_kind(ValueType::I32))
-        return Errors::invalid("select index type", ValueType(ValueType::I32), index_type);
+        return Errors::invalid("select index type"sv, ValueType(ValueType::I32), index_type);
 
     if (arg0_type != arg1_type || arg0_type != required_types.first())
-        return Errors::invalid("select argument types", Vector { required_types.first(), required_types.first() }, Vector { arg0_type, arg1_type });
+        return Errors::invalid("select argument types"sv, Vector { required_types.first(), required_types.first() }, Vector { arg0_type, arg1_type });
 
     return {};
 }
@@ -1445,7 +1445,7 @@ VALIDATE_INSTRUCTION(global_set)
     auto& global = m_context.globals[index.value()];
 
     if (!global.is_mutable())
-        return Errors::invalid("global variable for global.set");
+        return Errors::invalid("global variable for global.set"sv);
 
     TRY(stack.take(global.type()));
 
@@ -1525,10 +1525,10 @@ VALIDATE_INSTRUCTION(table_copy)
     auto& rhs_table = m_context.tables[args.rhs.value()];
 
     if (lhs_table.element_type() != rhs_table.element_type())
-        return Errors::non_conforming_types("table.copy", lhs_table.element_type(), rhs_table.element_type());
+        return Errors::non_conforming_types("table.copy"sv, lhs_table.element_type(), rhs_table.element_type());
 
     if (!lhs_table.element_type().is_reference())
-        return Errors::invalid("table.copy element type", "a reference type", lhs_table.element_type());
+        return Errors::invalid("table.copy element type"sv, "a reference type"sv, lhs_table.element_type());
 
     TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
@@ -1546,7 +1546,7 @@ VALIDATE_INSTRUCTION(table_init)
     auto& element_type = m_context.elements[args.element_index.value()];
 
     if (table.element_type() != element_type)
-        return Errors::non_conforming_types("table.init", table.element_type(), element_type);
+        return Errors::non_conforming_types("table.init"sv, table.element_type(), element_type);
 
     TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
@@ -1568,7 +1568,7 @@ VALIDATE_INSTRUCTION(i32_load)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(i32))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i32));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i32));
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
@@ -1581,7 +1581,7 @@ VALIDATE_INSTRUCTION(i64_load)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(i64))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i64));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i64));
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1594,7 +1594,7 @@ VALIDATE_INSTRUCTION(f32_load)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(float))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(float));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(float));
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::F32));
@@ -1607,7 +1607,7 @@ VALIDATE_INSTRUCTION(f64_load)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(double))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(double));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(double));
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::F64));
@@ -1620,7 +1620,7 @@ VALIDATE_INSTRUCTION(i32_load16_s)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
@@ -1633,7 +1633,7 @@ VALIDATE_INSTRUCTION(i32_load16_u)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
@@ -1646,7 +1646,7 @@ VALIDATE_INSTRUCTION(i32_load8_s)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
@@ -1659,7 +1659,7 @@ VALIDATE_INSTRUCTION(i32_load8_u)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
@@ -1672,7 +1672,7 @@ VALIDATE_INSTRUCTION(i64_load32_s)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 32 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1685,7 +1685,7 @@ VALIDATE_INSTRUCTION(i64_load32_u)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 32 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1698,7 +1698,7 @@ VALIDATE_INSTRUCTION(i64_load16_s)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1711,7 +1711,7 @@ VALIDATE_INSTRUCTION(i64_load16_u)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1724,7 +1724,7 @@ VALIDATE_INSTRUCTION(i64_load8_s)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1737,7 +1737,7 @@ VALIDATE_INSTRUCTION(i64_load8_u)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
@@ -1750,7 +1750,7 @@ VALIDATE_INSTRUCTION(i32_store)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(i32))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i32));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i32));
 
     TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
@@ -1763,7 +1763,7 @@ VALIDATE_INSTRUCTION(i64_store)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(i64))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i64));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i64));
 
     TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
@@ -1776,7 +1776,7 @@ VALIDATE_INSTRUCTION(f32_store)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(float))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(float));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(float));
 
     TRY((stack.take<ValueType::F32, ValueType::I32>()));
 
@@ -1789,7 +1789,7 @@ VALIDATE_INSTRUCTION(f64_store)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > sizeof(double))
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(double));
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(double));
 
     TRY((stack.take<ValueType::F64, ValueType::I32>()));
 
@@ -1802,7 +1802,7 @@ VALIDATE_INSTRUCTION(i32_store16)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
@@ -1815,7 +1815,7 @@ VALIDATE_INSTRUCTION(i32_store8)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
@@ -1828,7 +1828,7 @@ VALIDATE_INSTRUCTION(i64_store32)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 32 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
     TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
@@ -1841,7 +1841,7 @@ VALIDATE_INSTRUCTION(i64_store16)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 16 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
     TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
@@ -1854,7 +1854,7 @@ VALIDATE_INSTRUCTION(i64_store8)
 
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     if ((1ull << arg.align) > 8 / 8)
-        return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
     TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
@@ -1925,7 +1925,7 @@ VALIDATE_INSTRUCTION(unreachable)
 VALIDATE_INSTRUCTION(structured_end)
 {
     if (m_entered_scopes.is_empty())
-        return Errors::invalid("usage of structured end");
+        return Errors::invalid("usage of structured end"sv);
 
     auto last_scope = m_entered_scopes.take_last();
     m_context = m_parent_contexts.take_last();
@@ -1938,7 +1938,7 @@ VALIDATE_INSTRUCTION(structured_end)
         m_block_details.take_last();
         break;
     case ChildScopeKind::IfWithElse:
-        return Errors::invalid("usage of if without an else clause that appears to have one anyway");
+        return Errors::invalid("usage of if without an else clause that appears to have one anyway"sv);
     }
 
     auto& results = last_block_type.results();
@@ -1955,10 +1955,10 @@ VALIDATE_INSTRUCTION(structured_end)
 VALIDATE_INSTRUCTION(structured_else)
 {
     if (m_entered_scopes.is_empty())
-        return Errors::invalid("usage of structured else");
+        return Errors::invalid("usage of structured else"sv);
 
     if (m_entered_scopes.last() != ChildScopeKind::IfWithElse)
-        return Errors::invalid("usage of structured else");
+        return Errors::invalid("usage of structured else"sv);
 
     auto& block_type = m_entered_blocks.last();
     auto& results = block_type.results();
@@ -2108,7 +2108,7 @@ VALIDATE_INSTRUCTION(br_table)
 VALIDATE_INSTRUCTION(return_)
 {
     if (!m_context.return_.has_value())
-        return Errors::invalid("use of return outside function");
+        return Errors::invalid("use of return outside function"sv);
 
     auto& return_types = m_context.return_->types();
     for (size_t i = 0; i < return_types.size(); ++i)
@@ -2142,7 +2142,7 @@ VALIDATE_INSTRUCTION(call_indirect)
 
     auto& table = m_context.tables[args.table.value()];
     if (!table.element_type().is_reference())
-        return Errors::invalid("table element type for call.indirect", "a reference type", table.element_type());
+        return Errors::invalid("table element type for call.indirect"sv, "a reference type"sv, table.element_type());
 
     auto& type = m_context.types[args.type.value()];
 
@@ -2170,7 +2170,7 @@ ErrorOr<void, ValidationError> Validator::validate(Instruction const& instructio
 #undef M
     default:
         is_constant = false;
-        return Errors::invalid("instruction opcode");
+        return Errors::invalid("instruction opcode"sv);
     }
 }
 

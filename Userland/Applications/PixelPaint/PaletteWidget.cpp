@@ -264,7 +264,7 @@ Result<void, String> PaletteWidget::save_palette_file(Vector<Color> palette, Cor
 {
     for (auto& color : palette) {
         file.write(color.to_string_without_alpha());
-        file.write("\n");
+        file.write("\n"sv);
     }
     return {};
 }

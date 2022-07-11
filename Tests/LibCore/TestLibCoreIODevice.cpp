@@ -30,7 +30,7 @@ TEST_CASE(file_readline)
     auto outputfile = outfile_or_error.release_value();
     while (file->can_read_line()) {
         outputfile->write(file->read_line());
-        outputfile->write("\n");
+        outputfile->write("\n"sv);
     }
     file->close();
     outputfile->close();
@@ -84,7 +84,7 @@ TEST_CASE(file_lines_range)
     auto outputfile = outfile_or_error.release_value();
     for (auto line : file->lines()) {
         outputfile->write(line);
-        outputfile->write("\n");
+        outputfile->write("\n"sv);
     }
     file->close();
     outputfile->close();

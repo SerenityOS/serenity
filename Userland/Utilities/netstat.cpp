@@ -170,16 +170,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("local_port").to_u32() < b.as_object().get("local_port").to_u32();
+            return a.as_object().get("local_port"sv).to_u32() < b.as_object().get("local_port"sv).to_u32();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto bytes_in = if_object.get("bytes_in").to_string();
-            auto bytes_out = if_object.get("bytes_out").to_string();
+            auto bytes_in = if_object.get("bytes_in"sv).to_string();
+            auto bytes_out = if_object.get("bytes_out"sv).to_string();
 
-            auto peer_address = if_object.get("peer_address").to_string();
+            auto peer_address = if_object.get("peer_address"sv).to_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -191,9 +191,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get("peer_port").to_string();
+            auto peer_port = if_object.get("peer_port"sv).to_string();
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "tcp");
+                auto service = getservbyport(htons(if_object.get("peer_port"sv).to_u32()), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -201,7 +201,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_address = if_object.get("local_address").to_string();
+            auto local_address = if_object.get("local_address"sv).to_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -213,9 +213,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get("local_port").to_string();
+            auto local_port = if_object.get("local_port"sv).to_string();
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "tcp");
+                auto service = getservbyport(htons(if_object.get("local_port"sv).to_u32()), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -223,8 +223,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto state = if_object.get("state").to_string();
-            auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
+            auto state = if_object.get("state"sv).to_string();
+            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get("origin_pid"sv).to_u32() : -1;
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
                 continue;
@@ -257,13 +257,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("local_port").to_u32() < b.as_object().get("local_port").to_u32();
+            return a.as_object().get("local_port"sv).to_u32() < b.as_object().get("local_port"sv).to_u32();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto local_address = if_object.get("local_address").to_string();
+            auto local_address = if_object.get("local_address"sv).to_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -275,9 +275,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get("local_port").to_string();
+            auto local_port = if_object.get("local_port"sv).to_string();
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "udp");
+                auto service = getservbyport(htons(if_object.get("local_port"sv).to_u32()), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -285,7 +285,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_address = if_object.get("peer_address").to_string();
+            auto peer_address = if_object.get("peer_address"sv).to_string();
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -297,9 +297,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get("peer_port").to_string();
+            auto peer_port = if_object.get("peer_port"sv).to_string();
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "udp");
+                auto service = getservbyport(htons(if_object.get("peer_port"sv).to_u32()), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -307,7 +307,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
+            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get("origin_pid"sv).to_u32() : -1;
 
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "udp";

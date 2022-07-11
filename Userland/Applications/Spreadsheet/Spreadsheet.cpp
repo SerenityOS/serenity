@@ -48,7 +48,7 @@ Sheet::Sheet(Workbook& workbook)
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
     // Sadly, these have to be evaluated once per sheet.
-    constexpr StringView runtime_file_path = "/res/js/Spreadsheet/runtime.js";
+    constexpr auto runtime_file_path = "/res/js/Spreadsheet/runtime.js"sv;
     auto file_or_error = Core::File::open(runtime_file_path, Core::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_all();
@@ -94,7 +94,7 @@ size_t Sheet::add_row()
 static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, StringView map = {})
 {
     if (map.is_null())
-        map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"sv;
 
     VERIFY(base >= 2 && base <= map.length());
 
@@ -375,10 +375,10 @@ Vector<CellChange> Sheet::copy_cells(Vector<Position> from, Vector<Position> to,
 RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 {
     auto sheet = adopt_ref(*new Sheet(workbook));
-    auto rows = object.get("rows").to_u32(default_row_count);
-    auto columns = object.get("columns");
-    auto name = object.get("name").as_string_or("Sheet");
-    if (object.has("cells") && !object.has_object("cells"))
+    auto rows = object.get("rows"sv).to_u32(default_row_count);
+    auto columns = object.get("columns"sv);
+    auto name = object.get("name"sv).as_string_or("Sheet");
+    if (object.has("cells"sv) && !object.has_object("cells"sv))
         return {};
 
     sheet->set_name(name);
@@ -403,51 +403,51 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     auto& parse_function = json.as_object().get_without_side_effects("parse").as_function();
 
     auto read_format = [](auto& format, auto const& obj) {
-        if (auto value = obj.get("foreground_color"); value.is_string())
+        if (auto value = obj.get("foreground_color"sv); value.is_string())
             format.foreground_color = Color::from_string(value.as_string());
-        if (auto value = obj.get("background_color"); value.is_string())
+        if (auto value = obj.get("background_color"sv); value.is_string())
             format.background_color = Color::from_string(value.as_string());
     };
 
-    if (object.has_object("cells")) {
-        object.get("cells").as_object().for_each_member([&](auto& name, JsonValue const& value) {
+    if (object.has_object("cells"sv)) {
+        object.get("cells"sv).as_object().for_each_member([&](auto& name, JsonValue const& value) {
             auto position_option = sheet->parse_cell_name(name);
             if (!position_option.has_value())
                 return IterationDecision::Continue;
 
             auto position = position_option.value();
             auto& obj = value.as_object();
-            auto kind = obj.get("kind").as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
+            auto kind = obj.get("kind"sv).as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
 
             OwnPtr<Cell> cell;
             switch (kind) {
             case Cell::LiteralString:
-                cell = make<Cell>(obj.get("value").to_string(), position, *sheet);
+                cell = make<Cell>(obj.get("value"sv).to_string(), position, *sheet);
                 break;
             case Cell::Formula: {
                 auto& interpreter = sheet->interpreter();
-                auto value_or_error = JS::call(interpreter.global_object(), parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
+                auto value_or_error = JS::call(interpreter.global_object(), parse_function, json, JS::js_string(interpreter.heap(), obj.get("value"sv).as_string()));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
                 }
-                cell = make<Cell>(obj.get("source").to_string(), value_or_error.release_value(), position, *sheet);
+                cell = make<Cell>(obj.get("source"sv).to_string(), value_or_error.release_value(), position, *sheet);
                 break;
             }
             }
 
-            auto type_name = obj.has("type") ? obj.get("type").to_string() : "Numeric";
+            auto type_name = obj.has("type"sv) ? obj.get("type"sv).to_string() : "Numeric";
             cell->set_type(type_name);
 
-            auto type_meta = obj.get("type_metadata");
+            auto type_meta = obj.get("type_metadata"sv);
             if (type_meta.is_object()) {
                 auto& meta_obj = type_meta.as_object();
                 auto meta = cell->type_metadata();
-                if (auto value = meta_obj.get("length"); value.is_number())
+                if (auto value = meta_obj.get("length"sv); value.is_number())
                     meta.length = value.to_i32();
-                if (auto value = meta_obj.get("format"); value.is_string())
+                if (auto value = meta_obj.get("format"sv); value.is_string())
                     meta.format = value.as_string();
-                if (auto value = meta_obj.get("alignment"); value.is_string()) {
+                if (auto value = meta_obj.get("alignment"sv); value.is_string()) {
                     auto alignment = Gfx::text_alignment_from_string(value.as_string());
                     if (alignment.has_value())
                         meta.alignment = alignment.value();
@@ -457,7 +457,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell->set_type_metadata(move(meta));
             }
 
-            auto conditional_formats = obj.get("conditional_formats");
+            auto conditional_formats = obj.get("conditional_formats"sv);
             auto cformats = cell->conditional_formats();
             if (conditional_formats.is_array()) {
                 conditional_formats.as_array().for_each([&](const auto& fmt_val) {
@@ -465,7 +465,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                         return IterationDecision::Continue;
 
                     auto& fmt_obj = fmt_val.as_object();
-                    auto fmt_cond = fmt_obj.get("condition").to_string();
+                    auto fmt_cond = fmt_obj.get("condition"sv).to_string();
                     if (fmt_cond.is_empty())
                         return IterationDecision::Continue;
 
@@ -479,7 +479,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell->set_conditional_formats(move(cformats));
             }
 
-            auto evaluated_format = obj.get("evaluated_formats");
+            auto evaluated_format = obj.get("evaluated_formats"sv);
             if (evaluated_format.is_object()) {
                 auto& evaluated_format_obj = evaluated_format.as_object();
                 auto& evaluated_fmts = cell->evaluated_formats();
@@ -722,8 +722,8 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
         return String::formatted("{}(...???{})", function, argument_index);
 
     auto& entry_object = entry.as_object();
-    size_t argc = entry_object.get("argc").to_int(0);
-    auto argnames_value = entry_object.get("argnames");
+    size_t argc = entry_object.get("argc"sv).to_int(0);
+    auto argnames_value = entry_object.get("argnames"sv);
     if (!argnames_value.is_array())
         return String::formatted("{}(...{}???{})", function, argc, argument_index);
     auto& argnames = argnames_value.as_array();
@@ -731,7 +731,7 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     builder.appendff("{}(", function);
     for (size_t i = 0; i < (size_t)argnames.size(); ++i) {
         if (i != 0 && i < (size_t)argnames.size())
-            builder.append(", ");
+            builder.append(", "sv);
         if (i == argument_index)
             builder.append('<');
         else if (i >= argc)

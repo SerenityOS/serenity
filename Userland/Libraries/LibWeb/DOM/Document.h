@@ -50,7 +50,7 @@ public:
         HTML
     };
 
-    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank")
+    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank"sv)
     {
         return adopt_ref(*new Document(url));
     }
@@ -190,7 +190,7 @@ public:
     JS::Realm& realm();
     JS::Interpreter& interpreter();
 
-    JS::Value run_javascript(StringView source, StringView filename = "(unknown)");
+    JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
     ExceptionOr<NonnullRefPtr<Element>> create_element(String const& tag_name);
     ExceptionOr<NonnullRefPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);

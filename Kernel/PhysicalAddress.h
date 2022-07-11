@@ -61,8 +61,8 @@ struct AK::Formatter<PhysicalAddress> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, PhysicalAddress value)
     {
         if constexpr (sizeof(PhysicalPtr) == sizeof(u64))
-            return AK::Formatter<FormatString>::format(builder, "P{:016x}", value.get());
+            return AK::Formatter<FormatString>::format(builder, "P{:016x}"sv, value.get());
         else
-            return AK::Formatter<FormatString>::format(builder, "P{}", value.as_ptr());
+            return AK::Formatter<FormatString>::format(builder, "P{}"sv, value.as_ptr());
     }
 };

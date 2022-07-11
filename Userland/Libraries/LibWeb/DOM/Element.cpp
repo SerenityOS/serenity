@@ -685,10 +685,10 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         if (!pseudo_element_node)
             continue;
         auto object = MUST(children_array.add_object());
-        MUST(object.add("name", String::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
-        MUST(object.add("type", "pseudo-element"));
-        MUST(object.add("parent-id", id()));
-        MUST(object.add("pseudo-element", i));
+        MUST(object.add("name"sv, String::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
+        MUST(object.add("type"sv, "pseudo-element"));
+        MUST(object.add("parent-id"sv, id()));
+        MUST(object.add("pseudo-element"sv, i));
         MUST(object.finish());
     }
 }

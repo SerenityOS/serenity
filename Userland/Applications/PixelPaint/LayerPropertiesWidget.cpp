@@ -23,7 +23,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    auto& group_box = add<GUI::GroupBox>("Layer properties");
+    auto& group_box = add<GUI::GroupBox>("Layer properties"sv);
     auto& layout = group_box.set_layout<GUI::VerticalBoxLayout>();
 
     layout.set_margins({ 8 });

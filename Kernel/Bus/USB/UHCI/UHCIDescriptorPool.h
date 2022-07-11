@@ -30,7 +30,7 @@ class UHCIDescriptorPool {
 public:
     static ErrorOr<NonnullOwnPtr<UHCIDescriptorPool<T>>> try_create(StringView name)
     {
-        auto pool_memory_block = TRY(MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool", Memory::Region::Access::ReadWrite));
+        auto pool_memory_block = TRY(MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
         return adopt_nonnull_own_or_enomem(new (nothrow) UHCIDescriptorPool(move(pool_memory_block), name));
     }
 

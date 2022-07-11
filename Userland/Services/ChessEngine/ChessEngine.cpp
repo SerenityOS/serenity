@@ -13,8 +13,8 @@ using namespace Chess::UCI;
 
 void ChessEngine::handle_uci()
 {
-    send_command(IdCommand(IdCommand::Type::Name, "ChessEngine"));
-    send_command(IdCommand(IdCommand::Type::Author, "the SerenityOS developers"));
+    send_command(IdCommand(IdCommand::Type::Name, "ChessEngine"sv));
+    send_command(IdCommand(IdCommand::Type::Author, "the SerenityOS developers"sv));
     send_command(UCIOkCommand());
 }
 

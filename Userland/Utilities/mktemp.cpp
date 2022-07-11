@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-constexpr StringView default_template = "tmp.XXXXXXXXXX";
+constexpr StringView default_template = "tmp.XXXXXXXXXX"sv;
 
 static String generate_random_filename(String const& pattern)
 {
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         file_template = default_template;
     }
 
-    if (!file_template.find("XXX").has_value()) {
+    if (!file_template.find("XXX"sv).has_value()) {
         if (!quiet)
             warnln("Too few X's in template {}", file_template);
         return 1;

@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     process_remaining(col2_fmt, file2, col2_count, !suppress_col2);
 
     if (print_total)
-        outln(print_color ? COL1_COLOR "\t" COL2_COLOR "\t" COL3_COLOR "\ttotal" : "{}\t{}\t{}\ttotal", col1_count, col2_count, col3_count);
+        outln(print_color ? COL1_COLOR "\t" COL2_COLOR "\t" COL3_COLOR "\ttotal"sv : "{}\t{}\t{}\ttotal"sv, col1_count, col2_count, col3_count);
 
     return 0;
 }

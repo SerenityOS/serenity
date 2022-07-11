@@ -26,18 +26,18 @@ Dialog::ExecResult MessageBox::show(Window* parent_window, StringView text, Stri
 
 Dialog::ExecResult MessageBox::show_error(Window* parent_window, StringView text)
 {
-    return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    return show(parent_window, text, "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
 }
 
 Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
 {
     StringBuilder builder;
-    builder.append("Save changes to ");
+    builder.append("Save changes to "sv);
     if (path.is_empty())
-        builder.append("untitled document");
+        builder.append("untitled document"sv);
     else
         builder.appendff("\"{}\"", LexicalPath::basename(path));
-    builder.append(" before closing?");
+    builder.append(" before closing?"sv);
 
     if (!path.is_empty() && last_unmodified_timestamp.has_value()) {
         auto age = (Time::now_monotonic() - *last_unmodified_timestamp).to_seconds();
@@ -45,7 +45,7 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
         builder.appendff("\nLast saved {} ago.", readable_time);
     }
 
-    auto box = MessageBox::construct(parent_window, builder.string_view(), "Unsaved changes", Type::Warning, InputType::YesNoCancel);
+    auto box = MessageBox::construct(parent_window, builder.string_view(), "Unsaved changes"sv, Type::Warning, InputType::YesNoCancel);
     if (parent_window)
         box->set_icon(parent_window->icon());
 
@@ -76,13 +76,13 @@ RefPtr<Gfx::Bitmap> MessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-information.png").release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-information.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Warning:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-warning.png").release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-warning.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Error:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-error.png").release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-error.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Question:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-question.png").release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-question.png"sv).release_value_but_fixme_should_propagate_errors();
     default:
         return nullptr;
     }

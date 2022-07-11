@@ -127,11 +127,11 @@ String Backtrace::Entry::to_string(bool color) const
     StringBuilder builder;
     builder.appendff("{:p}: ", eip);
     if (object_name.is_empty()) {
-        builder.append("???");
+        builder.append("???"sv);
         return builder.build();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
-    builder.append(" (");
+    builder.append(" ("sv);
 
     Vector<Debug::DebugInfo::SourcePosition> source_positions;
 
@@ -146,10 +146,10 @@ String Backtrace::Entry::to_string(bool color) const
 
     for (size_t i = 0; i < source_positions.size(); ++i) {
         auto& position = source_positions[i];
-        auto fmt = color ? "\033[34;1m{}\033[0m:{}" : "{}:{}";
+        auto fmt = color ? "\033[34;1m{}\033[0m:{}"sv : "{}:{}"sv;
         builder.appendff(fmt, LexicalPath::basename(position.file_path), position.line_number);
         if (i != source_positions.size() - 1) {
-            builder.append(" => ");
+            builder.append(" => "sv);
         }
     }
 

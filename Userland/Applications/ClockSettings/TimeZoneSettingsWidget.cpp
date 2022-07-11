@@ -62,7 +62,7 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
     m_time_zone_map = *find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
     m_time_zone_map->set_bitmap(time_zone_map_bitmap);
 
-    auto time_zone_marker = Gfx::Bitmap::try_load_from_file("/res/icons/32x32/ladyball.png").release_value_but_fixme_should_propagate_errors();
+    auto time_zone_marker = Gfx::Bitmap::try_load_from_file("/res/icons/32x32/ladyball.png"sv).release_value_but_fixme_should_propagate_errors();
     m_time_zone_marker = time_zone_marker->scaled(0.75f, 0.75f).release_value_but_fixme_should_propagate_errors();
 
     set_time_zone_location();
@@ -159,5 +159,5 @@ Optional<Gfx::FloatPoint> TimeZoneSettingsWidget::compute_time_zone_location() c
 
 void TimeZoneSettingsWidget::set_time_zone()
 {
-    GUI::Process::spawn_or_show_error(window(), "/bin/timezone", Array { m_time_zone.characters() });
+    GUI::Process::spawn_or_show_error(window(), "/bin/timezone"sv, Array { m_time_zone.characters() });
 }

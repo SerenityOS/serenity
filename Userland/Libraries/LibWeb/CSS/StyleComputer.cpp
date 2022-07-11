@@ -563,7 +563,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 if (!custom_property_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto custom_property_name = custom_property_name_token.token().ident();
-                if (!custom_property_name.starts_with("--"))
+                if (!custom_property_name.starts_with("--"sv))
                     return false;
 
                 // Detect dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
@@ -962,15 +962,15 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    int slope = Gfx::name_to_slope("Normal");
+    int slope = Gfx::name_to_slope("Normal"sv);
     // FIXME: Implement oblique <angle>
     if (font_style->is_identifier()) {
         switch (static_cast<IdentifierStyleValue const&>(*font_style).id()) {
         case CSS::ValueID::Italic:
-            slope = Gfx::name_to_slope("Italic");
+            slope = Gfx::name_to_slope("Italic"sv);
             break;
         case CSS::ValueID::Oblique:
-            slope = Gfx::name_to_slope("Oblique");
+            slope = Gfx::name_to_slope("Oblique"sv);
             break;
         case CSS::ValueID::Normal:
         default:

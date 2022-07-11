@@ -97,7 +97,7 @@ struct AK::Formatter<NumberFormat> : Formatter<FormatString> {
         identifier_indices.join(", "sv, format.identifier_indices);
 
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {{ {} }} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {{ {} }} }}"sv,
             format.magnitude,
             format.exponent,
             to_underlying(format.plurality),
@@ -173,7 +173,7 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, NumberSystem const& system)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             system.symbols,
             system.primary_grouping_size,
             system.secondary_grouping_size,
@@ -223,7 +223,7 @@ struct AK::Formatter<Unit> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Unit const& system)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {} }}"sv,
             system.unit,
             system.long_formats,
             system.short_formats,
@@ -868,7 +868,7 @@ static constexpr Array<u8, @size@> s_minimum_grouping_digits { { )~~~");
 
     bool first = true;
     for (auto const& locale : locales) {
-        generator.append(first ? " " : ", ");
+        generator.append(first ? " "sv : ", "sv);
         generator.append(String::number(locale_data.locales.find(locale)->value.minimum_grouping_digits));
         first = false;
     }
@@ -884,7 +884,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
 
         bool first = true;
         for (auto const& item : map) {
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             if constexpr (requires { item.value; })
                 generator.append(String::number(item.value));
             else
@@ -895,9 +895,9 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    generate_mapping(generator, locale_data.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
-    generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
-    generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}", nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
+    generate_mapping(generator, locale_data.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
+    generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
+    generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
 
     generator.append(R"~~~(
 static Optional<NumberSystem> keyword_to_number_system(KeywordNumbers keyword)

@@ -14,10 +14,10 @@ String CommentBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
-    builder.append("<!--");
+    builder.append("<!--"sv);
     builder.append(escape_html_entities(m_comment));
     // TODO: This is probably incorrect, because we technically need to escape "--" in some form. However, Browser does not care about this.
-    builder.append("-->\n");
+    builder.append("-->\n"sv);
 
     return builder.build();
 }

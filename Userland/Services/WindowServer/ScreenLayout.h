@@ -37,7 +37,7 @@ public:
         {
 #define __ENUMERATE_MODE_ENUM(val) \
     case Mode::val:                \
-        return #val;
+        return #val##sv;
 
             switch (mode) {
                 __ENUMERATE_MODE_ENUM(Invalid)

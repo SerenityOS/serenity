@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-calculator");
+    auto app_icon = GUI::Icon::default_icon("app-calculator"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Calculator");
@@ -57,13 +57,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     auto& constants_menu = window->add_menu("&Constants");
-    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/pi.png")), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
         widget->set_entry(KeypadValue { 31415926535, 10 });
     }));
-    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/eulers_number.png")), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
         widget->set_entry(KeypadValue { 27182818284, 10 });
     }));
-    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png")), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_entry(KeypadValue { 16180339887, 10 });
     }));
 

@@ -449,7 +449,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         : TypedArray(prototype,                                                                                                        \
             reinterpret_cast<TypedArrayBase::IntrinsicConstructor>(&GlobalObject::snake_name##_constructor), length, array_buffer)     \
     {                                                                                                                                  \
-        if constexpr (StringView { #ClassName }.is_one_of("BigInt64Array", "BigUint64Array"))                                          \
+        if constexpr (#ClassName##sv.is_one_of("BigInt64Array", "BigUint64Array"))                                                     \
             m_content_type = ContentType::BigInt;                                                                                      \
         else                                                                                                                           \
             m_content_type = ContentType::Number;                                                                                      \

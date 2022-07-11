@@ -90,7 +90,7 @@ template<class Parser>
 String Regex<Parser>::error_string(Optional<String> message) const
 {
     StringBuilder eb;
-    eb.append("Error during parsing of regular expression:\n");
+    eb.append("Error during parsing of regular expression:\n"sv);
     eb.appendff("    {}\n    ", pattern_value);
     for (size_t i = 0; i < parser_result.error_token.position(); ++i)
         eb.append(' ');

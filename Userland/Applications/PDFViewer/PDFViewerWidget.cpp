@@ -65,13 +65,13 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_reset_zoom_action);
 
     auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
 }
 
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
-        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
             m_sidebar->set_fixed_width(m_sidebar_open ? 200 : 0);
         },
@@ -82,13 +82,13 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*open_outline_action);
     toolbar.add_separator();
 
-    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-up.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
         m_page_text_box->set_current_number(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
-    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-down.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
         m_page_text_box->set_current_number(m_viewer->current_page() + 2);
     });

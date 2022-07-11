@@ -58,7 +58,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::Select:
         return parse_select_statement({});
     default:
-        expected("CREATE, ALTER, DROP, DESCRIBE, INSERT, UPDATE, DELETE, or SELECT");
+        expected("CREATE, ALTER, DROP, DESCRIBE, INSERT, UPDATE, DELETE, or SELECT"sv);
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -75,7 +75,7 @@ NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<Com
     case TokenType::Select:
         return parse_select_statement(move(common_table_expression_list));
     default:
-        expected("INSERT, UPDATE, DELETE, or SELECT");
+        expected("INSERT, UPDATE, DELETE, or SELECT"sv);
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -226,7 +226,7 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
                     chained_expressions.append(static_ptr_cast<ChainedExpression>(chained_expression.release_nonnull()));
                 }
             } else {
-                expected("Chained expression");
+                expected("Chained expression"sv);
             }
         });
     } else if (match(TokenType::Select)) {
@@ -381,7 +381,7 @@ RefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
     parse_comma_separated_list(false, [&]() { common_table_expression.append(parse_common_table_expression()); });
 
     if (common_table_expression.is_empty()) {
-        expected("Common table expression list");
+        expected("Common table expression list"sv);
         return {};
     }
 
@@ -432,7 +432,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     if (auto expression = parse_exists_expression(false))
         return expression.release_nonnull();
 
-    expected("Primary Expression");
+    expected("Primary Expression"sv);
     consume();
 
     return create_ast_node<ErrorExpression>();
@@ -465,7 +465,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     if (auto expression = parse_in_expression(primary, invert_expression))
         return expression.release_nonnull();
 
-    expected("Secondary Expression");
+    expected("Secondary Expression"sv);
     consume();
 
     return create_ast_node<ErrorExpression>();
@@ -805,13 +805,13 @@ RefPtr<Expression> Parser::parse_between_expression(NonnullRefPtr<Expression> ex
 
     auto nested = parse_expression();
     if (!is<BinaryOperatorExpression>(*nested)) {
-        expected("Binary Expression");
+        expected("Binary Expression"sv);
         return create_ast_node<ErrorExpression>();
     }
 
     auto const& binary_expression = static_cast<BinaryOperatorExpression const&>(*nested);
     if (binary_expression.type() != BinaryOperator::And) {
-        expected("AND Expression");
+        expected("AND Expression"sv);
         return create_ast_node<ErrorExpression>();
     }
 
@@ -903,7 +903,7 @@ NonnullRefPtr<SignedNumber> Parser::parse_signed_number()
         return create_ast_node<SignedNumber>(is_positive ? number : (number * -1));
     }
 
-    expected("NumericLiteral");
+    expected("NumericLiteral"sv);
     return create_ast_node<SignedNumber>(0);
 }
 
@@ -1047,7 +1047,7 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
         else if (consume_if(TokenType::Last))
             nulls = Nulls::Last;
         else
-            expected("FIRST or LAST");
+            expected("FIRST or LAST"sv);
     }
 
     return create_ast_node<OrderingTerm>(move(expression), move(collation_name), order, nulls);
@@ -1080,7 +1080,7 @@ ConflictResolution Parser::parse_conflict_resolution()
         if (consume_if(TokenType::Rollback))
             return ConflictResolution::Rollback;
 
-        expected("ABORT, FAIL, IGNORE, REPLACE, or ROLLBACK");
+        expected("ABORT, FAIL, IGNORE, REPLACE, or ROLLBACK"sv);
     }
 
     return ConflictResolution::Abort;

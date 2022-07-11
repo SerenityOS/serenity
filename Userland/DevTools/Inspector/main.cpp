@@ -48,10 +48,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pid_t pid;
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-inspector"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-inspector"sv));
     if (gui_mode) {
     choose_pid:
-        auto process_chooser = TRY(GUI::ProcessChooser::try_create("Inspector", "Inspect", app_icon.bitmap_for_size(16)));
+        auto process_chooser = TRY(GUI::ProcessChooser::try_create("Inspector"sv, "Inspect"sv, app_icon.bitmap_for_size(16)));
         if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return 0;
         pid = process_chooser->pid();
@@ -65,13 +65,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
 
     if (pid == getpid()) {
-        GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window, "Cannot inspect Inspector itself!"sv, "Error"sv, GUI::MessageBox::Type::Error);
         return 1;
     }
 
     RemoteProcess remote_process(pid);
     if (!remote_process.is_inspectable()) {
-        GUI::MessageBox::show(window, String::formatted("Process pid={} is not inspectable", remote_process.pid()), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window, String::formatted("Process pid={} is not inspectable", remote_process.pid()), "Error"sv, GUI::MessageBox::Type::Error);
         if (gui_mode) {
             goto choose_pid;
         } else {
@@ -126,7 +126,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto properties_tree_view_context_menu = TRY(GUI::Menu::try_create("Properties Tree View"));
 
-    auto copy_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors();
+    auto copy_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors();
     auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_string());
     });

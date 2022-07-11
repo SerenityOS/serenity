@@ -88,7 +88,7 @@ public:
         case State::TimeWait:
             return "TimeWait"sv;
         default:
-            return "None";
+            return "None"sv;
         }
     }
 

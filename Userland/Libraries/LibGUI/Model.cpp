@@ -108,7 +108,7 @@ RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
     selection.for_each_index([&](auto& index) {
         auto text_data = index.data();
         if (!first)
-            text_builder.append(", ");
+            text_builder.append(", "sv);
         text_builder.append(text_data.to_string());
 
         if (!first)

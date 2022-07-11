@@ -34,7 +34,7 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
     if (active_file.is_null())
         return Error::from_string_literal("no active file");
 
-    if (active_file.ends_with(".js")) {
+    if (active_file.ends_with(".js"sv)) {
         TRY(m_terminal->run_command(String::formatted("js -A {}", active_file)));
         return {};
     }
@@ -60,7 +60,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
     if (active_file.is_null())
         return Error::from_string_literal("no active file");
 
-    if (active_file.ends_with(".js")) {
+    if (active_file.ends_with(".js"sv)) {
         TRY(m_terminal->run_command(String::formatted("js {}", active_file)));
         return {};
     }
@@ -129,7 +129,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
         }
     }
 
-    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt").string();
+    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
     if (Core::File::exists(cmake_file_path))
         MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
 
@@ -148,7 +148,7 @@ Optional<String> ProjectBuilder::find_cmake_file_for(StringView file_path) const
 {
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
-        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt");
+        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
         if (Core::File::exists(cmake_path.string()))
             return cmake_path.string();
         directory = LexicalPath::dirname(directory);

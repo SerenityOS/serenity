@@ -45,11 +45,11 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     };
     m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
 
-    auto mouse_settings_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-mouse.png").release_value_but_fixme_should_propagate_errors();
+    auto mouse_settings_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-mouse.png"sv).release_value_but_fixme_should_propagate_errors();
     m_cursor_themes_button = *find_descendant_of_type_named<GUI::Button>("cursor_themes_button");
     m_cursor_themes_button->set_icon(mouse_settings_icon);
     m_cursor_themes_button->on_click = [&](auto) {
-        GUI::Process::spawn_or_show_error(window(), "/bin/MouseSettings", Array { "-t", "cursor-theme" });
+        GUI::Process::spawn_or_show_error(window(), "/bin/MouseSettings"sv, Array { "-t", "cursor-theme" });
     };
 
     GUI::Application::the()->on_theme_change = [&]() {

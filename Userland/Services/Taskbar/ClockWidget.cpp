@@ -21,7 +21,7 @@ ClockWidget::ClockWidget()
     set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(1);
 
-    update_format(Config::read_string("Taskbar", "Clock", "TimeFormat", "%T"));
+    update_format(Config::read_string("Taskbar"sv, "Clock"sv, "TimeFormat"sv, "%T"sv));
 
     m_timer = add<Core::Timer>(1000, [this] {
         static time_t last_update_time;
@@ -29,7 +29,7 @@ ClockWidget::ClockWidget()
         if (now != last_update_time) {
             tick_clock();
             last_update_time = now;
-            set_tooltip(Core::DateTime::now().to_string("%Y-%m-%d"));
+            set_tooltip(Core::DateTime::now().to_string("%Y-%m-%d"sv));
         }
     });
 
@@ -58,7 +58,7 @@ ClockWidget::ClockWidget()
     m_prev_date = navigation_container.add<GUI::Button>();
     m_prev_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_prev_date->set_fixed_size(24, 24);
-    m_prev_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors());
+    m_prev_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors());
     m_prev_date->on_click = [&](auto) {
         unsigned view_month = m_calendar->view_month();
         unsigned view_year = m_calendar->view_year();
@@ -92,7 +92,7 @@ ClockWidget::ClockWidget()
     m_next_date = navigation_container.add<GUI::Button>();
     m_next_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_next_date->set_fixed_size(24, 24);
-    m_next_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors());
+    m_next_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors());
     m_next_date->on_click = [&](auto) {
         unsigned view_month = m_calendar->view_month();
         unsigned view_year = m_calendar->view_year();
@@ -142,7 +142,7 @@ ClockWidget::ClockWidget()
     m_jump_to_button = settings_container.add<GUI::Button>();
     m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_jump_to_button->set_fixed_size(24, 24);
-    m_jump_to_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png").release_value_but_fixme_should_propagate_errors());
+    m_jump_to_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png"sv).release_value_but_fixme_should_propagate_errors());
     m_jump_to_button->set_tooltip("Jump to today");
     m_jump_to_button->on_click = [this](auto) {
         jump_to_current_date();
@@ -151,10 +151,10 @@ ClockWidget::ClockWidget()
     m_calendar_launcher = settings_container.add<GUI::Button>();
     m_calendar_launcher->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_calendar_launcher->set_fixed_size(24, 24);
-    m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png").release_value_but_fixme_should_propagate_errors());
+    m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png"sv).release_value_but_fixme_should_propagate_errors());
     m_calendar_launcher->set_tooltip("Calendar");
     m_calendar_launcher->on_click = [this](auto) {
-        GUI::Process::spawn_or_show_error(window(), "/bin/Calendar");
+        GUI::Process::spawn_or_show_error(window(), "/bin/Calendar"sv);
     };
 }
 

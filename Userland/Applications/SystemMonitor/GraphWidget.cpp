@@ -153,8 +153,8 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
             text_rect.set_height(font().glyph_height());
             auto text = format.text_formatter(current_values[i]);
             if (format.text_shadow_color != Color::Transparent)
-                painter.draw_text(text_rect.translated(1, 1), text.characters(), Gfx::TextAlignment::CenterRight, format.text_shadow_color);
-            painter.draw_text(text_rect, text.characters(), Gfx::TextAlignment::CenterRight, graph_color);
+                painter.draw_text(text_rect.translated(1, 1), text, Gfx::TextAlignment::CenterRight, format.text_shadow_color);
+            painter.draw_text(text_rect, text, Gfx::TextAlignment::CenterRight, graph_color);
             y += text_rect.height() + 4;
         }
     }

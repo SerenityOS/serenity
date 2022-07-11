@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-magnifier");
+    auto app_icon = GUI::Icon::default_icon("app-magnifier"sv);
 
     // 4px on each side for padding
     constexpr int window_dimensions = 200 + 4 + 4;
@@ -78,13 +78,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
     auto previous_frame_action = GUI::Action::create(
-        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png")), [&](auto&) {
+        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_previous_frame();
         });
     auto next_frame_action = GUI::Action::create(
-        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png")), [&](auto&) {
+        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_next_frame();

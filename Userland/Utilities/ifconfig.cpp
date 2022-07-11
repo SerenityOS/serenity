@@ -43,16 +43,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         json.as_array().for_each([](auto& value) {
             auto& if_object = value.as_object();
 
-            auto name = if_object.get("name").to_string();
-            auto class_name = if_object.get("class_name").to_string();
-            auto mac_address = if_object.get("mac_address").to_string();
-            auto ipv4_address = if_object.get("ipv4_address").to_string();
-            auto netmask = if_object.get("ipv4_netmask").to_string();
-            auto packets_in = if_object.get("packets_in").to_u32();
-            auto bytes_in = if_object.get("bytes_in").to_u32();
-            auto packets_out = if_object.get("packets_out").to_u32();
-            auto bytes_out = if_object.get("bytes_out").to_u32();
-            auto mtu = if_object.get("mtu").to_u32();
+            auto name = if_object.get("name"sv).to_string();
+            auto class_name = if_object.get("class_name"sv).to_string();
+            auto mac_address = if_object.get("mac_address"sv).to_string();
+            auto ipv4_address = if_object.get("ipv4_address"sv).to_string();
+            auto netmask = if_object.get("ipv4_netmask"sv).to_string();
+            auto packets_in = if_object.get("packets_in"sv).to_u32();
+            auto bytes_in = if_object.get("bytes_in"sv).to_u32();
+            auto packets_out = if_object.get("packets_out"sv).to_u32();
+            auto bytes_out = if_object.get("bytes_out"sv).to_u32();
+            auto mtu = if_object.get("mtu"sv).to_u32();
 
             outln("{}:", name);
             outln("\tmac: {}", mac_address);

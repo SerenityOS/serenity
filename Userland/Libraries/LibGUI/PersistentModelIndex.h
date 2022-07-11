@@ -76,7 +76,7 @@ template<>
 struct Formatter<GUI::PersistentModelIndex> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, GUI::PersistentModelIndex const& value)
     {
-        return Formatter<FormatString>::format(builder, "PersistentModelIndex({},{},{})", value.row(), value.column(), value.internal_data());
+        return Formatter<FormatString>::format(builder, "PersistentModelIndex({},{},{})"sv, value.row(), value.column(), value.internal_data());
     }
 };
 

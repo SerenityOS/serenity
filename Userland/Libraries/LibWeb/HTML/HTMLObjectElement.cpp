@@ -175,7 +175,7 @@ void HTMLObjectElement::resource_did_load()
 
         // FIXME: For now, ignore application/ MIME types as we cannot render yet them anyways. We will need to implement the MIME type sniffing
         //        algorithm in order to map all unknown MIME types to "application/octet-stream".
-        else if (auto type = resource()->mime_type(); !type.starts_with("application/"))
+        else if (auto type = resource()->mime_type(); !type.starts_with("application/"sv))
             tentative_type = move(type);
 
         // 2. If tentative type is not application/octet-stream, then let resource type be tentative type and jump to the step below labeled handler.
@@ -195,7 +195,7 @@ static bool is_xml_mime_type(StringView resource_type)
         return false;
 
     // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
-    if (mime_type->subtype().ends_with("+xml"))
+    if (mime_type->subtype().ends_with("+xml"sv))
         return true;
 
     return mime_type->essence().is_one_of("text/xml"sv, "application/xml"sv);

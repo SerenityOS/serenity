@@ -153,9 +153,9 @@ struct ParsedDHCPv4Options {
     String to_string() const
     {
         StringBuilder builder;
-        builder.append("DHCP Options (");
+        builder.append("DHCP Options ("sv);
         builder.appendff("{}", options.size());
-        builder.append(" entries)\n");
+        builder.append(" entries)\n"sv);
         for (auto& opt : options) {
             builder.appendff("\toption {} ({} bytes):", (u8)opt.key, (u8)opt.value.length);
             for (auto i = 0; i < opt.value.length; ++i)

@@ -23,7 +23,7 @@ static constexpr Gfx::CharacterBitmap s_arrow_bitmap {
     "   ###   "
     "   ##    "
     "   #     "
-    "         ",
+    "         "sv,
     9, 9
 };
 

@@ -31,12 +31,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(selected_tab, "Tab, one of 'cursor-theme', 'cursor-highlight',  or 'mouse'", "open-tab", 't', "tab");
     args_parser.parse(arguments);
 
-    auto app_icon = GUI::Icon::default_icon("app-mouse");
+    auto app_icon = GUI::Icon::default_icon("app-mouse"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<MouseWidget>("Mouse", "mouse"));
-    (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme", "cursor-theme"));
-    (void)TRY(window->add_tab<HighlightWidget>("Cursor Highlight", "cursor-highlight"));
+    (void)TRY(window->add_tab<MouseWidget>("Mouse"sv, "mouse"sv));
+    (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme"sv, "cursor-theme"sv));
+    (void)TRY(window->add_tab<HighlightWidget>("Cursor Highlight"sv, "cursor-highlight"sv));
 
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_active_tab(selected_tab);

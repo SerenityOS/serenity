@@ -17,13 +17,13 @@
 SnakeGame::SnakeGame()
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png").release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png"sv).release_value_but_fixme_should_propagate_errors());
     reset();
 
-    m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);
+    m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
     m_high_score_text = String::formatted("Best: {}", m_high_score);
 }
 
@@ -126,7 +126,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
             m_high_score = m_score;
             m_high_score_text = String::formatted("Best: {}", m_high_score);
             update(high_score_rect());
-            Config::write_i32("Snake", "Snake", "HighScore", m_high_score);
+            Config::write_i32("Snake"sv, "Snake"sv, "HighScore"sv, m_high_score);
         }
         update(score_rect());
         dirty_cells.append(m_fruit);

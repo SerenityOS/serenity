@@ -101,25 +101,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("destination").to_string() < b.as_object().get("destination").to_string();
+            return a.as_object().get("destination"sv).to_string() < b.as_object().get("destination"sv).to_string();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto destination = if_object.get("destination").to_string();
-            auto gateway = if_object.get("gateway").to_string();
-            auto genmask = if_object.get("genmask").to_string();
-            auto interface = if_object.get("interface").to_string();
-            auto flags = if_object.get("flags").to_u32();
+            auto destination = if_object.get("destination"sv).to_string();
+            auto gateway = if_object.get("gateway"sv).to_string();
+            auto genmask = if_object.get("genmask"sv).to_string();
+            auto interface = if_object.get("interface"sv).to_string();
+            auto flags = if_object.get("flags"sv).to_u32();
 
             StringBuilder flags_builder;
             if (flags & RTF_UP)
-                flags_builder.append("U");
+                flags_builder.append('U');
             if (flags & RTF_GATEWAY)
-                flags_builder.append("G");
+                flags_builder.append('G');
             if (flags & RTF_HOST)
-                flags_builder.append("H");
+                flags_builder.append('H');
 
             if (destination_column != -1)
                 columns[destination_column].buffer = destination;

@@ -405,7 +405,7 @@ void StackingContext::dump(int indent) const
     if (m_box.computed_values().z_index().has_value())
         builder.appendff("{}", m_box.computed_values().z_index().value());
     else
-        builder.append("auto");
+        builder.append("auto"sv);
     builder.append(')');
 
     auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());

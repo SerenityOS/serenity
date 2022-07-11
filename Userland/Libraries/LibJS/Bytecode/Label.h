@@ -30,6 +30,6 @@ template<>
 struct AK::Formatter<JS::Bytecode::Label> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Bytecode::Label const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "@{}", value.block().name());
+        return AK::Formatter<FormatString>::format(builder, "@{}"sv, value.block().name());
     }
 };

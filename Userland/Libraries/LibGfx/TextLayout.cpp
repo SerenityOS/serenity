@@ -187,7 +187,7 @@ String TextLayout::elide_text_from_right(Utf8View text, bool force_elision) cons
 {
     size_t text_width = m_font->width(text);
     if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {
-        size_t ellipsis_width = m_font->width("...");
+        size_t ellipsis_width = m_font->width("..."sv);
         size_t current_width = ellipsis_width;
         size_t glyph_spacing = m_font->glyph_spacing();
 
@@ -211,7 +211,7 @@ String TextLayout::elide_text_from_right(Utf8View text, bool force_elision) cons
 
             StringBuilder builder;
             builder.append(text.substring_view(0, offset).as_string());
-            builder.append("...");
+            builder.append("..."sv);
             return builder.to_string();
         }
     }

@@ -37,7 +37,7 @@ protected:
 private:
     ErrorOr<void> try_generate(KBufferBuilder&);
     virtual ErrorOr<void> refresh_data(OpenFileDescription& description) const override;
-    mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
+    mutable Mutex m_lock { "SysFSUSBDeviceInformation"sv };
     NonnullOwnPtr<KString> m_device_name;
 };
 

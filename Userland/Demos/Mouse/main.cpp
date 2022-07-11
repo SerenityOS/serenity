@@ -160,7 +160,7 @@ private:
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-mouse"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-mouse"sv));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));

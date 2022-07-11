@@ -759,7 +759,7 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     auto name = m_class_expression.name();
     auto scope = interpreter.ast_interpreter_scope();
     auto& ast_interpreter = scope.interpreter();
-    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? "" : name));
+    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? ""sv : name));
     interpreter.accumulator() = class_object;
     return {};
 }
@@ -810,7 +810,7 @@ String NewBigInt::to_string_impl(Bytecode::Executable const&) const
 String NewArray::to_string_impl(Bytecode::Executable const&) const
 {
     StringBuilder builder;
-    builder.append("NewArray");
+    builder.append("NewArray"sv);
     if (m_element_count != 0) {
         builder.appendff(" [{}-{}]", m_elements[0], m_elements[1]);
     }
@@ -842,7 +842,7 @@ String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&
     StringBuilder builder;
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
     if (m_excluded_names_count != 0) {
-        builder.append(" excluding:[");
+        builder.append(" excluding:["sv);
         for (size_t i = 0; i < m_excluded_names_count; ++i) {
             builder.appendff("{}", m_excluded_names[i]);
             if (i != m_excluded_names_count - 1)
@@ -950,7 +950,7 @@ String Call::to_string_impl(Bytecode::Executable const&) const
     StringBuilder builder;
     builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
     if (m_argument_count != 0) {
-        builder.append(", arguments:[");
+        builder.append(", arguments:["sv);
         for (size_t i = 0; i < m_argument_count; ++i) {
             builder.appendff("{}", m_arguments[i]);
             if (i != m_argument_count - 1)
@@ -1024,14 +1024,14 @@ String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
 String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
-    builder.append("PushDeclarativeEnvironment");
+    builder.append("PushDeclarativeEnvironment"sv);
     if (!m_variables.is_empty()) {
-        builder.append(" {");
+        builder.append(" {"sv);
         Vector<String> names;
         for (auto& it : m_variables)
             names.append(executable.get_string(it.key));
-        builder.join(", ", names);
         builder.append("}");
+        builder.join(", "sv, names);
     }
     return builder.to_string();
 }

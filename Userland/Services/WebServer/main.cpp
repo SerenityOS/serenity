@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res/icons", "r"));
-    TRY(Core::System::unveil(real_root_path.characters(), "r"));
+    TRY(Core::System::unveil(real_root_path, "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     TRY(Core::System::pledge("stdio accept rpath"));

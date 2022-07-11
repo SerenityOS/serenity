@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     if (paths.is_empty())
-        paths.append(".");
+        paths.append("."sv);
 
     Vector<FileMetadata> files;
     for (auto& path : paths) {
@@ -267,7 +267,7 @@ static size_t print_name(const struct stat& st, String const& name, char const* 
         else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
         printf("%s", begin_color);
-        nprinted = print_escaped(name.characters());
+        nprinted = print_escaped(name);
         printf("%s", end_color);
     }
     if (S_ISLNK(st.st_mode)) {
@@ -276,7 +276,7 @@ static size_t print_name(const struct stat& st, String const& name, char const* 
             if (link_destination_or_error.is_error()) {
                 perror("readlink");
             } else {
-                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value().characters());
+                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value());
             }
         } else {
             if (flag_classify)

@@ -54,9 +54,9 @@ void MouseCursorModel::invalidate()
 
     while (iterator.has_next()) {
         auto path = iterator.next_full_path();
-        if (path.ends_with(".ini"))
+        if (path.ends_with(".ini"sv))
             continue;
-        if (path.contains("2x"))
+        if (path.contains("2x"sv))
             continue;
 
         Cursor cursor;

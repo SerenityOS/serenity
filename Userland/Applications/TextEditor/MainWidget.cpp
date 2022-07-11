@@ -76,10 +76,10 @@ MainWidget::MainWidget()
     m_replace_widget = *find_descendant_of_type_named<GUI::Widget>("replace_widget");
 
     m_find_textbox = *find_descendant_of_type_named<GUI::TextBox>("find_textbox");
-    m_find_textbox->set_placeholder("Find");
+    m_find_textbox->set_placeholder("Find"sv);
 
     m_replace_textbox = *find_descendant_of_type_named<GUI::TextBox>("replace_textbox");
-    m_replace_textbox->set_placeholder("Replace");
+    m_replace_textbox->set_placeholder("Replace"sv);
 
     m_match_case_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("match_case_checkbox");
     m_match_case_checkbox->on_checked = [this](auto is_checked) {
@@ -99,11 +99,11 @@ MainWidget::MainWidget()
     };
     m_wrap_around_checkbox->set_checked(true);
 
-    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResutls::Yes);
     });
 
-    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResutls::Yes);
     });
 
@@ -122,7 +122,7 @@ MainWidget::MainWidget()
         } else {
             GUI::MessageBox::show(window(),
                 String::formatted("Not found: \"{}\"", needle),
-                "Not found",
+                "Not found"sv,
                 GUI::MessageBox::Type::Information);
         }
     });
@@ -147,11 +147,11 @@ MainWidget::MainWidget()
 
     m_find_previous_button = *find_descendant_of_type_named<GUI::Button>("find_previous_button");
     m_find_previous_button->set_action(*m_find_previous_action);
-    m_find_previous_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png").release_value_but_fixme_should_propagate_errors());
+    m_find_previous_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_find_next_button = *find_descendant_of_type_named<GUI::Button>("find_next_button");
     m_find_next_button->set_action(*m_find_next_action);
-    m_find_next_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors());
+    m_find_next_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_find_textbox->on_return_pressed = [this] {
         m_find_next_button->click();
@@ -191,7 +191,7 @@ MainWidget::MainWidget()
     });
     m_vim_emulation_setting_action->set_checked(false);
 
-    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
@@ -216,7 +216,7 @@ MainWidget::MainWidget()
     m_statusbar->segment(1).set_clickable(true);
     m_statusbar->segment(1).set_menu(m_syntax_statusbar_menu);
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    auto width = font().width("Ln 0000, Col 000") + font().max_glyph_width();
+    auto width = font().width("Ln 0000, Col 000"sv) + font().max_glyph_width();
     m_statusbar->segment(2).set_fixed_width(width);
     m_statusbar->segment(2).set_clickable(true);
     m_statusbar->segment(2).set_menu(m_line_column_statusbar_menu);
@@ -236,7 +236,7 @@ MainWidget::MainWidget()
     m_editor->on_selection_change = [this] { update_statusbar(); };
     m_editor->on_highlighter_change = [this] { update_statusbar(); };
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
@@ -273,7 +273,7 @@ MainWidget::MainWidget()
 
         auto file = response.release_value();
         if (!m_editor->write_to_file(*file)) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -291,7 +291,7 @@ MainWidget::MainWidget()
             return;
 
         if (!m_editor->write_to_file(*response.value())) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
         }
     });
 
@@ -327,7 +327,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
                 GUI::MessageBox::show(
                     window(),
                     String::formatted("The link to '{}' could not be opened.", url),
-                    "Failed to open link",
+                    "Failed to open link"sv,
                     GUI::MessageBox::Type::Error);
             }
         };
@@ -389,26 +389,26 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         action.is_checked() ? m_toolbar_container->set_visible(true) : m_toolbar_container->set_visible(false);
-        Config::write_bool("TextEditor", "Layout", "ShowToolbar", action.is_checked());
+        Config::write_bool("TextEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
-    auto show_toolbar = Config::read_bool("TextEditor", "Layout", "ShowToolbar", true);
+    auto show_toolbar = Config::read_bool("TextEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
 
     m_layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
-        Config::write_bool("TextEditor", "Layout", "ShowStatusbar", action.is_checked());
+        Config::write_bool("TextEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
         update_statusbar();
     });
-    auto show_statusbar = Config::read_bool("TextEditor", "Layout", "ShowStatusbar", true);
+    auto show_statusbar = Config::read_bool("TextEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 
     m_layout_ruler_action = GUI::Action::create_checkable("&Ruler", [&](auto& action) {
         action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
-        Config::write_bool("TextEditor", "Layout", "ShowRuler", action.is_checked());
+        Config::write_bool("TextEditor"sv, "Layout"sv, "ShowRuler"sv, action.is_checked());
     });
-    auto show_ruler = Config::read_bool("TextEditor", "Layout", "ShowRuler", true);
+    auto show_ruler = Config::read_bool("TextEditor"sv, "Layout"sv, "ShowRuler"sv, true);
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
@@ -420,7 +420,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     view_menu.add_separator();
 
-    view_menu.add_action(GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(),
+    view_menu.add_action(GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, &m_editor->font(), false);
             if (picker->exec() == GUI::Dialog::ExecResult::OK) {
@@ -435,15 +435,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-        Config::write_string("TextEditor", "View", "WrappingMode", "None");
+        Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "None"sv);
     });
     m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
-        Config::write_string("TextEditor", "View", "WrappingMode", "Anywhere");
+        Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "Anywhere"sv);
     });
     m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
-        Config::write_string("TextEditor", "View", "WrappingMode", "Words");
+        Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "Words"sv);
     });
 
     m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
@@ -454,7 +454,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
     wrapping_mode_menu.add_action(*m_wrap_at_words_action);
 
-    auto word_wrap = Config::read_string("TextEditor", "View", "WrappingMode", "Words");
+    auto word_wrap = Config::read_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "Words"sv);
     if (word_wrap == "None") {
         m_no_wrapping_action->set_checked(true);
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
@@ -610,7 +610,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window));
 
     auto& wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode");
     wrapping_statusbar_menu.add_action(*m_no_wrapping_action);
@@ -691,10 +691,10 @@ void MainWidget::update_title()
 {
     StringBuilder builder;
     if (m_path.is_empty())
-        builder.append("Untitled");
+        builder.append("Untitled"sv);
     else
         builder.append(m_path);
-    builder.append("[*] - Text Editor");
+    builder.append("[*] - Text Editor"sv);
     window()->set_title(builder.to_string());
 }
 
@@ -742,7 +742,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         if (urls.size() > 1) {
-            GUI::MessageBox::show(window(), "TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "TextEditor can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -854,7 +854,7 @@ void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessa
     if (!result.is_valid() && show_message == ShowMessageIfNoResutls::Yes) {
         GUI::MessageBox::show(window(),
             String::formatted("Not found: \"{}\"", needle),
-            "Not found",
+            "Not found"sv,
             GUI::MessageBox::Type::Information);
     }
 }

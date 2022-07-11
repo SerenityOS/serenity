@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    auto app_icon = GUI::Icon::default_icon("app-sql-studio");
+    auto app_icon = GUI::Icon::default_icon("app-sql-studio"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 480);

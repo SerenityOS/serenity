@@ -2274,7 +2274,7 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
     auto reload_cursor = [&](RefPtr<Cursor>& cursor, String const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
-        static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";
+        static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
         cursor = Cursor::create(String::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor", name)), s_default_cursor_path);
 
         if (is_current_cursor) {

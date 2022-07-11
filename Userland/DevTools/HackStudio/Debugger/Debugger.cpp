@@ -154,7 +154,7 @@ int Debugger::debugger_loop()
             return Debug::DebugSession::DebugDecision::SingleStep;
 
         // We currently do no support stepping through assembly source
-        if (source_position.value().file_path.ends_with(".S"))
+        if (source_position.value().file_path.ends_with(".S"sv))
             return Debug::DebugSession::DebugDecision::SingleStep;
 
         VERIFY(source_position.has_value());

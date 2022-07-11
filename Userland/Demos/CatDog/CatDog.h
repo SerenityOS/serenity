@@ -74,28 +74,28 @@ private:
 
     RefPtr<Core::File> m_proc_all;
 
-    NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_artist = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_inspector = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nwrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_nwrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_serun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_serun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_sleep1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_sleep2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_srun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_srun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_still = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_swrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_swrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_wrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png").release_value_but_fixme_should_propagate_errors();
-    NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png").release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_artist = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_inspector = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nwrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_nwrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_serun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_serun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_sleep1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_sleep2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_srun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_srun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_still = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_swrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_swrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_wrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png"sv).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png"sv).release_value_but_fixme_should_propagate_errors();
 
     NonnullRefPtr<Gfx::Bitmap> m_curr_bmp = m_alert;
 

@@ -159,11 +159,11 @@ static ErrorOr<void> print_mounts()
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
-        auto class_name = fs_object.get("class_name").to_string();
-        auto mount_point = fs_object.get("mount_point").to_string();
-        auto source = fs_object.get("source").as_string_or("none");
-        auto readonly = fs_object.get("readonly").to_bool();
-        auto mount_flags = fs_object.get("mount_flags").to_int();
+        auto class_name = fs_object.get("class_name"sv).to_string();
+        auto mount_point = fs_object.get("mount_point"sv).to_string();
+        auto source = fs_object.get("source"sv).as_string_or("none");
+        auto readonly = fs_object.get("readonly"sv).to_bool();
+        auto mount_flags = fs_object.get("mount_flags"sv).to_int();
 
         out("{} on {} type {} (", source, mount_point, class_name);
 
@@ -219,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!source.is_empty() && !mountpoint.is_empty()) {
         if (fs_type.is_empty())
-            fs_type = "ext2";
+            fs_type = "ext2"sv;
         int flags = !options.is_empty() ? parse_options(options) : 0;
 
         int fd = get_source_fd(source);

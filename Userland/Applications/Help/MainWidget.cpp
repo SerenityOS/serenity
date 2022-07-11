@@ -94,7 +94,7 @@ MainWidget::MainWidget()
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.protocol() == "file") {
             auto path = url.path();
-            if (!path.starts_with("/usr/share/man/")) {
+            if (!path.starts_with("/usr/share/man/"sv)) {
                 open_external(url);
                 return;
             }
@@ -181,7 +181,7 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
             m_history.push(path);
             open_page(path);
             set_start_page = true;
-        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md")) {
+        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md"sv)) {
             // > Help [/path/to/documentation/file.md]
             m_history.push(url.path());
             open_page(url.path());
@@ -241,11 +241,11 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_home_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
-    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png")), [&](auto&) {
+    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
         String path = "/usr/share/man/man1/Help.md";
         open_page(path);
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help")), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window)));
 
     m_context_menu = TRY(GUI::Menu::try_create());
     TRY(m_context_menu->try_add_action(*m_go_back_action));
@@ -259,7 +259,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     m_browse_view->set_model(*m_manual_model);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));
     m_search_view->set_model(*m_filter_model);
-    m_filter_model->set_filter_term("");
+    m_filter_model->set_filter_term(""sv);
 
     return {};
 }
@@ -287,7 +287,7 @@ void MainWidget::open_url(URL const& url)
 void MainWidget::open_external(URL const& url)
 {
     if (!Desktop::Launcher::open(url))
-        GUI::MessageBox::show(window(), String::formatted("The link to '{}' could not be opened.", url), "Failed to open link", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
 }
 
 void MainWidget::open_page(String const& path)

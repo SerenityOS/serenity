@@ -98,10 +98,10 @@ SetOptionCommand SetOptionCommand::from_string(StringView command)
 String SetOptionCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("setoption name ");
+    builder.append("setoption name "sv);
     builder.append(name());
     if (value().has_value()) {
-        builder.append(" value ");
+        builder.append(" value "sv);
         builder.append(value().value());
     }
     builder.append('\n');
@@ -129,13 +129,13 @@ PositionCommand PositionCommand::from_string(StringView command)
 String PositionCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("position ");
+    builder.append("position "sv);
     if (fen().has_value()) {
         builder.append(fen().value());
     } else {
-        builder.append("startpos ");
+        builder.append("startpos "sv);
     }
-    builder.append("moves");
+    builder.append("moves"sv);
     for (auto& move : moves()) {
         builder.append(' ');
         builder.append(move.to_long_algebraic());
@@ -193,10 +193,10 @@ GoCommand GoCommand::from_string(StringView command)
 String GoCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("go");
+    builder.append("go"sv);
 
     if (searchmoves.has_value()) {
-        builder.append(" searchmoves");
+        builder.append(" searchmoves"sv);
         for (auto& move : searchmoves.value()) {
             builder.append(' ');
             builder.append(move.to_long_algebraic());
@@ -204,7 +204,7 @@ String GoCommand::to_string() const
     }
 
     if (ponder)
-        builder.append(" ponder");
+        builder.append(" ponder"sv);
     if (wtime.has_value())
         builder.appendff(" wtime {}", wtime.value());
     if (btime.has_value())
@@ -224,7 +224,7 @@ String GoCommand::to_string() const
     if (movetime.has_value())
         builder.appendff(" movetime {}", movetime.value());
     if (infinite)
-        builder.append(" infinite");
+        builder.append(" infinite"sv);
 
     builder.append('\n');
     return builder.build();
@@ -266,11 +266,11 @@ IdCommand IdCommand::from_string(StringView command)
 String IdCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("id ");
+    builder.append("id "sv);
     if (field_type() == Type::Name) {
-        builder.append("name ");
+        builder.append("name "sv);
     } else {
-        builder.append("author ");
+        builder.append("author "sv);
     }
     builder.append(value());
     builder.append('\n');
@@ -314,7 +314,7 @@ BestMoveCommand BestMoveCommand::from_string(StringView command)
 String BestMoveCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("bestmove ");
+    builder.append("bestmove "sv);
     builder.append(move().to_long_algebraic());
     builder.append('\n');
     return builder.build();

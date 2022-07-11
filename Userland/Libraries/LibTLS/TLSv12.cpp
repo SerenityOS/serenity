@@ -197,7 +197,7 @@ static bool wildcard_matches(StringView host, StringView subject)
     if (host == subject)
         return true;
 
-    if (subject.starts_with("*.")) {
+    if (subject.starts_with("*."sv)) {
         auto maybe_first_dot_index = host.find('.');
         if (maybe_first_dot_index.has_value()) {
             auto first_dot_index = maybe_first_dot_index.release_value();

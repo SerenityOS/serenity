@@ -85,10 +85,10 @@ static Optional<String> elf_details(String description, String const& path)
         description,
         bitness,
         byteorder,
-        ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"),
-        ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"),
+        ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"sv),
+        ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"sv),
         header.e_ident[EI_ABIVERSION],
-        ELF::Image::object_abi_type_to_string(header.e_ident[EI_OSABI]).value_or("(?)"),
+        ELF::Image::object_abi_type_to_string(header.e_ident[EI_OSABI]).value_or("(?)"sv),
         is_dynamically_linked ? dynamic_section : "");
 }
 

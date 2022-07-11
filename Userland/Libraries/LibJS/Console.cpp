@@ -464,14 +464,14 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
     };
     StringBuilder builder;
     if (duration.days > 0)
-        append(builder, "{:.0} day(s)", duration.days);
+        append(builder, "{:.0} day(s)"sv, duration.days);
     if (duration.hours > 0)
-        append(builder, "{:.0} hour(s)", duration.hours);
+        append(builder, "{:.0} hour(s)"sv, duration.hours);
     if (duration.minutes > 0)
-        append(builder, "{:.0} minute(s)", duration.minutes);
+        append(builder, "{:.0} minute(s)"sv, duration.minutes);
     if (duration.seconds > 0 || duration.milliseconds > 0) {
         double combined_seconds = duration.seconds + (0.001 * duration.milliseconds);
-        append(builder, "{:.3} seconds", combined_seconds);
+        append(builder, "{:.3} seconds"sv, combined_seconds);
     }
 
     return builder.to_string();

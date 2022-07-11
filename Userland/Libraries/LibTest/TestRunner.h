@@ -248,16 +248,16 @@ inline void TestRunner::print_test_results_as_json() const
                 StringView result_name;
                 switch (case_.result) {
                 case Result::Pass:
-                    result_name = "PASSED";
+                    result_name = "PASSED"sv;
                     break;
                 case Result::Fail:
-                    result_name = "FAILED";
+                    result_name = "FAILED"sv;
                     break;
                 case Result::Skip:
-                    result_name = "SKIPPED";
+                    result_name = "SKIPPED"sv;
                     break;
                 case Result::Crashed:
-                    result_name = "PROCESS_ERROR";
+                    result_name = "PROCESS_ERROR"sv;
                     break;
                 }
 

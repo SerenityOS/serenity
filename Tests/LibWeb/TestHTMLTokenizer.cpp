@@ -42,9 +42,9 @@ using Token = Web::HTML::HTMLToken;
     EXPECT_EQ(current_token->code_point(), (u32)(character)); \
     NEXT_TOKEN();
 
-#define EXPECT_CHARACTER_TOKENS(string)  \
-    for (auto c : StringView(#string)) { \
-        EXPECT_CHARACTER_TOKEN(c);       \
+#define EXPECT_CHARACTER_TOKENS(string) \
+    for (auto c : #string##sv) {        \
+        EXPECT_CHARACTER_TOKEN(c);      \
     }
 
 #define EXPECT_COMMENT_TOKEN()                              \
@@ -87,7 +87,7 @@ static u32 hash_tokens(Vector<Token> const& tokens)
 
 TEST_CASE(empty)
 {
-    auto tokens = run_tokenizer("");
+    auto tokens = run_tokenizer(""sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
@@ -95,7 +95,7 @@ TEST_CASE(empty)
 
 TEST_CASE(basic)
 {
-    auto tokens = run_tokenizer("<html><head></head><body></body></html>");
+    auto tokens = run_tokenizer("<html><head></head><body></body></html>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(html);
     EXPECT_START_TAG_TOKEN(head);
@@ -109,7 +109,7 @@ TEST_CASE(basic)
 
 TEST_CASE(basic_with_text)
 {
-    auto tokens = run_tokenizer("<p>This is some text.</p>");
+    auto tokens = run_tokenizer("<p>This is some text.</p>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_CHARACTER_TOKENS(This is some text.);
@@ -120,7 +120,7 @@ TEST_CASE(basic_with_text)
 
 TEST_CASE(unquoted_attributes)
 {
-    auto tokens = run_tokenizer("<p foo=bar>");
+    auto tokens = run_tokenizer("<p foo=bar>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
@@ -131,7 +131,7 @@ TEST_CASE(unquoted_attributes)
 
 TEST_CASE(single_quoted_attributes)
 {
-    auto tokens = run_tokenizer("<p foo='bar'>");
+    auto tokens = run_tokenizer("<p foo='bar'>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
@@ -142,7 +142,7 @@ TEST_CASE(single_quoted_attributes)
 
 TEST_CASE(double_quoted_attributes)
 {
-    auto tokens = run_tokenizer("<p foo=\"bar\">");
+    auto tokens = run_tokenizer("<p foo=\"bar\">"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
@@ -153,7 +153,7 @@ TEST_CASE(double_quoted_attributes)
 
 TEST_CASE(multiple_attributes)
 {
-    auto tokens = run_tokenizer("<p foo=\"bar\" baz=foobar foo2=\"bar2\">");
+    auto tokens = run_tokenizer("<p foo=\"bar\" baz=foobar foo2=\"bar2\">"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
@@ -166,7 +166,7 @@ TEST_CASE(multiple_attributes)
 
 TEST_CASE(character_reference_in_attribute)
 {
-    auto tokens = run_tokenizer("<p foo=a&amp;b bar='a&#38;b' baz=\"a&#x26;b\">");
+    auto tokens = run_tokenizer("<p foo=a&amp;b bar='a&#38;b' baz=\"a&#x26;b\">"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
@@ -179,7 +179,7 @@ TEST_CASE(character_reference_in_attribute)
 
 TEST_CASE(comment)
 {
-    auto tokens = run_tokenizer("<p><!-- This is a comment --></p>");
+    auto tokens = run_tokenizer("<p><!-- This is a comment --></p>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_COMMENT_TOKEN();
@@ -190,7 +190,7 @@ TEST_CASE(comment)
 
 TEST_CASE(doctype)
 {
-    auto tokens = run_tokenizer("<!DOCTYPE html><html></html>");
+    auto tokens = run_tokenizer("<!DOCTYPE html><html></html>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_DOCTYPE_TOKEN();
     EXPECT_START_TAG_TOKEN(html);
@@ -201,7 +201,7 @@ TEST_CASE(doctype)
 //       If that changes, or something is added to the test HTML, the hash needs to be adjusted.
 TEST_CASE(regression)
 {
-    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibWeb/tokenizer-test.html", Core::Stream::OpenMode::Read));
+    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibWeb/tokenizer-test.html"sv, Core::Stream::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     MUST(file->read(content.bytes()));

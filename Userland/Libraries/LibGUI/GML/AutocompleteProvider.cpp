@@ -107,8 +107,8 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
         state = previous_states.take_last();
     }
 
-    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
-    auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
+    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget"sv);
+    auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout"sv);
 
     // FIXME: Can this be done without a StringBuilder?
     auto make_fuzzy = [](StringView str) {

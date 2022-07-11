@@ -11,7 +11,7 @@
 namespace Spreadsheet {
 
 IdentityCell::IdentityCell()
-    : CellType("Identity")
+    : CellType("Identity"sv)
 {
 }
 

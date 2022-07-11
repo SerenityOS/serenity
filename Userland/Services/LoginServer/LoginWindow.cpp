@@ -18,12 +18,12 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     set_resizable(false);
     set_minimizable(false);
     set_closeable(false);
-    set_icon(GUI::Icon::default_icon("ladyball").bitmap_for_size(16));
+    set_icon(GUI::Icon::default_icon("ladyball"sv).bitmap_for_size(16));
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.load_from_gml(login_window_gml);
     m_banner = *widget.find_descendant_of_type_named<GUI::ImageWidget>("banner");
-    m_banner->load_from_file("/res/graphics/brand-banner.png");
+    m_banner->load_from_file("/res/graphics/brand-banner.png"sv);
     m_banner->set_auto_resize(true);
 
     m_username = *widget.find_descendant_of_type_named<GUI::TextBox>("username");

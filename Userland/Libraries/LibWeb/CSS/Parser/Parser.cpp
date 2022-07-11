@@ -409,9 +409,9 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         auto const& case_sensitivity_part = attribute_tokens.next_token();
         if (case_sensitivity_part.is(Token::Type::Ident)) {
             auto case_sensitivity = case_sensitivity_part.token().ident();
-            if (case_sensitivity.equals_ignoring_case("i")) {
+            if (case_sensitivity.equals_ignoring_case("i"sv)) {
                 simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch;
-            } else if (case_sensitivity.equals_ignoring_case("s")) {
+            } else if (case_sensitivity.equals_ignoring_case("s"sv)) {
                 simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Expected a \"i\" or \"s\" attribute selector case sensitivity identifier, got: '{}'", case_sensitivity_part.to_debug_string());
@@ -490,39 +490,39 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             };
         };
 
-        if (pseudo_name.equals_ignoring_case("active")) {
+        if (pseudo_name.equals_ignoring_case("active"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
-        } else if (pseudo_name.equals_ignoring_case("checked")) {
+        } else if (pseudo_name.equals_ignoring_case("checked"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
-        } else if (pseudo_name.equals_ignoring_case("disabled")) {
+        } else if (pseudo_name.equals_ignoring_case("disabled"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Disabled);
-        } else if (pseudo_name.equals_ignoring_case("empty")) {
+        } else if (pseudo_name.equals_ignoring_case("empty"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Empty);
-        } else if (pseudo_name.equals_ignoring_case("enabled")) {
+        } else if (pseudo_name.equals_ignoring_case("enabled"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Enabled);
-        } else if (pseudo_name.equals_ignoring_case("first-child")) {
+        } else if (pseudo_name.equals_ignoring_case("first-child"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstChild);
-        } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+        } else if (pseudo_name.equals_ignoring_case("first-of-type"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstOfType);
-        } else if (pseudo_name.equals_ignoring_case("focus")) {
+        } else if (pseudo_name.equals_ignoring_case("focus"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Focus);
-        } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+        } else if (pseudo_name.equals_ignoring_case("focus-within"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusWithin);
-        } else if (pseudo_name.equals_ignoring_case("hover")) {
+        } else if (pseudo_name.equals_ignoring_case("hover"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Hover);
-        } else if (pseudo_name.equals_ignoring_case("last-child")) {
+        } else if (pseudo_name.equals_ignoring_case("last-child"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastChild);
-        } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
+        } else if (pseudo_name.equals_ignoring_case("last-of-type"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastOfType);
-        } else if (pseudo_name.equals_ignoring_case("link")) {
+        } else if (pseudo_name.equals_ignoring_case("link"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Link);
-        } else if (pseudo_name.equals_ignoring_case("only-child")) {
+        } else if (pseudo_name.equals_ignoring_case("only-child"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
-        } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
+        } else if (pseudo_name.equals_ignoring_case("only-of-type"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
-        } else if (pseudo_name.equals_ignoring_case("root")) {
+        } else if (pseudo_name.equals_ignoring_case("root"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
-        } else if (pseudo_name.equals_ignoring_case("visited")) {
+        } else if (pseudo_name.equals_ignoring_case("visited"sv)) {
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
         }
 
@@ -605,7 +605,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                         : Selector::SimpleSelector::PseudoClass::Type::Where,
                     .argument_selector_list = move(argument_selector_list) }
             };
-        } else if (pseudo_function.name().equals_ignoring_case("not")) {
+        } else if (pseudo_function.name().equals_ignoring_case("not"sv)) {
             auto function_token_stream = TokenStream(pseudo_function.values());
             auto not_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
 
@@ -817,7 +817,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<ComponentValue>&
         return media_query;
 
     // `[ and <media-condition-without-or> ]?`
-    if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_case("and")) {
+    if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_case("and"sv)) {
         if (auto media_condition = parse_media_condition(tokens, MediaCondition::AllowOr::No)) {
             tokens.skip_whitespace();
             if (tokens.has_next_token())
@@ -964,12 +964,12 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<ComponentValue>& 
                 return MediaFeatureName { MediaFeatureName::Type::Normal, id.value() };
             }
 
-            if (allow_min_max_prefix && (name.starts_with("min-", CaseSensitivity::CaseInsensitive) || name.starts_with("max-", CaseSensitivity::CaseInsensitive))) {
+            if (allow_min_max_prefix && (name.starts_with("min-"sv, CaseSensitivity::CaseInsensitive) || name.starts_with("max-"sv, CaseSensitivity::CaseInsensitive))) {
                 auto adjusted_name = name.substring_view(4);
                 if (auto id = media_feature_id_from_string(adjusted_name); id.has_value() && media_feature_type_is_range(id.value())) {
                     transaction.commit();
                     return MediaFeatureName {
-                        name.starts_with("min-", CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
+                        name.starts_with("min-"sv, CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
                         id.value()
                     };
                 }
@@ -1345,7 +1345,7 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
 
     auto& peeked_token = tokens.peek_token();
     // `not <supports-in-parens>`
-    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_case("not")) {
+    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_case("not"sv)) {
         tokens.next_token();
         tokens.skip_whitespace();
         auto child = parse_supports_in_parens(tokens);
@@ -1367,9 +1367,9 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
         if (!token.is(Token::Type::Ident))
             return {};
         auto ident = token.token().ident();
-        if (ident.equals_ignoring_case("and"))
+        if (ident.equals_ignoring_case("and"sv))
             return Supports::Condition::Type::And;
-        if (ident.equals_ignoring_case("or"))
+        if (ident.equals_ignoring_case("or"sv))
             return Supports::Condition::Type::Or;
         return {};
     };
@@ -1957,7 +1957,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         Optional<size_t> important_index;
         for (size_t i = declaration_values.size() - 1; i > 0; i--) {
             auto value = declaration_values[i];
-            if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important")) {
+            if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important"sv)) {
                 important_index = i;
                 break;
             }
@@ -2314,7 +2314,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     // FIXME: Handle data: urls (RFC2397)
 
     auto convert_string_to_url = [&](StringView& url_string) -> Optional<AK::URL> {
-        if (url_string.starts_with("data:", CaseSensitivity::CaseInsensitive)) {
+        if (url_string.starts_with("data:"sv, CaseSensitivity::CaseInsensitive)) {
             auto data_url = AK::URL(url_string);
 
             switch (allowed_data_url_type) {
@@ -2337,7 +2337,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
         auto url_string = component_value.token().url();
         return convert_string_to_url(url_string);
     }
-    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url")) {
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url"sv)) {
         auto& function_values = component_value.function().values();
         // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
         for (size_t i = 0; i < function_values.size(); ++i) {
@@ -2509,7 +2509,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     auto property_id = property_id_from_string(property_name);
 
     if (property_id == PropertyID::Invalid) {
-        if (property_name.starts_with("--")) {
+        if (property_name.starts_with("--"sv)) {
             property_id = PropertyID::Custom;
         } else if (has_ignored_vendor_prefix(property_name)) {
             return {};
@@ -2542,11 +2542,11 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_v
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
-        if (ident.equals_ignoring_case("inherit"))
+        if (ident.equals_ignoring_case("inherit"sv))
             return InheritStyleValue::the();
-        if (ident.equals_ignoring_case("initial"))
+        if (ident.equals_ignoring_case("initial"sv))
             return InitialStyleValue::the();
-        if (ident.equals_ignoring_case("unset"))
+        if (ident.equals_ignoring_case("unset"sv))
             return UnsetStyleValue::the();
         // FIXME: Implement `revert` and `revert-layer` keywords, from Cascade4 and Cascade5 respectively
     }
@@ -2595,10 +2595,10 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(ComponentValue const& component_v
     if (component_value.is_function()) {
         auto& function = component_value.function();
 
-        if (function.name().equals_ignoring_case("calc"))
+        if (function.name().equals_ignoring_case("calc"sv))
             return parse_calculated_value(function.values());
 
-        if (function.name().equals_ignoring_case("var")) {
+        if (function.name().equals_ignoring_case("var"sv)) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
@@ -2658,7 +2658,7 @@ Optional<Length> Parser::parse_length(ComponentValue const& component_value)
         return dimension->length();
 
     // FIXME: auto isn't a length!
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"))
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
         return Length::make_auto();
 
     return {};
@@ -2751,7 +2751,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
 
     // All options start with 'u'/'U'.
     auto& u = tokens.next_token();
-    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_case("u"))) {
+    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_case("u"sv))) {
         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> does not start with 'u'");
         return {};
     }
@@ -2883,7 +2883,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(StringView text)
         // 2. Interpret the consumed code points as a hexadecimal number,
         //    with the U+003F QUESTION MARK (?) code points replaced by U+0030 DIGIT ZERO (0) code points.
         //    This is the start value.
-        auto start_value_string = start_value_code_points.replace("?", "0", ReplaceMode::All);
+        auto start_value_string = start_value_code_points.replace("?"sv, "0"sv, ReplaceMode::All);
         auto maybe_start_value = AK::StringUtils::convert_to_uint_from_hex<u32>(start_value_string);
         if (!maybe_start_value.has_value()) {
             dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> ?-converted start value did not parse as hex number.");
@@ -2894,7 +2894,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(StringView text)
         // 3. Interpret the consumed code points as a hexadecimal number again,
         //    with the U+003F QUESTION MARK (?) code points replaced by U+0046 LATIN CAPITAL LETTER F (F) code points.
         //    This is the end value.
-        auto end_value_string = start_value_code_points.replace("?", "F", ReplaceMode::All);
+        auto end_value_string = start_value_code_points.replace("?"sv, "F"sv, ReplaceMode::All);
         auto maybe_end_value = AK::StringUtils::convert_to_uint_from_hex<u32>(end_value_string);
         if (!maybe_end_value.has_value()) {
             dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> ?-converted end value did not parse as hex number.");
@@ -2965,7 +2965,7 @@ RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component
     if (component_value.is(Token::Type::Number) && !(m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)))
         return {};
 
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"))
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
         return LengthStyleValue::create(Length::make_auto());
 
     auto dimension = parse_dimension(component_value);
@@ -4770,7 +4770,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         tokens.skip_whitespace();
         auto& part = tokens.next_token();
 
-        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none")) {
+        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none"sv)) {
             if (!transformations.is_empty())
                 return nullptr;
             tokens.skip_whitespace();
@@ -5306,11 +5306,11 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // odd | even
     if (first_value.is(Token::Type::Ident)) {
         auto ident = first_value.token().ident();
-        if (ident.equals_ignoring_case("odd")) {
+        if (ident.equals_ignoring_case("odd"sv)) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 1 };
         }
-        if (ident.equals_ignoring_case("even")) {
+        if (ident.equals_ignoring_case("even"sv)) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 0 };
         }
@@ -5781,9 +5781,9 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
 {
     if (!string.starts_with('-'))
         return false;
-    if (string.starts_with("--"))
+    if (string.starts_with("--"sv))
         return false;
-    if (string.starts_with("-libweb-"))
+    if (string.starts_with("-libweb-"sv))
         return false;
     return true;
 }
@@ -5800,7 +5800,7 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
         return {};
 
-    Parser parser(context, "");
+    Parser parser(context, ""sv);
     TokenStream<ComponentValue> token_stream { tokens };
     auto result = parser.parse_css_value(property_id, token_stream);
     if (result.is_error())

@@ -29,7 +29,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hearts"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hearts"sv));
 
     Config::pledge_domain("Hearts");
 
@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
 
-    String player_name = Config::read_string("Hearts", "", "player_name", "Gunnar");
+    String player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 
     game.on_status_change = [&](const AK::StringView& status) {
         statusbar.set_override_text(status);
@@ -80,18 +80,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         player_name = settings_dialog->player_name();
 
-        Config::write_string("Hearts", "", "player_name", player_name);
+        Config::write_string("Hearts"sv, ""sv, "player_name"sv, player_name);
 
-        GUI::MessageBox::show(window, "Settings have been successfully saved and will take effect in the next game.", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window, "Settings have been successfully saved and will take effect in the next game."sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.setup(player_name);
     })));
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
     TRY(game_menu->try_add_separator());

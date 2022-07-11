@@ -35,7 +35,7 @@ ATADiskDevice::~ATADiskDevice() = default;
 
 StringView ATADiskDevice::class_name() const
 {
-    return "ATADiskDevice";
+    return "ATADiskDevice"sv;
 }
 
 }

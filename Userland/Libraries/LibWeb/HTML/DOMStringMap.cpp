@@ -27,7 +27,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
     //    in the order that those attributes are listed in the element's attribute list, add a name-value pair to list whose name is the attribute's name with the first five characters removed and whose value
     //    is the attribute's value.
     m_associated_element->for_each_attribute([&](auto& name, auto& value) {
-        if (!name.starts_with("data-"))
+        if (!name.starts_with("data-"sv))
             return;
 
         auto name_after_starting_data = name.view().substring_view(5);
@@ -102,7 +102,7 @@ DOM::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String cons
 
     // 3. Insert the string data- at the front of name.
     // NOTE: This is done out of order because StringBuilder doesn't have prepend.
-    builder.append("data-");
+    builder.append("data-"sv);
 
     for (size_t character_index = 0; character_index < name.length(); ++character_index) {
         // 1. If name contains a U+002D HYPHEN-MINUS character (-) followed by an ASCII lower alpha, then throw a "SyntaxError" DOMException.
@@ -147,7 +147,7 @@ bool DOMStringMap::delete_existing_named_property(String const& name)
 
     // 2. Insert the string data- at the front of name.
     // NOTE: This is done out of order because StringBuilder doesn't have prepend.
-    builder.append("data-");
+    builder.append("data-"sv);
 
     for (auto character : name) {
         // 1. For each ASCII upper alpha in name, insert a U+002D HYPHEN-MINUS character (-) before the character and replace the character with the same character converted to ASCII lowercase.

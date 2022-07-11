@@ -154,7 +154,7 @@ static bool handle_breakpoint_command(String const& command)
     if (argument.is_empty())
         return false;
 
-    if (argument.contains(":")) {
+    if (argument.contains(":"sv)) {
         auto source_arguments = argument.split(':');
         if (source_arguments.size() != 2)
             return false;
@@ -164,7 +164,7 @@ static bool handle_breakpoint_command(String const& command)
         auto file = source_arguments[0];
         return insert_breakpoint_at_source_position(file, line.value());
     }
-    if ((argument.starts_with("0x"))) {
+    if ((argument.starts_with("0x"sv))) {
         return insert_breakpoint_at_address(strtoul(argument.characters() + 2, nullptr, 16));
     }
 
@@ -181,7 +181,7 @@ static bool handle_examine_command(String const& command)
     if (argument.is_empty())
         return false;
 
-    if (!(argument.starts_with("0x"))) {
+    if (!(argument.starts_with("0x"sv))) {
         return false;
     }
     FlatPtr address = strtoul(argument.characters() + 2, nullptr, 16);
@@ -309,14 +309,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 handle_print_registers(regs);
                 success = true;
 
-            } else if (command.starts_with("dis")) {
+            } else if (command.starts_with("dis"sv)) {
                 success = handle_disassemble_command(command, ip);
 
-            } else if (command.starts_with("bp")) {
+            } else if (command.starts_with("bp"sv)) {
                 success = handle_breakpoint_command(command);
-            } else if (command.starts_with("x")) {
+            } else if (command.starts_with("x"sv)) {
                 success = handle_examine_command(command);
-            } else if (command.starts_with("bt")) {
+            } else if (command.starts_with("bt"sv)) {
                 success = handle_backtrace_command(regs);
             }
 

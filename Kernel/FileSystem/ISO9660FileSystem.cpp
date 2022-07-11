@@ -239,7 +239,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
         }
 
         auto const* header = reinterpret_cast<ISO::VolumeDescriptorHeader const*>(block->data());
-        if (StringView { header->identifier, 5 } != "CD001") {
+        if (StringView { header->identifier, 5 } != "CD001"sv) {
             dbgln_if(ISO9660_DEBUG, "Header magic at volume descriptor {} is not valid", current_block_index - first_data_area_block);
             return EIO;
         }

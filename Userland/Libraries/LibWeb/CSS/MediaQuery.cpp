@@ -284,14 +284,14 @@ String MediaCondition::to_string() const
         builder.append(feature->to_string());
         break;
     case Type::Not:
-        builder.append("not ");
+        builder.append("not "sv);
         builder.append(conditions.first().to_string());
         break;
     case Type::And:
-        builder.join(" and ", conditions);
+        builder.join(" and "sv, conditions);
         break;
     case Type::Or:
-        builder.join(" or ", conditions);
+        builder.join(" or "sv, conditions);
         break;
     case Type::GeneralEnclosed:
         builder.append(general_enclosed->to_string());
@@ -323,12 +323,12 @@ String MediaQuery::to_string() const
     StringBuilder builder;
 
     if (m_negated)
-        builder.append("not ");
+        builder.append("not "sv);
 
     if (m_negated || m_media_type != MediaType::All || !m_media_condition) {
         builder.append(CSS::to_string(m_media_type));
         if (m_media_condition)
-            builder.append(" and ");
+            builder.append(" and "sv);
     }
 
     if (m_media_condition) {
@@ -386,7 +386,7 @@ String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media
     // 2. Serialize each media query in the list of media queries, in the same order as they
     // appear in the media query list, and then serialize the list.
     StringBuilder builder;
-    builder.join(", ", media_queries);
+    builder.join(", "sv, media_queries);
     return builder.to_string();
 }
 

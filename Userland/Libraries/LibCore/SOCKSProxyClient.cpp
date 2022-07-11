@@ -74,23 +74,23 @@ StringView reply_response_name(Reply reply)
 {
     switch (reply) {
     case Reply::Succeeded:
-        return "Succeeded";
+        return "Succeeded"sv;
     case Reply::GeneralSocksServerFailure:
-        return "GeneralSocksServerFailure";
+        return "GeneralSocksServerFailure"sv;
     case Reply::ConnectionNotAllowedByRuleset:
-        return "ConnectionNotAllowedByRuleset";
+        return "ConnectionNotAllowedByRuleset"sv;
     case Reply::NetworkUnreachable:
-        return "NetworkUnreachable";
+        return "NetworkUnreachable"sv;
     case Reply::HostUnreachable:
-        return "HostUnreachable";
+        return "HostUnreachable"sv;
     case Reply::ConnectionRefused:
-        return "ConnectionRefused";
+        return "ConnectionRefused"sv;
     case Reply::TTLExpired:
-        return "TTLExpired";
+        return "TTLExpired"sv;
     case Reply::CommandNotSupported:
-        return "CommandNotSupported";
+        return "CommandNotSupported"sv;
     case Reply::AddressTypeNotSupported:
-        return "AddressTypeNotSupported";
+        return "AddressTypeNotSupported"sv;
     }
     VERIFY_NOT_REACHED();
 }

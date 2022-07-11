@@ -259,9 +259,9 @@ TEST_CASE(parse_unicode_locale_id_with_other_extension)
     fail("en-z-aaa-a"sv);
     fail("en-0-aaa-a"sv);
 
-    pass("en-z-aa", { 'z', "aa"sv });
-    pass("en-z-aa-bbb", { 'z', "aa-bbb"sv });
-    pass("en-z-aa-bbb-cccccccc", { 'z', "aa-bbb-cccccccc"sv });
+    pass("en-z-aa"sv, { 'z', "aa"sv });
+    pass("en-z-aa-bbb"sv, { 'z', "aa-bbb"sv });
+    pass("en-z-aa-bbb-cccccccc"sv, { 'z', "aa-bbb-cccccccc"sv });
 }
 
 TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
@@ -282,10 +282,10 @@ TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
     fail("en-x-aaa-"sv);
     fail("en-x-aaa-aaaaaaaaa"sv);
 
-    pass("en-x-a", { "a"sv });
-    pass("en-x-aaaaaaaa", { "aaaaaaaa"sv });
-    pass("en-x-aaa-bbb", { "aaa"sv, "bbb"sv });
-    pass("en-x-aaa-x-bbb", { "aaa"sv, "x"sv, "bbb"sv });
+    pass("en-x-a"sv, { "a"sv });
+    pass("en-x-aaaaaaaa"sv, { "aaaaaaaa"sv });
+    pass("en-x-aaa-bbb"sv, { "aaa"sv, "bbb"sv });
+    pass("en-x-aaa-x-bbb"sv, { "aaa"sv, "x"sv, "bbb"sv });
 }
 
 TEST_CASE(canonicalize_unicode_locale_id)

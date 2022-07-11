@@ -22,11 +22,11 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 
     // 2. If muted errors is true, then set baseURL to about:blank.
     if (muted_errors == MutedErrors::Yes)
-        base_url = "about:blank";
+        base_url = "about:blank"sv;
 
     // 3. If scripting is disabled for settings, then set source to the empty string.
     if (environment_settings_object.is_scripting_disabled())
-        source = "";
+        source = ""sv;
 
     // 4. Let script be a new classic script that this algorithm will subsequently initialize.
     auto script = adopt_ref(*new ClassicScript(move(base_url), move(filename), environment_settings_object));

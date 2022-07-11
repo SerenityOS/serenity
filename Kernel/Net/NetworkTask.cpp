@@ -43,7 +43,7 @@ static HashTable<RefPtr<TCPSocket>>* delayed_ack_sockets;
 void NetworkTask::spawn()
 {
     RefPtr<Thread> thread;
-    auto name = KString::try_create("Network Task");
+    auto name = KString::try_create("Network Task"sv);
     if (name.is_error())
         TODO();
     (void)Process::create_kernel_process(thread, name.release_value(), NetworkTask_main, nullptr);
@@ -90,7 +90,7 @@ void NetworkTask_main(void*)
     };
 
     size_t buffer_size = 64 * KiB;
-    auto region_or_error = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Memory::Region::Access::ReadWrite);
+    auto region_or_error = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer"sv, Memory::Region::Access::ReadWrite);
     if (region_or_error.is_error())
         TODO();
     auto buffer_region = region_or_error.release_value();
@@ -104,7 +104,7 @@ void NetworkTask_main(void*)
         if (!packet_size) {
             auto timeout_time = Time::from_milliseconds(500);
             auto timeout = Thread::BlockTimeout { false, &timeout_time };
-            [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask");
+            [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask"sv);
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {

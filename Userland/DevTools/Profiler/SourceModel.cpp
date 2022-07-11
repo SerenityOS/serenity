@@ -27,7 +27,7 @@ public:
 public:
     SourceFile(StringView filename)
     {
-        String source_file_name = filename.replace("../../", source_root_path, ReplaceMode::FirstOnly);
+        String source_file_name = filename.replace("../../"sv, source_root_path, ReplaceMode::FirstOnly);
 
         auto maybe_file = Core::File::open(source_file_name, Core::OpenMode::ReadOnly);
         if (maybe_file.is_error()) {

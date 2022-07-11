@@ -31,7 +31,7 @@ RunWindow::RunWindow()
 {
     load_history();
 
-    auto app_icon = GUI::Icon::default_icon("app-run");
+    auto app_icon = GUI::Icon::default_icon("app-run"sv);
 
     set_title("Run");
     set_icon(app_icon.bitmap_for_size(16));
@@ -101,7 +101,7 @@ void RunWindow::do_run()
         return;
     }
 
-    GUI::MessageBox::show_error(this, "Failed to run. Please check your command, path, or address, and try again.");
+    GUI::MessageBox::show_error(this, "Failed to run. Please check your command, path, or address, and try again."sv);
 
     show();
 }

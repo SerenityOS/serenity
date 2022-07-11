@@ -52,7 +52,7 @@ public:
     static void indent(StringBuilder& builder, size_t indentation)
     {
         for (size_t i = 0; i < indentation; ++i)
-            builder.append("    ");
+            builder.append("    "sv);
     }
 };
 
@@ -136,7 +136,7 @@ public:
             auto first = true;
             as_array().for_each([&](auto& value) {
                 if (!first)
-                    builder.append(", ");
+                    builder.append(", "sv);
                 first = false;
                 value.serialize(builder);
             });
@@ -248,7 +248,7 @@ public:
             indent(builder, indentation);
         builder.append('@');
         builder.append(m_name);
-        builder.append(" {");
+        builder.append(" {"sv);
         if (!m_properties.is_empty() || !m_sub_objects.is_empty()) {
             builder.append('\n');
 

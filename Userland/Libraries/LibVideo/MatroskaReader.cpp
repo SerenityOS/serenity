@@ -113,7 +113,7 @@ bool MatroskaReader::parse_master_element([[maybe_unused]] StringView element_na
 Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
 {
     EBMLHeader header;
-    auto success = parse_master_element("Header", [&](u64 element_id) {
+    auto success = parse_master_element("Header"sv, [&](u64 element_id) {
         if (element_id == DOCTYPE_ELEMENT_ID) {
             auto doc_type = read_string_element();
             CHECK_HAS_VALUE(doc_type);
@@ -139,7 +139,7 @@ Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
 bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
 {
     dbgln_if(MATROSKA_DEBUG, "Parsing segment elements");
-    auto success = parse_master_element("Segment", [&](u64 element_id) {
+    auto success = parse_master_element("Segment"sv, [&](u64 element_id) {
         if (element_id == SEGMENT_INFORMATION_ELEMENT_ID) {
             auto segment_information = parse_information();
             if (!segment_information)
@@ -166,7 +166,7 @@ bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
 OwnPtr<SegmentInformation> MatroskaReader::parse_information()
 {
     auto segment_information = make<SegmentInformation>();
-    auto success = parse_master_element("Segment Information", [&](u64 element_id) {
+    auto success = parse_master_element("Segment Information"sv, [&](u64 element_id) {
         if (element_id == TIMESTAMP_SCALE_ID) {
             auto timestamp_scale = read_u64_element();
             CHECK_HAS_VALUE(timestamp_scale);
@@ -196,7 +196,7 @@ OwnPtr<SegmentInformation> MatroskaReader::parse_information()
 
 bool MatroskaReader::parse_tracks(MatroskaDocument& matroska_document)
 {
-    auto success = parse_master_element("Tracks", [&](u64 element_id) {
+    auto success = parse_master_element("Tracks"sv, [&](u64 element_id) {
         if (element_id == TRACK_ENTRY_ID) {
             dbgln_if(MATROSKA_DEBUG, "Parsing track");
             auto track_entry = parse_track_entry();
@@ -218,7 +218,7 @@ bool MatroskaReader::parse_tracks(MatroskaDocument& matroska_document)
 OwnPtr<TrackEntry> MatroskaReader::parse_track_entry()
 {
     auto track_entry = make<TrackEntry>();
-    auto success = parse_master_element("Track", [&](u64 element_id) {
+    auto success = parse_master_element("Track"sv, [&](u64 element_id) {
         if (element_id == TRACK_NUMBER_ID) {
             auto track_number = read_u64_element();
             CHECK_HAS_VALUE(track_number);
@@ -268,7 +268,7 @@ Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
 {
     TrackEntry::VideoTrack video_track {};
 
-    auto success = parse_master_element("VideoTrack", [&](u64 element_id) {
+    auto success = parse_master_element("VideoTrack"sv, [&](u64 element_id) {
         if (element_id == PIXEL_WIDTH_ID) {
             auto pixel_width = read_u64_element();
             CHECK_HAS_VALUE(pixel_width);
@@ -295,7 +295,7 @@ Optional<TrackEntry::AudioTrack> MatroskaReader::parse_audio_track_information()
 {
     TrackEntry::AudioTrack audio_track {};
 
-    auto success = parse_master_element("AudioTrack", [&](u64 element_id) {
+    auto success = parse_master_element("AudioTrack"sv, [&](u64 element_id) {
         if (element_id == CHANNELS_ID) {
             auto channels = read_u64_element();
             CHECK_HAS_VALUE(channels);
@@ -322,7 +322,7 @@ OwnPtr<Cluster> MatroskaReader::parse_cluster()
 {
     auto cluster = make<Cluster>();
 
-    auto success = parse_master_element("Cluster", [&](u64 element_id) {
+    auto success = parse_master_element("Cluster"sv, [&](u64 element_id) {
         if (element_id == SIMPLE_BLOCK_ID) {
             auto simple_block = parse_simple_block();
             if (!simple_block)
