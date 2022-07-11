@@ -148,7 +148,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* url_str = nullptr;
+    StringView url_str;
     bool save_at_provided_name = false;
     bool should_follow_url = false;
     char const* data = nullptr;
