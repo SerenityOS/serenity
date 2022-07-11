@@ -16,15 +16,14 @@ CharacterData::CharacterData(Document& document, NodeType type, String const& da
 {
 }
 
+// https://dom.spec.whatwg.org/#dom-characterdata-data
 void CharacterData::set_data(String data)
 {
-    if (m_data == data)
-        return;
-    m_data = move(data);
-    if (parent())
-        parent()->children_changed();
-    set_needs_style_update(true);
-    document().set_needs_layout();
+    // [The data] setter must replace data with node this, offset 0, count this’s length, and data new value.
+    // NOTE: Since the offset is 0, it can never be above data's length, so this can never throw.
+    // NOTE: Setting the data to the same value as the current data still causes a mutation observer callback.
+    // FIXME: Figure out a way to make this a no-op again if the passed in data is the same as the current data.
+    MUST(replace_data(0, m_data.length(), data));
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-substring
@@ -69,7 +68,7 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
     builder.append(this->data().substring_view(0, offset));
     builder.append(data);
     builder.append(this->data().substring_view(offset + count));
-    set_data(builder.to_string());
+    m_data = builder.to_string();
 
     // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
     for (auto& range : Range::live_ranges()) {
@@ -99,6 +98,8 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
     if (parent())
         parent()->children_changed();
 
+    set_needs_style_update(true);
+    document().set_needs_layout();
     return {};
 }
 
