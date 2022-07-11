@@ -69,7 +69,7 @@ void MemoryBackedHostBridge::map_bus_region(BusNumber bus)
     if (m_mapped_bus == bus && m_mapped_bus_region)
         return;
     auto bus_base_address = determine_memory_mapped_bus_base_address(bus);
-    auto region_or_error = MM.allocate_kernel_region(bus_base_address, memory_range_per_bus, "PCI ECAM", Memory::Region::Access::ReadWrite);
+    auto region_or_error = MM.allocate_kernel_region(bus_base_address, memory_range_per_bus, "PCI ECAM"sv, Memory::Region::Access::ReadWrite);
     // FIXME: Find a way to propagate error from here.
     if (region_or_error.is_error())
         VERIFY_NOT_REACHED();

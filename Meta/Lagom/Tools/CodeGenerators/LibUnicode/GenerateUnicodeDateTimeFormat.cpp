@@ -147,7 +147,7 @@ struct AK::Formatter<CalendarPattern> : Formatter<FormatString> {
         };
 
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             pattern.skeleton_index,
             pattern.pattern_index,
             pattern.pattern12_index,
@@ -212,7 +212,7 @@ struct AK::Formatter<CalendarRangePattern> : Formatter<FormatString> {
         };
 
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             pattern.skeleton_index,
             field_to_i8(pattern.field),
             pattern.start_range,
@@ -265,7 +265,7 @@ struct AK::Formatter<CalendarFormat> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, CalendarFormat const& pattern)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {} }}"sv,
             pattern.full_format,
             pattern.long_format,
             pattern.medium_format,
@@ -305,7 +305,7 @@ struct AK::Formatter<CalendarSymbols> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, CalendarSymbols const& symbols)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
+            "{{ {}, {}, {} }}"sv,
             symbols.narrow_symbols,
             symbols.short_symbols,
             symbols.long_symbols);
@@ -364,7 +364,7 @@ struct AK::Formatter<Calendar> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Calendar const& calendar)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             calendar.date_formats,
             calendar.time_formats,
             calendar.date_time_formats,
@@ -418,7 +418,7 @@ struct AK::Formatter<TimeZoneNames> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneNames const& time_zone)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {} }}"sv,
             time_zone.short_standard_name,
             time_zone.long_standard_name,
             time_zone.short_daylight_name,
@@ -469,7 +469,7 @@ template<>
 struct AK::Formatter<TimeZoneFormat> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneFormat const& time_zone_format)
     {
-        return Formatter<FormatString>::format(builder, "{{ {}, {}, {}, {}, {}, {} }}",
+        return Formatter<FormatString>::format(builder, "{{ {}, {}, {}, {}, {}, {} }}"sv,
             time_zone_format.symbol_ahead_sign,
             time_zone_format.symbol_ahead_separator,
             time_zone_format.symbol_behind_sign,
@@ -510,7 +510,7 @@ struct AK::Formatter<DayPeriod> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DayPeriod const& day_period)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
+            "{{ {}, {}, {} }}"sv,
             static_cast<u8>(day_period.day_period),
             day_period.begin,
             day_period.end);
@@ -825,7 +825,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Era
         if (all_of(segment, is_char('G'))) {
-            builder.append("{era}");
+            builder.append("{era}"sv);
 
             if (segment.length() <= 3)
                 format.era = CalendarPatternStyle::Short;
@@ -837,7 +837,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Year
         else if (all_of(segment, is_any_of("yYuUr"sv))) {
-            builder.append("{year}");
+            builder.append("{year}"sv);
 
             if (segment.length() == 2)
                 format.year = CalendarPatternStyle::TwoDigit;
@@ -853,7 +853,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Month
         else if (all_of(segment, is_any_of("ML"sv))) {
-            builder.append("{month}");
+            builder.append("{month}"sv);
 
             if (segment.length() == 1)
                 format.month = CalendarPatternStyle::Numeric;
@@ -878,20 +878,20 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Day
         else if (all_of(segment, is_char('d'))) {
-            builder.append("{day}");
+            builder.append("{day}"sv);
 
             if (segment.length() == 1)
                 format.day = CalendarPatternStyle::Numeric;
             else
                 format.day = CalendarPatternStyle::TwoDigit;
         } else if (all_of(segment, is_any_of("DFg"sv))) {
-            builder.append("{day}");
+            builder.append("{day}"sv);
             format.day = CalendarPatternStyle::Numeric;
         }
 
         // Weekday
         else if (all_of(segment, is_char('E'))) {
-            builder.append("{weekday}");
+            builder.append("{weekday}"sv);
 
             if (segment.length() == 4)
                 format.weekday = CalendarPatternStyle::Long;
@@ -900,7 +900,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
             else
                 format.weekday = CalendarPatternStyle::Short;
         } else if (all_of(segment, is_any_of("ec"sv))) {
-            builder.append("{weekday}");
+            builder.append("{weekday}"sv);
 
             // TR-35 defines "e", "c", and "cc" as as numeric, and "ee" as 2-digit, but those
             // pattern styles are not supported by Intl.DateTimeFormat.
@@ -917,10 +917,10 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Period
         else if (all_of(segment, is_any_of("ab"sv))) {
-            builder.append("{ampm}");
+            builder.append("{ampm}"sv);
             hour12 = true;
         } else if (all_of(segment, is_char('B'))) {
-            builder.append("{dayPeriod}");
+            builder.append("{dayPeriod}"sv);
             hour12 = true;
 
             if (segment.length() == 4)
@@ -933,7 +933,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Hour
         else if (all_of(segment, is_any_of("hHKk"sv))) {
-            builder.append("{hour}");
+            builder.append("{hour}"sv);
 
             if ((segment[0] == 'h') || (segment[0] == 'K'))
                 hour12 = true;
@@ -949,7 +949,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Minute
         else if (all_of(segment, is_char('m'))) {
-            builder.append("{minute}");
+            builder.append("{minute}"sv);
 
             if (segment.length() == 1)
                 format.minute = CalendarPatternStyle::Numeric;
@@ -959,14 +959,14 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Second
         else if (all_of(segment, is_char('s'))) {
-            builder.append("{second}");
+            builder.append("{second}"sv);
 
             if (segment.length() == 1)
                 format.second = CalendarPatternStyle::Numeric;
             else
                 format.second = CalendarPatternStyle::TwoDigit;
         } else if (all_of(segment, is_char('S'))) {
-            builder.append("{fractionalSecondDigits}");
+            builder.append("{fractionalSecondDigits}"sv);
 
             VERIFY(segment.length() <= 3);
             format.fractional_second_digits = static_cast<u8>(segment.length());
@@ -977,21 +977,21 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
 
         // Zone
         else if (all_of(segment, is_any_of("zV"sv))) {
-            builder.append("{timeZoneName}");
+            builder.append("{timeZoneName}"sv);
 
             if (segment.length() < 4)
                 format.time_zone_name = CalendarPatternStyle::Short;
             else
                 format.time_zone_name = CalendarPatternStyle::Long;
         } else if (all_of(segment, is_any_of("ZOXx"sv))) {
-            builder.append("{timeZoneName}");
+            builder.append("{timeZoneName}"sv);
 
             if (segment.length() < 4)
                 format.time_zone_name = CalendarPatternStyle::ShortOffset;
             else
                 format.time_zone_name = CalendarPatternStyle::LongOffset;
         } else if (all_of(segment, is_char('v'))) {
-            builder.append("{timeZoneName}");
+            builder.append("{timeZoneName}"sv);
 
             if (segment.length() < 4)
                 format.time_zone_name = CalendarPatternStyle::ShortGeneric;
@@ -1166,7 +1166,7 @@ static void generate_missing_patterns(Calendar& calendar, CalendarPatternList& f
         auto time_pattern = locale_data.unique_strings.get(time_format);
         auto date_pattern = locale_data.unique_strings.get(date_format);
 
-        auto new_pattern = pattern.replace("{0}", time_pattern, ReplaceMode::FirstOnly).replace("{1}", date_pattern, ReplaceMode::FirstOnly);
+        auto new_pattern = pattern.replace("{0}"sv, time_pattern, ReplaceMode::FirstOnly).replace("{1}"sv, date_pattern, ReplaceMode::FirstOnly);
         return locale_data.unique_strings.ensure(move(new_pattern));
     };
 
@@ -1958,7 +1958,7 @@ static constexpr Array<@calendar_index_type@, @size@> @name@ { {)~~~");
         for (auto const& calendar_key : locale_data.calendars) {
             auto calendar = calendars.find(calendar_key)->value;
 
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(calendar));
             first = false;
         }
@@ -1979,7 +1979,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto const& value = map.find(key)->value;
             auto mapping = mapping_getter(value);
 
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(mapping));
             first = false;
         }
@@ -1990,7 +1990,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     auto locales = locale_data.locales.keys();
     quick_sort(locales);
 
-    generate_mapping(generator, locale_data.locales, s_calendar_index_type, "s_locale_calendars"sv, "s_calendars_{}", format_identifier, [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
+    generate_mapping(generator, locale_data.locales, s_calendar_index_type, "s_locale_calendars"sv, "s_calendars_{}"sv, format_identifier, [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
     append_mapping(locales, locale_data.locales, s_time_zone_index_type, "s_locale_time_zones"sv, [](auto const& locale) { return locale.time_zones; });
     append_mapping(locales, locale_data.locales, s_time_zone_format_index_type, "s_locale_time_zone_formats"sv, [](auto const& locale) { return locale.time_zone_formats; });
     append_mapping(locales, locale_data.locales, s_day_period_index_type, "s_locale_day_periods"sv, [](auto const& locale) { return locale.day_periods; });

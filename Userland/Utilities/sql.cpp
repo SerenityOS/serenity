@@ -94,7 +94,7 @@ public:
 
         m_sql_client->on_next_result = [](int, Vector<String> const& row) {
             StringBuilder builder;
-            builder.join(", ", row);
+            builder.join(", "sv, row);
             outln("{}", builder.build());
         };
 
@@ -293,10 +293,10 @@ private:
     {
         static StringBuilder prompt_builder;
         prompt_builder.clear();
-        prompt_builder.append("> ");
+        prompt_builder.append("> "sv);
 
         for (auto i = 0; i < level; ++i)
-            prompt_builder.append("    ");
+            prompt_builder.append("    "sv);
 
         return prompt_builder.build();
     }
@@ -307,7 +307,7 @@ private:
         if (command == ".exit" || command == ".quit") {
             m_keep_running = false;
             ready_for_input = false;
-        } else if (command.starts_with(".connect ")) {
+        } else if (command.starts_with(".connect "sv)) {
             auto parts = command.split_view(' ');
             if (parts.size() == 2) {
                 connect(parts[1]);
@@ -315,7 +315,7 @@ private:
             } else {
                 outln("\033[33;1mUsage: .connect <database name>\033[0m");
             }
-        } else if (command.starts_with(".read ")) {
+        } else if (command.starts_with(".read "sv)) {
             if (!m_input_file) {
                 auto parts = command.split_view(' ');
                 if (parts.size() == 2) {

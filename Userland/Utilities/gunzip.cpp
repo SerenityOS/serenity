@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         String input_filename;
         String output_filename;
-        if (filename.ends_with(".gz")) {
+        if (filename.ends_with(".gz"sv)) {
             input_filename = filename;
             output_filename = filename.substring_view(0, filename.length() - 3);
         } else {

@@ -16,7 +16,7 @@ void KeymapStatusWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() != GUI::MouseButton::Primary)
         return;
 
-    GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings");
+    GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings"sv);
 }
 
 KeymapStatusWindow::KeymapStatusWindow()

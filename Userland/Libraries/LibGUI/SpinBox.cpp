@@ -18,7 +18,7 @@ SpinBox::SpinBox()
     set_min_size({ 40, 22 });
     set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
     m_editor = add<TextBox>();
-    m_editor->set_text("0");
+    m_editor->set_text("0"sv);
     m_editor->on_change = [this, weak_this = make_weak_ptr()] {
         if (!weak_this)
             return;
@@ -42,13 +42,13 @@ SpinBox::SpinBox()
 
     m_increment_button = add<Button>();
     m_increment_button->set_button_style(Gfx::ButtonStyle::ThickCap);
-    m_increment_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    m_increment_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
     m_increment_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_increment_button->on_click = [this](auto) { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
     m_decrement_button = add<Button>();
     m_decrement_button->set_button_style(Gfx::ButtonStyle::ThickCap);
-    m_decrement_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    m_decrement_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
     m_decrement_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_decrement_button->on_click = [this](auto) { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);

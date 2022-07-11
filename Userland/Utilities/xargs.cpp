@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
     int devnull_fd = 0;
 
     if (is_stdin) {
-        devnull_fd = TRY(Core::System::open("/dev/null", O_RDONLY | O_CLOEXEC));
+        devnull_fd = TRY(Core::System::open("/dev/null"sv, O_RDONLY | O_CLOEXEC));
     }
 
     size_t total_command_length = 0;
@@ -254,8 +254,8 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<String>& arguments, String
     // Append an implicit placeholder at the end if no argument has any placeholders.
     if (!some_argument_has_placeholder) {
         Vector<StringView> parts;
-        parts.append("");
-        parts.append("");
+        parts.append(""sv);
+        parts.append(""sv);
         m_all_parts.append(move(parts));
     }
 }

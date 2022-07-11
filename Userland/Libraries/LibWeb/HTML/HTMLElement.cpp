@@ -40,10 +40,10 @@ HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
     auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
     // "true", an empty string or a missing value map to the "true" state.
-    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"))
+    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"sv))
         return ContentEditableState::True;
     // "false" maps to the "false" state.
-    if (contenteditable.equals_ignoring_case("false"))
+    if (contenteditable.equals_ignoring_case("false"sv))
         return ContentEditableState::False;
     // Having no such attribute or an invalid value maps to the "inherit" state.
     return ContentEditableState::Inherit;
@@ -80,15 +80,15 @@ String HTMLElement::content_editable() const
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
 DOM::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
 {
-    if (content_editable.equals_ignoring_case("inherit")) {
+    if (content_editable.equals_ignoring_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);
         return {};
     }
-    if (content_editable.equals_ignoring_case("true")) {
+    if (content_editable.equals_ignoring_case("true"sv)) {
         set_attribute(HTML::AttributeNames::contenteditable, "true");
         return {};
     }
-    if (content_editable.equals_ignoring_case("false")) {
+    if (content_editable.equals_ignoring_case("false"sv)) {
         set_attribute(HTML::AttributeNames::contenteditable, "false");
         return {};
     }

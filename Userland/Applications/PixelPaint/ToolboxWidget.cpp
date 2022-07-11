@@ -68,20 +68,20 @@ void ToolboxWidget::setup_tools()
         m_tools.append(move(tool));
     };
 
-    add_tool("Move", "move", { 0, Key_M }, make<MoveTool>());
-    add_tool("Pen", "pen", { 0, Key_N }, make<PenTool>());
-    add_tool("Brush", "brush", { 0, Key_P }, make<BrushTool>());
-    add_tool("Bucket Fill", "bucket", { Mod_Shift, Key_B }, make<BucketTool>());
-    add_tool("Spray", "spray", { Mod_Shift, Key_S }, make<SprayTool>());
-    add_tool("Color Picker", "picker", { 0, Key_O }, make<PickerTool>());
-    add_tool("Erase", "eraser", { Mod_Shift, Key_E }, make<EraseTool>());
-    add_tool("Line", "line", { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
-    add_tool("Rectangle", "rectangle", { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
-    add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
-    add_tool("Zoom", "zoom", { 0, Key_Z }, make<ZoomTool>());
-    add_tool("Rectangle Select", "rectangle-select", { 0, Key_R }, make<RectangleSelectTool>());
-    add_tool("Guides", "guides", { 0, Key_G }, make<GuideTool>());
-    add_tool("Clone Tool", "clone", { 0, Key_C }, make<CloneTool>());
+    add_tool("Move", "move"sv, { 0, Key_M }, make<MoveTool>());
+    add_tool("Pen", "pen"sv, { 0, Key_N }, make<PenTool>());
+    add_tool("Brush", "brush"sv, { 0, Key_P }, make<BrushTool>());
+    add_tool("Bucket Fill", "bucket"sv, { Mod_Shift, Key_B }, make<BucketTool>());
+    add_tool("Spray", "spray"sv, { Mod_Shift, Key_S }, make<SprayTool>());
+    add_tool("Color Picker", "picker"sv, { 0, Key_O }, make<PickerTool>());
+    add_tool("Erase", "eraser"sv, { Mod_Shift, Key_E }, make<EraseTool>());
+    add_tool("Line", "line"sv, { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
+    add_tool("Rectangle", "rectangle"sv, { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
+    add_tool("Ellipse", "circle"sv, { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
+    add_tool("Zoom", "zoom"sv, { 0, Key_Z }, make<ZoomTool>());
+    add_tool("Rectangle Select", "rectangle-select"sv, { 0, Key_R }, make<RectangleSelectTool>());
+    add_tool("Guides", "guides"sv, { 0, Key_G }, make<GuideTool>());
+    add_tool("Clone Tool", "clone"sv, { 0, Key_C }, make<CloneTool>());
 }
 
 }

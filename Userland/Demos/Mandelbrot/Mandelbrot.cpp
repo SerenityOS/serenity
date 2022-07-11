@@ -388,7 +388,7 @@ void Mandelbrot::export_image(String const& export_path, ImageType image_type)
     m_set.resize(size());
     auto file = fopen(export_path.characters(), "wb");
     if (!file) {
-        GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot"sv, GUI::MessageBox::Type::Error);
         return;
     }
     fwrite(encoded_data.data(), 1, encoded_data.size(), file);
@@ -439,7 +439,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             mandelbrot->export_image(export_path.value(), ImageType::QOI);
         })));
 
-    export_submenu.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png")));
+    export_submenu.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
 
     TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
@@ -463,7 +463,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
-    auto app_icon = GUI::Icon::default_icon("app-mandelbrot");
+    auto app_icon = GUI::Icon::default_icon("app-mandelbrot"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto view_menu = TRY(window->try_add_menu("&View"));

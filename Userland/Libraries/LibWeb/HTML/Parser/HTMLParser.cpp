@@ -393,16 +393,16 @@ DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) co
     auto const& public_identifier = doctype_token.doctype_data().public_identifier;
     auto const& system_identifier = doctype_token.doctype_data().system_identifier;
 
-    if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"))
+    if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"sv))
         return DOM::QuirksMode::Yes;
 
-    if (public_identifier.equals_ignoring_case("-/W3C/DTD HTML 4.0 Transitional/EN"))
+    if (public_identifier.equals_ignoring_case("-/W3C/DTD HTML 4.0 Transitional/EN"sv))
         return DOM::QuirksMode::Yes;
 
-    if (public_identifier.equals_ignoring_case("HTML"))
+    if (public_identifier.equals_ignoring_case("HTML"sv))
         return DOM::QuirksMode::Yes;
 
-    if (system_identifier.equals_ignoring_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"))
+    if (system_identifier.equals_ignoring_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"sv))
         return DOM::QuirksMode::Yes;
 
     for (auto& public_id : s_quirks_public_ids) {
@@ -411,24 +411,24 @@ DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) co
     }
 
     if (doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
     }
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//", CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//", CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
     if (!doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//", CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
     }
 
@@ -1884,7 +1884,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         (void)m_stack_of_open_elements.pop();
         token.acknowledge_self_closing_flag_if_set();
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden")) {
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden"sv)) {
             m_frameset_ok = false;
         }
         return;
@@ -2620,7 +2620,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::input) {
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden")) {
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden"sv)) {
             goto AnythingElse;
         }
 
@@ -3468,18 +3468,18 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         for (auto& ch : string) {
             // 1. Replace any occurrence of the "&" character by the string "&amp;".
             if (ch == '&')
-                builder.append("&amp;");
+                builder.append("&amp;"sv);
             // 2. Replace any occurrences of the U+00A0 NO-BREAK SPACE character by the string "&nbsp;".
             else if (ch == '\xA0')
-                builder.append("&nbsp;");
+                builder.append("&nbsp;"sv);
             // 3. If the algorithm was invoked in the attribute mode, replace any occurrences of the """ character by the string "&quot;".
             else if (ch == '"' && attribute_mode == AttributeMode::Yes)
-                builder.append("&quot;");
+                builder.append("&quot;"sv);
             // 4. If the algorithm was not invoked in the attribute mode, replace any occurrences of the "<" character by the string "&lt;", and any occurrences of the ">" character by the string "&gt;".
             else if (ch == '<' && attribute_mode == AttributeMode::No)
-                builder.append("&lt;");
+                builder.append("&lt;"sv);
             else if (ch == '>' && attribute_mode == AttributeMode::No)
-                builder.append("&gt;");
+                builder.append("&gt;"sv);
             else
                 builder.append(ch);
         }
@@ -3544,7 +3544,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
                 // FIXME: -> If the attribute is in some other namespace:
                 //             The attribute's serialized name is the attribute's qualified name.
 
-                builder.append("=\"");
+                builder.append("=\""sv);
                 builder.append(escape_string(value, AttributeMode::Yes));
                 builder.append('"');
             });
@@ -3559,7 +3559,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
             // 7. Append the value of running the HTML fragment serialization algorithm on the current node element (thus recursing into this algorithm for that element),
             //    followed by a U+003C LESS-THAN SIGN character (<), a U+002F SOLIDUS character (/), tagname again, and finally a U+003E GREATER-THAN SIGN character (>).
             builder.append(serialize_html_fragment(element));
-            builder.append("</");
+            builder.append("</"sv);
             builder.append(tag_name);
             builder.append('>');
 
@@ -3594,9 +3594,9 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 
             // 1. Append the literal string "<!--" (U+003C LESS-THAN SIGN, U+0021 EXCLAMATION MARK, U+002D HYPHEN-MINUS, U+002D HYPHEN-MINUS),
             //    followed by the value of current node's data IDL attribute, followed by the literal string "-->" (U+002D HYPHEN-MINUS, U+002D HYPHEN-MINUS, U+003E GREATER-THAN SIGN).
-            builder.append("<!--");
+            builder.append("<!--"sv);
             builder.append(comment_node.data());
-            builder.append("-->");
+            builder.append("-->"sv);
             return IterationDecision::Continue;
         }
 
@@ -3606,7 +3606,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 
             // 1. Append the literal string "<?" (U+003C LESS-THAN SIGN, U+003F QUESTION MARK), followed by the value of current node's target IDL attribute,
             //    followed by a single U+0020 SPACE character, followed by the value of current node's data IDL attribute, followed by a single U+003E GREATER-THAN SIGN character (>).
-            builder.append("<?");
+            builder.append("<?"sv);
             builder.append(processing_instruction_node.target());
             builder.append(' ');
             builder.append(processing_instruction_node.data());
@@ -3621,7 +3621,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
             // 1. Append the literal string "<!DOCTYPE" (U+003C LESS-THAN SIGN, U+0021 EXCLAMATION MARK, U+0044 LATIN CAPITAL LETTER D, U+004F LATIN CAPITAL LETTER O,
             //    U+0043 LATIN CAPITAL LETTER C, U+0054 LATIN CAPITAL LETTER T, U+0059 LATIN CAPITAL LETTER Y, U+0050 LATIN CAPITAL LETTER P, U+0045 LATIN CAPITAL LETTER E),
             //    followed by a space (U+0020 SPACE), followed by the value of current node's name IDL attribute, followed by the literal string ">" (U+003E GREATER-THAN SIGN).
-            builder.append("<!DOCTYPE ");
+            builder.append("<!DOCTYPE "sv);
             builder.append(document_type_node.name());
             builder.append('>');
             return IterationDecision::Continue;

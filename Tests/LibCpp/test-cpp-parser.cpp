@@ -31,7 +31,7 @@ TEST_CASE(test_regression)
         auto file_path = directory_iterator.next_full_path();
 
         auto path = LexicalPath { file_path };
-        if (!path.has_extension(".cpp"))
+        if (!path.has_extension(".cpp"sv))
             continue;
 
         outln("Checking {}...", path.basename());

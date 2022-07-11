@@ -87,30 +87,30 @@ constexpr int black_key_height = 60;
 
 constexpr int white_key_labels_count = 12;
 constexpr Array<StringView, white_key_labels_count> white_key_labels = {
-    "A",
-    "S",
-    "D",
-    "F",
-    "G",
-    "H",
-    "J",
-    "K",
-    "L",
-    ";",
-    "\'",
-    "\u23CE", // Return key symbol
+    "A"sv,
+    "S"sv,
+    "D"sv,
+    "F"sv,
+    "G"sv,
+    "H"sv,
+    "J"sv,
+    "K"sv,
+    "L"sv,
+    ";"sv,
+    "\'"sv,
+    "\u23CE"sv, // Return key symbol
 };
 
 constexpr int black_key_labels_count = 8;
 constexpr Array<StringView, black_key_labels_count> black_key_labels = {
-    "W",
-    "E",
-    "T",
-    "Y",
-    "U",
-    "O",
-    "P",
-    "]",
+    "W"sv,
+    "E"sv,
+    "T"sv,
+    "Y"sv,
+    "U"sv,
+    "O"sv,
+    "P"sv,
+    "]"sv,
 };
 
 constexpr int black_key_offsets[] = {

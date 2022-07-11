@@ -26,8 +26,8 @@ class NetworkWidget final : public GUI::ImageWidget {
 public:
     static ErrorOr<NonnullRefPtr<NetworkWidget>> try_create(bool notifications)
     {
-        NonnullRefPtr<Gfx::Bitmap> connected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png"));
-        NonnullRefPtr<Gfx::Bitmap> disconnected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png"));
+        NonnullRefPtr<Gfx::Bitmap> connected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png"sv));
+        NonnullRefPtr<Gfx::Bitmap> disconnected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png"sv));
         return adopt_nonnull_ref_or_enomem(new (nothrow) NetworkWidget(notifications, move(connected_icon), move(disconnected_icon)));
     }
 
@@ -50,7 +50,7 @@ private:
     {
         if (event.button() != GUI::MouseButton::Primary)
             return;
-        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor", Array { "-t", "network" });
+        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", "network" });
     }
 
     virtual void update_widget()
@@ -124,10 +124,10 @@ private:
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, include_loopback, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
-            auto ip_address = if_object.get("ipv4_address").as_string_or("no IP");
-            auto ifname = if_object.get("name").to_string();
-            auto link_up = if_object.get("link_up").as_bool();
-            auto link_speed = if_object.get("link_speed").to_i32();
+            auto ip_address = if_object.get("ipv4_address"sv).as_string_or("no IP");
+            auto ifname = if_object.get("name"sv).to_string();
+            auto link_up = if_object.get("link_up"sv).as_bool();
+            auto link_speed = if_object.get("link_speed"sv).to_i32();
 
             if (!include_loopback)
                 if (ifname == "loop")
@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_has_alpha_channel(true);
     window->resize(16, 16);
     auto icon = TRY(window->try_set_main_widget<NetworkWidget>(display_notifications));
-    icon->load_from_file("/res/icons/16x16/network.png");
+    icon->load_from_file("/res/icons/16x16/network.png"sv);
     window->resize(16, 16);
     window->show();
 

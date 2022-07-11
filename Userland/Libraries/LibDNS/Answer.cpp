@@ -62,26 +62,26 @@ ErrorOr<void> AK::Formatter<DNS::RecordType>::format(AK::FormatBuilder& builder,
 {
     switch (value) {
     case DNS::RecordType::A:
-        return builder.put_string("A");
+        return builder.put_string("A"sv);
     case DNS::RecordType::NS:
-        return builder.put_string("NS");
+        return builder.put_string("NS"sv);
     case DNS::RecordType::CNAME:
-        return builder.put_string("CNAME");
+        return builder.put_string("CNAME"sv);
     case DNS::RecordType::SOA:
-        return builder.put_string("SOA");
+        return builder.put_string("SOA"sv);
     case DNS::RecordType::PTR:
-        return builder.put_string("PTR");
+        return builder.put_string("PTR"sv);
     case DNS::RecordType::MX:
-        return builder.put_string("MX");
+        return builder.put_string("MX"sv);
     case DNS::RecordType::TXT:
-        return builder.put_string("TXT");
+        return builder.put_string("TXT"sv);
     case DNS::RecordType::AAAA:
-        return builder.put_string("AAAA");
+        return builder.put_string("AAAA"sv);
     case DNS::RecordType::SRV:
-        return builder.put_string("SRV");
+        return builder.put_string("SRV"sv);
     }
 
-    TRY(builder.put_string("DNS record type "));
+    TRY(builder.put_string("DNS record type "sv));
     TRY(builder.put_u64((u16)value));
     return {};
 }
@@ -90,10 +90,10 @@ ErrorOr<void> AK::Formatter<DNS::RecordClass>::format(AK::FormatBuilder& builder
 {
     switch (value) {
     case DNS::RecordClass::IN:
-        return builder.put_string("IN");
+        return builder.put_string("IN"sv);
     }
 
-    TRY(builder.put_string("DNS record class "));
+    TRY(builder.put_string("DNS record class "sv));
     TRY(builder.put_u64((u16)value));
     return {};
 }

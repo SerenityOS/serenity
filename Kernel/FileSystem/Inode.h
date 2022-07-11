@@ -109,7 +109,7 @@ protected:
     void did_modify_contents();
     void did_delete_self();
 
-    mutable Mutex m_inode_lock { "Inode" };
+    mutable Mutex m_inode_lock { "Inode"sv };
 
 private:
     FileSystem& m_file_system;

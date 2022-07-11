@@ -39,7 +39,7 @@ ErrorOr<Memory::Region*> DisplayConnector::mmap(Process& process, OpenFileDescri
         range,
         *m_shared_framebuffer_vmobject,
         0,
-        "Mapped Framebuffer",
+        "Mapped Framebuffer"sv,
         prot,
         shared);
 }

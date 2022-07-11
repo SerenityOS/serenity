@@ -21,7 +21,7 @@ CoverWizardPage::CoverWizardPage()
     set_layout<HorizontalBoxLayout>();
     m_banner_image_widget = add<ImageWidget>();
     m_banner_image_widget->set_fixed_size(160, 315);
-    m_banner_image_widget->load_from_file("/res/graphics/wizard-banner-simple.png");
+    m_banner_image_widget->load_from_file("/res/graphics/wizard-banner-simple.png"sv);
 
     m_content_widget = add<Widget>();
     m_content_widget->set_layout<VerticalBoxLayout>();

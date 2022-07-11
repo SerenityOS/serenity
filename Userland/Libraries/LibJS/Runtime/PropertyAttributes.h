@@ -81,7 +81,7 @@ struct Formatter<JS::PropertyAttributes> : Formatter<StringView> {
         parts.append(String::formatted("[[Writable]]: {}", property_attributes.is_writable()));
         parts.append(String::formatted("[[Enumerable]]: {}", property_attributes.is_enumerable()));
         parts.append(String::formatted("[[Configurable]]: {}", property_attributes.is_configurable()));
-        return Formatter<StringView>::format(builder, String::formatted("PropertyAttributes {{ {} }}", String::join(", ", parts)));
+        return Formatter<StringView>::format(builder, String::formatted("PropertyAttributes {{ {} }}", String::join(", "sv, parts)));
     }
 };
 

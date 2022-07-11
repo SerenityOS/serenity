@@ -24,7 +24,7 @@ static ELF::Image* try_load_kernel_binary()
 {
     if (s_kernel_binary.has_value())
         return &s_kernel_binary->elf;
-    auto kernel_binary_or_error = Core::MappedFile::map("/boot/Kernel");
+    auto kernel_binary_or_error = Core::MappedFile::map("/boot/Kernel"sv);
     if (!kernel_binary_or_error.is_error()) {
         auto kernel_binary = kernel_binary_or_error.release_value();
         s_kernel_binary = { { kernel_binary, ELF::Image(kernel_binary->bytes()) } };
@@ -212,12 +212,12 @@ GUI::Variant DisassemblyModel::data(GUI::ModelIndex const& index, GUI::ModelRole
                 if (first)
                     first = false;
                 else
-                    builder.append(" => ");
+                    builder.append(" => "sv);
                 builder.appendff("{}:{}", entry.file_path, entry.line_number);
             }
             if (insn.source_position_with_inlines.source_position.has_value()) {
                 if (!first)
-                    builder.append(" => ");
+                    builder.append(" => "sv);
                 auto const& entry = insn.source_position_with_inlines.source_position.value();
                 builder.appendff("{}:{}", entry.file_path, entry.line_number);
             }

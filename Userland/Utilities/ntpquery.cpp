@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     }
 
 #ifdef __serenity__
-    TRY(Core::System::pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet"));
+    TRY(Core::System::pledge((adjust_time || set_time) ? "stdio inet settime"sv : "stdio inet"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 #endif
 

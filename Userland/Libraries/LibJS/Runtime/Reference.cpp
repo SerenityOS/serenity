@@ -199,24 +199,24 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
 String Reference::to_string() const
 {
     StringBuilder builder;
-    builder.append("Reference { Base=");
+    builder.append("Reference { Base="sv);
     switch (m_base_type) {
     case BaseType::Unresolvable:
-        builder.append("Unresolvable");
+        builder.append("Unresolvable"sv);
         break;
     case BaseType::Environment:
         builder.appendff("{}", base_environment().class_name());
         break;
     case BaseType::Value:
         if (m_base_value.is_empty())
-            builder.append("<empty>");
+            builder.append("<empty>"sv);
         else
             builder.appendff("{}", m_base_value.to_string_without_side_effects());
         break;
     }
-    builder.append(", ReferencedName=");
+    builder.append(", ReferencedName="sv);
     if (!m_name.is_valid())
-        builder.append("<invalid>");
+        builder.append("<invalid>"sv);
     else if (m_name.is_symbol())
         builder.appendff("{}", m_name.as_symbol()->to_string());
     else
@@ -224,11 +224,11 @@ String Reference::to_string() const
     builder.appendff(", Strict={}", m_strict);
     builder.appendff(", ThisValue=");
     if (m_this_value.is_empty())
-        builder.append("<empty>");
+        builder.append("<empty>"sv);
     else
         builder.appendff("{}", m_this_value.to_string_without_side_effects());
 
-    builder.append(" }");
+    builder.append(" }"sv);
     return builder.to_string();
 }
 

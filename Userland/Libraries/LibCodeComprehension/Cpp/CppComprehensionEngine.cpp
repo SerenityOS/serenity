@@ -740,7 +740,7 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = String::formatted("{}{}{}/", prefix, include_dir, path);
             options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
-        } else if (path.ends_with(".h")) {
+        } else if (path.ends_with(".h"sv)) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
             auto completion = String::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
@@ -784,7 +784,7 @@ CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(St
 
 CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(StringView qualified_name)
 {
-    auto parts = qualified_name.split_view("::");
+    auto parts = qualified_name.split_view("::"sv);
     VERIFY(!parts.is_empty());
     auto name = parts.take_last();
     return SymbolName::create(name, move(parts));

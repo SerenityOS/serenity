@@ -136,7 +136,7 @@ static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
 
             bool first = true;
             for (auto const& value : list) {
-                generator.append(first ? " " : ", ");
+                generator.append(first ? " "sv : ", "sv);
                 generator.append(String::formatted("{}", value));
                 first = false;
             }
@@ -538,7 +538,7 @@ Span<StringView const> @name@()
 
     bool first = true;
     for (auto const& value : values) {
-        generator.append(first ? " " : ", ");
+        generator.append(first ? " "sv : ", "sv);
         first = false;
 
         if (auto it = aliases.find_if([&](auto const& alias) { return alias.alias == value; }); it != aliases.end())

@@ -50,7 +50,7 @@ void DesktopSettingsWidget::apply_settings()
     if (workspace_rows != desktop.workspace_rows() || workspace_columns != desktop.workspace_columns()) {
         if (!GUI::ConnectionToWindowServer::the().apply_workspace_settings(workspace_rows, workspace_columns, true)) {
             GUI::MessageBox::show(window(), String::formatted("Error applying workspace settings"),
-                "Workspace settings", GUI::MessageBox::Type::Error);
+                "Workspace settings"sv, GUI::MessageBox::Type::Error);
         }
     }
 }

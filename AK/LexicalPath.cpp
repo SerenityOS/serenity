@@ -133,7 +133,7 @@ String LexicalPath::relative_path(StringView a_path, StringView a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
         // FIXME: This should probably VERIFY or return an Optional<String>.
-        return {};
+        return ""sv;
     }
 
     if (a_path == a_prefix)
@@ -171,7 +171,7 @@ LexicalPath LexicalPath::prepend(StringView value) const
 
 LexicalPath LexicalPath::parent() const
 {
-    return append("..");
+    return append(".."sv);
 }
 
 }

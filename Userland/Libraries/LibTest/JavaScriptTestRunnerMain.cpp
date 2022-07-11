@@ -141,7 +141,7 @@ int main(int argc, char** argv)
         test_root = String { specified_test_root };
     } else {
 #ifdef __serenity__
-        test_root = LexicalPath::join("/home/anon/Tests", String::formatted("{}-tests", program_name.split_view('-').last())).string();
+        test_root = LexicalPath::join("/home/anon/Tests"sv, String::formatted("{}-tests", program_name.split_view('-').last())).string();
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
         if (!serenity_source_dir) {

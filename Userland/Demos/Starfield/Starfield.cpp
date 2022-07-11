@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
-    auto app_icon = GUI::Icon::default_icon("app-starfield");
+    auto app_icon = GUI::Icon::default_icon("app-starfield"sv);
     auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(true);

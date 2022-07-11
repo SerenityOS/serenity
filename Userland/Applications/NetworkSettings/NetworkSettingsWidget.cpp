@@ -63,14 +63,14 @@ NetworkSettingsWidget::NetworkSettingsWidget()
 
     auto config_file = Core::ConfigFile::open_for_system("Network").release_value_but_fixme_should_propagate_errors();
 
-    auto proc_net_adapters_file = Core::Stream::File::open("/proc/net/adapters", Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    auto proc_net_adapters_file = Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
     auto data = proc_net_adapters_file->read_all().release_value_but_fixme_should_propagate_errors();
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = parser.parse().release_value_but_fixme_should_propagate_errors();
 
     // FIXME: This should be done before creating a window.
     if (proc_net_adapters_json.as_array().is_empty()) {
-        GUI::MessageBox::show_error(window(), "No network adapters found!");
+        GUI::MessageBox::show_error(window(), "No network adapters found!"sv);
         ::exit(1);
     }
 
@@ -78,7 +78,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto adapter_name = if_object.get("name").to_string();
+        auto adapter_name = if_object.get("name"sv).to_string();
         if (adapter_name == "loop")
             return;
 
@@ -160,10 +160,10 @@ void NetworkSettingsWidget::apply_settings()
         config_file->write_entry(adapter_data.key, "IPv4Gateway", adapter_data.value.default_gateway);
     }
 
-    GUI::Process::spawn_or_show_error(window(), "/bin/NetworkServer");
+    GUI::Process::spawn_or_show_error(window(), "/bin/NetworkServer"sv);
 
     if (may_need_to_reboot)
-        GUI::MessageBox::show(window(), "You may need to reboot for changes to take effect.", "Network Settings", GUI::MessageBox::Type::Warning);
+        GUI::MessageBox::show(window(), "You may need to reboot for changes to take effect."sv, "Network Settings"sv, GUI::MessageBox::Type::Warning);
 }
 
 }

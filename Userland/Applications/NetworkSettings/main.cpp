@@ -30,15 +30,15 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     auto app = TRY(GUI::Application::try_create(args));
 
     if (getuid() != 0) {
-        GUI::MessageBox::show_error(nullptr, "You need to be root to run Network Settings!");
+        GUI::MessageBox::show_error(nullptr, "You need to be root to run Network Settings!"sv);
         return 1;
     }
 
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd proc exec"));
 
-    auto app_icon = GUI::Icon::default_icon("network");
+    auto app_icon = GUI::Icon::default_icon("network"sv);
     auto window = TRY(GUI::SettingsWindow::create("Network Settings", GUI::SettingsWindow::ShowDefaultsButton::No));
-    (void)TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network", "network"));
+    (void)TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network"sv, "network"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

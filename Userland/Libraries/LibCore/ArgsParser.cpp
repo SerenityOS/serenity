@@ -743,7 +743,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
             continue;
         }
 
-        if (argument.starts_with("--")) {
+        if (argument.starts_with("--"sv)) {
             option_to_complete = argument;
             completing_option = true;
 
@@ -799,7 +799,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
         outln(file, "{}", object.to_string());
     };
 
-    if (option_to_complete.starts_with("--")) {
+    if (option_to_complete.starts_with("--"sv)) {
         // Complete a long option.
         auto option_pattern = option_to_complete.substring_view(2);
         for (auto& option : m_options) {

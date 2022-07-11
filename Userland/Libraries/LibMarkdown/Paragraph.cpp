@@ -15,12 +15,12 @@ String Paragraph::render_to_html(bool tight) const
     StringBuilder builder;
 
     if (!tight)
-        builder.append("<p>");
+        builder.append("<p>"sv);
 
     builder.append(m_text.render_to_html());
 
     if (!tight)
-        builder.append("</p>");
+        builder.append("</p>"sv);
 
     builder.append('\n');
 
@@ -30,9 +30,9 @@ String Paragraph::render_to_html(bool tight) const
 String Paragraph::render_for_terminal(size_t) const
 {
     StringBuilder builder;
-    builder.append("  ");
+    builder.append("  "sv);
     builder.append(m_text.render_for_terminal());
-    builder.append("\n\n");
+    builder.append("\n\n"sv);
     return builder.build();
 }
 

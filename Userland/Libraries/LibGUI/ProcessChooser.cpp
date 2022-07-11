@@ -56,7 +56,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
     select_button.set_fixed_width(80);
     select_button.on_click = [this](auto) {
         if (m_table_view->selection().is_empty()) {
-            GUI::MessageBox::show(this, "No process selected!", m_window_title, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, "No process selected!"sv, m_window_title, GUI::MessageBox::Type::Error);
             return;
         }
         auto index = m_table_view->selection().first();

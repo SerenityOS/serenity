@@ -56,6 +56,6 @@ template<>
 struct AK::Formatter<VirtualAddress> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, VirtualAddress const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
+        return AK::Formatter<FormatString>::format(builder, "V{}"sv, value.as_ptr());
     }
 };

@@ -87,7 +87,7 @@ template<>
 struct Formatter<Core::FileWatcherEvent> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent const& value)
     {
-        return Formatter<FormatString>::format(builder, "FileWatcherEvent(\"{}\", {})", value.event_path, value.type);
+        return Formatter<FormatString>::format(builder, "FileWatcherEvent(\"{}\", {})"sv, value.event_path, value.type);
     }
 };
 
@@ -95,22 +95,22 @@ template<>
 struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent::Type const& value)
     {
-        char const* type;
+        StringView type;
         switch (value) {
         case Core::FileWatcherEvent::Type::ChildCreated:
-            type = "ChildCreated";
+            type = "ChildCreated"sv;
             break;
         case Core::FileWatcherEvent::Type::ChildDeleted:
-            type = "ChildDeleted";
+            type = "ChildDeleted"sv;
             break;
         case Core::FileWatcherEvent::Type::Deleted:
-            type = "Deleted";
+            type = "Deleted"sv;
             break;
         case Core::FileWatcherEvent::Type::ContentModified:
-            type = "ContentModified";
+            type = "ContentModified"sv;
             break;
         case Core::FileWatcherEvent::Type::MetadataModified:
-            type = "MetadataModified";
+            type = "MetadataModified"sv;
             break;
         default:
             VERIFY_NOT_REACHED();

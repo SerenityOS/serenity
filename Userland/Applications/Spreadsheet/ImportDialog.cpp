@@ -179,7 +179,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");
-    wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet").bitmap_for_size(16));
+    wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
     auto import_xsv = [&]() -> Result<NonnullRefPtrVector<Sheet>, String> {
         auto contents = file.read_all();
@@ -212,7 +212,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
         auto json_value_option = JsonParser(file.read_all()).parse();
         if (json_value_option.is_error()) {
             StringBuilder sb;
-            sb.append("Failed to parse ");
+            sb.append("Failed to parse "sv);
             sb.append(file.filename());
 
             return sb.to_string();
@@ -221,7 +221,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(GUI::W
         auto& json_value = json_value_option.value();
         if (!json_value.is_array()) {
             StringBuilder sb;
-            sb.append("Did not find a spreadsheet in ");
+            sb.append("Did not find a spreadsheet in "sv);
             sb.append(file.filename());
 
             return sb.to_string();

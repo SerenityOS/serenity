@@ -43,8 +43,8 @@ ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilde
 
 ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 }));
-    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
 
     return thread_list().with([&](auto& list) -> ErrorOr<void> {
         for (auto const& thread : list) {
@@ -82,8 +82,8 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& pro
 
 ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, 0 }));
-    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
     return Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
         for (auto& process : processes) {
             if (process.ppid() == pid()) {
@@ -126,8 +126,8 @@ ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBu
 
 ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
     size_t count = 0;
     fds().with_shared([&](auto& fds) {
         fds.enumerate([&](auto& file_description_metadata) {
@@ -164,12 +164,12 @@ ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
     if (has_promised(Pledge::x)) {                 \
         if (!promises_builder.is_empty())          \
             TRY(promises_builder.try_append(' ')); \
-        TRY(promises_builder.try_append(#x));      \
+        TRY(promises_builder.try_append(#x##sv));  \
     }
     if (has_promises()) {
         StringBuilder promises_builder;
         ENUMERATE_PLEDGE_PROMISES
-        TRY(obj.add("promises", promises_builder.string_view()));
+        TRY(obj.add("promises"sv, promises_builder.string_view()));
     }
 #undef __ENUMERATE_PLEDGE_PROMISE
     TRY(obj.finish());
@@ -184,7 +184,7 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
             if (!unveiled_path.was_explicitly_unveiled())
                 return IterationDecision::Continue;
             auto obj = TRY(array.add_object());
-            TRY(obj.add("path", unveiled_path.path()));
+            TRY(obj.add("path"sv, unveiled_path.path()));
             StringBuilder permissions_builder;
             if (unveiled_path.permissions() & UnveilAccess::Read)
                 permissions_builder.append('r');
@@ -196,7 +196,7 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
                 permissions_builder.append('c');
             if (unveiled_path.permissions() & UnveilAccess::Browse)
                 permissions_builder.append('b');
-            TRY(obj.add("permissions", permissions_builder.string_view()));
+            TRY(obj.add("permissions"sv, permissions_builder.string_view()));
             TRY(obj.finish());
             return IterationDecision::Continue;
         }));
@@ -235,22 +235,22 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
             bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
             RefPtr<OpenFileDescription> description = file_description_metadata.description();
             auto description_object = TRY(array.add_object());
-            TRY(description_object.add("fd", count));
+            TRY(description_object.add("fd"sv, count));
             // TODO: Better OOM handling.
             auto pseudo_path_or_error = description->pseudo_path();
-            TRY(description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view()));
-            TRY(description_object.add("seekable", description->file().is_seekable()));
-            TRY(description_object.add("class", description->file().class_name()));
-            TRY(description_object.add("offset", description->offset()));
-            TRY(description_object.add("cloexec", cloexec));
-            TRY(description_object.add("blocking", description->is_blocking()));
-            TRY(description_object.add("can_read", description->can_read()));
-            TRY(description_object.add("can_write", description->can_write()));
+            TRY(description_object.add("absolute_path"sv, pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view()));
+            TRY(description_object.add("seekable"sv, description->file().is_seekable()));
+            TRY(description_object.add("class"sv, description->file().class_name()));
+            TRY(description_object.add("offset"sv, description->offset()));
+            TRY(description_object.add("cloexec"sv, cloexec));
+            TRY(description_object.add("blocking"sv, description->is_blocking()));
+            TRY(description_object.add("can_read"sv, description->can_read()));
+            TRY(description_object.add("can_write"sv, description->can_write()));
             Inode* inode = description->inode();
             if (inode != nullptr) {
-                auto inode_object = TRY(description_object.add_object("inode"));
-                TRY(inode_object.add("fsid", inode->fsid().value()));
-                TRY(inode_object.add("index", inode->index().value()));
+                auto inode_object = TRY(description_object.add_object("inode"sv));
+                TRY(inode_object.add("fsid"sv, inode->fsid().value()));
+                TRY(inode_object.add("index"sv, inode->index().value()));
                 TRY(inode_object.finish());
             }
             TRY(description_object.finish());
@@ -272,24 +272,24 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             if (!region.is_user() && !Process::current().is_superuser())
                 continue;
             auto region_object = TRY(array.add_object());
-            TRY(region_object.add("readable", region.is_readable()));
-            TRY(region_object.add("writable", region.is_writable()));
-            TRY(region_object.add("executable", region.is_executable()));
-            TRY(region_object.add("stack", region.is_stack()));
-            TRY(region_object.add("shared", region.is_shared()));
-            TRY(region_object.add("syscall", region.is_syscall_region()));
-            TRY(region_object.add("purgeable", region.vmobject().is_anonymous()));
+            TRY(region_object.add("readable"sv, region.is_readable()));
+            TRY(region_object.add("writable"sv, region.is_writable()));
+            TRY(region_object.add("executable"sv, region.is_executable()));
+            TRY(region_object.add("stack"sv, region.is_stack()));
+            TRY(region_object.add("shared"sv, region.is_shared()));
+            TRY(region_object.add("syscall"sv, region.is_syscall_region()));
+            TRY(region_object.add("purgeable"sv, region.vmobject().is_anonymous()));
             if (region.vmobject().is_anonymous()) {
-                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
+                TRY(region_object.add("volatile"sv, static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
             }
-            TRY(region_object.add("cacheable", region.is_cacheable()));
-            TRY(region_object.add("address", region.vaddr().get()));
-            TRY(region_object.add("size", region.size()));
-            TRY(region_object.add("amount_resident", region.amount_resident()));
-            TRY(region_object.add("amount_dirty", region.amount_dirty()));
-            TRY(region_object.add("cow_pages", region.cow_pages()));
-            TRY(region_object.add("name", region.name()));
-            TRY(region_object.add("vmobject", region.vmobject().class_name()));
+            TRY(region_object.add("cacheable"sv, region.is_cacheable()));
+            TRY(region_object.add("address"sv, region.vaddr().get()));
+            TRY(region_object.add("size"sv, region.size()));
+            TRY(region_object.add("amount_resident"sv, region.amount_resident()));
+            TRY(region_object.add("amount_dirty"sv, region.amount_dirty()));
+            TRY(region_object.add("cow_pages"sv, region.cow_pages()));
+            TRY(region_object.add("name"sv, region.name()));
+            TRY(region_object.add("vmobject"sv, region.vmobject().class_name()));
 
             StringBuilder pagemap_builder;
             for (size_t i = 0; i < region.page_count(); ++i) {
@@ -301,7 +301,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
                 else
                     pagemap_builder.append('P');
             }
-            TRY(region_object.add("pagemap", pagemap_builder.string_view()));
+            TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
             TRY(region_object.finish());
         }
     }

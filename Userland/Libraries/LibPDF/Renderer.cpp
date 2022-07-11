@@ -355,8 +355,8 @@ RENDERER_HANDLER(text_set_font)
 
     auto font_name = MUST(font_dictionary->get_name(m_document, CommonNames::BaseFont))->name().to_lowercase();
     auto font_view = font_name.view();
-    bool is_bold = font_view.contains("bold");
-    bool is_italic = font_view.contains("italic");
+    bool is_bold = font_view.contains("bold"sv);
+    bool is_italic = font_view.contains("italic"sv);
 
     String font_variant;
 

@@ -85,7 +85,7 @@ String NamedType::to_string() const
     if (is_auto())
         name = "auto";
     else
-        name = m_name.is_null() ? "" : m_name->full_name();
+        name = m_name.is_null() ? ""sv : m_name->full_name();
 
     return String::formatted("{}{}", qualifiers_string, name);
 }
@@ -109,7 +109,7 @@ String Reference::to_string() const
     if (m_kind == Kind::Lvalue)
         builder.append("&");
     else
-        builder.append("&&");
+        builder.append("&&"sv);
     return builder.to_string();
 }
 
@@ -123,7 +123,7 @@ String FunctionType::to_string() const
         if (first)
             first = false;
         else
-            builder.append(", ");
+            builder.append(", "sv);
         if (parameter.type())
             builder.append(parameter.type()->to_string());
         if (parameter.name() && !parameter.full_name().is_empty()) {
@@ -552,7 +552,7 @@ StringView Name::full_name() const
             builder.appendff("{}::", scope.name());
         }
     }
-    m_full_name = String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->name());
+    m_full_name = String::formatted("{}{}", builder.to_string(), m_name.is_null() ? ""sv : m_name->name());
     return *m_full_name;
 }
 

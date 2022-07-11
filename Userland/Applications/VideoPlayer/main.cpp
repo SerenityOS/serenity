@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
 
-    auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm");
+    auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
     auto const& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
     if (!optional_track.has_value())
         return 1;

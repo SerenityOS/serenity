@@ -332,7 +332,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
         // After vertical line
         b.clear();
-        b.append("a|");
+        b.append("a|"sv);
         b.append(ch);
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);

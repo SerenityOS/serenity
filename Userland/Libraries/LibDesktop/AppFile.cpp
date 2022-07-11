@@ -33,7 +33,7 @@ void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, StringVi
         return;
     while (di.has_next()) {
         auto name = di.next_path();
-        if (!name.ends_with(".af"))
+        if (!name.ends_with(".af"sv))
             continue;
         auto path = String::formatted("{}/{}", directory, name);
         auto af = AppFile::open(path);

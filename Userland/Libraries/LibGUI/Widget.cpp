@@ -1150,7 +1150,7 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
             return false;
         }
 
-        auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
+        auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout"sv);
         if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
             auto layout = registration->construct();
             if (!layout || !registration->is_derived_from(layout_class)) {
@@ -1168,7 +1168,7 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
         });
     }
 
-    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget"sv);
     bool is_tab_widget = is<TabWidget>(*this);
     object->for_each_child_object_interruptible([&](auto child_data) {
         auto class_name = child_data->name();

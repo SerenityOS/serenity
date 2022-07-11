@@ -13,7 +13,7 @@
 namespace Spreadsheet {
 
 DateCell::DateCell()
-    : CellType("Date")
+    : CellType("Date"sv)
 {
 }
 
@@ -21,7 +21,7 @@ JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata con
 {
     return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
         auto timestamp = TRY(js_value(cell, metadata));
-        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(cell.sheet().global_object()))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
+        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(cell.sheet().global_object()))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
 
         if (metadata.length >= 0)
             return string.substring(0, metadata.length);

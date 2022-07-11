@@ -22,18 +22,18 @@
 
 namespace Core {
 
-#define REGISTER_ABSTRACT_CORE_OBJECT(namespace_, class_name)                                                                 \
-    namespace Core {                                                                                                          \
-    namespace Registration {                                                                                                  \
-    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return RefPtr<Object>(); }); \
-    }                                                                                                                         \
+#define REGISTER_ABSTRACT_CORE_OBJECT(namespace_, class_name)                                                                     \
+    namespace Core {                                                                                                              \
+    namespace Registration {                                                                                                      \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return RefPtr<Object>(); }); \
+    }                                                                                                                             \
     }
 
-#define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                             \
-    namespace Core {                                                                                                                             \
-    namespace Registration {                                                                                                                     \
-    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); }); \
-    }                                                                                                                                            \
+#define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                                 \
+    namespace Core {                                                                                                                                 \
+    namespace Registration {                                                                                                                         \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name##sv, []() { return namespace_::class_name::construct(); }); \
+    }                                                                                                                                                \
     }
 
 class ObjectClassRegistration {
@@ -67,7 +67,7 @@ enum class TimerShouldFireWhenNotVisible {
 
 #define C_OBJECT(klass)                                                                  \
 public:                                                                                  \
-    virtual StringView class_name() const override { return #klass; }                    \
+    virtual StringView class_name() const override { return #klass##sv; }                \
     template<typename Klass = klass, class... Args>                                      \
     static NonnullRefPtr<klass> construct(Args&&... args)                                \
     {                                                                                    \
@@ -81,7 +81,7 @@ public:                                                                         
 
 #define C_OBJECT_ABSTRACT(klass) \
 public:                          \
-    virtual StringView class_name() const override { return #klass; }
+    virtual StringView class_name() const override { return #klass##sv; }
 
 class Object
     : public RefCounted<Object>
@@ -215,7 +215,7 @@ template<>
 struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::Object const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
+        return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.class_name(), &value);
     }
 };
 
@@ -306,28 +306,28 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
         },                                                     \
         {});
 
-#define REGISTER_RECT_PROPERTY(property_name, getter, setter)          \
-    register_property(                                                 \
-        property_name,                                                 \
-        [this] {                                                       \
-            auto rect = this->getter();                                \
-            JsonObject rect_object;                                    \
-            rect_object.set("x", rect.x());                            \
-            rect_object.set("y", rect.y());                            \
-            rect_object.set("width", rect.width());                    \
-            rect_object.set("height", rect.height());                  \
-            return rect_object;                                        \
-        },                                                             \
-        [this](auto& value) {                                          \
-            if (!value.is_object())                                    \
-                return false;                                          \
-            Gfx::IntRect rect;                                         \
-            rect.set_x(value.as_object().get("x").to_i32());           \
-            rect.set_y(value.as_object().get("y").to_i32());           \
-            rect.set_width(value.as_object().get("width").to_i32());   \
-            rect.set_height(value.as_object().get("height").to_i32()); \
-            setter(rect);                                              \
-            return true;                                               \
+#define REGISTER_RECT_PROPERTY(property_name, getter, setter)            \
+    register_property(                                                   \
+        property_name,                                                   \
+        [this] {                                                         \
+            auto rect = this->getter();                                  \
+            JsonObject rect_object;                                      \
+            rect_object.set("x"sv, rect.x());                            \
+            rect_object.set("y"sv, rect.y());                            \
+            rect_object.set("width"sv, rect.width());                    \
+            rect_object.set("height"sv, rect.height());                  \
+            return rect_object;                                          \
+        },                                                               \
+        [this](auto& value) {                                            \
+            if (!value.is_object())                                      \
+                return false;                                            \
+            Gfx::IntRect rect;                                           \
+            rect.set_x(value.as_object().get("x"sv).to_i32());           \
+            rect.set_y(value.as_object().get("y"sv).to_i32());           \
+            rect.set_width(value.as_object().get("width"sv).to_i32());   \
+            rect.set_height(value.as_object().get("height"sv).to_i32()); \
+            setter(rect);                                                \
+            return true;                                                 \
         });
 
 #define REGISTER_SIZE_PROPERTY(property_name, getter, setter) \

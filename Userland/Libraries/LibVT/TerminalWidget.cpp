@@ -97,9 +97,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
         update();
     };
 
-    m_cursor_blink_timer->set_interval(Config::read_i32("Terminal", "Text",
-        "CursorBlinkInterval",
-        500));
+    m_cursor_blink_timer->set_interval(Config::read_i32("Terminal"sv, "Text"sv, "CursorBlinkInterval"sv, 500));
     m_cursor_blink_timer->on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
@@ -114,7 +112,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     };
     m_auto_scroll_timer->start();
 
-    auto font_entry = Config::read_string("Terminal", "Text", "Font", "default");
+    auto font_entry = Config::read_string("Terminal"sv, "Text"sv, "Font"sv, "default"sv);
     if (font_entry == "default")
         set_font(Gfx::FontDatabase::default_fixed_width_font());
     else
@@ -122,14 +120,14 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
-    m_terminal.set_size(Config::read_i32("Terminal", "Window", "Width", 80), Config::read_i32("Terminal", "Window", "Height", 25));
+    m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
-    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/paste.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/paste.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
@@ -147,7 +145,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     update_copy_action();
     update_paste_action();
 
-    set_color_scheme(Config::read_string("Terminal", "Window", "ColorScheme", "Default"));
+    set_color_scheme(Config::read_string("Terminal"sv, "Window"sv, "ColorScheme"sv, "Default"sv));
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -757,7 +755,7 @@ void TerminalWidget::paste()
         return;
 
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("text/"))
+    if (!mime_type.starts_with("text/"sv))
         return;
     if (data.is_empty())
         return;
@@ -1170,7 +1168,7 @@ void TerminalWidget::update_copy_action()
 void TerminalWidget::update_paste_action()
 {
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    m_paste_action->set_enabled(mime_type.starts_with("text/") && !data.is_empty());
+    m_paste_action->set_enabled(mime_type.starts_with("text/"sv) && !data.is_empty());
 }
 
 void TerminalWidget::set_color_scheme(StringView name)
@@ -1183,14 +1181,14 @@ void TerminalWidget::set_color_scheme(StringView name)
     m_color_scheme_name = name;
 
     constexpr StringView color_names[] = {
-        "Black",
-        "Red",
-        "Green",
-        "Yellow",
-        "Blue",
-        "Magenta",
-        "Cyan",
-        "White"
+        "Black"sv,
+        "Red"sv,
+        "Green"sv,
+        "Yellow"sv,
+        "Blue"sv,
+        "Magenta"sv,
+        "Cyan"sv,
+        "White"sv
     };
 
     auto path = String::formatted("/res/terminal-colors/{}.ini", name);
@@ -1270,8 +1268,8 @@ void TerminalWidget::set_font_and_resize_to_fit(Gfx::Font const& font)
 // This basically wraps the code that handles sending the escape sequence in bracketed paste mode.
 void TerminalWidget::send_non_user_input(ReadonlyBytes bytes)
 {
-    constexpr StringView leading_control_sequence = "\e[200~";
-    constexpr StringView trailing_control_sequence = "\e[201~";
+    constexpr StringView leading_control_sequence = "\e[200~"sv;
+    constexpr StringView trailing_control_sequence = "\e[201~"sv;
 
     int nwritten;
     if (m_terminal.needs_bracketed_paste()) {

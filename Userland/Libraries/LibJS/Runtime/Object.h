@@ -30,7 +30,7 @@ public:                                            \
     using Base = base_class;                       \
     virtual StringView class_name() const override \
     {                                              \
-        return #class_;                            \
+        return #class_##sv;                        \
     }
 
 struct PrivateElement {

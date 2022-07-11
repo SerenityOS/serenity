@@ -969,13 +969,13 @@ static ThrowCompletionOr<Value> create_html(GlobalObject& global_object, Value s
         auto value_string = TRY(value.to_string(global_object));
         builder.append(' ');
         builder.append(attribute);
-        builder.append("=\"");
-        builder.append(value_string.replace("\"", "&quot;", ReplaceMode::All));
+        builder.append("=\""sv);
+        builder.append(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All));
         builder.append('"');
     }
     builder.append('>');
     builder.append(str);
-    builder.append("</");
+    builder.append("</"sv);
     builder.append(tag);
     builder.append('>');
     return js_string(vm, builder.build());

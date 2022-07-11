@@ -27,20 +27,20 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 
     auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
-    file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif");
+    file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif"sv);
     file_copy_animation.animate();
 
     auto& source_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("source_folder_icon");
-    source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
+    source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png"sv);
 
     auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
 
     switch (m_operation) {
     case FileOperation::Delete:
-        destination_folder_icon.load_from_file("/res/icons/32x32/recycle-bin.png");
+        destination_folder_icon.load_from_file("/res/icons/32x32/recycle-bin.png"sv);
         break;
     default:
-        destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
+        destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png"sv);
         break;
     }
 
@@ -129,7 +129,7 @@ void FileOperationProgressWidget::did_error(StringView message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
-    GUI::MessageBox::show(window(), String::formatted("An error occurred: {}", message), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    GUI::MessageBox::show(window(), String::formatted("An error occurred: {}", message), "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     window()->close();
 }
 

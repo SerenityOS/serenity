@@ -116,7 +116,7 @@ int OptionParser::getopt()
             m_consumed_args = 0;
     } else {
         // Alright, so we have an option on our hands!
-        bool is_long_option = arg.starts_with("--");
+        bool is_long_option = arg.starts_with("--"sv);
         if (is_long_option)
             res = handle_long_option();
         else
@@ -146,7 +146,7 @@ bool OptionParser::lookup_short_option(char option, int& needs_value) const
         return false;
     }
 
-    if (parts[1].starts_with("::")) {
+    if (parts[1].starts_with("::"sv)) {
         // If an option is followed by two colons, it optionally accepts an
         // argument.
         needs_value = optional_argument;

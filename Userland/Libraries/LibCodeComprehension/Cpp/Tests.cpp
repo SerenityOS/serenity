@@ -33,7 +33,7 @@ static bool s_some_test_failed = false;
         return;                        \
     } while (0)
 
-constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/comprehension";
+constexpr auto TESTS_ROOT_DIR = "/home/anon/Tests/cpp-tests/comprehension"sv;
 
 class FileDB : public CodeComprehension::FileDB {
 public:

@@ -148,31 +148,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (argument == "--help") {
             out("{}", usage);
             return 0;
-        } else if (argument.starts_with("if=")) {
+        } else if (argument.starts_with("if="sv)) {
             if (handle_io_file_arguments(input_fd, input_flags, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("of=")) {
+        } else if (argument.starts_with("of="sv)) {
             if (handle_io_file_arguments(output_fd, output_flags, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("bs=")) {
+        } else if (argument.starts_with("bs="sv)) {
             if (handle_size_arguments(block_size, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("count=")) {
+        } else if (argument.starts_with("count="sv)) {
             if (handle_size_arguments(count, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("seek=")) {
+        } else if (argument.starts_with("seek="sv)) {
             if (handle_size_arguments(seek, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("skip=")) {
+        } else if (argument.starts_with("skip="sv)) {
             if (handle_size_arguments(skip, argument) < 0) {
                 return 1;
             }
-        } else if (argument.starts_with("status=")) {
+        } else if (argument.starts_with("status="sv)) {
             if (handle_status_arguments(status, argument) < 0) {
                 return 1;
             }

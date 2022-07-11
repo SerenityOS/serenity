@@ -316,7 +316,7 @@ TEST_CASE(port_overflow)
 
 TEST_CASE(equality)
 {
-    EXPECT(URL("http://serenityos.org").equals("http://serenityos.org#test", URL::ExcludeFragment::Yes));
+    EXPECT(URL("http://serenityos.org").equals("http://serenityos.org#test"sv, URL::ExcludeFragment::Yes));
     EXPECT_EQ(URL("http://example.com/index.html"), URL("http://ex%61mple.com/index.html"));
     EXPECT_EQ(URL("file:///my/file"), URL("file://localhost/my/file"));
     EXPECT_NE(URL("http://serenityos.org/index.html"), URL("http://serenityos.org/test.html"));

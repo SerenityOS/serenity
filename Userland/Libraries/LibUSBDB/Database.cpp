@@ -27,7 +27,7 @@ const StringView Database::get_vendor(u16 vendor_id) const
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value())
-        return "";
+        return ""sv;
     return vendor.value()->name;
 }
 
@@ -35,11 +35,11 @@ const StringView Database::get_device(u16 vendor_id, u16 device_id) const
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value()) {
-        return "";
+        return ""sv;
     }
     auto const& device = vendor.value()->devices.get(device_id);
     if (!device.has_value())
-        return "";
+        return ""sv;
     return device.value()->name;
 }
 
@@ -47,13 +47,13 @@ const StringView Database::get_interface(u16 vendor_id, u16 device_id, u16 inter
 {
     auto const& vendor = m_vendors.get(vendor_id);
     if (!vendor.has_value())
-        return "";
+        return ""sv;
     auto const& device = vendor.value()->devices.get(device_id);
     if (!device.has_value())
-        return "";
+        return ""sv;
     auto const& interface = device.value()->interfaces.get(interface_id);
     if (!interface.has_value())
-        return "";
+        return ""sv;
     return interface.value()->name;
 }
 
@@ -61,7 +61,7 @@ const StringView Database::get_class(u8 class_id) const
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())
-        return "";
+        return ""sv;
     return xclass.value()->name;
 }
 
@@ -69,10 +69,10 @@ const StringView Database::get_subclass(u8 class_id, u8 subclass_id) const
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())
-        return "";
+        return ""sv;
     auto const& subclass = xclass.value()->subclasses.get(subclass_id);
     if (!subclass.has_value())
-        return "";
+        return ""sv;
     return subclass.value()->name;
 }
 
@@ -80,13 +80,13 @@ const StringView Database::get_protocol(u8 class_id, u8 subclass_id, u8 protocol
 {
     auto const& xclass = m_classes.get(class_id);
     if (!xclass.has_value())
-        return "";
+        return ""sv;
     auto const& subclass = xclass.value()->subclasses.get(subclass_id);
     if (!subclass.has_value())
-        return "";
+        return ""sv;
     auto const& protocol = subclass.value()->protocols.get(protocol_id);
     if (!protocol.has_value())
-        return "";
+        return ""sv;
     return protocol.value()->name;
 }
 

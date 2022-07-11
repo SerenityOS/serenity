@@ -156,7 +156,7 @@ static String double_to_string(double d)
         return builder.to_string();
     }
     if (-6 < exponent && exponent <= 0) {
-        builder.append("0.");
+        builder.append("0."sv);
         builder.append(String::repeated('0', -exponent));
         builder.append(digits);
         return builder.to_string();

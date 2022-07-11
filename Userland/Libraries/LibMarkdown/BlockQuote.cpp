@@ -13,9 +13,9 @@ namespace Markdown {
 String BlockQuote::render_to_html(bool) const
 {
     StringBuilder builder;
-    builder.append("<blockquote>\n");
+    builder.append("<blockquote>\n"sv);
     builder.append(m_contents->render_to_html());
-    builder.append("</blockquote>\n");
+    builder.append("</blockquote>\n"sv);
     return builder.build();
 }
 

@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT void initialize()
     if (!rsdp.has_value())
         return;
 
-    auto facp = StaticParsing::find_table(rsdp.value(), "FACP");
+    auto facp = StaticParsing::find_table(rsdp.value(), "FACP"sv);
     if (!facp.has_value())
         return;
     auto facp_table_or_error = Memory::map_typed<Structures::FADT>(facp.value());

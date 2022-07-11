@@ -162,7 +162,7 @@ void HTMLScriptElement::prepare_script()
     if (is_javascript_mime_type_essence_match(script_block_type.trim_whitespace())) {
         // - If the script block's type string with leading and trailing ASCII whitespace stripped is a JavaScript MIME type essence match, the script's type is "classic".
         m_script_type = ScriptType::Classic;
-    } else if (script_block_type.equals_ignoring_case("module")) {
+    } else if (script_block_type.equals_ignoring_case("module"sv)) {
         // - If the script block's type string is an ASCII case-insensitive match for the string "module", the script's type is "module".
         m_script_type = ScriptType::Module;
     } else {
@@ -217,13 +217,13 @@ void HTMLScriptElement::prepare_script()
         event = event.trim_whitespace();
 
         // 4. If for is not an ASCII case-insensitive match for the string "window", then return. The script is not executed.
-        if (!for_.equals_ignoring_case("window")) {
+        if (!for_.equals_ignoring_case("window"sv)) {
             dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'for' attribute is not equal to 'window'");
             return;
         }
 
         // 5. If event is not an ASCII case-insensitive match for either the string "onload" or the string "onload()", then return. The script is not executed.
-        if (!event.equals_ignoring_case("onload") && !event.equals_ignoring_case("onload()")) {
+        if (!event.equals_ignoring_case("onload"sv) && !event.equals_ignoring_case("onload()"sv)) {
             dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'event' attribute is not equal to 'onload' or 'onload()'");
             return;
         }

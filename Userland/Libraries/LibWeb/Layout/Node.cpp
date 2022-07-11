@@ -592,7 +592,7 @@ String Node::debug_description() const
                 builder.appendff(".{}", class_name);
         }
     } else {
-        builder.append("(anonymous)");
+        builder.append("(anonymous)"sv);
     }
     return builder.to_string();
 }

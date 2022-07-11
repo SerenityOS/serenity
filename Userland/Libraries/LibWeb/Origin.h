@@ -78,7 +78,7 @@ public:
         result.append(protocol());
 
         // 3. Append "://" to result.
-        result.append("://");
+        result.append("://"sv);
 
         // 4. Append origin's host, serialized, to result.
         result.append(host());

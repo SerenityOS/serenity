@@ -234,7 +234,7 @@ TEST_CASE(test_unsigned_bigint_division_combined_test)
 
 TEST_CASE(test_unsigned_bigint_base10_from_string)
 {
-    auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793");
+    auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793"sv);
     Vector<u32> expected_result { 3806301393, 954919431, 3879607298, 721 };
     EXPECT_EQ(result.words(), expected_result);
 }
@@ -414,7 +414,7 @@ TEST_CASE(test_bigint_import_big_endian_encode_decode_roundtrip)
 
 TEST_CASE(test_bigint_big_endian_import)
 {
-    auto number = Crypto::UnsignedBigInteger::import_data("hello");
+    auto number = Crypto::UnsignedBigInteger::import_data("hello"sv);
     EXPECT_EQ(number, "448378203247"_bigint);
 }
 

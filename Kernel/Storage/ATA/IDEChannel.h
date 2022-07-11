@@ -158,7 +158,7 @@ protected:
     u64 m_current_request_block_index { 0 };
     bool m_current_request_flushing_cache { false };
     Spinlock m_request_lock;
-    Mutex m_lock { "IDEChannel" };
+    Mutex m_lock { "IDEChannel"sv };
 
     IOAddressGroup m_io_group;
     NonnullRefPtr<IDEController> m_parent_controller;

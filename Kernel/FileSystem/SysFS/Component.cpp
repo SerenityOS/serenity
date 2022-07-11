@@ -35,8 +35,8 @@ ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     VERIFY(m_parent_directory);
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

@@ -128,7 +128,7 @@ public:
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual ModelIndex parent_index(ModelIndex const&) const override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
-    virtual StringView drag_data_type() const override { return "text/uri-list"; }
+    virtual StringView drag_data_type() const override { return "text/uri-list"sv; }
     virtual bool accepts_drag(ModelIndex const&, Vector<String> const& mime_types) const override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     virtual bool is_editable(ModelIndex const&) const override;

@@ -22,7 +22,7 @@
 
 namespace Audio {
 
-static constexpr StringView no_plugin_error = "No loader plugin available";
+static constexpr StringView no_plugin_error = "No loader plugin available"sv;
 
 using LoaderSamples = Result<FixedArray<Sample>, LoaderError>;
 using MaybeLoaderError = Result<void, LoaderError>;

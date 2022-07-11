@@ -13,7 +13,7 @@ String Text::render_to_html() const
 {
     StringBuilder builder;
     builder.append(escape_html_entities(m_text));
-    builder.append("<br>\n");
+    builder.append("<br>\n"sv);
     return builder.build();
 }
 
@@ -28,9 +28,9 @@ String UnorderedList::render_to_html() const
     //           FIXME: The spec is unclear about what the space means, or where it goes
     //                  somehow figure this out
     StringBuilder builder;
-    builder.append("<li>");
+    builder.append("<li>"sv);
     builder.append(escape_html_entities(m_text.substring_view(1, m_text.length() - 1)));
-    builder.append("</li>");
+    builder.append("</li>"sv);
     return builder.build();
 }
 
@@ -59,7 +59,7 @@ Link::Link(String text, Document const& document)
     while (index < m_text.length() && (m_text[index] == ' ' || m_text[index] == '\t'))
         ++index;
     auto url_string = m_text.substring_view(index, m_text.length() - index);
-    auto space_offset = url_string.find_any_of(" \t");
+    auto space_offset = url_string.find_any_of(" \t"sv);
     String url = url_string;
     if (space_offset.has_value()) {
         url = url_string.substring_view(0, space_offset.value());
@@ -76,11 +76,11 @@ Link::Link(String text, Document const& document)
 String Link::render_to_html() const
 {
     StringBuilder builder;
-    builder.append("<a href=\"");
+    builder.append("<a href=\""sv);
     builder.append(escape_html_entities(m_url.to_string()));
-    builder.append("\">");
+    builder.append("\">"sv);
     builder.append(escape_html_entities(m_name));
-    builder.append("</a><br>\n");
+    builder.append("</a><br>\n"sv);
     return builder.build();
 }
 
@@ -88,7 +88,7 @@ String Preformatted::render_to_html() const
 {
     StringBuilder builder;
     builder.append(escape_html_entities(m_text));
-    builder.append("\n");
+    builder.append('\n');
 
     return builder.build();
 }

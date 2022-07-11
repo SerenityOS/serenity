@@ -31,7 +31,7 @@ Bitmap const* Emoji::emoji_for_code_points(Span<u32> const& code_points)
     if (it != s_emojis.end())
         return (*it).value.ptr();
 
-    auto basename = String::join('_', code_points, "U+{:X}");
+    auto basename = String::join('_', code_points, "U+{:X}"sv);
     auto bitmap_or_error = Bitmap::try_load_from_file(String::formatted("/res/emoji/{}.png", basename));
     if (bitmap_or_error.is_error()) {
         s_emojis.set(code_points, nullptr);

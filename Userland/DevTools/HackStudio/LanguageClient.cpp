@@ -209,7 +209,7 @@ void ConnectionToServerWrapper::on_crash()
 void ConnectionToServerWrapper::show_frequent_crashes_notification() const
 {
     auto notification = GUI::Notification::construct();
-    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
+    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
     notification->set_title("LanguageServer Crashes too much!");
     notification->set_text("LanguageServer aided features will not be available in this session");
     notification->show();
@@ -217,7 +217,7 @@ void ConnectionToServerWrapper::show_frequent_crashes_notification() const
 void ConnectionToServerWrapper::show_crash_notification() const
 {
     auto notification = GUI::Notification::construct();
-    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
+    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
     notification->set_title("Oops!");
     notification->set_text(String::formatted("LanguageServer has crashed"));
     notification->show();

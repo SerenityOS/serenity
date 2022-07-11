@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"sv));
 
     Config::pledge_domain("Solitaire");
 
@@ -39,19 +39,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Solitaire");
 
-    auto mode = static_cast<Solitaire::Mode>(Config::read_i32("Solitaire", "Settings", "Mode", static_cast<int>(Solitaire::Mode::SingleCardDraw)));
+    auto mode = static_cast<Solitaire::Mode>(Config::read_i32("Solitaire"sv, "Settings"sv, "Mode"sv, static_cast<int>(Solitaire::Mode::SingleCardDraw)));
 
     auto update_mode = [&](Solitaire::Mode new_mode) {
         mode = new_mode;
-        Config::write_i32("Solitaire", "Settings", "Mode", static_cast<int>(mode));
+        Config::write_i32("Solitaire"sv, "Settings"sv, "Mode"sv, static_cast<int>(mode));
     };
 
     auto high_score = [&]() {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            return static_cast<u32>(Config::read_i32("Solitaire", "HighScores", "SingleCardDraw", 0));
+            return static_cast<u32>(Config::read_i32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, 0));
         case Solitaire::Mode::ThreeCardDraw:
-            return static_cast<u32>(Config::read_i32("Solitaire", "HighScores", "ThreeCardDraw", 0));
+            return static_cast<u32>(Config::read_i32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, 0));
         default:
             VERIFY_NOT_REACHED();
         }
@@ -60,10 +60,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto update_high_score = [&](u32 new_high_score) {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            Config::write_i32("Solitaire", "HighScores", "SingleCardDraw", static_cast<int>(new_high_score));
+            Config::write_i32("Solitaire"sv, "HighScores"sv, "SingleCardDraw"sv, static_cast<int>(new_high_score));
             break;
         case Solitaire::Mode::ThreeCardDraw:
-            Config::write_i32("Solitaire", "HighScores", "ThreeCardDraw", static_cast<int>(new_high_score));
+            Config::write_i32("Solitaire"sv, "HighScores"sv, "ThreeCardDraw"sv, static_cast<int>(new_high_score));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -139,8 +139,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto game_in_progress = timer->is_active();
         if (game_in_progress) {
             auto result = GUI::MessageBox::show(window,
-                "A game is still in progress, are you sure you would like to quit?",
-                "Game in progress",
+                "A game is still in progress, are you sure you would like to quit?"sv,
+                "Game in progress"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNo);
 
@@ -174,18 +174,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     three_card_draw_action->set_status_tip("Draw three cards at a time");
     draw_setting_actions.add_action(three_card_draw_action);
 
-    game.set_auto_collect(Config::read_bool("Solitaire", "Settings", "AutoCollect", false));
+    game.set_auto_collect(Config::read_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, false));
     auto toggle_auto_collect_action = GUI::Action::create_checkable("Auto-&Collect", [&](auto& action) {
         auto checked = action.is_checked();
         game.set_auto_collect(checked);
-        Config::write_bool("Solitaire", "Settings", "AutoCollect", checked);
+        Config::write_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, checked);
     });
     toggle_auto_collect_action->set_checked(game.is_auto_collecting());
     toggle_auto_collect_action->set_status_tip("Auto-collect to foundation piles");
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.setup(mode);
     })));
     TRY(game_menu->try_add_separator());

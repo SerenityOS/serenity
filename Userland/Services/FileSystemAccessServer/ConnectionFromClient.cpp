@@ -69,14 +69,14 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
             access_string = "write to";
 
         auto pid = this->socket().peer_pid().release_value_but_fixme_should_propagate_errors();
-        auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe").string();
+        auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe"sv).string();
         auto exe_path = Core::File::real_path_for(exe_link);
 
         auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
         if (prompt == ShouldPrompt::Yes) {
             auto exe_name = LexicalPath::basename(exe_path);
-            auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+            auto result = GUI::MessageBox::show(main_window, String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
             approved = result == GUI::MessageBox::ExecResult::Yes;
         } else {
             approved = true;

@@ -21,8 +21,8 @@ SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirec
 ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
 
     return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> ErrorOr<void> {
         for (auto& exposed_device : list) {

@@ -153,7 +153,7 @@ class DevTmpFSRootDirectoryInode final : public DevTmpFSDirectoryInode {
 
 public:
     virtual ~DevTmpFSRootDirectoryInode() override;
-    virtual StringView name() const override { return "."; }
+    virtual StringView name() const override { return "."sv; }
 
 private:
     // ^DevTmpFSInode

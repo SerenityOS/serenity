@@ -128,7 +128,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
         mounts.append(move(mount));
     });
 
-    m_root_custody = TRY(Custody::try_create(nullptr, "", *m_root_inode, root_mount_flags));
+    m_root_custody = TRY(Custody::try_create(nullptr, ""sv, *m_root_inode, root_mount_flags));
     return {};
 }
 
@@ -376,7 +376,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     path = path.trim("/"sv, TrimMode::Right);
     if (path.is_empty()) {
         // NOTE: This means the path was a series of slashes, which resolves to "/".
-        path = "/";
+        path = "/"sv;
     }
 
     RefPtr<Custody> parent_custody;
@@ -736,8 +736,8 @@ ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
     if (custody->is_readonly())
         return EROFS;
 
-    TRY(inode.remove_child("."));
-    TRY(inode.remove_child(".."));
+    TRY(inode.remove_child("."sv));
+    TRY(inode.remove_child(".."sv));
 
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }

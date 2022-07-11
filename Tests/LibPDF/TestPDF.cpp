@@ -13,7 +13,7 @@
 
 TEST_CASE(linearized_pdf)
 {
-    auto file = Core::MappedFile::map("linearized.pdf").release_value();
+    auto file = Core::MappedFile::map("linearized.pdf"sv).release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
     EXPECT(!document.value()->initialize().is_error());
@@ -22,7 +22,7 @@ TEST_CASE(linearized_pdf)
 
 TEST_CASE(non_linearized_pdf)
 {
-    auto file = Core::MappedFile::map("non-linearized.pdf").release_value();
+    auto file = Core::MappedFile::map("non-linearized.pdf"sv).release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
     EXPECT(!document.value()->initialize().is_error());
@@ -31,7 +31,7 @@ TEST_CASE(non_linearized_pdf)
 
 TEST_CASE(complex_pdf)
 {
-    auto file = Core::MappedFile::map("complex.pdf").release_value();
+    auto file = Core::MappedFile::map("complex.pdf"sv).release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
     EXPECT(!document.value()->initialize().is_error());

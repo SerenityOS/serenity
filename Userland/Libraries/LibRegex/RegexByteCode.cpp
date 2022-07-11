@@ -14,94 +14,94 @@
 
 namespace regex {
 
-char const* OpCode::name(OpCodeId opcode_id)
+StringView OpCode::name(OpCodeId opcode_id)
 {
     switch (opcode_id) {
 #define __ENUMERATE_OPCODE(x) \
     case OpCodeId::x:         \
-        return #x;
+        return #x##sv;
         ENUMERATE_OPCODES
 #undef __ENUMERATE_OPCODE
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 
-char const* OpCode::name() const
+StringView OpCode::name() const
 {
     return name(opcode_id());
 }
 
-char const* execution_result_name(ExecutionResult result)
+StringView execution_result_name(ExecutionResult result)
 {
     switch (result) {
 #define __ENUMERATE_EXECUTION_RESULT(x) \
     case ExecutionResult::x:            \
-        return #x;
+        return #x##sv;
         ENUMERATE_EXECUTION_RESULTS
 #undef __ENUMERATE_EXECUTION_RESULT
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 
-char const* opcode_id_name(OpCodeId opcode)
+StringView opcode_id_name(OpCodeId opcode)
 {
     switch (opcode) {
 #define __ENUMERATE_OPCODE(x) \
     case OpCodeId::x:         \
-        return #x;
+        return #x##sv;
 
         ENUMERATE_OPCODES
 
 #undef __ENUMERATE_OPCODE
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 
-char const* boundary_check_type_name(BoundaryCheckType ty)
+StringView boundary_check_type_name(BoundaryCheckType ty)
 {
     switch (ty) {
 #define __ENUMERATE_BOUNDARY_CHECK_TYPE(x) \
     case BoundaryCheckType::x:             \
-        return #x;
+        return #x##sv;
         ENUMERATE_BOUNDARY_CHECK_TYPES
 #undef __ENUMERATE_BOUNDARY_CHECK_TYPE
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 
-char const* character_compare_type_name(CharacterCompareType ch_compare_type)
+StringView character_compare_type_name(CharacterCompareType ch_compare_type)
 {
     switch (ch_compare_type) {
 #define __ENUMERATE_CHARACTER_COMPARE_TYPE(x) \
     case CharacterCompareType::x:             \
-        return #x;
+        return #x##sv;
         ENUMERATE_CHARACTER_COMPARE_TYPES
 #undef __ENUMERATE_CHARACTER_COMPARE_TYPE
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 
-static char const* character_class_name(CharClass ch_class)
+static StringView character_class_name(CharClass ch_class)
 {
     switch (ch_class) {
 #define __ENUMERATE_CHARACTER_CLASS(x) \
     case CharClass::x:                 \
-        return #x;
+        return #x##sv;
         ENUMERATE_CHARACTER_CLASSES
 #undef __ENUMERATE_CHARACTER_CLASS
     default:
         VERIFY_NOT_REACHED();
-        return "<Unknown>";
+        return "<Unknown>"sv;
     }
 }
 

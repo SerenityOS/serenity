@@ -97,7 +97,7 @@ static void do_weird_call(size_t attempt, int syscall_fn, size_t arg1, size_t ar
         attempt, Syscall::to_string((Syscall::Function)syscall_fn), arg1, arg2, arg3, fake_params);
     for (size_t i = 0; i < fake_params_count; ++i) {
         if (i != 0)
-            builder.append(", ");
+            builder.append(", "sv);
         builder.appendff("{:p}", fake_params[i]);
     }
     builder.append("]");

@@ -16,7 +16,7 @@ StringView Token::name(TokenType type)
     switch (type) {
 #define __ENUMERATE_SQL_TOKEN(value, type, category) \
     case TokenType::type:                            \
-        return #type;
+        return #type##sv;
         ENUMERATE_SQL_TOKENS
 #undef __ENUMERATE_SQL_TOKEN
     default:

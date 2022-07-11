@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Vector<String> interfaces_with_dhcp_enabled;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto ifname = if_object.get("name").to_string();
+        auto ifname = if_object.get("name"sv).to_string();
 
         if (ifname == "loop")
             return;
@@ -73,10 +73,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 // FIXME: Propagate errors
                 // FIXME: Do this asynchronously
                 dbgln("Setting up interface {} statically ({}/{})", ifname, config.ipv4_address, config.ipv4_netmask);
-                MUST(Core::command("ifconfig", { "-a", ifname.characters(), "-i", config.ipv4_address.characters(), "-m", config.ipv4_netmask.characters() }, {}));
+                MUST(Core::command("ifconfig"sv, { "-a", ifname.characters(), "-i", config.ipv4_address.characters(), "-m", config.ipv4_netmask.characters() }, {}));
                 if (config.ipv4_gateway != "0.0.0.0") {
-                    MUST(Core::command("route", { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
-                    MUST(Core::command("route", { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
+                    MUST(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
+                    MUST(Core::command("route"sv, { "add", "-n", "0.0.0.0", "-m", "0.0.0.0", "-g", config.ipv4_gateway, "-i", ifname }, {}));
                 }
             }
         }
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             args.append(const_cast<char*>(iface.characters()));
         args.append(nullptr);
         MUST(Core::command("killall", { "DHCPClient" }, {}));
-        auto dhcp_client_pid = TRY(Core::System::posix_spawnp("DHCPClient", nullptr, nullptr, args.data(), environ));
+        auto dhcp_client_pid = TRY(Core::System::posix_spawnp("DHCPClient"sv, nullptr, nullptr, args.data(), environ));
         TRY(Core::System::disown(dhcp_client_pid));
     }
     return 0;

@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->resize(840, 600);
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
+    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
 
     update_path_environment_variable();
 
@@ -112,7 +112,7 @@ static bool make_is_available()
 static void notify_make_not_available()
 {
     auto notification = GUI::Notification::construct();
-    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
+    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png"sv).release_value_but_fixme_should_propagate_errors());
     notification->set_title("'make' Not Available");
     notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository");
     notification->show();
@@ -128,7 +128,7 @@ static void update_path_environment_variable()
 
     if (path.length())
         path.append(":");
-    path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin");
+    path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv);
     setenv("PATH", path.to_string().characters(), true);
 }
 

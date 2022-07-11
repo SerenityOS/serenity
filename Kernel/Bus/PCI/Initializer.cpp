@@ -24,7 +24,7 @@ static bool test_pci_io();
 UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 {
     auto boot_determined = kernel_command_line().pci_access_level();
-    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG").has_value())
+    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG"sv).has_value())
         return PCIAccessLevel::IOAddressing;
 
     if (boot_determined != PCIAccessLevel::IOAddressing)
@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT void initialize()
         return;
     switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
-        auto mcfg = ACPI::Parser::the()->find_table("MCFG");
+        auto mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
         VERIFY(mcfg.has_value());
         auto success = Access::initialize_for_multiple_pci_domains(mcfg.value());
         VERIFY(success);

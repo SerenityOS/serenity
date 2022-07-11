@@ -32,7 +32,7 @@ static String get_salt()
     fill_with_random(random_data, sizeof(random_data));
 
     StringBuilder builder;
-    builder.append("$5$");
+    builder.append("$5$"sv);
     builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
 
     return builder.build();

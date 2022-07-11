@@ -271,7 +271,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         dbgln("APIC: RSDP not found");
         return false;
     }
-    auto madt_address = ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
+    auto madt_address = ACPI::StaticParsing::find_table(rsdp.value(), "APIC"sv);
     if (!madt_address.has_value()) {
         dbgln("APIC: MADT table not found");
         return false;

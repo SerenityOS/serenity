@@ -49,7 +49,7 @@ public:
                     if (lexer.next_is('"'))
                         m_filename = lexer.consume_quoted_string();
                     else
-                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "sv));
                 } else {
                     m_might_be_wrong = true;
                 }
@@ -67,7 +67,7 @@ public:
                     if (lexer.next_is('"'))
                         m_filename = lexer.consume_quoted_string();
                     else
-                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "sv));
                 } else {
                     m_might_be_wrong = true;
                 }

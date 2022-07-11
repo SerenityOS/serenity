@@ -13,34 +13,34 @@
 
 TEST_CASE(test_hmac_md5_name)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
-    EXPECT_EQ(hmac.class_name(), "HMAC-MD5");
+    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends"sv);
+    EXPECT_EQ(hmac.class_name(), "HMAC-MD5"sv);
 }
 
 TEST_CASE(test_hmac_md5_process)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends"sv);
     u8 result[] {
         0x3b, 0x5b, 0xde, 0x30, 0x3a, 0x54, 0x7b, 0xbb, 0x09, 0xfe, 0x78, 0x89, 0xbc, 0x9f, 0x22, 0xa3
     };
-    auto mac = hmac.process("Some bogus data");
+    auto mac = hmac.process("Some bogus data"sv);
     EXPECT(memcmp(result, mac.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_md5_process_reuse)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends"sv);
 
-    auto mac_0 = hmac.process("Some bogus data");
-    auto mac_1 = hmac.process("Some bogus data");
+    auto mac_0 = hmac.process("Some bogus data"sv);
+    auto mac_1 = hmac.process("Some bogus data"sv);
 
     EXPECT(memcmp(mac_0.data, mac_1.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha1_name)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac("Well Hello Friends");
-    EXPECT_EQ(hmac.class_name(), "HMAC-SHA1");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac("Well Hello Friends"sv);
+    EXPECT_EQ(hmac.class_name(), "HMAC-SHA1"sv);
 }
 
 TEST_CASE(test_hmac_sha1_process)
@@ -76,72 +76,72 @@ TEST_CASE(test_hmac_sha1_process_reuse)
 
 TEST_CASE(test_hmac_sha256_name)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
-    EXPECT_EQ(hmac.class_name(), "HMAC-SHA256");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends"sv);
+    EXPECT_EQ(hmac.class_name(), "HMAC-SHA256"sv);
 }
 
 TEST_CASE(test_hmac_sha256_process)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends"sv);
     u8 result[] {
         0x1a, 0xf2, 0x20, 0x62, 0xde, 0x3b, 0x84, 0x65, 0xc1, 0x25, 0x23, 0x99, 0x76, 0x15, 0x1b, 0xec, 0x15, 0x21, 0x82, 0x1f, 0x23, 0xca, 0x11, 0x66, 0xdd, 0x8c, 0x6e, 0xf1, 0x81, 0x3b, 0x7f, 0x1b
     };
-    auto mac = hmac.process("Some bogus data");
+    auto mac = hmac.process("Some bogus data"sv);
     EXPECT(memcmp(result, mac.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha256_reuse)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends"sv);
 
-    auto mac_0 = hmac.process("Some bogus data");
-    auto mac_1 = hmac.process("Some bogus data");
+    auto mac_0 = hmac.process("Some bogus data"sv);
+    auto mac_1 = hmac.process("Some bogus data"sv);
 
     EXPECT(memcmp(mac_0.data, mac_1.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha256_data_is_same_size_as_block)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends"sv);
     u8 result[] = {
         0x1d, 0x90, 0xce, 0x68, 0x45, 0x0b, 0xba, 0xd6, 0xbe, 0x1c, 0xb2, 0x3a, 0xea, 0x7f, 0xac, 0x4b, 0x68, 0x08, 0xa4, 0x77, 0x81, 0x2a, 0xad, 0x5d, 0x05, 0xe2, 0x15, 0xe8, 0xf4, 0xcb, 0x06, 0xaf
     };
-    auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"sv);
     EXPECT(memcmp(result, mac.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha256_data_is_bigger_size_as_block)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends"sv);
     u8 result[] = {
         0x9b, 0xa3, 0x9e, 0xf3, 0xb4, 0x30, 0x5f, 0x6f, 0x67, 0xd0, 0xa8, 0xb0, 0xf0, 0xcb, 0x12, 0xf5, 0x85, 0xe2, 0x19, 0xba, 0x0c, 0x8b, 0xe5, 0x43, 0xf0, 0x93, 0x39, 0xa8, 0xa3, 0x07, 0xf1, 0x95
     };
-    auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"sv);
     EXPECT(memcmp(result, mac.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha512_name)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends"sv);
     EXPECT_EQ(hmac.class_name(), "HMAC-SHA512");
 }
 
 TEST_CASE(test_hmac_sha512_process)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends"sv);
     u8 result[] {
         0xeb, 0xa8, 0x34, 0x11, 0xfd, 0x5b, 0x46, 0x5b, 0xef, 0xbb, 0x67, 0x5e, 0x7d, 0xc2, 0x7c, 0x2c, 0x6b, 0xe1, 0xcf, 0xe6, 0xc7, 0xe4, 0x7d, 0xeb, 0xca, 0x97, 0xb7, 0x4c, 0xd3, 0x4d, 0x6f, 0x08, 0x9f, 0x0d, 0x3a, 0xf1, 0xcb, 0x00, 0x79, 0x78, 0x2f, 0x05, 0x8e, 0xeb, 0x94, 0x48, 0x0d, 0x50, 0x64, 0x3b, 0xca, 0x70, 0xe2, 0x69, 0x38, 0x4f, 0xe4, 0xb0, 0x49, 0x0f, 0xc5, 0x4c, 0x7a, 0xa7
     };
-    auto mac = hmac.process("Some bogus data");
+    auto mac = hmac.process("Some bogus data"sv);
     EXPECT(memcmp(result, mac.data, hmac.digest_size()) == 0);
 }
 
 TEST_CASE(test_hmac_sha512_reuse)
 {
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends"sv);
 
-    auto mac_0 = hmac.process("Some bogus data");
-    auto mac_1 = hmac.process("Some bogus data");
+    auto mac_0 = hmac.process("Some bogus data"sv);
+    auto mac_1 = hmac.process("Some bogus data"sv);
 
     EXPECT(memcmp(mac_0.data, mac_1.data, hmac.digest_size()) == 0);
 }

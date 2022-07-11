@@ -36,7 +36,7 @@ AboutDialog::AboutDialog(StringView name, Gfx::Bitmap const* icon, Window* paren
     widget.layout()->set_spacing(0);
 
     auto& banner_image = widget.add<GUI::ImageWidget>();
-    banner_image.load_from_file("/res/graphics/brand-banner.png");
+    banner_image.load_from_file("/res/graphics/brand-banner.png"sv);
 
     auto& content_container = widget.add<Widget>();
     content_container.set_layout<HorizontalBoxLayout>();
@@ -69,9 +69,9 @@ AboutDialog::AboutDialog(StringView name, Gfx::Bitmap const* icon, Window* paren
     make_label(m_name, true);
     // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
     if (m_name != "SerenityOS")
-        make_label("SerenityOS");
+        make_label("SerenityOS"sv);
     make_label(m_version_string);
-    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2022");
+    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2022"sv);
 
     right_container.layout()->add_spacer();
 

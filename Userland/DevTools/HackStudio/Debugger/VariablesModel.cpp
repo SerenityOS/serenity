@@ -144,7 +144,7 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, StringView
     GUI::MessageBox::show(
         parent_window,
         String::formatted("String value \"{}\" could not be converted to a value of type {}.", string_value, variable->type_name),
-        "Set value failed",
+        "Set value failed"sv,
         GUI::MessageBox::Type::Error);
 }
 

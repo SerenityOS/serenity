@@ -29,28 +29,28 @@ static bool is_missing_file_acceptable(String const& filename)
 {
     const StringView acceptable_missing_files[] = {
         // FIXME: Please write these manpages!
-        "/usr/share/man/man2/accept.md",
-        "/usr/share/man/man2/exec.md",
-        "/usr/share/man/man2/fcntl.md",
-        "/usr/share/man/man2/fork.md",
-        "/usr/share/man/man2/ioctl.md",
-        "/usr/share/man/man2/listen.md",
-        "/usr/share/man/man2/mmap.md",
-        "/usr/share/man/man2/mprotect.md",
-        "/usr/share/man/man2/open.md",
-        "/usr/share/man/man2/ptrace.md",
-        "/usr/share/man/man5/perfcore.md",
+        "/usr/share/man/man2/accept.md"sv,
+        "/usr/share/man/man2/exec.md"sv,
+        "/usr/share/man/man2/fcntl.md"sv,
+        "/usr/share/man/man2/fork.md"sv,
+        "/usr/share/man/man2/ioctl.md"sv,
+        "/usr/share/man/man2/listen.md"sv,
+        "/usr/share/man/man2/mmap.md"sv,
+        "/usr/share/man/man2/mprotect.md"sv,
+        "/usr/share/man/man2/open.md"sv,
+        "/usr/share/man/man2/ptrace.md"sv,
+        "/usr/share/man/man5/perfcore.md"sv,
         // These ones are okay:
-        "/home/anon/Tests/js-tests/test-common.js",
-        "/man1/index.html",
-        "/man2/index.html",
-        "/man3/index.html",
-        "/man4/index.html",
-        "/man5/index.html",
-        "/man6/index.html",
-        "/man7/index.html",
-        "/man8/index.html",
-        "index.html",
+        "/home/anon/Tests/js-tests/test-common.js"sv,
+        "/man1/index.html"sv,
+        "/man2/index.html"sv,
+        "/man3/index.html"sv,
+        "/man4/index.html"sv,
+        "/man5/index.html"sv,
+        "/man6/index.html"sv,
+        "/man7/index.html"sv,
+        "/man8/index.html"sv,
+        "index.html"sv,
     };
     for (auto const& suffix : acceptable_missing_files) {
         if (filename.ends_with(suffix))
@@ -143,24 +143,24 @@ static String slugify(String const& text)
     String slug = text.to_lowercase();
     // Reverse-engineered through github, using:
     // find AK/ Base/ Documentation/ Kernel/ Meta/ Ports/ Tests/ Userland/ -name '*.md' | xargs grep --color=always -Pin '^##+ .*[^a-z0-9 ?()`_:/!&|.$'"'"',<>"+-]' README.md
-    slug = slug.replace(" ", "-", ReplaceMode::All)
-               .replace("!", "", ReplaceMode::All)
-               .replace("?", "", ReplaceMode::All)
-               .replace("(", "", ReplaceMode::All)
-               .replace(")", "", ReplaceMode::All)
-               .replace(":", "", ReplaceMode::All)
-               .replace("/", "-", ReplaceMode::All)
-               .replace("&", "", ReplaceMode::All)
-               .replace("|", "", ReplaceMode::All)
-               .replace(".", "", ReplaceMode::All)
-               .replace("$", "", ReplaceMode::All)
-               .replace("'", "", ReplaceMode::All)
-               .replace(",", "", ReplaceMode::All)
-               .replace("\"", "", ReplaceMode::All)
-               .replace("+", "", ReplaceMode::All)
-               .replace("\\", "", ReplaceMode::All)
-               .replace("<", "", ReplaceMode::All)
-               .replace(">", "", ReplaceMode::All);
+    slug = slug.replace(" "sv, "-"sv, ReplaceMode::All)
+               .replace("!"sv, ""sv, ReplaceMode::All)
+               .replace("?"sv, ""sv, ReplaceMode::All)
+               .replace("("sv, ""sv, ReplaceMode::All)
+               .replace(")"sv, ""sv, ReplaceMode::All)
+               .replace(":"sv, ""sv, ReplaceMode::All)
+               .replace("/"sv, "-"sv, ReplaceMode::All)
+               .replace("&"sv, ""sv, ReplaceMode::All)
+               .replace("|"sv, ""sv, ReplaceMode::All)
+               .replace("."sv, ""sv, ReplaceMode::All)
+               .replace("$"sv, ""sv, ReplaceMode::All)
+               .replace("'"sv, ""sv, ReplaceMode::All)
+               .replace(","sv, ""sv, ReplaceMode::All)
+               .replace("\""sv, ""sv, ReplaceMode::All)
+               .replace("+"sv, ""sv, ReplaceMode::All)
+               .replace("\\"sv, ""sv, ReplaceMode::All)
+               .replace("<"sv, ""sv, ReplaceMode::All)
+               .replace(">"sv, ""sv, ReplaceMode::All);
     // What about "="?
     return slug;
 }
@@ -202,7 +202,7 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
         }
         if (url.scheme() == "file") {
             // TODO: Check more possible links other than icons.
-            if (url.path().starts_with("/res/icons/")) {
+            if (url.path().starts_with("/res/icons/"sv)) {
                 auto file = String::formatted("{}/Base{}", m_serenity_source_directory, url.path());
                 m_file_links.append({ file, String(), StringCollector::from(*link_node.text) });
                 return RecursionDecision::Recurse;

@@ -28,9 +28,9 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "DocumentType")
         return true;
-    if (type.name.ends_with("Element"))
+    if (type.name.ends_with("Element"sv))
         return true;
-    if (type.name.ends_with("Event"))
+    if (type.name.ends_with("Event"sv))
         return true;
     if (type.name == "ImageData")
         return true;
@@ -155,7 +155,7 @@ static String make_input_acceptable_cpp(String const& input)
         return builder.to_string();
     }
 
-    return input.replace("-", "_", ReplaceMode::All);
+    return input.replace("-"sv, "_"sv, ReplaceMode::All);
 }
 
 static void generate_include_for_wrapper(auto& generator, auto& wrapper_name)
@@ -239,7 +239,7 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
 
         if (is_iterator) {
             auto iterator_name = String::formatted("{}Iterator", interface->name);
-            auto iterator_path = String::formatted("{}Iterator", interface->fully_qualified_name.replace("::", "/", ReplaceMode::All));
+            auto iterator_path = String::formatted("{}Iterator", interface->fully_qualified_name.replace("::"sv, "/"sv, ReplaceMode::All));
             generate_include_for_iterator(generator, iterator_path, iterator_name);
         }
 
@@ -263,9 +263,9 @@ static bool should_emit_wrapper_factory(IDL::Interface const& interface)
         return false;
     if (interface.name == "DocumentType")
         return false;
-    if (interface.name.ends_with("Element"))
+    if (interface.name.ends_with("Element"sv))
         return false;
-    if (interface.name.starts_with("CSS") && interface.name.ends_with("Rule"))
+    if (interface.name.starts_with("CSS"sv) && interface.name.ends_with("Rule"sv))
         return false;
     return true;
 }
@@ -580,7 +580,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto default_value_cpp_name = enumeration.translated_cpp_names.get(enum_member_name);
         VERIFY(default_value_cpp_name.has_value());
         enum_generator.set("enum.default.cpp_value", *default_value_cpp_name);
-        enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
+        enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"sv), enum_generator.get("js_suffix"sv)));
         enum_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
 )~~~");
@@ -1291,7 +1291,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         ++argument_index;
     }
 
-    arguments_builder.join(", ", parameter_names);
+    arguments_builder.join(", "sv, parameter_names);
 }
 
 // https://webidl.spec.whatwg.org/#create-sequence-from-iterable
@@ -1674,7 +1674,7 @@ static Optional<String> generate_arguments_match_check_for_count(Vector<IDL::Par
     }
     if (conditions.is_empty())
         return {};
-    return String::formatted("({})", String::join(" && ", conditions));
+    return String::formatted("({})", String::join(" && "sv, conditions));
 }
 
 static String generate_arguments_match_check(Function const& function)
@@ -1692,7 +1692,7 @@ static String generate_arguments_match_check(Function const& function)
         if (match_check.has_value())
             options.append(match_check.release_value());
     }
-    return String::join(" || ", options);
+    return String::join(" || "sv, options);
 }
 
 static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, String const& class_name)
@@ -3679,7 +3679,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
     generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
     generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
     generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
-    generator.set("possible_include_path", String::formatted("{}Iterator", interface.name.replace("::", "/", ReplaceMode::All)));
+    generator.set("possible_include_path", String::formatted("{}Iterator", interface.name.replace("::"sv, "/"sv, ReplaceMode::All)));
 
     generator.append(R"~~~(
 #include <AK/Function.h>

@@ -37,11 +37,11 @@ public:
     static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
     {
         Array<VolumeBitmapPair, 5> volume_level_bitmaps = {
-            { { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png")) },
-                { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png")) },
-                { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png")) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) } }
+            { { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png"sv)) },
+                { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png"sv)) },
+                { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png"sv)) },
+                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png"sv)) },
+                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png"sv)) } }
         };
         auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
@@ -53,7 +53,7 @@ private:
     AudioWidget(NonnullRefPtr<Audio::ConnectionFromClient> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
-        , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
+        , m_show_percent(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, false))
     {
         m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
         m_audio_muted = m_audio_client->is_main_mix_muted();
@@ -102,7 +102,7 @@ private:
             m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
             GUI::Application::the()->hide_tooltip();
 
-            Config::write_bool("AudioApplet", "Applet", "ShowPercent", m_show_percent);
+            Config::write_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, m_show_percent);
         };
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
@@ -254,7 +254,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     // This positioning code depends on the window actually existing.
-    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false));
+    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, false));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 

@@ -42,7 +42,7 @@ TEST_CASE(can_write_with_header)
     auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
     OutputMemoryStream stream { buffer };
 
-    Writer::CSV csv(stream, data, { "A", "B\"", "C" });
+    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv });
 
     auto expected_output = R"~(A,"B""",C
 1,2,3
@@ -63,7 +63,7 @@ TEST_CASE(can_write_with_different_behaviors)
     auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
     OutputMemoryStream stream { buffer };
 
-    Writer::CSV csv(stream, data, { "A", "B\"", "C" }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);
+    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);
 
     auto expected_output = R"~(A,B",C
 Well,Hello",Friends

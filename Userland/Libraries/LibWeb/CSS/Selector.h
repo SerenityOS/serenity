@@ -61,7 +61,7 @@ public:
                     result.append("n");
                 // - A is -1: Append "-n" to result.
                 else if (step_size == -1)
-                    result.append("-n");
+                    result.append("-n"sv);
                 // - A is non-zero: Serialize A and append it to result, then append "n" to result.
                 else if (step_size != 0)
                     result.appendff("{}n", step_size);

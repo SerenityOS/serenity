@@ -20,7 +20,7 @@
 
 TEST_CASE(file_open)
 {
-    auto maybe_file = Core::Stream::File::open("/tmp/file-open-test.txt", Core::Stream::OpenMode::Write);
+    auto maybe_file = Core::Stream::File::open("/tmp/file-open-test.txt"sv, Core::Stream::OpenMode::Write);
     if (maybe_file.is_error()) {
         warnln("Failed to open the file: {}", strerror(maybe_file.error().code()));
         VERIFY_NOT_REACHED();
@@ -40,7 +40,7 @@ TEST_CASE(file_open)
 
 TEST_CASE(file_write_bytes)
 {
-    auto maybe_file = Core::Stream::File::open("/tmp/file-write-bytes-test.txt", Core::Stream::OpenMode::Write);
+    auto maybe_file = Core::Stream::File::open("/tmp/file-write-bytes-test.txt"sv, Core::Stream::OpenMode::Write);
     auto file = maybe_file.release_value();
 
     constexpr auto some_words = "These are some words"sv;
@@ -53,7 +53,7 @@ constexpr auto expected_buffer_contents = "&lt;small&gt;(Please consider transla
 
 TEST_CASE(file_read_bytes)
 {
-    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt", Core::Stream::OpenMode::Read);
+    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt"sv, Core::Stream::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
     auto file = maybe_file.release_value();
 
@@ -75,7 +75,7 @@ constexpr auto expected_seek_contents3 = "levels of advanc"sv;
 
 TEST_CASE(file_seeking_around)
 {
-    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt", Core::Stream::OpenMode::Read);
+    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt"sv, Core::Stream::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
     auto file = maybe_file.release_value();
 
@@ -137,7 +137,7 @@ TEST_CASE(file_adopt_invalid_fd)
 
 TEST_CASE(file_truncate)
 {
-    auto maybe_file = Core::Stream::File::open("/tmp/file-truncate-test.txt", Core::Stream::OpenMode::Write);
+    auto maybe_file = Core::Stream::File::open("/tmp/file-truncate-test.txt"sv, Core::Stream::OpenMode::Write);
     auto file = maybe_file.release_value();
 
     EXPECT(!file->truncate(999).is_error());
@@ -417,7 +417,7 @@ TEST_CASE(local_socket_write)
 
 TEST_CASE(buffered_long_file_read)
 {
-    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt", Core::Stream::OpenMode::Read);
+    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/long_lines.txt"sv, Core::Stream::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
     auto maybe_buffered_file = Core::Stream::BufferedFile::create(maybe_file.release_value());
     EXPECT(!maybe_buffered_file.is_error());
@@ -439,7 +439,7 @@ TEST_CASE(buffered_long_file_read)
 
 TEST_CASE(buffered_small_file_read)
 {
-    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/small.txt", Core::Stream::OpenMode::Read);
+    auto maybe_file = Core::Stream::File::open("/usr/Tests/LibCore/small.txt"sv, Core::Stream::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
     auto maybe_buffered_file = Core::Stream::BufferedFile::create(maybe_file.release_value());
     EXPECT(!maybe_buffered_file.is_error());

@@ -70,9 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto username = window->username();
         auto password = Core::SecretString::take_ownership(window->password().to_byte_buffer());
 
-        window->set_password("");
+        window->set_password(""sv);
 
-        auto fail_message = "Can't log in: invalid username or password.";
+        auto fail_message = "Can't log in: invalid username or password."sv;
 
         auto account = Core::Account::from_name(username.characters());
         if (account.is_error()) {
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        window->set_username("");
+        window->set_username(""sv);
         window->hide();
 
         login(account.value(), *window);

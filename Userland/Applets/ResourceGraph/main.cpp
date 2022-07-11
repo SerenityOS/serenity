@@ -58,7 +58,7 @@ private:
                 m_tooltip = String::formatted("CPU usage: {:.1}%", 100 * cpu);
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = StringView("Unable to determine CPU usage");
+                m_tooltip = "Unable to determine CPU usage"sv;
             }
             break;
         }
@@ -71,7 +71,7 @@ private:
                 m_tooltip = String::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB);
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = StringView("Unable to determine memory usage");
+                m_tooltip = "Unable to determine memory usage"sv;
             }
             break;
         }
@@ -102,7 +102,7 @@ private:
                 m_tooltip = String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0);
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = StringView("Unable to determine network usage");
+                m_tooltip = "Unable to determine network usage"sv;
             }
             break;
         }
@@ -142,7 +142,7 @@ private:
     {
         if (event.button() != GUI::MouseButton::Primary)
             return;
-        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor", Array { "-t", m_graph_type == GraphType::Network ? "network" : "graphs" });
+        GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", m_graph_type == GraphType::Network ? "network" : "graphs" });
     }
 
     bool get_cpu_usage(u64& total, u64& idle)
@@ -167,8 +167,8 @@ private:
             return false;
         auto json = json_or_error.release_value();
         auto const& obj = json.as_object();
-        total = obj.get("total_time").to_u64();
-        idle = obj.get("idle_time").to_u64();
+        total = obj.get("total_time"sv).to_u64();
+        idle = obj.get("idle_time"sv).to_u64();
         return true;
     }
 
@@ -191,11 +191,11 @@ private:
             return false;
         auto json = json_or_error.release_value();
         auto const& obj = json.as_object();
-        unsigned kmalloc_allocated = obj.get("kmalloc_allocated").to_u32();
-        unsigned kmalloc_available = obj.get("kmalloc_available").to_u32();
-        auto user_physical_allocated = obj.get("user_physical_allocated").to_u64();
-        auto user_physical_committed = obj.get("user_physical_committed").to_u64();
-        auto user_physical_uncommitted = obj.get("user_physical_uncommitted").to_u64();
+        unsigned kmalloc_allocated = obj.get("kmalloc_allocated"sv).to_u32();
+        unsigned kmalloc_available = obj.get("kmalloc_available"sv).to_u32();
+        auto user_physical_allocated = obj.get("user_physical_allocated"sv).to_u64();
+        auto user_physical_committed = obj.get("user_physical_committed"sv).to_u64();
+        auto user_physical_uncommitted = obj.get("user_physical_uncommitted"sv).to_u64();
         unsigned kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
         unsigned kmalloc_pages_total = (kmalloc_bytes_total + PAGE_SIZE - 1) / PAGE_SIZE;
         u64 total_userphysical_and_swappable_pages = kmalloc_pages_total + user_physical_allocated + user_physical_committed + user_physical_uncommitted;
@@ -226,13 +226,13 @@ private:
         auto const& array = json.as_array();
         for (auto const& adapter_value : array.values()) {
             auto const& adapter_obj = adapter_value.as_object();
-            if (!adapter_obj.has_string("ipv4_address") || !adapter_obj.get("link_up").as_bool())
+            if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get("link_up"sv).as_bool())
                 continue;
 
-            tx += adapter_obj.get("bytes_in").to_u64();
-            rx += adapter_obj.get("bytes_out").to_u64();
+            tx += adapter_obj.get("bytes_in"sv).to_u64();
+            rx += adapter_obj.get("bytes_out"sv).to_u64();
             // Link speed data is given in megabits, but we want all return values to be in bytes.
-            link_speed += adapter_obj.get("link_speed").to_u64() * 8'000'000;
+            link_speed += adapter_obj.get("link_speed"sv).to_u64() * 8'000'000;
         }
         link_speed /= 8;
         return tx != 0;

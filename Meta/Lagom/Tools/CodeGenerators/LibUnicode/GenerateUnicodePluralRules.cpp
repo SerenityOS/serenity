@@ -591,13 +591,13 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
     append_lookup_table("PluralCategoryFunction"sv, "ordinal"sv, "default_category"sv, [](auto& rules, auto form) -> Conditions& { return rules.rules_for_form(form); });
     append_lookup_table("PluralRangeFunction"sv, "range"sv, "default_range"sv, [](auto& rules, auto) -> Ranges& { return rules.plural_ranges; });
 
-    generate_mapping(generator, locales, "PluralCategory"sv, "s_cardinal_categories"sv, "s_cardinal_categories_{}", format_identifier,
+    generate_mapping(generator, locales, "PluralCategory"sv, "s_cardinal_categories"sv, "s_cardinal_categories_{}"sv, format_identifier,
         [&](auto const& name, auto const& locale) {
             auto& rules = locale_data.locales.find(locale)->value;
             append_categories(name, rules.rules_for_form("cardinal"sv));
         });
 
-    generate_mapping(generator, locales, "PluralCategory"sv, "s_ordinal_categories"sv, "s_ordinal_categories_{}", format_identifier,
+    generate_mapping(generator, locales, "PluralCategory"sv, "s_ordinal_categories"sv, "s_ordinal_categories_{}"sv, format_identifier,
         [&](auto const& name, auto const& locale) {
             auto& rules = locale_data.locales.find(locale)->value;
             append_categories(name, rules.rules_for_form("ordinal"sv));

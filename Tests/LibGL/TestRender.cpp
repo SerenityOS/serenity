@@ -70,7 +70,7 @@ TEST_CASE(0001_simple_triangle)
     EXPECT_EQ(glGetError(), 0u);
 
     context->present();
-    expect_bitmap_equals_reference(context->frontbuffer(), "0001_simple_triangle");
+    expect_bitmap_equals_reference(context->frontbuffer(), "0001_simple_triangle"sv);
 }
 
 TEST_CASE(0002_quad_color_interpolation)
@@ -92,7 +92,7 @@ TEST_CASE(0002_quad_color_interpolation)
     EXPECT_EQ(glGetError(), 0u);
 
     context->present();
-    expect_bitmap_equals_reference(context->frontbuffer(), "0002_quad_color_interpolation");
+    expect_bitmap_equals_reference(context->frontbuffer(), "0002_quad_color_interpolation"sv);
 }
 
 TEST_CASE(0003_rect_w_coordinate_regression)
@@ -115,7 +115,7 @@ TEST_CASE(0003_rect_w_coordinate_regression)
     EXPECT_EQ(glGetError(), 0u);
 
     context->present();
-    expect_bitmap_equals_reference(context->frontbuffer(), "0003_rect_w_coordinate_regression");
+    expect_bitmap_equals_reference(context->frontbuffer(), "0003_rect_w_coordinate_regression"sv);
 }
 
 TEST_CASE(0004_points)
@@ -145,7 +145,7 @@ TEST_CASE(0004_points)
     EXPECT_EQ(glGetError(), 0u);
 
     context->present();
-    expect_bitmap_equals_reference(context->frontbuffer(), "0004_points");
+    expect_bitmap_equals_reference(context->frontbuffer(), "0004_points"sv);
 }
 
 TEST_CASE(0005_lines_antialiased)
@@ -167,5 +167,5 @@ TEST_CASE(0005_lines_antialiased)
     EXPECT_EQ(glGetError(), 0u);
 
     context->present();
-    expect_bitmap_equals_reference(context->frontbuffer(), "0005_lines");
+    expect_bitmap_equals_reference(context->frontbuffer(), "0005_lines"sv);
 }

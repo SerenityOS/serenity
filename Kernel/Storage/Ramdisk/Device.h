@@ -33,7 +33,7 @@ private:
     // ^StorageDevice
     virtual CommandSet command_set() const override { return CommandSet::PlainMemory; }
 
-    Mutex m_lock { "RamdiskDevice" };
+    Mutex m_lock { "RamdiskDevice"sv };
 
     NonnullOwnPtr<Memory::Region> m_region;
 };

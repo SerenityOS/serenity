@@ -47,7 +47,7 @@ String MarkupGenerator::html_from_error(Object& object)
 void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
 {
     if (value.is_empty()) {
-        output_html.append("&lt;empty&gt;");
+        output_html.append("&lt;empty&gt;"sv);
         return;
     }
 
@@ -88,7 +88,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
     if (value.is_string())
         output_html.append('"');
 
-    output_html.append("</span>");
+    output_html.append("</span>"sv);
 }
 
 void MarkupGenerator::array_to_html(Array const& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)

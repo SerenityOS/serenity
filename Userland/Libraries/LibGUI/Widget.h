@@ -32,12 +32,12 @@ extern Core::ObjectClassRegistration registration_Widget;
 }
 }
 
-#define REGISTER_WIDGET(namespace_, class_name)                                                                                                   \
-    namespace Core {                                                                                                                              \
-    namespace Registration {                                                                                                                      \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                      \
-        #namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
-    }                                                                                                                                             \
+#define REGISTER_WIDGET(namespace_, class_name)                                                                                                       \
+    namespace Core {                                                                                                                                  \
+    namespace Registration {                                                                                                                          \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                          \
+        #namespace_ "::" #class_name##sv, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
+    }                                                                                                                                                 \
     }
 
 namespace GUI {

@@ -26,26 +26,26 @@
 #include "VirGLProtocol.h"
 #include "Widget.h"
 
-static constexpr StringView frag_shader = "FRAG\n"
-                                          "PROPERTY FS_COLOR0_WRITES_ALL_CBUFS 1\n"
-                                          "DCL IN[0], COLOR, COLOR\n"
-                                          "DCL OUT[0], COLOR\n"
-                                          "  0: MOV OUT[0], IN[0]\n"
-                                          "  1: END\n";
+static constexpr auto frag_shader = "FRAG\n"
+                                    "PROPERTY FS_COLOR0_WRITES_ALL_CBUFS 1\n"
+                                    "DCL IN[0], COLOR, COLOR\n"
+                                    "DCL OUT[0], COLOR\n"
+                                    "  0: MOV OUT[0], IN[0]\n"
+                                    "  1: END\n"sv;
 
-static constexpr StringView vert_shader = "VERT\n"
-                                          "DCL IN[0]\n"
-                                          "DCL IN[1]\n"
-                                          "DCL OUT[0], POSITION\n"
-                                          "DCL OUT[1], COLOR\n"
-                                          "DCL CONST[0..3]\n"
-                                          "DCL TEMP[0..1]\n"
-                                          "  0: MUL TEMP[0], IN[0].xxxx, CONST[0]\n"
-                                          "  1: MAD TEMP[1], IN[0].yyyy, CONST[1], TEMP[0]\n"
-                                          "  2: MAD TEMP[0], IN[0].zzzz, CONST[2], TEMP[1]\n"
-                                          "  3: MAD OUT[0], IN[0].wwww, CONST[3], TEMP[0]\n"
-                                          "  4: MOV_SAT OUT[1], IN[1]\n"
-                                          "  5: END\n";
+static constexpr auto vert_shader = "VERT\n"
+                                    "DCL IN[0]\n"
+                                    "DCL IN[1]\n"
+                                    "DCL OUT[0], POSITION\n"
+                                    "DCL OUT[1], COLOR\n"
+                                    "DCL CONST[0..3]\n"
+                                    "DCL TEMP[0..1]\n"
+                                    "  0: MUL TEMP[0], IN[0].xxxx, CONST[0]\n"
+                                    "  1: MAD TEMP[1], IN[0].yyyy, CONST[1], TEMP[0]\n"
+                                    "  2: MAD TEMP[0], IN[0].zzzz, CONST[2], TEMP[1]\n"
+                                    "  3: MAD OUT[0], IN[0].wwww, CONST[3], TEMP[0]\n"
+                                    "  4: MOV_SAT OUT[1], IN[1]\n"
+                                    "  5: END\n"sv;
 
 struct VertexData {
     float r;
@@ -318,7 +318,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto demo = TRY(window->try_set_main_widget<Demo>());
 
-    auto app_icon = GUI::Icon::default_icon("app-cube");
+    auto app_icon = GUI::Icon::default_icon("app-cube"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     init();

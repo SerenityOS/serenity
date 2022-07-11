@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/bin/Help", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    auto app_icon = GUI::Icon::default_icon("app-welcome");
+    auto app_icon = GUI::Icon::default_icon("app-welcome"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(480, 250);

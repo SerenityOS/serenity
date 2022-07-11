@@ -205,8 +205,8 @@ DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode() = default;
 ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock);
-    TRY(callback({ ".", identifier(), 0 }));
-    TRY(callback({ "..", identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), 0 }));
+    TRY(callback({ ".."sv, identifier(), 0 }));
     for (auto& node : m_nodes) {
         InodeIdentifier identifier = { fsid(), node.index() };
         TRY(callback({ node.name(), identifier, 0 }));

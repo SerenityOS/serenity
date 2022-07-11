@@ -24,11 +24,11 @@ String Declaration::to_string() const
     StringBuilder builder;
 
     serialize_an_identifier(builder, m_name);
-    builder.append(": ");
-    builder.join(" ", m_values);
+    builder.append(": "sv);
+    builder.join(' ', m_values);
 
     if (m_important == Important::Yes)
-        builder.append(" !important");
+        builder.append(" !important"sv);
 
     return builder.to_string();
 }

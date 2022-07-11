@@ -30,12 +30,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-terminal");
+    auto app_icon = GUI::Icon::default_icon("app-terminal"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Terminal Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal", "terminal"));
-    (void)TRY(window->add_tab<TerminalSettingsViewWidget>("View", "view"));
+    (void)TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal"sv, "terminal"sv));
+    (void)TRY(window->add_tab<TerminalSettingsViewWidget>("View"sv, "view"sv));
     window->set_active_tab(selected_tab);
 
     window->show();

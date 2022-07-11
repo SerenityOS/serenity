@@ -112,7 +112,7 @@ void serialize_a_url(StringBuilder& builder, StringView url)
 {
     // To serialize a URL means to create a string represented by "url(",
     // followed by the serialization of the URL as a string, followed by ")".
-    builder.append("url(");
+    builder.append("url("sv);
     serialize_a_string(builder, url.to_string());
     builder.append(')');
 }

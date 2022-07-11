@@ -248,7 +248,7 @@ struct Formatter<PDF::OutlineDict> : Formatter<FormatString> {
         child_builder.append('[');
         for (auto& child : dict.children)
             child_builder.appendff("{}\n", child.to_string(2));
-        child_builder.append("  ]");
+        child_builder.append("  ]"sv);
 
         return Formatter<FormatString>::format(builder,
             "OutlineDict {{\n  count={}\n  children={}\n}}"sv, dict.count, child_builder.to_string());

@@ -21,9 +21,9 @@
 static bool flag_show_numerical = false;
 static bool flag_verbose = false;
 
-static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
-static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
-static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}";
+static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})"sv;
+static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})"sv;
+static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}"sv;
 
 static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {

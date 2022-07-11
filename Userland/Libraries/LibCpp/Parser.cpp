@@ -45,7 +45,7 @@ NonnullRefPtrVector<Declaration> Parser::parse_declarations_in_translation_unit(
         if (declaration) {
             declarations.append(declaration.release_nonnull());
         } else {
-            error("unexpected token");
+            error("unexpected token"sv);
             consume();
         }
     }
@@ -92,7 +92,7 @@ NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, Declaratio
     case DeclarationType::Destructor:
         return parse_destructor(parent);
     default:
-        error("unexpected declaration type");
+        error("unexpected declaration type"sv);
         return create_ast_node<InvalidDeclaration>(parent, position(), position());
     }
 }
@@ -181,7 +181,7 @@ NonnullRefPtr<Statement> Parser::parse_statement(ASTNode& parent)
         consume_semicolon.disarm();
         return parse_if_statement(parent);
     } else {
-        error("unexpected statement type");
+        error("unexpected statement type"sv);
         consume_semicolon.disarm();
         consume();
         return create_ast_node<InvalidStatement>(parent, position(), position());
@@ -295,7 +295,7 @@ bool Parser::match_variable_declaration()
     if (match(Token::Type::Equals)) {
         consume(Token::Type::Equals);
         if (!match_expression()) {
-            error("initial value of variable is not an expression");
+            error("initial value of variable is not an expression"sv);
             return false;
         }
         return true;
@@ -312,7 +312,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
     LOG_SCOPE();
     auto var = create_ast_node<VariableDeclaration>(parent, position(), {});
     if (!match_variable_declaration()) {
-        error("unexpected token for variable type");
+        error("unexpected token for variable type"sv);
         var->set_end(position());
         return var;
     }
@@ -432,7 +432,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
         return parse_name(parent);
     }
 
-    error("could not parse primary expression");
+    error("could not parse primary expression"sv);
     auto token = consume();
     return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
 }
@@ -523,7 +523,7 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
         [[fallthrough]];
     }
     default: {
-        error("could not parse literal");
+        error("could not parse literal"sv);
         auto token = consume();
         return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
     }
@@ -805,7 +805,7 @@ void Parser::consume_preprocessor()
         consume(Token::Type::IncludePath);
         break;
     default:
-        error("unexpected token while parsing preprocessor statement");
+        error("unexpected token while parsing preprocessor statement"sv);
         consume();
     }
 }
@@ -832,7 +832,7 @@ bool Parser::match(Token::Type type)
 Token Parser::consume()
 {
     if (eof()) {
-        error("C++ Parser: out of tokens");
+        error("C++ Parser: out of tokens"sv);
         return { Token::Type::EOF_TOKEN, position(), position(), {} };
     }
     return m_tokens[m_state.token_index++];
@@ -905,14 +905,14 @@ void Parser::error(StringView message)
         return;
 
     if (message.is_null() || message.is_empty())
-        message = "<empty>";
+        message = "<empty>"sv;
     String formatted_message;
     if (m_state.token_index >= m_tokens.size()) {
         formatted_message = String::formatted("C++ Parsed error on EOF.{}", message);
     } else {
         formatted_message = String::formatted("C++ Parser error: {}. token: {} ({}:{})",
             message,
-            m_state.token_index < m_tokens.size() ? text_of_token(m_tokens[m_state.token_index]) : "EOF",
+            m_state.token_index < m_tokens.size() ? text_of_token(m_tokens[m_state.token_index]) : "EOF"sv,
             m_tokens[m_state.token_index].start().line,
             m_tokens[m_state.token_index].start().column);
     }
@@ -1017,7 +1017,7 @@ Vector<CodeComprehension::TodoEntry> Parser::get_todo_entries() const
     Vector<CodeComprehension::TodoEntry> ret;
     for (auto& token : m_tokens) {
         if (token.type() == Token::Type::Comment) {
-            if (token.text().contains("TODO") || token.text().contains("FIXME")) {
+            if (token.text().contains("TODO"sv) || token.text().contains("FIXME"sv)) {
                 ret.append({ token.text(), m_filename, token.start().line, token.start().column });
             }
         }
@@ -1206,7 +1206,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     LOG_SCOPE();
 
     if (!match_named_type()) {
-        error("expected named named_type");
+        error("expected named named_type"sv);
         auto token = consume();
         return create_ast_node<NamedType>(parent, token.start(), token.end());
     }
@@ -1412,7 +1412,7 @@ NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode&
         if (declaration) {
             namespace_decl->add_declaration(declaration.release_nonnull());
         } else {
-            error("unexpected token");
+            error("unexpected token"sv);
             consume();
         }
     }
@@ -1577,7 +1577,7 @@ NonnullRefPtrVector<Declaration> Parser::parse_class_members(StructOrClassDeclar
         if (member_type.has_value()) {
             members.append(parse_declaration(parent, member_type.value()));
         } else {
-            error("Expected class member");
+            error("Expected class member"sv);
             consume();
         }
     }
@@ -1661,7 +1661,7 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
     auto parameters = parse_parameter_list(func);
     if (parameters.has_value()) {
         if (type == CtorOrDtor::Dtor && !parameters->is_empty())
-            error("Destructor declaration that takes parameters");
+            error("Destructor declaration that takes parameters"sv);
         else
             func.set_parameters(parameters.value());
     }

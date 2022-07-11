@@ -39,9 +39,9 @@ void ThemePreviewWidget::paint_preview(GUI::PaintEvent&)
     };
     center_window_group_within(window_group, frame_inner_rect());
 
-    paint_window("Inactive Window", inactive_window_rect, Gfx::WindowTheme::WindowState::Inactive, inactive_window_icon());
-    paint_window("Active Window", active_window_rect, Gfx::WindowTheme::WindowState::Active, active_window_icon());
-    paint_window("Alert", message_box, Gfx::WindowTheme::WindowState::Highlighted, active_window_icon(), 1);
+    paint_window("Inactive Window"sv, inactive_window_rect, Gfx::WindowTheme::WindowState::Inactive, inactive_window_icon());
+    paint_window("Active Window"sv, active_window_rect, Gfx::WindowTheme::WindowState::Active, active_window_icon());
+    paint_window("Alert"sv, message_box, Gfx::WindowTheme::WindowState::Highlighted, active_window_icon(), 1);
 
     auto draw_centered_button = [&](auto window_rect, auto text, int button_width, int button_height) {
         Gfx::IntRect button_rect { 0, 0, button_width, button_height };
@@ -50,7 +50,7 @@ void ThemePreviewWidget::paint_preview(GUI::PaintEvent&)
         painter.draw_text(button_rect, text, Gfx::TextAlignment::Center, preview_palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
     };
 
-    draw_centered_button(message_box, "Ok", 32, 16);
+    draw_centered_button(message_box, "Ok"sv, 32, 16);
 }
 
 }

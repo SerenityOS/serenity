@@ -101,9 +101,9 @@ String Supports::Condition::to_string() const
     case Type::Not:
         return String::formatted("not {}", children.first().to_string());
     case Type::And:
-        return String::join(" and ", children);
+        return String::join(" and "sv, children);
     case Type::Or:
-        return String::join(" or ", children);
+        return String::join(" or "sv, children);
     }
     VERIFY_NOT_REACHED();
 }

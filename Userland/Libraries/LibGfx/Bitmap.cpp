@@ -104,7 +104,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int scale_factor)
 {
-    if (scale_factor > 1 && path.starts_with("/res/")) {
+    if (scale_factor > 1 && path.starts_with("/res/"sv)) {
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
         TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));

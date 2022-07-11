@@ -84,13 +84,13 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     m_components = components;
 
     auto rsdp = Memory::map_typed<Structures::RSDPDescriptor20>(ACPI::Parser::the()->rsdp()).release_value_but_fixme_should_propagate_errors();
-    m_components.append(ACPISysFSComponent::create("RSDP", ACPI::Parser::the()->rsdp(), rsdp->base.revision == 0 ? sizeof(Structures::RSDPDescriptor) : rsdp->length));
+    m_components.append(ACPISysFSComponent::create("RSDP"sv, ACPI::Parser::the()->rsdp(), rsdp->base.revision == 0 ? sizeof(Structures::RSDPDescriptor) : rsdp->length));
 
     auto main_system_description_table = Memory::map_typed<Structures::SDTHeader>(ACPI::Parser::the()->main_system_description_table()).release_value_but_fixme_should_propagate_errors();
     if (ACPI::Parser::the()->is_xsdt_supported()) {
-        m_components.append(ACPISysFSComponent::create("XSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
+        m_components.append(ACPISysFSComponent::create("XSDT"sv, ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
     } else {
-        m_components.append(ACPISysFSComponent::create("RSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
+        m_components.append(ACPISysFSComponent::create("RSDT"sv, ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
     }
 }
 

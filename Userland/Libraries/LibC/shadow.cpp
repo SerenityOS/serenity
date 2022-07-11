@@ -87,7 +87,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (min_string.is_empty())
-        min_string = "-1";
+        min_string = "-1"sv;
     auto min_value = min_string.to_int();
     if (!min_value.has_value()) {
         dbgln("getspent(): Malformed min value on line {}", s_line_number);
@@ -95,7 +95,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (max_string.is_empty())
-        max_string = "-1";
+        max_string = "-1"sv;
     auto max_value = max_string.to_int();
     if (!max_value.has_value()) {
         dbgln("getspent(): Malformed max value on line {}", s_line_number);
@@ -103,7 +103,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (warn_string.is_empty())
-        warn_string = "-1";
+        warn_string = "-1"sv;
     auto warn = warn_string.to_int();
     if (!warn.has_value()) {
         dbgln("getspent(): Malformed warn on line {}", s_line_number);
@@ -111,7 +111,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (inact_string.is_empty())
-        inact_string = "-1";
+        inact_string = "-1"sv;
     auto inact = inact_string.to_int();
     if (!inact.has_value()) {
         dbgln("getspent(): Malformed inact on line {}", s_line_number);
@@ -119,7 +119,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (expire_string.is_empty())
-        expire_string = "-1";
+        expire_string = "-1"sv;
     auto expire = expire_string.to_int();
     if (!expire.has_value()) {
         dbgln("getspent(): Malformed expire on line {}", s_line_number);
@@ -127,7 +127,7 @@ static bool parse_shadow_entry(String const& line)
     }
 
     if (flag_string.is_empty())
-        flag_string = "0";
+        flag_string = "0"sv;
     auto flag = flag_string.to_int();
     if (!flag.has_value()) {
         dbgln("getspent(): Malformed flag on line {}", s_line_number);

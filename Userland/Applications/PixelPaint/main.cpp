@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
+    auto app_icon = GUI::Icon::default_icon("app-pixel-paint"sv);
 
     PixelPaint::g_icon_bag = TRY(PixelPaint::IconBag::try_create());
 

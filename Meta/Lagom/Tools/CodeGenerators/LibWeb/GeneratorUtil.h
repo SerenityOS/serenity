@@ -51,7 +51,7 @@ String camel_casify(StringView dashy_name)
 
 String snake_casify(String const& dashy_name)
 {
-    return dashy_name.replace("-", "_", ReplaceMode::All);
+    return dashy_name.replace("-"sv, "_"sv, ReplaceMode::All);
 }
 
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)

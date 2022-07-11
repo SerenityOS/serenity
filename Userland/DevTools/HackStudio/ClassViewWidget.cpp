@@ -130,7 +130,7 @@ static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& childre
 void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
 {
     ClassViewNode* parent = nullptr;
-    auto scope_parts = decl.scope.view().split_view("::");
+    auto scope_parts = decl.scope.view().split_view("::"sv);
 
     if (!scope_parts.is_empty()) {
         // Traverse declarations tree to the parent of 'decl'

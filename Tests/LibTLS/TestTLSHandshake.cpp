@@ -15,7 +15,7 @@
 static char const* ca_certs_file = "./ca_certs.ini";
 static int port = 443;
 
-constexpr char const* DEFAULT_SERVER { "www.google.com" };
+constexpr auto DEFAULT_SERVER = "www.google.com"sv;
 
 static ByteBuffer operator""_b(char const* string, size_t length)
 {
@@ -101,8 +101,8 @@ TEST_CASE(test_TLS_hello_handshake)
         return;
     }
 
-    auto* the_server = DEFAULT_SERVER;
-    if (!tls->write_or_error(StringView(the_server).bytes())) {
+    auto the_server = DEFAULT_SERVER;
+    if (!tls->write_or_error(the_server.bytes())) {
         FAIL("write(1) failed");
         return;
     }

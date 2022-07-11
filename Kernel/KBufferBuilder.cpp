@@ -105,19 +105,19 @@ ErrorOr<void> KBufferBuilder::append_escaped_for_json(StringView string)
     for (auto ch : string) {
         switch (ch) {
         case '\b':
-            TRY(append("\\b"));
+            TRY(append("\\b"sv));
             break;
         case '\n':
-            TRY(append("\\n"));
+            TRY(append("\\n"sv));
             break;
         case '\t':
-            TRY(append("\\t"));
+            TRY(append("\\t"sv));
             break;
         case '\"':
-            TRY(append("\\\""));
+            TRY(append("\\\""sv));
             break;
         case '\\':
-            TRY(append("\\\\"));
+            TRY(append("\\\\"sv));
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)

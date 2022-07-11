@@ -154,7 +154,7 @@ void ViewWidget::mouseup_event(GUI::MouseEvent& event)
 void ViewWidget::load_from_file(String const& path)
 {
     auto show_error = [&] {
-        GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image"sv, GUI::MessageBox::Type::Error);
     };
 
     auto file_or_error = Core::MappedFile::map(path);

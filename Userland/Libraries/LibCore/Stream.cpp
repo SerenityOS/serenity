@@ -333,7 +333,7 @@ ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
     int rc = getaddrinfo(host.characters(), nullptr, &hints, &results);
     if (rc != 0) {
         if (rc == EAI_SYSTEM) {
-            return Error::from_syscall("getaddrinfo", -errno);
+            return Error::from_syscall("getaddrinfo"sv, -errno);
         }
 
         auto const* error_string = gai_strerror(rc);
@@ -423,7 +423,7 @@ ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
     } while (rc < 0 && errno == EINTR);
 
     if (rc < 0) {
-        return Error::from_syscall("poll", -errno);
+        return Error::from_syscall("poll"sv, -errno);
     }
 
     return (the_fd.revents & POLLIN) > 0;

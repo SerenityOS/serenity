@@ -14,7 +14,7 @@ ByteBuffer GeminiRequest::to_raw_request() const
 {
     StringBuilder builder;
     builder.append(m_url.to_string());
-    builder.append("\r\n");
+    builder.append("\r\n"sv);
     return builder.to_byte_buffer();
 }
 

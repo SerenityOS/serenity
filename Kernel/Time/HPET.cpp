@@ -127,7 +127,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
 {
     VERIFY(!HPET::initialized());
     hpet_initialized = true;
-    auto hpet_table = ACPI::Parser::the()->find_table("HPET");
+    auto hpet_table = ACPI::Parser::the()->find_table("HPET"sv);
     if (!hpet_table.has_value())
         return false;
     dmesgln("HPET @ {}", hpet_table.value());
@@ -153,7 +153,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
 
 UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
 {
-    auto hpet_table = ACPI::Parser::the()->find_table("HPET");
+    auto hpet_table = ACPI::Parser::the()->find_table("HPET"sv);
     if (!hpet_table.has_value())
         return false;
 
@@ -431,7 +431,7 @@ u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
 UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     : m_physical_acpi_hpet_table(acpi_hpet)
     , m_physical_acpi_hpet_registers(find_acpi_hpet_registers_block())
-    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO", Memory::Region::Access::ReadWrite).release_value())
+    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO"sv, Memory::Region::Access::ReadWrite).release_value())
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 

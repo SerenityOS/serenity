@@ -138,7 +138,7 @@ public:
                 processors_field.empend("brand", "Brand", Gfx::TextAlignment::CenterLeft);
                 processors_field.empend("Features", Gfx::TextAlignment::CenterLeft, [](auto& object) {
                     StringBuilder builder;
-                    auto features = object.get("features").as_array();
+                    auto features = object.get("features"sv).as_array();
                     for (auto& feature : features.values()) {
                         builder.append(feature.to_string());
                         builder.append(' ');
@@ -163,38 +163,38 @@ public:
                 pci_fields.empend(
                     "Address", Gfx::TextAlignment::CenterLeft,
                     [](const JsonObject& object) {
-                        auto seg = object.get("seg").to_u32();
-                        auto bus = object.get("bus").to_u32();
-                        auto device = object.get("device").to_u32();
-                        auto function = object.get("function").to_u32();
+                        auto seg = object.get("seg"sv).to_u32();
+                        auto bus = object.get("bus"sv).to_u32();
+                        auto device = object.get("device"sv).to_u32();
+                        auto function = object.get("function"sv).to_u32();
                         return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, device, function);
                     });
                 pci_fields.empend(
                     "Class", Gfx::TextAlignment::CenterLeft,
                     [this](const JsonObject& object) {
-                        auto class_id = object.get("class").to_u32();
-                        String class_name = m_db ? m_db->get_class(class_id) : nullptr;
+                        auto class_id = object.get("class"sv).to_u32();
+                        String class_name = m_db ? m_db->get_class(class_id) : StringView {};
                         return class_name.is_empty() ? String::formatted("Unknown class: {:04x}", class_id) : class_name;
                     });
                 pci_fields.empend(
                     "Vendor", Gfx::TextAlignment::CenterLeft,
                     [this](const JsonObject& object) {
-                        auto vendor_id = object.get("vendor_id").to_u32();
-                        String vendor_name = m_db ? m_db->get_vendor(vendor_id) : nullptr;
+                        auto vendor_id = object.get("vendor_id"sv).to_u32();
+                        String vendor_name = m_db ? m_db->get_vendor(vendor_id) : StringView {};
                         return vendor_name.is_empty() ? String::formatted("Unknown vendor: {:02x}", vendor_id) : vendor_name;
                     });
                 pci_fields.empend(
                     "Device", Gfx::TextAlignment::CenterLeft,
                     [this](const JsonObject& object) {
-                        auto vendor_id = object.get("vendor_id").to_u32();
-                        auto device_id = object.get("device_id").to_u32();
-                        String device_name = m_db ? m_db->get_device(vendor_id, device_id) : nullptr;
+                        auto vendor_id = object.get("vendor_id"sv).to_u32();
+                        auto device_id = object.get("device_id"sv).to_u32();
+                        String device_name = m_db ? m_db->get_device(vendor_id, device_id) : StringView {};
                         return device_name.is_empty() ? String::formatted("Unknown device: {:02x}", device_id) : device_name;
                     });
                 pci_fields.empend(
                     "Revision", Gfx::TextAlignment::CenterRight,
                     [](const JsonObject& object) {
-                        auto revision_id = object.get("revision_id").to_u32();
+                        auto revision_id = object.get("revision_id"sv).to_u32();
                         return String::formatted("{:02x}", revision_id);
                     });
 
@@ -227,18 +227,18 @@ public:
                 [](const JsonObject& object) {
                     StringBuilder size_builder;
                     size_builder.append(" ");
-                    size_builder.append(human_readable_size(object.get("total_block_count").to_u64() * object.get("block_size").to_u64()));
+                    size_builder.append(human_readable_size(object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64()));
                     size_builder.append(" ");
                     return size_builder.to_string();
                 },
                 [](const JsonObject& object) {
-                    return object.get("total_block_count").to_u64() * object.get("block_size").to_u64();
+                    return object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
                 },
                 [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count").to_u64();
+                    auto total_blocks = object.get("total_block_count"sv).to_u64();
                     if (total_blocks == 0)
                         return 0;
-                    auto free_blocks = object.get("free_block_count").to_u64();
+                    auto free_blocks = object.get("free_block_count"sv).to_u64();
                     auto used_blocks = total_blocks - free_blocks;
                     int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
                     return percentage;
@@ -246,34 +246,34 @@ public:
             df_fields.empend(
                 "Used", Gfx::TextAlignment::CenterRight,
                 [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count").to_u64();
-            auto free_blocks = object.get("free_block_count").to_u64();
+            auto total_blocks = object.get("total_block_count"sv).to_u64();
+            auto free_blocks = object.get("free_block_count"sv).to_u64();
             auto used_blocks = total_blocks - free_blocks;
-            return human_readable_size(used_blocks * object.get("block_size").to_u64()); },
+            return human_readable_size(used_blocks * object.get("block_size"sv).to_u64()); },
                 [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count").to_u64();
-                    auto free_blocks = object.get("free_block_count").to_u64();
+                    auto total_blocks = object.get("total_block_count"sv).to_u64();
+                    auto free_blocks = object.get("free_block_count"sv).to_u64();
                     auto used_blocks = total_blocks - free_blocks;
-                    return used_blocks * object.get("block_size").to_u64();
+                    return used_blocks * object.get("block_size"sv).to_u64();
                 });
             df_fields.empend(
                 "Available", Gfx::TextAlignment::CenterRight,
                 [](const JsonObject& object) {
-                    return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
+                    return human_readable_size(object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64());
                 },
                 [](const JsonObject& object) {
-                    return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
+                    return object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
                 });
             df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                bool readonly = object.get("readonly").to_bool();
-                int mount_flags = object.get("mount_flags").to_int();
+                bool readonly = object.get("readonly"sv).to_bool();
+                int mount_flags = object.get("mount_flags"sv).to_int();
                 return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
             });
             df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                int mount_flags = object.get("mount_flags").to_int();
+                int mount_flags = object.get("mount_flags"sv).to_int();
                 StringBuilder builder;
                 bool first = true;
-                auto check = [&](int flag, const char* name) {
+                auto check = [&](int flag, StringView name) {
                     if (!(mount_flags & flag))
                         return;
                     if (!first)
@@ -281,13 +281,13 @@ public:
                     builder.append(name);
                     first = false;
                 };
-                check(MS_NODEV, "nodev");
-                check(MS_NOEXEC, "noexec");
-                check(MS_NOSUID, "nosuid");
-                check(MS_BIND, "bind");
-                check(MS_RDONLY, "ro");
-                check(MS_WXALLOWED, "wxallowed");
-                check(MS_AXALLOWED, "axallowed");
+                check(MS_NODEV, "nodev"sv);
+                check(MS_NOEXEC, "noexec"sv);
+                check(MS_NOSUID, "nosuid"sv);
+                check(MS_BIND, "bind"sv);
+                check(MS_RDONLY, "ro"sv);
+                check(MS_WXALLOWED, "wxallowed"sv);
+                check(MS_AXALLOWED, "axallowed"sv);
                 if (builder.string_view().is_empty())
                     return String("defaults");
                 return builder.to_string();
@@ -365,7 +365,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
     StringView args_tab_view = args_tab;
 
-    auto app_icon = GUI::Icon::default_icon("app-system-monitor");
+    auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);
 
     auto window = GUI::Window::construct();
     window->set_title("System Monitor");
@@ -402,10 +402,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_model->update();
 
-    i32 frequency = Config::read_i32("SystemMonitor", "Monitor", "Frequency", 3);
+    i32 frequency = Config::read_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, 3);
     if (frequency != 1 && frequency != 3 && frequency != 5) {
         frequency = 3;
-        Config::write_i32("SystemMonitor", "Monitor", "Frequency", frequency);
+        Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, frequency);
     }
 
     auto& refresh_timer = window->add<Core::Timer>(
@@ -439,29 +439,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto kill_action = GUI::Action::create(
-        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGKILL);
         },
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
-            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             if (rc == GUI::Dialog::ExecResult::Yes)
                 kill(pid, SIGSTOP);
         },
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "&Continue Process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/continue.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/continue.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -470,12 +470,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_action = GUI::Action::create(
         "&Profile Process", { Mod_Ctrl, Key_P },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
             auto pid_string = String::number(pid);
-            GUI::Process::spawn_or_show_error(window, "/bin/Profiler", Array { "--pid", pid_string.characters() });
+            GUI::Process::spawn_or_show_error(window, "/bin/Profiler"sv, Array { "--pid", pid_string.characters() });
         },
         &process_table_view);
 
@@ -531,7 +531,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto make_frequency_action = [&](int seconds) {
         auto action = GUI::Action::create_checkable(String::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
-            Config::write_i32("SystemMonitor", "Monitor", "Frequency", seconds);
+            Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
             refresh_timer.restart(seconds * 1000);
         });
         action->set_status_tip(String::formatted("Refresh every {} seconds", seconds));
@@ -597,7 +597,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     window->resize(480, 360);
     window->set_title(String::formatted("PID {} - System Monitor", pid));
 
-    auto app_icon = GUI::Icon::default_icon("app-system-monitor");
+    auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());

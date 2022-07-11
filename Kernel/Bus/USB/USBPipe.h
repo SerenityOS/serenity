@@ -79,7 +79,7 @@ private:
     u8 m_poll_interval { 0 };     // Polling interval (in frames)
     bool m_data_toggle { false }; // Data toggle for stuffing bit
 
-    Mutex m_dma_buffer_lock { "USB pipe mutex" };
+    Mutex m_dma_buffer_lock { "USB pipe mutex"sv };
 
     NonnullOwnPtr<Memory::Region> m_dma_buffer;
 };

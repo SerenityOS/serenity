@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-minesweeper"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-minesweeper"sv));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_resizable(false);
@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     container->layout()->add_spacer();
 
     auto flag_image = TRY(container->try_add<GUI::Label>());
-    flag_image->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png").release_value_but_fixme_should_propagate_errors());
+    flag_image->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png"sv).release_value_but_fixme_should_propagate_errors());
     flag_image->set_fixed_width(16);
 
     auto flag_label = TRY(container->try_add<GUI::Label>());
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto time_image = TRY(container->try_add<GUI::Label>());
     time_image->set_fixed_width(16);
-    time_image->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/timer.png").release_value_but_fixme_should_propagate_errors());
+    time_image->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/timer.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto time_label = TRY(container->try_add<GUI::Label>());
     time_label->set_fixed_width(50);
@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
     })));
 

@@ -155,18 +155,18 @@ static String percent_encode_after_encoding(StringView input, URL::PercentEncode
 Optional<URL> URLParser::parse_data_url(StringView raw_input)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
-    VERIFY(raw_input.starts_with("data:"));
+    VERIFY(raw_input.starts_with("data:"sv));
     auto input = raw_input.substring_view(5);
     auto comma_offset = input.find(',');
     if (!comma_offset.has_value())
         return {};
-    auto mime_type = StringUtils::trim(input.substring_view(0, comma_offset.value()), "\t\n\f\r ", TrimMode::Both);
+    auto mime_type = StringUtils::trim(input.substring_view(0, comma_offset.value()), "\t\n\f\r "sv, TrimMode::Both);
     auto encoded_body = input.substring_view(comma_offset.value() + 1);
     auto body = URL::percent_decode(encoded_body);
     bool is_base64_encoded = false;
-    if (mime_type.ends_with("base64", CaseSensitivity::CaseInsensitive)) {
+    if (mime_type.ends_with("base64"sv, CaseSensitivity::CaseInsensitive)) {
         auto substring_view = mime_type.substring_view(0, mime_type.length() - 6);
-        auto trimmed_substring_view = StringUtils::trim(substring_view, " ", TrimMode::Right);
+        auto trimmed_substring_view = StringUtils::trim(substring_view, " "sv, TrimMode::Right);
         if (trimmed_substring_view.ends_with(';')) {
             is_base64_encoded = true;
             mime_type = trimmed_substring_view.substring_view(0, trimmed_substring_view.length() - 1);
@@ -174,14 +174,14 @@ Optional<URL> URLParser::parse_data_url(StringView raw_input)
     }
 
     StringBuilder builder;
-    if (mime_type.starts_with(";") || mime_type.is_empty()) {
-        builder.append("text/plain");
+    if (mime_type.starts_with(";"sv) || mime_type.is_empty()) {
+        builder.append("text/plain"sv);
         builder.append(mime_type);
         mime_type = builder.string_view();
     }
 
     // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
-    URL url { StringUtils::trim(mime_type, "\n\r\t ", TrimMode::Both), move(body), is_base64_encoded };
+    URL url { StringUtils::trim(mime_type, "\n\r\t "sv, TrimMode::Both), move(body), is_base64_encoded };
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsed data URL to be '{}'.", url.serialize());
     return url;
 }
@@ -202,7 +202,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
     if (raw_input.is_empty())
         return {};
 
-    if (raw_input.starts_with("data:")) {
+    if (raw_input.starts_with("data:"sv)) {
         auto maybe_url = parse_data_url(raw_input);
         if (!maybe_url.has_value())
             return {};
@@ -243,9 +243,9 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
     String processed_input = raw_input.substring_view(start_index, end_index - start_index);
 
     // NOTE: This replaces all tab and newline characters with nothing.
-    if (processed_input.contains("\t") || processed_input.contains("\n")) {
+    if (processed_input.contains("\t"sv) || processed_input.contains("\n"sv)) {
         report_validation_error();
-        processed_input = processed_input.replace("\t", "", ReplaceMode::All).replace("\n", "", ReplaceMode::All);
+        processed_input = processed_input.replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All);
     }
 
     State state = state_override.value_or(State::SchemeStart);
@@ -295,7 +295,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                 url->m_scheme = buffer.to_string();
                 buffer.clear();
                 if (url->scheme() == "file") {
-                    if (!get_remaining().starts_with("//")) {
+                    if (!get_remaining().starts_with("//"sv)) {
                         report_validation_error();
                     }
                     state = State::File;
@@ -304,7 +304,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                         state = State::SpecialRelativeOrAuthority;
                     else
                         state = State::SpecialAuthoritySlashes;
-                } else if (get_remaining().starts_with("/")) {
+                } else if (get_remaining().starts_with("/"sv)) {
                     state = State::PathOrAuthority;
                     ++iterator;
                 } else {
@@ -339,7 +339,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             }
             break;
         case State::SpecialRelativeOrAuthority:
-            if (code_point == '/' && get_remaining().starts_with("/")) {
+            if (code_point == '/' && get_remaining().starts_with("/"sv)) {
                 state = State::SpecialAuthorityIgnoreSlashes;
                 ++iterator;
             } else {
@@ -403,7 +403,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             }
             break;
         case State::SpecialAuthoritySlashes:
-            if (code_point == '/' && get_remaining().starts_with("/")) {
+            if (code_point == '/' && get_remaining().starts_with("/"sv)) {
                 state = State::SpecialAuthorityIgnoreSlashes;
                 ++iterator;
             } else {
@@ -426,7 +426,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                 if (at_sign_seen) {
                     auto content = buffer.to_string();
                     buffer.clear();
-                    buffer.append("%40");
+                    buffer.append("%40"sv);
                     buffer.append(content);
                 }
                 at_sign_seen = true;

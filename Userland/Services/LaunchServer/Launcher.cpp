@@ -47,17 +47,17 @@ String Handler::to_details_str() const
 {
     StringBuilder builder;
     auto obj = MUST(JsonObjectSerializer<>::try_create(builder));
-    MUST(obj.add("executable", executable));
-    MUST(obj.add("name", name));
+    MUST(obj.add("executable"sv, executable));
+    MUST(obj.add("name"sv, name));
     switch (handler_type) {
     case Type::Application:
-        MUST(obj.add("type", "app"));
+        MUST(obj.add("type"sv, "app"));
         break;
     case Type::UserDefault:
-        MUST(obj.add("type", "userdefault"));
+        MUST(obj.add("type"sv, "userdefault"));
         break;
     case Type::UserPreferred:
-        MUST(obj.add("type", "userpreferred"));
+        MUST(obj.add("type"sv, "userpreferred"));
         break;
     default:
         break;

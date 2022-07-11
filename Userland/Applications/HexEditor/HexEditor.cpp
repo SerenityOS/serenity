@@ -194,17 +194,17 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
 
     StringBuilder output_string_builder;
     output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", m_selection_end - m_selection_start);
-    output_string_builder.append("    ");
+    output_string_builder.append("    "sv);
     for (size_t i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_document->get(i).value);
         if (i >= m_selection_end - 1)
             continue;
         if ((j % 12) == 0)
-            output_string_builder.append(",\n    ");
+            output_string_builder.append(",\n    "sv);
         else
-            output_string_builder.append(", ");
+            output_string_builder.append(", "sv);
     }
-    output_string_builder.append("\n};\n");
+    output_string_builder.append("\n};\n"sv);
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
     return true;

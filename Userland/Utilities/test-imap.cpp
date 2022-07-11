@@ -51,9 +51,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     response = move(client->send_simple_command(IMAP::CommandType::Capability)->await().value().get<IMAP::SolidResponse>());
     outln("[CAPABILITY] First capability: {}", response.data().capabilities().first());
-    bool idle_supported = !response.data().capabilities().find_if([](auto capability) { return capability.equals_ignoring_case("IDLE"); }).is_end();
+    bool idle_supported = !response.data().capabilities().find_if([](auto capability) { return capability.equals_ignoring_case("IDLE"sv); }).is_end();
 
-    response = client->list("", "*")->await().release_value();
+    response = client->list(""sv, "*"sv)->await().release_value();
     outln("[LIST] First mailbox: {}", response.data().list_items().first().name);
 
     auto mailbox = "Inbox"sv;
@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "This is a message just to say hello.\r\n"
         "So, \"Hello\"."
     };
-    auto promise = client->append("INBOX", move(message));
+    auto promise = client->append("INBOX"sv, move(message));
     response = promise->await().release_value();
     outln("[APPEND] Response: {}", response.response_text());
 
@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto added_message = search_results.first();
     outln("[SEARCH] Number of results: {}", search_results.size());
 
-    response = client->status("INBOX", { IMAP::StatusItemType::Recent, IMAP::StatusItemType::Messages })->await().release_value();
+    response = client->status("INBOX"sv, { IMAP::StatusItemType::Recent, IMAP::StatusItemType::Messages })->await().release_value();
     outln("[STATUS] Recent items: {}", response.data().status_item().get(IMAP::StatusItemType::Recent));
 
     for (auto item : search_results) {

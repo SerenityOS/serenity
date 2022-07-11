@@ -28,7 +28,7 @@ static Vector<u32> supported_emoji_code_points()
         if (lexical_path.extension() != "png")
             continue;
         auto basename = lexical_path.basename();
-        if (!basename.starts_with("U+"))
+        if (!basename.starts_with("U+"sv))
             continue;
         // FIXME: Handle multi code point emojis.
         if (basename.contains('_'))

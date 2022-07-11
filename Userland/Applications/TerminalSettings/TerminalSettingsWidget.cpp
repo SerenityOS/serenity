@@ -38,7 +38,7 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
     auto& visual_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
     auto& no_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
 
-    m_bell_mode = parse_bell(Config::read_string("Terminal", "Window", "Bell"));
+    m_bell_mode = parse_bell(Config::read_string("Terminal"sv, "Window"sv, "Bell"sv));
     m_original_bell_mode = m_bell_mode;
 
     switch (m_bell_mode) {
@@ -55,46 +55,46 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
 
     beep_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
-        Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, stringify_bell(m_bell_mode));
         set_modified(true);
     };
     visual_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Visible;
-        Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, stringify_bell(m_bell_mode));
         set_modified(true);
     };
     no_bell_radio.on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Disabled;
-        Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_bell_mode));
+        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, stringify_bell(m_bell_mode));
         set_modified(true);
     };
 
-    m_max_history_size = Config::read_i32("Terminal", "Terminal", "MaxHistorySize");
+    m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv);
     m_original_max_history_size = m_max_history_size;
     auto& history_size_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
     history_size_spinbox.set_value(m_max_history_size, GUI::AllowCallback::No);
     history_size_spinbox.on_change = [this](int value) {
         m_max_history_size = value;
-        Config::write_i32("Terminal", "Terminal", "MaxHistorySize", static_cast<i32>(m_max_history_size));
+        Config::write_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, static_cast<i32>(m_max_history_size));
         set_modified(true);
     };
 
-    m_show_scrollbar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
+    m_show_scrollbar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
     m_orignal_show_scrollbar = m_show_scrollbar;
     auto& show_scrollbar_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("terminal_show_scrollbar");
     show_scrollbar_checkbox.on_checked = [&](bool show_scrollbar) {
         m_show_scrollbar = show_scrollbar;
-        Config::write_bool("Terminal", "Terminal", "ShowScrollBar", show_scrollbar);
+        Config::write_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, show_scrollbar);
         set_modified(true);
     };
     show_scrollbar_checkbox.set_checked(m_show_scrollbar, GUI::AllowCallback::No);
 
-    m_confirm_close = Config::read_bool("Terminal", "Terminal", "ConfirmClose", true);
+    m_confirm_close = Config::read_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, true);
     m_orignal_confirm_close = m_confirm_close;
     auto& confirm_close_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("terminal_confirm_close");
     confirm_close_checkbox.on_checked = [&](bool confirm_close) {
         m_confirm_close = confirm_close;
-        Config::write_bool("Terminal", "Terminal", "ConfirmClose", confirm_close);
+        Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, confirm_close);
         set_modified(true);
     };
     confirm_close_checkbox.set_checked(m_confirm_close, GUI::AllowCallback::No);
@@ -105,16 +105,16 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     load_from_gml(terminal_settings_view_gml);
 
     auto& slider = *find_descendant_of_type_named<GUI::OpacitySlider>("background_opacity_slider");
-    m_opacity = Config::read_i32("Terminal", "Window", "Opacity");
+    m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);
     m_original_opacity = m_opacity;
     slider.set_value(m_opacity);
     slider.on_change = [this](int value) {
         m_opacity = value;
-        Config::write_i32("Terminal", "Window", "Opacity", static_cast<i32>(m_opacity));
+        Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_opacity));
         set_modified(true);
     };
 
-    m_color_scheme = Config::read_string("Terminal", "Window", "ColorScheme");
+    m_color_scheme = Config::read_string("Terminal"sv, "Window"sv, "ColorScheme"sv);
     m_original_color_scheme = m_color_scheme;
     // The settings window takes a reference to this vector, so it needs to outlive this scope.
     // As long as we ensure that only one settings window may be open at a time (which we do),
@@ -124,7 +124,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_path();
-        color_scheme_names.append(path.replace(".ini", "", ReplaceMode::FirstOnly));
+        color_scheme_names.append(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly));
     }
     quick_sort(color_scheme_names);
     auto& color_scheme_combo = *find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
@@ -134,13 +134,13 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     color_scheme_combo.set_enabled(color_scheme_names.size() > 1);
     color_scheme_combo.on_change = [&](auto&, const GUI::ModelIndex& index) {
         m_color_scheme = index.data().as_string();
-        Config::write_string("Terminal", "Window", "ColorScheme", m_color_scheme);
+        Config::write_string("Terminal"sv, "Window"sv, "ColorScheme"sv, m_color_scheme);
         set_modified(true);
     };
 
     auto& font_button = *find_descendant_of_type_named<GUI::Button>("terminal_font_button");
     auto& font_text = *find_descendant_of_type_named<GUI::Label>("terminal_font_label");
-    auto font_name = Config::read_string("Terminal", "Text", "Font");
+    auto font_name = Config::read_string("Terminal"sv, "Text"sv, "Font"sv);
     if (font_name.is_empty())
         m_font = Gfx::FontDatabase::the().default_fixed_width_font();
     else
@@ -154,7 +154,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
             m_font = picker->font();
             font_text.set_text(m_font->human_readable_name());
             font_text.set_font(m_font);
-            Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
+            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
             set_modified(true);
         }
     };
@@ -167,13 +167,13 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
             m_font = Gfx::FontDatabase::the().default_fixed_width_font();
             font_text.set_text(m_font->human_readable_name());
             font_text.set_font(m_font);
-            Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
+            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         } else {
             font_selection.set_enabled(true);
             m_font = font_name.is_empty()
                 ? Gfx::FontDatabase::the().default_fixed_width_font()
                 : Gfx::FontDatabase::the().get_by_name(font_name);
-            Config::write_string("Terminal", "Text", "Font", m_font->qualified_name());
+            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         }
         set_modified(true);
     };
@@ -188,10 +188,10 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
 
     auto& terminal_cursor_blinking = *find_descendant_of_type_named<GUI::CheckBox>("terminal_cursor_blinking");
 
-    m_cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal", "Cursor", "Shape")).value_or(VT::CursorShape::Block);
+    m_cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv)).value_or(VT::CursorShape::Block);
     m_original_cursor_shape = m_cursor_shape;
 
-    m_cursor_is_blinking_set = Config::read_bool("Terminal", "Cursor", "Blinking", true);
+    m_cursor_is_blinking_set = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true);
     m_original_cursor_is_blinking_set = m_cursor_is_blinking_set;
 
     switch (m_cursor_shape) {
@@ -208,30 +208,30 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     terminal_cursor_blinking.on_checked = [&](bool is_checked) {
         set_modified(true);
         m_cursor_is_blinking_set = is_checked;
-        Config::write_bool("Terminal", "Cursor", "Blinking", is_checked);
+        Config::write_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, is_checked);
     };
-    terminal_cursor_blinking.set_checked(Config::read_bool("Terminal", "Cursor", "Blinking", true));
+    terminal_cursor_blinking.set_checked(Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true));
 
     terminal_cursor_block.on_checked = [&](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Block;
-        Config::write_string("Terminal", "Cursor", "Shape", "Block");
+        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv);
     };
-    terminal_cursor_block.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Block");
+    terminal_cursor_block.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Block"sv);
 
     terminal_cursor_underline.on_checked = [&](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Underline;
-        Config::write_string("Terminal", "Cursor", "Shape", "Underline");
+        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Underline"sv);
     };
-    terminal_cursor_underline.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Underline");
+    terminal_cursor_underline.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Underline"sv);
 
     terminal_cursor_bar.on_checked = [&](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Bar;
-        Config::write_string("Terminal", "Cursor", "Shape", "Bar");
+        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Bar"sv);
     };
-    terminal_cursor_bar.set_checked(Config::read_string("Terminal", "Cursor", "Shape") == "Bar");
+    terminal_cursor_bar.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Bar"sv);
 }
 
 VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView bell_string)
@@ -266,10 +266,10 @@ void TerminalSettingsMainWidget::apply_settings()
 }
 void TerminalSettingsMainWidget::write_back_settings() const
 {
-    Config::write_i32("Terminal", "Terminal", "MaxHistorySize", static_cast<i32>(m_original_max_history_size));
-    Config::write_bool("Terminal", "Terminal", "ShowScrollBar", m_orignal_show_scrollbar);
-    Config::write_bool("Terminal", "Terminal", "ConfirmClose", m_orignal_confirm_close);
-    Config::write_string("Terminal", "Window", "Bell", stringify_bell(m_original_bell_mode));
+    Config::write_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, static_cast<i32>(m_original_max_history_size));
+    Config::write_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, m_orignal_show_scrollbar);
+    Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, m_orignal_confirm_close);
+    Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, stringify_bell(m_original_bell_mode));
 }
 
 void TerminalSettingsMainWidget::cancel_settings()
@@ -289,11 +289,11 @@ void TerminalSettingsViewWidget::apply_settings()
 
 void TerminalSettingsViewWidget::write_back_settings() const
 {
-    Config::write_i32("Terminal", "Window", "Opacity", static_cast<i32>(m_original_opacity));
-    Config::write_string("Terminal", "Text", "Font", m_original_font->qualified_name());
-    Config::write_string("Terminal", "Window", "ColorScheme", m_original_color_scheme);
-    Config::write_string("Terminal", "Cursor", "Shape", VT::TerminalWidget::stringify_cursor_shape(m_original_cursor_shape));
-    Config::write_bool("Terminal", "Cursor", "Blinking", m_original_cursor_is_blinking_set);
+    Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_original_opacity));
+    Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_original_font->qualified_name());
+    Config::write_string("Terminal"sv, "Window"sv, "ColorScheme"sv, m_original_color_scheme);
+    Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, VT::TerminalWidget::stringify_cursor_shape(m_original_cursor_shape));
+    Config::write_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, m_original_cursor_is_blinking_set);
 }
 
 void TerminalSettingsViewWidget::cancel_settings()

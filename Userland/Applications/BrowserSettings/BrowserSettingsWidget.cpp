@@ -62,22 +62,22 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     load_from_gml(browser_settings_widget_gml);
 
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
-    m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", default_homepage_url), GUI::AllowCallback::No);
+    m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, default_homepage_url), GUI::AllowCallback::No);
     m_homepage_url_textbox->on_change = [&]() { set_modified(true); };
 
     m_new_tab_url_textbox = find_descendant_of_type_named<GUI::TextBox>("new_tab_url_textbox");
-    m_new_tab_url_textbox->set_text(Config::read_string("Browser", "Preferences", "NewTab", default_new_tab_url), GUI::AllowCallback::No);
+    m_new_tab_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, default_new_tab_url), GUI::AllowCallback::No);
     m_new_tab_url_textbox->on_change = [&]() { set_modified(true); };
 
     m_color_scheme_combobox = find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combobox");
     m_color_scheme_combobox->set_only_allow_values_from_model(true);
     m_color_scheme_combobox->set_model(adopt_ref(*new ColorSchemeModel()));
     m_color_scheme_combobox->set_selected_index(0, GUI::AllowCallback::No);
-    set_color_scheme(Config::read_string("Browser", "Preferences", "ColorScheme", default_color_scheme));
+    set_color_scheme(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, default_color_scheme));
     m_color_scheme_combobox->on_change = [&](auto, auto) { set_modified(true); };
 
     m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
-    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", default_show_bookmarks_bar), GUI::AllowCallback::No);
+    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, default_show_bookmarks_bar), GUI::AllowCallback::No);
     m_show_bookmarks_bar_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     m_enable_search_engine_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_search_engine_checkbox");
@@ -111,10 +111,10 @@ BrowserSettingsWidget::BrowserSettingsWidget()
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
         set_modified(true);
     };
-    set_search_engine_url(Config::read_string("Browser", "Preferences", "SearchEngine", default_search_engine));
+    set_search_engine_url(Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, default_search_engine));
 
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
-    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", default_auto_close_download_windows), GUI::AllowCallback::No);
+    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, default_auto_close_download_windows), GUI::AllowCallback::No);
     m_auto_close_download_windows_checkbox->on_checked = [&](auto) { set_modified(true); };
 }
 
@@ -170,39 +170,39 @@ void BrowserSettingsWidget::apply_settings()
 {
     auto homepage_url = m_homepage_url_textbox->text();
     if (!URL(homepage_url).is_valid()) {
-        GUI::MessageBox::show_error(this->window(), "The homepage URL you have entered is not valid");
+        GUI::MessageBox::show_error(this->window(), "The homepage URL you have entered is not valid"sv);
         m_homepage_url_textbox->select_all();
         m_homepage_url_textbox->set_focus(true);
         return;
     }
-    Config::write_string("Browser", "Preferences", "Home", homepage_url);
+    Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
 
     auto new_tab_url = m_new_tab_url_textbox->text();
     if (!URL(new_tab_url).is_valid()) {
-        GUI::MessageBox::show_error(this->window(), "The new tab URL you have entered is not valid");
+        GUI::MessageBox::show_error(this->window(), "The new tab URL you have entered is not valid"sv);
         m_new_tab_url_textbox->select_all();
         m_new_tab_url_textbox->set_focus(true);
         return;
     }
-    Config::write_string("Browser", "Preferences", "NewTab", new_tab_url);
+    Config::write_string("Browser"sv, "Preferences"sv, "NewTab"sv, new_tab_url);
 
-    Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", m_show_bookmarks_bar_checkbox->is_checked());
+    Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, m_show_bookmarks_bar_checkbox->is_checked());
 
     auto color_scheme_index = m_color_scheme_combobox->selected_index();
     auto color_scheme = m_color_scheme_combobox->model()->index(color_scheme_index, 1).data().to_string();
-    Config::write_string("Browser", "Preferences", "ColorScheme", color_scheme);
+    Config::write_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, color_scheme);
 
     if (!m_enable_search_engine_checkbox->is_checked()) {
-        Config::write_string("Browser", "Preferences", "SearchEngine", {});
+        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, {});
     } else if (m_is_custom_search_engine) {
-        Config::write_string("Browser", "Preferences", "SearchEngine", m_custom_search_engine_textbox->text());
+        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, m_custom_search_engine_textbox->text());
     } else {
         auto selected_index = m_search_engine_combobox->selected_index();
         auto url = m_search_engine_combobox->model()->index(selected_index, 1).data().to_string();
-        Config::write_string("Browser", "Preferences", "SearchEngine", url);
+        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, url);
     }
 
-    Config::write_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", m_auto_close_download_windows_checkbox->is_checked());
+    Config::write_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, m_auto_close_download_windows_checkbox->is_checked());
 }
 
 void BrowserSettingsWidget::reset_default_values()

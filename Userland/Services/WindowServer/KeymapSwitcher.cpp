@@ -96,13 +96,13 @@ String KeymapSwitcher::get_current_keymap() const
 
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
-    VERIFY(keymap_object.has("keymap"));
-    return keymap_object.get("keymap").to_string();
+    VERIFY(keymap_object.has("keymap"sv));
+    return keymap_object.get("keymap"sv).to_string();
 }
 
 void KeymapSwitcher::setkeymap(const AK::String& keymap)
 {
-    if (Core::Process::spawn("/bin/keymap", Array { "-m", keymap.characters() }).is_error())
+    if (Core::Process::spawn("/bin/keymap"sv, Array { "-m", keymap.characters() }).is_error())
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));
 
     if (on_keymap_change)

@@ -74,19 +74,19 @@ TEST_CASE(file_permission_mask_from_symbolic_notation)
 
     mask = Core::FilePermissionsMask::from_symbolic_notation("z+rw"sv);
     EXPECT(mask.is_error());
-    EXPECT(mask.error().string_literal().starts_with("invalid class"));
+    EXPECT(mask.error().string_literal().starts_with("invalid class"sv));
 
     mask = Core::FilePermissionsMask::from_symbolic_notation("u*rw"sv);
     EXPECT(mask.is_error());
-    EXPECT(mask.error().string_literal().starts_with("invalid operation"));
+    EXPECT(mask.error().string_literal().starts_with("invalid operation"sv));
 
     mask = Core::FilePermissionsMask::from_symbolic_notation("u+rz"sv);
     EXPECT(mask.is_error());
-    EXPECT(mask.error().string_literal().starts_with("invalid symbolic permission"));
+    EXPECT(mask.error().string_literal().starts_with("invalid symbolic permission"sv));
 
     mask = Core::FilePermissionsMask::from_symbolic_notation("u+rw;g+rw"sv);
     EXPECT(mask.is_error());
-    EXPECT(mask.error().string_literal().starts_with("invalid symbolic permission"));
+    EXPECT(mask.error().string_literal().starts_with("invalid symbolic permission"sv));
 }
 
 TEST_CASE(file_permission_mask_parse)
@@ -100,9 +100,9 @@ TEST_CASE(file_permission_mask_parse)
     EXPECT_EQ(numeric_mask.value().clear_mask(), symbolic_mask.value().clear_mask());
     EXPECT_EQ(numeric_mask.value().write_mask(), symbolic_mask.value().write_mask());
 
-    auto mask = Core::FilePermissionsMask::parse("888");
+    auto mask = Core::FilePermissionsMask::parse("888"sv);
     EXPECT(mask.is_error());
 
-    mask = Core::FilePermissionsMask::parse("z+rw");
+    mask = Core::FilePermissionsMask::parse("z+rw"sv);
     EXPECT(mask.is_error());
 }

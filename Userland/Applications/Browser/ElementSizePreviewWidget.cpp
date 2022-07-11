@@ -83,7 +83,7 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     draw_borders(margin_rect, Color::Black);
     margin_rect.shrink(1, 1, 1, 1);
     margin_rect.shrink(text_height_padding, text_width_padding, text_height_padding, text_width_padding);
-    painter.draw_text(margin_rect, "margin", font(), Gfx::TextAlignment::TopLeft, Color::Black);
+    painter.draw_text(margin_rect, "margin"sv, font(), Gfx::TextAlignment::TopLeft, Color::Black);
     draw_size_texts(margin_rect, Color::Black, m_node_box_sizing.margin);
 
     // paint border box
@@ -91,7 +91,7 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     draw_borders(border_rect, Color::Black);
     border_rect.shrink(1, 1, 1, 1);
     border_rect.shrink(text_height_padding, text_width_padding, text_height_padding, text_width_padding);
-    painter.draw_text(border_rect, "border", font(), Gfx::TextAlignment::TopLeft, Color::Black);
+    painter.draw_text(border_rect, "border"sv, font(), Gfx::TextAlignment::TopLeft, Color::Black);
     draw_size_texts(border_rect, Color::Black, m_node_box_sizing.border);
 
     // paint padding box
@@ -99,7 +99,7 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     draw_borders(padding_rect, Color::Black);
     padding_rect.shrink(1, 1, 1, 1);
     padding_rect.shrink(text_height_padding, text_width_padding, text_height_padding, text_width_padding);
-    painter.draw_text(padding_rect, "padding", font(), Gfx::TextAlignment::TopLeft, Color::Black);
+    painter.draw_text(padding_rect, "padding"sv, font(), Gfx::TextAlignment::TopLeft, Color::Black);
     draw_size_texts(padding_rect, Color::Black, m_node_box_sizing.padding);
 
     // paint content box

@@ -11,15 +11,15 @@
 #include <LibJS/Script.h>
 #include <LibTest/TestCase.h>
 
-#define SETUP_AND_PARSE(source)                                                 \
-    auto vm = JS::VM::create();                                                 \
-    auto ast_interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);      \
-                                                                                \
-    auto script_or_error = JS::Script::parse(source, ast_interpreter->realm()); \
-    EXPECT(!script_or_error.is_error());                                        \
-                                                                                \
-    auto script = script_or_error.release_value();                              \
-    auto const& program = script->parse_node();                                 \
+#define SETUP_AND_PARSE(source)                                                     \
+    auto vm = JS::VM::create();                                                     \
+    auto ast_interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);          \
+                                                                                    \
+    auto script_or_error = JS::Script::parse(source##sv, ast_interpreter->realm()); \
+    EXPECT(!script_or_error.is_error());                                            \
+                                                                                    \
+    auto script = script_or_error.release_value();                                  \
+    auto const& program = script->parse_node();                                     \
     JS::Bytecode::Interpreter bytecode_interpreter(ast_interpreter->global_object(), ast_interpreter->realm());
 
 #define EXPECT_NO_EXCEPTION(executable)                                 \
@@ -110,7 +110,7 @@ TEST_CASE(loading_multiple_files)
     }
 
     {
-        auto test_file_script_or_error = JS::Script::parse("if (f() !== 'hello') throw new Exception('failed'); ", ast_interpreter->realm());
+        auto test_file_script_or_error = JS::Script::parse("if (f() !== 'hello') throw new Exception('failed'); "sv, ast_interpreter->realm());
         EXPECT(!test_file_script_or_error.is_error());
 
         auto test_file_script = test_file_script_or_error.release_value();

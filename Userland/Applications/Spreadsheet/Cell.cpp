@@ -74,10 +74,10 @@ CellType const& Cell::type() const
 
     if (m_kind == LiteralString) {
         if (m_data.to_int().has_value())
-            return *CellType::get_by_name("Numeric");
+            return *CellType::get_by_name("Numeric"sv);
     }
 
-    return *CellType::get_by_name("Identity");
+    return *CellType::get_by_name("Identity"sv);
 }
 
 JS::ThrowCompletionOr<String> Cell::typed_display() const

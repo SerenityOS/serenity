@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (output_path.is_empty()) {
-        output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
+        output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
     }
 
     auto app = TRY(GUI::Application::try_create(arguments));

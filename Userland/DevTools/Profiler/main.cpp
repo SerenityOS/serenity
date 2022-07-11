@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"sv));
 
     String perfcore_file;
     if (!perfcore_file_arg) {
@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
-        GUI::MessageBox::show(nullptr, String::formatted("{}", profile_or_error.error()), "Profiler", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("{}", profile_or_error.error()), "Profiler"sv, GUI::MessageBox::Type::Error);
         return 0;
     }
 
@@ -170,12 +170,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_source_model();
     };
 
-    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         disassembly_view->set_visible(action.is_checked());
         update_disassembly_model();
     });
 
-    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         source_view->set_visible(action.is_checked());
         update_source_model();
     });
@@ -314,7 +314,7 @@ static bool prompt_to_stop_profiling(pid_t pid, String const& process_name)
     auto window = GUI::Window::construct();
     window->set_title(String::formatted("Profiling {}({})", process_name, pid));
     window->resize(240, 100);
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
+    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
 
     auto& widget = window->set_main_widget<GUI::Widget>();
@@ -342,7 +342,7 @@ static bool prompt_to_stop_profiling(pid_t pid, String const& process_name)
 bool generate_profile(pid_t& pid)
 {
     if (!pid) {
-        auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
+        auto process_chooser = GUI::ProcessChooser::construct("Profiler"sv, "Profile"sv, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
         if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return false;
         pid = process_chooser->pid();
@@ -366,7 +366,7 @@ bool generate_profile(pid_t& pid)
 
     if (profiling_enable(pid, event_mask) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 

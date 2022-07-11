@@ -43,12 +43,12 @@ enum class TarFileType : char {
 };
 
 constexpr size_t block_size = 512;
-constexpr StringView gnu_magic = "ustar ";    // gnu format magic
-constexpr StringView gnu_version = " ";       // gnu format version
-constexpr StringView ustar_magic = "ustar";   // ustar format magic
-constexpr StringView ustar_version = "00";    // ustar format version
-constexpr StringView posix1_tar_magic = "";   // POSIX.1-1988 format magic
-constexpr StringView posix1_tar_version = ""; // POSIX.1-1988 format version
+constexpr StringView gnu_magic = "ustar "sv;    // gnu format magic
+constexpr StringView gnu_version = " "sv;       // gnu format version
+constexpr StringView ustar_magic = "ustar"sv;   // ustar format magic
+constexpr StringView ustar_version = "00"sv;    // ustar format version
+constexpr StringView posix1_tar_magic = ""sv;   // POSIX.1-1988 format magic
+constexpr StringView posix1_tar_version = ""sv; // POSIX.1-1988 format version
 
 template<size_t N>
 static size_t get_field_as_integral(char const (&field)[N])

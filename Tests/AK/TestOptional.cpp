@@ -71,7 +71,7 @@ TEST_CASE(optional_leak_1)
 
 TEST_CASE(short_notation)
 {
-    Optional<StringView> value = "foo";
+    Optional<StringView> value = "foo"sv;
 
     EXPECT_EQ(value->length(), 3u);
     EXPECT_EQ(*value, "foo");
@@ -89,9 +89,9 @@ TEST_CASE(comparison_without_values)
 TEST_CASE(comparison_with_values)
 {
     Optional<StringView> opt0;
-    Optional<StringView> opt1 = "foo";
-    Optional<String> opt2 = "foo";
-    Optional<StringView> opt3 = "bar";
+    Optional<StringView> opt1 = "foo"sv;
+    Optional<String> opt2 = "foo"sv;
+    Optional<StringView> opt3 = "bar"sv;
     EXPECT_NE(opt0, opt1);
     EXPECT_EQ(opt1, opt2);
     EXPECT_NE(opt1, opt3);
@@ -103,7 +103,7 @@ TEST_CASE(comparison_to_underlying_types)
     EXPECT_NE(opt0, String());
     EXPECT_NE(opt0, "foo");
 
-    Optional<StringView> opt1 = "foo";
+    Optional<StringView> opt1 = "foo"sv;
     EXPECT_EQ(opt1, "foo");
     EXPECT_NE(opt1, "bar");
     EXPECT_EQ(opt1, String("foo"));
@@ -250,7 +250,7 @@ TEST_CASE(move_optional_reference)
 
 TEST_CASE(short_notation_reference)
 {
-    StringView test = "foo";
+    StringView test = "foo"sv;
     Optional<StringView&> value = test;
 
     EXPECT_EQ(value->length(), 3u);
@@ -259,11 +259,11 @@ TEST_CASE(short_notation_reference)
 
 TEST_CASE(comparison_reference)
 {
-    StringView test = "foo";
+    StringView test = "foo"sv;
     Optional<StringView&> opt0;
     Optional<StringView const&> opt1 = test;
-    Optional<String> opt2 = "foo";
-    Optional<StringView> opt3 = "bar";
+    Optional<String> opt2 = "foo"sv;
+    Optional<StringView> opt3 = "bar"sv;
 
     EXPECT_NE(opt0, opt1);
     EXPECT_EQ(opt1, opt2);

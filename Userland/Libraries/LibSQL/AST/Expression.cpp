@@ -12,7 +12,7 @@
 
 namespace SQL::AST {
 
-static constexpr StringView s_posix_basic_metacharacters = ".^$*[]+\\";
+static constexpr auto s_posix_basic_metacharacters = ".^$*[]+\\"sv;
 
 ResultOr<Value> NumericLiteral::evaluate(ExecutionContext&) const
 {
@@ -205,7 +205,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
             } else if (c == '_' && !escaped) {
                 builder.append('.');
             } else if (c == '%' && !escaped) {
-                builder.append(".*");
+                builder.append(".*"sv);
             } else {
                 escaped = false;
                 builder.append(c);
@@ -226,7 +226,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
         auto err = regex.parser_result.error;
         if (err != regex::Error::NoError) {
             StringBuilder builder;
-            builder.append("Regular expression: ");
+            builder.append("Regular expression: "sv);
             builder.append(get_error_string(err));
 
             return Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, builder.build() };

@@ -346,7 +346,7 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         optind++;
         if (should_treat_expression_as_single_string({ argv[optind], strlen(argv[optind]) })) {
             --optind;
-            return make<StringCompare>(move(arg), "", StringCompare::NotEqual);
+            return make<StringCompare>(move(arg), ""sv, StringCompare::NotEqual);
         }
 
         StringView value { argv[optind], strlen(argv[optind]) };
@@ -381,9 +381,9 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             --optind;
             return {};
         case 'n':
-            return make<StringCompare>("", value, StringCompare::NotEqual);
+            return make<StringCompare>(""sv, value, StringCompare::NotEqual);
         case 'z':
-            return make<StringCompare>("", value, StringCompare::Equal);
+            return make<StringCompare>(""sv, value, StringCompare::Equal);
         case 'g':
         case 'G':
         case 'k':
@@ -445,12 +445,12 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         // '-a' and '-o' are boolean ops, which are part of a complex expression
         // put them back and return with lhs as string compare.
         --optind;
-        return make<StringCompare>("", lhs, StringCompare::NotEqual);
+        return make<StringCompare>(""sv, lhs, StringCompare::NotEqual);
     } else {
         // Now that we know it's not a well-formed expression, see if it's actually a negation
         if (lhs == "!") {
             if (should_treat_expression_as_single_string(arg))
-                return make<StringCompare>(move(lhs), "", StringCompare::NotEqual);
+                return make<StringCompare>(move(lhs), ""sv, StringCompare::NotEqual);
 
             auto command = parse_complex_expression(argv);
             if (!command)
@@ -459,7 +459,7 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             return make<Not>(command.release_nonnull());
         }
         --optind;
-        return make<StringCompare>("", lhs, StringCompare::NotEqual);
+        return make<StringCompare>(""sv, lhs, StringCompare::NotEqual);
     }
 }
 

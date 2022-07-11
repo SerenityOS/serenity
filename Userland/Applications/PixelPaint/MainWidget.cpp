@@ -174,7 +174,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "bmp");
                 if (response.is_error())
                     return;
-                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_bmp_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to BMP failed: {}", result.error()));
@@ -189,7 +189,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "png");
                 if (response.is_error())
                     return;
-                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_png_to_file(response.value(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
@@ -407,12 +407,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     // Save this so other methods can use it
     m_show_guides_action = GUI::Action::create_checkable(
         "Show &Guides", [&](auto& action) {
-            Config::write_bool("PixelPaint", "Guides", "Show", action.is_checked());
+            Config::write_bool("PixelPaint"sv, "Guides"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_guide_visibility(action.is_checked());
         });
-    m_show_guides_action->set_checked(Config::read_bool("PixelPaint", "Guides", "Show", true));
+    m_show_guides_action->set_checked(Config::read_bool("PixelPaint"sv, "Guides"sv, "Show"sv, true));
 
     m_view_menu->add_action(*m_zoom_in_action);
     m_view_menu->add_action(*m_zoom_out_action);
@@ -437,32 +437,32 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto show_pixel_grid_action = GUI::Action::create_checkable(
         "Show &Pixel Grid", [&](auto& action) {
-            Config::write_bool("PixelPaint", "PixelGrid", "Show", action.is_checked());
+            Config::write_bool("PixelPaint"sv, "PixelGrid"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_pixel_grid_visibility(action.is_checked());
         });
-    show_pixel_grid_action->set_checked(Config::read_bool("PixelPaint", "PixelGrid", "Show", true));
+    show_pixel_grid_action->set_checked(Config::read_bool("PixelPaint"sv, "PixelGrid"sv, "Show"sv, true));
     m_view_menu->add_action(*show_pixel_grid_action);
 
     m_show_rulers_action = GUI::Action::create_checkable(
         "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
-            Config::write_bool("PixelPaint", "Rulers", "Show", action.is_checked());
+            Config::write_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_ruler_visibility(action.is_checked());
         });
-    m_show_rulers_action->set_checked(Config::read_bool("PixelPaint", "Rulers", "Show", true));
+    m_show_rulers_action->set_checked(Config::read_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, true));
     m_view_menu->add_action(*m_show_rulers_action);
 
     m_show_active_layer_boundary_action = GUI::Action::create_checkable(
         "Show Active Layer &Boundary", [&](auto& action) {
-            Config::write_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", action.is_checked());
+            Config::write_bool("PixelPaint"sv, "ImageEditor"sv, "ShowActiveLayerBoundary"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_show_active_layer_boundary(action.is_checked());
         });
-    m_show_active_layer_boundary_action->set_checked(Config::read_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", true));
+    m_show_active_layer_boundary_action->set_checked(Config::read_bool("PixelPaint"sv, "ImageEditor"sv, "ShowActiveLayerBoundary"sv, true));
     m_view_menu->add_action(*m_show_active_layer_boundary_action);
 
     m_tool_menu = window.add_menu("&Tool");
@@ -700,7 +700,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     }));
 
     auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"sv), &window));
 
     m_levels_dialog_action = GUI::Action::create(
         "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {
@@ -825,7 +825,7 @@ void MainWidget::create_image_from_clipboard()
 {
     auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
     if (!bitmap) {
-        GUI::MessageBox::show(window(), "There is no image in a clipboard to paste.", "PixelPaint", GUI::MessageBox::Type::Warning);
+        GUI::MessageBox::show(window(), "There is no image in a clipboard to paste."sv, "PixelPaint"sv, GUI::MessageBox::Type::Warning);
         return;
     }
 

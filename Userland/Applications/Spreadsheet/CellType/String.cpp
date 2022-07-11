@@ -11,7 +11,7 @@
 namespace Spreadsheet {
 
 StringCell::StringCell()
-    : CellType("String")
+    : CellType("String"sv)
 {
 }
 

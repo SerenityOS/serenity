@@ -50,11 +50,11 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
     VERIFY(json);
 
     Selection selection {};
-    if (json->has_u32("pseudo-element")) {
-        selection.dom_node_id = json->get("parent-id").to_i32();
-        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get("pseudo-element").to_u32());
+    if (json->has_u32("pseudo-element"sv)) {
+        selection.dom_node_id = json->get("parent-id"sv).to_i32();
+        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get("pseudo-element"sv).to_u32());
     } else {
-        selection.dom_node_id = json->get("id").to_i32();
+        selection.dom_node_id = json->get("id"sv).to_i32();
     }
 
     if (selection == m_selection)
@@ -186,21 +186,21 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
     auto json_value = json_or_error.release_value();
     auto const& json_object = json_value.as_object();
 
-    m_node_box_sizing.margin.top = json_object.get("margin_top").to_float();
-    m_node_box_sizing.margin.right = json_object.get("margin_right").to_float();
-    m_node_box_sizing.margin.bottom = json_object.get("margin_bottom").to_float();
-    m_node_box_sizing.margin.left = json_object.get("margin_left").to_float();
-    m_node_box_sizing.padding.top = json_object.get("padding_top").to_float();
-    m_node_box_sizing.padding.right = json_object.get("padding_right").to_float();
-    m_node_box_sizing.padding.bottom = json_object.get("padding_bottom").to_float();
-    m_node_box_sizing.padding.left = json_object.get("padding_left").to_float();
-    m_node_box_sizing.border.top = json_object.get("border_top").to_float();
-    m_node_box_sizing.border.right = json_object.get("border_right").to_float();
-    m_node_box_sizing.border.bottom = json_object.get("border_bottom").to_float();
-    m_node_box_sizing.border.left = json_object.get("border_left").to_float();
+    m_node_box_sizing.margin.top = json_object.get("margin_top"sv).to_float();
+    m_node_box_sizing.margin.right = json_object.get("margin_right"sv).to_float();
+    m_node_box_sizing.margin.bottom = json_object.get("margin_bottom"sv).to_float();
+    m_node_box_sizing.margin.left = json_object.get("margin_left"sv).to_float();
+    m_node_box_sizing.padding.top = json_object.get("padding_top"sv).to_float();
+    m_node_box_sizing.padding.right = json_object.get("padding_right"sv).to_float();
+    m_node_box_sizing.padding.bottom = json_object.get("padding_bottom"sv).to_float();
+    m_node_box_sizing.padding.left = json_object.get("padding_left"sv).to_float();
+    m_node_box_sizing.border.top = json_object.get("border_top"sv).to_float();
+    m_node_box_sizing.border.right = json_object.get("border_right"sv).to_float();
+    m_node_box_sizing.border.bottom = json_object.get("border_bottom"sv).to_float();
+    m_node_box_sizing.border.left = json_object.get("border_left"sv).to_float();
 
-    m_element_size_view->set_node_content_width(json_object.get("content_width").to_float());
-    m_element_size_view->set_node_content_height(json_object.get("content_height").to_float());
+    m_element_size_view->set_node_content_width(json_object.get("content_width"sv).to_float());
+    m_element_size_view->set_node_content_height(json_object.get("content_height"sv).to_float());
     m_element_size_view->set_box_model(m_node_box_sizing);
 }
 

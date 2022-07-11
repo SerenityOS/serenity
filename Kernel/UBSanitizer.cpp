@@ -127,18 +127,18 @@ void __ubsan_handle_type_mismatch_v1(TypeMismatchData const&, ValueHandle) __att
 void __ubsan_handle_type_mismatch_v1(TypeMismatchData const& data, ValueHandle ptr)
 {
     constexpr StringView kinds[] = {
-        "load of",
-        "store to",
-        "reference binding to",
-        "member access within",
-        "member call on",
-        "constructor call on",
-        "downcast of",
-        "downcast of",
-        "upcast of",
-        "cast to virtual base of",
-        "_Nonnull binding to",
-        "dynamic operation on"
+        "load of"sv,
+        "store to"sv,
+        "reference binding to"sv,
+        "member access within"sv,
+        "member call on"sv,
+        "constructor call on"sv,
+        "downcast of"sv,
+        "downcast of"sv,
+        "upcast of"sv,
+        "cast to virtual base of"sv,
+        "_Nonnull binding to"sv,
+        "dynamic operation on"sv
     };
 
     FlatPtr alignment = (FlatPtr)1 << data.log_alignment;

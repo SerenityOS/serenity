@@ -312,7 +312,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
                     dbgln("Integer PrettyPrint error: {}", value.error());
                     return;
                 }
-                builder.append(" 0x");
+                builder.append(" 0x"sv);
                 for (auto ch : value.value())
                     builder.appendff("{:0>2x}", ch);
                 break;
@@ -323,7 +323,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
                     dbgln("BitString PrettyPrint error: {}", value.error());
                     return;
                 }
-                builder.append(" 0b");
+                builder.append(" 0b"sv);
                 for (size_t i = 0; i < value.value().size(); ++i)
                     builder.append(value.value().get(i) ? '1' : '0');
                 break;
@@ -334,7 +334,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
                     dbgln("OctetString PrettyPrint error: {}", value.error());
                     return;
                 }
-                builder.append(" 0x");
+                builder.append(" 0x"sv);
                 for (auto ch : value.value())
                     builder.appendff("{:0>2x}", ch);
                 break;

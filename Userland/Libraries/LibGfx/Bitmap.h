@@ -100,8 +100,8 @@ public:
 
     static bool is_path_a_supported_image_format(StringView path)
     {
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                        \
+    if (path.ends_with(Ext##sv, CaseSensitivity::CaseInsensitive)) \
         return true;
         ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
