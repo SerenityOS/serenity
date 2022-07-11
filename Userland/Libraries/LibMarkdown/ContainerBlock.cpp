@@ -125,7 +125,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
         }
 
         if (!paragraph_text.is_empty())
-            paragraph_text.append("\n");
+            paragraph_text.append('\n');
         paragraph_text.append(*lines++);
     }
 

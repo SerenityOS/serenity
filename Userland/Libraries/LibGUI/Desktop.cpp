@@ -53,7 +53,7 @@ void Desktop::set_wallpaper_mode(StringView mode)
 
 String Desktop::wallpaper_path() const
 {
-    return Config::read_string("WindowManager", "Background", "Wallpaper");
+    return Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv);
 }
 
 RefPtr<Gfx::Bitmap> Desktop::wallpaper_bitmap() const
@@ -72,7 +72,7 @@ bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<Strin
 
     if (ret_val && path.has_value()) {
         dbgln("Saving wallpaper path '{}' to ConfigServer", *path);
-        Config::write_string("WindowManager", "Background", "Wallpaper", *path);
+        Config::write_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, *path);
     }
 
     return ret_val;

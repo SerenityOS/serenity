@@ -15,9 +15,9 @@
 
 TEST_SETUP
 {
-    auto file_or_error = Core::Stream::File::open("/home/anon/Tests/commonmark.spec.json", Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::Stream::File::open("/home/anon/Tests/commonmark.spec.json"sv, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
-        file_or_error = Core::Stream::File::open("./commonmark.spec.json", Core::Stream::OpenMode::Read);
+        file_or_error = Core::Stream::File::open("./commonmark.spec.json"sv, Core::Stream::OpenMode::Read);
     VERIFY(!file_or_error.is_error());
     auto file = file_or_error.release_value();
     auto file_size = MUST(file->size());
@@ -31,13 +31,13 @@ TEST_SETUP
         auto testcase = tests[i].as_object();
 
         auto name = String::formatted("{}_ex{}_{}..{}",
-            testcase.get("section"),
-            testcase.get("example"),
-            testcase.get("start_line"),
-            testcase.get("end_line"));
+            testcase.get("section"sv),
+            testcase.get("example"sv),
+            testcase.get("start_line"sv),
+            testcase.get("end_line"sv));
 
-        String markdown = testcase.get("markdown").as_string();
-        String html = testcase.get("html").as_string();
+        String markdown = testcase.get("markdown"sv).as_string();
+        String html = testcase.get("html"sv).as_string();
 
         Test::TestSuite::the().add_case(adopt_ref(*new Test::TestCase(
             name, [markdown, html]() {

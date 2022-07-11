@@ -22,7 +22,7 @@ void Parser::write(StringView data)
                 break;
             case '\r':
                 if (on_data)
-                    on_data("\n");
+                    on_data("\n"sv);
                 break;
             case '\0':
             case '\n':
@@ -39,7 +39,7 @@ void Parser::write(StringView data)
             case IAC: {
                 m_state = State::Free;
                 if (on_data)
-                    on_data("\xff");
+                    on_data("\xff"sv);
                 break;
             }
             case CMD_WILL:

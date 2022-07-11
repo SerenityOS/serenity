@@ -34,7 +34,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     m_name_textbox->on_change = [this] {
         m_image_name = m_name_textbox->text();
     };
-    auto default_name = Config::read_string("PixelPaint", "NewImage", "Name");
+    auto default_name = Config::read_string("PixelPaint"sv, "NewImage"sv, "Name"sv);
     m_name_textbox->set_text(default_name);
 
     auto& width_label = main_widget.add<GUI::Label>("Width:");
@@ -72,8 +72,8 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     width_spinbox.set_range(1, 16384);
     height_spinbox.set_range(1, 16384);
 
-    auto default_width = Config::read_i32("PixelPaint", "NewImage", "Width", 510);
-    auto default_height = Config::read_i32("PixelPaint", "NewImage", "Height", 356);
+    auto default_width = Config::read_i32("PixelPaint"sv, "NewImage"sv, "Width"sv, 510);
+    auto default_height = Config::read_i32("PixelPaint"sv, "NewImage"sv, "Height"sv, 356);
     width_spinbox.set_value(default_width);
     height_spinbox.set_value(default_height);
 }

@@ -126,9 +126,9 @@ GoToOffsetDialog::GoToOffsetDialog()
 
     m_text_editor->on_change = [this]() {
         auto text = m_text_editor->text();
-        if (text.starts_with("0x")) {
+        if (text.starts_with("0x"sv)) {
             m_offset_type_box->set_selected_index(1);
-            m_text_editor->set_text(text.replace("0x", "", ReplaceMode::FirstOnly));
+            m_text_editor->set_text(text.replace("0x"sv, ""sv, ReplaceMode::FirstOnly));
         }
         update_statusbar();
     };

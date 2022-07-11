@@ -31,7 +31,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         if (object_line.starts_with("#"))
             continue;
 
-        if (object_line.starts_with("vt")) {
+        if (object_line.starts_with("vt"sv)) {
             auto tex_coord_line = object_line.split_view(' ');
             if (tex_coord_line.size() != 3) {
                 dbgln("Wavefront: Malformed TexCoord line. Aborting.");
@@ -44,7 +44,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
             continue;
         }
 
-        if (object_line.starts_with("vn")) {
+        if (object_line.starts_with("vn"sv)) {
             auto normal_line = object_line.split_view(' ');
             if (normal_line.size() != 4) {
                 dbgln("Wavefront: Malformed vertex normal line. Aborting.");

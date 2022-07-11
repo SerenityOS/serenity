@@ -21,7 +21,7 @@ static constexpr Gfx::CharacterBitmap s_diamond {
     " ####### "
     "  #####  "
     "   ###   "
-    "    #    ",
+    "    #    "sv,
     9, 9
 };
 
@@ -34,7 +34,7 @@ static constexpr Gfx::CharacterBitmap s_heart {
     " ####### "
     "  #####  "
     "   ###   "
-    "    #    ",
+    "    #    "sv,
     9, 9
 };
 
@@ -47,7 +47,7 @@ static constexpr Gfx::CharacterBitmap s_spade {
     "#########"
     " ## # ## "
     "   ###   "
-    "   ###   ",
+    "   ###   "sv,
     9, 9
 };
 
@@ -60,7 +60,7 @@ static constexpr Gfx::CharacterBitmap s_club {
     "###########"
     "#### # ####"
     " ## ### ## "
-    "    ###    ",
+    "    ###    "sv,
     11, 9
 };
 
@@ -80,7 +80,7 @@ Card::Card(Suit suit, uint8_t value)
         s_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
         Gfx::Painter bg_painter(*s_background);
 
-        auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png").release_value_but_fixme_should_propagate_errors();
+        auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png"sv).release_value_but_fixme_should_propagate_errors();
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
         auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
@@ -107,7 +107,7 @@ Card::Card(Suit suit, uint8_t value)
     paint_rect.set_height(paint_rect.height() / 2);
     paint_rect.shrink(10, 6);
 
-    auto text_rect = Gfx::IntRect { 4, 6, font.width("10"), font.glyph_height() };
+    auto text_rect = Gfx::IntRect { 4, 6, font.width("10"sv), font.glyph_height() };
     painter.draw_text(text_rect, label, font, Gfx::TextAlignment::Center, color());
 
     auto const& symbol = [&]() -> Gfx::CharacterBitmap const& {

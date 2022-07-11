@@ -1359,7 +1359,7 @@ static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& proces
     bool mask_kernel_addresses = !process.is_superuser();
     if (!symbol.symbol) {
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
-            TRY(builder.try_append("0xdeadc0de\n"));
+            TRY(builder.try_append("0xdeadc0de\n"sv));
         } else {
             if (auto* region = process.address_space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
                 size_t offset = symbol.address - region->vaddr().get();
@@ -1421,7 +1421,7 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return {};
 
-    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific", PROT_READ | PROT_WRITE));
+    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
 
     m_thread_specific_range = region->range();
 
@@ -1511,5 +1511,5 @@ ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kern
 {
     return AK::Formatter<FormatString>::format(
         builder,
-        "{}({}:{})", value.process().name(), value.pid().value(), value.tid().value());
+        "{}({}:{})"sv, value.process().name(), value.pid().value(), value.tid().value());
 }

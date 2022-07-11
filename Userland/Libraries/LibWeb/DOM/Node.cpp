@@ -987,16 +987,16 @@ bool Node::is_uninteresting_whitespace_node() const
 
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
-    MUST(object.add("name", node_name().view()));
-    MUST(object.add("id", id()));
+    MUST(object.add("name"sv, node_name().view()));
+    MUST(object.add("id"sv, id()));
     if (is_document()) {
-        MUST(object.add("type", "document"));
+        MUST(object.add("type"sv, "document"));
     } else if (is_element()) {
-        MUST(object.add("type", "element"));
+        MUST(object.add("type"sv, "element"));
 
         auto const* element = static_cast<DOM::Element const*>(this);
         if (element->has_attributes()) {
-            auto attributes = MUST(object.add_object("attributes"));
+            auto attributes = MUST(object.add_object("attributes"sv));
             element->for_each_attribute([&attributes](auto& name, auto& value) {
                 MUST(attributes.add(name, value));
             });
@@ -1006,7 +1006,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
         if (element->is_browsing_context_container()) {
             auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
             if (auto const* content_document = container->content_document()) {
-                auto children = MUST(object.add_array("children"));
+                auto children = MUST(object.add_array("children"sv));
                 JsonObjectSerializer<StringBuilder> content_document_object = MUST(children.add_object());
                 content_document->serialize_tree_as_json(content_document_object);
                 MUST(content_document_object.finish());
@@ -1014,10 +1014,10 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
             }
         }
     } else if (is_text()) {
-        MUST(object.add("type", "text"));
+        MUST(object.add("type"sv, "text"));
 
         auto text_node = static_cast<DOM::Text const*>(this);
-        MUST(object.add("text", text_node->data()));
+        MUST(object.add("text"sv, text_node->data()));
     } else if (is_comment()) {
         MUST(object.add("type"sv, "comment"sv));
         MUST(object.add("data"sv, static_cast<DOM::Comment const&>(*this).data()));
@@ -1026,7 +1026,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     MUST((object.add("visible"sv, !!layout_node())));
 
     if (has_child_nodes()) {
-        auto children = MUST(object.add_array("children"));
+        auto children = MUST(object.add_array("children"sv));
         for_each_child([&children](DOM::Node& child) {
             if (child.is_uninteresting_whitespace_node())
                 return;

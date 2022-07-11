@@ -155,7 +155,7 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
 
 UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
 {
-    return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)).release_value_but_fixme_should_propagate_errors(), "AHCI HBA", Memory::Region::Access::ReadWrite).release_value();
+    return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)).release_value_but_fixme_should_propagate_errors(), "AHCI HBA"sv, Memory::Region::Access::ReadWrite).release_value();
 }
 
 AHCIController::~AHCIController() = default;

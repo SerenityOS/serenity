@@ -48,7 +48,7 @@ UnregisteredWidget::UnregisteredWidget(String const& class_name)
 {
     StringBuilder builder;
     builder.append(class_name);
-    builder.append("\nnot registered");
+    builder.append("\nnot registered"sv);
     m_text = builder.to_string();
 }
 
@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gml-playground"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gml-playground"sv));
     auto window = TRY(GUI::Window::try_create());
     window->set_title("GML Playground");
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -98,14 +98,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto update_title = [&] {
         StringBuilder builder;
         if (file_path.is_empty())
-            builder.append("Untitled");
+            builder.append("Untitled"sv);
         else
             builder.append(file_path);
 
         if (window->is_modified())
-            builder.append("[*]");
+            builder.append("[*]"sv);
 
-        builder.append(" - GML Playground");
+        builder.append(" - GML Playground"sv);
         window->set_title(builder.to_string());
     };
 
@@ -128,17 +128,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Now add some widgets!
 }
-)~~~");
+)~~~"sv);
         editor->set_cursor(4, 28); // after "...widgets!"
         update_title();
     } else {
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return 1;
         }
         if (file->is_device()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error"sv, GUI::MessageBox::Type::Error);
             return 1;
         }
         file_path = path;
@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         if (!editor->write_to_file(new_save_path.value())) {
-            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         file_path = new_save_path.value();
@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (!file_path.is_empty()) {
             if (!editor->write_to_file(file_path)) {
-                GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
                 return;
             }
             update_title();
@@ -189,12 +189,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file = Core::File::construct(open_path.value());
         if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
         if (file->is_device()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         file_path = open_path.value();
@@ -232,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(
                 window,
                 String::formatted("GML could not be formatted: {}", formatted_gml_or_error.error()),
-                "Error",
+                "Error"sv,
                 GUI::MessageBox::Type::Error);
         }
     })));

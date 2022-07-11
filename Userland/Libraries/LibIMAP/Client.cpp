@@ -288,17 +288,17 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Seque
     StringBuilder data_item_name;
     switch (method) {
     case StoreMethod::Replace:
-        data_item_name.append("FLAGS");
+        data_item_name.append("FLAGS"sv);
         break;
     case StoreMethod::Add:
-        data_item_name.append("+FLAGS");
+        data_item_name.append("+FLAGS"sv);
         break;
     case StoreMethod::Remove:
-        data_item_name.append("-FLAGS");
+        data_item_name.append("-FLAGS"sv);
         break;
     }
     if (silent) {
-        data_item_name.append(".SILENT");
+        data_item_name.append(".SILENT"sv);
     }
 
     StringBuilder flags_builder;
@@ -313,7 +313,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<String> charset
 {
     Vector<String> args;
     if (charset.has_value()) {
-        args.append("CHARSET ");
+        args.append("CHARSET "sv);
         args.append(charset.value());
     }
     for (auto const& item : keys) {
@@ -332,7 +332,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
 {
     auto promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(promise);
-    MUST(send_raw("DONE"));
+    MUST(send_raw("DONE"sv));
     m_expecting_response = true;
     return cast_promise<SolidResponse>(promise);
 }
@@ -343,19 +343,19 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vect
     for (auto type : types) {
         switch (type) {
         case StatusItemType::Recent:
-            args.append("RECENT");
+            args.append("RECENT"sv);
             break;
         case StatusItemType::UIDNext:
-            args.append("UIDNEXT");
+            args.append("UIDNEXT"sv);
             break;
         case StatusItemType::UIDValidity:
-            args.append("UIDVALIDITY");
+            args.append("UIDVALIDITY"sv);
             break;
         case StatusItemType::Unseen:
-            args.append("UNSEEN");
+            args.append("UNSEEN"sv);
             break;
         case StatusItemType::Messages:
-            args.append("MESSAGES");
+            args.append("MESSAGES"sv);
             break;
         }
     }
@@ -378,7 +378,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
         args.append(flags_sb.build());
     }
     if (date_time.has_value())
-        args.append(date_time.value().to_string("\"%d-%b-%Y %H:%M:%S +0000\""));
+        args.append(date_time.value().to_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));
 
     args.append(String::formatted("{{{}}}", message.data.length()));
 

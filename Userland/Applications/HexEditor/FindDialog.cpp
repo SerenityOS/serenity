@@ -26,8 +26,8 @@ struct Option {
 
 static constexpr Array<Option, 2> options = {
     {
-        { "ASCII String", OPTION_ASCII_STRING, true, true },
-        { "Hex value", OPTION_HEX_VALUE, true, false },
+        { "ASCII String"sv, OPTION_ASCII_STRING, true, true },
+        { "Hex value"sv, OPTION_HEX_VALUE, true, false },
     }
 };
 
@@ -79,7 +79,7 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 
     case OPTION_HEX_VALUE: {
-        auto decoded = decode_hex(text_value.replace(" ", "", ReplaceMode::All));
+        auto decoded = decode_hex(text_value.replace(" "sv, ""sv, ReplaceMode::All));
         if (decoded.is_error())
             return String::formatted("Input is invalid: {}", decoded.error().string_literal());
 

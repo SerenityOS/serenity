@@ -155,19 +155,19 @@ constexpr int beats_per_bar = 4;
 constexpr int notes_per_beat = 4;
 constexpr int roll_length = (sample_rate / (beats_per_minute / 60)) * beats_per_bar;
 
-constexpr char const* note_names[] = {
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
+constexpr StringView note_names[] = {
+    "C"sv,
+    "C#"sv,
+    "D"sv,
+    "D#"sv,
+    "E"sv,
+    "F"sv,
+    "F#"sv,
+    "G"sv,
+    "G#"sv,
+    "A"sv,
+    "A#"sv,
+    "B"sv,
 };
 
 // Equal temperament, A = 440Hz

@@ -1155,7 +1155,7 @@ struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::LinearizationDictionary const& dict)
     {
         StringBuilder builder;
-        builder.append("{\n");
+        builder.append("{\n"sv);
         builder.appendff("  length_of_file={}\n", dict.length_of_file);
         builder.appendff("  primary_hint_stream_offset={}\n", dict.primary_hint_stream_offset);
         builder.appendff("  primary_hint_stream_length={}\n", dict.primary_hint_stream_length);
@@ -1176,7 +1176,7 @@ struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTable const& table)
     {
         StringBuilder builder;
-        builder.append("{\n");
+        builder.append("{\n"sv);
         builder.appendff("  least_number_of_objects_in_a_page={}\n", table.least_number_of_objects_in_a_page);
         builder.appendff("  location_of_first_page_object={}\n", table.location_of_first_page_object);
         builder.appendff("  bits_required_for_object_number={}\n", table.bits_required_for_object_number);
@@ -1200,18 +1200,18 @@ struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> 
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTableEntry const& entry)
     {
         StringBuilder builder;
-        builder.append("{\n");
+        builder.append("{\n"sv);
         builder.appendff("  objects_in_page_number={}\n", entry.objects_in_page_number);
         builder.appendff("  page_length_number={}\n", entry.page_length_number);
         builder.appendff("  number_of_shared_objects={}\n", entry.number_of_shared_objects);
-        builder.append("  shared_object_identifiers=[");
+        builder.append("  shared_object_identifiers=["sv);
         for (auto& identifier : entry.shared_object_identifiers)
             builder.appendff(" {}", identifier);
-        builder.append(" ]\n");
-        builder.append("  shared_object_location_numerators=[");
+        builder.append(" ]\n"sv);
+        builder.append("  shared_object_location_numerators=["sv);
         for (auto& numerator : entry.shared_object_location_numerators)
             builder.appendff(" {}", numerator);
-        builder.append(" ]\n");
+        builder.append(" ]\n"sv);
         builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
         builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
         builder.append('}');

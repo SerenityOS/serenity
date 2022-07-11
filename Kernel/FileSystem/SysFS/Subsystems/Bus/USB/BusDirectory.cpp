@@ -17,8 +17,8 @@ ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(FileSystemID fsid, Fun
     SpinlockLocker lock(m_lock);
     // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
     VERIFY(m_parent_directory);
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, m_parent_directory->component_index() }, 0 }));
 
     for (auto const& device_node : m_device_nodes) {
         InodeIdentifier identifier = { fsid, device_node.component_index() };

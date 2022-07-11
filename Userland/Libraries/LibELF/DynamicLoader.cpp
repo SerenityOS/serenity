@@ -397,9 +397,9 @@ void DynamicLoader::load_program_headers()
         StringBuilder builder;
         builder.append(m_filepath);
         if (region.is_executable())
-            builder.append(": .text");
+            builder.append(": .text"sv);
         else
-            builder.append(": .rodata");
+            builder.append(": .rodata"sv);
 
         // Now we can map the text segment at the reserved address.
         auto* segment_base = (u8*)mmap_with_name(

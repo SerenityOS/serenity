@@ -193,7 +193,7 @@ inline void JsonValue::serialize(Builder& builder) const
         m_value.as_object->serialize(builder);
         break;
     case Type::Bool:
-        builder.append(m_value.as_bool ? "true" : "false");
+        builder.append(m_value.as_bool ? "true"sv : "false"sv);
         break;
 #if !defined(KERNEL)
     case Type::Double:
@@ -213,7 +213,7 @@ inline void JsonValue::serialize(Builder& builder) const
         builder.appendff("{}", as_u64());
         break;
     case Type::Null:
-        builder.append("null");
+        builder.append("null"sv);
         break;
     default:
         VERIFY_NOT_REACHED();

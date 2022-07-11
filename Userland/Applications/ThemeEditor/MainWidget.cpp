@@ -208,7 +208,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes");
+        auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
         load_from_file(*response.value());
@@ -304,7 +304,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(accessibility_menu->try_add_action(achromatomaly_accessibility_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", GUI::Icon::default_icon("app-theme-editor"), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", GUI::Icon::default_icon("app-theme-editor"sv), &window)));
 
     return {};
 }
@@ -604,7 +604,7 @@ void MainWidget::set_palette(Gfx::Palette palette)
 void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::TextBox& path_input, PathPickerTarget path_picker_target)
 {
     bool open_folder = path_picker_target == PathPickerTarget::Folder;
-    auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", property_display_name);
+    auto window_title = String::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
     auto target_path = path_input.text();
     if (Core::File::exists(target_path)) {
         if (!Core::File::is_directory(target_path))

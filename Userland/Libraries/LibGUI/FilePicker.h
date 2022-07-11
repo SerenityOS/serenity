@@ -43,7 +43,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled", StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
     static String ok_button_name(Mode mode)
     {

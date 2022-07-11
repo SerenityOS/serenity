@@ -103,8 +103,8 @@ ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     if (identifier().index() > 1)
         return ENOTDIR;
 
-    TRY(callback({ ".", identifier(), 0 }));
-    TRY(callback({ "..", identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), 0 }));
+    TRY(callback({ ".."sv, identifier(), 0 }));
 
     return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<void> {
         StringBuilder builder;

@@ -213,7 +213,7 @@ int Shell::builtin_type(int argc, char const** argv)
                     if (!(i == fn.arguments.size() - 1))
                         builder.append(" ");
                 }
-                builder.append(") {\n");
+                builder.append(") {\n"sv);
                 if (fn.body) {
                     auto formatter = Formatter(*fn.body);
                     builder.append(formatter.format());
@@ -831,7 +831,7 @@ int Shell::builtin_shift(int argc, char const** argv)
     if (count < 1)
         return 0;
 
-    auto argv_ = lookup_local_variable("ARGV");
+    auto argv_ = lookup_local_variable("ARGV"sv);
     if (!argv_) {
         warnln("shift: ARGV is unset");
         return 1;
@@ -864,7 +864,7 @@ int Shell::builtin_source(int argc, char const** argv)
     if (!parser.parse(argc, const_cast<char**>(argv)))
         return 1;
 
-    auto previous_argv = lookup_local_variable("ARGV");
+    auto previous_argv = lookup_local_variable("ARGV"sv);
     ScopeGuard guard { [&] {
         if (!args.is_empty())
             set_local_variable("ARGV", move(previous_argv));

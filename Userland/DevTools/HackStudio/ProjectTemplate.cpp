@@ -48,7 +48,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(String const& manife
 
     // Attempt to read in the template icons
     // Fallback to a generic executable icon if one isn't found
-    auto icon = GUI::Icon::default_icon("filetype-executable");
+    auto icon = GUI::Icon::default_icon("filetype-executable"sv);
 
     auto bitmap_path_32 = String::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate", "IconName32x"));
 
@@ -94,7 +94,7 @@ Result<void, String> ProjectTemplate::create_project(String const& name, String 
         dbgln("Running post-create script '{}'", postcreate_script_path);
 
         // Generate a namespace-safe project name (replace hyphens with underscores)
-        auto namespace_safe = name.replace("-", "_", ReplaceMode::All);
+        auto namespace_safe = name.replace("-"sv, "_"sv, ReplaceMode::All);
 
         pid_t child_pid;
         char const* argv[] = { postcreate_script_path.characters(), name.characters(), path.characters(), namespace_safe.characters(), nullptr };

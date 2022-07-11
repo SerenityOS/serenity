@@ -15,16 +15,16 @@ namespace Gemini {
 String Document::render_to_html() const
 {
     StringBuilder html_builder;
-    html_builder.append("<!DOCTYPE html>\n<html>\n");
-    html_builder.append("<head>\n<title>");
+    html_builder.append("<!DOCTYPE html>\n<html>\n"sv);
+    html_builder.append("<head>\n<title>"sv);
     html_builder.append(m_url.path());
-    html_builder.append("</title>\n</head>\n");
-    html_builder.append("<body>\n");
+    html_builder.append("</title>\n</head>\n"sv);
+    html_builder.append("<body>\n"sv);
     for (auto& line : m_lines) {
         html_builder.append(line.render_to_html());
     }
-    html_builder.append("</body>");
-    html_builder.append("</html>");
+    html_builder.append("</body>"sv);
+    html_builder.append("</html>"sv);
     return html_builder.build();
 }
 
@@ -45,7 +45,7 @@ void Document::read_lines(StringView source)
     };
 
     for (auto& line : source.lines()) {
-        if (line.starts_with("```")) {
+        if (line.starts_with("```"sv)) {
             close_list_if_needed();
 
             m_inside_preformatted_block = !m_inside_preformatted_block;

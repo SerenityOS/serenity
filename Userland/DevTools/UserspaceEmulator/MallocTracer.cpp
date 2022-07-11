@@ -130,8 +130,8 @@ void MallocTracer::target_did_free(Badge<Emulator>, FlatPtr address)
 
     if (auto* mallocation = find_mallocation(address)) {
         if (mallocation->freed) {
-            reportln("\n=={}==  \033[31;1mDouble free()\033[0m, {:p}", getpid(), address);
-            reportln("=={}==  Address {} has already been passed to free()", getpid(), address);
+            reportln("\n=={}==  \033[31;1mDouble free()\033[0m, {:p}"sv, getpid(), address);
+            reportln("=={}==  Address {} has already been passed to free()"sv, getpid(), address);
             m_emulator.dump_backtrace();
         } else {
             mallocation->freed = true;
@@ -140,8 +140,8 @@ void MallocTracer::target_did_free(Badge<Emulator>, FlatPtr address)
         return;
     }
 
-    reportln("\n=={}==  \033[31;1mInvalid free()\033[0m, {:p}", getpid(), address);
-    reportln("=={}==  Address {} has never been returned by malloc()", getpid(), address);
+    reportln("\n=={}==  \033[31;1mInvalid free()\033[0m, {:p}"sv, getpid(), address);
+    reportln("=={}==  Address {} has never been returned by malloc()"sv, getpid(), address);
     m_emulator.dump_backtrace();
 }
 
@@ -228,19 +228,19 @@ void MallocTracer::audit_read(Region const& region, FlatPtr address, size_t size
     auto* mallocation = find_mallocation(region, address);
 
     if (!mallocation) {
-        reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte read at address {:p}", getpid(), size, address);
+        reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte read at address {:p}"sv, getpid(), size, address);
         m_emulator.dump_backtrace();
         auto* mallocation_before = find_mallocation_before(address);
         auto* mallocation_after = find_mallocation_after(address);
         size_t distance_to_mallocation_before = mallocation_before ? (address - mallocation_before->address - mallocation_before->size) : 0;
         size_t distance_to_mallocation_after = mallocation_after ? (mallocation_after->address - address) : 0;
         if (mallocation_before && (!mallocation_after || distance_to_mallocation_before < distance_to_mallocation_after)) {
-            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
+            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:"sv, getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
             m_emulator.dump_backtrace(mallocation_before->malloc_backtrace);
             return;
         }
         if (mallocation_after && (!mallocation_before || distance_to_mallocation_after < distance_to_mallocation_before)) {
-            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
+            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:"sv, getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
             m_emulator.dump_backtrace(mallocation_after->malloc_backtrace);
         }
         return;
@@ -249,11 +249,11 @@ void MallocTracer::audit_read(Region const& region, FlatPtr address, size_t size
     size_t offset_into_mallocation = address - mallocation->address;
 
     if (mallocation->freed) {
-        reportln("\n=={}==  \033[31;1mUse-after-free\033[0m, invalid {}-byte read at address {:p}", getpid(), size, address);
+        reportln("\n=={}==  \033[31;1mUse-after-free\033[0m, invalid {}-byte read at address {:p}"sv, getpid(), size, address);
         m_emulator.dump_backtrace();
-        reportln("=={}==  Address is {} byte(s) into block of size {}, allocated at:", getpid(), offset_into_mallocation, mallocation->size);
+        reportln("=={}==  Address is {} byte(s) into block of size {}, allocated at:"sv, getpid(), offset_into_mallocation, mallocation->size);
         m_emulator.dump_backtrace(mallocation->malloc_backtrace);
-        reportln("=={}==  Later freed at:", getpid());
+        reportln("=={}==  Later freed at:"sv, getpid());
         m_emulator.dump_backtrace(mallocation->free_backtrace);
         return;
     }
@@ -274,19 +274,19 @@ void MallocTracer::audit_write(Region const& region, FlatPtr address, size_t siz
 
     auto* mallocation = find_mallocation(region, address);
     if (!mallocation) {
-        reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte write at address {:p}", getpid(), size, address);
+        reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte write at address {:p}"sv, getpid(), size, address);
         m_emulator.dump_backtrace();
         auto* mallocation_before = find_mallocation_before(address);
         auto* mallocation_after = find_mallocation_after(address);
         size_t distance_to_mallocation_before = mallocation_before ? (address - mallocation_before->address - mallocation_before->size) : 0;
         size_t distance_to_mallocation_after = mallocation_after ? (mallocation_after->address - address) : 0;
         if (mallocation_before && (!mallocation_after || distance_to_mallocation_before < distance_to_mallocation_after)) {
-            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
+            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:"sv, getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
             m_emulator.dump_backtrace(mallocation_before->malloc_backtrace);
             return;
         }
         if (mallocation_after && (!mallocation_before || distance_to_mallocation_after < distance_to_mallocation_before)) {
-            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
+            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:"sv, getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
             m_emulator.dump_backtrace(mallocation_after->malloc_backtrace);
         }
         return;
@@ -295,11 +295,11 @@ void MallocTracer::audit_write(Region const& region, FlatPtr address, size_t siz
     size_t offset_into_mallocation = address - mallocation->address;
 
     if (mallocation->freed) {
-        reportln("\n=={}==  \033[31;1mUse-after-free\033[0m, invalid {}-byte write at address {:p}", getpid(), size, address);
+        reportln("\n=={}==  \033[31;1mUse-after-free\033[0m, invalid {}-byte write at address {:p}"sv, getpid(), size, address);
         m_emulator.dump_backtrace();
-        reportln("=={}==  Address is {} byte(s) into block of size {}, allocated at:", getpid(), offset_into_mallocation, mallocation->size);
+        reportln("=={}==  Address is {} byte(s) into block of size {}, allocated at:"sv, getpid(), offset_into_mallocation, mallocation->size);
         m_emulator.dump_backtrace(mallocation->malloc_backtrace);
-        reportln("=={}==  Later freed at:", getpid());
+        reportln("=={}==  Later freed at:"sv, getpid());
         m_emulator.dump_backtrace(mallocation->free_backtrace);
         return;
     }
@@ -329,7 +329,7 @@ void MallocTracer::populate_memory_graph()
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
                 if constexpr (REACHABLE_DEBUG)
-                    reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
+                    reportln("region/mallocation {:p} is reachable from other mallocation {:p}"sv, other_address, mallocation.address);
                 edges_from_mallocation.edges_from_node.append(other_address);
             }
         }
@@ -357,7 +357,7 @@ void MallocTracer::populate_memory_graph()
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
                 if constexpr (REACHABLE_DEBUG)
-                    reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
+                    reportln("region/mallocation {:p} is reachable from region {:p}-{:p}"sv, other_address, region.base(), region.end() - 1);
                 m_memory_graph.find(other_address)->value.is_reachable = true;
                 reachable_mallocations.append(other_address);
             }
@@ -417,14 +417,14 @@ void MallocTracer::dump_leak_report()
             return IterationDecision::Continue;
         ++leaks_found;
         bytes_leaked += mallocation.size;
-        reportln("\n=={}==  \033[31;1mLeak\033[0m, {}-byte allocation at address {:p}", getpid(), mallocation.size, mallocation.address);
+        reportln("\n=={}==  \033[31;1mLeak\033[0m, {}-byte allocation at address {:p}"sv, getpid(), mallocation.size, mallocation.address);
         m_emulator.dump_backtrace(mallocation.malloc_backtrace);
         return IterationDecision::Continue;
     });
 
     if (!leaks_found)
-        reportln("\n=={}==  \033[32;1mNo leaks found!\033[0m", getpid());
+        reportln("\n=={}==  \033[32;1mNo leaks found!\033[0m"sv, getpid());
     else
-        reportln("\n=={}==  \033[31;1m{} leak(s) found: {} byte(s) leaked\033[0m", getpid(), leaks_found, bytes_leaked);
+        reportln("\n=={}==  \033[31;1m{} leak(s) found: {} byte(s) leaked\033[0m"sv, getpid(), leaks_found, bytes_leaked);
 }
 }

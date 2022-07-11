@@ -77,7 +77,7 @@ void Client::start()
             }
 
             builder.append(StringView { maybe_bytes_read.value() });
-            builder.append("\r\n");
+            builder.append("\r\n"sv);
         }
 
         auto request = builder.to_byte_buffer();
@@ -120,7 +120,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         }
     }
 
-    auto requested_path = LexicalPath::join("/", request.resource()).string();
+    auto requested_path = LexicalPath::join("/"sv, request.resource()).string();
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
@@ -134,7 +134,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
             StringBuilder red;
 
             red.append(requested_path);
-            red.append("/");
+            red.append("/"sv);
 
             TRY(send_redirect(red.to_string(), request));
             return true;
@@ -142,7 +142,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
         StringBuilder index_html_path_builder;
         index_html_path_builder.append(real_path);
-        index_html_path_builder.append("/index.html");
+        index_html_path_builder.append("/index.html"sv);
         auto index_html_path = index_html_path_builder.to_string();
         if (!Core::File::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
@@ -171,17 +171,17 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
-    builder.append("HTTP/1.0 200 OK\r\n");
-    builder.append("Server: WebServer (SerenityOS)\r\n");
-    builder.append("X-Frame-Options: SAMEORIGIN\r\n");
-    builder.append("X-Content-Type-Options: nosniff\r\n");
-    builder.append("Pragma: no-cache\r\n");
+    builder.append("HTTP/1.0 200 OK\r\n"sv);
+    builder.append("Server: WebServer (SerenityOS)\r\n"sv);
+    builder.append("X-Frame-Options: SAMEORIGIN\r\n"sv);
+    builder.append("X-Content-Type-Options: nosniff\r\n"sv);
+    builder.append("Pragma: no-cache\r\n"sv);
     if (content_info.type == "text/plain")
         builder.appendff("Content-Type: {}; charset=utf-8\r\n", content_info.type);
     else
         builder.appendff("Content-Type: {}\r\n", content_info.type);
     builder.appendff("Content-Length: {}\r\n", content_info.length);
-    builder.append("\r\n");
+    builder.append("\r\n"sv);
 
     auto builder_contents = builder.to_byte_buffer();
     TRY(m_socket->write(builder_contents));
@@ -206,8 +206,8 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
     } while (true);
 
     auto keep_alive = false;
-    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_case("Connection"); }); !it.is_end()) {
-        if (it->value.trim_whitespace().equals_ignoring_case("keep-alive"))
+    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_case("Connection"sv); }); !it.is_end()) {
+        if (it->value.trim_whitespace().equals_ignoring_case("keep-alive"sv))
             keep_alive = true;
     }
     if (!keep_alive)
@@ -219,11 +219,11 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
 ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
-    builder.append("HTTP/1.0 301 Moved Permanently\r\n");
-    builder.append("Location: ");
+    builder.append("HTTP/1.0 301 Moved Permanently\r\n"sv);
+    builder.append("Location: "sv);
     builder.append(redirect_path);
-    builder.append("\r\n");
-    builder.append("\r\n");
+    builder.append("\r\n"sv);
+    builder.append("\r\n"sv);
 
     auto builder_contents = builder.to_byte_buffer();
     TRY(m_socket->write(builder_contents));
@@ -236,7 +236,7 @@ static String folder_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png").release_value_but_fixme_should_propagate_errors();
+        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors();
         cache = encode_base64(file->bytes());
     }
     return cache;
@@ -246,7 +246,7 @@ static String file_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png").release_value_but_fixme_should_propagate_errors();
+        auto file = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors();
         cache = encode_base64(file->bytes());
     }
     return cache;
@@ -256,24 +256,24 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 {
     StringBuilder builder;
 
-    builder.append("<!DOCTYPE html>\n");
-    builder.append("<html>\n");
-    builder.append("<head><meta charset=\"utf-8\">\n");
-    builder.append("<title>Index of ");
+    builder.append("<!DOCTYPE html>\n"sv);
+    builder.append("<html>\n"sv);
+    builder.append("<head><meta charset=\"utf-8\">\n"sv);
+    builder.append("<title>Index of "sv);
     builder.append(escape_html_entities(requested_path));
-    builder.append("</title><style>\n");
-    builder.append(".folder { width: 16px; height: 16px; background-image: url('data:image/png;base64,");
+    builder.append("</title><style>\n"sv);
+    builder.append(".folder { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv);
     builder.append(folder_image_data());
-    builder.append("'); }\n");
-    builder.append(".file { width: 16px; height: 16px; background-image: url('data:image/png;base64,");
+    builder.append("'); }\n"sv);
+    builder.append(".file { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv);
     builder.append(file_image_data());
-    builder.append("'); }\n");
-    builder.append("</style></head><body>\n");
-    builder.append("<h1>Index of ");
+    builder.append("'); }\n"sv);
+    builder.append("</style></head><body>\n"sv);
+    builder.append("<h1>Index of "sv);
     builder.append(escape_html_entities(requested_path));
-    builder.append("</h1>\n");
-    builder.append("<hr>\n");
-    builder.append("<code><table>\n");
+    builder.append("</h1>\n"sv);
+    builder.append("<hr>\n"sv);
+    builder.append("<code><table>\n"sv);
 
     Core::DirIterator dt(real_path);
     Vector<String> names;
@@ -288,7 +288,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
         // NOTE: In the root directory of the webserver, ".." should be equal to ".", since we don't want
         //       the user to see e.g. the size of the parent directory (and it isn't unveiled, so stat fails).
         if (requested_path == "/" && name == "..")
-            path_builder.append(".");
+            path_builder.append("."sv);
         else
             path_builder.append(name);
 
@@ -301,30 +301,30 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
         bool is_directory = S_ISDIR(st.st_mode);
 
-        builder.append("<tr>");
+        builder.append("<tr>"sv);
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
-        builder.append("<td><a href=\"");
+        builder.append("<td><a href=\""sv);
         builder.append(URL::percent_encode(name));
         // NOTE: For directories, we append a slash so we don't always hit the redirect case,
         //       which adds a slash anyways.
         if (is_directory)
             builder.append('/');
-        builder.append("\">");
+        builder.append("\">"sv);
         builder.append(escape_html_entities(name));
-        builder.append("</a></td><td>&nbsp;</td>");
+        builder.append("</a></td><td>&nbsp;</td>"sv);
 
         builder.appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size);
-        builder.append("<td>");
+        builder.append("<td>"sv);
         builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
-        builder.append("</td>");
-        builder.append("</tr>\n");
+        builder.append("</td>"sv);
+        builder.append("</tr>\n"sv);
     }
 
-    builder.append("</table></code>\n");
-    builder.append("<hr>\n");
-    builder.append("<i>Generated by WebServer (SerenityOS)</i>\n");
-    builder.append("</body>\n");
-    builder.append("</html>\n");
+    builder.append("</table></code>\n"sv);
+    builder.append("<hr>\n"sv);
+    builder.append("<i>Generated by WebServer (SerenityOS)</i>\n"sv);
+    builder.append("</body>\n"sv);
+    builder.append("</html>\n"sv);
 
     auto response = builder.to_string();
     InputMemoryStream stream { response.bytes() };
@@ -336,23 +336,23 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
 
     StringBuilder content_builder;
-    content_builder.append("<!DOCTYPE html><html><body><h1>");
+    content_builder.append("<!DOCTYPE html><html><body><h1>"sv);
     content_builder.appendff("{} ", code);
     content_builder.append(reason_phrase);
-    content_builder.append("</h1></body></html>");
+    content_builder.append("</h1></body></html>"sv);
 
     StringBuilder header_builder;
     header_builder.appendff("HTTP/1.0 {} ", code);
     header_builder.append(reason_phrase);
-    header_builder.append("\r\n");
+    header_builder.append("\r\n"sv);
 
     for (auto& header : headers) {
         header_builder.append(header);
-        header_builder.append("\r\n");
+        header_builder.append("\r\n"sv);
     }
-    header_builder.append("Content-Type: text/html; charset=UTF-8\r\n");
+    header_builder.append("Content-Type: text/html; charset=UTF-8\r\n"sv);
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
-    header_builder.append("\r\n");
+    header_builder.append("\r\n"sv);
     TRY(m_socket->write(header_builder.to_byte_buffer()));
     TRY(m_socket->write(content_builder.to_byte_buffer()));
 
@@ -370,7 +370,7 @@ bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers
     VERIFY(Configuration::the().credentials().has_value());
     auto& configured_credentials = Configuration::the().credentials().value();
     for (auto& header : headers) {
-        if (header.name.equals_ignoring_case("Authorization")) {
+        if (header.name.equals_ignoring_case("Authorization"sv)) {
             auto provided_credentials = HTTP::HttpRequest::parse_http_basic_authentication_header(header.value);
             if (provided_credentials.has_value() && configured_credentials.username == provided_credentials->username && configured_credentials.password == provided_credentials->password)
                 return true;

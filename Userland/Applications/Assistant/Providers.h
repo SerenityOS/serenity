@@ -72,7 +72,7 @@ class CalculatorResult final : public Result {
 public:
     explicit CalculatorResult(String title)
         : Result(move(title), "'Enter' will copy to clipboard"sv, 100)
-        , m_bitmap(GUI::Icon::default_icon("app-calculator").bitmap_for_size(16))
+        , m_bitmap(GUI::Icon::default_icon("app-calculator"sv).bitmap_for_size(16))
     {
     }
     ~CalculatorResult() override = default;
@@ -100,7 +100,7 @@ class TerminalResult final : public Result {
 public:
     explicit TerminalResult(String command)
         : Result(move(command), "Run command in Terminal"sv, 100)
-        , m_bitmap(GUI::Icon::default_icon("app-terminal").bitmap_for_size(16))
+        , m_bitmap(GUI::Icon::default_icon("app-terminal"sv).bitmap_for_size(16))
     {
     }
     ~TerminalResult() override = default;
@@ -116,7 +116,7 @@ class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
         : Result(url.to_string(), "'Enter' will open this URL in the browser"sv, 50)
-        , m_bitmap(GUI::Icon::default_icon("app-browser").bitmap_for_size(16))
+        , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
     {
     }
     ~URLResult() override = default;

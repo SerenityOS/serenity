@@ -136,10 +136,10 @@ static String prompt_for_level(int level)
 {
     static StringBuilder prompt_builder;
     prompt_builder.clear();
-    prompt_builder.append("> ");
+    prompt_builder.append("> "sv);
 
     for (auto i = 0; i < level; ++i)
-        prompt_builder.append("    ");
+        prompt_builder.append("    "sv);
 
     return prompt_builder.build();
 }
@@ -265,7 +265,7 @@ static void print_type(FlyString const& name)
 
 static void print_separator(bool& first)
 {
-    js_out(first ? " " : ", ");
+    js_out(first ? " "sv : ", "sv);
     first = false;
 }
 
@@ -1319,8 +1319,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
     if (!vm.argument_count())
         return JS::Value(false);
     String save_path = vm.argument(0).to_string_without_side_effects();
-    StringView path = StringView(save_path.characters());
-    if (write_to_file(path)) {
+    if (write_to_file(save_path)) {
         return JS::Value(true);
     }
     return JS::Value(false);
@@ -1395,7 +1394,7 @@ static void repl(JS::Interpreter& interpreter)
             continue;
 
         g_repl_statements.append(piece);
-        parse_and_run(interpreter, piece, "REPL");
+        parse_and_run(interpreter, piece, "REPL"sv);
     }
 }
 
@@ -1428,7 +1427,7 @@ public:
     // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments arguments) override
     {
-        String indent = String::repeated("  ", m_group_stack_depth);
+        String indent = String::repeated("  "sv, m_group_stack_depth);
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
@@ -1681,7 +1680,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (mode == CompleteNullProperty) {
                 mode = CompleteProperty;
-                property_name = "";
+                property_name = ""sv;
                 last_token_has_trivia = false; // <name> <dot> [tab] is sensible to complete.
             }
 

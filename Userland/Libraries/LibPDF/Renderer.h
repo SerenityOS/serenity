@@ -177,7 +177,7 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
 
         for (auto& i : pattern.pattern) {
             if (!first)
-                builder.append(", ");
+                builder.append(", "sv);
             first = false;
             builder.appendff("{}", i);
         }
@@ -217,7 +217,7 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::TextState const& state)
     {
         StringBuilder builder;
-        builder.append("TextState {\n");
+        builder.append("TextState {\n"sv);
         builder.appendff("    character_spacing={}\n", state.character_spacing);
         builder.appendff("    word_spacing={}\n", state.word_spacing);
         builder.appendff("    horizontal_scaling={}\n", state.horizontal_scaling);
@@ -228,7 +228,7 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    rendering_mode={}\n", state.rendering_mode);
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
-        builder.append(" }");
+        builder.append(" }"sv);
         return format_builder.put_string(builder.to_string());
     }
 };
@@ -238,7 +238,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::GraphicsState const& state)
     {
         StringBuilder builder;
-        builder.append("GraphicsState {\n");
+        builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
         builder.appendff("  stroke_color={}\n", state.stroke_color);
         builder.appendff("  paint_color={}\n", state.paint_color);

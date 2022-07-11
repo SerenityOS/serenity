@@ -405,7 +405,7 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
     if (match(TokenType::Asterisk)) {
         consume();
         ByteCode::transform_bytecode_repetition_any(simple_re_bytecode, true);
-    } else if (try_skip("\\{")) {
+    } else if (try_skip("\\{"sv)) {
         auto read_number = [&]() -> Optional<size_t> {
             if (!match(TokenType::Char))
                 return {};
@@ -435,7 +435,7 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
             max_limit = read_number();
         }
 
-        if (!try_skip("\\}"))
+        if (!try_skip("\\}"sv))
             return set_error(Error::MismatchingBrace);
 
         if (max_limit.value_or(min_limit) < min_limit)
@@ -459,7 +459,7 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
 bool PosixBasicParser::parse_nonduplicating_re(ByteCode& bytecode, size_t& match_length_minimum)
 {
     // nondupl_RE : one_char_or_coll_elem_RE | Back_open_paren RE_expression Back_close_paren | BACKREF
-    if (try_skip("\\(")) {
+    if (try_skip("\\("sv)) {
         TemporaryChange change { m_current_capture_group_depth, m_current_capture_group_depth + 1 };
         // Max number of addressable capture groups is 10, let's just be lenient
         // and accept 20; anything past that is probably a silly pattern anyway.
@@ -472,7 +472,7 @@ bool PosixBasicParser::parse_nonduplicating_re(ByteCode& bytecode, size_t& match
         if (!parse_re_expression(capture_bytecode, capture_length_minimum))
             return false;
 
-        if (!try_skip("\\)"))
+        if (!try_skip("\\)"sv))
             return set_error(Error::MismatchingParen);
 
         match_length_minimum += capture_length_minimum;
@@ -1035,18 +1035,18 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
         return true;
     }
 
-    if (try_skip("\\b")) {
+    if (try_skip("\\b"sv)) {
         stack.insert_bytecode_check_boundary(BoundaryCheckType::Word);
         return true;
     }
 
-    if (try_skip("\\B")) {
+    if (try_skip("\\B"sv)) {
         stack.insert_bytecode_check_boundary(BoundaryCheckType::NonWord);
         return true;
     }
 
     if (match(TokenType::LeftParen)) {
-        if (!try_skip("(?"))
+        if (!try_skip("(?"sv))
             return false;
 
         if (done()) {
@@ -1058,13 +1058,13 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
         size_t length_dummy = 0;
 
         bool should_parse_forward_assertion = m_should_use_browser_extended_grammar ? unicode : true;
-        if (should_parse_forward_assertion && try_skip("=")) {
+        if (should_parse_forward_assertion && try_skip("="sv)) {
             if (!parse_inner_disjunction(assertion_stack, length_dummy, unicode, named))
                 return false;
             stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookAhead);
             return true;
         }
-        if (should_parse_forward_assertion && try_skip("!")) {
+        if (should_parse_forward_assertion && try_skip("!"sv)) {
             enter_capture_group_scope();
             ScopeGuard quit_scope {
                 [this] {
@@ -1089,14 +1089,14 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
                 }
             }
         }
-        if (try_skip("<=")) {
+        if (try_skip("<="sv)) {
             if (!parse_inner_disjunction(assertion_stack, length_dummy, unicode, named))
                 return false;
             // FIXME: Somehow ensure that this assertion regexp has a fixed length.
             stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookBehind, length_dummy);
             return true;
         }
-        if (try_skip("<!")) {
+        if (try_skip("<!"sv)) {
             enter_capture_group_scope();
             ScopeGuard quit_scope {
                 [this] {
@@ -1134,14 +1134,14 @@ bool ECMA262Parser::parse_quantifiable_assertion(ByteCode& stack, size_t&, bool 
     ByteCode assertion_stack;
     size_t match_length_minimum = 0;
 
-    if (try_skip("=")) {
+    if (try_skip("="sv)) {
         if (!parse_inner_disjunction(assertion_stack, match_length_minimum, false, named))
             return false;
 
         stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookAhead);
         return true;
     }
-    if (try_skip("!")) {
+    if (try_skip("!"sv)) {
         enter_capture_group_scope();
         ScopeGuard quit_scope {
             [this] {
@@ -1332,7 +1332,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token.value()[1] } });
         return true;
     }
-    if (try_skip("\\")) {
+    if (try_skip("\\"sv)) {
         // AtomEscape.
         return parse_atom_escape(stack, match_length_minimum, unicode, named);
     }
@@ -1453,38 +1453,38 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // CharacterEscape > ControlEscape
-    if (try_skip("f")) {
+    if (try_skip("f"sv)) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\f' } });
         return true;
     }
 
-    if (try_skip("n")) {
+    if (try_skip("n"sv)) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\n' } });
         return true;
     }
 
-    if (try_skip("r")) {
+    if (try_skip("r"sv)) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\r' } });
         return true;
     }
 
-    if (try_skip("t")) {
+    if (try_skip("t"sv)) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\t' } });
         return true;
     }
 
-    if (try_skip("v")) {
+    if (try_skip("v"sv)) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\v' } });
         return true;
     }
 
     // CharacterEscape > ControlLetter
-    if (try_skip("c")) {
+    if (try_skip("c"sv)) {
         for (auto c : s_alphabetic_characters) {
             if (try_skip({ &c, 1 })) {
                 match_length_minimum += 1;
@@ -1512,7 +1512,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // '\0'
-    if (try_skip("0")) {
+    if (try_skip("0"sv)) {
         if (!lookahead_any(s_decimal_characters)) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
@@ -1534,7 +1534,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // HexEscape
-    if (try_skip("x")) {
+    if (try_skip("x"sv)) {
         if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
@@ -1551,7 +1551,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         return false;
     }
 
-    if (try_skip("u")) {
+    if (try_skip("u"sv)) {
         if (auto code_point = consume_escaped_code_point(unicode); code_point.has_value()) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
@@ -1571,14 +1571,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (unicode) {
-        if (try_skip("/")) {
+        if (try_skip("/"sv)) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'/' } });
             return true;
         }
     }
 
-    if (named && try_skip("k")) {
+    if (named && try_skip("k"sv)) {
         auto name = read_capture_group_specifier(true);
         if (name.is_empty()) {
             set_error(Error::InvalidNameForCaptureGroup);
@@ -1651,7 +1651,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 }
 Optional<u8> ECMA262Parser::parse_legacy_octal_escape()
 {
-    constexpr auto all_octal_digits = "01234567";
+    constexpr auto all_octal_digits = "01234567"sv;
     auto read_octal_digit = [&](auto start, auto end, bool should_ensure_no_following_octal_digit) -> Optional<u8> {
         for (char c = '0' + start; c <= '0' + end; ++c) {
             if (try_skip({ &c, 1 })) {
@@ -1705,24 +1705,24 @@ Optional<u8> ECMA262Parser::parse_legacy_octal_escape()
 
 Optional<CharClass> ECMA262Parser::parse_character_class_escape(bool& negate, bool expect_backslash)
 {
-    if (expect_backslash && !try_skip("\\"))
+    if (expect_backslash && !try_skip("\\"sv))
         return {};
 
     // CharacterClassEscape
     CharClass ch_class;
-    if (try_skip("d")) {
+    if (try_skip("d"sv)) {
         ch_class = CharClass::Digit;
-    } else if (try_skip("D")) {
+    } else if (try_skip("D"sv)) {
         ch_class = CharClass::Digit;
         negate = true;
-    } else if (try_skip("s")) {
+    } else if (try_skip("s"sv)) {
         ch_class = CharClass::Space;
-    } else if (try_skip("S")) {
+    } else if (try_skip("S"sv)) {
         ch_class = CharClass::Space;
         negate = true;
-    } else if (try_skip("w")) {
+    } else if (try_skip("w"sv)) {
         ch_class = CharClass::Word;
-    } else if (try_skip("W")) {
+    } else if (try_skip("W"sv)) {
         ch_class = CharClass::Word;
         negate = true;
     } else {
@@ -1785,29 +1785,29 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             return { CharClassRangeElement { .code_point = (u32)token[1], .is_character_class = false } };
         }
 
-        if (try_skip("\\")) {
+        if (try_skip("\\"sv)) {
             if (done()) {
                 set_error(Error::InvalidTrailingEscape);
                 return {};
             }
 
-            if (try_skip("f"))
+            if (try_skip("f"sv))
                 return { CharClassRangeElement { .code_point = '\f', .is_character_class = false } };
-            if (try_skip("n"))
+            if (try_skip("n"sv))
                 return { CharClassRangeElement { .code_point = '\n', .is_character_class = false } };
-            if (try_skip("r"))
+            if (try_skip("r"sv))
                 return { CharClassRangeElement { .code_point = '\r', .is_character_class = false } };
-            if (try_skip("t"))
+            if (try_skip("t"sv))
                 return { CharClassRangeElement { .code_point = '\t', .is_character_class = false } };
-            if (try_skip("v"))
+            if (try_skip("v"sv))
                 return { CharClassRangeElement { .code_point = '\v', .is_character_class = false } };
-            if (try_skip("b"))
+            if (try_skip("b"sv))
                 return { CharClassRangeElement { .code_point = '\b', .is_character_class = false } };
-            if (try_skip("/"))
+            if (try_skip("/"sv))
                 return { CharClassRangeElement { .code_point = '/', .is_character_class = false } };
 
             // CharacterEscape > ControlLetter
-            if (try_skip("c")) {
+            if (try_skip("c"sv)) {
                 for (auto c : s_alphabetic_characters) {
                     if (try_skip({ &c, 1 })) {
                         return { CharClassRangeElement { .code_point = (u32)(c % 32), .is_character_class = false } };
@@ -1824,7 +1824,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                         if (try_skip({ &c, 1 }))
                             return { CharClassRangeElement { .code_point = (u32)(c % 32), .is_character_class = false } };
                     }
-                    if (try_skip("_"))
+                    if (try_skip("_"sv))
                         return { CharClassRangeElement { .code_point = (u32)('_' % 32), .is_character_class = false } };
 
                     back(1 + !done());
@@ -1833,7 +1833,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             // '\0'
-            if (try_skip("0")) {
+            if (try_skip("0"sv)) {
                 if (!lookahead_any(s_decimal_characters))
                     return { CharClassRangeElement { .code_point = 0, .is_character_class = false } };
                 back();
@@ -1846,7 +1846,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             // HexEscape
-            if (try_skip("x")) {
+            if (try_skip("x"sv)) {
                 if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
                     return { CharClassRangeElement { .code_point = hex_escape.value(), .is_character_class = false } };
                 } else if (!unicode) {
@@ -1858,7 +1858,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 }
             }
 
-            if (try_skip("u")) {
+            if (try_skip("u"sv)) {
                 if (auto code_point = consume_escaped_code_point(unicode); code_point.has_value()) {
                     // FIXME: While code point ranges are supported, code point matches as "Char" are not!
                     return { CharClassRangeElement { .code_point = code_point.value(), .is_character_class = false } };
@@ -1873,7 +1873,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (unicode) {
-                if (try_skip("-"))
+                if (try_skip("-"sv))
                     return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
 
                 PropertyEscape property {};
@@ -1896,17 +1896,17 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 }
             }
 
-            if (try_skip("d"))
+            if (try_skip("d"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Digit, .is_character_class = true } };
-            if (try_skip("s"))
+            if (try_skip("s"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Space, .is_character_class = true } };
-            if (try_skip("w"))
+            if (try_skip("w"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Word, .is_character_class = true } };
-            if (try_skip("D"))
+            if (try_skip("D"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Digit, .is_negated = true, .is_character_class = true } };
-            if (try_skip("S"))
+            if (try_skip("S"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Space, .is_negated = true, .is_character_class = true } };
-            if (try_skip("W"))
+            if (try_skip("W"sv))
                 return { CharClassRangeElement { .character_class = CharClass::Word, .is_negated = true, .is_character_class = true } };
 
             if (!unicode) {
@@ -2021,9 +2021,9 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
 {
     negated = false;
 
-    if (try_skip("p"))
+    if (try_skip("p"sv))
         negated = false;
-    else if (try_skip("P"))
+    else if (try_skip("P"sv))
         negated = true;
     else
         return false;
@@ -2125,7 +2125,7 @@ FlyString ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_b
         }
 
         if (code_point == '\\') {
-            if (!try_skip("u")) {
+            if (!try_skip("u"sv)) {
                 set_error(Error::InvalidNameForCaptureGroup);
                 return {};
             }
@@ -2338,7 +2338,7 @@ size_t ECMA262Parser::ensure_total_number_of_capturing_parenthesis()
                 if (!lexer.consume_specific('<'))
                     break;
 
-                if (lexer.next_is(is_any_of("=!")))
+                if (lexer.next_is(is_any_of("=!"sv)))
                     break;
 
                 ++count;

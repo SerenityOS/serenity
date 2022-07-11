@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-theme-editor");
+    auto app_icon = GUI::Icon::default_icon("app-theme-editor"sv);
     auto window = GUI::Window::construct();
 
     auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>());

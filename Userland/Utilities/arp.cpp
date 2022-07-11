@@ -105,26 +105,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("ip_address").to_string() < b.as_object().get("ip_address").to_string();
+            return a.as_object().get("ip_address"sv).to_string() < b.as_object().get("ip_address"sv).to_string();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto ip_address = if_object.get("ip_address").to_string();
+            auto ip_address = if_object.get("ip_address"sv).to_string();
 
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(ip_address);
                 auto addr = from_string.value().to_in_addr_t();
                 auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
                 if (hostent != nullptr) {
-                    auto host_name = StringView(hostent->h_name);
+                    StringView host_name { hostent->h_name, strlen(hostent->h_name) };
                     if (!host_name.is_empty())
                         ip_address = host_name;
                 }
             }
 
-            auto mac_address = if_object.get("mac_address").to_string();
+            auto mac_address = if_object.get("mac_address"sv).to_string();
 
             if (proto_address_column != -1)
                 columns[proto_address_column].buffer = ip_address;

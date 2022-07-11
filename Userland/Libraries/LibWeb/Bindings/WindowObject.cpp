@@ -183,7 +183,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObje
 
     auto* this_object = MUST(this_value.to_object(global_object));
 
-    if (StringView("WindowObject") != this_object->class_name())
+    if ("WindowObject"sv != this_object->class_name())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WindowObject");
     return &static_cast<WindowObject*>(this_object)->impl();
 }

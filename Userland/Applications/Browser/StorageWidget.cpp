@@ -25,7 +25,7 @@ StorageWidget::StorageWidget()
     m_cookies_model = adopt_ref(*new CookiesModel());
 
     m_cookies_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_cookies_model));
-    m_cookies_filtering_model->set_filter_term("");
+    m_cookies_filtering_model->set_filter_term(""sv);
 
     m_cookies_textbox->on_change = [this] {
         m_cookies_filtering_model->set_filter_term(m_cookies_textbox->text());
@@ -42,7 +42,7 @@ StorageWidget::StorageWidget()
     m_local_storage_model = adopt_ref(*new StorageModel());
 
     m_local_storage_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_local_storage_model));
-    m_local_storage_filtering_model->set_filter_term("");
+    m_local_storage_filtering_model->set_filter_term(""sv);
 
     m_local_storage_textbox->on_change = [this] {
         m_local_storage_filtering_model->set_filter_term(m_local_storage_textbox->text());
@@ -59,7 +59,7 @@ StorageWidget::StorageWidget()
     m_session_storage_model = adopt_ref(*new StorageModel());
 
     m_session_storage_filtering_model = MUST(GUI::FilteringProxyModel::create(*m_session_storage_model));
-    m_session_storage_filtering_model->set_filter_term("");
+    m_session_storage_filtering_model->set_filter_term(""sv);
 
     m_session_storage_textbox->on_change = [this] {
         m_session_storage_filtering_model->set_filter_term(m_session_storage_textbox->text());

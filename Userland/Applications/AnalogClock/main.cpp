@@ -24,9 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-analog-clock"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-analog-clock"sv));
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(Core::DateTime::now().to_string("%Y-%m-%d"));
+    window->set_title(Core::DateTime::now().to_string("%Y-%m-%d"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(170, 170);
     window->set_resizable(false);

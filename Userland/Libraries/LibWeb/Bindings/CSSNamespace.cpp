@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
         }
         // Otherwise, if property is a custom property name string, return true.
         // FIXME: This check is not enough to make sure this is a valid custom property name, but it's close enough.
-        else if (property_name.starts_with("--") && property_name.length() >= 3) {
+        else if (property_name.starts_with("--"sv) && property_name.length() >= 3) {
             return JS::Value(true);
         }
 

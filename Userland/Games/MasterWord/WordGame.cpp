@@ -21,9 +21,9 @@
 WordGame::WordGame()
 {
     read_words();
-    m_num_letters = Config::read_i32("MasterWord", "", "word_length", 5);
-    m_max_guesses = Config::read_i32("MasterWord", "", "max_guesses", 6);
-    m_check_guesses = Config::read_bool("MasterWord", "", "check_guesses_in_dictionary", false);
+    m_num_letters = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
+    m_max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 6);
+    m_check_guesses = Config::read_bool("MasterWord"sv, ""sv, "check_guesses_in_dictionary"sv, false);
     reset();
     pick_font();
 }
@@ -36,7 +36,7 @@ void WordGame::reset()
     if (maybe_word.has_value())
         m_current_word = maybe_word.value();
     else {
-        GUI::MessageBox::show(window(), String::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord");
+        GUI::MessageBox::show(window(), String::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
         if (m_num_letters != 5) {
             m_num_letters = 5;
             reset();
@@ -90,10 +90,10 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
             auto won = m_current_guess == m_current_word;
             m_current_guess = {};
             if (won) {
-                GUI::MessageBox::show(window(), "You win!", "MasterWord");
+                GUI::MessageBox::show(window(), "You win!"sv, "MasterWord"sv);
                 reset();
             } else if (m_guesses.size() == m_max_guesses) {
-                GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord");
+                GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
                 reset();
             }
         } else {
@@ -161,7 +161,7 @@ void WordGame::read_words()
     m_words.clear();
     auto response = Core::File::open("/res/words.txt", Core::OpenMode::ReadOnly);
     if (response.is_error()) {
-        GUI::MessageBox::show(nullptr, "Could not read /res/words.txt.\nPlease ensure this file exists and restart MasterWord.", "MasterWord");
+        GUI::MessageBox::show(nullptr, "Could not read /res/words.txt.\nPlease ensure this file exists and restart MasterWord."sv, "MasterWord"sv);
         exit(0);
     }
     auto words_file = response.value();

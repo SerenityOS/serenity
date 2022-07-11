@@ -33,11 +33,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-analog-clock"); // FIXME: Create a ClockSettings icon.
+    auto app_icon = GUI::Icon::default_icon("app-analog-clock"sv); // FIXME: Create a ClockSettings icon.
 
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock", "clock"));
-    (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone", "time-zone"));
+    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"sv, "clock"sv));
+    (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone"sv, "time-zone"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(540, 570);
     window->set_active_tab(selected_tab);

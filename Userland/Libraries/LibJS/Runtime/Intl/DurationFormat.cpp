@@ -299,7 +299,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& g
 //  here, but at some point we should split the the NumberFormat exporter to export both formats of the data.
 static String convert_number_format_pattern_to_duration_format_template(Unicode::NumberFormat const& number_format)
 {
-    auto result = number_format.zero_format.replace("{number}", "{0}", ReplaceMode::FirstOnly);
+    auto result = number_format.zero_format.replace("{number}"sv, "{0}"sv, ReplaceMode::FirstOnly);
 
     for (size_t i = 0; i < number_format.identifiers.size(); ++i)
         result = result.replace(String::formatted("{{unitIdentifier:{}}}", i), number_format.identifiers[i], ReplaceMode::FirstOnly);
@@ -428,7 +428,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
                 auto separator = Unicode::get_number_system_symbol(data_locale, duration_format.numbering_system(), Unicode::NumericSymbol::TimeSeparator).value_or(":"sv);
 
                 // 2. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                result.append({ "literal", separator });
+                result.append({ "literal"sv, separator });
             }
         }
 

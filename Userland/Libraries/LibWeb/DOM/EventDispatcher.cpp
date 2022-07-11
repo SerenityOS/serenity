@@ -187,13 +187,13 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
         // 2. If event’s type attribute value is a match for any of the strings in the first column in the following table,
         //    set event’s type attribute value to the string in the second column on the same row as the matching string, and return otherwise.
         if (event.type() == "animationend")
-            event.set_type("webkitAnimationEnd");
+            event.set_type("webkitAnimationEnd"sv);
         else if (event.type() == "animationiteration")
-            event.set_type("webkitAnimationIteration");
+            event.set_type("webkitAnimationIteration"sv);
         else if (event.type() == "animationstart")
-            event.set_type("webkitAnimationStart");
+            event.set_type("webkitAnimationStart"sv);
         else if (event.type() == "transitionend")
-            event.set_type("webkitTransitionEnd");
+            event.set_type("webkitTransitionEnd"sv);
         else
             return;
 

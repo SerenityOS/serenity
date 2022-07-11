@@ -157,11 +157,11 @@ static ErrorOr<void> run_command(String command, bool keep_open)
     arguments.append(shell);
     if (!command.is_empty()) {
         if (keep_open)
-            arguments.append("--keep-open");
-        arguments.append("-c");
+            arguments.append("--keep-open"sv);
+        arguments.append("-c"sv);
         arguments.append(command);
     }
-    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm", "PAGER=more", "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin" }));
+    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm"sv, "PAGER=more"sv, "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv }));
     TRY(Core::System::exec(shell, arguments, Core::System::SearchInPath::No, env.span()));
     VERIFY_NOT_REACHED();
 }
@@ -189,13 +189,13 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     find_textbox->set_fixed_width(230);
     find_textbox->set_focus(true);
     if (terminal.has_selection())
-        find_textbox->set_text(terminal.selected_text().replace("\n", " ", ReplaceMode::All));
+        find_textbox->set_text(terminal.selected_text().replace("\n"sv, " "sv, ReplaceMode::All));
     auto find_backwards = TRY(find->try_add<GUI::Button>());
     find_backwards->set_fixed_width(25);
-    find_backwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    find_backwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
     auto find_forwards = TRY(find->try_add<GUI::Button>());
     find_forwards->set_fixed_width(25);
-    find_forwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    find_forwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
 
     find_textbox->on_return_pressed = [find_backwards]() mutable {
         find_backwards->click();
@@ -280,14 +280,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (command_to_execute)
             TRY(run_command(command_to_execute, keep_open));
         else
-            TRY(run_command(Config::read_string("Terminal", "Startup", "Command", ""), false));
+            TRY(run_command(Config::read_string("Terminal"sv, "Startup"sv, "Command"sv, ""sv), false));
         VERIFY_NOT_REACHED();
     }
 
     auto ptsname = TRY(Core::System::ptsname(ptm_fd));
     utmp_update(ptsname, shell_pid, true);
 
-    auto app_icon = GUI::Icon::default_icon("app-terminal");
+    auto app_icon = GUI::Icon::default_icon("app-terminal"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Terminal");
@@ -308,10 +308,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     Config::monitor_domain("Terminal");
-    auto should_confirm_close = Config::read_bool("Terminal", "Terminal", "ConfirmClose", true);
+    auto should_confirm_close = Config::read_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, true);
     TerminalChangeListener listener { terminal };
 
-    auto bell = Config::read_string("Terminal", "Window", "Bell", "Visible");
+    auto bell = Config::read_string("Terminal"sv, "Window"sv, "Bell"sv, "Visible"sv);
     if (bell == "AudibleBeep") {
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
     } else if (bell == "Disabled") {
@@ -320,35 +320,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::Visible);
     }
 
-    auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal", "Cursor", "Shape", "Block")).value_or(VT::CursorShape::Block);
+    auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv)).value_or(VT::CursorShape::Block);
     terminal->set_cursor_shape(cursor_shape);
 
-    auto cursor_blinking = Config::read_bool("Terminal", "Cursor", "Blinking", true);
+    auto cursor_blinking = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true);
     terminal->set_cursor_blinking(cursor_blinking);
 
     auto find_window = TRY(create_find_window(terminal));
 
-    auto new_opacity = Config::read_i32("Terminal", "Window", "Opacity", 255);
+    auto new_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, 255);
     terminal->set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
 
-    auto new_scrollback_size = Config::read_i32("Terminal", "Terminal", "MaxHistorySize", terminal->max_history_size());
+    auto new_scrollback_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, terminal->max_history_size());
     terminal->set_max_history_size(new_scrollback_size);
 
-    auto show_scroll_bar = Config::read_bool("Terminal", "Terminal", "ShowScrollBar", true);
+    auto show_scroll_bar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
     terminal->set_show_scrollbar(show_scroll_bar);
 
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings");
+            GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings"sv);
         });
 
     TRY(terminal->context_menu().try_add_separator());
     TRY(terminal->context_menu().try_add_action(open_settings_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        GUI::Process::spawn_or_show_error(window, "/bin/Terminal");
+    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        GUI::Process::spawn_or_show_error(window, "/bin/Terminal"sv);
     })));
 
     TRY(file_menu->try_add_action(open_settings_action));
@@ -383,7 +383,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 close_message = "There is a background process running in this terminal. Closing the terminal may kill it.";
         }
         if (close_message.has_value())
-            return GUI::MessageBox::show(window, *close_message, "Close this terminal?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+            return GUI::MessageBox::show(window, *close_message, "Close this terminal?"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
         return GUI::MessageBox::ExecResult::OK;
     };
 
@@ -397,7 +397,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(terminal->copy_action()));
     TRY(edit_menu->try_add_action(terminal->paste_action()));
     TRY(edit_menu->try_add_separator());
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(),
+    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             find_window->show();
             find_window->move_to_front();

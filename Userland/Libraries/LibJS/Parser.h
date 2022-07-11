@@ -182,7 +182,7 @@ public:
                 return {};
             // We need to modify the source to match what the lexer considers one line - normalizing
             // line terminators to \n is easier than splitting using all different LT characters.
-            String source_string = source.replace("\r\n", "\n", ReplaceMode::All).replace("\r", "\n", ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n", ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n", ReplaceMode::All);
+            String source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
             StringBuilder builder;
             builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
             builder.append('\n');

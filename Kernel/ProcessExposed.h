@@ -138,7 +138,7 @@ public:
 protected:
     virtual bool acquire_link(KBufferBuilder& builder) = 0;
     explicit ProcFSExposedLink(StringView name);
-    mutable Mutex m_lock { "ProcFSLink" };
+    mutable Mutex m_lock { "ProcFSLink"sv };
 };
 
 namespace PCI {

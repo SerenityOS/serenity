@@ -158,7 +158,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
     u32 active_namespace_list[NVMe_IDENTIFY_SIZE / sizeof(u32)];
 
     {
-        auto buffer = TRY(MM.allocate_dma_buffer_page("Identify PRP", Memory::Region::Access::ReadWrite, prp_dma_buffer));
+        auto buffer = TRY(MM.allocate_dma_buffer_page("Identify PRP"sv, Memory::Region::Access::ReadWrite, prp_dma_buffer));
         prp_dma_region = move(buffer);
     }
 
@@ -269,7 +269,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
         return EFAULT;
     }
     {
-        auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "Admin CQ queue", Memory::Region::Access::ReadWrite, cq_dma_pages));
+        auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "Admin CQ queue"sv, Memory::Region::Access::ReadWrite, cq_dma_pages));
         cq_dma_region = move(buffer);
     }
 
@@ -278,7 +278,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     memset(cq_dma_region->vaddr().as_ptr(), 0, cq_size);
 
     {
-        auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "Admin SQ queue", Memory::Region::Access::ReadWrite, sq_dma_pages));
+        auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "Admin SQ queue"sv, Memory::Region::Access::ReadWrite, sq_dma_pages));
         sq_dma_region = move(buffer);
     }
     auto doorbell_regs = TRY(Memory::map_typed_writable<volatile DoorbellRegister>(PhysicalAddress(m_bar + REG_SQ0TDBL_START)));
@@ -307,7 +307,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
 
     {
-        auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "IO CQ queue", Memory::Region::Access::ReadWrite, cq_dma_pages));
+        auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "IO CQ queue"sv, Memory::Region::Access::ReadWrite, cq_dma_pages));
         cq_dma_region = move(buffer);
     }
 
@@ -316,7 +316,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     memset(cq_dma_region->vaddr().as_ptr(), 0, cq_size);
 
     {
-        auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "IO SQ queue", Memory::Region::Access::ReadWrite, sq_dma_pages));
+        auto buffer = TRY(MM.allocate_dma_buffer_pages(sq_size, "IO SQ queue"sv, Memory::Region::Access::ReadWrite, sq_dma_pages));
         sq_dma_region = move(buffer);
     }
 

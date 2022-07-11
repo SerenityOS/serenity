@@ -37,13 +37,13 @@ public:
     {
         auto* region = find_region(address);
         if (!region) {
-            reportln("SoftMMU::read256: No region for @ {:p}", address.offset());
+            reportln("SoftMMU::read256: No region for @ {:p}"sv, address.offset());
             dump_backtrace();
             TODO();
         }
 
         if (!region->is_readable()) {
-            reportln("SoftMMU::read256: Non-readable region @ {:p}", address.offset());
+            reportln("SoftMMU::read256: Non-readable region @ {:p}"sv, address.offset());
             dump_backtrace();
             TODO();
         }

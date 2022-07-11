@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static constexpr StringView APP_NAME = "Space Analyzer";
+static constexpr auto APP_NAME = "Space Analyzer"sv;
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
@@ -88,11 +88,11 @@ static void fill_mounts(Vector<MountInfo>& output)
     auto content = file->read_all();
     auto json = JsonValue::from_string(content).release_value_but_fixme_should_propagate_errors();
 
-    json.as_array().for_each([&output](auto& value) {
+    json.as_array().for_each([&output](JsonValue const& value) {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
-        mount_info.mount_point = filesystem_object.get("mount_point").to_string();
-        mount_info.source = filesystem_object.get("source").as_string_or("none");
+        mount_info.mount_point = filesystem_object.get("mount_point"sv).to_string();
+        mount_info.source = filesystem_object.get("source"sv).as_string_or("none"sv);
         output.append(mount_info);
     });
 }
@@ -254,20 +254,20 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     if (!error_accumulator.is_empty()) {
         StringBuilder builder;
         bool first = true;
-        builder.append("Some directories were not analyzed: ");
+        builder.append("Some directories were not analyzed: "sv);
         for (auto& key : error_accumulator.keys()) {
             if (!first) {
-                builder.append(", ");
+                builder.append(", "sv);
             }
             auto const* error = strerror(key);
             builder.append({ error, strlen(error) });
-            builder.append(" (");
+            builder.append(" ("sv);
             int value = error_accumulator.get(key).value();
             builder.append(String::number(value));
             if (value == 1) {
-                builder.append(" time");
+                builder.append(" time"sv);
             } else {
-                builder.append(" times");
+                builder.append(" times"sv);
             }
             builder.append(")");
             first = false;
@@ -308,7 +308,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
     // Configure application window.
-    auto app_icon = GUI::Icon::default_icon("app-space-analyzer");
+    auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
     auto window = GUI::Window::construct();
     window->set_title(APP_NAME);
     window->resize(640, 480);
@@ -336,14 +336,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
 
     // Configure the nodes context menu.
-    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(get_absolute_path_to_selected_node(treemapwidget)));
     });
-    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         LexicalPath path { get_absolute_path_to_selected_node(treemapwidget) };
         Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     });
-    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
@@ -358,7 +358,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     String::formatted("Failed to delete \"{}\": {}. Retry?",
                         deletion_result.error().file,
                         static_cast<Error const&>(deletion_result.error())),
-                    "Deletion failed",
+                    "Deletion failed"sv,
                     GUI::MessageBox::Type::Error,
                     GUI::MessageBox::InputType::YesNo);
                 if (retry_message_result == GUI::MessageBox::ExecResult::Yes) {
@@ -367,7 +367,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 GUI::MessageBox::show(window,
                     String::formatted("Successfully deleted \"{}\".", selected_node_path),
-                    "Deletion completed",
+                    "Deletion completed"sv,
                     GUI::MessageBox::Type::Information,
                     GUI::MessageBox::InputType::OK);
             }

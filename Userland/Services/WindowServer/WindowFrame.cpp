@@ -142,7 +142,7 @@ void WindowFrame::reload_config()
 {
     String icons_path = WindowManager::the().palette().title_button_icons_path();
 
-    auto reload_bitmap = [&](RefPtr<MultiScaleBitmaps>& multiscale_bitmap, StringView path, StringView default_path = "") {
+    auto reload_bitmap = [&](RefPtr<MultiScaleBitmaps>& multiscale_bitmap, StringView path, StringView default_path = ""sv) {
         StringBuilder full_path;
         full_path.append(icons_path);
         full_path.append(path);
@@ -155,19 +155,19 @@ void WindowFrame::reload_config()
     auto reload_icon = [&](Button::Icon& icon, StringView name, StringView default_path) {
         StringBuilder full_name;
         full_name.append(name);
-        full_name.append(".png");
+        full_name.append(".png"sv);
         reload_bitmap(icon.bitmap, full_name.string_view(), default_path);
         // Note: No default for hover bitmaps
         full_name.clear();
         full_name.append(name);
-        full_name.append("-hover.png");
+        full_name.append("-hover.png"sv);
         reload_bitmap(icon.hover_bitmap, full_name.string_view());
     };
-    reload_icon(s_minimize_icon, "window-minimize", "/res/icons/16x16/downward-triangle.png");
-    reload_icon(s_maximize_icon, "window-maximize", "/res/icons/16x16/upward-triangle.png");
-    reload_icon(s_restore_icon, "window-restore", "/res/icons/16x16/window-restore.png");
-    reload_icon(s_close_icon, "window-close", "/res/icons/16x16/window-close.png");
-    reload_icon(s_close_modified_icon, "window-close-modified", "/res/icons/16x16/window-close-modified.png");
+    reload_icon(s_minimize_icon, "window-minimize"sv, "/res/icons/16x16/downward-triangle.png"sv);
+    reload_icon(s_maximize_icon, "window-maximize"sv, "/res/icons/16x16/upward-triangle.png"sv);
+    reload_icon(s_restore_icon, "window-restore"sv, "/res/icons/16x16/window-restore.png"sv);
+    reload_icon(s_close_icon, "window-close"sv, "/res/icons/16x16/window-close.png"sv);
+    reload_icon(s_close_modified_icon, "window-close-modified"sv, "/res/icons/16x16/window-close-modified.png"sv);
 
     auto load_shadow = [](String const& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {

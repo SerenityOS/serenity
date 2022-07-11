@@ -1533,15 +1533,15 @@ String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider,
     if (has_segment_prefix())
         builder.appendff("{}: ", register_name(segment_prefix().value()));
     if (has_address_size_override_prefix())
-        builder.append(m_a32 ? "a32 " : "a16 ");
+        builder.append(m_a32 ? "a32 "sv : "a16 "sv);
     // Note: SSE2 Uses this to change to doubles in SSE instruction or xmm registers in MMX instructions
     if (has_operand_size_override_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
-        builder.append(m_o32 ? "o32 " : "o16 ");
+        builder.append(m_o32 ? "o32 "sv : "o16 "sv);
     if (has_lock_prefix())
-        builder.append("lock ");
+        builder.append("lock "sv);
     // Note: SSE instructions use these to toggle between packed and single data
     if (has_rep_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
-        builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz " : "repz ");
+        builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz "sv : "repz "sv);
     to_string_internal(builder, origin, symbol_provider, x32);
     return builder.to_string();
 }
@@ -1564,7 +1564,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         if (symbol_provider) {
             u32 symbol_offset = 0;
             auto symbol = symbol_provider->symbolicate(origin + offset, &symbol_offset);
-            builder.append(" <");
+            builder.append(" <"sv);
             builder.append(symbol);
             if (symbol_offset)
                 builder.appendff("+{:#x}", symbol_offset);
@@ -1626,7 +1626,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
             append_mmrm64();
     };
 
-    auto append = [&](auto& content) { builder.append(content); };
+    auto append = [&](auto content) { builder.append(content); };
     auto append_moff = [&] {
         builder.append('[');
         if (m_a32) {
@@ -1674,7 +1674,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_AL_imm8:
         append_mnemonic_space();
-        append("al,");
+        append("al,"sv);
         append_imm8();
         break;
     case OP_imm8:
@@ -1684,37 +1684,37 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_reg8_imm8:
         append_mnemonic_space();
         append_reg8();
-        append(",");
+        append(',');
         append_imm8();
         break;
     case OP_AX_imm8:
         append_mnemonic_space();
-        append("ax,");
+        append("ax,"sv);
         append_imm8();
         break;
     case OP_EAX_imm8:
         append_mnemonic_space();
-        append("eax,");
+        append("eax,"sv);
         append_imm8();
         break;
     case OP_imm8_AL:
         append_mnemonic_space();
         append_imm8();
-        append(",al");
+        append(",al"sv);
         break;
     case OP_imm8_AX:
         append_mnemonic_space();
         append_imm8();
-        append(",ax");
+        append(",ax"sv);
         break;
     case OP_imm8_EAX:
         append_mnemonic_space();
         append_imm8();
-        append(",eax");
+        append(",eax"sv);
         break;
     case OP_AX_imm16:
         append_mnemonic_space();
-        append("ax,");
+        append("ax,"sv);
         append_imm16();
         break;
     case OP_imm16:
@@ -1749,32 +1749,32 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_EAX_imm32:
         append_mnemonic_space();
-        append("eax,");
+        append("eax,"sv);
         append_imm32();
         break;
     case OP_CS:
         append_mnemonic_space();
-        append("cs");
+        append("cs"sv);
         break;
     case OP_DS:
         append_mnemonic_space();
-        append("ds");
+        append("ds"sv);
         break;
     case OP_ES:
         append_mnemonic_space();
-        append("es");
+        append("es"sv);
         break;
     case OP_SS:
         append_mnemonic_space();
-        append("ss");
+        append("ss"sv);
         break;
     case OP_FS:
         append_mnemonic_space();
-        append("fs");
+        append("fs"sv);
         break;
     case OP_GS:
         append_mnemonic_space();
-        append("gs");
+        append("gs"sv);
         break;
     case OP:
         append_mnemonic();
@@ -1786,86 +1786,86 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_imm16_imm8:
         append_mnemonic_space();
         append_imm16_1();
-        append(",");
+        append(',');
         append_imm8_2();
         break;
     case OP_moff8_AL:
         append_mnemonic_space();
         append_moff();
-        append(",al");
+        append(",al"sv);
         break;
     case OP_moff16_AX:
         append_mnemonic_space();
         append_moff();
-        append(",ax");
+        append(",ax"sv);
         break;
     case OP_moff32_EAX:
         append_mnemonic_space();
         append_moff();
-        append(",eax");
+        append(",eax"sv);
         break;
     case OP_AL_moff8:
         append_mnemonic_space();
-        append("al,");
+        append("al,"sv);
         append_moff();
         break;
     case OP_AX_moff16:
         append_mnemonic_space();
-        append("ax,");
+        append("ax,"sv);
         append_moff();
         break;
     case OP_EAX_moff32:
         append_mnemonic_space();
-        append("eax,");
+        append("eax,"sv);
         append_moff();
         break;
     case OP_imm16_imm16:
         append_mnemonic_space();
         append_imm16_1();
-        append(":");
+        append(":"sv);
         append_imm16_2();
         break;
     case OP_imm16_imm32:
         append_mnemonic_space();
         append_imm16_1();
-        append(":");
+        append(":"sv);
         append_imm32_2();
         break;
     case OP_reg32_imm32:
         append_mnemonic_space();
         append_reg32();
-        append(",");
+        append(',');
         append_imm32();
         break;
     case OP_RM8_1:
         append_mnemonic_space();
         append_rm8();
-        append(",0x01");
+        append(",0x01"sv);
         break;
     case OP_RM16_1:
         append_mnemonic_space();
         append_rm16();
-        append(",0x01");
+        append(",0x01"sv);
         break;
     case OP_RM32_1:
         append_mnemonic_space();
         append_rm32();
-        append(",0x01");
+        append(",0x01"sv);
         break;
     case OP_RM8_CL:
         append_mnemonic_space();
         append_rm8();
-        append(",cl");
+        append(",cl"sv);
         break;
     case OP_RM16_CL:
         append_mnemonic_space();
         append_rm16();
-        append(",cl");
+        append(",cl"sv);
         break;
     case OP_RM32_CL:
         append_mnemonic_space();
         append_rm32();
-        append(",cl");
+        append(",cl"sv);
         break;
     case OP_reg16:
         append_mnemonic_space();
@@ -1873,46 +1873,46 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_AX_reg16:
         append_mnemonic_space();
-        append("ax,");
+        append("ax,"sv);
         append_reg16();
         break;
     case OP_EAX_reg32:
         append_mnemonic_space();
-        append("eax,");
+        append("eax,"sv);
         append_reg32();
         break;
     case OP_3:
         append_mnemonic_space();
-        append("0x03");
+        append("0x03"sv);
         break;
     case OP_AL_DX:
         append_mnemonic_space();
-        append("al,dx");
+        append("al,dx"sv);
         break;
     case OP_AX_DX:
         append_mnemonic_space();
-        append("ax,dx");
+        append("ax,dx"sv);
         break;
     case OP_EAX_DX:
         append_mnemonic_space();
-        append("eax,dx");
+        append("eax,dx"sv);
         break;
     case OP_DX_AL:
         append_mnemonic_space();
-        append("dx,al");
+        append("dx,al"sv);
         break;
     case OP_DX_AX:
         append_mnemonic_space();
-        append("dx,ax");
+        append("dx,ax"sv);
         break;
     case OP_DX_EAX:
         append_mnemonic_space();
-        append("dx,eax");
+        append("dx,eax"sv);
         break;
     case OP_reg8_CL:
         append_mnemonic_space();
         append_reg8();
-        append(",cl");
+        append(",cl"sv);
         break;
     case OP_RM8:
         append_mnemonic_space();

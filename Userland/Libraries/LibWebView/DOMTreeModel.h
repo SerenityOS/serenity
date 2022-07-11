@@ -45,7 +45,7 @@ private:
 
     ALWAYS_INLINE static JsonArray const* get_children(JsonObject const& o)
     {
-        if (auto const* maybe_children = o.get_ptr("children"); maybe_children)
+        if (auto const* maybe_children = o.get_ptr("children"sv); maybe_children)
             return &maybe_children->as_array();
         return nullptr;
     }

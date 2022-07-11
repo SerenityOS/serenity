@@ -61,9 +61,9 @@ struct [[gnu::packed]] MemoryRegionInfo {
 #ifndef KERNEL
     String object_name() const
     {
-        StringView memory_region_name { region_name };
-        if (memory_region_name.contains("Loader.so"))
-            return "Loader.so";
+        StringView memory_region_name { region_name, strlen(region_name) };
+        if (memory_region_name.contains("Loader.so"sv))
+            return "Loader.so"sv;
         auto maybe_colon_index = memory_region_name.find(':');
         if (!maybe_colon_index.has_value())
             return {};

@@ -33,7 +33,7 @@
 
 #define HANDLE(VALUE) \
     case VALUE:       \
-        return #VALUE;
+        return #VALUE##sv;
 #define VALUES_TO_NAMES(FUNC_NAME)     \
     static String FUNC_NAME(int value) \
     {                                  \
@@ -252,7 +252,7 @@ struct BitflagOption {
 };
 
 #define BITFLAG(NAME) \
-    BitflagOption { NAME, #NAME }
+    BitflagOption { NAME, #NAME##sv }
 
 struct BitflagBase {
     int flagset;
@@ -280,7 +280,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
                 continue;
             remaining &= ~option.value;
             if (had_any_output)
-                TRY(format_builder.put_literal(" | "));
+                TRY(format_builder.put_literal(" | "sv));
             TRY(format_builder.put_literal(option.name));
             had_any_output = true;
         }
@@ -288,7 +288,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
         if (remaining != 0) {
             // No more BitflagOptions are available. Any remaining flags are unrecognized.
             if (had_any_output)
-                TRY(format_builder.put_literal(" | "));
+                TRY(format_builder.put_literal(" | "sv));
             format_builder.builder().appendff("0x{:x} (?)", static_cast<unsigned>(remaining));
             had_any_output = true;
         }
@@ -297,7 +297,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
             if constexpr (requires { BitflagDerivative::default_; })
                 TRY(format_builder.put_literal(BitflagDerivative::default_));
             else
-                TRY(format_builder.put_literal("0"));
+                TRY(format_builder.put_literal("0"sv));
         }
 
         return {};
@@ -322,7 +322,7 @@ struct Formatter<PointerArgument> : StandardFormatter {
     {
         auto& builder = format_builder.builder();
         if (value.value == nullptr)
-            builder.append("null");
+            builder.append("null"sv);
         else
             builder.appendff("{}", value.value);
         return {};
@@ -348,7 +348,7 @@ struct Formatter<StringArgument> : StandardFormatter {
     {
         auto& builder = format_builder.builder();
         if (string_argument.argument.characters == nullptr) {
-            builder.append("null");
+            builder.append("null"sv);
             return {};
         }
 
@@ -403,7 +403,7 @@ public:
 
     void format_result(Integral auto res)
     {
-        m_builder.append(") = ");
+        m_builder.append(") = "sv);
         if (res < 0)
             m_builder.appendff("{} {}", res, errno_name(-(int)res));
         else
@@ -414,7 +414,7 @@ public:
     void format_result(void* res)
     {
         if (res == MAP_FAILED)
-            m_builder.append(") = MAP_FAILED\n");
+            m_builder.append(") = MAP_FAILED\n"sv);
         else if (FlatPtr(res) > FlatPtr(-EMAXERRNO))
             m_builder.appendff(") = {} {}\n", res, errno_name(-static_cast<int>(FlatPtr(res))));
         else
@@ -423,7 +423,7 @@ public:
 
     void format_result()
     {
-        m_builder.append(")\n");
+        m_builder.append(")\n"sv);
     }
 
     StringView string_view()
@@ -435,7 +435,7 @@ private:
     void add_argument_separator()
     {
         if (!m_first_arg) {
-            m_builder.append(", ");
+            m_builder.append(", "sv);
         }
         m_first_arg = false;
     }
@@ -592,7 +592,7 @@ struct Formatter<struct sockaddr> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder& format_builder, struct sockaddr address)
     {
         auto& builder = format_builder.builder();
-        builder.append("{sa_family=");
+        builder.append("{sa_family="sv);
         builder.append(domain_name(address.sa_family));
         if (address.sa_family == AF_INET) {
             auto* address_in = (const struct sockaddr_in*)&address;
@@ -643,14 +643,14 @@ struct MmapFlags : BitflagBase {
         BITFLAG(MAP_RANDOMIZED), BITFLAG(MAP_STACK), BITFLAG(MAP_NORESERVE), BITFLAG(MAP_PURGEABLE),
         BITFLAG(MAP_FIXED_NOREPLACE)
     };
-    static constexpr StringView default_ = "MAP_FILE";
+    static constexpr StringView default_ = "MAP_FILE"sv;
 };
 
 struct MemoryProtectionFlags : BitflagBase {
     static constexpr auto options = {
         BITFLAG(PROT_READ), BITFLAG(PROT_WRITE), BITFLAG(PROT_EXEC)
     };
-    static constexpr StringView default_ = "PROT_NONE";
+    static constexpr StringView default_ = "PROT_NONE"sv;
 };
 
 static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)

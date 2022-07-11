@@ -339,6 +339,6 @@ bool SignedBigInteger::operator>=(SignedBigInteger const& other) const
 ErrorOr<void> AK::Formatter<Crypto::SignedBigInteger>::format(FormatBuilder& fmtbuilder, Crypto::SignedBigInteger const& value)
 {
     if (value.is_negative())
-        TRY(fmtbuilder.put_string("-"));
+        TRY(fmtbuilder.put_string("-"sv));
     return Formatter<Crypto::UnsignedBigInteger>::format(fmtbuilder, value.unsigned_value());
 }

@@ -29,7 +29,7 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
     if (should_confirm) {
         auto result = GUI::MessageBox::show(parent_window,
             message,
-            "Confirm deletion",
+            "Confirm deletion"sv,
             GUI::MessageBox::Type::Warning,
             GUI::MessageBox::InputType::OKCancel);
         if (result == GUI::MessageBox::ExecResult::Cancel)
@@ -51,17 +51,17 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& 
         TRY(Core::System::dup2(pipe_fds[1], STDOUT_FILENO));
 
         Vector<StringView> file_operation_args;
-        file_operation_args.append("/bin/FileOperation");
+        file_operation_args.append("/bin/FileOperation"sv);
 
         switch (operation) {
         case FileOperation::Copy:
-            file_operation_args.append("Copy");
+            file_operation_args.append("Copy"sv);
             break;
         case FileOperation::Move:
-            file_operation_args.append("Move");
+            file_operation_args.append("Move"sv);
             break;
         case FileOperation::Delete:
-            file_operation_args.append("Delete");
+            file_operation_args.append("Delete"sv);
             break;
         default:
             VERIFY_NOT_REACHED();

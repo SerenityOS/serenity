@@ -819,8 +819,8 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Mutex m_big_lock { "Process", Mutex::MutexBehavior::BigLock };
-    Mutex m_ptrace_lock { "ptrace" };
+    Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
+    Mutex m_ptrace_lock { "ptrace"sv };
 
     RefPtr<Timer> m_alarm_timer;
 
@@ -1036,6 +1036,6 @@ template<>
 struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::Process const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}({})", value.name(), value.pid().value());
+        return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.name(), value.pid().value());
     }
 };

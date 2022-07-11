@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_password_enabled(true);
     } else {
         if (current_uid != 0) {
-            auto current_password = TRY(Core::get_password("Current password: "));
+            auto current_password = TRY(Core::get_password("Current password: "sv));
 
             if (!target_account.authenticate(current_password)) {
                 warnln("Incorrect or disabled password.");
@@ -73,8 +73,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        auto new_password = TRY(Core::get_password("New password: "));
-        auto new_password_retype = TRY(Core::get_password("Retype new password: "));
+        auto new_password = TRY(Core::get_password("New password: "sv));
+        auto new_password_retype = TRY(Core::get_password("Retype new password: "sv));
 
         if (new_password.is_empty() && new_password_retype.is_empty()) {
             warnln("No password supplied.");

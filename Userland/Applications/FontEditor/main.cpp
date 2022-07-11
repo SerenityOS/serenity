@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-font-editor"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));

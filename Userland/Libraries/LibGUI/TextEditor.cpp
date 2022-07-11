@@ -89,12 +89,12 @@ void TextEditor::create_actions()
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
-    m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"));
+    m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
-            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecResult::OK) {
+                if (InputBox::show(window(), value, "Line:"sv, "Go to line"sv) == InputBox::ExecResult::OK) {
                     auto line_target = value.to_uint();
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -1560,7 +1560,7 @@ void TextEditor::paste()
         return;
 
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("text/"))
+    if (!mime_type.starts_with("text/"sv))
         return;
 
     if (data.is_empty())
@@ -1953,8 +1953,8 @@ void TextEditor::document_did_update_undo_stack()
     m_undo_action->set_enabled(can_undo() && !text_is_secret());
     m_redo_action->set_enabled(can_redo() && !text_is_secret());
 
-    m_undo_action->set_text(make_action_text("&Undo", document().undo_stack().undo_action_text()));
-    m_redo_action->set_text(make_action_text("&Redo", document().undo_stack().redo_action_text()));
+    m_undo_action->set_text(make_action_text("&Undo"sv, document().undo_stack().undo_action_text()));
+    m_redo_action->set_text(make_action_text("&Redo"sv, document().undo_stack().redo_action_text()));
 
     // FIXME: This is currently firing more often than it should.
     //        Ideally we'd only send this out when the undo stack modified state actually changes.
@@ -1982,7 +1982,7 @@ void TextEditor::cursor_did_change()
 
 void TextEditor::clipboard_content_did_change(String const& mime_type)
 {
-    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"));
+    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"sv));
 }
 
 void TextEditor::set_document(TextDocument& document)

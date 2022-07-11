@@ -35,7 +35,7 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
 
         // 4. Start parser and let it run until it has consumed all the characters just inserted into the input stream.
         // FIXME: This is to match the default URL. Instead, pass in this's relevant global object's associated Document's URL.
-        parser->run("about:blank");
+        parser->run("about:blank"sv);
     } else {
         // -> Otherwise
 

@@ -30,7 +30,7 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
             return maybe_bitmap;
         return Gfx::Bitmap::try_load_from_file(default_path);
     };
-    constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";
+    constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
     auto cursor_path = String::formatted("/res/cursor-themes/{}/{}",
         cursor_theme, cursor_theme_config->read_entry("Cursor", "Arrow"));
     m_cursor_bitmap = TRY(load_bitmap(cursor_path, default_cursor_path));

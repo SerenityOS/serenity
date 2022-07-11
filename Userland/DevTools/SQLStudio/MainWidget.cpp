@@ -35,7 +35,7 @@ MainWidget::MainWidget()
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         open_new_script();
     });
 
@@ -142,7 +142,7 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
-    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         // TODO select the database to use in UI.
@@ -207,10 +207,10 @@ MainWidget::MainWidget()
     m_statusbar = add<GUI::Statusbar>(3);
 
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected") + font().max_glyph_width());
+    m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected"sv) + font().max_glyph_width());
 
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000") + font().max_glyph_width());
+    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
@@ -266,7 +266,7 @@ void MainWidget::initialize_menu(GUI::Window* window)
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/SQLStudio.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("SQL Studio", GUI::Icon::default_icon("app-sql-studio"), window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("SQL Studio", GUI::Icon::default_icon("app-sql-studio"sv), window));
 }
 
 void MainWidget::open_new_script()
@@ -394,7 +394,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
 
         for (auto& url : urls) {
             auto& scheme = url.scheme();
-            if (!scheme.equals_ignoring_case("file"))
+            if (!scheme.equals_ignoring_case("file"sv))
                 continue;
 
             auto lexical_path = LexicalPath(url.path());

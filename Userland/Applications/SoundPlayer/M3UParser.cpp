@@ -20,7 +20,7 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
     auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
     VERIFY(!file_result.is_error());
     auto contents = file_result.value()->read_all();
-    auto use_utf8 = path.ends_with(".m3u8", CaseSensitivity::CaseInsensitive);
+    auto use_utf8 = path.ends_with(".m3u8"sv, CaseSensitivity::CaseInsensitive);
     return from_memory(String { contents, NoChomp }, use_utf8);
 }
 
@@ -66,7 +66,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             return {};
         };
 
-        if (auto ext_inf = tag("#EXTINF:"); ext_inf.has_value()) {
+        if (auto ext_inf = tag("#EXTINF:"sv); ext_inf.has_value()) {
             auto separator = ext_inf.value().find(',');
             VERIFY(separator.has_value());
             auto seconds = ext_inf.value().substring_view(0, separator.value());
@@ -78,15 +78,15 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             // TODO: support the alternative, non-standard #EXTINF value of a key=value dictionary
             continue;
         }
-        if (auto playlist = tag("#PLAYLIST:"); playlist.has_value())
+        if (auto playlist = tag("#PLAYLIST:"sv); playlist.has_value())
             m_parsed_playlist_title = move(playlist.value());
-        else if (auto ext_grp = tag("#EXTGRP:"); ext_grp.has_value())
+        else if (auto ext_grp = tag("#EXTGRP:"sv); ext_grp.has_value())
             metadata_for_next_file.group_name = move(ext_grp.value());
-        else if (auto ext_alb = tag("#EXTALB:"); ext_alb.has_value())
+        else if (auto ext_alb = tag("#EXTALB:"sv); ext_alb.has_value())
             metadata_for_next_file.album_title = move(ext_alb.value());
-        else if (auto ext_art = tag("#EXTART:"); ext_art.has_value())
+        else if (auto ext_art = tag("#EXTART:"sv); ext_art.has_value())
             metadata_for_next_file.album_artist = move(ext_art.value());
-        else if (auto ext_genre = tag("#EXTGENRE:"); ext_genre.has_value())
+        else if (auto ext_genre = tag("#EXTGENRE:"sv); ext_genre.has_value())
             metadata_for_next_file.album_genre = move(ext_genre.value());
         // TODO: Support M3A files (M3U files with embedded mp3 files)
     }

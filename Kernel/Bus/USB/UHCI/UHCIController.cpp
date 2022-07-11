@@ -105,7 +105,7 @@ ErrorOr<void> UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist", Memory::Region::Access::Write));
+    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist"sv, Memory::Region::Access::Write));
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
@@ -139,7 +139,7 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
     // Now the Transfer Descriptor pool
     m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
-    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite));
+    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
 
     // Set up the Isochronous Transfer Descriptor list
     m_iso_td_list.resize(UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
@@ -509,7 +509,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 ErrorOr<void> UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task")), [&] {
+    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();

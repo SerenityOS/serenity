@@ -67,7 +67,7 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescriptio
         range,
         move(vmobject),
         0,
-        "Mapped Physical Memory",
+        "Mapped Physical Memory"sv,
         prot,
         shared);
 }

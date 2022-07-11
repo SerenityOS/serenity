@@ -34,7 +34,7 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
     auto maybe_kernel_base = Symbolication::kernel_base();
 
     if (maybe_kernel_base.has_value() && containing_function.value().address_low >= maybe_kernel_base.value()) {
-        auto file_or_error = Core::MappedFile::map("/boot/Kernel.debug");
+        auto file_or_error = Core::MappedFile::map("/boot/Kernel.debug"sv);
         if (file_or_error.is_error())
             return;
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());

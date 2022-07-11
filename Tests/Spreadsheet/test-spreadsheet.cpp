@@ -38,7 +38,7 @@ TESTJS_RUN_FILE_FUNCTION(String const&, JS::Interpreter& interpreter, JS::Execut
     run_file(LexicalPath::join(Test::JS::g_test_root, s_spreadsheet_runtime_path).string());
 #endif
 
-    run_file("mock.test-common.js");
+    run_file("mock.test-common.js"sv);
 
     return Test::JS::RunFileHookResult::RunAsNormal;
 }

@@ -13,7 +13,7 @@
 namespace Spreadsheet {
 
 NumericCell::NumericCell()
-    : CellType("Numeric")
+    : CellType("Numeric"sv)
 {
 }
 

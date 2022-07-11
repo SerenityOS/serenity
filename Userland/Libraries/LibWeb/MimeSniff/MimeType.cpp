@@ -42,7 +42,7 @@ static bool contains_only_http_token_code_points(StringView string)
     // https://mimesniff.spec.whatwg.org/#http-token-code-point
     // An HTTP token code point is U+0021 (!), U+0023 (#), U+0024 ($), U+0025 (%), U+0026 (&), U+0027 ('), U+002A (*),
     // U+002B (+), U+002D (-), U+002E (.), U+005E (^), U+005F (_), U+0060 (`), U+007C (|), U+007E (~), or an ASCII alphanumeric.
-    constexpr auto is_certain_non_ascii_alphanumeric = is_any_of("!#$%&'*+-.^_`|~");
+    constexpr auto is_certain_non_ascii_alphanumeric = is_any_of("!#$%&'*+-.^_`|~"sv);
     for (char ch : string) {
         if (!is_certain_non_ascii_alphanumeric(ch) && !is_ascii_alphanumeric(ch))
             return false;
@@ -56,7 +56,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
     // https://fetch.spec.whatwg.org/#http-whitespace
     // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
     // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-    constexpr char const* http_whitespace = "\n\r\t ";
+    constexpr auto http_whitespace = "\n\r\t "sv;
 
     // 1. Remove any leading and trailing HTTP whitespace from input.
     auto trimmed_string = string.trim(http_whitespace, TrimMode::Both);

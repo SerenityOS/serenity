@@ -44,7 +44,7 @@ private:
         // FIXME: Help! Make this GUI less ugly.
         StringBuilder builder;
         builder.appendff("{}x{}", N, N);
-        builder.append(" Convolution");
+        builder.append(" Convolution"sv);
         set_title(builder.string_view());
 
         resize(200, 250);
@@ -73,7 +73,7 @@ private:
                         if (endptr != nullptr)
                             element = value;
                         else
-                            textbox.set_text("");
+                            textbox.set_text(""sv);
                     };
                 } else {
                     horizontal_container.template add<GUI::Widget>();

@@ -42,8 +42,8 @@ namespace Browser {
 
 URL url_from_user_input(String const& input)
 {
-    if (input.starts_with("?") && !g_search_engine.is_empty())
-        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
+    if (input.starts_with('?') && !g_search_engine.is_empty())
+        return URL(g_search_engine.replace("{}"sv, URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
 
     URL url_with_http_schema = URL(String::formatted("http://{}", input));
     if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
@@ -150,7 +150,7 @@ Tab::Tab(BrowserWindow& window)
     toolbar.add_action(window.reload_action());
 
     m_location_box = toolbar.add<GUI::UrlBox>();
-    m_location_box->set_placeholder("Address");
+    m_location_box->set_placeholder("Address"sv);
 
     m_location_box->on_return_pressed = [this] {
         auto url = url_from_location_bar();
@@ -166,7 +166,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
         auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-        if (!mime_type.starts_with("text/"))
+        if (!mime_type.starts_with("text/"sv))
             return;
         auto const& paste_text = data;
         if (paste_text.is_empty())
@@ -400,7 +400,7 @@ Tab::Tab(BrowserWindow& window)
 Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
 {
     if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
-        GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching."sv, "No search engine selected"sv, GUI::MessageBox::Type::Information);
         return {};
     }
 
@@ -410,8 +410,8 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
     builder.append(text);
     if (may_append_tld == MayAppendTLD::Yes) {
         // FIXME: Expand the list of top level domains.
-        if (!(text.ends_with(".com") || text.ends_with(".net") || text.ends_with(".org"))) {
-            builder.append(".com");
+        if (!(text.ends_with(".com"sv) || text.ends_with(".net"sv) || text.ends_with(".org"sv))) {
+            builder.append(".com"sv);
         }
     }
     String final_text = builder.to_string();

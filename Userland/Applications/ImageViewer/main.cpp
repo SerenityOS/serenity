@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    auto app_icon = GUI::Icon::default_icon("filetype-image");
+    auto app_icon = GUI::Icon::default_icon("filetype-image"sv);
 
     char const* path = nullptr;
     Core::ArgsParser args_parser;
@@ -124,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto msgbox_result = GUI::MessageBox::show(window,
                 String::formatted("Are you sure you want to delete {}?", path),
-                "Confirm deletion",
+                "Confirm deletion"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
 
@@ -135,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
                     String::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
-                    "Delete failed",
+                    "Delete failed"sv,
                     GUI::MessageBox::Type::Error);
 
                 return;
@@ -157,42 +157,42 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->rotate(Gfx::RotationDirection::Clockwise);
     });
 
-    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png")),
+    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png")),
+    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Horizontal);
         });
 
-    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png")),
+    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
         [&](auto&) {
             if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
                 GUI::MessageBox::show(window,
                     String::formatted("set_wallpaper({}) failed", widget->path()),
-                    "Could not set wallpaper",
+                    "Could not set wallpaper"sv,
                     GUI::MessageBox::Type::Error);
             }
         });
 
-    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png")),
+    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png")),
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png")),
+    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png")),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Last);
         });

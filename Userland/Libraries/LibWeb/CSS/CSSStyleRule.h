@@ -32,7 +32,7 @@ public:
     NonnullRefPtrVector<Selector> const& selectors() const { return m_selectors; }
     CSSStyleDeclaration const& declaration() const { return m_declaration; }
 
-    virtual StringView class_name() const override { return "CSSStyleRule"; };
+    virtual StringView class_name() const override { return "CSSStyleRule"sv; };
     virtual Type type() const override { return Type::Style; };
 
     String selector_text() const;

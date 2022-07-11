@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (paths.is_empty())
-        paths.append("-");
+        paths.append("-"sv);
 
     Crypto::Hash::Manager hash;
     hash.initialize(hash_kind);

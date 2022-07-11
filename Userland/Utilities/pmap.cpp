@@ -47,31 +47,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<JsonValue> sorted_regions = json.as_array().values();
     quick_sort(sorted_regions, [](auto& a, auto& b) {
-        return a.as_object().get("address").to_addr() < b.as_object().get("address").to_addr();
+        return a.as_object().get("address"sv).to_addr() < b.as_object().get("address"sv).to_addr();
     });
 
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
-        auto address = map.get("address").to_addr();
-        auto size = map.get("size").to_string();
+        auto address = map.get("address"sv).to_addr();
+        auto size = map.get("size"sv).to_string();
 
         auto access = String::formatted("{}{}{}{}{}",
-            (map.get("readable").to_bool() ? "r" : "-"),
-            (map.get("writable").to_bool() ? "w" : "-"),
-            (map.get("executable").to_bool() ? "x" : "-"),
-            (map.get("shared").to_bool() ? "s" : "-"),
-            (map.get("syscall").to_bool() ? "c" : "-"));
+            (map.get("readable"sv).to_bool() ? "r" : "-"),
+            (map.get("writable"sv).to_bool() ? "w" : "-"),
+            (map.get("executable"sv).to_bool() ? "x" : "-"),
+            (map.get("shared"sv).to_bool() ? "s" : "-"),
+            (map.get("syscall"sv).to_bool() ? "c" : "-"));
 
         out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
-            auto resident = map.get("amount_resident").to_string();
-            auto dirty = map.get("amount_dirty").to_string();
-            auto vmobject = map.get("vmobject").to_string();
-            if (vmobject.ends_with("VMObject"))
+            auto resident = map.get("amount_resident"sv).to_string();
+            auto dirty = map.get("amount_dirty"sv).to_string();
+            auto vmobject = map.get("vmobject"sv).to_string();
+            if (vmobject.ends_with("VMObject"sv))
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
-            auto purgeable = map.get("purgeable").to_string();
-            auto cow_pages = map.get("cow_pages").to_string();
+            auto purgeable = map.get("purgeable"sv).to_string();
+            auto cow_pages = map.get("cow_pages"sv).to_string();
             out("{:>10} ", resident);
             out("{:>10} ", dirty);
             out("{:6} ", access);
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             out("{:6} ", access);
         }
-        auto name = map.get("name").to_string();
+        auto name = map.get("name"sv).to_string();
         out("{:20}", name);
         outln();
     }

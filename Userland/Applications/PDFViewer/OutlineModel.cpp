@@ -15,8 +15,8 @@ NonnullRefPtr<OutlineModel> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict>
 OutlineModel::OutlineModel(NonnullRefPtr<PDF::OutlineDict> const& outline)
     : m_outline(outline)
 {
-    m_closed_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png").release_value_but_fixme_should_propagate_errors());
-    m_open_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png").release_value_but_fixme_should_propagate_errors());
+    m_closed_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_open_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 void OutlineModel::set_index_open_state(const GUI::ModelIndex& index, bool is_open)

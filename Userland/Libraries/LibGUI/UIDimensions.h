@@ -298,17 +298,17 @@ inline auto clamp<GUI::UIDimension>(GUI::UIDimension const& input, GUI::UIDimens
         [this] {                                                               \
             auto size = this->getter();                                        \
             JsonObject size_object;                                            \
-            size_object.set("width", size.width().as_json_value());            \
-            size_object.set("height", size.height().as_json_value());          \
+            size_object.set("width"sv, size.width().as_json_value());          \
+            size_object.set("height"sv, size.height().as_json_value());        \
             return size_object;                                                \
         },                                                                     \
         [this](auto& value) {                                                  \
             if (!value.is_object())                                            \
                 return false;                                                  \
             auto result_width = GUI::UIDimension::construct_from_json_value(   \
-                value.as_object().get("width"));                               \
+                value.as_object().get("width"sv));                             \
             auto result_height = GUI::UIDimension::construct_from_json_value(  \
-                value.as_object().get("height"));                              \
+                value.as_object().get("height"sv));                            \
             if (result_width.has_value() && result_height.has_value()) {       \
                 GUI::UISize size(result_width.value(), result_height.value()); \
                 setter(size);                                                  \

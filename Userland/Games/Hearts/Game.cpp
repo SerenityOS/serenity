@@ -146,9 +146,9 @@ void Game::show_score_card(bool game_over)
     score_dialog->resize({ 20 + score_card.width() + 15 + close_button.width(), 20 + score_card.height() });
 
     StringBuilder title_builder;
-    title_builder.append("Score Card");
+    title_builder.append("Score Card"sv);
     if (game_over)
-        title_builder.append(" - Game Over");
+        title_builder.append(" - Game Over"sv);
     score_dialog->set_title(title_builder.to_string());
 
     RefPtr<Core::Timer> close_timer;

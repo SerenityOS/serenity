@@ -329,7 +329,7 @@ StringView trim(StringView str, StringView characters, TrimMode mode)
     if (mode == TrimMode::Left || mode == TrimMode::Both) {
         for (size_t i = 0; i < str.length(); ++i) {
             if (substring_length == 0)
-                return "";
+                return ""sv;
             if (!characters.contains(str[i]))
                 break;
             ++substring_start;
@@ -340,7 +340,7 @@ StringView trim(StringView str, StringView characters, TrimMode mode)
     if (mode == TrimMode::Right || mode == TrimMode::Both) {
         for (size_t i = str.length() - 1; i > 0; --i) {
             if (substring_length == 0)
-                return "";
+                return ""sv;
             if (!characters.contains(str[i]))
                 break;
             --substring_length;
@@ -352,7 +352,7 @@ StringView trim(StringView str, StringView characters, TrimMode mode)
 
 StringView trim_whitespace(StringView str, TrimMode mode)
 {
-    return trim(str, " \n\t\v\f\r", mode);
+    return trim(str, " \n\t\v\f\r"sv, mode);
 }
 
 Optional<size_t> find(StringView haystack, char needle, size_t start)

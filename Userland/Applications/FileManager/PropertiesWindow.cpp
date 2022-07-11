@@ -40,7 +40,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
 
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png").release_value_but_fixme_should_propagate_errors());
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
 
@@ -194,12 +194,12 @@ bool PropertiesWindow::apply_changes()
         String new_file = make_full_path(new_name).characters();
 
         if (Core::File::exists(new_file)) {
-            GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(this, String::formatted("Could not rename file: {}!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -210,7 +210,7 @@ bool PropertiesWindow::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(this, String::formatted("Could not update permissions: {}!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 

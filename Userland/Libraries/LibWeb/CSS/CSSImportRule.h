@@ -40,7 +40,7 @@ public:
     NonnullRefPtr<CSSStyleSheet> style_sheet_for_bindings() { return *m_style_sheet; }
     void set_style_sheet(RefPtr<CSSStyleSheet> const& style_sheet) { m_style_sheet = style_sheet; }
 
-    virtual StringView class_name() const override { return "CSSImportRule"; };
+    virtual StringView class_name() const override { return "CSSImportRule"sv; };
     virtual Type type() const override { return Type::Import; };
 
 private:

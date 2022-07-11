@@ -51,7 +51,7 @@ int main(int argc, char** argv, char** env)
     else
         executable_path = Core::find_executable_in_path(arguments[0]);
     if (executable_path.is_empty()) {
-        reportln("Cannot find executable for '{}'.", arguments[0]);
+        reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv, char** env)
         return 1;
 
     StringBuilder builder;
-    builder.append("(UE) ");
+    builder.append("(UE) "sv);
     builder.append(LexicalPath::basename(arguments[0]));
     if (set_process_name(builder.string_view().characters_without_null_termination(), builder.string_view().length()) < 0) {
         perror("set_process_name");
@@ -106,7 +106,7 @@ int main(int argc, char** argv, char** env)
     }
     int rc = pthread_setname_np(pthread_self(), builder.to_string().characters());
     if (rc != 0) {
-        reportln("pthread_setname_np: {}", strerror(rc));
+        reportln("pthread_setname_np: {}"sv, strerror(rc));
         return 1;
     }
 

@@ -201,7 +201,7 @@ ErrorOr<void> Plan9FS::initialize()
     ensure_thread();
 
     Message version_message { *this, Message::Type::Tversion };
-    version_message << (u32)m_max_message_size << "9P2000.L";
+    version_message << (u32)m_max_message_size << "9P2000.L"sv;
 
     TRY(post_message_and_wait_for_a_reply(version_message));
 
@@ -218,8 +218,8 @@ ErrorOr<void> Plan9FS::initialize()
     Message attach_message { *this, Message::Type::Tattach };
     // FIXME: This needs a user name and an "export" name; but how do we get them?
     // Perhaps initialize() should accept a string of FS-specific options...
-    attach_message << root_fid << (u32)-1 << "sergey"
-                   << "/";
+    attach_message << root_fid << (u32)-1 << "sergey"sv
+                   << "/"sv;
     if (m_remote_protocol_version >= ProtocolVersion::v9P2000u)
         attach_message << (u32)-1;
 
@@ -653,7 +653,7 @@ void Plan9FS::ensure_thread()
 {
     SpinlockLocker lock(m_thread_lock);
     if (!m_thread_running.exchange(true, AK::MemoryOrder::memory_order_acq_rel)) {
-        auto process_name = KString::try_create("Plan9FS");
+        auto process_name = KString::try_create("Plan9FS"sv);
         if (process_name.is_error())
             TODO();
         (void)Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {

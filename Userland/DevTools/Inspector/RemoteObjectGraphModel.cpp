@@ -17,10 +17,10 @@ namespace Inspector {
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
     : m_process(process)
 {
-    m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
-    m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors());
-    m_layout_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/layout.png").release_value_but_fixme_should_propagate_errors());
-    m_timer_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/timer.png").release_value_but_fixme_should_propagate_errors());
+    m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_layout_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/layout.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_timer_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/timer.png"sv).release_value_but_fixme_should_propagate_errors());
 }
 
 GUI::ModelIndex RemoteObjectGraphModel::index(int row, int column, const GUI::ModelIndex& parent) const
@@ -82,7 +82,7 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, GUI::Mod
             return m_window_icon;
         if (remote_object->class_name == "Timer")
             return m_timer_icon;
-        if (remote_object->class_name.ends_with("Layout"))
+        if (remote_object->class_name.ends_with("Layout"sv))
             return m_layout_icon;
         return m_object_icon;
     }

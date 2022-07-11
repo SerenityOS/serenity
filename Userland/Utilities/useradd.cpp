@@ -25,7 +25,7 @@
 
 constexpr uid_t BASE_UID = 1000;
 constexpr gid_t USERS_GID = 100;
-constexpr char const* DEFAULT_SHELL = "/bin/sh";
+constexpr auto DEFAULT_SHELL = "/bin/sh"sv;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -139,7 +139,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         fill_with_random(random_data, sizeof(random_data));
 
         StringBuilder builder;
-        builder.append("$5$");
+        builder.append("$5$"sv);
         builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
 
         return builder.build();

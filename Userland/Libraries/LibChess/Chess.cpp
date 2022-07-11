@@ -88,7 +88,7 @@ String Square::to_algebraic() const
 Move::Move(StringView long_algebraic)
     : from(long_algebraic.substring_view(0, 2))
     , to(long_algebraic.substring_view(2, 2))
-    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""))
+    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""sv))
 {
 }
 
@@ -292,13 +292,13 @@ String Board::to_fen() const
 
     // 2. Active color
     VERIFY(m_turn != Color::None);
-    builder.append(m_turn == Color::White ? " w " : " b ");
+    builder.append(m_turn == Color::White ? " w "sv : " b "sv);
 
     // 3. Castling availability
-    builder.append(m_white_can_castle_kingside ? "K" : "");
-    builder.append(m_white_can_castle_queenside ? "Q" : "");
-    builder.append(m_black_can_castle_kingside ? "k" : "");
-    builder.append(m_black_can_castle_queenside ? "q" : "");
+    builder.append(m_white_can_castle_kingside ? "K"sv : ""sv);
+    builder.append(m_white_can_castle_queenside ? "Q"sv : ""sv);
+    builder.append(m_black_can_castle_kingside ? "k"sv : ""sv);
+    builder.append(m_black_can_castle_queenside ? "q"sv : ""sv);
     builder.append(" ");
 
     // 4. En passant target square

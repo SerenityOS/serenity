@@ -31,21 +31,21 @@ String CSSMediaRule::serialized() const
     StringBuilder builder;
 
     // 1. The string "@media", followed by a single SPACE (U+0020).
-    builder.append("@media ");
+    builder.append("@media "sv);
     // 2. The result of performing serialize a media query list on rule’s media query list.
     builder.append(condition_text());
     // 3. A single SPACE (U+0020), followed by the string "{", i.e., LEFT CURLY BRACKET (U+007B), followed by a newline.
-    builder.append(" {\n");
+    builder.append(" {\n"sv);
     // 4. The result of performing serialize a CSS rule on each rule in the rule’s cssRules list, separated by a newline and indented by two spaces.
     for (size_t i = 0; i < css_rules().length(); i++) {
         auto rule = css_rules().item(i);
         if (i != 0)
-            builder.append("\n");
-        builder.append("  ");
+            builder.append("\n"sv);
+        builder.append("  "sv);
         builder.append(rule->css_text());
     }
     // 5. A newline, followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D)
-    builder.append("\n}");
+    builder.append("\n}"sv);
 
     return builder.to_string();
 }

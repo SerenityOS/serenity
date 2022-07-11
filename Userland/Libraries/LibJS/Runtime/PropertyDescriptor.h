@@ -62,7 +62,7 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
             parts.append(String::formatted("[[Enumerable]]: {}", *property_descriptor.enumerable));
         if (property_descriptor.configurable.has_value())
             parts.append(String::formatted("[[Configurable]]: {}", *property_descriptor.configurable));
-        return Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", ", parts)));
+        return Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", "sv, parts)));
     }
 };
 

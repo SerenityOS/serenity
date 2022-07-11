@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     if (namespace_.is_one_of("Crypto", "CSS", "DOM", "DOMParsing", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebGL", "WebSockets", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
-        builder.append("::");
+        builder.append("::"sv);
         builder.append(interface.name);
         interface.fully_qualified_name = builder.to_string();
     } else {

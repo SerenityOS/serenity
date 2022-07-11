@@ -154,7 +154,7 @@ template<>
 struct Formatter<Audio::Sample> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Audio::Sample const& value)
     {
-        return Formatter<FormatString>::format(builder, "[{}, {}]", value.left, value.right);
+        return Formatter<FormatString>::format(builder, "[{}, {}]"sv, value.left, value.right);
     }
 };
 

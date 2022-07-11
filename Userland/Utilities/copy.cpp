@@ -24,7 +24,7 @@ struct Options {
 
 static Options parse_options(Main::Arguments arguments)
 {
-    char const* type = "text/plain";
+    auto type = "text/plain"sv;
     Vector<String> text;
     bool clear = false;
 

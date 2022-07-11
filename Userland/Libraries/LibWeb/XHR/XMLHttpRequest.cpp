@@ -161,7 +161,7 @@ String XMLHttpRequest::get_text_response() const
         if (mime_type.essence().is_one_of("text/xml"sv, "application/xml"sv))
             return true;
 
-        return mime_type.subtype().ends_with("+xml");
+        return mime_type.subtype().ends_with("+xml"sv);
     };
 
     // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
@@ -171,7 +171,7 @@ String XMLHttpRequest::get_text_response() const
 
     // 4. If charset is null, then set charset to UTF-8.
     if (!charset.has_value())
-        charset = "UTF-8";
+        charset = "UTF-8"sv;
 
     // 5. Return the result of running decode on xhr’s received bytes using fallback encoding charset.
     auto* decoder = TextCodec::decoder_for(charset.value());
@@ -300,7 +300,7 @@ Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& head
         // 3. Remove all HTTP tab or space from the start and end of value.
         // https://fetch.spec.whatwg.org/#http-tab-or-space
         // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-        auto trimmed_value = value.to_string().trim("\t ", TrimMode::Both);
+        auto trimmed_value = value.to_string().trim("\t "sv, TrimMode::Both);
 
         // 4. Append value to values.
         values.append(move(trimmed_value));
@@ -374,7 +374,7 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
 static bool is_forbidden_header_name(String const& header_name)
 {
-    if (header_name.starts_with("Proxy-", CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-", CaseSensitivity::CaseInsensitive))
+    if (header_name.starts_with("Proxy-"sv, CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-"sv, CaseSensitivity::CaseInsensitive))
         return true;
 
     auto lowercase_header_name = header_name.to_lowercase();
@@ -699,9 +699,9 @@ String XMLHttpRequest::get_all_response_headers() const
 
     for (auto& key : keys) {
         builder.append(key);
-        builder.append(": ");
+        builder.append(": "sv);
         builder.append(m_response_headers.get(key).value());
-        builder.append("\r\n");
+        builder.append("\r\n"sv);
     }
     return builder.to_string();
 }

@@ -65,8 +65,8 @@ TEST_CASE(strings_insert_ordered)
     strings.append("def");
     strings.append("ghi");
 
-    strings.insert_before_matching("f-g", [](auto& entry) {
-        return "f-g" < entry;
+    strings.insert_before_matching("f-g"sv, [](auto& entry) {
+        return "f-g"sv < entry;
     });
 
     EXPECT_EQ(strings[0], "abc");

@@ -18,7 +18,7 @@ ToolPropertiesWidget::ToolPropertiesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    m_group_box = add<GUI::GroupBox>("Tool properties");
+    m_group_box = add<GUI::GroupBox>("Tool properties"sv);
     auto& layout = m_group_box->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 8 });
     m_tool_widget_stack = m_group_box->add<GUI::StackWidget>();

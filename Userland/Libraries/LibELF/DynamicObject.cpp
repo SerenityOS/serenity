@@ -41,7 +41,7 @@ void DynamicObject::dump() const
 {
     if constexpr (DYNAMIC_LOAD_DEBUG) {
         StringBuilder builder;
-        builder.append("\nd_tag      tag_name         value\n");
+        builder.append("\nd_tag      tag_name         value\n"sv);
         size_t num_dynamic_sections = 0;
 
         for_each_dynamic_entry([&](DynamicObject::DynamicEntry const& entry) {

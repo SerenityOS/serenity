@@ -109,7 +109,7 @@ public:
     {
         StringBuilder builder;
         builder.append(this->cipher().class_name());
-        builder.append("_CTR");
+        builder.append("_CTR"sv);
         return builder.build();
     }
 #endif

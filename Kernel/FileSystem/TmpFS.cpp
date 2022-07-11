@@ -77,9 +77,9 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     if (!is_directory())
         return ENOTDIR;
 
-    TRY(callback({ ".", identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), 0 }));
     if (auto parent = m_parent.strong_ref())
-        TRY(callback({ "..", parent->identifier(), 0 }));
+        TRY(callback({ ".."sv, parent->identifier(), 0 }));
 
     for (auto& child : m_children) {
         TRY(callback({ child.name->view(), child.inode->identifier(), 0 }));

@@ -36,11 +36,11 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     set_original_rect(m_image->rect());
     set_scale_bounds(0.1f, 100.0f);
 
-    m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint", "PixelGrid", "Threshold", 15);
-    m_show_pixel_grid = Config::read_bool("PixelPaint", "PixelGrid", "Show", true);
+    m_pixel_grid_threshold = (float)Config::read_i32("PixelPaint"sv, "PixelGrid"sv, "Threshold"sv, 15);
+    m_show_pixel_grid = Config::read_bool("PixelPaint"sv, "PixelGrid"sv, "Show"sv, true);
 
-    m_show_rulers = Config::read_bool("PixelPaint", "Rulers", "Show", true);
-    m_show_guides = Config::read_bool("PixelPaint", "Guides", "Show", true);
+    m_show_rulers = Config::read_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, true);
+    m_show_guides = Config::read_bool("PixelPaint"sv, "Guides"sv, "Show"sv, true);
 }
 
 ImageEditor::~ImageEditor()
@@ -618,14 +618,14 @@ Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
     StringBuilder builder;
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     m_image->serialize_as_json(json);
-    auto json_guides = MUST(json.add_array("guides"));
+    auto json_guides = MUST(json.add_array("guides"sv));
     for (auto const& guide : m_guides) {
         auto json_guide = MUST(json_guides.add_object());
         MUST(json_guide.add("offset"sv, (double)guide.offset()));
         if (guide.orientation() == Guide::Orientation::Vertical)
-            MUST(json_guide.add("orientation", "vertical"));
+            MUST(json_guide.add("orientation"sv, "vertical"));
         else if (guide.orientation() == Guide::Orientation::Horizontal)
-            MUST(json_guide.add("orientation", "horizontal"));
+            MUST(json_guide.add("orientation"sv, "horizontal"));
         MUST(json_guide.finish());
     }
     MUST(json_guides.finish());

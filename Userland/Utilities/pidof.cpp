@@ -25,7 +25,7 @@ static ErrorOr<int> pid_of(String const& process_name, bool single_shot, bool om
     for (auto& it : all_processes.value().processes) {
         if (it.name == process_name) {
             if (!omit_pid || it.pid != pid) {
-                out(displayed_at_least_one ? " {}" : "{}", it.pid);
+                out(displayed_at_least_one ? " {}"sv : "{}"sv, it.pid);
                 displayed_at_least_one = true;
 
                 if (single_shot)

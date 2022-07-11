@@ -12,7 +12,7 @@ TEST_CASE(test_utf8_decode)
 {
     auto decoder = TextCodec::UTF8Decoder();
     // Bytes for U+1F600 GRINNING FACE
-    auto test_string = "\xf0\x9f\x98\x80";
+    auto test_string = "\xf0\x9f\x98\x80"sv;
 
     Vector<u32> processed_code_points;
     decoder.process(test_string, [&](u32 code_point) {

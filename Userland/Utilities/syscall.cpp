@@ -123,7 +123,7 @@ static FlatPtr as_buf(Vector<FlatPtr> params_vec)
 
     if constexpr (SYSCALL_1_DEBUG) {
         StringBuilder builder;
-        builder.append("Prepared [");
+        builder.append("Prepared ["sv);
         for (size_t i = 0; i < params_vec.size(); ++i) {
             builder.appendff(" {:p}", params_vec[i]);
         }

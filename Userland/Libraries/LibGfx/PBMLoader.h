@@ -16,7 +16,7 @@ namespace Gfx {
 struct PBM {
     static constexpr auto ascii_magic_number = '1';
     static constexpr auto binary_magic_number = '4';
-    static constexpr StringView image_type = "PBM";
+    static constexpr StringView image_type = "PBM"sv;
 };
 
 using PBMLoadingContext = PortableImageMapLoadingContext<PBM>;

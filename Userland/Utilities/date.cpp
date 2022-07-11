@@ -62,13 +62,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (print_unix_date) {
         outln("{}", date.timestamp());
     } else if (print_iso_8601) {
-        outln("{}", date.to_string("%Y-%m-%dT%H:%M:%S%:z"));
+        outln("{}", date.to_string("%Y-%m-%dT%H:%M:%S%:z"sv));
     } else if (print_rfc_5322) {
-        outln("{}", date.to_string("%a, %d %b %Y %H:%M:%S %z"));
+        outln("{}", date.to_string("%a, %d %b %Y %H:%M:%S %z"sv));
     } else if (print_rfc_3339) {
-        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S%:z"));
+        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S%:z"sv));
     } else {
-        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S %Z"));
+        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S %Z"sv));
     }
     return 0;
 }

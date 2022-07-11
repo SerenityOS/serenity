@@ -76,7 +76,7 @@ void ImageLoader::resource_did_load()
     }
     m_redirects_count = 0;
 
-    if (!resource()->mime_type().starts_with("image/")) {
+    if (!resource()->mime_type().starts_with("image/"sv)) {
         m_loading_state = LoadingState::Failed;
         if (on_fail)
             on_fail();

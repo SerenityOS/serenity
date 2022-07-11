@@ -85,7 +85,7 @@ TEST_CASE(should_string_format)
 
 TEST_CASE(should_make_mac_address_from_string_numbers)
 {
-    auto const sut = MACAddress::from_string("01:02:03:04:05:06");
+    auto const sut = MACAddress::from_string("01:02:03:04:05:06"sv);
 
     EXPECT(sut.has_value());
     EXPECT_EQ(1, sut.value()[0]);
@@ -98,7 +98,7 @@ TEST_CASE(should_make_mac_address_from_string_numbers)
 
 TEST_CASE(should_make_mac_address_from_string_letters)
 {
-    auto const sut = MACAddress::from_string("de:ad:be:ee:ee:ef");
+    auto const sut = MACAddress::from_string("de:ad:be:ee:ee:ef"sv);
 
     EXPECT(sut.has_value());
     EXPECT_EQ(u8 { 0xDE }, sut.value()[0]);
@@ -111,14 +111,14 @@ TEST_CASE(should_make_mac_address_from_string_letters)
 
 TEST_CASE(should_make_empty_optional_from_bad_string)
 {
-    auto const sut = MACAddress::from_string("bad string");
+    auto const sut = MACAddress::from_string("bad string"sv);
 
     EXPECT(!sut.has_value());
 }
 
 TEST_CASE(should_make_empty_optional_from_out_of_range_values)
 {
-    auto const sut = MACAddress::from_string("de:ad:be:ee:ee:fz");
+    auto const sut = MACAddress::from_string("de:ad:be:ee:ee:fz"sv);
 
     EXPECT(!sut.has_value());
 }

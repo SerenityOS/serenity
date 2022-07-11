@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(sample_count, "How many samples to load at maximum", "sample-count", 's', "samples");
     args_parser.parse(args);
 
-    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"));
+    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio recvfd rpath"));
 

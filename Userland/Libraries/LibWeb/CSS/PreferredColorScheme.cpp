@@ -10,9 +10,9 @@ namespace Web::CSS {
 
 PreferredColorScheme preferred_color_scheme_from_string(String const& value)
 {
-    if (value.equals_ignoring_case("light"))
+    if (value.equals_ignoring_case("light"sv))
         return PreferredColorScheme::Light;
-    if (value.equals_ignoring_case("dark"))
+    if (value.equals_ignoring_case("dark"sv))
         return PreferredColorScheme::Dark;
     return PreferredColorScheme::Auto;
 }

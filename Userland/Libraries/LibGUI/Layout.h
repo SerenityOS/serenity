@@ -21,12 +21,12 @@ extern Core::ObjectClassRegistration registration_Layout;
 }
 }
 
-#define REGISTER_LAYOUT(namespace_, class_name)                                                                                                   \
-    namespace Core {                                                                                                                              \
-    namespace Registration {                                                                                                                      \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                      \
-        #namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Layout); \
-    }                                                                                                                                             \
+#define REGISTER_LAYOUT(namespace_, class_name)                                                                                                       \
+    namespace Core {                                                                                                                                  \
+    namespace Registration {                                                                                                                          \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                          \
+        #namespace_ "::" #class_name##sv, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Layout); \
+    }                                                                                                                                                 \
     }
 
 namespace GUI {

@@ -225,7 +225,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time->move_by({ window->width() - time->width(), 0 });
     cube->set_stat_label(time);
 
-    auto app_icon = GUI::Icon::default_icon("app-cube");
+    auto app_icon = GUI::Icon::default_icon("app-cube"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto file_menu = TRY(window->try_add_menu("&File"));

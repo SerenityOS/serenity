@@ -682,7 +682,7 @@ bool Parser::match_invalid_escaped_keyword() const
     return token_value != "let"sv;
 }
 
-static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
+static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements"sv, "interface"sv, "let"sv, "package"sv, "private"sv, "protected"sv, "public"sv, "static"sv, "yield"sv };
 
 static bool is_strict_reserved_word(StringView str)
 {
@@ -755,7 +755,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         TemporaryChange in_async_context(m_state.await_expression_is_valid, is_async || m_state.await_expression_is_valid);
 
         parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction | (is_async ? FunctionNodeParseOptions::IsAsyncFunction : 0));
-        if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"))
+        if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"sv))
             return nullptr;
         if (!match(TokenType::ParenClose))
             return nullptr;
@@ -1199,20 +1199,20 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 switch (method_kind) {
                 case ClassMethod::Kind::Method:
                     if (is_async) {
-                        name = "async";
+                        name = "async"sv;
                         is_async = false;
                     } else {
                         VERIFY(is_static);
-                        name = "static";
+                        name = "static"sv;
                         is_static = false;
                     }
                     break;
                 case ClassMethod::Kind::Getter:
-                    name = "get";
+                    name = "get"sv;
                     method_kind = ClassMethod::Kind::Method;
                     break;
                 case ClassMethod::Kind::Setter:
-                    name = "set";
+                    name = "set"sv;
                     method_kind = ClassMethod::Kind::Method;
                     break;
                 }

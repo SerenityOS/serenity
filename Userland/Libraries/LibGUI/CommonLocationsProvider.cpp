@@ -61,8 +61,8 @@ void CommonLocationsProvider::load_from_json(String const& json_path)
         if (!entry_value.is_object())
             continue;
         auto entry = entry_value.as_object();
-        auto name = entry.get("name").to_string();
-        auto path = entry.get("path").to_string();
+        auto name = entry.get("name"sv).to_string();
+        auto path = entry.get("path"sv).to_string();
         s_common_locations.append({ name, path });
     }
 

@@ -40,13 +40,13 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
     VERIFY(m_io_group.bus_master_base().has_value());
     // Let's try to set up DMA transfers.
     {
-        auto region_or_error = MM.allocate_dma_buffer_page("IDE PRDT", Memory::Region::Access::ReadWrite, m_prdt_page);
+        auto region_or_error = MM.allocate_dma_buffer_page("IDE PRDT"sv, Memory::Region::Access::ReadWrite, m_prdt_page);
         if (region_or_error.is_error())
             TODO();
         m_prdt_region = region_or_error.release_value();
     }
     {
-        auto region_or_error = MM.allocate_dma_buffer_page("IDE DMA region", Memory::Region::Access::ReadWrite, m_dma_buffer_page);
+        auto region_or_error = MM.allocate_dma_buffer_page("IDE DMA region"sv, Memory::Region::Access::ReadWrite, m_dma_buffer_page);
         if (region_or_error.is_error())
             TODO();
         m_dma_buffer_region = region_or_error.release_value();

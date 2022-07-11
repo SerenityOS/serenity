@@ -24,7 +24,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
 {
     set_title("Font picker");
     resize(430, 280);
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors());
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& widget = set_main_widget<GUI::Widget>();
     if (!widget.load_from_gml(font_picker_dialog_gml))

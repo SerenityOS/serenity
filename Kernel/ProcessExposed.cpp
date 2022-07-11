@@ -241,8 +241,8 @@ ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(FileSystemID fsid, F
     auto parent_directory = m_parent_directory.strong_ref();
     if (parent_directory.is_null())
         return Error::from_errno(EINVAL);
-    TRY(callback({ ".", { fsid, component_index() }, DT_DIR }));
-    TRY(callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR }));
+    TRY(callback({ "."sv, { fsid, component_index() }, DT_DIR }));
+    TRY(callback({ ".."sv, { fsid, parent_directory->component_index() }, DT_DIR }));
 
     for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

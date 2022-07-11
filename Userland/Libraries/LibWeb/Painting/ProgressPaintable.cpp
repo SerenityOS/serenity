@@ -31,7 +31,7 @@ void ProgressPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         // FIXME: This does not support floating point value() and max()
-        Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), 0, layout_box().dom_node().max(), layout_box().dom_node().value(), "");
+        Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), 0, layout_box().dom_node().max(), layout_box().dom_node().value(), ""sv);
     }
 }
 

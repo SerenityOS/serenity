@@ -46,24 +46,24 @@ private:
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(NetworkingManagement::the().try_for_each([&array](auto& adapter) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
-            TRY(obj.add("name", adapter.name()));
-            TRY(obj.add("class_name", adapter.class_name()));
+            TRY(obj.add("name"sv, adapter.name()));
+            TRY(obj.add("class_name"sv, adapter.class_name()));
             auto mac_address = TRY(adapter.mac_address().to_string());
-            TRY(obj.add("mac_address", mac_address->view()));
+            TRY(obj.add("mac_address"sv, mac_address->view()));
             if (!adapter.ipv4_address().is_zero()) {
                 auto ipv4_address = TRY(adapter.ipv4_address().to_string());
-                TRY(obj.add("ipv4_address", ipv4_address->view()));
+                TRY(obj.add("ipv4_address"sv, ipv4_address->view()));
                 auto ipv4_netmask = TRY(adapter.ipv4_netmask().to_string());
-                TRY(obj.add("ipv4_netmask", ipv4_netmask->view()));
+                TRY(obj.add("ipv4_netmask"sv, ipv4_netmask->view()));
             }
-            TRY(obj.add("packets_in", adapter.packets_in()));
-            TRY(obj.add("bytes_in", adapter.bytes_in()));
-            TRY(obj.add("packets_out", adapter.packets_out()));
-            TRY(obj.add("bytes_out", adapter.bytes_out()));
-            TRY(obj.add("link_up", adapter.link_up()));
-            TRY(obj.add("link_speed", adapter.link_speed()));
-            TRY(obj.add("link_full_duplex", adapter.link_full_duplex()));
-            TRY(obj.add("mtu", adapter.mtu()));
+            TRY(obj.add("packets_in"sv, adapter.packets_in()));
+            TRY(obj.add("bytes_in"sv, adapter.bytes_in()));
+            TRY(obj.add("packets_out"sv, adapter.packets_out()));
+            TRY(obj.add("bytes_out"sv, adapter.bytes_out()));
+            TRY(obj.add("link_up"sv, adapter.link_up()));
+            TRY(obj.add("link_speed"sv, adapter.link_speed()));
+            TRY(obj.add("link_full_duplex"sv, adapter.link_full_duplex()));
+            TRY(obj.add("mtu"sv, adapter.mtu()));
             TRY(obj.finish());
             return {};
         }));
@@ -85,9 +85,9 @@ private:
             for (auto& it : table) {
                 auto obj = TRY(array.add_object());
                 auto mac_address = TRY(it.value.to_string());
-                TRY(obj.add("mac_address", mac_address->view()));
+                TRY(obj.add("mac_address"sv, mac_address->view()));
                 auto ip_address = TRY(it.key.to_string());
-                TRY(obj.add("ip_address", ip_address->view()));
+                TRY(obj.add("ip_address"sv, ip_address->view()));
                 TRY(obj.finish());
             }
             return {};
@@ -110,13 +110,13 @@ private:
             for (auto& it : table) {
                 auto obj = TRY(array.add_object());
                 auto destination = TRY(it.destination.to_string());
-                TRY(obj.add("destination", destination->view()));
+                TRY(obj.add("destination"sv, destination->view()));
                 auto gateway = TRY(it.gateway.to_string());
-                TRY(obj.add("gateway", gateway->view()));
+                TRY(obj.add("gateway"sv, gateway->view()));
                 auto netmask = TRY(it.netmask.to_string());
-                TRY(obj.add("genmask", netmask->view()));
-                TRY(obj.add("flags", it.flags));
-                TRY(obj.add("interface", it.adapter->name()));
+                TRY(obj.add("genmask"sv, netmask->view()));
+                TRY(obj.add("flags"sv, it.flags));
+                TRY(obj.add("interface"sv, it.adapter->name()));
                 TRY(obj.finish());
             }
             return {};
@@ -138,22 +138,22 @@ private:
         TRY(TCPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
             auto local_address = TRY(socket.local_address().to_string());
-            TRY(obj.add("local_address", local_address->view()));
-            TRY(obj.add("local_port", socket.local_port()));
+            TRY(obj.add("local_address"sv, local_address->view()));
+            TRY(obj.add("local_port"sv, socket.local_port()));
             auto peer_address = TRY(socket.peer_address().to_string());
-            TRY(obj.add("peer_address", peer_address->view()));
-            TRY(obj.add("peer_port", socket.peer_port()));
-            TRY(obj.add("state", TCPSocket::to_string(socket.state())));
-            TRY(obj.add("ack_number", socket.ack_number()));
-            TRY(obj.add("sequence_number", socket.sequence_number()));
-            TRY(obj.add("packets_in", socket.packets_in()));
-            TRY(obj.add("bytes_in", socket.bytes_in()));
-            TRY(obj.add("packets_out", socket.packets_out()));
-            TRY(obj.add("bytes_out", socket.bytes_out()));
+            TRY(obj.add("peer_address"sv, peer_address->view()));
+            TRY(obj.add("peer_port"sv, socket.peer_port()));
+            TRY(obj.add("state"sv, TCPSocket::to_string(socket.state())));
+            TRY(obj.add("ack_number"sv, socket.ack_number()));
+            TRY(obj.add("sequence_number"sv, socket.sequence_number()));
+            TRY(obj.add("packets_in"sv, socket.packets_in()));
+            TRY(obj.add("bytes_in"sv, socket.bytes_in()));
+            TRY(obj.add("packets_out"sv, socket.packets_out()));
+            TRY(obj.add("bytes_out"sv, socket.bytes_out()));
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                TRY(obj.add("origin_pid", socket.origin_pid().value()));
-                TRY(obj.add("origin_uid", socket.origin_uid().value()));
-                TRY(obj.add("origin_gid", socket.origin_gid().value()));
+                TRY(obj.add("origin_pid"sv, socket.origin_pid().value()));
+                TRY(obj.add("origin_uid"sv, socket.origin_uid().value()));
+                TRY(obj.add("origin_gid"sv, socket.origin_gid().value()));
             }
             TRY(obj.finish());
             return {};
@@ -174,13 +174,13 @@ private:
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(LocalSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
-            TRY(obj.add("path", socket.socket_path()));
-            TRY(obj.add("origin_pid", socket.origin_pid().value()));
-            TRY(obj.add("origin_uid", socket.origin_uid().value()));
-            TRY(obj.add("origin_gid", socket.origin_gid().value()));
-            TRY(obj.add("acceptor_pid", socket.acceptor_pid().value()));
-            TRY(obj.add("acceptor_uid", socket.acceptor_uid().value()));
-            TRY(obj.add("acceptor_gid", socket.acceptor_gid().value()));
+            TRY(obj.add("path"sv, socket.socket_path()));
+            TRY(obj.add("origin_pid"sv, socket.origin_pid().value()));
+            TRY(obj.add("origin_uid"sv, socket.origin_uid().value()));
+            TRY(obj.add("origin_gid"sv, socket.origin_gid().value()));
+            TRY(obj.add("acceptor_pid"sv, socket.acceptor_pid().value()));
+            TRY(obj.add("acceptor_uid"sv, socket.acceptor_uid().value()));
+            TRY(obj.add("acceptor_gid"sv, socket.acceptor_gid().value()));
             TRY(obj.finish());
             return {};
         }));
@@ -201,15 +201,15 @@ private:
         TRY(UDPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
             auto local_address = TRY(socket.local_address().to_string());
-            TRY(obj.add("local_address", local_address->view()));
-            TRY(obj.add("local_port", socket.local_port()));
+            TRY(obj.add("local_address"sv, local_address->view()));
+            TRY(obj.add("local_port"sv, socket.local_port()));
             auto peer_address = TRY(socket.peer_address().to_string());
-            TRY(obj.add("peer_address", peer_address->view()));
-            TRY(obj.add("peer_port", socket.peer_port()));
+            TRY(obj.add("peer_address"sv, peer_address->view()));
+            TRY(obj.add("peer_port"sv, socket.peer_port()));
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                TRY(obj.add("origin_pid", socket.origin_pid().value()));
-                TRY(obj.add("origin_uid", socket.origin_uid().value()));
-                TRY(obj.add("origin_gid", socket.origin_gid().value()));
+                TRY(obj.add("origin_pid"sv, socket.origin_pid().value()));
+                TRY(obj.add("origin_uid"sv, socket.origin_uid().value()));
+                TRY(obj.add("origin_gid"sv, socket.origin_gid().value()));
             }
             TRY(obj.finish());
             return {};
@@ -402,22 +402,22 @@ private:
         TRY(VirtualFileSystem::the().for_each_mount([&array](auto& mount) -> ErrorOr<void> {
             auto& fs = mount.guest_fs();
             auto fs_object = TRY(array.add_object());
-            TRY(fs_object.add("class_name", fs.class_name()));
-            TRY(fs_object.add("total_block_count", fs.total_block_count()));
-            TRY(fs_object.add("free_block_count", fs.free_block_count()));
-            TRY(fs_object.add("total_inode_count", fs.total_inode_count()));
-            TRY(fs_object.add("free_inode_count", fs.free_inode_count()));
+            TRY(fs_object.add("class_name"sv, fs.class_name()));
+            TRY(fs_object.add("total_block_count"sv, fs.total_block_count()));
+            TRY(fs_object.add("free_block_count"sv, fs.free_block_count()));
+            TRY(fs_object.add("total_inode_count"sv, fs.total_inode_count()));
+            TRY(fs_object.add("free_inode_count"sv, fs.free_inode_count()));
             auto mount_point = TRY(mount.absolute_path());
-            TRY(fs_object.add("mount_point", mount_point->view()));
-            TRY(fs_object.add("block_size", static_cast<u64>(fs.block_size())));
-            TRY(fs_object.add("readonly", fs.is_readonly()));
-            TRY(fs_object.add("mount_flags", mount.flags()));
+            TRY(fs_object.add("mount_point"sv, mount_point->view()));
+            TRY(fs_object.add("block_size"sv, static_cast<u64>(fs.block_size())));
+            TRY(fs_object.add("readonly"sv, fs.is_readonly()));
+            TRY(fs_object.add("mount_flags"sv, mount.flags()));
 
             if (fs.is_file_backed()) {
                 auto pseudo_path = TRY(static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path());
-                TRY(fs_object.add("source", pseudo_path->view()));
+                TRY(fs_object.add("source"sv, pseudo_path->view()));
             } else {
-                TRY(fs_object.add("source", "none"));
+                TRY(fs_object.add("source"sv, "none"));
             }
 
             TRY(fs_object.finish());
@@ -444,16 +444,16 @@ private:
         auto system_memory = MM.get_system_memory_info();
 
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
-        TRY(json.add("kmalloc_allocated", stats.bytes_allocated));
-        TRY(json.add("kmalloc_available", stats.bytes_free));
-        TRY(json.add("user_physical_allocated", system_memory.user_physical_pages_used));
-        TRY(json.add("user_physical_available", system_memory.user_physical_pages - system_memory.user_physical_pages_used));
-        TRY(json.add("user_physical_committed", system_memory.user_physical_pages_committed));
-        TRY(json.add("user_physical_uncommitted", system_memory.user_physical_pages_uncommitted));
-        TRY(json.add("super_physical_allocated", system_memory.super_physical_pages_used));
-        TRY(json.add("super_physical_available", system_memory.super_physical_pages - system_memory.super_physical_pages_used));
-        TRY(json.add("kmalloc_call_count", stats.kmalloc_call_count));
-        TRY(json.add("kfree_call_count", stats.kfree_call_count));
+        TRY(json.add("kmalloc_allocated"sv, stats.bytes_allocated));
+        TRY(json.add("kmalloc_available"sv, stats.bytes_free));
+        TRY(json.add("user_physical_allocated"sv, system_memory.user_physical_pages_used));
+        TRY(json.add("user_physical_available"sv, system_memory.user_physical_pages - system_memory.user_physical_pages_used));
+        TRY(json.add("user_physical_committed"sv, system_memory.user_physical_pages_committed));
+        TRY(json.add("user_physical_uncommitted"sv, system_memory.user_physical_pages_uncommitted));
+        TRY(json.add("super_physical_allocated"sv, system_memory.super_physical_pages_used));
+        TRY(json.add("super_physical_available"sv, system_memory.super_physical_pages - system_memory.super_physical_pages_used));
+        TRY(json.add("kmalloc_call_count"sv, stats.kmalloc_call_count));
+        TRY(json.add("kfree_call_count"sv, stats.kfree_call_count));
         TRY(json.finish());
         return {};
     }
@@ -469,14 +469,14 @@ private:
     {
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
         auto total_time_scheduled = Scheduler::get_total_time_scheduled();
-        TRY(json.add("total_time", total_time_scheduled.total));
-        TRY(json.add("kernel_time", total_time_scheduled.total_kernel));
-        TRY(json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel));
+        TRY(json.add("total_time"sv, total_time_scheduled.total));
+        TRY(json.add("kernel_time"sv, total_time_scheduled.total_kernel));
+        TRY(json.add("user_time"sv, total_time_scheduled.total - total_time_scheduled.total_kernel));
         u64 idle_time = 0;
         Processor::for_each([&](Processor& processor) {
             idle_time += processor.time_spent_idle();
         });
-        TRY(json.add("idle_time", idle_time));
+        TRY(json.add("idle_time"sv, idle_time));
         TRY(json.finish());
         return {};
     }
@@ -501,78 +501,78 @@ private:
 
 #define __ENUMERATE_PLEDGE_PROMISE(promise)    \
     if (process.has_promised(Pledge::promise)) \
-        TRY(pledge_builder.try_append(#promise " "));
+        TRY(pledge_builder.try_append(#promise " "sv));
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
-                TRY(process_object.add("pledge", pledge_builder.string_view()));
+                TRY(process_object.add("pledge"sv, pledge_builder.string_view()));
 
                 switch (process.veil_state()) {
                 case VeilState::None:
-                    TRY(process_object.add("veil", "None"));
+                    TRY(process_object.add("veil"sv, "None"));
                     break;
                 case VeilState::Dropped:
-                    TRY(process_object.add("veil", "Dropped"));
+                    TRY(process_object.add("veil"sv, "Dropped"));
                     break;
                 case VeilState::Locked:
-                    TRY(process_object.add("veil", "Locked"));
+                    TRY(process_object.add("veil"sv, "Locked"));
                     break;
                 }
             } else {
-                TRY(process_object.add("pledge", ""sv));
-                TRY(process_object.add("veil", ""sv));
+                TRY(process_object.add("pledge"sv, ""sv));
+                TRY(process_object.add("veil"sv, ""sv));
             }
 
-            TRY(process_object.add("pid", process.pid().value()));
-            TRY(process_object.add("pgid", process.tty() ? process.tty()->pgid().value() : 0));
-            TRY(process_object.add("pgp", process.pgid().value()));
-            TRY(process_object.add("sid", process.sid().value()));
-            TRY(process_object.add("uid", process.uid().value()));
-            TRY(process_object.add("gid", process.gid().value()));
-            TRY(process_object.add("ppid", process.ppid().value()));
+            TRY(process_object.add("pid"sv, process.pid().value()));
+            TRY(process_object.add("pgid"sv, process.tty() ? process.tty()->pgid().value() : 0));
+            TRY(process_object.add("pgp"sv, process.pgid().value()));
+            TRY(process_object.add("sid"sv, process.sid().value()));
+            TRY(process_object.add("uid"sv, process.uid().value()));
+            TRY(process_object.add("gid"sv, process.gid().value()));
+            TRY(process_object.add("ppid"sv, process.ppid().value()));
             if (process.tty()) {
                 auto tty_pseudo_name = TRY(process.tty()->pseudo_name());
-                TRY(process_object.add("tty", tty_pseudo_name->view()));
+                TRY(process_object.add("tty"sv, tty_pseudo_name->view()));
             } else {
-                TRY(process_object.add("tty", ""));
+                TRY(process_object.add("tty"sv, ""));
             }
-            TRY(process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
-            TRY(process_object.add("name", process.name()));
-            TRY(process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
-            TRY(process_object.add("amount_virtual", process.address_space().amount_virtual()));
-            TRY(process_object.add("amount_resident", process.address_space().amount_resident()));
-            TRY(process_object.add("amount_dirty_private", process.address_space().amount_dirty_private()));
-            TRY(process_object.add("amount_clean_inode", TRY(process.address_space().amount_clean_inode())));
-            TRY(process_object.add("amount_shared", process.address_space().amount_shared()));
-            TRY(process_object.add("amount_purgeable_volatile", process.address_space().amount_purgeable_volatile()));
-            TRY(process_object.add("amount_purgeable_nonvolatile", process.address_space().amount_purgeable_nonvolatile()));
-            TRY(process_object.add("dumpable", process.is_dumpable()));
-            TRY(process_object.add("kernel", process.is_kernel_process()));
-            auto thread_array = TRY(process_object.add_array("threads"));
+            TRY(process_object.add("nfds"sv, process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
+            TRY(process_object.add("name"sv, process.name()));
+            TRY(process_object.add("executable"sv, process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
+            TRY(process_object.add("amount_virtual"sv, process.address_space().amount_virtual()));
+            TRY(process_object.add("amount_resident"sv, process.address_space().amount_resident()));
+            TRY(process_object.add("amount_dirty_private"sv, process.address_space().amount_dirty_private()));
+            TRY(process_object.add("amount_clean_inode"sv, TRY(process.address_space().amount_clean_inode())));
+            TRY(process_object.add("amount_shared"sv, process.address_space().amount_shared()));
+            TRY(process_object.add("amount_purgeable_volatile"sv, process.address_space().amount_purgeable_volatile()));
+            TRY(process_object.add("amount_purgeable_nonvolatile"sv, process.address_space().amount_purgeable_nonvolatile()));
+            TRY(process_object.add("dumpable"sv, process.is_dumpable()));
+            TRY(process_object.add("kernel"sv, process.is_kernel_process()));
+            auto thread_array = TRY(process_object.add_array("threads"sv));
             TRY(process.try_for_each_thread([&](const Thread& thread) -> ErrorOr<void> {
                 SpinlockLocker locker(thread.get_lock());
                 auto thread_object = TRY(thread_array.add_object());
 #if LOCK_DEBUG
-                TRY(thread_object.add("lock_count", thread.lock_count()));
+                TRY(thread_object.add("lock_count"sv, thread.lock_count()));
 #endif
-                TRY(thread_object.add("tid", thread.tid().value()));
-                TRY(thread_object.add("name", thread.name()));
-                TRY(thread_object.add("times_scheduled", thread.times_scheduled()));
-                TRY(thread_object.add("time_user", thread.time_in_user()));
-                TRY(thread_object.add("time_kernel", thread.time_in_kernel()));
-                TRY(thread_object.add("state", thread.state_string()));
-                TRY(thread_object.add("cpu", thread.cpu()));
-                TRY(thread_object.add("priority", thread.priority()));
-                TRY(thread_object.add("syscall_count", thread.syscall_count()));
-                TRY(thread_object.add("inode_faults", thread.inode_faults()));
-                TRY(thread_object.add("zero_faults", thread.zero_faults()));
-                TRY(thread_object.add("cow_faults", thread.cow_faults()));
-                TRY(thread_object.add("file_read_bytes", thread.file_read_bytes()));
-                TRY(thread_object.add("file_write_bytes", thread.file_write_bytes()));
-                TRY(thread_object.add("unix_socket_read_bytes", thread.unix_socket_read_bytes()));
-                TRY(thread_object.add("unix_socket_write_bytes", thread.unix_socket_write_bytes()));
-                TRY(thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes()));
-                TRY(thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes()));
+                TRY(thread_object.add("tid"sv, thread.tid().value()));
+                TRY(thread_object.add("name"sv, thread.name()));
+                TRY(thread_object.add("times_scheduled"sv, thread.times_scheduled()));
+                TRY(thread_object.add("time_user"sv, thread.time_in_user()));
+                TRY(thread_object.add("time_kernel"sv, thread.time_in_kernel()));
+                TRY(thread_object.add("state"sv, thread.state_string()));
+                TRY(thread_object.add("cpu"sv, thread.cpu()));
+                TRY(thread_object.add("priority"sv, thread.priority()));
+                TRY(thread_object.add("syscall_count"sv, thread.syscall_count()));
+                TRY(thread_object.add("inode_faults"sv, thread.inode_faults()));
+                TRY(thread_object.add("zero_faults"sv, thread.zero_faults()));
+                TRY(thread_object.add("cow_faults"sv, thread.cow_faults()));
+                TRY(thread_object.add("file_read_bytes"sv, thread.file_read_bytes()));
+                TRY(thread_object.add("file_write_bytes"sv, thread.file_write_bytes()));
+                TRY(thread_object.add("unix_socket_read_bytes"sv, thread.unix_socket_read_bytes()));
+                TRY(thread_object.add("unix_socket_write_bytes"sv, thread.unix_socket_write_bytes()));
+                TRY(thread_object.add("ipv4_socket_read_bytes"sv, thread.ipv4_socket_read_bytes()));
+                TRY(thread_object.add("ipv4_socket_write_bytes"sv, thread.ipv4_socket_write_bytes()));
 
                 TRY(thread_object.finish());
                 return {};
@@ -585,7 +585,7 @@ private:
         SpinlockLocker lock(g_scheduler_lock);
         {
             {
-                auto array = TRY(json.add_array("processes"));
+                auto array = TRY(json.add_array("processes"sv));
                 TRY(build_process(array, *Scheduler::colonel()));
                 TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
                     for (auto& process : processes)
@@ -596,8 +596,8 @@ private:
             }
 
             auto total_time_scheduled = Scheduler::get_total_time_scheduled();
-            TRY(json.add("total_time", total_time_scheduled.total));
-            TRY(json.add("total_time_kernel", total_time_scheduled.total_kernel));
+            TRY(json.add("total_time"sv, total_time_scheduled.total));
+            TRY(json.add("total_time_kernel"sv, total_time_scheduled.total_kernel));
         }
         TRY(json.finish());
         return {};
@@ -616,13 +616,13 @@ private:
             [&](Processor& proc) -> ErrorOr<void> {
                 auto& info = proc.info();
                 auto obj = TRY(array.add_object());
-                TRY(obj.add("processor", proc.id()));
-                TRY(obj.add("vendor_id", info.vendor_id_string()));
-                TRY(obj.add("family", info.display_family()));
+                TRY(obj.add("processor"sv, proc.id()));
+                TRY(obj.add("vendor_id"sv, info.vendor_id_string()));
+                TRY(obj.add("family"sv, info.display_family()));
                 if (!info.hypervisor_vendor_id_string().is_null())
-                    TRY(obj.add("hypervisor_vendor_id", info.hypervisor_vendor_id_string()));
+                    TRY(obj.add("hypervisor_vendor_id"sv, info.hypervisor_vendor_id_string()));
 
-                auto features_array = TRY(obj.add_array("features"));
+                auto features_array = TRY(obj.add_array("features"sv));
                 auto keep_empty = false;
 
                 ErrorOr<void> result; // FIXME: Make this nicer
@@ -635,29 +635,29 @@ private:
 
                 TRY(features_array.finish());
 
-                TRY(obj.add("model", info.display_model()));
-                TRY(obj.add("stepping", info.stepping()));
-                TRY(obj.add("type", info.type()));
-                TRY(obj.add("brand", info.brand_string()));
+                TRY(obj.add("model"sv, info.display_model()));
+                TRY(obj.add("stepping"sv, info.stepping()));
+                TRY(obj.add("type"sv, info.type()));
+                TRY(obj.add("brand"sv, info.brand_string()));
 
-                auto caches = TRY(obj.add_object("caches"));
+                auto caches = TRY(obj.add_object("caches"sv));
 
                 auto add_cache_info = [&](StringView name, ProcessorInfo::Cache const& cache) -> ErrorOr<void> {
                     auto cache_object = TRY(caches.add_object(name));
-                    TRY(cache_object.add("size", cache.size));
-                    TRY(cache_object.add("line_size", cache.line_size));
+                    TRY(cache_object.add("size"sv, cache.size));
+                    TRY(cache_object.add("line_size"sv, cache.line_size));
                     TRY(cache_object.finish());
                     return {};
                 };
 
                 if (info.l1_data_cache().has_value())
-                    TRY(add_cache_info("l1_data", *info.l1_data_cache()));
+                    TRY(add_cache_info("l1_data"sv, *info.l1_data_cache()));
                 if (info.l1_data_cache().has_value())
-                    TRY(add_cache_info("l1_instruction", *info.l1_instruction_cache()));
+                    TRY(add_cache_info("l1_instruction"sv, *info.l1_instruction_cache()));
                 if (info.l1_data_cache().has_value())
-                    TRY(add_cache_info("l2", *info.l2_cache()));
+                    TRY(add_cache_info("l2"sv, *info.l2_cache()));
                 if (info.l1_data_cache().has_value())
-                    TRY(add_cache_info("l3", *info.l3_cache()));
+                    TRY(add_cache_info("l3"sv, *info.l3_cache()));
 
                 TRY(caches.finish());
 
@@ -701,12 +701,12 @@ private:
                 return;
             result = ([&]() -> ErrorOr<void> {
                 auto obj = TRY(array.add_object());
-                TRY(obj.add("purpose", handler.purpose()));
-                TRY(obj.add("interrupt_line", handler.interrupt_number()));
-                TRY(obj.add("controller", handler.controller()));
-                TRY(obj.add("cpu_handler", 0)); // FIXME: Determine the responsible CPU for each interrupt handler.
-                TRY(obj.add("device_sharing", (unsigned)handler.sharing_devices_count()));
-                TRY(obj.add("call_count", (unsigned)handler.get_invoking_count()));
+                TRY(obj.add("purpose"sv, handler.purpose()));
+                TRY(obj.add("interrupt_line"sv, handler.interrupt_number()));
+                TRY(obj.add("controller"sv, handler.controller()));
+                TRY(obj.add("cpu_handler"sv, 0)); // FIXME: Determine the responsible CPU for each interrupt handler.
+                TRY(obj.add("device_sharing"sv, (unsigned)handler.sharing_devices_count()));
+                TRY(obj.add("call_count"sv, (unsigned)handler.get_invoking_count()));
                 TRY(obj.finish());
                 return {};
             })();
@@ -726,7 +726,7 @@ private:
     {
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
         TRY(HIDManagement::the().keymap_data().with([&](auto const& keymap_data) {
-            return json.add("keymap", keymap_data.character_map_name->view());
+            return json.add("keymap"sv, keymap_data.character_map_name->view());
         }));
         TRY(json.finish());
         return {};
@@ -749,17 +749,17 @@ private:
                 return;
             result = ([&]() -> ErrorOr<void> {
                 auto obj = TRY(array.add_object());
-                TRY(obj.add("domain", device_identifier.address().domain()));
-                TRY(obj.add("bus", device_identifier.address().bus()));
-                TRY(obj.add("device", device_identifier.address().device()));
-                TRY(obj.add("function", device_identifier.address().function()));
-                TRY(obj.add("vendor_id", device_identifier.hardware_id().vendor_id));
-                TRY(obj.add("device_id", device_identifier.hardware_id().device_id));
-                TRY(obj.add("revision_id", device_identifier.revision_id().value()));
-                TRY(obj.add("subclass", device_identifier.subclass_code().value()));
-                TRY(obj.add("class", device_identifier.class_code().value()));
-                TRY(obj.add("subsystem_id", device_identifier.subsystem_id().value()));
-                TRY(obj.add("subsystem_vendor_id", device_identifier.subsystem_vendor_id().value()));
+                TRY(obj.add("domain"sv, device_identifier.address().domain()));
+                TRY(obj.add("bus"sv, device_identifier.address().bus()));
+                TRY(obj.add("device"sv, device_identifier.address().device()));
+                TRY(obj.add("function"sv, device_identifier.address().function()));
+                TRY(obj.add("vendor_id"sv, device_identifier.hardware_id().vendor_id));
+                TRY(obj.add("device_id"sv, device_identifier.hardware_id().device_id));
+                TRY(obj.add("revision_id"sv, device_identifier.revision_id().value()));
+                TRY(obj.add("subclass"sv, device_identifier.subclass_code().value()));
+                TRY(obj.add("class"sv, device_identifier.class_code().value()));
+                TRY(obj.add("subsystem_id"sv, device_identifier.subsystem_id().value()));
+                TRY(obj.add("subsystem_vendor_id"sv, device_identifier.subsystem_vendor_id().value()));
                 TRY(obj.finish());
                 return {};
             })();
@@ -781,14 +781,14 @@ private:
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
         TRY(DeviceManagement::the().try_for_each([&array](auto& device) -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
-            TRY(obj.add("major", device.major().value()));
-            TRY(obj.add("minor", device.minor().value()));
-            TRY(obj.add("class_name", device.class_name()));
+            TRY(obj.add("major"sv, device.major().value()));
+            TRY(obj.add("minor"sv, device.minor().value()));
+            TRY(obj.add("class_name"sv, device.class_name()));
 
             if (device.is_block_device())
-                TRY(obj.add("type", "block"));
+                TRY(obj.add("type"sv, "block"));
             else if (device.is_character_device())
-                TRY(obj.add("type", "character"));
+                TRY(obj.add("type"sv, "character"));
             else
                 VERIFY_NOT_REACHED();
             TRY(obj.finish());
@@ -1048,8 +1048,8 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
 ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, 0 }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, 0 }, 0 }));
 
     for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

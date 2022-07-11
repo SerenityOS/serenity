@@ -269,9 +269,9 @@ void HeaderView::paint_horizontal(Painter& painter)
             StringBuilder builder;
             builder.append(model()->column_name(section));
             if (m_table_view.sort_order() == SortOrder::Ascending)
-                builder.append(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
+                builder.append(" \xE2\xAC\x86"sv); // UPWARDS BLACK ARROW
             else if (m_table_view.sort_order() == SortOrder::Descending)
-                builder.append(" \xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
+                builder.append(" \xE2\xAC\x87"sv); // DOWNWARDS BLACK ARROW
             text = builder.to_string();
         } else {
             text = model()->column_name(section);

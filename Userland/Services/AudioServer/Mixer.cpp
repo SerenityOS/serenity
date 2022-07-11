@@ -28,7 +28,7 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
               mix();
               return 0;
           },
-          "AudioServer[mixer]"))
+          "AudioServer[mixer]"sv))
     , m_config(move(config))
 {
     if (!m_device->open(Core::OpenMode::WriteOnly)) {

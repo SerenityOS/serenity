@@ -20,8 +20,8 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, 0 }, 0 }));
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, 0 }, 0 }));
 
     for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

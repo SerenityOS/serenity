@@ -297,7 +297,7 @@ struct ReadElement {
 template<>
 struct ReadElement<char*, ReadKind::Normal> {
     ReadElement(StringView scan_set = {}, bool invert = false)
-        : scan_set(scan_set.is_null() ? " \t\n\f\r" : scan_set)
+        : scan_set(scan_set.is_null() ? " \t\n\f\r"sv : scan_set)
         , invert(scan_set.is_null() ? true : invert)
         , was_null(scan_set.is_null())
     {

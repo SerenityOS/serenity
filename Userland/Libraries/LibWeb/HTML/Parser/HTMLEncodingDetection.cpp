@@ -42,7 +42,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     GenericLexer lexer(lowercase_string);
 
     for (;;) {
-        auto charset_index = lexer.remaining().find("charset");
+        auto charset_index = lexer.remaining().find("charset"sv);
         if (!charset_index.has_value())
             return {};
 

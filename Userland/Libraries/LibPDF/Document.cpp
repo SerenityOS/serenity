@@ -12,7 +12,7 @@ namespace PDF {
 
 String OutlineItem::to_string(int indent) const
 {
-    auto indent_str = String::repeated("  ", indent + 1);
+    auto indent_str = String::repeated("  "sv, indent + 1);
 
     StringBuilder child_builder;
     child_builder.append('[');
@@ -21,7 +21,7 @@ String OutlineItem::to_string(int indent) const
     child_builder.appendff("{}]", indent_str);
 
     StringBuilder builder;
-    builder.append("OutlineItem {{\n");
+    builder.append("OutlineItem {{\n"sv);
     builder.appendff("{}title={}\n", indent_str, title);
     builder.appendff("{}count={}\n", indent_str, count);
     builder.appendff("{}dest={}\n", indent_str, dest);
@@ -29,7 +29,7 @@ String OutlineItem::to_string(int indent) const
     builder.appendff("{}italic={}\n", indent_str, italic);
     builder.appendff("{}bold={}\n", indent_str, bold);
     builder.appendff("{}children={}\n", indent_str, child_builder.to_string());
-    builder.appendff("{}}}", String::repeated("  ", indent));
+    builder.appendff("{}}}", String::repeated("  "sv, indent));
 
     return builder.to_string();
 }
@@ -51,7 +51,7 @@ PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
         // Automatically attempt to unencrypt the document with the empty string. The
         // result is not important; it is the caller's responsibility to ensure the
         // document is unencrypted before calling initialize().
-        document->m_security_handler->try_provide_user_password("");
+        document->m_security_handler->try_provide_user_password(""sv);
     }
 
     return document;

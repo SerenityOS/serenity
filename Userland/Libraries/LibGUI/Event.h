@@ -559,17 +559,17 @@ inline StringView mouse_button_to_string(MouseButton key)
 {
     switch (key) {
     case MouseButton::None:
-        return "None";
+        return "None"sv;
     case MouseButton::Primary:
-        return "Primary";
+        return "Primary"sv;
     case MouseButton::Secondary:
-        return "Secondary";
+        return "Secondary"sv;
     case MouseButton::Middle:
-        return "Middle";
+        return "Middle"sv;
     case MouseButton::Backward:
-        return "Backward";
+        return "Backward"sv;
     case MouseButton::Forward:
-        return "Forward";
+        return "Forward"sv;
     default:
         VERIFY_NOT_REACHED();
     }

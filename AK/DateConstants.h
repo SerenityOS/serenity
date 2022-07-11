@@ -12,29 +12,29 @@
 namespace AK {
 
 static constexpr Array<StringView, 7> long_day_names = {
-    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    "Sunday"sv, "Monday"sv, "Tuesday"sv, "Wednesday"sv, "Thursday"sv, "Friday"sv, "Saturday"sv
 };
 
 static constexpr Array<StringView, 7> short_day_names = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    "Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv
 };
 
 static constexpr Array<StringView, 7> mini_day_names = {
-    "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
+    "Su"sv, "Mo"sv, "Tu"sv, "We"sv, "Th"sv, "Fr"sv, "Sa"sv
 };
 
 static constexpr Array<StringView, 7> micro_day_names = {
-    "S", "M", "T", "W", "T", "F", "S"
+    "S"sv, "M"sv, "T"sv, "W"sv, "T"sv, "F"sv, "S"sv
 };
 
 static constexpr Array<StringView, 12> long_month_names = {
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January"sv, "February"sv, "March"sv, "April"sv, "May"sv, "June"sv,
+    "July"sv, "August"sv, "September"sv, "October"sv, "November"sv, "December"sv
 };
 
 static constexpr Array<StringView, 12> short_month_names = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan"sv, "Feb"sv, "Mar"sv, "Apr"sv, "May"sv, "Jun"sv,
+    "Jul"sv, "Aug"sv, "Sep"sv, "Oct"sv, "Nov"sv, "Dec"sv
 };
 
 }

@@ -91,7 +91,7 @@ struct Configuration {
         enable_bracketed_paste = flags & Flags::BracketedPaste;
     }
 
-    static Configuration from_config(StringView libname = "line");
+    static Configuration from_config(StringView libname = "line"sv);
 
     RefreshBehavior refresh_behavior { RefreshBehavior::Lazy };
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };

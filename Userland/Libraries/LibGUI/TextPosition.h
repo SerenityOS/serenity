@@ -45,8 +45,8 @@ struct AK::Formatter<GUI::TextPosition> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, GUI::TextPosition const& value)
     {
         if (value.is_valid())
-            return Formatter<FormatString>::format(builder, "({},{})", value.line(), value.column());
+            return Formatter<FormatString>::format(builder, "({},{})"sv, value.line(), value.column());
 
-        return Formatter<FormatString>::format(builder, "GUI::TextPosition(Invalid)");
+        return builder.put_string("GUI::TextPosition(Invalid)"sv);
     }
 };

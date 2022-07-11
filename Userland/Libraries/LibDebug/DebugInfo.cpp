@@ -135,9 +135,10 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
     if (!file_path.starts_with("/"))
         file_path = String::formatted("/{}", file_path);
 
-    constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
+    constexpr auto SERENITY_LIBS_PREFIX = "/usr/src/serenity"sv;
     if (file.starts_with(SERENITY_LIBS_PREFIX)) {
-        file_path = file.substring(sizeof(SERENITY_LIBS_PREFIX), file.length() - sizeof(SERENITY_LIBS_PREFIX));
+        size_t file_prefix_offset = SERENITY_LIBS_PREFIX.length() + 1;
+        file_path = file.substring(file_prefix_offset, file.length() - file_prefix_offset);
         file_path = String::formatted("../{}", file_path);
     }
 

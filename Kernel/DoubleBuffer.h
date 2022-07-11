@@ -72,7 +72,7 @@ private:
     size_t m_read_buffer_index { 0 };
     size_t m_space_for_writing { 0 };
     bool m_empty { true };
-    mutable Mutex m_lock { "DoubleBuffer" };
+    mutable Mutex m_lock { "DoubleBuffer"sv };
 };
 
 }

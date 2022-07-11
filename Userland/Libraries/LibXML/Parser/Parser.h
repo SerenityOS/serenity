@@ -150,7 +150,7 @@ private:
             [this, position = m_lexer.tell(), location] {
                 m_lexer.retreat(m_lexer.tell() - position);
                 (void)location;
-                dbgln_if(XML_PARSER_DEBUG, "{:->{}}FAIL @ {} -- \x1b[31m{}\x1b[0m", " ", s_debug_indent_level * 2, location, m_lexer.remaining().substring_view(0, min(16, m_lexer.tell_remaining())).replace("\n", "\\n", ReplaceMode::All));
+                dbgln_if(XML_PARSER_DEBUG, "{:->{}}FAIL @ {} -- \x1b[31m{}\x1b[0m", " ", s_debug_indent_level * 2, location, m_lexer.remaining().substring_view(0, min(16, m_lexer.tell_remaining())).replace("\n"sv, "\\n"sv, ReplaceMode::All));
             }
         };
     }
@@ -181,7 +181,7 @@ private:
         auto error = ParseError { forward<Ts>(args)... };
         if (m_current_rule.accept) {
             auto rule_name = m_current_rule.rule.value_or("<?>");
-            if (rule_name.starts_with("parse_"))
+            if (rule_name.starts_with("parse_"sv))
                 rule_name = rule_name.substring_view(6);
             m_parse_errors.append({
                 error.offset,
@@ -218,6 +218,6 @@ template<>
 struct AK::Formatter<XML::ParseError> : public AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, XML::ParseError const& error)
     {
-        return Formatter<FormatString>::format(builder, "{} at offset {}", error.error, error.offset);
+        return Formatter<FormatString>::format(builder, "{} at offset {}"sv, error.error, error.offset);
     }
 };

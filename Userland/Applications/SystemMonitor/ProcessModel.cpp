@@ -38,7 +38,7 @@ ProcessModel::ProcessModel()
         auto cpuinfo_array = json.value().as_array();
         cpuinfo_array.for_each([&](auto& value) {
             auto& cpu_object = value.as_object();
-            auto cpu_id = cpu_object.get("processor").as_u32();
+            auto cpu_id = cpu_object.get("processor"sv).as_u32();
             m_cpus.append(make<CpuInfo>(cpu_id));
         });
     }
@@ -46,7 +46,7 @@ ProcessModel::ProcessModel()
     if (m_cpus.is_empty())
         m_cpus.append(make<CpuInfo>(0));
 
-    m_kernel_process_icon = GUI::Icon::default_icon("gear");
+    m_kernel_process_icon = GUI::Icon::default_icon("gear"sv);
 }
 
 int ProcessModel::row_count(GUI::ModelIndex const& index) const

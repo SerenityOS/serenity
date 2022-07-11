@@ -114,16 +114,16 @@ void MemoryStatsWidget::refresh()
     auto json_result = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
     auto const& json = json_result.as_object();
 
-    u32 kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
-    u32 kmalloc_available = json.get("kmalloc_available").to_u32();
-    u64 user_physical_allocated = json.get("user_physical_allocated").to_u64();
-    u64 user_physical_available = json.get("user_physical_available").to_u64();
-    u64 user_physical_committed = json.get("user_physical_committed").to_u64();
-    u64 user_physical_uncommitted = json.get("user_physical_uncommitted").to_u64();
-    u64 super_physical_alloc = json.get("super_physical_allocated").to_u64();
-    u64 super_physical_free = json.get("super_physical_available").to_u64();
-    u32 kmalloc_call_count = json.get("kmalloc_call_count").to_u32();
-    u32 kfree_call_count = json.get("kfree_call_count").to_u32();
+    u32 kmalloc_allocated = json.get("kmalloc_allocated"sv).to_u32();
+    u32 kmalloc_available = json.get("kmalloc_available"sv).to_u32();
+    u64 user_physical_allocated = json.get("user_physical_allocated"sv).to_u64();
+    u64 user_physical_available = json.get("user_physical_available"sv).to_u64();
+    u64 user_physical_committed = json.get("user_physical_committed"sv).to_u64();
+    u64 user_physical_uncommitted = json.get("user_physical_uncommitted"sv).to_u64();
+    u64 super_physical_alloc = json.get("super_physical_allocated"sv).to_u64();
+    u64 super_physical_free = json.get("super_physical_available"sv).to_u64();
+    u32 kmalloc_call_count = json.get("kmalloc_call_count"sv).to_u32();
+    u32 kfree_call_count = json.get("kfree_call_count"sv).to_u32();
 
     u64 kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
     u64 user_physical_pages_total = user_physical_allocated + user_physical_available;

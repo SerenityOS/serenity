@@ -60,7 +60,7 @@ ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GraphicsHeadModeSetti
         rc = graphics_connector_set_safe_head_mode_setting(m_framebuffer_fd);
         if (rc != 0) {
             dbgln("Failed to set backend safe mode setting: aborting");
-            return Error::from_syscall("graphics_connector_set_safe_head_mode_setting", rc);
+            return Error::from_syscall("graphics_connector_set_safe_head_mode_setting"sv, rc);
         }
         dbgln("Failed to set backend mode setting: falling back to safe resolution - success.");
     }
@@ -83,7 +83,7 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
     memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
     int rc = graphics_connector_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
     if (rc != 0) {
-        return Error::from_syscall("graphics_connector_get_head_mode_setting", rc);
+        return Error::from_syscall("graphics_connector_get_head_mode_setting"sv, rc);
     }
     m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
     m_framebuffer = (Gfx::ARGB32*)TRY(Core::System::mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0));
@@ -108,7 +108,7 @@ ErrorOr<GraphicsHeadModeSetting> HardwareScreenBackend::get_head_mode_setting()
     memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
     int rc = graphics_connector_get_head_mode_setting(m_framebuffer_fd, &mode_setting);
     if (rc != 0) {
-        return Error::from_syscall("graphics_connector_get_head_mode_setting", rc);
+        return Error::from_syscall("graphics_connector_get_head_mode_setting"sv, rc);
     }
     m_pitch = mode_setting.horizontal_stride;
     return mode_setting;
@@ -131,7 +131,7 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, S
     if (rc == -ENOTSUP)
         m_can_device_flush_buffers = false;
     else if (rc != 0)
-        return Error::from_syscall("fb_flush_buffers", rc);
+        return Error::from_syscall("fb_flush_buffers"sv, rc);
     return {};
 }
 
@@ -141,7 +141,7 @@ ErrorOr<void> HardwareScreenBackend::flush_framebuffer()
     if (rc == -ENOTSUP)
         m_can_device_flush_entire_framebuffer = false;
     else if (rc != 0)
-        return Error::from_syscall("fb_flush_head", rc);
+        return Error::from_syscall("fb_flush_head"sv, rc);
     return {};
 }
 }

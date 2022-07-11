@@ -73,7 +73,7 @@ void KernelRng::wait_for_entropy()
     SpinlockLocker lock(get_lock());
     if (!is_ready()) {
         dbgln("Entropy starvation...");
-        m_seed_queue.wait_forever("KernelRng");
+        m_seed_queue.wait_forever("KernelRng"sv);
     }
 }
 

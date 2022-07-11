@@ -41,7 +41,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::
 
         if (m_writers == 0) {
             locker.unlock();
-            m_write_open_queue.wait_forever("FIFO");
+            m_write_open_queue.wait_forever("FIFO"sv);
             locker.lock();
         }
     }
@@ -51,7 +51,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::
 
         if (m_readers == 0) {
             locker.unlock();
-            m_read_open_queue.wait_forever("FIFO");
+            m_read_open_queue.wait_forever("FIFO"sv);
             locker.lock();
         }
     }

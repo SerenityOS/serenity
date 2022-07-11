@@ -16,19 +16,19 @@ String Document::render_to_html() const
 {
     StringBuilder builder;
 
-    builder.append("<!DOCTYPE html>\n");
-    builder.append("<html>\n");
-    builder.append("<head>\n");
-    builder.append("<style>\n");
-    builder.append("code { white-space: pre; }\n");
-    builder.append("</style>\n");
-    builder.append("</head>\n");
-    builder.append("<body>\n");
+    builder.append("<!DOCTYPE html>\n"sv);
+    builder.append("<html>\n"sv);
+    builder.append("<head>\n"sv);
+    builder.append("<style>\n"sv);
+    builder.append("code { white-space: pre; }\n"sv);
+    builder.append("</style>\n"sv);
+    builder.append("</head>\n"sv);
+    builder.append("<body>\n"sv);
 
     builder.append(render_to_inline_html());
 
-    builder.append("</body>\n");
-    builder.append("</html>\n");
+    builder.append("</body>\n"sv);
+    builder.append("</html>\n"sv);
     return builder.build();
 }
 

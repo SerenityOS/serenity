@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } });
     args_parser.parse(arguments);
 
-    auto app_icon = GUI::Icon::default_icon("app-help");
+    auto app_icon = GUI::Icon::default_icon("app-help"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));

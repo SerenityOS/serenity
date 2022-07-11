@@ -173,7 +173,7 @@ String DateTime::to_string(StringView format) const
                 builder.append('\n');
                 break;
             case 'p':
-                builder.append(tm.tm_hour < 12 ? "AM" : "PM");
+                builder.append(tm.tm_hour < 12 ? "AM"sv : "PM"sv);
                 break;
             case 'r': {
                 int display_hour = tm.tm_hour % 12;
@@ -240,11 +240,11 @@ String DateTime::to_string(StringView format) const
                 break;
             case ':':
                 if (++i == format_len) {
-                    builder.append("%:");
+                    builder.append("%:"sv);
                     break;
                 }
                 if (format[i] != 'z') {
-                    builder.append("%:");
+                    builder.append("%:"sv);
                     builder.append(format[i]);
                     break;
                 }

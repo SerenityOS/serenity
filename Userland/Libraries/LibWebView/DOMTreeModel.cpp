@@ -18,9 +18,9 @@ DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
     : m_tree_view(tree_view)
     , m_dom_tree(move(dom_tree))
 {
-    m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png").release_value_but_fixme_should_propagate_errors());
-    m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
-    m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png").release_value_but_fixme_should_propagate_errors());
+    m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors());
 
     map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
@@ -116,8 +116,8 @@ static String with_whitespace_collapsed(StringView string)
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto node_name = node.get("name").as_string();
-    auto type = node.get("type").as_string_or("unknown");
+    auto node_name = node.get("name"sv).as_string();
+    auto type = node.get("type"sv).as_string_or("unknown"sv);
 
     if (role == GUI::ModelRole::ForegroundColor) {
         // FIXME: Allow models to return a foreground color *role*.
@@ -126,7 +126,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return m_tree_view.palette().syntax_comment();
         if (type == "pseudo-element"sv)
             return m_tree_view.palette().syntax_type();
-        if (!node.get("visible").to_bool(true))
+        if (!node.get("visible"sv).to_bool(true))
             return m_tree_view.palette().syntax_comment();
         return {};
     }
@@ -141,7 +141,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     }
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
-            return with_whitespace_collapsed(node.get("text").as_string());
+            return with_whitespace_collapsed(node.get("text"sv).as_string());
         if (type == "comment"sv)
             return String::formatted("<!--{}-->", node.get("data"sv).as_string());
         if (type != "element")
@@ -150,8 +150,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         StringBuilder builder;
         builder.append('<');
         builder.append(node_name.to_lowercase());
-        if (node.has("attributes")) {
-            auto attributes = node.get("attributes").as_object();
+        if (node.has("attributes"sv)) {
+            auto attributes = node.get("attributes"sv).as_object();
             attributes.for_each_member([&builder](auto& name, JsonValue const& value) {
                 builder.append(' ');
                 builder.append(name);
@@ -170,7 +170,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
     m_dom_node_to_parent_map.set(node, parent);
-    m_node_id_to_dom_node_map.set(node->get("id").to_i32(), node);
+    m_node_id_to_dom_node_map.set(node->get("id"sv).to_i32(), node);
 
     auto const* children = get_children(*node);
     if (!children)
@@ -191,10 +191,10 @@ GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id, Optional<Web::CSS::Sel
             auto node_children = get_children(*node);
             for (size_t i = 0; i < node_children->size(); i++) {
                 auto& child = node_children->at(i).as_object();
-                if (!child.has("pseudo-element"))
+                if (!child.has("pseudo-element"sv))
                     continue;
 
-                auto child_pseudo_element = child.get("pseudo-element");
+                auto child_pseudo_element = child.get("pseudo-element"sv);
                 if (!child_pseudo_element.is_i32())
                     continue;
 
@@ -214,7 +214,7 @@ GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id, Optional<Web::CSS::Sel
         }
     }
 
-    dbgln("Didn't find index for node {}, pseudo-element {}!", node_id, pseudo_element.has_value() ? Web::CSS::pseudo_element_name(pseudo_element.value()) : "NONE");
+    dbgln("Didn't find index for node {}, pseudo-element {}!", node_id, pseudo_element.has_value() ? Web::CSS::pseudo_element_name(pseudo_element.value()) : "NONE"sv);
     return {};
 }
 

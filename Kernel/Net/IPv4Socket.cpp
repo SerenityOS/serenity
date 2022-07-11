@@ -474,7 +474,7 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(OpenFileDescription cons
         return KString::try_create("socket"sv);
 
     StringBuilder builder;
-    TRY(builder.try_append("socket:"));
+    TRY(builder.try_append("socket:"sv));
 
     TRY(builder.try_appendff("{}:{}", m_local_address.to_string(), m_local_port));
     if (m_role == Role::Accepted || m_role == Role::Connected)
@@ -482,16 +482,16 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(OpenFileDescription cons
 
     switch (m_role) {
     case Role::Listener:
-        TRY(builder.try_append(" (listening)"));
+        TRY(builder.try_append(" (listening)"sv));
         break;
     case Role::Accepted:
-        TRY(builder.try_append(" (accepted)"));
+        TRY(builder.try_append(" (accepted)"sv));
         break;
     case Role::Connected:
-        TRY(builder.try_append(" (connected)"));
+        TRY(builder.try_append(" (connected)"sv));
         break;
     case Role::Connecting:
-        TRY(builder.try_append(" (connecting)"));
+        TRY(builder.try_append(" (connecting)"sv));
         break;
     default:
         VERIFY_NOT_REACHED();
