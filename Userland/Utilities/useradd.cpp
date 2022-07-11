@@ -35,10 +35,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int uid = 0;
     int gid = USERS_GID;
     bool create_home_dir = false;
-    char const* password = "";
-    char const* shell = DEFAULT_SHELL;
-    char const* gecos = "";
-    char const* username = nullptr;
+    String password = "";
+    String shell = DEFAULT_SHELL;
+    String gecos = "";
+    String username;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     // Let's run a quick sanity check on username
-    if (strpbrk(username, "\\/!@#$%^&*()~+=`:\n")) {
+    if (strpbrk(username.characters(), "\\/!@#$%^&*()~+=`:\n")) {
         warnln("invalid character in username, {}", username);
         return 1;
     }
@@ -145,19 +145,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return builder.build();
     };
 
-    char* hash = crypt(password, get_salt().characters());
+    char* hash = crypt(password.characters(), get_salt().characters());
 
     struct passwd p;
-    p.pw_name = const_cast<char*>(username);
+    p.pw_name = const_cast<char*>(username.characters());
     p.pw_passwd = const_cast<char*>("!");
     p.pw_dir = const_cast<char*>(home.characters());
     p.pw_uid = static_cast<uid_t>(uid);
     p.pw_gid = static_cast<gid_t>(gid);
-    p.pw_shell = const_cast<char*>(shell);
-    p.pw_gecos = const_cast<char*>(gecos);
+    p.pw_shell = const_cast<char*>(shell.characters());
+    p.pw_gecos = const_cast<char*>(gecos.characters());
 
     struct spwd s;
-    s.sp_namp = const_cast<char*>(username);
+    s.sp_namp = const_cast<char*>(username.characters());
     s.sp_pwdp = const_cast<char*>(hash);
     s.sp_lstchg = 18727;
     s.sp_min = 0;

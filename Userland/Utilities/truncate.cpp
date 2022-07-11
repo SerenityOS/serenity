@@ -22,9 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
-    char const* resize = nullptr;
-    char const* reference = nullptr;
-    char const* file = nullptr;
+    StringView resize;
+    StringView reference;
+    StringView file;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");
@@ -32,12 +32,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(file, "File path", "file");
     args_parser.parse(arguments);
 
-    if (!resize && !reference) {
+    if (resize.is_empty() && reference.is_empty()) {
         args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
-    if (resize && reference) {
+    if (!resize.is_empty() && !reference.is_empty()) {
         args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto op = OP_Set;
     off_t size = 0;
 
-    if (resize) {
+    if (!resize.is_empty()) {
         String str = resize;
 
         switch (str[0]) {
@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         size = size_opt.value();
     }
 
-    if (reference) {
+    if (!reference.is_empty()) {
         auto stat = TRY(Core::System::stat(reference));
         size = stat.st_size;
     }

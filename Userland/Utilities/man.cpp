@@ -59,9 +59,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    char const* section = nullptr;
-    char const* name = nullptr;
-    char const* pager = nullptr;
+    StringView section {};
+    StringView name {};
+    StringView pager {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
@@ -70,19 +70,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager");
     args_parser.parse(arguments);
 
-    auto make_path = [name](char const* section) {
+    auto make_path = [name](StringView section) {
         return String::formatted("/usr/share/man/man{}/{}.md", section, name);
     };
-    if (!section) {
-        char const* sections[] = {
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8"
+    if (section.is_empty()) {
+        constexpr StringView sections[] = {
+            "1"sv,
+            "2"sv,
+            "3"sv,
+            "4"sv,
+            "5"sv,
+            "6"sv,
+            "7"sv,
+            "8"sv
         };
         for (auto s : sections) {
             String path = make_path(s);
@@ -102,10 +102,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     String pager_command;
-    if (pager)
+    if (!pager.is_empty())
         pager_command = pager;
     else
-        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''", ReplaceMode::FirstOnly), StringView(section).replace("'", "'\\''", ReplaceMode::FirstOnly));
+        pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly));
     pid_t pager_pid = TRY(pipe_to_pager(pager_command));
 
     auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));

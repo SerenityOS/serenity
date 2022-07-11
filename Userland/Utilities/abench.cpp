@@ -19,7 +19,7 @@ static constexpr size_t MAX_CHUNK_SIZE = 1 * MiB / 2;
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    char const* path = nullptr;
+    StringView path {};
     int sample_count = -1;
 
     Core::ArgsParser args_parser;

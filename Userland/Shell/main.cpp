@@ -157,8 +157,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
     };
 
-    char const* command_to_run = nullptr;
-    char const* file_to_read_from = nullptr;
+    StringView command_to_run = {};
+    StringView file_to_read_from = {};
     Vector<String> script_args;
     bool skip_rc_files = false;
     char const* format = nullptr;
@@ -201,10 +201,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto execute_file = file_to_read_from && "-"sv != file_to_read_from;
+    auto execute_file = !file_to_read_from.is_empty() && "-"sv != file_to_read_from;
     attempt_interactive = !execute_file;
 
-    if (keep_open && !command_to_run && !execute_file) {
+    if (keep_open && command_to_run.is_empty() && !execute_file) {
         warnln("Option --keep-open can only be used in combination with -c or when specifying a file to execute.");
         return 1;
     }
@@ -230,7 +230,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(script_args))));
 
-    if (command_to_run) {
+    if (!command_to_run.is_empty()) {
         dbgln("sh -c '{}'\n", command_to_run);
         auto result = shell->run_command(command_to_run);
         if (!keep_open)

@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool gzip = false;
     bool no_auto_compress = false;
     StringView archive_file;
-    char const* directory = nullptr;
+    StringView directory;
     Vector<String> paths;
 
     Core::ArgsParser args_parser;
@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!archive_file.is_empty())
             file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
 
-        if (directory)
+        if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
         Core::InputFileStream file_stream(file);
@@ -213,7 +213,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!archive_file.is_empty())
             file = TRY(Core::File::open(archive_file, Core::OpenMode::WriteOnly));
 
-        if (directory)
+        if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
         Core::OutputFileStream file_stream(file);
