@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2021, the SerenityOS developers.
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2355,6 +2356,187 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
+{
+    if (!component_value.is_function())
+        return {};
+
+    auto function_name = component_value.function().name();
+    if (!function_name.is_one_of_ignoring_case("linear-gradient"sv, "-webkit-linear-gradient"sv))
+        return {};
+
+    // linear-gradient() = linear-gradient([ <angle> | to <side-or-corner> ]?, <color-stop-list>)
+
+    TokenStream tokens { component_value.function().values() };
+    tokens.skip_whitespace();
+
+    if (!tokens.has_next_token())
+        return {};
+
+    bool has_direction_param = true;
+    LinearGradientStyleValue::GradientDirection gradient_direction = SideOrCorner::Bottom;
+
+    auto& first_param = tokens.peek_token();
+    if (first_param.is(Token::Type::Dimension)) {
+        // <angle>
+        tokens.next_token();
+        float angle_value = first_param.token().dimension_value();
+        auto unit_string = first_param.token().dimension_unit();
+        auto angle_type = Angle::unit_from_name(unit_string);
+
+        if (!angle_type.has_value())
+            return {};
+
+        gradient_direction = Angle { angle_value, angle_type.release_value() };
+    } else if (first_param.is(Token::Type::Ident) && first_param.token().ident().equals_ignoring_case("to"sv)) {
+        // <side-or-corner> = [left | right] || [top | bottom]
+        tokens.next_token();
+        tokens.skip_whitespace();
+
+        auto to_side = [](StringView value) -> Optional<SideOrCorner> {
+            if (value.equals_ignoring_case("top"sv))
+                return SideOrCorner::Top;
+            if (value.equals_ignoring_case("bottom"sv))
+                return SideOrCorner::Bottom;
+            if (value.equals_ignoring_case("left"sv))
+                return SideOrCorner::Left;
+            if (value.equals_ignoring_case("right"sv))
+                return SideOrCorner::Right;
+            return {};
+        };
+
+        if (!tokens.has_next_token())
+            return {};
+
+        // [left | right] || [top | bottom]
+        auto& second_param = tokens.next_token();
+        if (!second_param.is(Token::Type::Ident))
+            return {};
+        auto side_a = to_side(second_param.token().ident());
+        tokens.skip_whitespace();
+        Optional<SideOrCorner> side_b;
+        if (tokens.has_next_token() && tokens.peek_token().is(Token::Type::Ident))
+            side_b = to_side(tokens.next_token().token().ident());
+
+        if (side_a.has_value() && !side_b.has_value()) {
+            gradient_direction = *side_a;
+        } else if (side_a.has_value() && side_b.has_value()) {
+            // Covert two sides to a corner
+            if (to_underlying(*side_b) < to_underlying(*side_a))
+                swap(side_a, side_b);
+            if (side_a == SideOrCorner::Top && side_b == SideOrCorner::Left)
+                gradient_direction = SideOrCorner::TopLeft;
+            else if (side_a == SideOrCorner::Top && side_b == SideOrCorner::Right)
+                gradient_direction = SideOrCorner::TopRight;
+            else if (side_a == SideOrCorner::Bottom && side_b == SideOrCorner::Left)
+                gradient_direction = SideOrCorner::BottomLeft;
+            else if (side_a == SideOrCorner::Bottom && side_b == SideOrCorner::Right)
+                gradient_direction = SideOrCorner::BottomRight;
+            else
+                return {};
+        } else {
+            return {};
+        }
+    } else {
+        has_direction_param = false;
+    }
+
+    tokens.skip_whitespace();
+    if (!tokens.has_next_token())
+        return {};
+
+    if (has_direction_param && !tokens.next_token().is(Token::Type::Comma))
+        return {};
+
+    // <color-stop-list> =
+    //      <linear-color-stop> , [ <linear-color-hint>? , <linear-color-stop> ]#
+
+    // FIXME: Support multi-position color stops
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient#gradient_with_multi-position_color_stops
+    // These are shown on MDN... Though do not appear in the W3 spec(?)
+
+    enum class ElementType {
+        Garbage,
+        ColorStop,
+        ColorHint
+    };
+
+    auto parse_color_stop_list_element = [&](ColorStopListElement& element) -> ElementType {
+        tokens.skip_whitespace();
+        if (!tokens.has_next_token())
+            return ElementType::Garbage;
+        auto& token = tokens.next_token();
+
+        Gfx::Color color;
+        Optional<LengthPercentage> length;
+        auto dimension = parse_dimension(token);
+        if (dimension.has_value() && dimension->is_length_percentage()) {
+            // [<length-percentage> <color>] or [<length-percentage>]
+            length = dimension->length_percentage();
+            tokens.skip_whitespace();
+            // <length-percentage>
+            if (!tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma)) {
+                element.transition_hint = GradientColorHint { *length };
+                return ElementType::ColorHint;
+            }
+            // <length-percentage> <color>
+            auto maybe_color = parse_color(tokens.next_token());
+            if (!maybe_color.has_value())
+                return ElementType::Garbage;
+            color = *maybe_color;
+        } else {
+            // [<color> <length-percentage>?]
+            auto maybe_color = parse_color(token);
+            if (!maybe_color.has_value())
+                return ElementType::Garbage;
+            color = *maybe_color;
+            tokens.skip_whitespace();
+            if (tokens.has_next_token() && !tokens.peek_token().is(Token::Type::Comma)) {
+                auto token = tokens.next_token();
+                auto dimension = parse_dimension(token);
+                if (!dimension.has_value() || !dimension->is_length_percentage())
+                    return ElementType::Garbage;
+                length = dimension->length_percentage();
+            }
+        }
+
+        element.color_stop = GradientColorStop { color, length };
+        return ElementType::ColorStop;
+    };
+
+    ColorStopListElement first_element {};
+    if (parse_color_stop_list_element(first_element) != ElementType::ColorStop)
+        return {};
+
+    if (!tokens.has_next_token())
+        return {};
+
+    Vector<ColorStopListElement> color_stops { first_element };
+    while (tokens.has_next_token()) {
+        ColorStopListElement list_element {};
+        tokens.skip_whitespace();
+        if (!tokens.next_token().is(Token::Type::Comma))
+            return {};
+        auto element_type = parse_color_stop_list_element(list_element);
+        if (element_type == ElementType::ColorHint) {
+            // <linear-color-hint>, <linear-color-stop>
+            tokens.skip_whitespace();
+            if (!tokens.next_token().is(Token::Type::Comma))
+                return {};
+            // Note: This fills in the color stop on the same list_element as the color hint (it does not overwrite it).
+            if (parse_color_stop_list_element(list_element) != ElementType::ColorStop)
+                return {};
+        } else if (element_type == ElementType::ColorStop) {
+            // <linear-color-stop>
+        } else {
+            return {};
+        }
+        color_stops.append(list_element);
+    }
+
+    return LinearGradientStyleValue::create(gradient_direction, move(color_stops));
+}
+
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
 {
     if (rule->is_at_rule()) {
@@ -3253,9 +3435,8 @@ RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_val
     auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
     if (url.has_value())
         return ImageStyleValue::create(url.value());
-    // FIXME: Handle gradients.
-
-    return {};
+    // FIXME: Implement other kinds of gradient
+    return parse_linear_gradient_function(component_value);
 }
 
 template<typename ParseFunction>
