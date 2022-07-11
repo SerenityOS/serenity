@@ -27,6 +27,21 @@
 #    define AK_OS_BSD_GENERIC
 #endif
 
+// FIXME: Remove clang-format suppression after https://github.com/llvm/llvm-project/issues/56602 resolved
+// clang-format off
+#if defined(__ANDROID__)
+#    define STR(x) __STR(x)
+#    define __STR(x) #x
+#    if __ANDROID_API__ < 30
+#        pragma message "Invalid android API " STR(__ANDROID_API__)
+#        error "Build configuration not tested on configured Android API version"
+#    endif
+#    undef STR
+#    undef __STR
+#    define AK_OS_ANDROID
+#endif
+// clang-format on
+
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
 #if ARCH(I386) || ARCH(X86_64)
