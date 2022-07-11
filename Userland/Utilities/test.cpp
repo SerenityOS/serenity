@@ -516,7 +516,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         --argc;
         if (StringView { arguments.strings[argc] } != "]")
             fatal_error("test invoked as '[' requires a closing bracket ']'");
-        arguments.strings[argc] = nullptr;
+        arguments.strings[argc] = {};
     }
 
     // Exit false when no arguments are given.

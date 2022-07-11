@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& clipboard = GUI::Clipboard::the();
 
     if (watch) {
-        watch_command.append(nullptr);
+        watch_command.append({});
 
         clipboard.on_change = [&](String const&) {
             // Technically there's a race here...
