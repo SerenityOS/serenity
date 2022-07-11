@@ -1,4 +1,7 @@
-
+# Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
 option(LADYBIRD_USE_LLD "Use llvm lld to link application" ON)
 if (LADYBIRD_USE_LLD AND NOT APPLE)
     find_program(LLD_LINKER NAMES "ld.lld")
