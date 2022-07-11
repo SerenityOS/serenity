@@ -16,6 +16,7 @@ RadioButton::RadioButton(DOM::Document& document, HTML::HTMLInputElement& elemen
 {
     set_intrinsic_width(12);
     set_intrinsic_height(12);
+    set_intrinsic_aspect_ratio(1);
 }
 
 RadioButton::~RadioButton() = default;
