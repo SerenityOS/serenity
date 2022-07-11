@@ -254,6 +254,10 @@
 #include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
+#include <LibWeb/Bindings/MutationObserverConstructor.h>
+#include <LibWeb/Bindings/MutationObserverPrototype.h>
+#include <LibWeb/Bindings/MutationRecordConstructor.h>
+#include <LibWeb/Bindings/MutationRecordPrototype.h>
 #include <LibWeb/Bindings/NavigatorConstructor.h>
 #include <LibWeb/Bindings/NavigatorPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
@@ -492,6 +496,8 @@
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                                                         \
+    ADD_WINDOW_OBJECT_INTERFACE(MutationObserver)                                                   \
+    ADD_WINDOW_OBJECT_INTERFACE(MutationRecord)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(Navigator)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(NodeIterator)                                                       \
