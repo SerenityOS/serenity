@@ -60,7 +60,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         color_box = get_box(background_layers->last().clip);
 
     auto layer_is_paintable = [&](auto& layer) {
-        return layer.image && layer.image->bitmap();
+        return layer.background_image && layer.background_image->is_image() && layer.background_image->as_image().bitmap();
     };
 
     bool has_paintable_layers = false;
@@ -86,7 +86,6 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         if (!layer_is_paintable(layer))
             continue;
         Gfx::PainterStateSaver state { painter };
-        auto& image = *layer.image->bitmap();
 
         // Clip
         auto clip_box = get_box(layer.clip);
@@ -94,6 +93,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         painter.add_clip_rect(clip_rect);
         ScopedCornerRadiusClip corner_clip { painter, clip_rect, clip_box.radii };
 
+        auto& image = *layer.background_image->as_image().bitmap();
         Gfx::FloatRect background_positioning_area;
 
         // Attachment and Origin

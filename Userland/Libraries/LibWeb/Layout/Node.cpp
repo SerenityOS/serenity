@@ -280,9 +280,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         for (size_t layer_index = 0; layer_index < layer_count; layer_index++) {
             CSS::BackgroundLayerData layer;
 
-            if (auto image_value = value_for_layer(images, layer_index); image_value && image_value->is_image()) {
-                layer.image = image_value->as_image();
-                layer.image->load_bitmap(document());
+            if (auto image_value = value_for_layer(images, layer_index); image_value) {
+                if (image_value->is_image()) {
+                    image_value->as_image().load_bitmap(document());
+                    layer.background_image = image_value;
+                } else if (image_value->is_linear_gradient()) {
+                    layer.background_image = image_value;
+                }
             }
 
             if (auto attachment_value = value_for_layer(attachments, layer_index); attachment_value && attachment_value->has_identifier()) {
