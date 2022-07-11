@@ -34,6 +34,8 @@ class Node : public TreeNode<Node> {
 public:
     virtual ~Node();
 
+    size_t serial_id() const { return m_serial_id; }
+
     bool is_anonymous() const { return !m_dom_node; }
     const DOM::Node* dom_node() const { return m_dom_node; }
     DOM::Node* dom_node() { return m_dom_node; }
@@ -140,6 +142,8 @@ private:
     NonnullRefPtr<DOM::Document> m_document;
     RefPtr<DOM::Node> m_dom_node;
     RefPtr<Painting::Paintable> m_paintable;
+
+    size_t m_serial_id { 0 };
 
     bool m_inline { false };
     bool m_has_style { false };

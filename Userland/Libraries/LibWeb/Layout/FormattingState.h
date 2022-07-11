@@ -30,6 +30,7 @@ struct FormattingState {
         : m_parent(parent)
         , m_root(find_root())
     {
+        nodes.resize(m_root.nodes.size());
     }
 
     FormattingState const& find_root() const
@@ -41,6 +42,8 @@ struct FormattingState {
     }
 
     struct NodeState {
+        Layout::NodeWithStyleAndBoxModelMetrics* node { nullptr };
+
         float content_width { 0 };
         float content_height { 0 };
         Gfx::FloatPoint offset;
@@ -106,7 +109,7 @@ struct FormattingState {
     // NOTE: get() will not CoW the NodeState.
     NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;
+    Vector<OwnPtr<NodeState>> nodes;
 
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
@@ -123,13 +126,6 @@ struct FormattingState {
 
     FormattingState const* m_parent { nullptr };
     FormattingState const& m_root;
-
-    struct LookupCache {
-        NodeWithStyleAndBoxModelMetrics const* box { nullptr };
-        NodeState* state { nullptr };
-        bool is_mutable { false };
-    };
-    LookupCache m_lookup_cache;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);

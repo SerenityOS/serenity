@@ -606,11 +606,13 @@ void Document::update_layout()
     auto viewport_rect = browsing_context()->viewport_rect();
 
     if (!m_layout_root) {
+        m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
     Layout::FormattingState formatting_state;
+    formatting_state.nodes.resize(layout_node_count());
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
 
     auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);

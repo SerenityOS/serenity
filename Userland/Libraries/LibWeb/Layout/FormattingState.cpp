@@ -12,48 +12,37 @@ namespace Web::Layout {
 
 FormattingState::NodeState& FormattingState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
 {
-    if (m_lookup_cache.box == &box && m_lookup_cache.is_mutable)
-        return *m_lookup_cache.state;
+    auto serial_id = box.serial_id();
+    if (nodes[serial_id])
+        return *nodes[serial_id];
 
-    auto& node_state = [&]() -> NodeState& {
-        if (auto it = nodes.find(&box); it != nodes.end())
-            return *it->value;
-
-        for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-            if (auto it = ancestor->nodes.find(&box); it != ancestor->nodes.end()) {
-                auto cow_node_state = adopt_own(*new NodeState(*it->value));
-                auto* cow_node_state_ptr = cow_node_state.ptr();
-                nodes.set(&box, move(cow_node_state));
-                return *cow_node_state_ptr;
-            }
+    for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
+        if (ancestor->nodes[serial_id]) {
+            auto cow_node_state = adopt_own(*new NodeState(*ancestor->nodes[serial_id]));
+            auto* cow_node_state_ptr = cow_node_state.ptr();
+            nodes[serial_id] = move(cow_node_state);
+            return *cow_node_state_ptr;
         }
+    }
 
-        return *nodes.ensure(&box, [] { return adopt_own(*new NodeState); });
-    }();
-
-    m_lookup_cache = LookupCache { .box = &box, .state = &node_state, .is_mutable = true };
-
-    return node_state;
+    nodes[serial_id] = adopt_own(*new NodeState);
+    nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    return *nodes[serial_id];
 }
 
 FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelMetrics const& box) const
 {
-    if (m_lookup_cache.box == &box)
-        return *m_lookup_cache.state;
+    auto serial_id = box.serial_id();
+    if (nodes[serial_id])
+        return *nodes[serial_id];
 
-    auto& node_state = [&]() -> NodeState const& {
-        if (auto it = nodes.find(&box); it != nodes.end())
-            return *it->value;
-
-        for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-            if (auto it = ancestor->nodes.find(&box); it != ancestor->nodes.end())
-                return *it->value;
-        }
-        return *const_cast<FormattingState&>(*this).nodes.ensure(&box, [] { return adopt_own(*new NodeState); });
-    }();
-
-    const_cast<FormattingState*>(this)->m_lookup_cache = LookupCache { .box = &box, .state = const_cast<NodeState*>(&node_state), .is_mutable = false };
-    return node_state;
+    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
+        if (ancestor->nodes[serial_id])
+            return *ancestor->nodes[serial_id];
+    }
+    const_cast<FormattingState*>(this)->nodes[serial_id] = adopt_own(*new NodeState);
+    const_cast<FormattingState*>(this)->nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    return *nodes[serial_id];
 }
 
 void FormattingState::commit()
@@ -63,9 +52,11 @@ void FormattingState::commit()
 
     HashTable<Layout::TextNode*> text_nodes;
 
-    for (auto& it : nodes) {
-        auto& node = const_cast<Layout::NodeWithStyleAndBoxModelMetrics&>(*it.key);
-        auto& node_state = *it.value;
+    for (auto& node_state_ptr : nodes) {
+        if (!node_state_ptr)
+            continue;
+        auto& node_state = *node_state_ptr;
+        auto& node = *node_state.node;
 
         // Transfer box model metrics.
         node.box_model().inset = { node_state.inset_top, node_state.inset_right, node_state.inset_bottom, node_state.inset_left };

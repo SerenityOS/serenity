@@ -23,6 +23,8 @@ Node::Node(DOM::Document& document, DOM::Node* node)
     : m_document(document)
     , m_dom_node(node)
 {
+    m_serial_id = m_document->next_layout_node_serial_id({});
+
     if (m_dom_node)
         m_dom_node->set_layout_node({}, this);
 }

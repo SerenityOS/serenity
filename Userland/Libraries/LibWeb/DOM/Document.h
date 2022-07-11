@@ -61,6 +61,9 @@ public:
 
     virtual ~Document() override;
 
+    size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
+    size_t layout_node_count() const { return m_next_layout_node_serial_id; }
+
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(String const&, Cookie::Source = Cookie::Source::NonHttp);
 
@@ -390,6 +393,8 @@ private:
     }
 
     unsigned m_referencing_node_count { 0 };
+
+    size_t m_next_layout_node_serial_id { 0 };
 
     OwnPtr<CSS::StyleComputer> m_style_computer;
     RefPtr<CSS::StyleSheetList> m_style_sheets;
