@@ -59,6 +59,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toReversed, to_reversed, 0, attr);
     define_native_function(vm.names.toSorted, to_sorted, 1, attr);
+    define_native_function(vm.names.toSpliced, to_spliced, 2, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -1594,6 +1595,141 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         // b. Set j to j + 1.
     }
 
+    return return_array;
+}
+
+// 1.2.2.1.5 %TypedArray%.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toSpliced
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_spliced)
+{
+    auto start = vm.argument(0);
+    auto delete_count = vm.argument(1);
+
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
+    auto relative_start = TRY(start.to_integer_or_infinity(global_object));
+
+    size_t actual_start;
+
+    // 5. If relativeStart is -∞, let actualStart be 0.
+    if (Value(relative_start).is_negative_infinity())
+        actual_start = 0;
+    // 6. Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
+    else if (relative_start < 0)
+        actual_start = static_cast<size_t>(max(static_cast<double>(length) + relative_start, 0));
+    // 7. Else, let actualStart be min(relativeStart, len).
+    else
+        actual_start = static_cast<size_t>(min(relative_start, static_cast<double>(length)));
+
+    size_t actual_delete_count;
+
+    // 8. If start is not present, then
+    if (vm.argument_count() == 0) {
+        // a. Let actualDeleteCount be 0.
+        actual_delete_count = 0;
+    }
+    // 9. Else if deleteCount is not present, then
+    else if (vm.argument_count() == 1) {
+        // a. Let actualDeleteCount be len - actualStart.
+        actual_delete_count = length - actual_start;
+    }
+    // 10. Else,
+    else {
+        // a. Let dc be ? ToIntegerOrInfinity(deleteCount).
+        auto dc = TRY(delete_count.to_integer_or_infinity(global_object));
+
+        // b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
+        actual_delete_count = static_cast<size_t>(clamp(dc, 0, static_cast<double>(length - actual_start)));
+    }
+
+    // 11. Let insertCount be the number of elements in items.
+    auto insert_count = vm.argument_count() >= 2 ? vm.argument_count() - 2 : 0;
+
+    // 12. Let convertedItems be a new empty List.
+    MarkedVector<Value> converted_items(vm.heap());
+
+    // 13. For each element E of items, do
+    for (size_t element_index = 2; element_index < vm.argument_count(); element_index++) {
+        auto element = vm.argument(element_index);
+        Value converted_value;
+        // a. If O.[[ContentType]] is BigInt, let convertedValue be ? ToBigInt(E).
+        if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
+            converted_value = TRY(element.to_bigint(global_object));
+        // Else, let convertedValue be ? ToNumber(E).
+        else
+            converted_value = TRY(element.to_number(global_object));
+
+        // c. Append convertedValue as the last element of convertedItems.
+        converted_items.append(converted_value);
+    }
+
+    // Let newLen be len + insertCount - actualDeleteCount.
+    auto new_length = length + insert_count - actual_delete_count;
+
+    // 15. Let A be ? TypedArrayCreateSameType(O, « 𝔽(newLen) »).
+    MarkedVector<Value> arguments(vm.heap());
+    arguments.empend(length);
+    auto* return_array = TRY(typed_array_create_same_type(global_object, *typed_array, move(arguments)));
+
+    // 16. Let i be 0.
+    // 17. Let r be actualStart + actualDeleteCount.
+    size_t i = 0;
+    auto r = actual_start + actual_delete_count;
+
+    // 18. Repeat, while i < actualStart,
+    while (i < actual_start) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let iValue be ! Get(O, Pi).
+        auto index_value = MUST(typed_array->get(property_key));
+
+        // c. Perform ! Set(target, Pi, iValue, true).
+        MUST(return_array->set(property_key, index_value, Object::ShouldThrowExceptions::Yes));
+
+        // d. Set i to i + 1.
+        i++;
+    }
+
+    // 19. For each element E of convertedItems, do
+    for (auto const& element : converted_items) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Perform ! Set(A, Pi, E, true).
+        MUST(return_array->set(property_key, element, Object::ShouldThrowExceptions::Yes));
+
+        // c. Set i to i + 1.
+        i++;
+    }
+
+    // 20. Repeat, while i < newLen,
+    while (i < new_length) {
+        // a. Let Pi be ! ToString(𝔽(i)).
+        auto property_key = PropertyKey { i };
+
+        // b. Let from be ! ToString(𝔽(r)).
+        auto from = PropertyKey { r };
+
+        // c. Let fromValue be ! Get(O, from).
+        auto from_value = TRY(typed_array->get(from));
+
+        // d. Perform ! Set(A, Pi, fromValue, true).
+        MUST(return_array->set(property_key, from_value, Object::ShouldThrowExceptions::Yes));
+
+        // e. Set i to i + 1.
+        i++;
+
+        // f. Set r to r + 1.
+        r++;
+    }
+
+    // 21. Return A.
     return return_array;
 }
 
