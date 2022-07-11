@@ -873,6 +873,13 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
     } else {
         cache.min_content_width = context->greatest_child_width(box);
     }
+
+    if (!isfinite(*cache.min_content_width)) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
+        cache.min_content_width = 0;
+    }
+
     return *cache.min_content_width;
 }
 
@@ -902,6 +909,12 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
         cache.max_content_width = box_state.content_width;
     } else {
         cache.max_content_width = context->greatest_child_width(box);
+    }
+
+    if (!isfinite(*cache.max_content_width)) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite max-content width for {}", box.debug_description());
+        cache.max_content_width = 0;
     }
 
     return *cache.max_content_width;
@@ -935,6 +948,12 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
         cache.min_content_height = calculate_auto_height(throwaway_state, box);
     }
 
+    if (!isfinite(*cache.min_content_height)) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite min-content height for {}", box.debug_description());
+        cache.min_content_height = 0;
+    }
+
     return *cache.min_content_height;
 }
 
@@ -964,6 +983,12 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
         cache.max_content_height = box_state.content_height;
     } else {
         cache.max_content_height = calculate_auto_height(throwaway_state, box);
+    }
+
+    if (!isfinite(*cache.max_content_height)) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite max-content height for {}", box.debug_description());
+        cache.max_content_height = 0;
     }
 
     return *cache.max_content_height;
