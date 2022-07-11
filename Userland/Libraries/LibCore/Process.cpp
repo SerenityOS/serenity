@@ -45,7 +45,7 @@ struct ArgvList {
 
     ErrorOr<pid_t> spawn()
     {
-        auto pid = TRY(System::posix_spawn(m_path.characters(), nullptr, nullptr, const_cast<char**>(get().data()), environ));
+        auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), environ));
 #ifdef __serenity__
         TRY(System::disown(pid));
 #endif
