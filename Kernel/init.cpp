@@ -408,7 +408,7 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // serial_debug will output all the dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    if (StringView(kernel_cmdline).contains("serial_debug")) {
+    if (StringView { kernel_cmdline, strlen(kernel_cmdline) }.contains("serial_debug"sv)) {
         set_serial_debug(true);
     }
 }

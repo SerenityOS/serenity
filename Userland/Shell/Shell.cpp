@@ -110,7 +110,7 @@ String Shell::prompt() const
                     builder.append(username);
                     break;
                 case 'h':
-                    builder.append(hostname);
+                    builder.append({ hostname, strlen(hostname) });
                     break;
                 case 'w': {
                     String home_path = getenv("HOME");
@@ -1607,7 +1607,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
 
     // Look at the environment.
     for (auto i = 0; environ[i]; ++i) {
-        auto entry = StringView { environ[i] };
+        StringView entry { environ[i], strlen(environ[i]) };
         if (entry.starts_with(pattern)) {
             auto parts = entry.split_view('=');
             if (parts.is_empty() || parts.first().is_empty())
@@ -2183,7 +2183,10 @@ Shell::Shell()
     // Add the default PATH vars.
     {
         StringBuilder path;
-        path.append(getenv("PATH"));
+        auto const* path_env_ptr = getenv("PATH");
+
+        if (path_env_ptr != NULL)
+            path.append({ path_env_ptr, strlen(path_env_ptr) });
         if (path.length())
             path.append(":");
         path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin");
@@ -2476,7 +2479,8 @@ void Shell::timer_event(Core::TimerEvent& event)
     if (m_is_subshell)
         return;
 
-    StringView option = getenv("HISTORY_AUTOSAVE_TIME_MS");
+    auto const* autosave_env_ptr = getenv("HISTORY_AUTOSAVE_TIME_MS");
+    auto option = autosave_env_ptr != NULL ? StringView { autosave_env_ptr, strlen(autosave_env_ptr) } : StringView {};
 
     auto time = option.to_uint();
     if (!time.has_value() || time.value() == 0) {

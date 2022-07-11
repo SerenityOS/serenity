@@ -73,11 +73,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (target_directory.is_empty()) {
         if (!file_template.is_empty()) { // If a custom template is specified we assume the target directory is the current directory
-            target_directory = getcwd(nullptr, 0);
+            // FIXME: Get rid of this minor memory leak.
+            auto const* cwd_ptr = getcwd(nullptr, 0);
+            target_directory = StringView { cwd_ptr, strlen(cwd_ptr) };
         } else {
             LexicalPath template_path(file_template);
             char const* env_directory = getenv("TMPDIR");
-            target_directory = env_directory && *env_directory ? env_directory : "/tmp";
+            target_directory = env_directory && *env_directory ? StringView { env_directory, strlen(env_directory) } : "/tmp"sv;
         }
     }
 

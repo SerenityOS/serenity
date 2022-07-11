@@ -82,7 +82,7 @@ StringView system_time_zone()
 
 StringView current_time_zone()
 {
-    return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
+    return canonicalize_time_zone({ tzname[0], __builtin_strlen(tzname[0]) }).value_or("UTC"sv);
 }
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)

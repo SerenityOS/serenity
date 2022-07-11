@@ -170,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .short_name = 'H',
         .value_name = "header-value",
         .accept_value = [&](auto* s) {
-            StringView header { s };
+            StringView header { s, strlen(s) };
             auto split = header.find(':');
             if (!split.has_value())
                 return false;
@@ -316,7 +316,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         request->stream_into(output_stream);
     };
 
-    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {}, proxy_data);
+    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data, strlen(data) }.bytes() : ReadonlyBytes {}, proxy_data);
     setup_request();
 
     dbgln("started request with id {}", request->id());

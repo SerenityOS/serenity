@@ -19,7 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     for (;;) {
         char buffer[4096];
-        auto str = StringView(fgets(buffer, sizeof(buffer), stdin));
+        fgets(buffer, sizeof(buffer), stdin);
+        auto str = StringView { buffer, strlen(buffer) };
         if (str.contains(arguments.strings[1]))
             TRY(Core::System::write(1, str.bytes()));
         if (feof(stdin))

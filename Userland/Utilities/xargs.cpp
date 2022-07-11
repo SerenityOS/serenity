@@ -178,7 +178,7 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)> c
 
         Decision decision;
         do {
-            decision = callback(item);
+            decision = callback({ item, strlen(item) });
             if (decision == Stop) {
                 free(item);
                 return true;

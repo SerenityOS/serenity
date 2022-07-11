@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<StringView> exec_environment;
     for (size_t i = 0; environ[i]; ++i) {
-        StringView env_view { environ[i] };
+        StringView env_view { environ[i], strlen(environ[i]) };
         auto maybe_needle = env_view.find('=');
 
         if (!maybe_needle.has_value())

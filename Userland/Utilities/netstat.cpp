@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto addr = from_string.value().to_in_addr_t();
                 auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
                 if (hostent != nullptr) {
-                    auto host_name = StringView(hostent->h_name);
+                    auto host_name = StringView { hostent->h_name, strlen(hostent->h_name) };
                     if (!host_name.is_empty())
                         peer_address = host_name;
                 }
@@ -195,7 +195,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "tcp");
                 if (service != nullptr) {
-                    auto s_name = StringView(service->s_name);
+                    auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
                         peer_port = s_name;
                 }
@@ -207,7 +207,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto addr = from_string.value().to_in_addr_t();
                 auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
                 if (hostent != nullptr) {
-                    auto host_name = StringView(hostent->h_name);
+                    auto host_name = StringView { hostent->h_name, strlen(hostent->h_name) };
                     if (!host_name.is_empty())
                         local_address = host_name;
                 }
@@ -217,7 +217,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "tcp");
                 if (service != nullptr) {
-                    auto s_name = StringView(service->s_name);
+                    auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
                         local_port = s_name;
                 }
@@ -269,7 +269,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto addr = from_string.value().to_in_addr_t();
                 auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
                 if (hostent != nullptr) {
-                    auto host_name = StringView(hostent->h_name);
+                    auto host_name = StringView { hostent->h_name, strlen(hostent->h_name) };
                     if (!host_name.is_empty())
                         local_address = host_name;
                 }
@@ -279,7 +279,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "udp");
                 if (service != nullptr) {
-                    auto s_name = StringView(service->s_name);
+                    auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
                         local_port = s_name;
                 }
@@ -291,7 +291,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto addr = from_string.value().to_in_addr_t();
                 auto* hostent = gethostbyaddr(&addr, sizeof(in_addr), AF_INET);
                 if (hostent != nullptr) {
-                    auto host_name = StringView(hostent->h_name);
+                    auto host_name = StringView { hostent->h_name, strlen(hostent->h_name) };
                     if (!host_name.is_empty())
                         peer_address = host_name;
                 }
@@ -301,7 +301,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "udp");
                 if (service != nullptr) {
-                    auto s_name = StringView(service->s_name);
+                    auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
                         peer_port = s_name;
                 }

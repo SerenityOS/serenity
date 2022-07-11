@@ -259,7 +259,8 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
             if (!first) {
                 builder.append(", ");
             }
-            builder.append(strerror(key));
+            auto const* error = strerror(key);
+            builder.append({ error, strlen(error) });
             builder.append(" (");
             int value = error_accumulator.get(key).value();
             builder.append(String::number(value));

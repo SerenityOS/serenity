@@ -80,7 +80,7 @@ Optional<Color> Color::from_string(StringView string)
     struct ColorAndWebName {
         constexpr ColorAndWebName(ARGB32 c, char const* n)
             : color(c)
-            , name(n)
+            , name(n != nullptr ? StringView { n, __builtin_strlen(n) } : StringView {})
         {
         }
         ARGB32 color;

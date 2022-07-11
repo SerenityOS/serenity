@@ -16,7 +16,8 @@ int getsubopt(char** option_array, char* const* tokens, char** option_value)
     if (**option_array == '\0')
         return -1;
 
-    auto option_string = StringView(*option_array);
+    auto const* option_ptr = *option_array;
+    StringView option_string { option_ptr, strlen(option_ptr) };
 
     auto possible_comma_location = option_string.find(',');
     char* option_end = const_cast<char*>(option_string.characters_without_null_termination()) + possible_comma_location.value_or(option_string.length());
@@ -34,7 +35,8 @@ int getsubopt(char** option_array, char* const* tokens, char** option_value)
     });
 
     for (int count = 0; tokens[count] != NULL; ++count) {
-        auto token_stringview = StringView(tokens[count]);
+        auto const* token = tokens[count];
+        StringView token_stringview { token, strlen(token) };
         if (!option_string.starts_with(token_stringview))
             continue;
         if (tokens[count][value_start - *option_array] != '\0')

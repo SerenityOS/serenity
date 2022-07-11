@@ -20,7 +20,7 @@ TEST_CASE(construct_empty)
 TEST_CASE(view_literal)
 {
     char const* truth = "cats rule dogs drool";
-    StringView view(truth);
+    StringView view { truth, strlen(truth) };
     EXPECT_EQ(view.is_null(), false);
     EXPECT_EQ(view.characters_without_null_termination(), truth);
     EXPECT_EQ(view, view);

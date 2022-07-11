@@ -836,7 +836,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto parse_syscalls = [](char const* option, auto& hash_table) {
         if (option != nullptr) {
-            for (auto syscall : StringView(option).split_view(','))
+            for (auto syscall : StringView { option, strlen(option) }.split_view(','))
                 hash_table.set(syscall);
         }
     };

@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         .short_name = 'i',
         .value_name = "path",
         .accept_value = [&](char const* s) {
-            s_header_search_paths.append(s);
+            s_header_search_paths.append({ s, strlen(s) });
             return true;
         },
     });

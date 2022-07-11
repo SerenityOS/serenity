@@ -280,9 +280,11 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
         bool result = file.write(file_content);
         if (!result) {
             int error_number = errno;
+            auto const* error = strerror(error_number);
+
             StringBuilder sb;
             sb.append("Unable to save file. Error: ");
-            sb.append(strerror(error_number));
+            sb.append({ error, strlen(error) });
 
             return sb.to_string();
         }
