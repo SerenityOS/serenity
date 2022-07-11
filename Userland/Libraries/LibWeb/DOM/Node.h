@@ -229,6 +229,8 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
+    void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+
 protected:
     Node(Document&, NodeType);
 
@@ -243,6 +245,9 @@ protected:
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
     NonnullRefPtrVector<RegisteredObserver> m_registered_observer_list;
+
+private:
+    void queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 };
 
 }

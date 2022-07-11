@@ -132,8 +132,11 @@ void Document::removed_last_ref()
             for (auto& node : descendants) {
                 VERIFY(&node.document() == this);
                 VERIFY(!node.is_document());
-                if (node.parent())
-                    node.remove();
+                if (node.parent()) {
+                    // We need to suppress mutation observers so that they don't try and queue a microtask for this Document which is in the process of dying,
+                    // which will cause an `!m_in_removed_last_ref` assertion failure when it tries to ref this Document.
+                    node.remove(true);
+                }
             }
         }
 
