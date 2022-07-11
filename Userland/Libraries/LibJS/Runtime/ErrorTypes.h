@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/StringView.h>
+
 #define JS_ENUMERATE_ERROR_TYPES(M)                                                                                                     \
     M(ArrayMaxSize, "Maximum array size exceeded")                                                                                      \
     M(AccessorBadField, "Accessor descriptor's '{}' field must be a function or undefined")                                             \
@@ -306,18 +308,18 @@ public:
     JS_ENUMERATE_ERROR_TYPES(__ENUMERATE_JS_ERROR)
 #undef __ENUMERATE_JS_ERROR
 
-    char const* message() const
+    StringView message() const
     {
         return m_message;
     }
 
 private:
-    explicit ErrorType(char const* message)
+    explicit ErrorType(StringView message)
         : m_message(message)
     {
     }
 
-    char const* m_message;
+    StringView m_message;
 };
 
 }
