@@ -321,4 +321,13 @@ private:
 };
 
 }
+
+template<>
+struct Traits<ByteBuffer> : public GenericTraits<ByteBuffer> {
+    static unsigned hash(ByteBuffer const& byte_buffer)
+    {
+        return Traits<ReadonlyBytes>::hash(byte_buffer.span());
+    }
+};
+
 }
