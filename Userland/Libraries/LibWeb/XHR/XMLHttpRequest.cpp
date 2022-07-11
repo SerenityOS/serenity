@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Origin.h>
@@ -379,34 +380,11 @@ static bool is_forbidden_header_name(String const& header_name)
     return lowercase_header_name.is_one_of("accept-charset", "accept-encoding", "access-control-request-headers", "access-control-request-method", "connection", "content-length", "cookie", "cookie2", "date", "dnt", "expect", "host", "keep-alive", "origin", "referer", "te", "trailer", "transfer-encoding", "upgrade", "via");
 }
 
-// https://fetch.spec.whatwg.org/#forbidden-method
-static bool is_forbidden_method(String const& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    return lowercase_method.is_one_of("connect", "trace", "track");
-}
-
-// https://fetch.spec.whatwg.org/#concept-method
-static bool is_method(String const& method)
-{
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$)~~~" };
-    return regex.has_match(method);
-}
-
 // https://fetch.spec.whatwg.org/#header-name
 static bool is_header_name(String const& header_name)
 {
     Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$)~~~" };
     return regex.has_match(header_name);
-}
-
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-static String normalize_method(String const& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    if (lowercase_method.is_one_of("delete", "get", "head", "options", "post", "put"))
-        return method.to_uppercase();
-    return method;
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
@@ -480,14 +458,16 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, St
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
-DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String const& url)
 {
     // 8. If the async argument is omitted, set async to true, and set username and password to null.
-    return open(method, url, true, {}, {});
+    return open(method_string, url, true, {}, {});
 }
 
-DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url, bool async, String const& username, String const& password)
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String const& url, bool async, String const& username, String const& password)
 {
+    auto method = method_string.to_byte_buffer();
+
     // 1. Let settingsObject be this’s relevant settings object.
     auto& settings_object = m_window->associated_document().relevant_settings_object();
 
@@ -496,15 +476,15 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
         return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
-    if (!is_method(method))
+    if (!Fetch::is_method(method))
         return DOM::SyntaxError::create("An invalid or illegal string was specified.");
 
     // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
-    if (is_forbidden_method(method))
+    if (Fetch::is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     // 5. Normalize method.
-    auto normalized_method = normalize_method(method);
+    method = MUST(Fetch::normalize_method(method));
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
     auto parsed_url = settings_object.api_base_url().complete_url(url);
@@ -537,7 +517,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     // Unset this’s upload listener flag.
     m_upload_listener = false;
     // Set this’s request method to method.
-    m_method = normalized_method;
+    m_method = move(method);
     // Set this’s request URL to parsedURL.
     m_url = parsed_url;
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
