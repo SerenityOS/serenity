@@ -246,7 +246,7 @@ input[type=submit], input[type=button], input[type=reset], input[type=checkbox],
 }
 
 button, input[type=submit], input[type=button], input[type=reset] {
-    padding: 4px 8px;
+    padding: 1px 4px;
     background-color: -libweb-palette-button;
     border: 1px solid -libweb-palette-threed-shadow1;
 }
