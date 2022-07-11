@@ -54,6 +54,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
     JS_DECLARE_NATIVE_FUNCTION(to_reversed);
     JS_DECLARE_NATIVE_FUNCTION(to_sorted);
+    JS_DECLARE_NATIVE_FUNCTION(to_spliced);
 };
 
 }
