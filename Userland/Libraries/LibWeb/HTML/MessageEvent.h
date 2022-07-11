@@ -31,20 +31,20 @@ public:
 
     virtual ~MessageEvent() override = default;
 
-    JS::Value data() const { return m_data; }
+    JS::Value data() const { return m_data.value(); }
     String const& origin() const { return m_origin; }
     String const& last_event_id() const { return m_last_event_id; }
 
 protected:
     MessageEvent(FlyString const& event_name, MessageEventInit const& event_init)
         : DOM::Event(event_name, event_init)
-        , m_data(event_init.data)
+        , m_data(JS::make_handle(event_init.data))
         , m_origin(event_init.origin)
         , m_last_event_id(event_init.last_event_id)
     {
     }
 
-    JS::Value m_data;
+    JS::Handle<JS::Value> m_data;
     String m_origin;
     String m_last_event_id;
 };
