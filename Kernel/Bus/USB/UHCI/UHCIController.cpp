@@ -213,8 +213,10 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     piix4_td_hack->set_max_len(0x7ff); // Null data packet
     piix4_td_hack->set_device_address(0x7f);
     piix4_td_hack->set_packet_id(PacketID::IN);
-    m_dummy_qh->terminate_with_stray_descriptor(piix4_td_hack);
-    m_dummy_qh->terminate_element_link_ptr();
+    m_dummy_qh->attach_transfer_descriptor_chain(piix4_td_hack);
+    // Cyclically link to the full speed control QH to allow for full speed
+    // bandwidth reclamation during frame idle time
+    m_dummy_qh->link_next_queue_head(m_fullspeed_control_qh);
 
     u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
     for (int frame = 0; frame < UHCI_NUMBER_OF_FRAMES; frame++) {

@@ -296,12 +296,6 @@ struct alignas(16) QueueHead {
         m_element_link_ptr = m_element_link_ptr | static_cast<u32>(LinkPointerBits::QHSelect);
     }
 
-    void terminate_with_stray_descriptor(TransferDescriptor* td)
-    {
-        m_link_ptr = td->paddr();
-        m_link_ptr |= static_cast<u32>(LinkPointerBits::Terminate);
-    }
-
     // TODO: Should we pass in an array or vector of TDs instead????
     void attach_transfer_descriptor_chain(TransferDescriptor* td)
     {
