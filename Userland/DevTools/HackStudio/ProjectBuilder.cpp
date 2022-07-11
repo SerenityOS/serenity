@@ -32,7 +32,7 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
     }
 
     if (active_file.is_null())
-        return Error::from_string_literal("no active file"sv);
+        return Error::from_string_literal("no active file");
 
     if (active_file.ends_with(".js")) {
         TRY(m_terminal->run_command(String::formatted("js -A {}", active_file)));
@@ -58,7 +58,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
     }
 
     if (active_file.is_null())
-        return Error::from_string_literal("no active file"sv);
+        return Error::from_string_literal("no active file");
 
     if (active_file.ends_with(".js")) {
         TRY(m_terminal->run_command(String::formatted("js {}", active_file)));
@@ -89,7 +89,7 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
     auto cmake_file = find_cmake_file_for(active_file);
     if (!cmake_file.has_value()) {
         warnln("did not find cmake file for: {}", active_file);
-        return Error::from_string_literal("did not find cmake file"sv);
+        return Error::from_string_literal("did not find cmake file");
     }
 
     if (m_serenity_component_cmake_file == cmake_file.value())
@@ -116,7 +116,7 @@ ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
     static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
     RegexResult result;
     if (!component_name.search(StringView { content }, result))
-        return Error::from_string_literal("component not found"sv);
+        return Error::from_string_literal("component not found");
 
     return String { result.capture_group_matches.at(0).at(0).view.string_view() };
 }
@@ -255,7 +255,7 @@ ErrorOr<void> ProjectBuilder::verify_cmake_is_installed()
     auto res = Core::command("cmake --version", {});
     if (!res.is_error() && res.value().exit_code == 0)
         return {};
-    return Error::from_string_literal("CMake port is not installed"sv);
+    return Error::from_string_literal("CMake port is not installed");
 }
 
 ErrorOr<void> ProjectBuilder::verify_make_is_installed()
@@ -263,7 +263,7 @@ ErrorOr<void> ProjectBuilder::verify_make_is_installed()
     auto res = Core::command("make --version", {});
     if (!res.is_error() && res.value().exit_code == 0)
         return {};
-    return Error::from_string_literal("Make port is not installed"sv);
+    return Error::from_string_literal("Make port is not installed");
 }
 
 String ProjectBuilder::build_directory() const

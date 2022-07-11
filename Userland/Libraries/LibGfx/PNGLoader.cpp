@@ -407,7 +407,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if (palette_index[i] >= context.palette_data.size())
-                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at((int)palette_index[i]);
                     auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
                         ? context.palette_transparency_data.data()[palette_index[i]]
@@ -428,7 +428,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                     auto palette_index = (palette_indices[i / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if ((size_t)palette_index >= context.palette_data.size())
-                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at(palette_index);
                     auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
                         ? context.palette_transparency_data.data()[palette_index]
@@ -578,23 +578,23 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
         PNG::FilterType filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
         if (to_underlying(filter) > 4) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
         auto row_size = context.compute_row_size_for_width(context.width);
         if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
 
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
 
@@ -673,12 +673,12 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         PNG::FilterType filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
         if (to_underlying(filter) > 4) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
         subimage_context.scanlines.append({ filter });
@@ -686,10 +686,10 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 
         auto row_size = context.compute_row_size_for_width(subimage_context.width);
         if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
 
@@ -718,22 +718,22 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
 {
     if (context.state < PNGLoadingContext::State::ChunksDecoded) {
         if (!decode_png_chunks(context))
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
     }
 
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return {};
 
     if (context.width == -1 || context.height == -1)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk."sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk.");
 
     if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty."sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
 
     auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {
         context.state = PNGLoadingContext::State::Error;
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed");
     }
     context.decompression_buffer = &result.value();
     context.compressed_data.clear();
@@ -748,7 +748,7 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
         break;
     default:
         context.state = PNGLoadingContext::State::Error;
-        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method");
     }
 
     context.decompression_buffer = nullptr;
@@ -960,10 +960,10 @@ size_t PNGImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == PNGLoadingContext::State::Error)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.

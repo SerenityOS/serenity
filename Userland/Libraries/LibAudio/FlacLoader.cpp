@@ -861,7 +861,7 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
     if ((start_byte & 0b10000000) == 0) {
         return start_byte;
     } else if ((start_byte & 0b11000000) == 0b10000000) {
-        return Error::from_string_literal("Illegal continuation byte"sv);
+        return Error::from_string_literal("Illegal continuation byte");
     }
     // This algorithm is too good and supports the theoretical max 0xFF start byte
     u8 length = 1;

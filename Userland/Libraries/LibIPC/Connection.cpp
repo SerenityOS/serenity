@@ -30,7 +30,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     // NOTE: If this connection is being shut down, but has not yet been destroyed,
     //       the socket will be closed. Don't try to send more messages.
     if (!m_socket->is_open())
-        return Error::from_string_literal("Trying to post_message during IPC shutdown"sv);
+        return Error::from_string_literal("Trying to post_message during IPC shutdown");
 
     // Prepend the message size.
     uint32_t message_size = buffer.data.size();
@@ -57,9 +57,9 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
                 shutdown_with_error(error);
                 switch (error.code()) {
                 case EPIPE:
-                    return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer"sv);
+                    return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer");
                 case EAGAIN:
-                    return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed"sv);
+                    return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed");
                 default:
                     return Error::from_syscall("IPC::Connection::post_message write"sv, -error.code());
                 }
@@ -141,7 +141,7 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
             deferred_invoke([this] { shutdown(); });
             if (!bytes.is_empty())
                 break;
-            return Error::from_string_literal("IPC connection EOF"sv);
+            return Error::from_string_literal("IPC connection EOF");
         }
 
         bytes.append(bytes_read.data(), bytes_read.size());
@@ -169,7 +169,7 @@ ErrorOr<void> ConnectionBase::drain_messages_from_peer()
         auto remaining_bytes = TRY(ByteBuffer::copy(bytes.span().slice(index)));
         if (!m_unprocessed_bytes.is_empty()) {
             shutdown();
-            return Error::from_string_literal("drain_messages_from_peer: Already have unprocessed bytes"sv);
+            return Error::from_string_literal("drain_messages_from_peer: Already have unprocessed bytes");
         }
         m_unprocessed_bytes = move(remaining_bytes);
     }

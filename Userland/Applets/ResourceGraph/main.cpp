@@ -289,7 +289,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dbgln("Create applet: {} with spec '{}'", (int)graph_type, spec);
 
         if (parts.size() != 2)
-            return Error::from_string_literal("ResourceGraph: Applet spec is not composed of exactly 2 comma-separated parts"sv);
+            return Error::from_string_literal("ResourceGraph: Applet spec is not composed of exactly 2 comma-separated parts");
 
         auto name = parts[0];
         auto graph_color = Gfx::Color::from_string(parts[1]);

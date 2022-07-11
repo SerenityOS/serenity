@@ -140,7 +140,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
 
     if (file->is_device()) {
         GUI::MessageBox::show_error(request_data.parent_window, String::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
-        request_data.promise->resolve(Error::from_string_literal("Cannot open device files"sv));
+        request_data.promise->resolve(Error::from_string_literal("Cannot open device files"));
         return;
     }
 

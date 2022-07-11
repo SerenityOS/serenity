@@ -168,22 +168,22 @@ Optional<Name> Name::from_slice(ReadonlyBytes slice)
 ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
 {
     if (slice.size() < sizeof(u32))
-        return Error::from_string_literal("Invalid kern table header"sv);
+        return Error::from_string_literal("Invalid kern table header");
 
     // We only support the old (2x u16) version of the header
     auto version = be_u16(slice.data());
     auto number_of_subtables = be_u16(slice.offset(sizeof(u16)));
     if (version != 0)
-        return Error::from_string_literal("Unsupported kern table version"sv);
+        return Error::from_string_literal("Unsupported kern table version");
     if (number_of_subtables == 0)
-        return Error::from_string_literal("Kern table does not contain any subtables"sv);
+        return Error::from_string_literal("Kern table does not contain any subtables");
 
     // Read all subtable offsets
     auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
     size_t offset = 2 * sizeof(u16);
     for (size_t i = 0; i < number_of_subtables; ++i) {
         if (slice.size() < offset + Sizes::SubtableHeader)
-            return Error::from_string_literal("Invalid kern subtable header"sv);
+            return Error::from_string_literal("Invalid kern subtable header");
 
         subtable_offsets[i] = offset;
         auto subtable_size = be_u16(slice.offset(offset + sizeof(u16)));
@@ -365,22 +365,22 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(String path, unsigned inde
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index)
 {
     if (buffer.size() < 4)
-        return Error::from_string_literal("Font file too small"sv);
+        return Error::from_string_literal("Font file too small");
 
     u32 tag = be_u32(buffer.data());
     if (tag == tag_from_str("ttcf")) {
         // It's a font collection
         if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1))
-            return Error::from_string_literal("Font file too small"sv);
+            return Error::from_string_literal("Font file too small");
 
         u32 offset = be_u32(buffer.offset_pointer((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
         return try_load_from_offset(buffer, offset);
     }
     if (tag == tag_from_str("OTTO"))
-        return Error::from_string_literal("CFF fonts not supported yet"sv);
+        return Error::from_string_literal("CFF fonts not supported yet");
 
     if (tag != 0x00010000)
-        return Error::from_string_literal("Not a valid font"sv);
+        return Error::from_string_literal("Not a valid font");
 
     return try_load_from_offset(buffer, 0);
 }
@@ -389,10 +389,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset)
 {
     if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable))
-        return Error::from_string_literal("Invalid offset in font header"sv);
+        return Error::from_string_literal("Invalid offset in font header");
 
     if (buffer.size() < offset + (u32)Sizes::OffsetTable)
-        return Error::from_string_literal("Font file too small"sv);
+        return Error::from_string_literal("Font file too small");
 
     Optional<ReadonlyBytes> opt_head_slice = {};
     Optional<ReadonlyBytes> opt_name_slice = {};
@@ -417,7 +417,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
-        return Error::from_string_literal("Font file too small"sv);
+        return Error::from_string_literal("Font file too small");
 
     for (auto i = 0; i < num_tables; i++) {
         u32 record_offset = offset + (u32)Sizes::OffsetTable + i * (u32)Sizes::TableRecord;
@@ -426,10 +426,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         u32 table_length = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Length));
 
         if (Checked<u32>::addition_would_overflow(table_offset, table_length))
-            return Error::from_string_literal("Invalid table offset or length in font"sv);
+            return Error::from_string_literal("Invalid table offset or length in font");
 
         if (buffer.size() < table_offset + table_length)
-            return Error::from_string_literal("Font file too small"sv);
+            return Error::from_string_literal("Font file too small");
 
         auto buffer_here = ReadonlyBytes(buffer.offset_pointer(table_offset), table_length);
 
@@ -458,39 +458,39 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
 
     if (!opt_head_slice.has_value() || !(opt_head = Head::from_slice(opt_head_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Head"sv);
+        return Error::from_string_literal("Could not load Head");
     auto head = opt_head.value();
 
     if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Name"sv);
+        return Error::from_string_literal("Could not load Name");
     auto name = opt_name.value();
 
     if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Hhea"sv);
+        return Error::from_string_literal("Could not load Hhea");
     auto hhea = opt_hhea.value();
 
     if (!opt_maxp_slice.has_value() || !(opt_maxp = Maxp::from_slice(opt_maxp_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Maxp"sv);
+        return Error::from_string_literal("Could not load Maxp");
     auto maxp = opt_maxp.value();
 
     if (!opt_hmtx_slice.has_value() || !(opt_hmtx = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics())).has_value())
-        return Error::from_string_literal("Could not load Hmtx"sv);
+        return Error::from_string_literal("Could not load Hmtx");
     auto hmtx = opt_hmtx.value();
 
     if (!opt_cmap_slice.has_value() || !(opt_cmap = Cmap::from_slice(opt_cmap_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Cmap"sv);
+        return Error::from_string_literal("Could not load Cmap");
     auto cmap = opt_cmap.value();
 
     if (!opt_loca_slice.has_value() || !(opt_loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format())).has_value())
-        return Error::from_string_literal("Could not load Loca"sv);
+        return Error::from_string_literal("Could not load Loca");
     auto loca = opt_loca.value();
 
     if (!opt_glyf_slice.has_value())
-        return Error::from_string_literal("Could not load Glyf"sv);
+        return Error::from_string_literal("Could not load Glyf");
     auto glyf = Glyf(opt_glyf_slice.value());
 
     if (!opt_os2_slice.has_value())
-        return Error::from_string_literal("Could not load OS/2"sv);
+        return Error::from_string_literal("Could not load OS/2");
     auto os2 = OS2(opt_os2_slice.value());
 
     Optional<Kern> kern {};
@@ -507,7 +507,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         auto subtable = opt_subtable.value();
         auto platform = subtable.platform_id();
         if (!platform.has_value())
-            return Error::from_string_literal("Invalid Platform ID"sv);
+            return Error::from_string_literal("Invalid Platform ID");
 
         if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {

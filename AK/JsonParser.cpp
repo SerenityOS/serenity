@@ -20,7 +20,7 @@ constexpr bool is_space(int ch)
 ErrorOr<String> JsonParser::consume_and_unescape_string()
 {
     if (!consume_specific('"'))
-        return Error::from_string_literal("JsonParser: Expected '\"'"sv);
+        return Error::from_string_literal("JsonParser: Expected '\"'");
     StringBuilder final_sb;
 
     for (;;) {
@@ -33,7 +33,7 @@ ErrorOr<String> JsonParser::consume_and_unescape_string()
             if (ch == '"' || ch == '\\')
                 break;
             if (is_ascii_c0_control(ch))
-                return Error::from_string_literal("JsonParser: Error while parsing string"sv);
+                return Error::from_string_literal("JsonParser: Error while parsing string");
             ++peek_index;
         }
 
@@ -102,20 +102,20 @@ ErrorOr<String> JsonParser::consume_and_unescape_string()
         if (next_is('u')) {
             ignore();
             if (tell_remaining() < 4)
-                return Error::from_string_literal("JsonParser: EOF while parsing Unicode escape"sv);
+                return Error::from_string_literal("JsonParser: EOF while parsing Unicode escape");
 
             auto code_point = AK::StringUtils::convert_to_uint_from_hex(consume(4));
             if (code_point.has_value()) {
                 final_sb.append_code_point(code_point.value());
                 continue;
             }
-            return Error::from_string_literal("JsonParser: Error while parsing Unicode escape"sv);
+            return Error::from_string_literal("JsonParser: Error while parsing Unicode escape");
         }
 
-        return Error::from_string_literal("JsonParser: Error while parsing string"sv);
+        return Error::from_string_literal("JsonParser: Error while parsing string");
     }
     if (!consume_specific('"'))
-        return Error::from_string_literal("JsonParser: Expected '\"'"sv);
+        return Error::from_string_literal("JsonParser: Expected '\"'");
 
     return final_sb.to_string();
 }
@@ -124,7 +124,7 @@ ErrorOr<JsonValue> JsonParser::parse_object()
 {
     JsonObject object;
     if (!consume_specific('{'))
-        return Error::from_string_literal("JsonParser: Expected '{'"sv);
+        return Error::from_string_literal("JsonParser: Expected '{'");
     for (;;) {
         ignore_while(is_space);
         if (peek() == '}')
@@ -132,10 +132,10 @@ ErrorOr<JsonValue> JsonParser::parse_object()
         ignore_while(is_space);
         auto name = TRY(consume_and_unescape_string());
         if (name.is_null())
-            return Error::from_string_literal("JsonParser: Expected object property name"sv);
+            return Error::from_string_literal("JsonParser: Expected object property name");
         ignore_while(is_space);
         if (!consume_specific(':'))
-            return Error::from_string_literal("JsonParser: Expected ':'"sv);
+            return Error::from_string_literal("JsonParser: Expected ':'");
         ignore_while(is_space);
         auto value = TRY(parse_helper());
         object.set(name, move(value));
@@ -143,13 +143,13 @@ ErrorOr<JsonValue> JsonParser::parse_object()
         if (peek() == '}')
             break;
         if (!consume_specific(','))
-            return Error::from_string_literal("JsonParser: Expected ','"sv);
+            return Error::from_string_literal("JsonParser: Expected ','");
         ignore_while(is_space);
         if (peek() == '}')
-            return Error::from_string_literal("JsonParser: Unexpected '}'"sv);
+            return Error::from_string_literal("JsonParser: Unexpected '}'");
     }
     if (!consume_specific('}'))
-        return Error::from_string_literal("JsonParser: Expected '}'"sv);
+        return Error::from_string_literal("JsonParser: Expected '}'");
     return JsonValue { move(object) };
 }
 
@@ -157,7 +157,7 @@ ErrorOr<JsonValue> JsonParser::parse_array()
 {
     JsonArray array;
     if (!consume_specific('['))
-        return Error::from_string_literal("JsonParser: Expected '['"sv);
+        return Error::from_string_literal("JsonParser: Expected '['");
     for (;;) {
         ignore_while(is_space);
         if (peek() == ']')
@@ -168,14 +168,14 @@ ErrorOr<JsonValue> JsonParser::parse_array()
         if (peek() == ']')
             break;
         if (!consume_specific(','))
-            return Error::from_string_literal("JsonParser: Expected ','"sv);
+            return Error::from_string_literal("JsonParser: Expected ','");
         ignore_while(is_space);
         if (peek() == ']')
-            return Error::from_string_literal("JsonParser: Unexpected ']'"sv);
+            return Error::from_string_literal("JsonParser: Unexpected ']'");
     }
     ignore_while(is_space);
     if (!consume_specific(']'))
-        return Error::from_string_literal("JsonParser: Expected ']'"sv);
+        return Error::from_string_literal("JsonParser: Expected ']'");
     return JsonValue { move(array) };
 }
 
@@ -197,7 +197,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         char ch = peek();
         if (ch == '.') {
             if (is_double)
-                return Error::from_string_literal("JsonParser: Multiple '.' in number"sv);
+                return Error::from_string_literal("JsonParser: Multiple '.' in number");
 
             is_double = true;
             ++m_index;
@@ -209,18 +209,18 @@ ErrorOr<JsonValue> JsonParser::parse_number()
 
             if (is_double) {
                 if (ch == '-')
-                    return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+                    return Error::from_string_literal("JsonParser: Error while parsing number");
 
                 fraction_buffer.append(ch);
             } else {
                 if (number_buffer.size() > 0) {
                     if (number_buffer.at(0) == '0')
-                        return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+                        return Error::from_string_literal("JsonParser: Error while parsing number");
                 }
 
                 if (number_buffer.size() > 1) {
                     if (number_buffer.at(0) == '-' && number_buffer.at(1) == '0')
-                        return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+                        return Error::from_string_literal("JsonParser: Error while parsing number");
                 }
 
                 number_buffer.append(ch);
@@ -247,14 +247,14 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         } else {
             auto number = number_string.to_int();
             if (!number.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+                return Error::from_string_literal("JsonParser: Error while parsing number");
             whole = number.value();
         }
 
         StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
         auto fraction_string_uint = fraction_string.to_uint<u64>();
         if (!fraction_string_uint.has_value())
-            return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+            return Error::from_string_literal("JsonParser: Error while parsing number");
         auto fraction = static_cast<double>(fraction_string_uint.value());
         double sign = (whole < 0) ? -1 : 1;
 
@@ -272,7 +272,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         } else {
             auto number = number_string.to_int<i64>();
             if (!number.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number"sv);
+                return Error::from_string_literal("JsonParser: Error while parsing number");
             if (number.value() <= NumericLimits<i32>::max()) {
                 value = JsonValue((i32)number.value());
             } else {
@@ -289,21 +289,21 @@ ErrorOr<JsonValue> JsonParser::parse_number()
 ErrorOr<JsonValue> JsonParser::parse_true()
 {
     if (!consume_specific("true"))
-        return Error::from_string_literal("JsonParser: Expected 'true'"sv);
+        return Error::from_string_literal("JsonParser: Expected 'true'");
     return JsonValue(true);
 }
 
 ErrorOr<JsonValue> JsonParser::parse_false()
 {
     if (!consume_specific("false"))
-        return Error::from_string_literal("JsonParser: Expected 'false'"sv);
+        return Error::from_string_literal("JsonParser: Expected 'false'");
     return JsonValue(false);
 }
 
 ErrorOr<JsonValue> JsonParser::parse_null()
 {
     if (!consume_specific("null"))
-        return Error::from_string_literal("JsonParser: Expected 'null'"sv);
+        return Error::from_string_literal("JsonParser: Expected 'null'");
     return JsonValue(JsonValue::Type::Null);
 }
 
@@ -338,7 +338,7 @@ ErrorOr<JsonValue> JsonParser::parse_helper()
         return parse_null();
     }
 
-    return Error::from_string_literal("JsonParser: Unexpected character"sv);
+    return Error::from_string_literal("JsonParser: Unexpected character");
 }
 
 ErrorOr<JsonValue> JsonParser::parse()
@@ -346,7 +346,7 @@ ErrorOr<JsonValue> JsonParser::parse()
     auto result = TRY(parse_helper());
     ignore_while(is_space);
     if (!is_eof())
-        return Error::from_string_literal("JsonParser: Didn't consume all input"sv);
+        return Error::from_string_literal("JsonParser: Didn't consume all input");
     return result;
 }
 

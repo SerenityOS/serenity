@@ -70,7 +70,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create(BitmapFormat format, IntSize c
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_shareable(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow");
 
     auto const pitch = minimum_pitch(size.width() * scale_factor, format);
     auto const data_size = size_in_bytes(pitch, size.height() * scale_factor);
@@ -98,7 +98,7 @@ Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, Backi
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow");
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
@@ -134,7 +134,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String
             return bitmap.release_nonnull();
     }
 
-    return Error::from_string_literal("Gfx::Bitmap unable to load from fd"sv);
+    return Error::from_string_literal("Gfx::Bitmap unable to load from fd");
 }
 
 Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
@@ -206,22 +206,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(By
     };
 
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     palette.ensure_capacity(palette_size);
     for (size_t i = 0; i < palette_size; ++i) {
         if (!read(palette[i]))
-            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
     }
 
     if (stream.remaining() < actual_size)
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
@@ -548,7 +548,7 @@ Gfx::ShareableBitmap Bitmap::to_shareable_bitmap() const
 ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap backing store size overflow");
 
     auto const pitch = minimum_pitch(size.width() * scale_factor, format);
     auto const data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);

@@ -11,7 +11,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm");
     if (!document) {
-        return Error::from_string_literal("Failed to parse :("sv);
+        return Error::from_string_literal("Failed to parse :(");
     }
 
     outln("DocType is {}", document->header().doc_type.characters());

@@ -1285,15 +1285,15 @@ size_t JPGImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("JPGImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("JPGImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == JPGLoadingContext::State::Error)
-        return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
         if (!decode_jpg(*m_context)) {
             m_context->state = JPGLoadingContext::State::Error;
-            return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed");
         }
         m_context->state = JPGLoadingContext::State::BitmapDecoded;
     }

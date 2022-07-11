@@ -30,7 +30,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& si
     VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return Error::from_string_literal("Image size too large"sv);
+        return Error::from_string_literal("Image size too large");
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) Image(size));
 }
@@ -62,16 +62,16 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     // FIXME: Find a way to avoid the memory copying here.
     auto maybe_decoded_image = client->decode_image(bitmap_data);
     if (!maybe_decoded_image.has_value())
-        return Error::from_string_literal("Image decode failed"sv);
+        return Error::from_string_literal("Image decode failed");
 
     // FIXME: Support multi-frame images?
     auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
-        return Error::from_string_literal("Image decode failed (no frames)"sv);
+        return Error::from_string_literal("Image decode failed (no frames)");
 
     auto decoded_bitmap = decoded_image.frames.first().bitmap;
     if (decoded_bitmap.is_null())
-        return Error::from_string_literal("Image decode failed (no bitmap for frame)"sv);
+        return Error::from_string_literal("Image decode failed (no bitmap for frame)");
     return decoded_bitmap.release_nonnull();
 }
 
@@ -108,7 +108,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
         auto height = layer_object.get("height").to_i32();
 
         if (width != layer->size().width() || height != layer->size().height())
-            return Error::from_string_literal("Decoded layer bitmap has wrong size"sv);
+            return Error::from_string_literal("Decoded layer bitmap has wrong size");
 
         image->add_layer(*layer);
 
