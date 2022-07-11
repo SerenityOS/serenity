@@ -393,26 +393,6 @@ String String::invert_case() const
     return StringUtils::invert_case(*this);
 }
 
-bool operator<(char const* characters, String const& string)
-{
-    return string.view() > characters;
-}
-
-bool operator>=(char const* characters, String const& string)
-{
-    return string.view() <= characters;
-}
-
-bool operator>(char const* characters, String const& string)
-{
-    return string.view() < characters;
-}
-
-bool operator<=(char const* characters, String const& string)
-{
-    return string.view() >= characters;
-}
-
 bool String::operator==(char const* cstring) const
 {
     return view() == cstring;
