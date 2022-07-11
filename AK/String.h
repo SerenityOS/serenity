@@ -327,11 +327,6 @@ struct CaseInsensitiveStringTraits : public Traits<String> {
     static bool equals(String const& a, String const& b) { return a.equals_ignoring_case(b); }
 };
 
-bool operator<(char const*, String const&);
-bool operator>=(char const*, String const&);
-bool operator>(char const*, String const&);
-bool operator<=(char const*, String const&);
-
 String escape_html_entities(StringView html);
 
 InputStream& operator>>(InputStream& stream, String& string);
