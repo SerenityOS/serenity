@@ -94,6 +94,9 @@ set(SOURCES
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
     DOM/LiveNodeList.cpp
+    DOM/MutationObserver.cpp
+    DOM/MutationRecord.cpp
+    DOM/MutationType.cpp
     DOM/NamedNodeMap.cpp
     DOM/Node.cpp
     DOM/NodeIterator.cpp
