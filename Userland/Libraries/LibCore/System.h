@@ -55,6 +55,29 @@ inline ErrorOr<void> unveil(StringView, StringView)
 inline ErrorOr<void> pledge(StringView, StringView = {}) { return {}; }
 #endif
 
+template<size_t N>
+ALWAYS_INLINE ErrorOr<void> pledge(char const (&promises)[N])
+{
+    return pledge(StringView { promises, N - 1 });
+}
+
+template<size_t NPromises, size_t NExecPromises>
+ALWAYS_INLINE ErrorOr<void> pledge(char const (&promises)[NPromises], char const (&execpromises)[NExecPromises])
+{
+    return pledge(StringView { promises, NPromises - 1 }, StringView { execpromises, NExecPromises - 1 });
+}
+
+template<size_t NPath, size_t NPermissions>
+ALWAYS_INLINE ErrorOr<void> unveil(char const (&path)[NPath], char const (&permissions)[NPermissions])
+{
+    return unveil(StringView { path, NPath - 1 }, StringView { permissions, NPermissions - 1 });
+}
+
+ALWAYS_INLINE ErrorOr<void> unveil(std::nullptr_t, std::nullptr_t)
+{
+    return unveil(StringView {}, StringView {});
+}
+
 #ifndef AK_OS_BSD_GENERIC
 ErrorOr<Optional<struct spwd>> getspent();
 ErrorOr<Optional<struct spwd>> getspnam(StringView name);
