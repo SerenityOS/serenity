@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -370,39 +371,6 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, 
     return mime_type;
 }
 
-// https://fetch.spec.whatwg.org/#forbidden-header-name
-static bool is_forbidden_header_name(String const& header_name)
-{
-    if (header_name.starts_with("Proxy-"sv, CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-"sv, CaseSensitivity::CaseInsensitive))
-        return true;
-
-    auto lowercase_header_name = header_name.to_lowercase();
-    return lowercase_header_name.is_one_of("accept-charset", "accept-encoding", "access-control-request-headers", "access-control-request-method", "connection", "content-length", "cookie", "cookie2", "date", "dnt", "expect", "host", "keep-alive", "origin", "referer", "te", "trailer", "transfer-encoding", "upgrade", "via");
-}
-
-// https://fetch.spec.whatwg.org/#header-name
-static bool is_header_name(String const& header_name)
-{
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$)~~~" };
-    return regex.has_match(header_name);
-}
-
-// https://fetch.spec.whatwg.org/#concept-header-value-normalize
-static String normalize_header_value(String const& header_value)
-{
-    return header_value.trim(Fetch::HTTP_WHITESPACE);
-}
-
-// https://fetch.spec.whatwg.org/#header-value
-static bool is_header_value(String const& header_value)
-{
-    for (auto const& character : header_value.view()) {
-        if (character == '\0' || character == '\n' || character == '\r')
-            return false;
-    }
-    return true;
-}
-
 static XMLHttpRequest::BodyWithType safely_extract_body(XMLHttpRequestBodyInit& body)
 {
     if (body.has<NonnullRefPtr<URL::URLSearchParams>>()) {
@@ -419,8 +387,11 @@ static XMLHttpRequest::BodyWithType safely_extract_body(XMLHttpRequestBodyInit& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, String const& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_string, String const& value_string)
 {
+    auto name = name_string.to_byte_buffer();
+    auto value = value_string.to_byte_buffer();
+
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -430,28 +401,29 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, St
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // 3. Normalize value.
-    auto normalized_value = normalize_header_value(value);
+    value = MUST(Fetch::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
-    if (!is_header_name(name))
+    if (!Fetch::is_header_name(name))
         return DOM::SyntaxError::create("Header name contains invalid characters.");
-    if (!is_header_value(value))
+    if (!Fetch::is_header_value(value))
         return DOM::SyntaxError::create("Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
-    if (is_forbidden_header_name(name))
+    if (Fetch::is_forbidden_header_name(name))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
     // FIXME: The header name look-up should be case-insensitive.
-    if (m_request_headers.contains(name)) {
+    // FIXME: Headers should be stored as raw byte sequences, not Strings.
+    if (m_request_headers.contains(StringView { name })) {
         // 1. If list contains name, then set the value of the first such header to its value,
         //    followed by 0x2C 0x20, followed by value.
-        auto maybe_header_value = m_request_headers.get(name);
-        m_request_headers.set(name, String::formatted("{}, {}", maybe_header_value.release_value(), normalized_value));
+        auto maybe_header_value = m_request_headers.get(StringView { name });
+        m_request_headers.set(StringView { name }, String::formatted("{}, {}", maybe_header_value.release_value(), StringView { name }));
     } else {
         // 2. Otherwise, append (name, value) to list.
-        m_request_headers.set(name, normalized_value);
+        m_request_headers.set(StringView { name }, StringView { value });
     }
 
     return {};
