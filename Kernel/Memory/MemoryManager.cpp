@@ -711,16 +711,21 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
         return fault.vaddr() >= VirtualAddress { start } && fault.vaddr() < VirtualAddress { end };
     };
 
-    if (faulted_in_range(&start_of_ro_after_init, &end_of_ro_after_init))
-        PANIC("Attempt to write into READONLY_AFTER_INIT section");
+    if (faulted_in_range(&start_of_ro_after_init, &end_of_ro_after_init)) {
+        dbgln("Attempt to write into READONLY_AFTER_INIT section");
+        return PageFaultResponse::ShouldCrash;
+    }
 
     if (faulted_in_range(&start_of_unmap_after_init, &end_of_unmap_after_init)) {
         auto const* kernel_symbol = symbolicate_kernel_address(fault.vaddr().get());
-        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault.vaddr(), kernel_symbol ? kernel_symbol->name : "(Unknown)");
+        dbgln("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault.vaddr(), kernel_symbol ? kernel_symbol->name : "(Unknown)");
+        return PageFaultResponse::ShouldCrash;
     }
 
-    if (faulted_in_range(&start_of_kernel_ksyms, &end_of_kernel_ksyms))
-        PANIC("Attempt to access KSYMS section");
+    if (faulted_in_range(&start_of_kernel_ksyms, &end_of_kernel_ksyms)) {
+        dbgln("Attempt to access KSYMS section");
+        return PageFaultResponse::ShouldCrash;
+    }
 
     if (Processor::current_in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
