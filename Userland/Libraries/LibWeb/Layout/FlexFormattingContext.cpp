@@ -599,11 +599,11 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    and the flex container is being sized under a min-content or max-content constraint
         //    (e.g. when performing automatic table layout [CSS21]), size the item under that constraint.
         //    The flex base size is the item’s resulting main size.
-        if (used_flex_basis.type == CSS::FlexBasis::Content
-            // FIXME: && sized under min-content or max-content constraints
-            && false) {
-            TODO();
-            // Size child_box under the constraints, flex_base_size is then the resulting main_size.
+        auto flex_container_main_size_constraint = is_row_layout() ? m_flex_container_state.width_constraint : m_flex_container_state.height_constraint;
+        if (used_flex_basis.type == CSS::FlexBasis::Content && flex_container_main_size_constraint != SizeConstraint::None) {
+            if (flex_container_main_size_constraint == SizeConstraint::MinContent)
+                return calculate_min_content_main_size(flex_item);
+            return calculate_max_content_main_size(flex_item);
         }
 
         // D. Otherwise, if the used flex basis is content or depends on its available space,
