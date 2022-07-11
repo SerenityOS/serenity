@@ -35,7 +35,7 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
     String qualifiers_string;
     if (!m_qualifiers.is_empty()) {
         print_indent(output, indent + 1);
-        outln(output, "[{}]", String::join(" ", m_qualifiers));
+        outln(output, "[{}]", String::join(' ', m_qualifiers));
     }
 
     m_return_type->dump(output, indent + 1);
@@ -79,7 +79,7 @@ String NamedType::to_string() const
 {
     String qualifiers_string;
     if (!qualifiers().is_empty())
-        qualifiers_string = String::formatted("[{}] ", String::join(" ", qualifiers()));
+        qualifiers_string = String::formatted("[{}] ", String::join(' ', qualifiers()));
 
     String name;
     if (is_auto())
@@ -96,7 +96,7 @@ String Pointer::to_string() const
         return {};
     StringBuilder builder;
     builder.append(m_pointee->to_string());
-    builder.append("*");
+    builder.append('*');
     return builder.to_string();
 }
 
@@ -107,7 +107,7 @@ String Reference::to_string() const
     StringBuilder builder;
     builder.append(m_referenced_type->to_string());
     if (m_kind == Kind::Lvalue)
-        builder.append("&");
+        builder.append('&');
     else
         builder.append("&&"sv);
     return builder.to_string();
@@ -117,7 +117,7 @@ String FunctionType::to_string() const
 {
     StringBuilder builder;
     builder.append(m_return_type->to_string());
-    builder.append("(");
+    builder.append('(');
     bool first = true;
     for (auto& parameter : m_parameters) {
         if (first)
@@ -127,11 +127,11 @@ String FunctionType::to_string() const
         if (parameter.type())
             builder.append(parameter.type()->to_string());
         if (parameter.name() && !parameter.full_name().is_empty()) {
-            builder.append(" ");
+            builder.append(' ');
             builder.append(parameter.full_name());
         }
     }
-    builder.append(")");
+    builder.append(')');
     return builder.to_string();
 }
 

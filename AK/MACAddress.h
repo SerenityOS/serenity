@@ -75,7 +75,7 @@ public:
         if (string.is_null())
             return {};
 
-        auto const parts = string.split_view(":");
+        auto const parts = string.split_view(':');
         if (parts.size() != 6)
             return {};
 

@@ -169,7 +169,7 @@ struct QueueEntry {
 
 static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
 {
-    VERIFY(!root.m_name.ends_with("/"));
+    VERIFY(!root.m_name.ends_with('/'));
 
     Queue<QueueEntry> queue;
     queue.enqueue(QueueEntry(root.m_name, &root));
@@ -177,7 +177,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
 
     StringBuilder builder = StringBuilder();
     builder.append(root.m_name);
-    builder.append("/");
+    builder.append('/');
     MountInfo* root_mount_info = find_mount_for_path(builder.to_string(), mounts);
     if (!root_mount_info) {
         return;
@@ -187,7 +187,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
 
         builder.clear();
         builder.append(queue_entry.path);
-        builder.append("/");
+        builder.append('/');
 
         MountInfo* mount_info = find_mount_for_path(builder.to_string(), mounts);
         if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
@@ -269,7 +269,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
             } else {
                 builder.append(" times"sv);
             }
-            builder.append(")");
+            builder.append(')');
             first = false;
         }
         statusbar.set_text(builder.to_string());
@@ -404,7 +404,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
 
-            builder.append("/");
+            builder.append('/');
             builder.append(node->name());
 
             breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());

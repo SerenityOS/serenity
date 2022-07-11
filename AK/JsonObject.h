@@ -182,9 +182,9 @@ inline void JsonValue::serialize(Builder& builder) const
 {
     switch (m_type) {
     case Type::String: {
-        builder.append("\"");
+        builder.append('\"');
         builder.append_escaped_for_json({ m_value.as_string->characters(), m_value.as_string->length() });
-        builder.append("\"");
+        builder.append('\"');
     } break;
     case Type::Array:
         m_value.as_array->serialize(builder);

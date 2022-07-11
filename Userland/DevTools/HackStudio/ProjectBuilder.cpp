@@ -246,7 +246,7 @@ void ProjectBuilder::for_each_library_dependencies(Function<void(String, Vector<
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
         auto dependencies_string = result.capture_group_matches.at(0).at(1).view.string_view();
 
-        func(library_name, dependencies_string.split_view(" "));
+        func(library_name, dependencies_string.split_view(' '));
     }
 }
 

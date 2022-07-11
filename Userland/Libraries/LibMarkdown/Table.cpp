@@ -42,10 +42,10 @@ String Table::render_for_terminal(size_t view_width) const
         write_aligned(col.header, width, col.alignment);
     }
 
-    builder.append("\n");
+    builder.append('\n');
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    builder.append("\n");
+    builder.append('\n');
 
     for (size_t i = 0; i < m_row_count; ++i) {
         bool first = true;
@@ -60,10 +60,10 @@ String Table::render_for_terminal(size_t view_width) const
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        builder.append("\n");
+        builder.append('\n');
     }
 
-    builder.append("\n");
+    builder.append('\n');
 
     return builder.to_string();
 }

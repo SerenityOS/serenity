@@ -85,7 +85,7 @@ public:
 
         // 5. If origin's port is non-null, append a U+003A COLON character (:), and origin's port, serialized, to result.
         if (port() != 0) {
-            result.append(":");
+            result.append(':');
             result.append(String::number(port()));
         }
         // 6. Return result

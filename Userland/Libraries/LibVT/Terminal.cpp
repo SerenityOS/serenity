@@ -1448,7 +1448,7 @@ void Terminal::unimplemented_csi_sequence(Parameters parameters, Intermediates i
         builder.append(", parameters: ["sv);
         for (size_t i = 0; i < parameters.size(); ++i)
             builder.appendff("{}{}", (i == 0) ? "" : ", ", parameters[i]);
-        builder.append("]");
+        builder.append("]"sv);
     }
     if (!intermediates.is_empty()) {
         builder.append(", intermediates:"sv);
@@ -1469,7 +1469,7 @@ void Terminal::unimplemented_osc_sequence(OscParameters parameters, u8 last_byte
         builder.append('[');
         for (auto character : parameter)
             builder.append((char)character);
-        builder.append("]");
+        builder.append(']');
         first = false;
     }
 

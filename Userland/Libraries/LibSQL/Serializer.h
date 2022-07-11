@@ -163,7 +163,7 @@ private:
             bytes.append(String::formatted("{0:02x}", *(ptr + ix)));
         }
         StringBuilder bytes_builder;
-        bytes_builder.join(" ", bytes);
+        bytes_builder.join(' ', bytes);
         builder.append(bytes_builder.to_string());
         dbgln(builder.to_string());
     }

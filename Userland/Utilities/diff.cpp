@@ -41,11 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // Action
         if (num_added > 0 && num_removed > 0)
-            sb.append("c");
+            sb.append('c');
         else if (num_added > 0)
-            sb.append("a");
+            sb.append('a');
         else
-            sb.append("d");
+            sb.append('d');
 
         // Target line(s)
         sb.appendff("{}", target_start);

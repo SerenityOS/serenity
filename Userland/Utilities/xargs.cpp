@@ -197,7 +197,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
 
     if (verbose) {
         StringBuilder builder;
-        builder.join(" ", child_argv);
+        builder.join(' ', child_argv);
         warnln("xargs: {}", builder.to_string());
     }
 

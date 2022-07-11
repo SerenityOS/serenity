@@ -205,7 +205,7 @@ void print_human_readable(termios const& modes, winsize const& ws, bool verbose_
     auto escape_character = [&](u8 ch) {
         StringBuilder sb;
         if (ch <= 0x20) {
-            sb.append("^");
+            sb.append('^');
             sb.append(ch + 0x40);
         } else if (ch == 0x7f) {
             sb.append("^?"sv);

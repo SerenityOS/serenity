@@ -209,7 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& arguments_label = *widget->find_descendant_of_type_named<GUI::Label>("arguments_label");
-    arguments_label.set_text(String::join(" ", crashed_process_arguments));
+    arguments_label.set_text(String::join(' ', crashed_process_arguments));
 
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
@@ -241,7 +241,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_tab->layout()->set_margins(4);
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
-    environment_text_editor->set_text(String::join("\n", environment));
+    environment_text_editor->set_text(String::join('\n', environment));
     environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
@@ -250,7 +250,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     memory_regions_tab->layout()->set_margins(4);
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
-    memory_regions_text_editor->set_text(String::join("\n", memory_regions));
+    memory_regions_text_editor->set_text(String::join('\n', memory_regions));
     memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
     memory_regions_text_editor->set_visualize_trailing_whitespace(false);

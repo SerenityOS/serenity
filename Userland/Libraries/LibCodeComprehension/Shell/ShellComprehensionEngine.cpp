@@ -80,7 +80,7 @@ Vector<String> const& ShellComprehensionEngine::DocumentData::sourced_paths() co
                             return;
                         auto name_list = const_cast<::Shell::AST::Node*>(filename.ptr())->run(nullptr)->resolve_as_list(nullptr);
                         StringBuilder builder;
-                        builder.join(" ", name_list);
+                        builder.join(' ', name_list);
                         sourced_files.set(builder.build());
                     }
                 }

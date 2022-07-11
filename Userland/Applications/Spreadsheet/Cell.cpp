@@ -22,7 +22,7 @@ void Cell::set_data(String new_data)
     if (m_data == new_data)
         return;
 
-    if (new_data.starts_with("=")) {
+    if (new_data.starts_with('=')) {
         new_data = new_data.substring(1, new_data.length() - 1);
         m_kind = Formula;
     } else {

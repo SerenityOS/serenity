@@ -108,7 +108,7 @@ void Text::TextNode::render_to_html(StringBuilder& builder) const
 void Text::TextNode::render_for_terminal(StringBuilder& builder) const
 {
     if (collapsible && (text == "\n" || text.is_whitespace())) {
-        builder.append(" ");
+        builder.append(' ');
     } else {
         builder.append(text);
     }
@@ -546,7 +546,7 @@ NonnullOwnPtr<Text::Node> Text::parse_code(Vector<Token>::ConstIterator& tokens)
             if (!is_all_whitespace) {
                 auto& first = dynamic_cast<TextNode&>(code->children.first());
                 auto& last = dynamic_cast<TextNode&>(code->children.last());
-                if (first.text.starts_with(" ") && last.text.ends_with(" ")) {
+                if (first.text.starts_with(' ') && last.text.ends_with(' ')) {
                     first.text = first.text.substring(1);
                     last.text = last.text.substring(0, last.text.length() - 1);
                 }
@@ -608,7 +608,7 @@ NonnullOwnPtr<Text::Node> Text::parse_strike_through(Vector<Token>::ConstIterato
             if (!is_all_whitespace) {
                 auto& first = dynamic_cast<TextNode&>(striked_text->children.first());
                 auto& last = dynamic_cast<TextNode&>(striked_text->children.last());
-                if (first.text.starts_with(" ") && last.text.ends_with(" ")) {
+                if (first.text.starts_with(' ') && last.text.ends_with(' ')) {
                     first.text = first.text.substring(1);
                     last.text = last.text.substring(0, last.text.length() - 1);
                 }

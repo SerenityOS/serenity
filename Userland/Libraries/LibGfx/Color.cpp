@@ -30,7 +30,7 @@ String Color::to_string_without_alpha() const
 static Optional<Color> parse_rgb_color(StringView string)
 {
     VERIFY(string.starts_with("rgb("sv, CaseSensitivity::CaseInsensitive));
-    VERIFY(string.ends_with(")"));
+    VERIFY(string.ends_with(')'));
 
     auto substring = string.substring_view(4, string.length() - 5);
     auto parts = substring.split_view(',');
@@ -51,7 +51,7 @@ static Optional<Color> parse_rgb_color(StringView string)
 static Optional<Color> parse_rgba_color(StringView string)
 {
     VERIFY(string.starts_with("rgba("sv, CaseSensitivity::CaseInsensitive));
-    VERIFY(string.ends_with(")"));
+    VERIFY(string.ends_with(')'));
 
     auto substring = string.substring_view(5, string.length() - 6);
     auto parts = substring.split_view(',');
@@ -252,10 +252,10 @@ Optional<Color> Color::from_string(StringView string)
             return Color::from_rgb(web_colors[i].color);
     }
 
-    if (string.starts_with("rgb("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(")"))
+    if (string.starts_with("rgb("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(')'))
         return parse_rgb_color(string);
 
-    if (string.starts_with("rgba("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(")"))
+    if (string.starts_with("rgba("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(')'))
         return parse_rgba_color(string);
 
     if (string[0] != '#')

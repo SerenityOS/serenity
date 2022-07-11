@@ -390,7 +390,7 @@ String Shell::local_variable_or(StringView name, String const& replacement) cons
     auto value = lookup_local_variable(name);
     if (value) {
         StringBuilder builder;
-        builder.join(" ", value->resolve_as_list(*this));
+        builder.join(' ', value->resolve_as_list(*this));
         return builder.to_string();
     }
     return replacement;
@@ -839,7 +839,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     close(sync_pipe[1]);
 
     StringBuilder cmd;
-    cmd.join(" ", command.argv);
+    cmd.join(' ', command.argv);
 
     auto command_copy = AST::Command(command);
     // Clear the next chain if it's to be immediately executed

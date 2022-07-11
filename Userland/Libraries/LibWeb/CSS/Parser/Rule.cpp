@@ -25,11 +25,11 @@ String Rule::to_string() const
     StringBuilder builder;
 
     if (is_at_rule()) {
-        builder.append("@");
+        builder.append('@');
         serialize_an_identifier(builder, m_at_rule_name);
     }
 
-    builder.join(" ", m_prelude);
+    builder.join(' ', m_prelude);
 
     if (m_block)
         builder.append(m_block->to_string());

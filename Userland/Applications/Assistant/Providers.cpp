@@ -62,7 +62,7 @@ void URLResult::activate() const
 
 void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
-    if (query.starts_with("=") || query.starts_with('$'))
+    if (query.starts_with('=') || query.starts_with('$'))
         return;
 
     NonnullRefPtrVector<Result> results;
@@ -81,7 +81,7 @@ void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<R
 
 void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
-    if (!query.starts_with("="))
+    if (!query.starts_with('='))
         return;
 
     auto vm = JS::VM::create();

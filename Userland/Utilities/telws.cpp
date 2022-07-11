@@ -93,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (line.is_empty())
             continue;
 
-        if (line.starts_with(".")) {
+        if (line.starts_with('.')) {
             if (line.starts_with(".text "sv)) {
                 editor->add_to_history(line);
                 if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {

@@ -1221,7 +1221,7 @@ void GLContext::build_extension_string()
     if (m_device_info.num_texture_units > 1)
         extensions.append("GL_ARB_multitexture"sv);
 
-    m_extensions = String::join(" ", extensions);
+    m_extensions = String::join(' ', extensions);
 }
 
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)

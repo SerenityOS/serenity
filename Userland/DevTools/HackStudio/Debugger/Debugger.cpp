@@ -94,7 +94,7 @@ bool Debugger::set_execution_position(String const& file, size_t line)
 
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(String const& file, size_t line)
 {
-    if (file.starts_with("/"))
+    if (file.starts_with('/'))
         return { file, line + 1 };
     return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
 }

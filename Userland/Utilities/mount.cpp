@@ -70,7 +70,7 @@ static int get_source_fd(StringView source)
 static bool mount_by_line(String const& line)
 {
     // Skip comments and blank lines.
-    if (line.is_empty() || line.starts_with("#"))
+    if (line.is_empty() || line.starts_with('#'))
         return true;
 
     Vector<String> parts = line.split('\t');

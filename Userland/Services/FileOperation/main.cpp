@@ -355,7 +355,7 @@ String deduplicate_destination_file_name(String const& destination)
     StringBuilder basename;
     basename.appendff("{}-{}", title_without_counter, next_counter);
     if (!destination_path.extension().is_empty()) {
-        basename.append(".");
+        basename.append('.');
         basename.append(destination_path.extension());
     }
 

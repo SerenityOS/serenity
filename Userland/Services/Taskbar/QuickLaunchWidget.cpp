@@ -112,7 +112,7 @@ QuickLaunchWidget::QuickLaunchWidget()
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView value)
 {
-    if (!value.starts_with("/") && value.ends_with(".af"sv)) {
+    if (!value.starts_with('/') && value.ends_with(".af"sv)) {
         auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, value);
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
     }

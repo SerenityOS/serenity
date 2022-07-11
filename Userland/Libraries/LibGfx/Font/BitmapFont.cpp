@@ -356,7 +356,7 @@ String BitmapFont::variant() const
         if (builder.string_view() == "Regular"sv)
             builder.clear();
         else
-            builder.append(" ");
+            builder.append(' ');
         builder.append(slope_to_name(slope()));
     }
     return builder.to_string();

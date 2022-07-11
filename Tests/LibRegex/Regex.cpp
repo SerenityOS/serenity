@@ -159,7 +159,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
         // After circumflex
         b.clear();
-        b.append("^");
+        b.append('^');
         b.append(ch);
         pattern = b.build();
         l.set_source(pattern);
@@ -169,7 +169,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
         // After dollar
         b.clear();
-        b.append("$");
+        b.append('$');
         b.append(ch);
         pattern = b.build();
         l.set_source(pattern);
@@ -179,9 +179,9 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 
         // After left parens
         b.clear();
-        b.append("(");
+        b.append('(');
         b.append(ch);
-        b.append(")");
+        b.append(')');
         pattern = b.build();
         l.set_source(pattern);
         p.parse();

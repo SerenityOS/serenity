@@ -153,7 +153,7 @@ String Backtrace::Entry::to_string(bool color) const
         }
     }
 
-    builder.append(")");
+    builder.append(')');
 
     return builder.build();
 }

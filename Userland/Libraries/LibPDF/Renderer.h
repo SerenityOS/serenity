@@ -172,7 +172,7 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::LineDashPattern const& pattern)
     {
         StringBuilder builder;
-        builder.append("[");
+        builder.append('[');
         bool first = true;
 
         for (auto& i : pattern.pattern) {
@@ -248,7 +248,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.appendff("  miter_limit={}\n", state.miter_limit);
         builder.appendff("  line_dash_pattern={}\n", state.line_dash_pattern);
         builder.appendff("  text_state={}\n", state.text_state);
-        builder.append("}");
+        builder.append('}');
         return format_builder.put_string(builder.to_string());
     }
 };
