@@ -57,7 +57,14 @@ constexpr Piece EmptyPiece = { Color::None, Type::None };
 struct Square {
     i8 rank; // zero indexed;
     i8 file;
+
     Square(StringView name);
+
+    Square(char const name[3])
+        : Square({ name, 2 })
+    {
+    }
+
     Square(int const& rank, int const& file)
         : rank(rank)
         , file(file)
