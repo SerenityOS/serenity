@@ -6,6 +6,13 @@
       "align-items"
     ]
   },
+  "align-self": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "align-self"
+    ]
+  },
   "background": {
     "affects-layout": false,
     "inherited": false,

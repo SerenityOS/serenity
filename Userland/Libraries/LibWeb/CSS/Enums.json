@@ -1,10 +1,28 @@
 {
     "align-items": [
-        "flex-start",
-        "flex-end",
-        "center",
         "baseline",
-        "stretch"
+        "center",
+        "flex-end",
+        "flex-start",
+        "normal",
+        "safe",
+        "self-end",
+        "self-start",
+        "stretch",
+        "unsafe"
+    ],
+    "align-self": [
+        "auto",
+        "baseline",
+        "center",
+        "flex-end",
+        "flex-start",
+        "normal",
+        "safe",
+        "self-end",
+        "self-start",
+        "stretch",
+        "unsafe"
     ],
     "background-attachment": [
         "fixed",

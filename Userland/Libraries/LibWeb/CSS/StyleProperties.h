@@ -67,6 +67,7 @@ public:
     float flex_shrink() const;
     int order() const;
     Optional<CSS::AlignItems> align_items() const;
+    Optional<CSS::AlignSelf> align_self() const;
     float opacity() const;
     Optional<CSS::Visibility> visibility() const;
     Optional<CSS::ImageRendering> image_rendering() const;

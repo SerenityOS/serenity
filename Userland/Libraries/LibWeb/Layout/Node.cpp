@@ -423,6 +423,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (align_items.has_value())
         computed_values.set_align_items(align_items.value());
 
+    auto align_self = computed_style.align_self();
+    if (align_self.has_value())
+        computed_values.set_align_self(align_self.value());
+
     auto position = computed_style.position();
     if (position.has_value())
         computed_values.set_position(position.value());

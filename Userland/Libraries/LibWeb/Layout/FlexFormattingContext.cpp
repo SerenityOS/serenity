@@ -1072,13 +1072,12 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const c
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
 void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
 {
-    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
     for (auto& flex_line : m_flex_lines) {
         for (auto& flex_item : flex_line.items) {
             //  If a flex item has align-self: stretch, its computed cross size property is auto,
             //  and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line,
             //  clamped according to the item’s used min and max cross sizes.
-            if (flex_item->box.computed_values().align_items() == CSS::AlignItems::Stretch
+            if (alignment_for_item(*flex_item) == CSS::AlignItems::Stretch
                 && is_cross_auto(flex_item->box)
                 && !flex_item->margins.cross_before_is_auto
                 && !flex_item->margins.cross_after_is_auto) {
@@ -1201,14 +1200,43 @@ void FlexFormattingContext::dump_items() const
     }
 }
 
+CSS::AlignItems FlexFormattingContext::alignment_for_item(FlexItem const& item) const
+{
+    switch (item.box.computed_values().align_self()) {
+    case CSS::AlignSelf::Auto:
+        return flex_container().computed_values().align_items();
+    case CSS::AlignSelf::Normal:
+        return CSS::AlignItems::Normal;
+    case CSS::AlignSelf::SelfStart:
+        return CSS::AlignItems::SelfStart;
+    case CSS::AlignSelf::SelfEnd:
+        return CSS::AlignItems::SelfEnd;
+    case CSS::AlignSelf::FlexStart:
+        return CSS::AlignItems::FlexStart;
+    case CSS::AlignSelf::FlexEnd:
+        return CSS::AlignItems::FlexEnd;
+    case CSS::AlignSelf::Center:
+        return CSS::AlignItems::Center;
+    case CSS::AlignSelf::Baseline:
+        return CSS::AlignItems::Baseline;
+    case CSS::AlignSelf::Stretch:
+        return CSS::AlignItems::Stretch;
+    case CSS::AlignSelf::Safe:
+        return CSS::AlignItems::Safe;
+    case CSS::AlignSelf::Unsafe:
+        return CSS::AlignItems::Unsafe;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
 {
-    // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
     // FIXME: Take better care of margins
     float line_cross_offset = 0;
     for (auto& flex_line : m_flex_lines) {
         for (auto* flex_item : flex_line.items) {
-            switch (flex_container().computed_values().align_items()) {
+            switch (alignment_for_item(*flex_item)) {
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
                 //  Fallthrough

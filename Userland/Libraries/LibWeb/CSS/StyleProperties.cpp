@@ -310,6 +310,12 @@ Optional<CSS::AlignItems> StyleProperties::align_items() const
     return value_id_to_align_items(value->to_identifier());
 }
 
+Optional<CSS::AlignSelf> StyleProperties::align_self() const
+{
+    auto value = property(CSS::PropertyID::AlignSelf);
+    return value_id_to_align_self(value->to_identifier());
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
