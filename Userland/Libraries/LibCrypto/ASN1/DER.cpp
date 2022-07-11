@@ -401,24 +401,24 @@ ErrorOr<void> AK::Formatter<Crypto::ASN1::DecodeError>::format(FormatBuilder& fm
 
     switch (error) {
     case DecodeError::NoInput:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(No input provided)");
+        return fmtbuilder.put_string("DecodeError(No input provided)"sv);
     case DecodeError::NonConformingType:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Tried to read with a non-conforming type)");
+        return fmtbuilder.put_string("DecodeError(Tried to read with a non-conforming type)"sv);
     case DecodeError::EndOfStream:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(End of stream)");
+        return fmtbuilder.put_string("DecodeError(End of stream)"sv);
     case DecodeError::NotEnoughData:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Not enough data)");
+        return fmtbuilder.put_string("DecodeError(Not enough data)"sv);
     case DecodeError::EnteringNonConstructedTag:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Tried to enter a primitive tag)");
+        return fmtbuilder.put_string("DecodeError(Tried to enter a primitive tag)"sv);
     case DecodeError::LeavingMainContext:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Tried to leave the main context)");
+        return fmtbuilder.put_string("DecodeError(Tried to leave the main context)"sv);
     case DecodeError::InvalidInputFormat:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Input data contained invalid syntax/data)");
+        return fmtbuilder.put_string("DecodeError(Input data contained invalid syntax/data)"sv);
     case DecodeError::Overflow:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Construction would overflow)");
+        return fmtbuilder.put_string("DecodeError(Construction would overflow)"sv);
     case DecodeError::UnsupportedFormat:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Input data format not supported by this parser)");
+        return fmtbuilder.put_string("DecodeError(Input data format not supported by this parser)"sv);
     default:
-        return Formatter<StringView>::format(fmtbuilder, "DecodeError(Unknown)");
+        return fmtbuilder.put_string("DecodeError(Unknown)"sv);
     }
 }

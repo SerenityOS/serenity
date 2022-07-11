@@ -375,7 +375,7 @@ bool UnsignedBigInteger::operator>=(UnsignedBigInteger const& other) const
 ErrorOr<void> AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, Crypto::UnsignedBigInteger const& value)
 {
     if (value.is_invalid())
-        return Formatter<StringView>::format(fmtbuilder, "invalid");
+        return fmtbuilder.put_string("invalid"sv);
 
     StringBuilder builder;
     for (int i = value.length() - 1; i >= 0; --i)

@@ -228,10 +228,10 @@ struct Formatter<JS::PropertyKey> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::PropertyKey const& property_key)
     {
         if (!property_key.is_valid())
-            return Formatter<StringView>::format(builder, "<invalid PropertyKey>");
+            return builder.put_string("<invalid PropertyKey>"sv);
         if (property_key.is_number())
-            return Formatter<StringView>::format(builder, String::number(property_key.as_number()));
-        return Formatter<StringView>::format(builder, property_key.to_string_or_symbol().to_display_string());
+            return builder.put_u64(property_key.as_number());
+        return builder.put_string(property_key.to_string_or_symbol().to_display_string());
     }
 };
 
