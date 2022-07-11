@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .short_name = 'u',
         .value_name = "path",
         .accept_value = [&](auto* s) {
-            StringView path { s };
+            StringView path { s, strlen(s) };
             if (path.is_empty())
                 return false;
             auto maybe_error = Core::System::unveil(path, permissions);
@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .min_values = 0,
         .max_values = INT_MAX,
         .accept_value = [&](auto* s) {
-            auto maybe_error = Core::System::access(s, X_OK);
+            auto maybe_error = Core::System::access({ s, strlen(s) }, X_OK);
             if (maybe_error.is_error())
                 warnln("'{}' - fail: {}", s, maybe_error.error());
             else

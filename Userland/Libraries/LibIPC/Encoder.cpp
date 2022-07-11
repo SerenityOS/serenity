@@ -135,7 +135,7 @@ Encoder& Encoder::operator<<(double value)
 
 Encoder& Encoder::operator<<(char const* value)
 {
-    return *this << StringView(value);
+    return *this << StringView { value, strlen(value) };
 }
 
 Encoder& Encoder::operator<<(StringView value)

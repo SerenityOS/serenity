@@ -710,7 +710,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor_hyperv(CPUID const& hyperviso
     alignas(sizeof(u32)) char interface_signature_buffer[5];
     *reinterpret_cast<u32*>(interface_signature_buffer) = hypervisor_interface.eax();
     interface_signature_buffer[4] = '\0';
-    StringView hyperv_interface_signature(interface_signature_buffer);
+    StringView hyperv_interface_signature { interface_signature_buffer, strlen(interface_signature_buffer) };
 
     dmesgln("CPU[{}]: Hyper-V interface signature '{}' ({:#x})", current_id(), hyperv_interface_signature, hypervisor_interface.eax());
 

@@ -47,7 +47,7 @@ TEST_CASE(overlong_realpath)
 
     // Then, create a long path.
     StringBuilder expected;
-    expected.append(tmp_dir);
+    expected.append({ tmp_dir, strlen(tmp_dir) });
 
     // But first, demonstrate the functionality at a reasonable depth:
     auto expected_str = expected.build();
@@ -63,7 +63,7 @@ TEST_CASE(overlong_realpath)
             return;
         }
         expected.append('/');
-        expected.append(PATH_LOREM_250);
+        expected.append({ PATH_LOREM_250, strlen(PATH_LOREM_250) });
         ret = chdir(PATH_LOREM_250);
         if (ret < 0) {
             perror("chdir iter");

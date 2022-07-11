@@ -144,7 +144,7 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
         's',
         nullptr,
         [&top_option](char const* s) {
-            StringView sort_by_option { s };
+            StringView sort_by_option { s, strlen(s) };
             if (sort_by_option == "pid"sv)
                 top_option.sort_by = TopOption::SortBy::Pid;
             else if (sort_by_option == "tid"sv)

@@ -157,7 +157,8 @@ const JsonObject Reader::process_info() const
     }
     if (!process_info_notes_entry)
         return {};
-    auto process_info_json_value = JsonValue::from_string(process_info_notes_entry->json_data);
+    auto const* json_data_ptr = process_info_notes_entry->json_data;
+    auto process_info_json_value = JsonValue::from_string({ json_data_ptr, strlen(json_data_ptr) });
     if (process_info_json_value.is_error())
         return {};
     if (!process_info_json_value.value().is_object())
@@ -256,7 +257,8 @@ HashMap<String, String> Reader::metadata() const
     }
     if (!metadata_notes_entry)
         return {};
-    auto metadata_json_value = JsonValue::from_string(metadata_notes_entry->json_data);
+    auto const* json_data_ptr = metadata_notes_entry->json_data;
+    auto metadata_json_value = JsonValue::from_string({ json_data_ptr, strlen(json_data_ptr) });
     if (metadata_json_value.is_error())
         return {};
     if (!metadata_json_value.value().is_object())

@@ -99,7 +99,7 @@ public:
     time_t timestamp() const { return get_field_as_integral(m_timestamp); }
     unsigned checksum() const { return get_field_as_integral(m_checksum); }
     TarFileType type_flag() const { return TarFileType(m_type_flag); }
-    StringView link_name() const { return m_link_name; }
+    StringView link_name() const { return { m_link_name, strlen(m_link_name) }; }
     StringView magic() const { return get_field_as_string_view(m_magic); }
     StringView version() const { return get_field_as_string_view(m_version); }
     StringView owner_name() const { return get_field_as_string_view(m_owner_name); }

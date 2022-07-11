@@ -45,7 +45,7 @@ char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
             data->result[header_len] = '$';
 
             Crypto::Hash::SHA256 sha;
-            sha.update(key);
+            sha.update(StringView { key, strlen(key) });
             sha.update((u8 const*)salt_value, salt_len);
 
             auto digest = sha.digest();

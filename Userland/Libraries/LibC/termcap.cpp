@@ -114,7 +114,7 @@ int __attribute__((weak)) tgetnum(char const* id)
 static Vector<char> s_tgoto_buffer;
 char* __attribute__((weak)) tgoto([[maybe_unused]] char const* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
-    auto cap_str = StringView(cap).replace("%p1%d", String::number(col), ReplaceMode::FirstOnly).replace("%p2%d", String::number(row), ReplaceMode::FirstOnly);
+    auto cap_str = StringView { cap, strlen(cap) }.replace("%p1%d"sv, String::number(col), ReplaceMode::FirstOnly).replace("%p2%d"sv, String::number(row), ReplaceMode::FirstOnly);
 
     s_tgoto_buffer.clear_with_capacity();
     s_tgoto_buffer.ensure_capacity(cap_str.length());

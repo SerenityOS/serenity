@@ -112,8 +112,8 @@ class TypeCommand final : public Command {
 public:
     TypeCommand(char const* arg)
     {
-        StringView type = arg;
-        if (type.length() != 1 || !StringView("bcdlpfs").contains(type[0]))
+        StringView type { arg, strlen(arg) };
+        if (type.length() != 1 || !"bcdlpfs"sv.contains(type[0]))
             fatal_error("Invalid mode: \033[1m{}", arg);
         m_type = type[0];
     }
@@ -157,7 +157,7 @@ class LinksCommand final : public StatCommand {
 public:
     LinksCommand(char const* arg)
     {
-        auto number = StringView(arg).to_uint();
+        auto number = StringView { arg, strlen(arg) }.to_uint();
         if (!number.has_value())
             fatal_error("Invalid number: \033[1m{}", arg);
         m_links = number.value();
@@ -180,7 +180,7 @@ public:
             m_uid = passwd->pw_uid;
         } else {
             // Attempt to parse it as decimal UID.
-            auto number = StringView(arg).to_uint();
+            auto number = StringView { arg, strlen(arg) }.to_uint();
             if (!number.has_value())
                 fatal_error("Invalid user: \033[1m{}", arg);
             m_uid = number.value();
@@ -204,7 +204,7 @@ public:
             m_gid = gr->gr_gid;
         } else {
             // Attempt to parse it as decimal GID.
-            auto number = StringView(arg).to_int();
+            auto number = StringView { arg, strlen(arg) }.to_int();
             if (!number.has_value())
                 fatal_error("Invalid group: \033[1m{}", arg);
             m_gid = number.value();
@@ -224,7 +224,7 @@ class SizeCommand final : public StatCommand {
 public:
     SizeCommand(char const* arg)
     {
-        StringView view = arg;
+        StringView view { arg, strlen(arg) };
         if (view.ends_with('c')) {
             m_is_bytes = true;
             view = view.substring_view(0, view.length() - 1);
@@ -252,7 +252,7 @@ private:
 class NameCommand : public Command {
 public:
     NameCommand(char const* pattern, CaseSensitivity case_sensitivity)
-        : m_pattern(pattern)
+        : m_pattern(pattern, strlen(pattern))
         , m_case_sensitivity(case_sensitivity)
     {
     }
@@ -306,7 +306,7 @@ private:
             // constness.
             auto argv = const_cast<Vector<char*>&>(m_argv);
             for (auto& arg : argv) {
-                if (StringView(arg) == "{}")
+                if (StringView { arg, strlen(arg) } == "{}")
                     arg = const_cast<char*>(file_data.full_path.string().characters());
             }
             argv.append(nullptr);
@@ -374,11 +374,11 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         return {};
 
     char* raw_arg = args.take_first();
-    StringView arg = raw_arg;
+    StringView arg { raw_arg, strlen(raw_arg) };
 
     if (arg == "(") {
         auto command = parse_complex_command(args);
-        if (command && !args.is_empty() && StringView(args.first()) == ")")
+        if (command && !args.is_empty() && StringView { args.first(), strlen(args.first()) } == ")")
             return command;
         fatal_error("Unmatched \033[1m(");
     } else if (arg == "-type") {
@@ -438,7 +438,7 @@ static OwnPtr<Command> parse_complex_command(Vector<char*>& args)
 
     while (command && !args.is_empty()) {
         char* raw_arg = args.take_first();
-        StringView arg = raw_arg;
+        StringView arg { raw_arg, strlen(raw_arg) };
 
         enum {
             And,
@@ -533,7 +533,7 @@ static void walk_tree(FileData& root_data, Command& command)
             continue;
 
         FileData file_data {
-            root_data.full_path.append(dirent->d_name),
+            root_data.full_path.append({ dirent->d_name, strlen(dirent->d_name) }),
             dirfd,
             dirent->d_name,
             (struct stat) {},
@@ -561,7 +561,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     while (!args.is_empty()) {
         char* raw_arg = args.take_first();
-        StringView arg = raw_arg;
+        StringView arg { raw_arg, strlen(raw_arg) };
         if (arg == "-L") {
             g_follow_symlinks = true;
         } else if (!arg.starts_with('-')) {

@@ -125,7 +125,7 @@ void Window::show()
 
     Gfx::IntRect launch_origin_rect;
     if (auto* launch_origin_rect_string = getenv("__libgui_launch_origin_rect")) {
-        auto parts = StringView(launch_origin_rect_string).split_view(',');
+        auto parts = StringView { launch_origin_rect_string, strlen(launch_origin_rect_string) }.split_view(',');
         if (parts.size() == 4) {
             launch_origin_rect = Gfx::IntRect {
                 parts[0].to_int().value_or(0),

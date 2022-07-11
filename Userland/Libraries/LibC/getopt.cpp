@@ -214,11 +214,11 @@ int OptionParser::handle_short_option()
 
 option const* OptionParser::lookup_long_option(char* raw) const
 {
-    StringView arg = raw;
+    StringView arg { raw, strlen(raw) };
 
     for (size_t index = 0; m_long_options[index].name; index++) {
         auto& option = m_long_options[index];
-        StringView name = option.name;
+        StringView name { option.name, strlen(option.name) };
 
         if (!arg.starts_with(name))
             continue;
@@ -347,12 +347,12 @@ bool OptionParser::find_next_option()
 int getopt(int argc, char* const* argv, char const* short_options)
 {
     option dummy { nullptr, 0, nullptr, 0 };
-    OptionParser parser { argc, argv, short_options, &dummy };
+    OptionParser parser { argc, argv, { short_options, strlen(short_options) }, &dummy };
     return parser.getopt();
 }
 
 int getopt_long(int argc, char* const* argv, char const* short_options, const struct option* long_options, int* out_long_option_index)
 {
-    OptionParser parser { argc, argv, short_options, long_options, out_long_option_index };
+    OptionParser parser { argc, argv, { short_options, strlen(short_options) }, long_options, out_long_option_index };
     return parser.getopt();
 }

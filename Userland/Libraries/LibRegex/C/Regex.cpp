@@ -91,10 +91,11 @@ int regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pm
     }
 
     RegexResult result;
+    StringView string_view { string, strlen(string) };
     if (eflags & REG_SEARCH)
-        result = preg->re->visit([&](auto& re) { return re->search(string, PosixOptions {} | (PosixFlags)eflags); });
+        result = preg->re->visit([&](auto& re) { return re->search(string_view, PosixOptions {} | (PosixFlags)eflags); });
     else
-        result = preg->re->visit([&](auto& re) { return re->match(string, PosixOptions {} | (PosixFlags)eflags); });
+        result = preg->re->visit([&](auto& re) { return re->match(string_view, PosixOptions {} | (PosixFlags)eflags); });
 
     if (result.success) {
         auto capture_groups_count = preg->re->visit([](auto& re) { return re->parser_result.capture_groups_count; });

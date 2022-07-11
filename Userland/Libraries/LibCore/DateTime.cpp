@@ -250,9 +250,11 @@ String DateTime::to_string(StringView format) const
                 }
                 format_time_zone_offset(true);
                 break;
-            case 'Z':
-                builder.append(tzname[daylight]);
+            case 'Z': {
+                auto const* timezone_name = tzname[daylight];
+                builder.append({ timezone_name, strlen(timezone_name) });
                 break;
+            }
             case '%':
                 builder.append('%');
                 break;

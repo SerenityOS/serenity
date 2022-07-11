@@ -12,9 +12,10 @@
 namespace Gfx {
 
 struct FontStyleMapping {
+    // NOTE: __builtin_strlen required to make this work at compile time.
     constexpr FontStyleMapping(int s, char const* n)
         : style(s)
-        , name(n)
+        , name(StringView { n, __builtin_strlen(n) })
     {
     }
     int style { 0 };

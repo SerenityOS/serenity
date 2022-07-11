@@ -35,7 +35,7 @@ int Shell::builtin_dump(int argc, char const** argv)
     if (argc != 2)
         return 1;
 
-    Parser { argv[1] }.parse()->dump(0);
+    Parser { StringView { argv[1], strlen(argv[1]) } }.parse()->dump(0);
     return 0;
 }
 
@@ -124,7 +124,8 @@ int Shell::builtin_bg(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -497,7 +498,8 @@ int Shell::builtin_fg(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -568,7 +570,8 @@ int Shell::builtin_disown(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -721,7 +724,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
     if (argc == 2) {
         directory_stack.append(cwd.characters());
         if (argv[1][0] == '/') {
-            path_builder.append(argv[1]);
+            path_builder.append({ argv[1], strlen(argv[1]) });
         } else {
             path_builder.appendff("{}/{}", cwd, argv[1]);
         }
@@ -732,7 +735,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
 
             if (arg[0] != '-') {
                 if (arg[0] == '/') {
-                    path_builder.append(arg);
+                    path_builder.append({ arg, strlen(arg) });
                 } else
                     path_builder.appendff("{}/{}", cwd, arg);
             }
@@ -969,7 +972,8 @@ int Shell::builtin_wait(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -1071,14 +1075,14 @@ int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
-    auto kill_path = find_in_path("kill");
+    auto kill_path = find_in_path("kill"sv);
     if (kill_path.is_empty()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
     replaced_values.append(kill_path);
     for (auto i = 1; i < argc; ++i) {
-        if (auto job_id = resolve_job_spec(argv[i]); job_id.has_value()) {
+        if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
                 replaced_values.append(String::number(job->pid()));
@@ -1240,7 +1244,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 option.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert(value, type);
+                    auto result = try_convert({ value, strlen(value) }, type);
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1262,7 +1266,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 arg.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert(value, type);
+                    auto result = try_convert({ value, strlen(value) }, type);
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1345,7 +1349,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            StringView ty = name;
+            StringView ty { name, strlen(name) };
             if (ty == "bool") {
                 if (auto option = current.get_pointer<Core::ArgsParser::Option>()) {
                     if (option->value_name != nullptr) {
@@ -1499,7 +1503,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            auto number = StringView(value).to_uint();
+            auto number = StringView { value, strlen(value) }.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --min: '{}', expected a non-negative number", value);
                 return false;
@@ -1527,7 +1531,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            auto number = StringView(value).to_uint();
+            auto number = StringView { value, strlen(value) }.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --max: '{}', expected a non-negative number", value);
                 return false;

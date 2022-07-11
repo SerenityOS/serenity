@@ -295,7 +295,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
     Vector<StringView> parameters;
     parameters.ensure_capacity(parameter_count);
     for (size_t i = 0; i < parameter_count; ++i)
-        parameters.append(StringView(raw_parameters[i]));
+        parameters.append(StringView { raw_parameters[i], strlen(raw_parameters[i]) });
 
     auto parse_baud = [&](size_t idx) -> Optional<speed_t> {
         auto maybe_numeric_value = parameters[idx].to_uint<uint32_t>();

@@ -15,12 +15,12 @@ namespace JS {
 
 // U+2028 LINE SEPARATOR
 constexpr char const line_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa8, 0 };
-constexpr const StringView LINE_SEPARATOR_STRING { line_separator_chars };
+constexpr const StringView LINE_SEPARATOR_STRING { line_separator_chars, sizeof(line_separator_chars) - 1 };
 constexpr const u32 LINE_SEPARATOR { 0x2028 };
 
 // U+2029 PARAGRAPH SEPARATOR
 constexpr char const paragraph_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa9, 0 };
-constexpr const StringView PARAGRAPH_SEPARATOR_STRING { paragraph_separator_chars };
+constexpr const StringView PARAGRAPH_SEPARATOR_STRING { paragraph_separator_chars, sizeof(paragraph_separator_chars) - 1 };
 constexpr const u32 PARAGRAPH_SEPARATOR { 0x2029 };
 
 // U+00A0 NO BREAK SPACE

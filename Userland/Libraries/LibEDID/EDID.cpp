@@ -417,7 +417,7 @@ StringView Parser::version() const
 
 StringView Parser::legacy_manufacturer_id() const
 {
-    return m_legacy_manufacturer_id;
+    return { m_legacy_manufacturer_id, strlen(m_legacy_manufacturer_id) };
 }
 
 #ifndef KERNEL

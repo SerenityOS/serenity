@@ -121,7 +121,11 @@ static void notify_make_not_available()
 static void update_path_environment_variable()
 {
     StringBuilder path;
-    path.append(getenv("PATH"));
+
+    auto const* path_env_ptr = getenv("PATH");
+    if (path_env_ptr != NULL)
+        path.append({ path_env_ptr, strlen(path_env_ptr) });
+
     if (path.length())
         path.append(":");
     path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin");
