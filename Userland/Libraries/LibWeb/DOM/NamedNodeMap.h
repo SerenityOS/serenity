@@ -55,6 +55,8 @@ private:
     Element& associated_element() { return ref_count_target(); }
     Element const& associated_element() const { return ref_count_target(); }
 
+    void remove_attribute_at_index(size_t attribute_index);
+
     NonnullRefPtrVector<Attribute> m_attributes;
 };
 
