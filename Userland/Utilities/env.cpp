@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath exec"));
 
     bool ignore_env = false;
-    char const* split_string = nullptr;
+    StringView split_string {};
     Vector<String> values;
 
     Core::ArgsParser args_parser;
@@ -41,8 +41,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Vector<StringView> new_argv;
-    if (split_string) {
-        for (auto view : StringView(split_string).split_view(' ')) {
+    if (!split_string.is_empty()) {
+        for (auto view : split_string.split_view(' ')) {
             new_argv.append(view);
         }
     }

@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath sendfd unix thread"));
 
-    char const* path = nullptr;
+    StringView path {};
     bool should_loop = false;
     bool show_sample_progress = false;
 

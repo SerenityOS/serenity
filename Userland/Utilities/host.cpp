@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio unix"));
 
-    char const* name_or_ip = nullptr;
+    String name_or_ip {};
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between domain name and IPv4 address.");
     args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");
@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         return 0;
     }
 
-    auto* hostent = gethostbyname(name_or_ip);
+    auto* hostent = gethostbyname(name_or_ip.characters());
     if (!hostent) {
         warnln("Lookup failed for '{}'", name_or_ip);
         return 1;
