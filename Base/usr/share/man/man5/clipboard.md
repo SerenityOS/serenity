@@ -25,7 +25,7 @@ Various applications accept drag & drop to open files.
 
 Requires the metadata-fields `count` (count of glyphs copied) and `first_glyph` (lowest codepoint that is copied), encoded as decimal strings.
 
-The data contains codepoint (encoded as host-endian u32), width and height (as u8's) and glyph bitmap data. It is encoded in width times height many bytes, either 0 (clear) or 1 (set).
+The data contains code point (encoded as host-endian `u32`), width and height (as `u8`'s) and glyph bitmap data. It is encoded in width times height many bytes, either 0 (clear) or 1 (set).
 
 Implemented in `FontEditor::MainWidget::copy_selected_glyphs` and `FontEditor::MainWidget::paste_glyphs`, in [`Userland/Applications/FontEditor/MainWidget.cpp`](../../../../../Userland/Applications/FontEditor/MainWidget.cpp).
 
@@ -34,13 +34,13 @@ Implemented in `FontEditor::MainWidget::copy_selected_glyphs` and `FontEditor::M
 Requires the metadata-fields `width`, `height`, `scale`, `format` (see `Gfx::BitmapFormat`), and `pitch`, encoded as decimal strings.
 
 The data is encoded according to `Gfx::determine_storage_format(BitmapFormat)`, so either as
-BGRx8888, BGRA8888, RGBA8888, or 8-bit palette index. Note that the palette is not transferred.
+`BGRx8888`, `BGRA8888`, `RGBA8888`, or 8-bit palette index. Note that the palette is not transferred.
 
 Implemented in [`Clipboard::set_bitmap` and `Clipboard::DataAndType::as_bitmap()`](../../../../../Userland/Libraries/LibGUI/Clipboard.cpp).
 
 ## text/uri-list (Clipboard and drag & drop)
 
-Newline-delimited set of URIs. Used by File Manager, FileSystemModel, and Terminal.
+Newline-delimited set of URIs. Used by File Manager, `FileSystemModel`, and Terminal.
 
 Example:
 
