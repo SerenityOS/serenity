@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/Fetch/AbstractOperations.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Origin.h>
@@ -298,9 +299,7 @@ Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& head
         }
 
         // 3. Remove all HTTP tab or space from the start and end of value.
-        // https://fetch.spec.whatwg.org/#http-tab-or-space
-        // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-        auto trimmed_value = value.to_string().trim("\t "sv, TrimMode::Both);
+        auto trimmed_value = value.to_string().trim(Fetch::HTTP_TAB_OR_SPACE, TrimMode::Both);
 
         // 4. Append value to values.
         values.append(move(trimmed_value));
