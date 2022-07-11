@@ -395,6 +395,8 @@ template<>
 struct Formatter<Bytes> : Formatter<ReadonlyBytes> {
 };
 
+// FIXME: Printing raw char pointers is inherently dangerous. Remove this and
+//        its users and prefer StringView over it.
 template<>
 struct Formatter<char const*> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, char const* value)
@@ -403,7 +405,8 @@ struct Formatter<char const*> : Formatter<StringView> {
             Formatter<FlatPtr> formatter { *this };
             return formatter.format(builder, reinterpret_cast<FlatPtr>(value));
         }
-        return Formatter<StringView>::format(builder, value);
+
+        return Formatter<StringView>::format(builder, value != nullptr ? StringView { value, __builtin_strlen(value) } : "(null)"sv);
     }
 };
 template<>
