@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
     TRY(Core::System::pledge("stdio rpath proc exec"));
 
-    char const* placeholder = nullptr;
+    StringView placeholder;
     bool split_with_nulls = false;
     char const* specified_delimiter = "\n";
     Vector<String> arguments;
@@ -74,15 +74,13 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 
     char entry_separator = split_with_nulls ? '\0' : *specified_delimiter;
 
-    StringView placeholder_view { placeholder };
-
-    if (!placeholder_view.is_empty())
+    if (!placeholder.is_empty())
         max_lines = 1;
 
     if (arguments.is_empty())
         arguments.append("echo");
 
-    ParsedInitialArguments initial_arguments(arguments, placeholder_view);
+    ParsedInitialArguments initial_arguments(arguments, placeholder);
 
     FILE* fp = stdin;
     bool is_stdin = true;

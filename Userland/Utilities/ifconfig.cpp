@@ -25,9 +25,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* value_ipv4 = nullptr;
-    char const* value_adapter = nullptr;
-    char const* value_mask = nullptr;
+    StringView value_ipv4 {};
+    StringView value_adapter {};
+    StringView value_mask {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
     args_parser.parse(arguments);
 
-    if (!value_ipv4 && !value_adapter && !value_mask) {
+    if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty()) {
         auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
         auto json = TRY(JsonValue::from_string(file->read_all()));
 
@@ -66,14 +66,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     } else {
 
-        if (!value_adapter) {
+        if (value_adapter.is_empty()) {
             warnln("No network adapter was specified.");
             return 1;
         }
 
         String ifname = value_adapter;
 
-        if (value_ipv4) {
+        if (!value_ipv4.is_empty()) {
             auto address = IPv4Address::from_string(value_ipv4);
 
             if (!address.has_value()) {
@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        if (value_mask) {
+        if (!value_mask.is_empty()) {
             auto address = IPv4Address::from_string(value_mask);
 
             if (!address.has_value()) {

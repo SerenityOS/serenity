@@ -15,9 +15,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Core::ArgsParser args_parser;
-    char const* title = nullptr;
-    char const* message = nullptr;
-    char const* icon_path = nullptr;
+    StringView title {};
+    StringView message {};
+    StringView icon_path {};
     args_parser.add_positional_argument(title, "Title of the notification", "title");
     args_parser.add_positional_argument(message, "Message to display in the notification", "message");
     args_parser.add_positional_argument(icon_path, "Path of icon to display in the notification", "icon-path", Core::ArgsParser::Required::No);
@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto notification = TRY(GUI::Notification::try_create());
     notification->set_text(message);
     notification->set_title(title);
-    if (icon_path) {
+    if (!icon_path.is_empty()) {
         notification->set_icon(TRY(Gfx::Bitmap::try_load_from_file(icon_path)));
     }
     notification->show();

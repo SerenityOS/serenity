@@ -269,7 +269,7 @@ static void print_link_error(Wasm::LinkError const& error)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* filename = nullptr;
+    StringView filename;
     bool print = false;
     bool attempt_instantiate = false;
     bool debug = false;

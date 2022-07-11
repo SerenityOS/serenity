@@ -267,16 +267,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    char const* cpu = nullptr;
-    char const* memory = nullptr;
-    char const* network = nullptr;
+    StringView cpu {};
+    StringView memory {};
+    StringView network {};
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
     args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
     args_parser.add_option(network, "Create network graph", "network", 'N', "network");
     args_parser.parse(arguments);
 
-    if (!cpu && !memory && !network) {
+    if (cpu.is_empty() && memory.is_empty() && network.is_empty()) {
         printf("At least one of --cpu, --memory, or --network must be used");
         return 1;
     }
@@ -306,11 +306,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return {};
     };
 
-    if (cpu)
+    if (!cpu.is_empty())
         TRY(create_applet(GraphType::CPU, cpu));
-    if (memory)
+    if (!memory.is_empty())
         TRY(create_applet(GraphType::Memory, memory));
-    if (network)
+    if (!network.is_empty())
         TRY(create_applet(GraphType::Network, network));
 
     TRY(Core::System::unveil("/res", "r"));

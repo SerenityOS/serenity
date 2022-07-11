@@ -19,7 +19,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    char const* path = nullptr;
+    StringView path {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

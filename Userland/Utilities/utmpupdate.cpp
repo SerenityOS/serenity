@@ -24,8 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pid_t pid = 0;
     bool flag_create = false;
     bool flag_delete = false;
-    char const* tty_name = nullptr;
-    char const* from = nullptr;
+    StringView tty_name;
+    StringView from;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_create, "Create entry", "create", 'c');

@@ -96,8 +96,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool complement_flag = false;
     bool delete_flag = false;
     bool squeeze_flag = false;
-    char const* from_chars = nullptr;
-    char const* to_chars = nullptr;
+    StringView from_chars;
+    StringView to_chars;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    bool transform_flag = to_chars && !delete_flag;
+    bool transform_flag = !to_chars.is_empty() && !delete_flag;
 
     if (!transform_flag && !delete_flag && !squeeze_flag) {
         warnln("tr: Missing operand");
@@ -115,13 +115,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (delete_flag && squeeze_flag && !to_chars) {
+    if (delete_flag && squeeze_flag && to_chars.is_empty()) {
         warnln("tr: Combined delete and squeeze operations need two sets of characters");
         args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
-    if (delete_flag && !squeeze_flag && to_chars) {
+    if (delete_flag && !squeeze_flag && !to_chars.is_empty()) {
         warnln("tr: Only one set of characters may be given when deleting without squeezing");
         args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
@@ -138,7 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto to_str = TRY(build_set(to_chars));
-    auto squeeze_string = TRY(build_set(to_chars ? to_chars : from_chars));
+    auto squeeze_string = TRY(build_set(!to_chars.is_empty() ? to_chars : from_chars));
     Optional<char> last_char;
 
     for (;;) {

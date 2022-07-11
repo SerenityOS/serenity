@@ -232,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    char const* path;
+    StringView path {};
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;

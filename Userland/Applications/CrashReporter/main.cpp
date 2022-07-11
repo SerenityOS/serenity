@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    char const* coredump_path = nullptr;
+    String coredump_path {};
     bool unlink_on_exit = false;
     StringBuilder full_backtrace;
 
@@ -265,7 +265,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
     debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
     debug_button.on_click = [&](int) {
-        GUI::Process::spawn_or_show_error(window, "/bin/HackStudio", Array { "-c", coredump_path });
+        GUI::Process::spawn_or_show_error(window, "/bin/HackStudio", Array { "-c", coredump_path.characters() });
     };
 
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");

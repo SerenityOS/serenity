@@ -14,16 +14,16 @@
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    char const* hostname = nullptr;
+    StringView hostname {};
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(hostname, "Hostname to set", "hostname", Core::ArgsParser::Required::No);
     args_parser.parse(args);
 
-    if (!hostname) {
+    if (hostname.is_empty()) {
         outln("{}", TRY(Core::System::gethostname()));
     } else {
-        if (strlen(hostname) >= HOST_NAME_MAX) {
+        if (hostname.length() >= HOST_NAME_MAX) {
             warnln("Hostname must be less than {} characters", HOST_NAME_MAX);
             return 1;
         }

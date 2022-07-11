@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath chown"));
 
     char const* gid_arg = nullptr;
-    char const* path = nullptr;
+    StringView path {};
     bool dont_follow_symlinks = false;
 
     Core::ArgsParser args_parser;
