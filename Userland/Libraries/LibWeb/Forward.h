@@ -62,6 +62,7 @@ class InitialStyleValue;
 class Length;
 class LengthPercentage;
 class LengthStyleValue;
+class LinearGradientStyleValue;
 class ListStyleStyleValue;
 class MediaList;
 class MediaQuery;
