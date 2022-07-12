@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
+#include <AK/String.h>
 #include <LibGUI/Model.h>
 
 class ManualModel final : public GUI::Model {
@@ -23,10 +23,10 @@ public:
 
     Optional<GUI::ModelIndex> index_from_path(StringView) const;
 
-    DeprecatedString page_name(const GUI::ModelIndex&) const;
-    DeprecatedString page_path(const GUI::ModelIndex&) const;
-    DeprecatedString page_and_section(const GUI::ModelIndex&) const;
-    ErrorOr<StringView> page_view(DeprecatedString const& path) const;
+    Optional<String> page_name(const GUI::ModelIndex&) const;
+    Optional<String> page_path(const GUI::ModelIndex&) const;
+    Optional<String> page_and_section(const GUI::ModelIndex&) const;
+    ErrorOr<StringView> page_view(String const& path) const;
 
     void update_section_node_on_toggle(const GUI::ModelIndex&, bool const);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
@@ -42,5 +42,5 @@ private:
     GUI::Icon m_section_open_icon;
     GUI::Icon m_section_icon;
     GUI::Icon m_page_icon;
-    mutable HashMap<DeprecatedString, NonnullRefPtr<Core::MappedFile>> m_mapped_files;
+    mutable HashMap<String, NonnullRefPtr<Core::MappedFile>> m_mapped_files;
 };
