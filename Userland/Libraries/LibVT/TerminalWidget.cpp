@@ -833,10 +833,12 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             if (!handlers.is_empty()) {
                 auto path = URL(attribute.href).path();
                 auto name = LexicalPath::basename(path);
-                if (path == handlers[0])
+                if (path == handlers[0]) {
                     set_tooltip(String::formatted("Execute {}", name));
-                else
-                    set_tooltip(String::formatted("Open {} with {}", name, LexicalPath::basename(handlers[0])));
+                } else {
+                    auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handlers[0]));
+                    set_tooltip(String::formatted("Open {} with {}", name, af->is_valid() ? af->name() : LexicalPath::basename(handlers[0])));
+                }
             }
         } else {
             m_hovered_href_id = {};
