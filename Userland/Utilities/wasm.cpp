@@ -288,7 +288,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
     parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's');
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Extra modules to link with, use to resolve imports",
         .long_name = "link",
         .short_name = 'l',
@@ -302,7 +302,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Supply arguments to the function (default=0) (expects u64, casts to required type)",
         .long_name = "arg",
         .short_name = 0,

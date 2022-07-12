@@ -60,7 +60,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         if (opt.long_name) {
             option long_opt {
                 opt.long_name,
-                opt.requires_argument ? required_argument : no_argument,
+                opt.argument_mode == OptionArgumentMode::Required ? required_argument : no_argument,
                 &index_of_found_long_option,
                 static_cast<int>(i)
             };
@@ -68,7 +68,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         }
         if (opt.short_name) {
             short_options_builder.append(opt.short_name);
-            if (opt.requires_argument)
+            if (opt.argument_mode != OptionArgumentMode::None)
                 short_options_builder.append(':');
         }
     }
@@ -103,7 +103,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         }
         VERIFY(found_option);
 
-        char const* arg = found_option->requires_argument ? optarg : nullptr;
+        char const* arg = found_option->argument_mode != OptionArgumentMode::None ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
             warnln("\033[31mInvalid value for option \033[1m{}\033[22m\033[0m", found_option->name_for_display());
             fail();
@@ -200,7 +200,7 @@ void ArgsParser::print_usage_terminal(FILE* file, char const* argv0)
     for (auto& opt : m_options) {
         if (opt.hide_mode != OptionHideMode::None)
             continue;
-        if (opt.requires_argument)
+        if (opt.argument_mode == OptionArgumentMode::Required)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
         else
             out(file, " [{}]", opt.name_for_display());
@@ -233,7 +233,7 @@ void ArgsParser::print_usage_terminal(FILE* file, char const* argv0)
 
         auto print_argument = [&]() {
             if (opt.value_name) {
-                if (opt.requires_argument)
+                if (opt.argument_mode == OptionArgumentMode::Required)
                     out(file, " {}", opt.value_name);
             }
         };
@@ -277,7 +277,7 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
         // FIXME: We allow opt.value_name to be empty even if the option
         //        requires an argument. This should be disallowed as it will
         //        currently display a blank name after the option.
-        if (opt.requires_argument)
+        if (opt.argument_mode == OptionArgumentMode::Required)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name ?: "");
         else
             out(file, " [{}]", opt.name_for_display());
@@ -320,7 +320,7 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
 
         auto print_argument = [&]() {
             if (opt.value_name != nullptr) {
-                if (opt.requires_argument)
+                if (opt.argument_mode == OptionArgumentMode::Required)
                     out(file, " {}", opt.value_name);
             }
         };
@@ -367,7 +367,7 @@ void ArgsParser::add_option(Option&& option)
 void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode)
 {
     Option option {
-        false,
+        OptionArgumentMode::None,
         "Ignored",
         long_name,
         short_name,
@@ -383,7 +383,7 @@ void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideM
 void ArgsParser::add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode)
 {
     Option option {
-        false,
+        OptionArgumentMode::None,
         help_string,
         long_name,
         short_name,
@@ -401,7 +401,7 @@ void ArgsParser::add_option(bool& value, char const* help_string, char const* lo
 void ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -418,7 +418,7 @@ void ArgsParser::add_option(char const*& value, char const* help_string, char co
 void ArgsParser::add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -435,7 +435,7 @@ void ArgsParser::add_option(String& value, char const* help_string, char const* 
 void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -452,7 +452,7 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
 void ArgsParser::add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -470,7 +470,7 @@ void ArgsParser::add_option(int& value, char const* help_string, char const* lon
 void ArgsParser::add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -488,7 +488,7 @@ void ArgsParser::add_option(unsigned& value, char const* help_string, char const
 void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -506,7 +506,7 @@ void ArgsParser::add_option(double& value, char const* help_string, char const* 
 void ArgsParser::add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -523,7 +523,7 @@ void ArgsParser::add_option(Optional<double>& value, char const* help_string, ch
 void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -540,7 +540,7 @@ void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, ch
 void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, OptionHideMode hide_mode)
 {
     Option option {
-        true,
+        OptionArgumentMode::Required,
         help_string,
         long_name,
         short_name,
@@ -754,7 +754,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
             if (it.is_end())
                 continue;
 
-            if (it->requires_argument)
+            if (it->argument_mode == OptionArgumentMode::Required)
                 skip_next = true;
             continue;
         }
@@ -775,7 +775,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
             if (it.is_end())
                 continue;
 
-            if (it->requires_argument)
+            if (it->argument_mode == OptionArgumentMode::Required)
                 skip_next = true;
             continue;
         }
@@ -791,7 +791,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
         object.set("static_offset", 0);
         object.set("invariant_offset", has_invariant ? option_to_complete.length() : 0u);
         object.set("display_trivia", option.help_string);
-        object.set("trailing_trivia", option.requires_argument ? " " : "");
+        object.set("trailing_trivia", option.argument_mode == OptionArgumentMode::Required ? " " : "");
         outln(file, "{}", object.to_string());
     };
 

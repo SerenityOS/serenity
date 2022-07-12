@@ -35,7 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
     args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
     args_parser.add_option(Core::ArgsParser::Option {
-        true, "Enable tracking specific event type", nullptr, 't', "event_type",
+        Core::ArgsParser::OptionArgumentMode::Required,
+        "Enable tracking specific event type", nullptr, 't', "event_type",
         [&](String event_type) {
             seen_event_type_arg = true;
             if (event_type == "sample")

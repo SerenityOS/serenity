@@ -59,7 +59,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     Vector<StringView> files_to_process;
 
     Core::ArgsParser::Option time_option {
-        true,
+        Core::ArgsParser::OptionArgumentMode::Required,
         "Show time of type time-type of any file in the directory, or any of its subdirectories. "
         "Available choices: mtime, modification, ctime, status, use, atime, access",
         "time",

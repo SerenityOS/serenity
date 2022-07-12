@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E');
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Pattern",
         .long_name = "regexp",
         .short_name = 'e',
@@ -75,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(quiet_mode, "Do not write anything to standard output", "quiet", 'q');
     args_parser.add_option(suppress_errors, "Suppress error messages for nonexistent or unreadable files", "no-messages", 's');
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Action to take for binary files ([binary], text, skip)",
         .long_name = "binary-mode",
         .accept_value = [&](auto* str) {
@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Treat binary files as text (same as --binary-mode text)",
         .long_name = "text",
         .short_name = 'a',
@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Ignore binary files (same as --binary-mode skip)",
         .long_name = nullptr,
         .short_name = 'I',
@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "When to use colored output for the matching text ([auto], never, always)",
         .long_name = "color",
         .short_name = 0,
