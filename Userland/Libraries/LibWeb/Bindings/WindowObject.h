@@ -17,6 +17,7 @@
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 
 namespace Web {
@@ -38,7 +39,7 @@ public:
     HTML::Window& impl() { return *m_impl; }
     const HTML::Window& impl() const { return *m_impl; }
 
-    Origin origin() const;
+    HTML::Origin origin() const;
 
     LocationObject* location_object() { return m_location_object; }
     LocationObject const* location_object() const { return m_location_object; }

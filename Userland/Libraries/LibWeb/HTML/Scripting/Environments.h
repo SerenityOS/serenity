@@ -14,7 +14,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
-#include <LibWeb/Origin.h>
+#include <LibWeb/HTML/Origin.h>
 
 namespace Web::HTML {
 

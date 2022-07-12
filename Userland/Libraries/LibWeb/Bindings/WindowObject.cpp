@@ -41,10 +41,10 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -157,7 +157,7 @@ void WindowObject::visit_edges(Visitor& visitor)
         visitor.visit(it.value);
 }
 
-Origin WindowObject::origin() const
+HTML::Origin WindowObject::origin() const
 {
     return impl().associated_document().origin();
 }

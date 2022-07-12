@@ -9,8 +9,8 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Namespace.h>
-#include <LibWeb/Origin.h>
 
 namespace Web::DOM {
 

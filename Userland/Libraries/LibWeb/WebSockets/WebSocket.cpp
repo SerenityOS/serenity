@@ -20,8 +20,8 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 
 namespace Web::WebSockets {

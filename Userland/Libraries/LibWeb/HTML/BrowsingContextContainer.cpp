@@ -9,7 +9,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
-#include <LibWeb/Origin.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {

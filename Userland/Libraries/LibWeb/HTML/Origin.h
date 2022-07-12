@@ -9,7 +9,7 @@
 
 #include <AK/String.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class Origin {
 public:
@@ -105,8 +105,8 @@ private:
 
 namespace AK {
 template<>
-struct Traits<Web::Origin> : public GenericTraits<Web::Origin> {
-    static unsigned hash(Web::Origin const& origin)
+struct Traits<Web::HTML::Origin> : public GenericTraits<Web::HTML::Origin> {
+    static unsigned hash(Web::HTML::Origin const& origin)
     {
         return pair_int_hash(origin.protocol().hash(), pair_int_hash(int_hash(origin.port()), origin.host().hash()));
     }
