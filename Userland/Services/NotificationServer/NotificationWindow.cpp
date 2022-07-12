@@ -118,6 +118,7 @@ void NotificationWindow::enter_event(Core::Event&)
     m_hovering = true;
     resize_to_fit_text();
     move_to_front();
+    update_notification_window_locations(GUI::Desktop::the().rect());
 }
 
 void NotificationWindow::leave_event(Core::Event&)
@@ -125,6 +126,7 @@ void NotificationWindow::leave_event(Core::Event&)
     m_hovering = false;
     m_text_label->set_preferred_height(GUI::SpecialDimension::Grow);
     set_height(40);
+    update_notification_window_locations(GUI::Desktop::the().rect());
 }
 
 void NotificationWindow::set_text(String const& value)
