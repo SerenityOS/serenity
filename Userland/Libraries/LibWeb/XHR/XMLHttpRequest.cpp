@@ -279,7 +279,7 @@ Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& head
             // 1. If the code point at position within input is U+0022 ("), then:
             if (lexer.peek() == '"') {
                 // 1. Append the result of collecting an HTTP quoted string from input, given position, to value.
-                auto quoted_value_part = Fetch::collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::No);
+                auto quoted_value_part = Fetch::collect_an_http_quoted_string(lexer);
                 value.append(quoted_value_part);
 
                 // 2. If position is not past the end of input, then continue.
