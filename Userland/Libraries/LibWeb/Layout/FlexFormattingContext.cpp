@@ -1387,7 +1387,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
         if (flex_fraction >= 0)
             flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
         else
-            flex_fraction /= flex_item.scaled_flex_shrink_factor;
+            flex_fraction /= max(flex_item.scaled_flex_shrink_factor, 1.0f);
 
         // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
         flex_item.max_content_flex_fraction = flex_fraction;
