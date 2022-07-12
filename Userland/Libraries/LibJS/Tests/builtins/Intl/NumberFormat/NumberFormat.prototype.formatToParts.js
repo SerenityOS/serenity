@@ -171,8 +171,34 @@ describe("style=decimal", () => {
         ]);
     });
 
-    test("useGrouping=true", () => {
-        const en = new Intl.NumberFormat("en", { useGrouping: true });
+    test("useGrouping=always", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "always" });
+        expect(en.formatToParts(1234)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "," },
+            { type: "integer", value: "234" },
+        ]);
+        expect(en.formatToParts(12345)).toEqual([
+            { type: "integer", value: "12" },
+            { type: "group", value: "," },
+            { type: "integer", value: "345" },
+        ]);
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "always" });
+        expect(plPl.formatToParts(1234)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "\u00a0" },
+            { type: "integer", value: "234" },
+        ]);
+        expect(plPl.formatToParts(12345)).toEqual([
+            { type: "integer", value: "12" },
+            { type: "group", value: "\u00a0" },
+            { type: "integer", value: "345" },
+        ]);
+    });
+
+    test("useGrouping=auto", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "auto" });
         expect(en.formatToParts(123456)).toEqual([
             { type: "integer", value: "123" },
             { type: "group", value: "," },
@@ -186,7 +212,7 @@ describe("style=decimal", () => {
             { type: "integer", value: "567" },
         ]);
 
-        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: true });
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "auto" });
         expect(enIn.formatToParts(123456)).toEqual([
             { type: "integer", value: "1" },
             { type: "group", value: "," },
@@ -202,7 +228,7 @@ describe("style=decimal", () => {
             { type: "integer", value: "567" },
         ]);
 
-        const ar = new Intl.NumberFormat("ar", { useGrouping: true });
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "auto" });
         expect(ar.formatToParts(123456)).toEqual([
             { type: "integer", value: "\u0661\u0662\u0663" },
             { type: "group", value: "\u066c" },
@@ -214,6 +240,24 @@ describe("style=decimal", () => {
             { type: "integer", value: "\u0662\u0663\u0664" },
             { type: "group", value: "\u066c" },
             { type: "integer", value: "\u0665\u0666\u0667" },
+        ]);
+    });
+
+    test("useGrouping=min2", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "min2" });
+        expect(en.formatToParts(1234)).toEqual([{ type: "integer", value: "1234" }]);
+        expect(en.formatToParts(12345)).toEqual([
+            { type: "integer", value: "12" },
+            { type: "group", value: "," },
+            { type: "integer", value: "345" },
+        ]);
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "min2" });
+        expect(plPl.formatToParts(1234)).toEqual([{ type: "integer", value: "1234" }]);
+        expect(plPl.formatToParts(12345)).toEqual([
+            { type: "integer", value: "12" },
+            { type: "group", value: "\u00a0" },
+            { type: "integer", value: "345" },
         ]);
     });
 

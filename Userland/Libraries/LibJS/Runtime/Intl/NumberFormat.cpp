@@ -428,13 +428,6 @@ static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
     return number.as_bigint().big_integer() > Crypto::SignedBigInteger::create_from(rhs);
 }
 
-static ALWAYS_INLINE bool is_greater_than_or_equal(Value number, i64 rhs)
-{
-    if (number.is_number())
-        return number.as_double() >= rhs;
-    return number.as_bigint().big_integer() >= Crypto::SignedBigInteger::create_from(rhs);
-}
-
 static ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
 {
     if (number.is_number())
@@ -682,15 +675,31 @@ Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, N
     return result;
 }
 
-static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings const& grouping_sizes, StringView integer)
+static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings const& grouping_sizes, StringView integer, NumberFormat::UseGrouping use_grouping)
 {
     Utf8View utf8_integer { integer };
     if (utf8_integer.length() <= grouping_sizes.primary_grouping_size)
         return { integer };
 
     size_t index = utf8_integer.length() - grouping_sizes.primary_grouping_size;
-    if (index < grouping_sizes.minimum_grouping_digits)
-        return { integer };
+
+    switch (use_grouping) {
+    case NumberFormat::UseGrouping::Min2:
+        if (utf8_integer.length() < 5)
+            return { integer };
+        break;
+
+    case NumberFormat::UseGrouping::Auto:
+        if (index < grouping_sizes.minimum_grouping_digits)
+            return { integer };
+        break;
+
+    case NumberFormat::UseGrouping::Always:
+        break;
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     Vector<StringView> groups;
 
@@ -712,6 +721,7 @@ static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings 
 }
 
 // 15.5.5 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/ecma402/#sec-partitionnotationsubpattern
+// 1.1.7 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnotationsubpattern
 Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, String formatted_string, int exponent)
 {
     // 1. Let result be a new empty List.
@@ -779,30 +789,18 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
                     // b. Let fraction be undefined.
                 }
 
-                // FIXME: Handle all NumberFormat V3 [[UseGrouping]] options.
-                bool use_grouping = number_format.use_grouping() != NumberFormat::UseGrouping::False;
-
-                // FIXME: The spec doesn't indicate this, but grouping should be disabled for numbers less than 10,000 when the notation is compact.
-                //        This is addressed in Intl.NumberFormat V3 with the "min2" [[UseGrouping]] option. However, test262 explicitly expects this
-                //        behavior in the "de-DE" locale tests, because this is how ICU (and therefore V8, SpiderMoney, etc.) has always behaved.
-                //
-                //        So, in locales "de-*", we must have:
-                //            Intl.NumberFormat("de", {notation: "compact"}).format(1234) === "1234"
-                //            Intl.NumberFormat("de", {notation: "compact"}).format(12345) === "12.345"
-                //            Intl.NumberFormat("de").format(1234) === "1.234"
-                //            Intl.NumberFormat("de").format(12345) === "12.345"
-                //
-                //        See: https://github.com/tc39/proposal-intl-numberformat-v3/issues/3
-                if (number_format.has_compact_format())
-                    use_grouping = is_greater_than_or_equal(number, 10'000);
-
-                // 6. If the numberFormat.[[UseGrouping]] is true, then
-                if (use_grouping) {
+                // 6. If the numberFormat.[[UseGrouping]] is false, then
+                if (number_format.use_grouping() == NumberFormat::UseGrouping::False) {
+                    // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
+                    result.append({ "integer"sv, integer });
+                }
+                // 7. Else,
+                else {
                     // a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
                     auto group_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Group).value_or(","sv);
 
-                    // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer.
-                    auto groups = separate_integer_into_groups(*grouping_sizes, integer);
+                    // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer, which may depend on the value of numberFormat.[[UseGrouping]].
+                    auto groups = separate_integer_into_groups(*grouping_sizes, integer, number_format.use_grouping());
 
                     // c. Assert: The number of elements in groups List is greater than 0.
                     VERIFY(!groups.is_empty());
@@ -821,11 +819,6 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
                             result.append({ "group"sv, group_sep_symbol });
                         }
                     }
-                }
-                // 7. Else,
-                else {
-                    // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
-                    result.append({ "integer"sv, integer });
                 }
 
                 // 8. If fraction is not undefined, then
