@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
 
     Core::ArgsParser::Option number_style_option {
-        true,
+        Core::ArgsParser::OptionArgumentMode::Required,
         "Line numbering style: 't' for non-empty lines, 'a' for all lines, 'n' for no lines",
         "body-numbering",
         'b',

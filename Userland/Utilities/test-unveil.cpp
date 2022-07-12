@@ -20,7 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(permissions, "Apply these permissions going forward", "permissions", 'p', "unveil-permissions");
     parser.add_option(should_sleep, "Sleep after processing all arguments", "sleep", 's');
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a path to the unveil list",
         .long_name = "unveil",
         .short_name = 'u',
@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         } });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Lock the veil",
         .long_name = "lock",
         .short_name = 'l',

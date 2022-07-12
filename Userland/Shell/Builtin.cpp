@@ -1288,7 +1288,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     };
 
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Stop processing arguments after a non-argument parameter is seen",
         .long_name = "stop-on-first-non-option",
         .accept_value = [&](auto) {
@@ -1297,7 +1297,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the general help string for the parser",
         .long_name = "general-help",
         .value_name = "string",
@@ -1307,7 +1307,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing an option",
         .long_name = "add-option",
         .value_name = "variable-name",
@@ -1326,7 +1326,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Accept multiple of the current option being given",
         .long_name = "list",
         .accept_value = [&](auto) {
@@ -1339,7 +1339,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Define the type of the option or argument being described",
         .long_name = "type",
         .value_name = "type",
@@ -1379,7 +1379,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the help string of the option or argument being defined",
         .long_name = "help-string",
         .value_name = "string",
@@ -1396,7 +1396,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the long name of the option being defined",
         .long_name = "long-name",
         .value_name = "name",
@@ -1415,7 +1415,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the short name of the option being defined",
         .long_name = "short-name",
         .value_name = "char",
@@ -1438,7 +1438,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the value name of the option being defined",
         .long_name = "value-name",
         .value_name = "string",
@@ -1473,7 +1473,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing a positional argument",
         .long_name = "add-positional-argument",
         .value_name = "variable",
@@ -1492,7 +1492,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the minimum required number of positional arguments for the argument being described",
         .long_name = "min",
         .value_name = "n",
@@ -1520,7 +1520,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the maximum required number of positional arguments for the argument being described",
         .long_name = "max",
         .value_name = "n",
@@ -1548,7 +1548,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Mark the positional argument being described as required (shorthand for --min 1)",
         .long_name = "required",
         .accept_value = [&](auto) {

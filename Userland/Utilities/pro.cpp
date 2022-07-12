@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
     args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l');
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header entry to the request",
         .long_name = "header",
         .short_name = 'H',

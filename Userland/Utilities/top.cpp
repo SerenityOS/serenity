@@ -138,7 +138,7 @@ static struct winsize g_window_size;
 static void parse_args(Main::Arguments arguments, TopOption& top_option)
 {
     Core::ArgsParser::Option sort_by_option {
-        true,
+        Core::ArgsParser::OptionArgumentMode::Required,
         "Sort by field [pid, tid, pri, user, state, virt, phys, cpu, name]",
         "sort-by",
         's',

@@ -30,6 +30,11 @@ public:
         Ignore,
     };
 
+    enum class OptionArgumentMode {
+        None,
+        Required,
+    };
+
     /// When an option is hidden.
     /// If the hide mode is not None, then it's always hidden from the usage/synopsis.
     enum class OptionHideMode {
@@ -39,7 +44,7 @@ public:
     };
 
     struct Option {
-        bool requires_argument { true };
+        OptionArgumentMode argument_mode { OptionArgumentMode::Required };
         char const* help_string { nullptr };
         char const* long_name { nullptr };
         char short_name { 0 };
