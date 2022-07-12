@@ -38,6 +38,7 @@ RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(Stri
 ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::create(QNetworkAccessManager& qnam, String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
 {
     QNetworkRequest request { QString(url.to_string().characters()) };
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
 
     QNetworkReply* reply = nullptr;
 
