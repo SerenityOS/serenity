@@ -1253,6 +1253,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 break;
             case CSS::AlignItems::Center:
                 flex_item->cross_offset = 0 - (flex_item->cross_size / 2.0f);
+                break;
             default:
                 break;
             }
