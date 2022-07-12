@@ -12,8 +12,6 @@ set(SOURCES
     main.cpp
     MainWidget.cpp
     ManualModel.cpp
-    ManualPageNode.cpp
-    ManualSectionNode.cpp
 )
 
 set(GENERATED_SOURCES
@@ -21,4 +19,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Help ICON app-help)
-target_link_libraries(Help PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibDesktop LibMain)
+target_link_libraries(Help PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibDesktop LibMain LibManual)
+link_with_locale_data(Help)

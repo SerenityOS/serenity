@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto main_widget = TRY(window->try_set_main_widget<MainWidget>());
     TRY(main_widget->initialize_fallibles(window));
-    main_widget->set_start_page(start_page, section);
+    TRY(main_widget->set_start_page(start_page, section));
 
     window->show();
 

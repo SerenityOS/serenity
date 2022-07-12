@@ -20,13 +20,13 @@ public:
     virtual ~MainWidget() override = default;
 
     ErrorOr<void> initialize_fallibles(GUI::Window&);
-    void set_start_page(StringView page, u32 section);
+    ErrorOr<void> set_start_page(StringView page, u32 section);
 
 private:
     MainWidget();
 
     void open_url(URL const&);
-    void open_page(DeprecatedString const& path);
+    void open_page(Optional<String> const& path);
     void open_external(URL const&);
 
     History m_history;

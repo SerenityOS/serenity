@@ -5,21 +5,11 @@
  */
 
 #include "ManualModel.h"
-#include "ManualNode.h"
-#include "ManualPageNode.h"
-#include "ManualSectionNode.h"
 #include <AK/Try.h>
-
-static ManualSectionNode s_sections[] = {
-    { "1", "User Programs" },
-    { "2", "System Calls" },
-    { "3", "Library Functions" },
-    { "4", "Special Files" },
-    { "5", "File Formats" },
-    { "6", "Games" },
-    { "7", "Miscellanea" },
-    { "8", "Sysadmin Tools" }
-};
+#include <AK/Utf8View.h>
+#include <LibManual/Node.h>
+#include <LibManual/PageNode.h>
+#include <LibManual/SectionNode.h>
 
 ManualModel::ManualModel()
 {
@@ -34,11 +24,14 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
         auto parent_index = index(section, 0);
         for (int row = 0; row < row_count(parent_index); ++row) {
             auto child_index = index(row, 0, parent_index);
-            auto* node = static_cast<ManualNode const*>(child_index.internal_data());
+            auto* node = static_cast<Manual::Node const*>(child_index.internal_data());
             if (!node->is_page())
                 continue;
-            auto* page = static_cast<ManualPageNode const*>(node);
-            if (page->path() != path)
+            auto* page = static_cast<Manual::PageNode const*>(node);
+            auto const maybe_path = page->path();
+            if (maybe_path.is_error())
+                return {};
+            if (maybe_path.value().bytes_as_string_view() != path)
                 continue;
             return child_index;
         }
@@ -46,29 +39,32 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
     return {};
 }
 
-DeprecatedString ManualModel::page_name(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_name(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<ManualNode const*>(index.internal_data());
+    auto* node = static_cast<Manual::Node const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<ManualPageNode const*>(node);
+    auto* page = static_cast<Manual::PageNode const*>(node);
     return page->name();
 }
 
-DeprecatedString ManualModel::page_path(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_path(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<ManualNode const*>(index.internal_data());
+    auto* node = static_cast<Manual::Node const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<ManualPageNode const*>(node);
-    return page->path();
+    auto* page = static_cast<Manual::PageNode const*>(node);
+    auto path = page->path();
+    if (path.is_error())
+        return {};
+    return path.release_value();
 }
 
-ErrorOr<StringView> ManualModel::page_view(DeprecatedString const& path) const
+ErrorOr<StringView> ManualModel::page_view(String const& path) const
 {
     if (path.is_empty())
         return StringView {};
@@ -87,23 +83,29 @@ ErrorOr<StringView> ManualModel::page_view(DeprecatedString const& path) const
     return view;
 }
 
-DeprecatedString ManualModel::page_and_section(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_and_section(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<ManualNode const*>(index.internal_data());
+    auto* node = static_cast<Manual::Node const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<ManualPageNode const*>(node);
-    auto* section = static_cast<ManualSectionNode const*>(page->parent());
-    return DeprecatedString::formatted("{}({})", page->name(), section->section_name());
+    auto* page = static_cast<Manual::PageNode const*>(node);
+    auto* section = static_cast<Manual::SectionNode const*>(page->parent());
+    auto page_name = page->name();
+    if (page_name.is_error())
+        return {};
+    auto name = String::formatted("{}({})", page_name.release_value(), section->section_name());
+    if (name.is_error())
+        return {};
+    return name.release_value();
 }
 
 GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
     if (!parent_index.is_valid())
-        return create_index(row, column, &s_sections[row]);
-    auto* parent = static_cast<ManualNode const*>(parent_index.internal_data());
+        return create_index(row, column, Manual::sections[row].ptr());
+    auto* parent = static_cast<Manual::Node const*>(parent_index.internal_data());
     auto* child = &parent->children()[row];
     return create_index(row, column, child);
 }
@@ -112,19 +114,19 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* child = static_cast<ManualNode const*>(index.internal_data());
+    auto* child = static_cast<Manual::Node const*>(index.internal_data());
     auto* parent = child->parent();
     if (parent == nullptr)
         return {};
 
     if (parent->parent() == nullptr) {
-        for (size_t row = 0; row < sizeof(s_sections) / sizeof(s_sections[0]); row++)
-            if (&s_sections[row] == parent)
+        for (size_t row = 0; row < sizeof(Manual::sections) / sizeof(Manual::sections[0]); row++)
+            if (Manual::sections[row].ptr() == parent)
                 return create_index(row, 0, parent);
         VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent()->children().size(); row++) {
-        ManualNode* child_at_row = &parent->parent()->children()[row];
+        Manual::Node* child_at_row = &parent->parent()->children()[row];
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
@@ -134,8 +136,8 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
 int ManualModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
-        return sizeof(s_sections) / sizeof(s_sections[0]);
-    auto* node = static_cast<ManualNode const*>(index.internal_data());
+        return sizeof(Manual::sections) / sizeof(Manual::sections[0]);
+    auto* node = static_cast<Manual::Node const*>(index.internal_data());
     return node->children().size();
 }
 
@@ -146,12 +148,16 @@ int ManualModel::column_count(const GUI::ModelIndex&) const
 
 GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* node = static_cast<ManualNode const*>(index.internal_data());
+    auto* node = static_cast<Manual::Node const*>(index.internal_data());
     switch (role) {
     case GUI::ModelRole::Search:
         if (!node->is_page())
             return {};
-        return DeprecatedString(page_view(page_path(index)).value());
+        if (auto path = page_path(index); path.has_value())
+            if (auto page = page_view(path.release_value()); !page.is_error())
+                // FIXME: We already provide String, but GUI::Variant still needs DeprecatedString.
+                return DeprecatedString(page.release_value());
+        return {};
     case GUI::ModelRole::Display:
         return node->name();
     case GUI::ModelRole::Icon:
@@ -167,17 +173,24 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
 
 void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, bool const open)
 {
-    auto* node = static_cast<ManualSectionNode*>(index.internal_data());
+    auto* node = static_cast<Manual::SectionNode*>(index.internal_data());
     node->set_open(open);
 }
 
 TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
 {
     auto name = page_name(index);
-    if (name.contains(term.as_string(), CaseSensitivity::CaseInsensitive))
+    if (!name.has_value())
+        return TriState::False;
+
+    if (name.value().bytes_as_string_view().contains(term.as_string(), CaseSensitivity::CaseInsensitive))
         return TriState::True;
 
-    auto view_result = page_view(page_path(index));
+    auto path = page_path(index);
+    // NOTE: This is slightly inaccurate, as page_path can also fail due to OOM. We consider it acceptable to have a data mismatch in that case.
+    if (!path.has_value())
+        return TriState::False;
+    auto view_result = page_view(path.release_value());
     if (view_result.is_error() || view_result.value().is_empty())
         return TriState::False;
 
