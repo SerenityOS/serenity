@@ -116,6 +116,15 @@ describe("errors", () => {
             new Intl.PluralRules("en", { maximumSignificantDigits: 22 });
         }).toThrowWithMessage(RangeError, "Value 22 is NaN or is not between 1 and 21");
     });
+
+    test("roundingPriority option is invalid", () => {
+        expect(() => {
+            new Intl.PluralRules("en", { roundingPriority: "hello!" });
+        }).toThrowWithMessage(
+            RangeError,
+            "hello! is not a valid value for option roundingPriority"
+        );
+    });
 });
 
 describe("normal behavior", () => {
@@ -177,5 +186,13 @@ describe("normal behavior", () => {
                 new Intl.PluralRules("en", { maximumSignificantDigits: i });
             }).not.toThrow();
         }
+    });
+
+    test("all valid roundingPriority options", () => {
+        ["auto", "morePrecision", "lessPrecision"].forEach(roundingPriority => {
+            expect(() => {
+                new Intl.PluralRules("en", { roundingPriority: roundingPriority });
+            }).not.toThrow();
+        });
     });
 });

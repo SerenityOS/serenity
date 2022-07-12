@@ -104,4 +104,14 @@ describe("correct behavior", () => {
         expect(gaOrdinal.pluralCategories).toBeDefined();
         expect(contains(gaOrdinal.pluralCategories, ["other", "one"])).toBeTrue();
     });
+
+    test("rounding priority", () => {
+        const en1 = new Intl.PluralRules("en");
+        expect(en1.resolvedOptions().roundingPriority).toBe("auto");
+
+        ["auto", "morePrecision", "lessPrecision"].forEach(roundingPriority => {
+            const en2 = new Intl.PluralRules("en", { roundingPriority: roundingPriority });
+            expect(en2.resolvedOptions().roundingPriority).toBe(roundingPriority);
+        });
+    });
 });
