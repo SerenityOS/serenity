@@ -4,19 +4,21 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ManualSectionNode.h"
-#include "ManualPageNode.h"
+#include "SectionNode.h"
+#include "PageNode.h"
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/DirIterator.h>
 
-String ManualSectionNode::path() const
+namespace Manual {
+
+String SectionNode::path() const
 {
     return String::formatted("/usr/share/man/man{}", m_section);
 }
 
-void ManualSectionNode::reify_if_needed() const
+void SectionNode::reify_if_needed() const
 {
     if (m_reified)
         return;
@@ -35,12 +37,14 @@ void ManualSectionNode::reify_if_needed() const
     quick_sort(page_names);
 
     for (auto& page_name : page_names)
-        m_children.append(make<ManualPageNode>(*this, move(page_name)));
+        m_children.append(make_ref_counted<PageNode>(*this, move(page_name)));
 }
 
-void ManualSectionNode::set_open(bool open)
+void SectionNode::set_open(bool open)
 {
     if (m_open == open)
         return;
     m_open = open;
+}
+
 }

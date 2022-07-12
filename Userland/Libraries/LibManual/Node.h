@@ -7,16 +7,24 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 
-class ManualNode {
+namespace Manual {
+
+class PageNode;
+
+class Node : public RefCounted<Node> {
 public:
-    virtual ~ManualNode() = default;
+    virtual ~Node() = default;
 
-    virtual NonnullOwnPtrVector<ManualNode>& children() const = 0;
-    virtual ManualNode const* parent() const = 0;
+    virtual NonnullRefPtrVector<Node>& children() const = 0;
+    virtual Node const* parent() const = 0;
     virtual String name() const = 0;
     virtual bool is_page() const { return false; }
     virtual bool is_open() const { return false; }
 };
+
+}

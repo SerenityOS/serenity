@@ -13,10 +13,8 @@ set(SOURCES
     main.cpp
     MainWidget.cpp
     ManualModel.cpp
-    ManualPageNode.cpp
-    ManualSectionNode.cpp
 )
 
 serenity_app(Help ICON app-help)
-target_link_libraries(Help LibWebView LibWeb LibMarkdown LibGUI LibDesktop LibMain)
+target_link_libraries(Help LibWebView LibWeb LibMarkdown LibManual LibGUI LibDesktop LibMain)
 link_with_unicode_data(Help)

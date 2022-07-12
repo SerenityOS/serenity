@@ -8,7 +8,9 @@
  */
 
 #include "MainWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/Help/HelpWindowGML.h>
 #include <LibCore/ArgsParser.h>
@@ -30,6 +32,10 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
+#include <LibManual/Node.h>
+#include <LibManual/PageNode.h>
+#include <LibManual/Path.h>
+#include <LibManual/SectionNode.h>
 #include <LibMarkdown/Document.h>
 
 namespace Help {
@@ -193,17 +199,7 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
             // > Help [query]
 
             // First, see if we can find the page by name
-            char const* sections[] = {
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8"
-            };
-            for (auto s : sections) {
+            for (auto s : Manual::section_numbers) {
                 String path = String::formatted("/usr/share/man/man{}/{}.md", s, start_page);
                 if (Core::File::exists(path)) {
                     m_history.push(path);
