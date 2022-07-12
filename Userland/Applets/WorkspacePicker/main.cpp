@@ -8,6 +8,7 @@
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
@@ -25,7 +26,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(DesktopStatusWindow::try_create());
     window->set_title("WorkspacePicker");
-    window->resize(28, 16);
+
+    auto& desktop = GUI::Desktop::the();
+    if (desktop.workspace_rows() == 1 && desktop.workspace_columns() == 1)
+        window->resize(0, 0);
+    else
+        window->resize(28, 16);
+
     window->show();
     window->make_window_manager(WindowServer::WMEventMask::WorkspaceChanges);
 
