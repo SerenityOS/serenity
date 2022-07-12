@@ -15,6 +15,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
@@ -58,7 +59,7 @@ public:
     using RefCounted::unref;
 
     ReadyState ready_state() const { return m_ready_state; };
-    unsigned status() const { return m_status; };
+    Fetch::Status status() const { return m_status; };
     DOM::ExceptionOr<String> response_text() const;
     DOM::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
@@ -87,7 +88,7 @@ private:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void set_ready_state(ReadyState);
-    void set_status(unsigned status) { m_status = status; }
+    void set_status(Fetch::Status status) { m_status = status; }
     void fire_progress_event(String const&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
@@ -104,7 +105,7 @@ private:
     NonnullRefPtr<HTML::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
-    unsigned m_status { 0 };
+    Fetch::Status m_status { 0 };
     bool m_send { false };
     u32 m_timeout { 0 };
 

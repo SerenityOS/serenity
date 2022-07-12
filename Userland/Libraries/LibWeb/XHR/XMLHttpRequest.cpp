@@ -573,6 +573,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
 
         // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
+        // FIXME: In the Fetch spec, which XHR gets its definition of `status` from, the status code is 0-999.
+        //        We could clamp, wrap around (current browser behavior!), or error out.
+        //        See: https://github.com/whatwg/fetch/issues/1142
         ResourceLoader::the().load(
             request,
             [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
