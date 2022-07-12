@@ -104,6 +104,12 @@ private:
 DesktopStatusWindow::DesktopStatusWindow()
 {
     GUI::Desktop::the().on_receive_screen_rects([&](GUI::Desktop&) {
+        auto& desktop = GUI::Desktop::the();
+        if (desktop.workspace_rows() == 1 && desktop.workspace_columns() == 1)
+            resize(0, 0);
+        else
+            resize(28, 16);
+
         update();
     });
     set_window_type(GUI::WindowType::Applet);
