@@ -231,6 +231,10 @@ public:
 
     void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
+    // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
+    template<typename Callback>
+    IterationDecision for_each_shadow_including_descendant(Callback);
+
 protected:
     Node(Document&, NodeType);
 

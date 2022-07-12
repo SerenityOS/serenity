@@ -1116,8 +1116,7 @@ void Document::adopt_node(Node& node)
         node.remove();
 
     if (&old_document != this) {
-        // FIXME: This should be shadow-including.
-        node.for_each_in_inclusive_subtree([&](auto& inclusive_descendant) {
+        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.set_document({}, *this);
             // FIXME: If inclusiveDescendant is an element, then set the node document of each attribute in inclusiveDescendant’s attribute list to document.
             return IterationDecision::Continue;
@@ -1127,8 +1126,7 @@ void Document::adopt_node(Node& node)
         //        enqueue a custom element callback reaction with inclusiveDescendant, callback name "adoptedCallback",
         //        and an argument list containing oldDocument and document.
 
-        // FIXME: This should be shadow-including.
-        node.for_each_in_inclusive_subtree([&](auto& inclusive_descendant) {
+        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.adopted_from(old_document);
             return IterationDecision::Continue;
         });
