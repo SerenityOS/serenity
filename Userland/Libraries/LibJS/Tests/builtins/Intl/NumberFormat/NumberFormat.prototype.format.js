@@ -347,29 +347,89 @@ describe("style=decimal", () => {
         expect(ar.format(-1)).toBe("\u061c-\u0661");
     });
 
-    test("useGrouping=true", () => {
-        const en = new Intl.NumberFormat("en", { useGrouping: true });
+    test("useGrouping=always", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "always" });
         expect(en.format(123)).toBe("123");
         expect(en.format(1234)).toBe("1,234");
         expect(en.format(12345)).toBe("12,345");
         expect(en.format(123456)).toBe("123,456");
         expect(en.format(1234567)).toBe("1,234,567");
 
-        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: true });
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "always" });
         expect(enIn.format(123)).toBe("123");
         expect(enIn.format(1234)).toBe("1,234");
         expect(enIn.format(12345)).toBe("12,345");
         expect(enIn.format(123456)).toBe("1,23,456");
         expect(enIn.format(1234567)).toBe("12,34,567");
 
-        const ar = new Intl.NumberFormat("ar", { useGrouping: true });
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "always" });
         expect(ar.format(123)).toBe("\u0661\u0662\u0663");
         expect(ar.format(1234)).toBe("\u0661\u066c\u0662\u0663\u0664");
         expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
         expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
         expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
 
-        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: true });
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "always" });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1\u00a0234");
+        expect(plPl.format(12345)).toBe("12\u00a0345");
+        expect(plPl.format(123456)).toBe("123\u00a0456");
+        expect(plPl.format(1234567)).toBe("1\u00a0234\u00a0567");
+    });
+
+    test("useGrouping=auto", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "auto" });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1,234");
+        expect(en.format(12345)).toBe("12,345");
+        expect(en.format(123456)).toBe("123,456");
+        expect(en.format(1234567)).toBe("1,234,567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "auto" });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1,234");
+        expect(enIn.format(12345)).toBe("12,345");
+        expect(enIn.format(123456)).toBe("1,23,456");
+        expect(enIn.format(1234567)).toBe("12,34,567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "auto" });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u066c\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "auto" });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1234");
+        expect(plPl.format(12345)).toBe("12\u00a0345");
+        expect(plPl.format(123456)).toBe("123\u00a0456");
+        expect(plPl.format(1234567)).toBe("1\u00a0234\u00a0567");
+    });
+
+    test("useGrouping=min2", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "min2" });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1234");
+        expect(en.format(12345)).toBe("12,345");
+        expect(en.format(123456)).toBe("123,456");
+        expect(en.format(1234567)).toBe("1,234,567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "min2" });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1234");
+        expect(enIn.format(12345)).toBe("12,345");
+        expect(enIn.format(123456)).toBe("1,23,456");
+        expect(enIn.format(1234567)).toBe("12,34,567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "min2" });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "min2" });
         expect(plPl.format(123)).toBe("123");
         expect(plPl.format(1234)).toBe("1234");
         expect(plPl.format(12345)).toBe("12\u00a0345");
