@@ -114,13 +114,34 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits())));
     if (number_format->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
-    MUST(options->create_data_property_or_throw(vm.names.useGrouping, Value(number_format->use_grouping())));
+    MUST(options->create_data_property_or_throw(vm.names.useGrouping, number_format->use_grouping_to_value(global_object)));
     MUST(options->create_data_property_or_throw(vm.names.notation, js_string(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
         MUST(options->create_data_property_or_throw(vm.names.compactDisplay, js_string(vm, number_format->compact_display_string())));
     MUST(options->create_data_property_or_throw(vm.names.signDisplay, js_string(vm, number_format->sign_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, js_string(vm, number_format->rounding_mode_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(number_format->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, js_string(vm, number_format->trailing_zero_display_string())));
 
-    // 5. Return options.
+    switch (number_format->rounding_type()) {
+    // 6. If nf.[[RoundingType]] is morePrecision, then
+    case NumberFormatBase::RoundingType::MorePrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "morePrecision"sv)));
+        break;
+    // 7. Else if nf.[[RoundingType]] is lessPrecision, then
+    case NumberFormatBase::RoundingType::LessPrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "lessPrecision"sv)));
+        break;
+    // 8. Else,
+    default:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "auto"sv)));
+        break;
+    }
+
+    // 9. Return options.
     return options;
 }
 

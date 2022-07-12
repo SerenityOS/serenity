@@ -24,7 +24,28 @@ public:
         Invalid,
         SignificantDigits,
         FractionDigits,
-        CompactRounding,
+        CompactRounding, // FIXME: Remove this when corresponding AOs are updated for NumberFormat V3.
+        MorePrecision,
+        LessPrecision,
+    };
+
+    enum class RoundingMode {
+        Invalid,
+        Ceil,
+        Expand,
+        Floor,
+        HalfCeil,
+        HalfEven,
+        HalfExpand,
+        HalfFloor,
+        HalfTrunc,
+        Trunc,
+    };
+
+    enum class TrailingZeroDisplay {
+        Invalid,
+        Auto,
+        StripIfInteger,
     };
 
     NumberFormatBase(Object& prototype);
@@ -59,15 +80,29 @@ public:
     StringView rounding_type_string() const;
     void set_rounding_type(RoundingType rounding_type) { m_rounding_type = rounding_type; }
 
+    RoundingMode rounding_mode() const { return m_rounding_mode; }
+    StringView rounding_mode_string() const;
+    void set_rounding_mode(StringView rounding_mode);
+
+    int rounding_increment() const { return m_rounding_increment; }
+    void set_rounding_increment(int rounding_increment) { m_rounding_increment = rounding_increment; }
+
+    TrailingZeroDisplay trailing_zero_display() const { return m_trailing_zero_display; }
+    StringView trailing_zero_display_string() const;
+    void set_trailing_zero_display(StringView trailing_zero_display);
+
 private:
-    String m_locale;                                        // [[Locale]]
-    String m_data_locale;                                   // [[DataLocale]]
-    int m_min_integer_digits { 0 };                         // [[MinimumIntegerDigits]]
-    Optional<int> m_min_fraction_digits {};                 // [[MinimumFractionDigits]]
-    Optional<int> m_max_fraction_digits {};                 // [[MaximumFractionDigits]]
-    Optional<int> m_min_significant_digits {};              // [[MinimumSignificantDigits]]
-    Optional<int> m_max_significant_digits {};              // [[MaximumSignificantDigits]]
-    RoundingType m_rounding_type { RoundingType::Invalid }; // [[RoundingType]]
+    String m_locale;                                                              // [[Locale]]
+    String m_data_locale;                                                         // [[DataLocale]]
+    int m_min_integer_digits { 0 };                                               // [[MinimumIntegerDigits]]
+    Optional<int> m_min_fraction_digits {};                                       // [[MinimumFractionDigits]]
+    Optional<int> m_max_fraction_digits {};                                       // [[MaximumFractionDigits]]
+    Optional<int> m_min_significant_digits {};                                    // [[MinimumSignificantDigits]]
+    Optional<int> m_max_significant_digits {};                                    // [[MaximumSignificantDigits]]
+    RoundingType m_rounding_type { RoundingType::Invalid };                       // [[RoundingType]]
+    RoundingMode m_rounding_mode { RoundingMode::Invalid };                       // [[RoundingMode]]
+    int m_rounding_increment { 1 };                                               // [[RoundingIncrement]]
+    TrailingZeroDisplay m_trailing_zero_display { TrailingZeroDisplay::Invalid }; // [[TrailingZeroDisplay]]
 };
 
 class NumberFormat final : public NumberFormatBase {
@@ -120,6 +155,15 @@ public:
         Never,
         Always,
         ExceptZero,
+        Negative,
+    };
+
+    enum class UseGrouping {
+        Invalid,
+        Always,
+        Auto,
+        Min2,
+        False,
     };
 
     static constexpr auto relevant_extension_keys()
@@ -163,8 +207,9 @@ public:
     StringView unit_display_string() const { return Unicode::style_to_string(*m_unit_display); }
     void set_unit_display(StringView unit_display) { m_unit_display = Unicode::style_from_string(unit_display); }
 
-    bool use_grouping() const { return m_use_grouping; }
-    void set_use_grouping(bool use_grouping) { m_use_grouping = use_grouping; }
+    UseGrouping use_grouping() const { return m_use_grouping; }
+    Value use_grouping_to_value(GlobalObject&) const;
+    void set_use_grouping(StringOrBoolean const& use_grouping);
 
     Notation notation() const { return m_notation; }
     StringView notation_string() const;
@@ -198,7 +243,7 @@ private:
     Optional<CurrencySign> m_currency_sign {};           // [[CurrencySign]]
     Optional<String> m_unit {};                          // [[Unit]]
     Optional<Unicode::Style> m_unit_display {};          // [[UnitDisplay]]
-    bool m_use_grouping { false };                       // [[UseGrouping]]
+    UseGrouping m_use_grouping { false };                // [[UseGrouping]]
     Notation m_notation { Notation::Invalid };           // [[Notation]]
     Optional<CompactDisplay> m_compact_display {};       // [[CompactDisplay]]
     SignDisplay m_sign_display { SignDisplay::Invalid }; // [[SignDisplay]]

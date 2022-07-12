@@ -161,9 +161,120 @@ StringView NumberFormatBase::rounding_type_string() const
         return "fractionDigits"sv;
     case RoundingType::CompactRounding:
         return "compactRounding"sv;
+    case RoundingType::MorePrecision:
+        return "morePrecision"sv;
+    case RoundingType::LessPrecision:
+        return "lessPrecision"sv;
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+StringView NumberFormatBase::rounding_mode_string() const
+{
+    switch (m_rounding_mode) {
+    case RoundingMode::Ceil:
+        return "ceil"sv;
+    case RoundingMode::Expand:
+        return "expand"sv;
+    case RoundingMode::Floor:
+        return "floor"sv;
+    case RoundingMode::HalfCeil:
+        return "halfCeil"sv;
+    case RoundingMode::HalfEven:
+        return "halfEven"sv;
+    case RoundingMode::HalfExpand:
+        return "halfExpand"sv;
+    case RoundingMode::HalfFloor:
+        return "halfFloor"sv;
+    case RoundingMode::HalfTrunc:
+        return "halfTrunc"sv;
+    case RoundingMode::Trunc:
+        return "trunc"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void NumberFormatBase::set_rounding_mode(StringView rounding_mode)
+{
+    if (rounding_mode == "ceil"sv)
+        m_rounding_mode = RoundingMode::Ceil;
+    else if (rounding_mode == "expand"sv)
+        m_rounding_mode = RoundingMode::Expand;
+    else if (rounding_mode == "floor"sv)
+        m_rounding_mode = RoundingMode::Floor;
+    else if (rounding_mode == "halfCeil"sv)
+        m_rounding_mode = RoundingMode::HalfCeil;
+    else if (rounding_mode == "halfEven"sv)
+        m_rounding_mode = RoundingMode::HalfEven;
+    else if (rounding_mode == "halfExpand"sv)
+        m_rounding_mode = RoundingMode::HalfExpand;
+    else if (rounding_mode == "halfFloor"sv)
+        m_rounding_mode = RoundingMode::HalfFloor;
+    else if (rounding_mode == "halfTrunc"sv)
+        m_rounding_mode = RoundingMode::HalfTrunc;
+    else if (rounding_mode == "trunc"sv)
+        m_rounding_mode = RoundingMode::Trunc;
+}
+
+StringView NumberFormatBase::trailing_zero_display_string() const
+{
+    switch (m_trailing_zero_display) {
+    case TrailingZeroDisplay::Auto:
+        return "auto"sv;
+    case TrailingZeroDisplay::StripIfInteger:
+        return "stripIfInteger"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void NumberFormatBase::set_trailing_zero_display(StringView trailing_zero_display)
+{
+    if (trailing_zero_display == "auto"sv)
+        m_trailing_zero_display = TrailingZeroDisplay::Auto;
+    else if (trailing_zero_display == "stripIfInteger"sv)
+        m_trailing_zero_display = TrailingZeroDisplay::StripIfInteger;
+    else
+        VERIFY_NOT_REACHED();
+}
+
+Value NumberFormat::use_grouping_to_value(GlobalObject& global_object) const
+{
+    auto& vm = global_object.vm();
+
+    switch (m_use_grouping) {
+    case UseGrouping::Always:
+        return js_string(vm, "always"sv);
+    case UseGrouping::Auto:
+        return js_string(vm, "auto"sv);
+    case UseGrouping::Min2:
+        return js_string(vm, "min2"sv);
+    case UseGrouping::False:
+        return Value(false);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void NumberFormat::set_use_grouping(StringOrBoolean const& use_grouping)
+{
+    use_grouping.visit(
+        [this](StringView grouping) {
+            if (grouping == "always"sv)
+                m_use_grouping = UseGrouping::Always;
+            else if (grouping == "auto"sv)
+                m_use_grouping = UseGrouping::Auto;
+            else if (grouping == "min2"sv)
+                m_use_grouping = UseGrouping::Min2;
+            else
+                VERIFY_NOT_REACHED();
+        },
+        [this](bool grouping) {
+            VERIFY(!grouping);
+            m_use_grouping = UseGrouping::False;
+        });
 }
 
 void NumberFormat::set_notation(StringView notation)
@@ -230,6 +341,8 @@ void NumberFormat::set_sign_display(StringView sign_display)
         m_sign_display = SignDisplay::Always;
     else if (sign_display == "exceptZero"sv)
         m_sign_display = SignDisplay::ExceptZero;
+    else if (sign_display == "negative"sv)
+        m_sign_display = SignDisplay::Negative;
     else
         VERIFY_NOT_REACHED();
 }
@@ -245,6 +358,8 @@ StringView NumberFormat::sign_display_string() const
         return "always"sv;
     case SignDisplay::ExceptZero:
         return "exceptZero"sv;
+    case SignDisplay::Negative:
+        return "negative"sv;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -372,6 +487,8 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         break;
 
     // 5. Else,
+    case NumberFormatBase::RoundingType::MorePrecision: // FIXME: Handle this case for NumberFormat V3.
+    case NumberFormatBase::RoundingType::LessPrecision: // FIXME: Handle this case for NumberFormat V3.
     case NumberFormatBase::RoundingType::CompactRounding:
         // a. Assert: intlObject.[[RoundingType]] is compactRounding.
         // b. Let result be ToRawPrecision(x, 1, 2).
@@ -662,7 +779,8 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
                     // b. Let fraction be undefined.
                 }
 
-                bool use_grouping = number_format.use_grouping();
+                // FIXME: Handle all NumberFormat V3 [[UseGrouping]] options.
+                bool use_grouping = number_format.use_grouping() != NumberFormat::UseGrouping::False;
 
                 // FIXME: The spec doesn't indicate this, but grouping should be disabled for numbers less than 10,000 when the notation is compact.
                 //        This is addressed in Intl.NumberFormat V3 with the "min2" [[UseGrouping]] option. However, test262 explicitly expects this
@@ -1174,7 +1292,8 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
         break;
 
     default:
-        VERIFY_NOT_REACHED();
+        // FIXME: Handle all NumberFormat V3 [[SignDisplay]] options.
+        return {};
     }
 
     found_pattern = patterns.release_value();

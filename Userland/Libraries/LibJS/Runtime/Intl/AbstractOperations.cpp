@@ -605,6 +605,39 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
 
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
+// 1.2.12 GetStringOrBooleanOption ( options, property, values, trueValue, falsyValue, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getstringorbooleanoption
+ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
+{
+    // 1. Let value be ? Get(options, property).
+    auto value = TRY(options.get(property));
+
+    // 2. If value is undefined, return fallback.
+    if (value.is_undefined())
+        return fallback;
+
+    // 3. If value is true, return trueValue.
+    if (value.is_boolean() && value.as_bool())
+        return true_value;
+
+    // 4. Let valueBoolean be ToBoolean(value).
+    auto value_boolean = value.to_boolean();
+
+    // 5. If valueBoolean is false, return falsyValue.
+    if (!value_boolean)
+        return falsy_value;
+
+    // 6. Let value be ? ToString(value).
+    auto value_string = TRY(value.to_string(global_object));
+
+    // 7. If values does not contain an element equal to value, return fallback.
+    auto it = find(values.begin(), values.end(), value_string);
+    if (it == values.end())
+        return fallback;
+
+    // 8. Return value.
+    return StringOrBoolean { *it };
+}
+
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
 ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)
 {

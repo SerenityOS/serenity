@@ -402,6 +402,7 @@ namespace JS {
     P(round)                                 \
     P(roundingIncrement)                     \
     P(roundingMode)                          \
+    P(roundingPriority)                      \
     P(script)                                \
     P(seal)                                  \
     P(second)                                \
@@ -514,6 +515,7 @@ namespace JS {
     P(toZonedDateTime)                       \
     P(toZonedDateTimeISO)                    \
     P(trace)                                 \
+    P(trailingZeroDisplay)                   \
     P(trim)                                  \
     P(trimEnd)                               \
     P(trimLeft)                              \
