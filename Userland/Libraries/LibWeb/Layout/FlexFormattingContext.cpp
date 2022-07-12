@@ -1237,7 +1237,6 @@ CSS::AlignItems FlexFormattingContext::alignment_for_item(FlexItem const& item) 
 void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
 {
     // FIXME: Take better care of margins
-    float line_cross_offset = 0;
     for (auto& flex_line : m_flex_lines) {
         for (auto* flex_item : flex_line.items) {
             float half_line_size = flex_line.cross_size / 2.0f;
@@ -1258,8 +1257,6 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 break;
             }
         }
-
-        line_cross_offset += flex_line.cross_size;
     }
 }
 
