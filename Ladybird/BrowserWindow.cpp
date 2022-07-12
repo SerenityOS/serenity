@@ -22,6 +22,9 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
 
+    m_tabs_bar = m_tabs_container->findChild<QTabBar*>();
+    m_tabs_bar->hide();
+
     auto* menu = menuBar()->addMenu("&File");
 
     auto* new_tab_action = new QAction("New &Tab");
@@ -181,6 +184,9 @@ void BrowserWindow::new_tab()
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+
+    if (m_tabs_container->count() > 1)
+        m_tabs_bar->show();
 }
 
 void BrowserWindow::close_tab(int index)
@@ -190,6 +196,9 @@ void BrowserWindow::close_tab(int index)
     m_tabs.remove_first_matching([&](auto& entry) {
         return entry == tab;
     });
+
+    if (m_tabs_container->count() <= 1)
+        m_tabs_bar->hide();
 }
 
 int BrowserWindow::tab_index(Tab* tab)
