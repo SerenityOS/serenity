@@ -80,6 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
 }
 
 // 15.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/ecma402/#sec-initializenumberformat
+// 1.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-initializenumberformat
 ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value)
 {
     auto& vm = global_object.vm();
@@ -170,32 +171,71 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     // 20. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
     TRY(set_number_format_digit_options(global_object, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
 
-    // 21. Let compactDisplay be ? GetOption(options, "compactDisplay", "string", « "short", "long" », "short").
+    // 21. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
+    auto rounding_increment = TRY(get_number_option(global_object, *options, vm.names.roundingIncrement, 1, 5000, 1));
+
+    // 22. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
+    static constexpr auto sanctioned_rounding_increments = AK::Array { 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 };
+
+    if (!sanctioned_rounding_increments.span().contains_slow(*rounding_increment))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidRoundingIncrement, *rounding_increment);
+
+    // 23. If roundingIncrement is not 1 and numberFormat.[[RoundingType]] is not fractionDigits, throw a TypeError exception.
+    if ((rounding_increment != 1) && (number_format.rounding_type() != NumberFormatBase::RoundingType::FractionDigits))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidRoundingIncrementForRoundingType, *rounding_increment, number_format.rounding_type_string());
+
+    // 24. If roundingIncrement is not 1 and numberFormat.[[MaximumFractionDigits]] is not equal to numberFormat.[[MinimumFractionDigits]], throw a RangeError exception.
+    if ((rounding_increment != 1) && (number_format.max_fraction_digits() != number_format.min_fraction_digits()))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidRoundingIncrementForFractionDigits, *rounding_increment);
+
+    // 25. Set numberFormat.[[RoundingIncrement]] to roundingIncrement.
+    number_format.set_rounding_increment(*rounding_increment);
+
+    // 26. Let trailingZeroDisplay be ? GetOption(options, "trailingZeroDisplay", "string", « "auto", "stripIfInteger" », "auto").
+    auto trailing_zero_display = TRY(get_option(global_object, *options, vm.names.trailingZeroDisplay, OptionType::String, { "auto"sv, "stripIfInteger"sv }, "auto"sv));
+
+    // 27. Set numberFormat.[[TrailingZeroDisplay]] to trailingZeroDisplay.
+    number_format.set_trailing_zero_display(trailing_zero_display.as_string().string());
+
+    // 28. Let compactDisplay be ? GetOption(options, "compactDisplay", "string", « "short", "long" », "short").
     auto compact_display = TRY(get_option(global_object, *options, vm.names.compactDisplay, OptionType::String, { "short"sv, "long"sv }, "short"sv));
 
-    // 22. If notation is "compact", then
+    // 29. Let defaultUseGrouping be "auto".
+    auto default_use_grouping = "auto"sv;
+
+    // 30. If notation is "compact", then
     if (number_format.notation() == NumberFormat::Notation::Compact) {
         // a. Set numberFormat.[[CompactDisplay]] to compactDisplay.
         number_format.set_compact_display(compact_display.as_string().string());
+
+        // b. Set defaultUseGrouping to "min2".
+        default_use_grouping = "min2"sv;
     }
 
-    // 23. Let useGrouping be ? GetOption(options, "useGrouping", "boolean", undefined, true).
-    auto use_grouping = TRY(get_option(global_object, *options, vm.names.useGrouping, OptionType::Boolean, {}, true));
+    // 31. Let useGrouping be ? GetStringOrBooleanOption(options, "useGrouping", « "min2", "auto", "always" », "always", false, defaultUseGrouping).
+    auto use_grouping = TRY(get_string_or_boolean_option(global_object, *options, vm.names.useGrouping, { "min2"sv, "auto"sv, "always"sv }, "always"sv, false, default_use_grouping));
 
-    // 24. Set numberFormat.[[UseGrouping]] to useGrouping.
-    number_format.set_use_grouping(use_grouping.as_bool());
+    // 32. Set numberFormat.[[UseGrouping]] to useGrouping.
+    number_format.set_use_grouping(use_grouping);
 
-    // 25. Let signDisplay be ? GetOption(options, "signDisplay", "string", « "auto", "never", "always", "exceptZero" », "auto").
-    auto sign_display = TRY(get_option(global_object, *options, vm.names.signDisplay, OptionType::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv }, "auto"sv));
+    // 33. Let signDisplay be ? GetOption(options, "signDisplay", "string", « "auto", "never", "always", "exceptZero, "negative" », "auto").
+    auto sign_display = TRY(get_option(global_object, *options, vm.names.signDisplay, OptionType::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv, "negative"sv }, "auto"sv));
 
-    // 26. Set numberFormat.[[SignDisplay]] to signDisplay.
+    // 34. Set numberFormat.[[SignDisplay]] to signDisplay.
     number_format.set_sign_display(sign_display.as_string().string());
 
-    // 27. Return numberFormat.
+    // 35. Let roundingMode be ? GetOption(options, "roundingMode", "string", « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », "halfExpand").
+    auto rounding_mode = TRY(get_option(global_object, *options, vm.names.roundingMode, OptionType::String, { "ceil"sv, "floor"sv, "expand"sv, "trunc"sv, "halfCeil"sv, "halfFloor"sv, "halfExpand"sv, "halfTrunc"sv, "halfEven"sv }, "halfExpand"sv));
+
+    // 36. Set numberFormat.[[RoundingMode]] to roundingMode.
+    number_format.set_rounding_mode(rounding_mode.as_string().string());
+
+    // 37. Return numberFormat.
     return &number_format;
 }
 
 // 15.1.3 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
+// 1.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-setnfdigitoptions
 ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
     auto& vm = global_object.vm();
@@ -218,46 +258,66 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
     // 6. Set intlObj.[[MinimumIntegerDigits]] to mnid.
     intl_object.set_min_integer_digits(*min_integer_digits);
 
-    // 7. If mnsd is not undefined or mxsd is not undefined, then
+    // 7. Let roundingPriority be ? GetOption(options, "roundingPriority", "string", « "auto", "morePrecision", "lessPrecision" », "auto").
+    auto rounding_priority = TRY(get_option(global_object, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
+
+    // 8. If mnsd is not undefined or mxsd is not undefined, then
     //     a. Let hasSd be true.
-    // 8. Else,
+    // 9. Else,
     //     a. Let hasSd be false.
     bool has_significant_digits = !min_significant_digits.is_undefined() || !max_significant_digits.is_undefined();
 
-    // 9. If mnfd is not undefined or mxfd is not undefined, then
+    // 10. If mnfd is not undefined or mxfd is not undefined, then
     //     a. Let hasFd be true.
-    // 10. Else,
+    // 11. Else,
     //     a. Let hasFd be false.
     bool has_fraction_digits = !min_fraction_digits.is_undefined() || !max_fraction_digits.is_undefined();
 
-    // 11. Let needSd be hasSd.
-    bool need_significant_digits = has_significant_digits;
+    // 12. Let needSd be true.
+    bool need_significant_digits = true;
 
-    // 12. If hasSd is true, or hasFd is false and notation is "compact", then
-    //     a. Let needFd be false.
-    // 13. Else,
-    //     a. Let needFd be true.
-    bool need_fraction_digits = !has_significant_digits && (has_fraction_digits || (notation != NumberFormat::Notation::Compact));
+    // 13. Let needFd be true.
+    bool need_fraction_digits = true;
 
-    // 14. If needSd is true, then
-    if (need_significant_digits) {
-        // a. Assert: hasSd is true.
-        VERIFY(has_significant_digits);
+    // 14. If roundingPriority is "auto", then
+    if (rounding_priority.as_string().string() == "auto"sv) {
+        // a. Set needSd to hasSd.
+        need_significant_digits = has_significant_digits;
 
-        // b. Set mnsd to ? DefaultNumberOption(mnsd, 1, 21, 1).
-        auto min_digits = TRY(default_number_option(global_object, min_significant_digits, 1, 21, 1));
-
-        // c. Set mxsd to ? DefaultNumberOption(mxsd, mnsd, 21, 21).
-        auto max_digits = TRY(default_number_option(global_object, max_significant_digits, *min_digits, 21, 21));
-
-        // d. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
-        intl_object.set_min_significant_digits(*min_digits);
-
-        // e. Set intlObj.[[MaximumSignificantDigits]] to mxsd.
-        intl_object.set_max_significant_digits(*max_digits);
+        // b. If hasSd is true, or hasFd is false and notation is "compact", then
+        if (has_significant_digits || (!has_fraction_digits && notation == NumberFormat::Notation::Compact)) {
+            // i. Set needFd to false.
+            need_fraction_digits = false;
+        }
     }
 
-    // 15. If needFd is true, then
+    // 15. If needSd is true, then
+    if (need_significant_digits) {
+        // a. If hasSd is true, then
+        if (has_significant_digits) {
+            // i. Set mnsd to ? DefaultNumberOption(mnsd, 1, 21, 1).
+            auto min_digits = TRY(default_number_option(global_object, min_significant_digits, 1, 21, 1));
+
+            // ii. Set mxsd to ? DefaultNumberOption(mxsd, mnsd, 21, 21).
+            auto max_digits = TRY(default_number_option(global_object, max_significant_digits, *min_digits, 21, 21));
+
+            // iii. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
+            intl_object.set_min_significant_digits(*min_digits);
+
+            // iv. Set intlObj.[[MaximumSignificantDigits]] to mxsd.
+            intl_object.set_max_significant_digits(*max_digits);
+        }
+        // b. Else,
+        else {
+            // i. Set intlObj.[[MinimumSignificantDigits]] to 1.
+            intl_object.set_min_significant_digits(1);
+
+            // ii. Set intlObj.[[MaximumSignificantDigits]] to 21.
+            intl_object.set_max_significant_digits(21);
+        }
+    }
+
+    // 16. If needFd is true, then
     if (need_fraction_digits) {
         // a. If hasFd is true, then
         if (has_fraction_digits) {
@@ -293,20 +353,46 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
         }
     }
 
-    // 16. If needSd is false and needFd is false, then
-    if (!need_significant_digits && !need_fraction_digits) {
-        // a. Set intlObj.[[RoundingType]] to compactRounding.
-        intl_object.set_rounding_type(NumberFormatBase::RoundingType::CompactRounding);
+    // 17. If needSd is true or needFd is true, then
+    if (need_significant_digits || need_fraction_digits) {
+        // a. If roundingPriority is "morePrecision", then
+        if (rounding_priority.as_string().string() == "morePrecision"sv) {
+            // i. Set intlObj.[[RoundingType]] to morePrecision.
+            intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
+        }
+        // b. Else if roundingPriority is "lessPrecision", then
+        else if (rounding_priority.as_string().string() == "lessPrecision"sv) {
+            // i. Set intlObj.[[RoundingType]] to lessPrecision.
+            intl_object.set_rounding_type(NumberFormatBase::RoundingType::LessPrecision);
+        }
+        // c. Else if hasSd is true, then
+        else if (has_significant_digits) {
+            // i. Set intlObj.[[RoundingType]] to significantDigits.
+            intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
+        }
+        // d. Else,
+        else {
+            // i. Set intlObj.[[RoundingType]] to fractionDigits.
+            intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
+        }
     }
-    // 17. Else if hasSd is true, then
-    else if (has_significant_digits) {
-        // a. Set intlObj.[[RoundingType]] to significantDigits.
-        intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
-    }
+
     // 18. Else,
     else {
-        // a. Set intlObj.[[RoundingType]] to fractionDigits.
-        intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
+        // a. Set intlObj.[[RoundingType]] to morePrecision.
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
+
+        // b. Set intlObj.[[MinimumFractionDigits]] to 0.
+        intl_object.set_min_fraction_digits(0);
+
+        // c. Set intlObj.[[MaximumFractionDigits]] to 0.
+        intl_object.set_max_fraction_digits(0);
+
+        // d. Set intlObj.[[MinimumSignificantDigits]] to 1.
+        intl_object.set_min_significant_digits(1);
+
+        // e. Set intlObj.[[MaximumSignificantDigits]] to 2.
+        intl_object.set_max_significant_digits(2);
     }
 
     return {};

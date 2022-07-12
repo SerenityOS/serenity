@@ -747,9 +747,13 @@ static void print_intl_number_format(JS::Intl::NumberFormat const& number_format
         print_value(JS::Value(number_format.max_significant_digits()), seen_objects);
     }
     js_out("\n  useGrouping: ");
-    print_value(JS::Value(number_format.use_grouping()), seen_objects);
+    print_value(number_format.use_grouping_to_value(number_format.global_object()), seen_objects);
     js_out("\n  roundingType: ");
     print_value(js_string(number_format.vm(), number_format.rounding_type_string()), seen_objects);
+    js_out("\n  roundingMode: ");
+    print_value(js_string(number_format.vm(), number_format.rounding_mode_string()), seen_objects);
+    js_out("\n  roundingIncrement: ");
+    print_value(JS::Value(number_format.rounding_increment()), seen_objects);
     js_out("\n  notation: ");
     print_value(js_string(number_format.vm(), number_format.notation_string()), seen_objects);
     if (number_format.has_compact_display()) {
@@ -758,6 +762,8 @@ static void print_intl_number_format(JS::Intl::NumberFormat const& number_format
     }
     js_out("\n  signDisplay: ");
     print_value(js_string(number_format.vm(), number_format.sign_display_string()), seen_objects);
+    js_out("\n  trailingZeroDisplay: ");
+    print_value(js_string(number_format.vm(), number_format.trailing_zero_display_string()), seen_objects);
 }
 
 static void print_intl_date_time_format(JS::Intl::DateTimeFormat& date_time_format, HashTable<JS::Object*>& seen_objects)

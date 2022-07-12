@@ -43,6 +43,9 @@
     M(IntlInvalidDateTimeFormatOption, "Option {} cannot be set when also providing {}")                                                \
     M(IntlInvalidKey, "{} is not a valid key")                                                                                          \
     M(IntlInvalidLanguageTag, "{} is not a structurally valid language tag")                                                            \
+    M(IntlInvalidRoundingIncrement, "{} is not a valid rounding increment")                                                             \
+    M(IntlInvalidRoundingIncrementForFractionDigits, "{} is not a valid rounding increment for inequal min/max fraction digits")        \
+    M(IntlInvalidRoundingIncrementForRoundingType, "{} is not a valid rounding increment for rounding type {}")                         \
     M(IntlInvalidTime, "Time value must be between -8.64E15 and 8.64E15")                                                               \
     M(IntlInvalidUnit, "Unit {} is not a valid time unit")                                                                              \
     M(IntlStartRangeAfterEndRange, "Range start {} is greater than range end {}")                                                       \
