@@ -13,6 +13,17 @@
 
 namespace Manual {
 
+ErrorOr<NonnullRefPtr<SectionNode>> SectionNode::try_create_from_number(StringView section)
+{
+    auto maybe_section_number = section.to_uint<u32>();
+    if (!maybe_section_number.has_value())
+        return Error::from_string_literal("Section is not a number");
+    auto section_number = maybe_section_number.release_value();
+    if (section_number > number_of_sections)
+        return Error::from_string_literal("Section number too large");
+    return sections[section_number - 1];
+}
+
 ErrorOr<String> SectionNode::path() const
 {
     return String::formatted("{}/{}{}", manual_base_path, top_level_section_prefix, m_section);

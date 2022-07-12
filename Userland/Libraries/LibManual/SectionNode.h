@@ -37,6 +37,8 @@ public:
     virtual bool is_open() const override { return m_open; }
     void set_open(bool open);
 
+    static ErrorOr<NonnullRefPtr<SectionNode>> try_create_from_number(StringView section_number);
+
 protected:
     String m_section;
     String m_name;

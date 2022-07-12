@@ -192,47 +192,22 @@ MainWidget::MainWidget()
     };
 }
 
-ErrorOr<void> MainWidget::set_start_page(StringView start_page, u32 section)
+ErrorOr<void> MainWidget::set_start_page(Vector<StringView, 2> query_parameters)
 {
-    bool set_start_page = false;
-    if (!start_page.is_null()) {
-        if (section != 0 && section < Manual::number_of_sections) {
-            // > Help [section] [name]
-            String const path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[section - 1], TRY(String::from_utf8(start_page))))->path());
-            m_history.push(path);
-            open_page(path);
-            set_start_page = true;
-        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md"sv)) {
-            // > Help [/path/to/documentation/file.md]
-            m_history.push(url.path());
-            open_page(TRY(String::from_deprecated_string(url.path())));
-            set_start_page = true;
-        } else {
-            // > Help [query]
-
-            // First, see if we can find the page by name
-            for (auto const& section : Manual::sections) {
-                String const path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(section, TRY(String::from_utf8(start_page))))->path());
-                if (Core::File::exists(path)) {
-                    m_history.push(path);
-                    open_page(path);
-                    set_start_page = true;
-                    break;
-                }
-            }
-
-            // No match, so treat the input as a search query
-            if (!set_start_page) {
-                m_tab_widget->set_active_widget(m_search_container);
-                m_search_box->set_focus(true);
-                m_search_box->set_text(start_page);
-                m_search_box->select_all();
-                m_filter_model->set_filter_term(m_search_box->text());
-            }
-        }
-    }
-    if (!set_start_page)
+    auto result = Manual::Node::try_create_from_query(query_parameters);
+    if (result.is_error()) {
+        // No match, so treat the input as a search query
+        m_tab_widget->set_active_widget(m_search_container);
+        m_search_box->set_focus(true);
+        m_search_box->set_text(query_parameters.first_matching([](auto&) { return true; }).value_or(""sv));
+        m_search_box->select_all();
+        m_filter_model->set_filter_term(m_search_box->text());
         m_go_home_action->activate();
+    } else {
+        auto const page = TRY(result.value()->path());
+        m_history.push(page);
+        open_page(page);
+    }
     return {};
 }
 
