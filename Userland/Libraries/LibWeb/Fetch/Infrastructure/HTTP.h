@@ -25,6 +25,6 @@ enum class HttpQuotedStringExtractValue {
     Yes,
 };
 
-String collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value);
+String collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value = HttpQuotedStringExtractValue::No);
 
 }
