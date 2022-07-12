@@ -1240,20 +1240,20 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
     float line_cross_offset = 0;
     for (auto& flex_line : m_flex_lines) {
         for (auto* flex_item : flex_line.items) {
+            float half_line_size = flex_line.cross_size / 2.0f;
             switch (alignment_for_item(*flex_item)) {
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
                 //  Fallthrough
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
-                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before + flex_item->borders.cross_before + flex_item->padding.cross_before;
+                flex_item->cross_offset = 0 - half_line_size + flex_item->margins.cross_before + flex_item->borders.cross_before + flex_item->padding.cross_before;
                 break;
             case CSS::AlignItems::FlexEnd:
-                flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
+                flex_item->cross_offset = half_line_size - flex_item->cross_size - flex_item->margins.cross_after - flex_item->borders.cross_after - flex_item->padding.cross_after;
                 break;
             case CSS::AlignItems::Center:
-                flex_item->cross_offset = line_cross_offset + (flex_line.cross_size / 2.0f) - (flex_item->cross_size / 2.0f);
-                break;
+                flex_item->cross_offset = 0 - (flex_item->cross_size / 2.0f);
             default:
                 break;
             }
@@ -1300,8 +1300,10 @@ void FlexFormattingContext::align_all_flex_lines()
         // For single-line flex containers, we only need to center the line along the cross axis.
         auto& flex_line = m_flex_lines[0];
         float cross_size_of_flex_container = specified_cross_size(flex_container());
-        for (auto* flex_item : flex_line.items)
-            flex_item->cross_offset += (cross_size_of_flex_container / 2.0f) - (flex_line.cross_size / 2.0f);
+        float center_of_line = cross_size_of_flex_container / 2.0f;
+        for (auto* flex_item : flex_line.items) {
+            flex_item->cross_offset += center_of_line;
+        }
     } else {
         // FIXME: Support align-content
     }
