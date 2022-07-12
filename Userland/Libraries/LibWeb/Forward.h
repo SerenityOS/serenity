@@ -170,6 +170,7 @@ class TextEncoder;
 }
 
 namespace Web::Fetch {
+class Body;
 struct Header;
 class HeaderList;
 }
