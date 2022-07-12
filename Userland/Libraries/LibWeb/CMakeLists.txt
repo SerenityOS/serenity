@@ -119,6 +119,7 @@ set(SOURCES
     Encoding/TextEncoder.cpp
     Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/URL.cpp
+    Fetch/Infrastructure/HTTP/Bodies.cpp
     Fetch/Infrastructure/HTTP/Headers.cpp
     Fetch/Infrastructure/HTTP/Methods.cpp
     Fetch/Infrastructure/HTTP/Statuses.cpp
