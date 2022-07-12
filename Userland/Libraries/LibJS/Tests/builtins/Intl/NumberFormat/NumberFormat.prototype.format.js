@@ -347,6 +347,20 @@ describe("style=decimal", () => {
         expect(ar.format(-1)).toBe("\u061c-\u0661");
     });
 
+    test("signDisplay=negative", () => {
+        const en = new Intl.NumberFormat("en", { signDisplay: "negative" });
+        expect(en.format(0)).toBe("0");
+        expect(en.format(1)).toBe("1");
+        expect(en.format(-0)).toBe("0");
+        expect(en.format(-1)).toBe("-1");
+
+        const ar = new Intl.NumberFormat("ar", { signDisplay: "negative" });
+        expect(ar.format(0)).toBe("\u0660");
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(-0)).toBe("\u0660");
+        expect(ar.format(-1)).toBe("\u061c-\u0661");
+    });
+
     test("useGrouping=always", () => {
         const en = new Intl.NumberFormat("en", { useGrouping: "always" });
         expect(en.format(123)).toBe("123");
@@ -623,6 +637,20 @@ describe("style=percent", () => {
         const ar = new Intl.NumberFormat("ar", { style: "percent", signDisplay: "exceptZero" });
         expect(ar.format(0.0)).toBe("\u0660\u066a\u061c");
         expect(ar.format(0.01)).toBe("\u061c+\u0661\u066a\u061c");
+        expect(ar.format(-0.0)).toBe("\u0660\u066a\u061c");
+        expect(ar.format(-0.01)).toBe("\u061c-\u0661\u066a\u061c");
+    });
+
+    test("signDisplay=negative", () => {
+        const en = new Intl.NumberFormat("en", { style: "percent", signDisplay: "negative" });
+        expect(en.format(0.0)).toBe("0%");
+        expect(en.format(0.01)).toBe("1%");
+        expect(en.format(-0.0)).toBe("0%");
+        expect(en.format(-0.01)).toBe("-1%");
+
+        const ar = new Intl.NumberFormat("ar", { style: "percent", signDisplay: "negative" });
+        expect(ar.format(0.0)).toBe("\u0660\u066a\u061c");
+        expect(ar.format(0.01)).toBe("\u0661\u066a\u061c");
         expect(ar.format(-0.0)).toBe("\u0660\u066a\u061c");
         expect(ar.format(-0.01)).toBe("\u061c-\u0661\u066a\u061c");
     });
@@ -949,6 +977,50 @@ describe("style=currency", () => {
         });
         expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+    });
+
+    test("signDisplay=negative", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            signDisplay: "negative",
+        });
+        expect(en1.format(0)).toBe("$0.00");
+        expect(en1.format(1)).toBe("$1.00");
+        expect(en1.format(-0)).toBe("$0.00");
+        expect(en1.format(-1)).toBe("-$1.00");
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            currencySign: "accounting",
+            signDisplay: "negative",
+        });
+        expect(en2.format(0)).toBe("$0.00");
+        expect(en2.format(1)).toBe("$1.00");
+        expect(en2.format(-0)).toBe("$0.00");
+        expect(en2.format(-1)).toBe("($1.00)");
+
+        const ar1 = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            signDisplay: "negative",
+        });
+        expect(ar1.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+
+        const ar2 = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            currencySign: "accounting",
+            signDisplay: "negative",
+        });
+        expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
     });

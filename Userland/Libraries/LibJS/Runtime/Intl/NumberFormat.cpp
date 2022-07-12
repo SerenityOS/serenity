@@ -1139,6 +1139,7 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
 }
 
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
+// 1.1.14 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getnumberformatpattern
 Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
@@ -1264,20 +1265,34 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
         }
         break;
 
-    // 15. Else,
+    // 15. Else if signDisplay is "exceptZero", then
     case NumberFormat::SignDisplay::ExceptZero:
-        // a. Assert: signDisplay is "exceptZero".
-        // b. If x is NaN, or if x is finite and ℝ(x) is 0, then
+        // a. If x is NaN, or if x is finite and ℝ(x) is 0, then
         if (is_positive_zero || is_negative_zero || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
-        // c. Else if ℝ(x) > 0, then
+        // b. Else if ℝ(x) > 0, then
         else if (is_greater_than(number, 0)) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
-        // d. Else,
+        // c. Else,
+        else {
+            // i. Let pattern be patterns.[[negativePattern]].
+            pattern = patterns->negative_format;
+        }
+        break;
+
+    // 16. Else,
+    case NumberFormat::SignDisplay::Negative:
+        // a. Assert: signDisplay is "negative".
+        // b. If x is 0 or x is -0 or x > 0 or x is NaN, then
+        if (is_positive_zero || is_negative_zero || is_greater_than(number, 0) || is_nan) {
+            // i. Let pattern be patterns.[[zeroPattern]].
+            pattern = patterns->zero_format;
+        }
+        // c. Else,
         else {
             // i. Let pattern be patterns.[[negativePattern]].
             pattern = patterns->negative_format;
@@ -1285,8 +1300,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
         break;
 
     default:
-        // FIXME: Handle all NumberFormat V3 [[SignDisplay]] options.
-        return {};
+        VERIFY_NOT_REACHED();
     }
 
     found_pattern = patterns.release_value();
