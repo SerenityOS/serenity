@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::DOM {
@@ -82,8 +83,8 @@ public:
     String url_string() const { return m_url.to_string(); }
     String document_uri() const { return m_url.to_string(); }
 
-    Origin origin() const;
-    void set_origin(Origin const& origin);
+    HTML::Origin origin() const;
+    void set_origin(HTML::Origin const& origin);
 
     AK::URL parse_url(String const&) const;
 

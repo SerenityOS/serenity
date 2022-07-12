@@ -3118,9 +3118,9 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/NodeFilter.h>
 #include <LibWeb/DOM/Range.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>

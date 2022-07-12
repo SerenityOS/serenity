@@ -8,8 +8,8 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Layout/FrameBox.h>
-#include <LibWeb/Origin.h>
 
 namespace Web::HTML {
 

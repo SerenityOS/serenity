@@ -56,6 +56,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
@@ -64,7 +65,6 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -305,14 +305,14 @@ ExceptionOr<void> Document::close()
     return {};
 }
 
-Origin Document::origin() const
+HTML::Origin Document::origin() const
 {
     if (!m_url.is_valid())
         return {};
     return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
 }
 
-void Document::set_origin(Origin const& origin)
+void Document::set_origin(HTML::Origin const& origin)
 {
     m_url.set_protocol(origin.protocol());
     m_url.set_host(origin.host());
