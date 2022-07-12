@@ -60,7 +60,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         if (opt.long_name) {
             option long_opt {
                 opt.long_name,
-                opt.argument_mode == OptionArgumentMode::Required ? required_argument : no_argument,
+                opt.argument_mode == OptionArgumentMode::Required ? required_argument : (opt.argument_mode == OptionArgumentMode::Optional ? optional_argument : no_argument),
                 &index_of_found_long_option,
                 static_cast<int>(i)
             };
@@ -69,6 +69,9 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
         if (opt.short_name) {
             short_options_builder.append(opt.short_name);
             if (opt.argument_mode != OptionArgumentMode::None)
+                short_options_builder.append(':');
+            // Note: This is a GNU extension.
+            if (opt.argument_mode == OptionArgumentMode::Optional)
                 short_options_builder.append(':');
         }
     }
@@ -202,6 +205,8 @@ void ArgsParser::print_usage_terminal(FILE* file, char const* argv0)
             continue;
         if (opt.argument_mode == OptionArgumentMode::Required)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
+        else if (opt.argument_mode == OptionArgumentMode::Optional)
+            out(file, " [{}[{}{}]]", opt.name_for_display(), opt.long_name ? "="sv : ""sv, opt.value_name);
         else
             out(file, " [{}]", opt.name_for_display());
     }
@@ -231,22 +236,24 @@ void ArgsParser::print_usage_terminal(FILE* file, char const* argv0)
         if (opt.hide_mode == OptionHideMode::CommandLineAndMarkdown)
             continue;
 
-        auto print_argument = [&]() {
+        auto print_argument = [&](StringView value_delimiter) {
             if (opt.value_name) {
                 if (opt.argument_mode == OptionArgumentMode::Required)
                     out(file, " {}", opt.value_name);
+                if (opt.argument_mode == OptionArgumentMode::Optional)
+                    out(file, "[{}{}]", value_delimiter, opt.value_name);
             }
         };
         out(file, "\t");
         if (opt.short_name) {
             out(file, "\033[1m-{}\033[0m", opt.short_name);
-            print_argument();
+            print_argument(""sv);
         }
         if (opt.short_name && opt.long_name)
             out(file, ", ");
         if (opt.long_name) {
             out(file, "\033[1m--{}\033[0m", opt.long_name);
-            print_argument();
+            print_argument("="sv);
         }
 
         if (opt.help_string)
@@ -279,6 +286,8 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
         //        currently display a blank name after the option.
         if (opt.argument_mode == OptionArgumentMode::Required)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name ?: "");
+        else if (opt.argument_mode == OptionArgumentMode::Optional)
+            out(file, " [{}[{}{}]]", opt.name_for_display(), opt.long_name ? "="sv : ""sv, opt.value_name);
         else
             out(file, " [{}]", opt.name_for_display());
     }
@@ -318,23 +327,25 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
         if (!should_display_option(opt))
             continue;
 
-        auto print_argument = [&]() {
+        auto print_argument = [&](StringView value_delimiter) {
             if (opt.value_name != nullptr) {
                 if (opt.argument_mode == OptionArgumentMode::Required)
                     out(file, " {}", opt.value_name);
+                if (opt.argument_mode == OptionArgumentMode::Optional)
+                    out(file, "[{}{}]", value_delimiter, opt.value_name);
             }
         };
         out(file, "* ");
         if (opt.short_name != '\0') {
             out(file, "`-{}", opt.short_name);
-            print_argument();
+            print_argument(""sv);
             out(file, "`");
         }
         if (opt.short_name != '\0' && opt.long_name != nullptr)
             out(file, ", ");
         if (opt.long_name != nullptr) {
             out(file, "`--{}", opt.long_name);
-            print_argument();
+            print_argument("="sv);
             out(file, "`");
         }
 

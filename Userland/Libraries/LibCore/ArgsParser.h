@@ -32,6 +32,7 @@ public:
 
     enum class OptionArgumentMode {
         None,
+        Optional,
         Required,
     };
 
