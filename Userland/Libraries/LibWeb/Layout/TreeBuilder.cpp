@@ -60,6 +60,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
 
     if (layout_parent.computed_values().display().is_flex_inside()) {
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
+        return *layout_parent.last_child();
     }
 
     if (!has_in_flow_block_children(layout_parent) || layout_parent.children_are_inline())
