@@ -83,6 +83,30 @@ public:
         m_builder.append('\n');
     }
 
+    template<size_t N>
+    String get(char const (&key)[N])
+    {
+        return get(StringView { key, N - 1 });
+    }
+
+    template<size_t N>
+    void set(char const (&key)[N], String value)
+    {
+        set(StringView { key, N - 1 }, value);
+    }
+
+    template<size_t N>
+    void append(char const (&pattern)[N])
+    {
+        append(StringView { pattern, N - 1 });
+    }
+
+    template<size_t N>
+    void appendln(char const (&pattern)[N])
+    {
+        appendln(StringView { pattern, N - 1 });
+    }
+
 private:
     StringBuilder& m_builder;
     MappingType m_mapping;
