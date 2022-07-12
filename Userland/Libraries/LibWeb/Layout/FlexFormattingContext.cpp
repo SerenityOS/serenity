@@ -22,7 +22,7 @@ namespace Web::Layout {
 // NOTE: We use a custom clamping function here instead of AK::clamp(), since the AK version
 //       will VERIFY(max >= min) and CSS explicitly allows that (see css-values-4.)
 template<typename T>
-constexpr T css_clamp(T const& value, T const& min, T const& max)
+[[nodiscard]] constexpr T css_clamp(T const& value, T const& min, T const& max)
 {
     return ::max(min, ::min(value, max));
 }
@@ -1066,7 +1066,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const c
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
     if (is_single_line())
-        css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
+        m_flex_lines[0].cross_size = css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
