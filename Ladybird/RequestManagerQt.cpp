@@ -73,14 +73,14 @@ void RequestManagerQt::Request::did_finish()
     for (auto& it : m_reply.rawHeaderPairs()) {
         auto name = String(it.first.data(), it.first.length());
         auto value = String(it.second.data(), it.second.length());
-        if (name.equals_ignoring_case("set-cookie")) {
+        if (name.equals_ignoring_case("set-cookie"sv)) {
             set_cookie_headers.append(value);
         } else {
             response_headers.set(name, value);
         }
     }
     if (!set_cookie_headers.is_empty()) {
-        response_headers.set("set-cookie", JsonArray { set_cookie_headers }.to_string());
+        response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_string());
     }
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });
 }
