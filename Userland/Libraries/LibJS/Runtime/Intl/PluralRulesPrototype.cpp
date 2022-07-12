@@ -76,6 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 }
 
 // 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
+// 1.4.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
     // 1. Let pr be the this value.
@@ -112,7 +113,25 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
     MUST(options->create_data_property_or_throw(vm.names.pluralCategories, plural_categories));
 
-    // 7. Return options.
+    switch (plural_rules->rounding_type()) {
+    // 7. If pr.[[RoundingType]] is morePrecision, then
+    case NumberFormatBase::RoundingType::MorePrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "morePrecision"sv)));
+        break;
+    // 8. Else if pr.[[RoundingType]] is lessPrecision, then
+    case NumberFormatBase::RoundingType::LessPrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "lessPrecision"sv)));
+        break;
+    // 9. Else,
+    default:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "auto"sv)));
+        break;
+    }
+
+    // 10. Return options.
     return options;
 }
 
