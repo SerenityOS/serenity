@@ -1,5 +1,9 @@
+#import <Geometry/DOMPoint.idl>
 #import <SVG/SVGGraphicsElement.idl>
 
 interface SVGGeometryElement : SVGGraphicsElement {
+
+    float getTotalLength();
+    DOMPoint getPointAtLength(float distance);
 
 };
