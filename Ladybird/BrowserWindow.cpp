@@ -152,7 +152,7 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
-        setWindowTitle(m_tabs_container->tabText(index));
+        setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
         setWindowIcon(m_tabs_container->tabIcon(index));
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
