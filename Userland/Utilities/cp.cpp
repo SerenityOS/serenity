@@ -41,6 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool destination_is_existing_dir = Core::File::is_directory(destination);
 
+    auto preserve_mode = Core::File::PreserveMode::Nothing;
+
+    if (preserve)
+        preserve_mode = Core::File::PreserveMode::Permissions | Core::File::PreserveMode::Ownership | Core::File::PreserveMode::Timestamps;
+
     for (auto& source : sources) {
         auto destination_path = destination_is_existing_dir
             ? String::formatted("{}/{}", destination, LexicalPath::basename(source))
@@ -51,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             recursion_allowed ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed,
             link ? Core::File::LinkMode::Allowed : Core::File::LinkMode::Disallowed,
             Core::File::AddDuplicateFileMarker::No,
-            preserve ? Core::File::PreserveMode::PermissionsOwnershipTimestamps : Core::File::PreserveMode::Nothing);
+            preserve_mode);
 
         if (result.is_error()) {
             if (result.error().tried_recursing)

@@ -56,8 +56,10 @@ public:
     };
 
     enum class PreserveMode {
-        Nothing,
-        PermissionsOwnershipTimestamps,
+        Nothing = 0,
+        Permissions = (1 << 0),
+        Ownership = (1 << 1),
+        Timestamps = (1 << 2),
     };
 
     struct CopyError : public Error {
@@ -112,5 +114,7 @@ private:
     String m_filename;
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
+
+AK_ENUM_BITWISE_OPERATORS(File::PreserveMode);
 
 }
