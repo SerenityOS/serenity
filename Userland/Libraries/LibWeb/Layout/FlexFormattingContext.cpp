@@ -1004,29 +1004,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
             item.hypothetical_cross_size = box_state.content_width;
     } else {
         // Item has indefinite main size, layout with "fit-content"
-
-        // If we're in a column layout and looking for the width, just use the fit-content width.
-        if (!is_row_layout()) {
-            item.hypothetical_cross_size = calculate_fit_content_width(item.box, m_available_space->cross);
-            return;
-        }
-
-        // We're in a row layout, looking for the height. Figure out the fit-content width,
-        // then layout with that and see what height comes out of it.
-
-        float fit_content_main_size = calculate_fit_content_width(item.box, m_available_space->main);
-
-        FormattingState throwaway_state(&m_state);
-        auto& box_state = throwaway_state.get_mutable(item.box);
-
-        auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
-        // NOTE: Flex items should always create an independent formatting context!
-        VERIFY(independent_formatting_context);
-
-        box_state.content_width = fit_content_main_size;
-        independent_formatting_context->run(item.box, LayoutMode::Normal);
-
-        item.hypothetical_cross_size = BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
+        item.hypothetical_cross_size = calculate_fit_content_cross_size(item);
     }
 }
 
