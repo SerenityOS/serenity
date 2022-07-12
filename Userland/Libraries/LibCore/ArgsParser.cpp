@@ -235,8 +235,6 @@ void ArgsParser::print_usage_terminal(FILE* file, char const* argv0)
             if (opt.value_name) {
                 if (opt.requires_argument)
                     out(file, " {}", opt.value_name);
-                else
-                    out(file, " [{}]", opt.value_name);
             }
         };
         out(file, "\t");
@@ -324,8 +322,6 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
             if (opt.value_name != nullptr) {
                 if (opt.requires_argument)
                     out(file, " {}", opt.value_name);
-                else
-                    out(file, " [{}]", opt.value_name);
             }
         };
         out(file, "* ");
