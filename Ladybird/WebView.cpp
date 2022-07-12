@@ -8,6 +8,7 @@
 #define AK_DONT_REPLACE_STD
 
 #include "WebView.h"
+#include "CookieJar.h"
 #include "RequestManagerQt.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -271,13 +272,14 @@ public:
         return String::empty();
     }
 
-    virtual String page_did_request_cookie(AK::URL const&, Web::Cookie::Source) override
+    virtual String page_did_request_cookie(AK::URL const& url, Web::Cookie::Source source) override
     {
-        return String::empty();
+        return m_cookie_jar.get_cookie(url, source);
     }
 
-    virtual void page_did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override
+    virtual void page_did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override
     {
+        m_cookie_jar.set_cookie(url, cookie, source);
     }
 
     void request_file(NonnullRefPtr<Web::FileRequest>& request) override
@@ -297,6 +299,7 @@ private:
 
     WebView& m_view;
     NonnullOwnPtr<Web::Page> m_page;
+    Browser::CookieJar m_cookie_jar;
 
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_viewport_rect { 0, 0, 800, 600 };

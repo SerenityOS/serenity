@@ -34,6 +34,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 set(SOURCES
     BrowserWindow.cpp
+    CookieJar.cpp
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
