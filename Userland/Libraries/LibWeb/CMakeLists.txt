@@ -121,6 +121,7 @@ set(SOURCES
     Fetch/Infrastructure/URL.cpp
     Fetch/Infrastructure/HTTP/Headers.cpp
     Fetch/Infrastructure/HTTP/Methods.cpp
+    Fetch/Infrastructure/HTTP/Statuses.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
