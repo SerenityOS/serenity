@@ -170,6 +170,8 @@ class TextEncoder;
 }
 
 namespace Web::Geometry {
+class DOMPoint;
+class DOMPointReadOnly;
 class DOMRect;
 class DOMRectList;
 class DOMRectReadOnly;
@@ -440,6 +442,8 @@ class DocumentWrapper;
 class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
+class DOMPointWrapper;
+class DOMPointReadOnlyWrapper;
 class DOMRectListWrapper;
 class DOMRectReadOnlyWrapper;
 class DOMRectWrapper;

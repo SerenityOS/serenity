@@ -59,6 +59,10 @@
 #include <LibWeb/Bindings/DOMImplementationPrototype.h>
 #include <LibWeb/Bindings/DOMParserConstructor.h>
 #include <LibWeb/Bindings/DOMParserPrototype.h>
+#include <LibWeb/Bindings/DOMPointConstructor.h>
+#include <LibWeb/Bindings/DOMPointPrototype.h>
+#include <LibWeb/Bindings/DOMPointReadOnlyConstructor.h>
+#include <LibWeb/Bindings/DOMPointReadOnlyPrototype.h>
 #include <LibWeb/Bindings/DOMRectConstructor.h>
 #include <LibWeb/Bindings/DOMRectListConstructor.h>
 #include <LibWeb/Bindings/DOMRectListPrototype.h>
@@ -403,6 +407,8 @@
     ADD_WINDOW_OBJECT_INTERFACE(DOMException)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(DOMImplementation)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(DOMParser)                                                          \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMPoint)                                                           \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMPointReadOnly)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRect)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectList)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(DOMRectReadOnly)                                                    \

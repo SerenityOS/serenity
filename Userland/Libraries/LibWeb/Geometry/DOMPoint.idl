@@ -1,0 +1,12 @@
+#import <Geometry/DOMPointReadOnly.idl>
+
+interface DOMPoint : DOMPointReadOnly {
+
+    constructor(optional double x = 0, optional double y = 0, optional double z = 0, optional double w = 0);
+
+    attribute double x;
+    attribute double y;
+    attribute double z;
+    attribute double w;
+
+};
