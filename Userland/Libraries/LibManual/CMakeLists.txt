@@ -1,4 +1,5 @@
 set(SOURCES
+    Node.cpp
     PageNode.cpp
     SectionNode.cpp
 )

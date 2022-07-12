@@ -20,7 +20,7 @@ public:
     virtual ~MainWidget() override = default;
 
     ErrorOr<void> initialize_fallibles(GUI::Window&);
-    void set_start_page(StringView page, u32 section);
+    void set_start_page(Vector<StringView, 2> query_parameters);
 
 private:
     MainWidget();
