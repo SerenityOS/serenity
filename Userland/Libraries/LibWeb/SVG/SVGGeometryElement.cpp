@@ -19,4 +19,15 @@ RefPtr<Layout::Node> SVGGeometryElement::create_layout_node(NonnullRefPtr<CSS::S
     return adopt_ref(*new Layout::SVGGeometryBox(document(), *this, move(style)));
 }
 
+float SVGGeometryElement::get_total_length()
+{
+    return 0;
+}
+
+NonnullRefPtr<Geometry::DOMPoint> SVGGeometryElement::get_point_at_length(float distance)
+{
+    (void)distance;
+    return Geometry::DOMPoint::create(0, 0, 0, 0);
+}
+
 }
