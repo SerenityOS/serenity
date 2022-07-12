@@ -270,6 +270,7 @@ class MessageEvent;
 class MessagePort;
 class Origin;
 class PageTransitionEvent;
+struct PolicyContainer;
 class PromiseRejectionEvent;
 class WorkerDebugConsoleClient;
 class Storage;
