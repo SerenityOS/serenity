@@ -18,8 +18,8 @@ UNMAP_AFTER_INIT NonnullRefPtr<VGATextModeConsole> VGATextModeConsole::initializ
 
 UNMAP_AFTER_INIT VGATextModeConsole::VGATextModeConsole()
     : Console(80, 25)
-    , m_vga_region(MM.allocate_kernel_region(PhysicalAddress(0xa0000), Memory::page_round_up(0xc0000 - 0xa0000).release_value_but_fixme_should_propagate_errors(), "VGA Display"sv, Memory::Region::Access::ReadWrite).release_value())
-    , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr())
+    , m_vga_window_region(MM.allocate_kernel_region(PhysicalAddress(0xa0000), Memory::page_round_up(0xc0000 - 0xa0000).release_value_but_fixme_should_propagate_errors(), "VGA Display"sv, Memory::Region::Access::ReadWrite).release_value())
+    , m_current_vga_window(m_vga_window_region->vaddr().offset(0x18000).as_ptr())
 {
     for (size_t index = 0; index < height(); index++) {
         clear_vga_row(index);

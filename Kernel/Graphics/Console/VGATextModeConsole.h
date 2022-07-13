@@ -40,7 +40,7 @@ private:
 
     mutable Spinlock m_vga_lock;
 
-    NonnullOwnPtr<Memory::Region> m_vga_region;
+    NonnullOwnPtr<Memory::Region> m_vga_window_region;
     VirtualAddress m_current_vga_window;
 };
 
