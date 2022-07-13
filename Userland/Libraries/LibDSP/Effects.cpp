@@ -20,6 +20,11 @@ Delay::Delay(NonnullRefPtr<Transport> transport)
     m_parameters.append(m_delay_decay);
     m_parameters.append(m_delay_time);
     m_parameters.append(m_dry_gain);
+
+    m_delay_time.register_change_listener([this](auto const&) {
+        this->handle_delay_time_change();
+    });
+    handle_delay_time_change();
 }
 
 void Delay::handle_delay_time_change()
@@ -35,9 +40,6 @@ void Delay::handle_delay_time_change()
 
 void Delay::process_impl(Signal const& input_signal, Signal& output_signal)
 {
-    // FIXME: This is allocating and needs to happen on a different thread.
-    handle_delay_time_change();
-
     auto const& samples = input_signal.get<FixedArray<Sample>>();
     auto& output = output_signal.get<FixedArray<Sample>>();
     for (size_t i = 0; i < output.size(); ++i) {

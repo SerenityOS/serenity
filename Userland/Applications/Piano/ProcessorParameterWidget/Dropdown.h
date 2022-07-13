@@ -35,9 +35,9 @@ public:
             auto value = static_cast<EnumT>(model_index.row());
             m_parameter.set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});
         };
-        m_parameter.did_change_value = [this](auto new_value) {
+        m_parameter.register_change_listener([this](auto new_value) {
             set_selected_index(static_cast<int>(new_value));
-        };
+        });
     }
 
     // Release focus when escape is pressed

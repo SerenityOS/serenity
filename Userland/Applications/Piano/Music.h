@@ -26,8 +26,6 @@ struct Sample {
 // HACK: needs to increase with device sample rate, but all of the sample_count stuff is static for now
 constexpr int sample_count = 1 << 10;
 
-constexpr int buffer_size = sample_count * sizeof(Sample);
-
 constexpr double sample_rate = 44100;
 
 // Headroom for the synth

@@ -34,7 +34,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_values_container->set_layout<GUI::HorizontalBoxLayout>();
     m_values_container->set_fixed_height(10);
 
-    m_volume_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track().volume()));
+    m_volume_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track()->volume()));
     m_octave_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
 
     m_knobs_container = add<GUI::Widget>();
@@ -44,13 +44,13 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     m_volume_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_volume_knob->set_range(0, volume_max);
-    m_volume_knob->set_value(volume_max - m_track_manager.current_track().volume());
+    m_volume_knob->set_value(volume_max - m_track_manager.current_track()->volume());
     m_volume_knob->set_step(10);
     m_volume_knob->on_change = [this](int value) {
         int new_volume = volume_max - value;
         if (m_change_underlying)
-            m_track_manager.current_track().set_volume(new_volume);
-        VERIFY(new_volume == m_track_manager.current_track().volume());
+            m_track_manager.current_track()->set_volume(new_volume);
+        VERIFY(new_volume == m_track_manager.current_track()->volume());
         m_volume_value->set_text(String::number(new_volume));
     };
 
@@ -67,7 +67,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         m_octave_value->set_text(String::number(new_octave));
     };
 
-    for (auto& raw_parameter : m_track_manager.current_track().synth()->parameters()) {
+    for (auto& raw_parameter : m_track_manager.current_track()->synth()->parameters()) {
         // The synth has range and enum parameters
         switch (raw_parameter.type()) {
         case DSP::ParameterType::Range: {
@@ -94,7 +94,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         }
     }
 
-    for (auto& raw_parameter : m_track_manager.current_track().delay()->parameters()) {
+    for (auto& raw_parameter : m_track_manager.current_track()->delay()->parameters()) {
         // FIXME: We shouldn't do that, but we know the effect and it's nice.
         auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
         m_delay_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
@@ -116,7 +116,7 @@ void KnobsWidget::update_knobs()
     // need to change the slider without changing the underlying value.
     m_change_underlying = false;
 
-    m_volume_knob->set_value(volume_max - m_track_manager.current_track().volume());
+    m_volume_knob->set_value(volume_max - m_track_manager.current_track()->volume());
     m_octave_knob->set_value(octave_max - m_track_manager.keyboard()->virtual_keyboard_octave());
 
     m_change_underlying = true;
