@@ -216,6 +216,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         if (request.page().has_value())
             m_page = request.page().value();
 
+        if (!m_page.has_value())
+            return;
         VERIFY(m_page.has_value());
         auto file_ref = make_ref_counted<FileRequest>(url.path());
         file_ref->on_file_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, file_ref](ErrorOr<i32> file_or_error) {
