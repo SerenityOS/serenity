@@ -963,6 +963,8 @@ void FlexFormattingContext::resolve_flexible_lengths()
         for (auto& flex_item : flex_line.items) {
             flex_item->main_size = flex_item->target_main_size;
         }
+
+        flex_line.remaining_free_space = calculate_free_space();
     }
 }
 
