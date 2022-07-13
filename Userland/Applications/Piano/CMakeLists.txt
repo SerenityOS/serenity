@@ -7,7 +7,6 @@ serenity_component(
 
 set(SOURCES
     AudioPlayerLoop.cpp
-    Track.cpp
     TrackManager.cpp
     KeysWidget.cpp
     KnobsWidget.cpp

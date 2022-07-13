@@ -29,4 +29,6 @@ protected:
 private:
     // Converts based on processor parameter boundaries.
     int linear_to_logarithmic(int linear_value);
+
+    bool m_currently_setting_from_ui { false };
 };

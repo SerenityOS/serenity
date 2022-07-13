@@ -79,7 +79,7 @@ public:
     void set_value(ParameterT value)
     {
         set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});
-        if (did_change_value)
+        for (auto const& did_change_value : m_change_value_listeners)
             did_change_value(value);
     }
 
@@ -90,10 +90,15 @@ public:
             m_value = value;
     }
 
-    Function<void(ParameterT const&)> did_change_value;
+    // FIXME: Devise a good API for unregistering listeners.
+    void register_change_listener(Function<void(ParameterT const&)> listener)
+    {
+        m_change_value_listeners.append(move(listener));
+    }
 
 protected:
     ParameterT m_value;
+    Vector<Function<void(ParameterT const&)>> m_change_value_listeners;
 };
 }
 

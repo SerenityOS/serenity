@@ -6,12 +6,16 @@
 
 #pragma once
 
+#include <AK/DisjointChunks.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibDSP/Clip.h>
+#include <LibDSP/Effects.h>
+#include <LibDSP/Keyboard.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/Processor.h>
+#include <LibDSP/Synthesizers.h>
 
 namespace DSP {
 
@@ -32,9 +36,17 @@ public:
     NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
     NonnullRefPtr<Transport const> transport() const { return m_transport; }
 
+    float volume() const;
+    void set_volume(float volume) const;
+
+    // FIXME: These two getters are temporary until we have dynamic processor UI
+    NonnullRefPtr<Synthesizers::Classic> synth();
+    NonnullRefPtr<Effects::Delay> delay();
+
 protected:
-    Track(NonnullRefPtr<Transport> transport)
+    Track(NonnullRefPtr<Transport> transport, NonnullRefPtr<Keyboard> keyboard)
         : m_transport(move(transport))
+        , m_keyboard(move(keyboard))
     {
     }
     bool check_processor_chain_valid_with_initial_type(SignalType initial_type) const;
@@ -44,6 +56,7 @@ protected:
 
     NonnullRefPtrVector<Processor> m_processor_chain;
     NonnullRefPtr<Transport> m_transport;
+    NonnullRefPtr<Keyboard> m_keyboard;
     // The current signal is stored here, to prevent unnecessary reallocation.
     Signal m_current_signal { FixedArray<Sample> {} };
 
@@ -58,8 +71,19 @@ class NoteTrack final : public Track {
 public:
     virtual ~NoteTrack() override = default;
 
+    NoteTrack(NonnullRefPtr<Transport> transport, NonnullRefPtr<Keyboard> keyboard)
+        : Track(move(transport), move(keyboard))
+    {
+        m_current_signal = RollNotes {};
+    }
+
     bool check_processor_chain_valid() const override;
-    NonnullRefPtrVector<NoteClip> const& clips() const { return m_clips; }
+    Span<NonnullRefPtr<NoteClip> const> notes() const { return m_clips.span(); }
+
+    void set_note(RollNote note);
+    void remove_note(RollNote note);
+
+    void add_clip(u32 start_time, u32 end_time);
 
 protected:
     void compute_current_clips_signal() override;
@@ -71,6 +95,11 @@ private:
 class AudioTrack final : public Track {
 public:
     virtual ~AudioTrack() override = default;
+
+    AudioTrack(NonnullRefPtr<Transport> transport, NonnullRefPtr<Keyboard> keyboard)
+        : Track(move(transport), move(keyboard))
+    {
+    }
 
     bool check_processor_chain_valid() const override;
     NonnullRefPtrVector<AudioClip> const& clips() const { return m_clips; }

@@ -14,6 +14,7 @@
 #include <LibAudio/WavWriter.h>
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>
+#include <LibDSP/Music.h>
 
 class TrackManager;
 
@@ -33,8 +34,8 @@ private:
     virtual void timer_event(Core::TimerEvent&) override;
 
     TrackManager& m_track_manager;
-    Array<Sample, sample_count> m_buffer;
-    Optional<Audio::ResampleHelper<Sample>> m_resampler;
+    FixedArray<DSP::Sample> m_buffer;
+    Optional<Audio::ResampleHelper<DSP::Sample>> m_resampler;
     RefPtr<Audio::ConnectionToServer> m_audio_client;
 
     bool m_should_play_audio = true;
