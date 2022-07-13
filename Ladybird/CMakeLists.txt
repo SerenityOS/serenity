@@ -28,6 +28,7 @@ include(cmake/FetchLagom.cmake)
 # Lagom warnings
 include(${Lagom_SOURCE_DIR}/../CMake/lagom_compile_options.cmake)
 add_compile_options(-Wno-expansion-to-defined)
+add_compile_options(-Wno-user-defined-literals)
 
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
