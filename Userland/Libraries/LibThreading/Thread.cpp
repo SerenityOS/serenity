@@ -45,6 +45,7 @@ void Threading::Thread::start()
         VERIFY(rc == 0);
     }
     dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
+    m_started = true;
 }
 
 void Threading::Thread::detach()
