@@ -5,7 +5,7 @@
  */
 
 #include "RequestManagerQt.h"
-#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 
 RequestManagerQt::RequestManagerQt()
 {

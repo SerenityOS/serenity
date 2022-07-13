@@ -53,7 +53,7 @@ Tab::Tab(QMainWindow* window)
         const QPoint* pos = new QPoint(0, size().height() - 15);
         QToolTip::showText(*pos, title, this);
     });
-    QObject::connect(m_view, &WebView::linkUnhovered, [this] {
+    QObject::connect(m_view, &WebView::linkUnhovered, [] {
         QToolTip::hideText();
     });
 
