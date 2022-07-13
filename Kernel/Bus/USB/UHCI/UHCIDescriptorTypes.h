@@ -266,28 +266,24 @@ struct alignas(16) QueueHead {
 
     u32 link_ptr() const { return m_link_ptr; }
     u32 element_link_ptr() const { return m_element_link_ptr; }
+
     u32 paddr() const { return m_paddr; }
     bool in_use() const { return m_in_use; }
-
     void set_in_use(bool in_use) { m_in_use = in_use; }
-    void set_link_ptr(u32 val) { m_link_ptr = val; }
 
     // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
     QueueHead* next_qh() { return m_next_qh; }
     QueueHead const* next_qh() const { return m_next_qh; }
-    void set_next_qh(QueueHead* qh) { m_next_qh = qh; }
 
     QueueHead* prev_qh() { return m_prev_qh; }
     QueueHead const* prev_qh() const { return m_prev_qh; }
-    void set_previous_qh(QueueHead* qh)
-    {
-        m_prev_qh = qh;
-    }
 
     void link_next_queue_head(QueueHead* qh)
     {
         m_link_ptr = qh->paddr();
         m_link_ptr |= static_cast<u32>(LinkPointerBits::QHSelect);
+        m_next_qh = qh;
+        qh->m_prev_qh = this;
     }
 
     void attach_transfer_queue(QueueHead& qh)
