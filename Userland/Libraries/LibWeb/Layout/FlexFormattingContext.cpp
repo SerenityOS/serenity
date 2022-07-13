@@ -725,7 +725,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             } else {
                 max_content_flex_fraction /= flex_item.scaled_flex_shrink_factor;
             }
-            flex_item.max_content_flex_fraction = max_content_flex_fraction;
+            flex_item.desired_flex_fraction = max_content_flex_fraction;
 
             if (max_content_flex_fraction > largest_max_content_flex_fraction)
                 largest_max_content_flex_fraction = max_content_flex_fraction;
@@ -736,7 +736,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
         float result = 0;
         for (auto& flex_item : m_flex_items) {
             auto product = 0;
-            if (flex_item.max_content_flex_fraction > 0) {
+            if (flex_item.desired_flex_fraction > 0) {
                 product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow();
             } else {
                 product = largest_max_content_flex_fraction * flex_item.scaled_flex_shrink_factor;
@@ -1329,7 +1329,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
     // The min-content main size of a single-line flex container is calculated identically to the max-content main size,
     // except that the flex items’ min-content contributions are used instead of their max-content contributions.
     // However, for a multi-line container, it is simply the largest min-content contribution of all the non-collapsed flex items in the flex container.
-    if (!is_single_line() && (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent)) {
+    if (!is_single_line() && flex_container_main_constraint() == SizeConstraint::MinContent) {
         float largest_contribution = 0;
         for (auto const& flex_item : m_flex_items) {
             // FIXME: Skip collapsed flex items.
@@ -1344,9 +1344,11 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
     // It is calculated, considering only non-collapsed flex items, by:
 
     // 1. For each flex item, subtract its outer flex base size from its max-content contribution size.
-    //    If that result is positive, divide by its flex grow factor floored at 1;
-    //    if negative, divide by its scaled flex shrink factor having floored the flex shrink factor at 1.
-    //    This is the item’s max-content flex fraction.
+    //    If that result is positive, divide it by the item’s flex grow factor if the flex grow factor is ≥ 1,
+    //    or multiply it by the flex grow factor if the flex grow factor is < 1; if the result is negative,
+    //    divide it by the item’s scaled flex shrink factor (if dividing by zero, treat the result as negative infinity).
+    //    This is the item’s desired flex fraction.
+
     for (auto& flex_item : m_flex_items) {
         float contribution;
         if (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent)
@@ -1354,14 +1356,23 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
         else
             contribution = calculate_main_max_content_contribution(flex_item);
 
-        float flex_fraction = contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after);
-        if (flex_fraction >= 0)
-            flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
-        else
-            flex_fraction /= max(flex_item.scaled_flex_shrink_factor, 1.0f);
+        float outer_flex_base_size = flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after;
 
-        // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
-        flex_item.max_content_flex_fraction = flex_fraction;
+        float result = contribution - outer_flex_base_size;
+        if (result > 0) {
+            if (flex_item.box.computed_values().flex_grow() >= 1) {
+                result /= flex_item.box.computed_values().flex_grow();
+            } else {
+                result *= flex_item.box.computed_values().flex_grow();
+            }
+        } else if (result < 0) {
+            if (flex_item.scaled_flex_shrink_factor == 0)
+                result = -INFINITY;
+            else
+                result /= flex_item.scaled_flex_shrink_factor;
+        }
+
+        flex_item.desired_flex_fraction = result;
     }
 
     // 2. Place all flex items into lines of infinite length.
@@ -1373,33 +1384,49 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
         m_flex_lines.last().items.append(&flex_item);
     }
 
-    // 3. Within each line, find the largest max-content flex fraction among all the flex items.
-    //    Add each item’s flex base size to the product of its flex grow factor
-    //    (or scaled flex shrink factor, if the chosen max-content flex fraction was negative)
-    //    and the chosen max-content flex fraction, then clamp that result by the max main size floored by the min main size.
     float largest_sum = 0;
-    for (auto& flex_line : m_flex_lines) {
-        float largest_flex_fraction = 0;
-        for (auto& flex_item : flex_line.items) {
-            // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
-            largest_flex_fraction = max(largest_flex_fraction, flex_item->max_content_flex_fraction);
-        }
 
+    //    Within each line, find the greatest (most positive) desired flex fraction among all the flex items.
+    //    This is the line’s chosen flex fraction.
+    for (auto& flex_line : m_flex_lines) {
+        float greatest_desired_flex_fraction = 0;
+        float sum_of_flex_grow_factors = 0;
+        float sum_of_flex_shrink_factors = 0;
+        for (auto& flex_item : flex_line.items) {
+            greatest_desired_flex_fraction = max(greatest_desired_flex_fraction, flex_item->desired_flex_fraction);
+            sum_of_flex_grow_factors += flex_item->box.computed_values().flex_grow();
+            sum_of_flex_shrink_factors += flex_item->box.computed_values().flex_shrink();
+        }
+        float chosen_flex_fraction = greatest_desired_flex_fraction;
+
+        // 3. If the chosen flex fraction is positive, and the sum of the line’s flex grow factors is less than 1,
+        //    divide the chosen flex fraction by that sum.
+        if (chosen_flex_fraction > 0 && sum_of_flex_grow_factors < 1)
+            chosen_flex_fraction /= sum_of_flex_grow_factors;
+
+        // If the chosen flex fraction is negative, and the sum of the line’s flex shrink factors is less than 1,
+        // multiply the chosen flex fraction by that sum.
+        if (chosen_flex_fraction < 0 && sum_of_flex_shrink_factors < 1)
+            chosen_flex_fraction *= sum_of_flex_shrink_factors;
+
+        // 4. Add each item’s flex base size to the product of its flex grow factor (scaled flex shrink factor, if shrinking)
+        //    and the chosen flex fraction, then clamp that result by the max main size floored by the min main size.
         float sum = 0;
         for (auto& flex_item : flex_line.items) {
-            auto product = 0;
-            if (flex_item->max_content_flex_fraction >= 0) {
-                product = largest_flex_fraction * flex_item->box.computed_values().flex_grow();
-            } else {
-                product = largest_flex_fraction * flex_item->scaled_flex_shrink_factor;
-            }
-            sum += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after + product;
+            float product = 0;
+            if (flex_item->desired_flex_fraction > 0)
+                product = chosen_flex_fraction * flex_item->box.computed_values().flex_grow();
+            else if (flex_item->desired_flex_fraction < 0)
+                product = chosen_flex_fraction * flex_item->scaled_flex_shrink_factor;
+            auto result = flex_item->flex_base_size + product;
+            // FIXME: Clamp result to min/max main size
+
+            sum += result;
         }
 
         largest_sum = max(largest_sum, sum);
     }
 
-    // 4. The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
     return largest_sum;
 }
 
@@ -1557,6 +1584,16 @@ float FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& it
 float FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
     return is_row_layout() ? calculate_max_content_height(item.box) : calculate_max_content_width(item.box);
+}
+
+SizeConstraint FlexFormattingContext::flex_container_main_constraint() const
+{
+    return is_row_layout() ? m_flex_container_state.width_constraint : m_flex_container_state.height_constraint;
+}
+
+SizeConstraint FlexFormattingContext::flex_container_cross_constraint() const
+{
+    return is_row_layout() ? m_flex_container_state.height_constraint : m_flex_container_state.width_constraint;
 }
 
 }

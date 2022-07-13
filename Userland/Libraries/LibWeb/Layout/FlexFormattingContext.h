@@ -23,6 +23,9 @@ public:
     Box const& flex_container() const { return context_box(); }
 
 private:
+    SizeConstraint flex_container_main_constraint() const;
+    SizeConstraint flex_container_cross_constraint() const;
+
     void dump_items() const;
 
     struct DirectionAgnosticMargins {
@@ -47,7 +50,7 @@ private:
         bool frozen { false };
         Optional<float> flex_factor {};
         float scaled_flex_shrink_factor { 0 };
-        float max_content_flex_fraction { 0 };
+        float desired_flex_fraction { 0 };
         float main_size { 0 };
         float cross_size { 0 };
         float main_offset { 0 };
