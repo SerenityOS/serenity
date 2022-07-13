@@ -655,7 +655,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
 
         // Seems like someone is writing (or is interested in writing and we let them have the lock)
         // wait until they're done.
-        auto rc = futex(lockp, FUTEX_WAIT_BITSET, current, timeout, nullptr, reader_wake_mask);
+        auto rc = futex(lockp, FUTEX_WAIT_BITSET | FUTEX_PRIVATE_FLAG, current, timeout, nullptr, reader_wake_mask);
         if (rc < 0 && errno == ETIMEDOUT && timeout) {
             return value_if_timeout;
         }
@@ -703,7 +703,7 @@ static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct t
 
         // Seems like someone is writing (or is interested in writing and we let them have the lock)
         // wait until they're done.
-        auto rc = futex(lockp, FUTEX_WAIT_BITSET, current, timeout, nullptr, writer_wake_mask);
+        auto rc = futex(lockp, FUTEX_WAIT_BITSET | FUTEX_PRIVATE_FLAG, current, timeout, nullptr, writer_wake_mask);
         if (rc < 0 && errno == ETIMEDOUT && timeout) {
             return value_if_timeout;
         }
@@ -794,7 +794,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
         auto desired = current & ~(writer_locked_mask | writer_intent_mask);
         AK::atomic_store(lockp, desired, AK::MemoryOrder::memory_order_release);
         // Then wake both readers and writers, if any.
-        auto rc = futex(lockp, FUTEX_WAKE_BITSET, current, nullptr, nullptr, (current & writer_wake_mask) | reader_wake_mask);
+        auto rc = futex(lockp, FUTEX_WAKE_BITSET | FUTEX_PRIVATE_FLAG, current, nullptr, nullptr, (current & writer_wake_mask) | reader_wake_mask);
         if (rc < 0)
             return errno;
         return 0;

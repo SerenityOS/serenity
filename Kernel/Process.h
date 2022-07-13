@@ -82,7 +82,22 @@ enum class VeilState {
     Locked,
 };
 
-using FutexQueues = HashMap<FlatPtr, NonnullRefPtr<FutexQueue>>;
+static constexpr FlatPtr futex_key_private_flag = 0b1;
+union GlobalFutexKey {
+    struct {
+        Memory::VMObject const* vmobject;
+        FlatPtr offset;
+    } shared;
+    struct {
+        Memory::AddressSpace const* address_space;
+        FlatPtr user_address;
+    } private_;
+    struct {
+        FlatPtr parent;
+        FlatPtr offset;
+    } raw;
+};
+static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
@@ -575,6 +590,8 @@ private:
     void clear_signal_handlers_for_exec();
     void clear_futex_queues_on_exec();
 
+    ErrorOr<GlobalFutexKey> get_futex_key(FlatPtr user_address, bool shared);
+
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
     ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
@@ -829,9 +846,6 @@ private:
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
-    FutexQueues m_futex_queues;
-    Spinlock m_futex_lock;
-
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
     // and wait for a tracer to attach.
@@ -1039,4 +1053,12 @@ struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
     {
         return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.name(), value.pid().value());
     }
+};
+
+namespace AK {
+template<>
+struct Traits<Kernel::GlobalFutexKey> : public GenericTraits<Kernel::GlobalFutexKey> {
+    static unsigned hash(Kernel::GlobalFutexKey const& futex_key) { return pair_int_hash(ptr_hash(futex_key.raw.parent), ptr_hash(futex_key.raw.offset)); }
+    static bool equals(Kernel::GlobalFutexKey const& a, Kernel::GlobalFutexKey const& b) { return a.raw.parent == b.raw.parent && a.raw.offset == b.raw.offset; }
+};
 };

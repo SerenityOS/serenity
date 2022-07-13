@@ -83,7 +83,7 @@ int sem_post(sem_t* sem)
     // Check if another sem_post() call has handled it already.
     if (!(value & POST_WAKES)) [[likely]]
         return 0;
-    int rc = futex_wake(&sem->value, 1);
+    int rc = futex_wake(&sem->value, 1, false);
     VERIFY(rc >= 0);
     return 0;
 }
@@ -145,7 +145,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
                 // Re-evaluate.
                 continue;
             if (going_to_wake) [[unlikely]] {
-                int rc = futex_wake(&sem->value, count - 1);
+                int rc = futex_wake(&sem->value, count - 1, false);
                 VERIFY(rc >= 0);
             }
             return 0;
@@ -162,7 +162,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
         }
         // At this point, we're committed to sleeping.
         responsible_for_waking = true;
-        futex_wait(&sem->value, value, abstime, CLOCK_REALTIME);
+        futex_wait(&sem->value, value, abstime, CLOCK_REALTIME, false);
         // This is the state we will probably see upon being waked:
         value = 1;
     }

@@ -98,7 +98,7 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
     // value might change as soon as we unlock it.
     u32 value = AK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL, AK::memory_order_release) | NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL;
     pthread_mutex_unlock(mutex);
-    int rc = futex_wait(&cond->value, value, abstime, cond->clockid);
+    int rc = futex_wait(&cond->value, value, abstime, cond->clockid, false);
     if (rc < 0 && errno != EAGAIN)
         return errno;
 
@@ -129,7 +129,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
     if (!(value & NEED_TO_WAKE_ONE)) [[likely]]
         return 0;
     // ...try to wake someone...
-    int rc = futex_wake(&cond->value, 1);
+    int rc = futex_wake(&cond->value, 1, false);
     VERIFY(rc >= 0);
     // ...and if we have woken someone, put the flag back.
     if (rc > 0)
@@ -152,7 +152,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     pthread_mutex_t* mutex = AK::atomic_load(&cond->mutex, AK::memory_order_relaxed);
     VERIFY(mutex);
 
-    int rc = futex(&cond->value, FUTEX_REQUEUE, 1, nullptr, &mutex->lock, INT_MAX);
+    int rc = futex(&cond->value, FUTEX_REQUEUE | FUTEX_PRIVATE_FLAG, 1, nullptr, &mutex->lock, INT_MAX);
     VERIFY(rc >= 0);
     return 0;
 }
