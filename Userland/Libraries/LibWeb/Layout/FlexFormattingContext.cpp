@@ -1265,16 +1265,28 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
 void FlexFormattingContext::align_all_flex_lines()
 {
     // FIXME: Support reverse
+
+    float cross_size_of_flex_container = specified_cross_size(flex_container());
+
     if (is_single_line()) {
         // For single-line flex containers, we only need to center the line along the cross axis.
         auto& flex_line = m_flex_lines[0];
-        float cross_size_of_flex_container = specified_cross_size(flex_container());
         float center_of_line = cross_size_of_flex_container / 2.0f;
         for (auto* flex_item : flex_line.items) {
             flex_item->cross_offset += center_of_line;
         }
     } else {
         // FIXME: Support align-content
+
+        float cross_size_per_flex_line = cross_size_of_flex_container / m_flex_lines.size();
+        float half_a_flex_line = cross_size_per_flex_line / 2.0f;
+        float center_of_current_line = 0 + half_a_flex_line;
+        for (auto& flex_line : m_flex_lines) {
+            for (auto* flex_item : flex_line.items) {
+                flex_item->cross_offset += center_of_current_line;
+            }
+            center_of_current_line += cross_size_per_flex_line;
+        }
     }
 }
 
