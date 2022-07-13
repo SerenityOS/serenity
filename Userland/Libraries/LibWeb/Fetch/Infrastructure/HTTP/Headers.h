@@ -7,7 +7,12 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Error.h>
 #include <AK/Forward.h>
+#include <AK/HashTable.h>
+#include <AK/Optional.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace Web::Fetch {
 
