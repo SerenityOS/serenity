@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -937,24 +937,35 @@ static NumberSystemData const* find_number_system(StringView locale, StringView 
     if (!locale_value.has_value())
         return nullptr;
 
-    auto number_system_keyword = keyword_nu_from_string(system);
-    if (!number_system_keyword.has_value())
-        return {};
-
-    auto number_system_value = keyword_to_number_system(*number_system_keyword);
-    if (!number_system_value.has_value())
-        return {};
-
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    auto number_system_index = to_underlying(*number_system_value);
-
     auto const& number_systems = s_locale_number_systems.at(locale_index);
-    number_system_index = number_systems.at(number_system_index);
 
-    if (number_system_index == 0)
+    auto lookup_number_system = [&](auto number_system) -> NumberSystemData const* {
+        auto number_system_keyword = keyword_nu_from_string(number_system);
+        if (!number_system_keyword.has_value())
+            return nullptr;
+
+        auto number_system_value = keyword_to_number_system(*number_system_keyword);
+        if (!number_system_value.has_value())
+            return nullptr;
+
+        auto number_system_index = to_underlying(*number_system_value);
+        number_system_index = number_systems.at(number_system_index);
+
+        if (number_system_index == 0)
+            return nullptr;
+
+        return &s_number_systems.at(number_system_index);
+    };
+
+    if (auto const* number_system = lookup_number_system(system))
+        return number_system;
+
+    auto default_number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
+    if (!default_number_system.has_value())
         return nullptr;
 
-    return &s_number_systems.at(number_system_index);
+    return lookup_number_system(*default_number_system);
 }
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
