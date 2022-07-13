@@ -67,7 +67,7 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
-    String serialize()
+    String serialize() const
     {
         // 1. If origin is an opaque origin, then return "null"
         if (is_opaque())
