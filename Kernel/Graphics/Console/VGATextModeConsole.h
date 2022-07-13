@@ -36,7 +36,7 @@ public:
 private:
     void clear_vga_row(u16 row);
 
-    VGATextModeConsole();
+    explicit VGATextModeConsole(NonnullOwnPtr<Memory::Region>);
 
     mutable Spinlock m_vga_lock;
 
