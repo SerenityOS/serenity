@@ -10,7 +10,6 @@
 #include <LibCore/EventLoop.h>
 #include <QAction>
 #include <QPlainTextEdit>
-#include <QStatusBar>
 
 extern String s_serenity_resource_root;
 
