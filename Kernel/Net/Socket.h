@@ -18,11 +18,6 @@
 
 namespace Kernel {
 
-enum class ShouldBlock {
-    No = 0,
-    Yes = 1
-};
-
 class OpenFileDescription;
 
 class Socket : public File {
@@ -79,7 +74,7 @@ public:
     ErrorOr<void> shutdown(int how);
 
     virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) = 0;
-    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock) = 0;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t) = 0;
     virtual ErrorOr<void> listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
