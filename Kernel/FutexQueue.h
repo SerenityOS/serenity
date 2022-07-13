@@ -21,7 +21,7 @@ public:
     FutexQueue();
     virtual ~FutexQueue();
 
-    u32 wake_n_requeue(u32, Function<FutexQueue*()> const&, u32, bool&, bool&);
+    ErrorOr<u32> wake_n_requeue(u32, Function<ErrorOr<FutexQueue*>()> const&, u32, bool&, bool&);
     u32 wake_n(u32, Optional<u32> const&, bool&);
     u32 wake_all(bool&);
 

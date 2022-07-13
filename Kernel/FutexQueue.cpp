@@ -30,7 +30,7 @@ bool FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
     return true;
 }
 
-u32 FutexQueue::wake_n_requeue(u32 wake_count, Function<FutexQueue*()> const& get_target_queue, u32 requeue_count, bool& is_empty, bool& is_empty_target)
+ErrorOr<u32> FutexQueue::wake_n_requeue(u32 wake_count, Function<ErrorOr<FutexQueue*>()> const& get_target_queue, u32 requeue_count, bool& is_empty, bool& is_empty_target)
 {
     is_empty_target = false;
     SpinlockLocker lock(m_lock);
@@ -55,7 +55,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, Function<FutexQueue*()> const& ge
     if (requeue_count > 0) {
         auto blockers_to_requeue = do_take_blockers(requeue_count);
         if (!blockers_to_requeue.is_empty()) {
-            if (auto* target_futex_queue = get_target_queue()) {
+            if (auto* target_futex_queue = TRY(get_target_queue())) {
                 dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue requeueing {} blockers to {}", this, blockers_to_requeue.size(), target_futex_queue);
 
                 // While still holding m_lock, notify each blocker
