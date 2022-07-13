@@ -124,7 +124,7 @@ public:
 
     FileBlockerSet& blocker_set();
 
-    ErrorOr<void> apply_flock(Process const&, Userspace<flock const*>);
+    ErrorOr<void> apply_flock(Process const&, Userspace<flock const*>, ShouldBlock);
     ErrorOr<void> get_flock(Userspace<flock*>) const;
 
 private:

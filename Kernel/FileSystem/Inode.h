@@ -22,6 +22,11 @@
 
 namespace Kernel {
 
+enum class ShouldBlock {
+    No = 0,
+    Yes = 1
+};
+
 class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     , public Weakable<Inode> {
     friend class VirtualFileSystem;
@@ -94,10 +99,11 @@ public:
 
     ErrorOr<NonnullRefPtr<FIFO>> fifo();
 
-    ErrorOr<void> can_apply_flock(OpenFileDescription const&, flock const&) const;
-    ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>);
+    bool can_apply_flock(flock const&) const;
+    ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>, ShouldBlock);
     ErrorOr<void> get_flock(OpenFileDescription const&, Userspace<flock*>) const;
     void remove_flocks_for_description(OpenFileDescription const&);
+    Thread::FlockBlockerSet& flock_blocker_set() { return m_flock_blocker_set; };
 
 protected:
     Inode(FileSystem&, InodeIndex);
@@ -112,6 +118,8 @@ protected:
     mutable Mutex m_inode_lock { "Inode"sv };
 
 private:
+    ErrorOr<bool> try_apply_flock(Process const&, OpenFileDescription const&, flock const&);
+
     FileSystem& m_file_system;
     InodeIndex m_index { 0 };
     WeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
@@ -129,6 +137,7 @@ private:
         short type;
     };
 
+    Thread::FlockBlockerSet m_flock_blocker_set;
     SpinlockProtected<Vector<Flock>> m_flocks;
 
 public:
