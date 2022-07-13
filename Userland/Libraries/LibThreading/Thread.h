@@ -32,6 +32,7 @@ public:
 
     String thread_name() const { return m_thread_name; }
     pthread_t tid() const { return m_tid; }
+    bool is_started() const { return m_started; }
 
 private:
     explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
@@ -39,6 +40,7 @@ private:
     pthread_t m_tid { 0 };
     String m_thread_name;
     bool m_detached { false };
+    bool m_started { false };
 };
 
 template<typename T>
