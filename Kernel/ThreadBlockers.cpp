@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -817,6 +818,39 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     // Because this may be called from add_blocker, in which case we should
     // not be actually trying to unblock the thread (because it hasn't actually
     // been blocked yet), we need to return true anyway
+    return true;
+}
+
+Thread::FlockBlocker::FlockBlocker(NonnullRefPtr<Inode> inode, flock const& flock)
+    : m_inode(move(inode))
+    , m_flock(flock)
+{
+}
+
+void Thread::FlockBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
+{
+    VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+}
+
+bool Thread::FlockBlocker::setup_blocker()
+{
+    return add_to_blocker_set(m_inode->flock_blocker_set());
+}
+
+bool Thread::FlockBlocker::try_unblock(bool from_add_blocker)
+{
+    if (!m_inode->can_apply_flock(m_flock))
+        return false;
+
+    {
+        SpinlockLocker lock(m_lock);
+        if (m_did_unblock)
+            return false;
+        m_did_unblock = true;
+    }
+
+    if (!from_add_blocker)
+        unblock_from_blocker();
     return true;
 }
 
