@@ -27,7 +27,7 @@ int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struc
 #    define ALWAYS_INLINE_SERENITY_H
 #endif
 
-static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value, const struct timespec* abstime, int clockid)
+static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value, const struct timespec* abstime, int clockid, int process_shared)
 {
     int op;
 
@@ -39,12 +39,12 @@ static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value,
     } else {
         op = FUTEX_WAIT;
     }
-    return futex(userspace_address, op, value, abstime, NULL, FUTEX_BITSET_MATCH_ANY);
+    return futex(userspace_address, op | (process_shared ? 0 : FUTEX_PRIVATE_FLAG), value, abstime, NULL, FUTEX_BITSET_MATCH_ANY);
 }
 
-static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)
+static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count, int process_shared)
 {
-    return futex(userspace_address, FUTEX_WAKE, count, NULL, NULL, 0);
+    return futex(userspace_address, FUTEX_WAKE | (process_shared ? 0 : FUTEX_PRIVATE_FLAG), count, NULL, NULL, 0);
 }
 
 #ifdef ALWAYS_INLINE_SERENITY_H
