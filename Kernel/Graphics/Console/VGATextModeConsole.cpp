@@ -5,18 +5,18 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Graphics/Console/TextModeConsole.h>
+#include <Kernel/Graphics/Console/VGATextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::Graphics {
 
-UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize()
+UNMAP_AFTER_INIT NonnullRefPtr<VGATextModeConsole> VGATextModeConsole::initialize()
 {
-    return adopt_ref(*new TextModeConsole());
+    return adopt_ref(*new VGATextModeConsole());
 }
 
-UNMAP_AFTER_INIT TextModeConsole::TextModeConsole()
+UNMAP_AFTER_INIT VGATextModeConsole::VGATextModeConsole()
     : Console(80, 25)
     , m_vga_region(MM.allocate_kernel_region(PhysicalAddress(0xa0000), Memory::page_round_up(0xc0000 - 0xa0000).release_value_but_fixme_should_propagate_errors(), "VGA Display"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr())
@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT TextModeConsole::TextModeConsole()
     for (size_t index = 0; index < height(); index++) {
         clear_vga_row(index);
     }
-    dbgln("Text mode console initialized!");
+    dbgln("VGA Text mode console initialized!");
 }
 
 enum VGAColor : u8 {
@@ -86,24 +86,24 @@ enum VGAColor : u8 {
     }
 }
 
-void TextModeConsole::set_cursor(size_t x, size_t y)
+void VGATextModeConsole::set_cursor(size_t x, size_t y)
 {
     SpinlockLocker lock(m_vga_lock);
     GraphicsManagement::the().set_vga_text_mode_cursor(width(), x, y);
     m_x = x;
     m_y = y;
 }
-void TextModeConsole::hide_cursor()
+void VGATextModeConsole::hide_cursor()
 {
     SpinlockLocker lock(m_vga_lock);
     GraphicsManagement::the().disable_vga_text_mode_console_cursor();
 }
-void TextModeConsole::show_cursor()
+void VGATextModeConsole::show_cursor()
 {
     set_cursor(m_x, m_y);
 }
 
-void TextModeConsole::clear(size_t x, size_t y, size_t length)
+void VGATextModeConsole::clear(size_t x, size_t y, size_t length)
 {
     SpinlockLocker lock(m_vga_lock);
     auto* buf = (u16*)m_current_vga_window.offset((x * 2) + (y * width() * 2)).as_ptr();
@@ -111,12 +111,12 @@ void TextModeConsole::clear(size_t x, size_t y, size_t length)
         buf[index] = 0x0720;
     }
 }
-void TextModeConsole::write(size_t x, size_t y, char ch, bool critical)
+void VGATextModeConsole::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
+void VGATextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
     SpinlockLocker lock(m_vga_lock);
     // If we are in critical printing mode, we need to handle new lines here
@@ -144,12 +144,12 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
     }
 }
 
-void TextModeConsole::clear_vga_row(u16 row)
+void VGATextModeConsole::clear_vga_row(u16 row)
 {
     clear(0, row, width());
 }
 
-void TextModeConsole::write(char ch, bool critical)
+void VGATextModeConsole::write(char ch, bool critical)
 {
     write(m_x, m_y, ch, critical);
 }
