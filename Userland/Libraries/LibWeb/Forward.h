@@ -173,6 +173,7 @@ namespace Web::Fetch {
 class Body;
 struct Header;
 class HeaderList;
+class Request;
 }
 
 namespace Web::Geometry {
