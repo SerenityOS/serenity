@@ -22,7 +22,7 @@ and launcher information (optional):
 - protocols
 
 ------------------------------------------
-All application files are stored in **read-only** memory in `/res/apps`.
+All application files are stored in **read-only** memory in [`/res/apps`](../../../../res/apps).
 
 ## Examples
 

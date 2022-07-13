@@ -18,4 +18,5 @@ supports comments: '#' and ';' will skip entire line (as '//' in C++).
 ```ini
 [Mapping]
 Keymaps=en-us
+<<<<<<< HEAD
 ```

@@ -4,7 +4,8 @@ IPC - Inter-Process Communication endpoint definition format (.ipc)
 
 ## Synopsis
 
-The IPC format of SerenityOS is a domain-specific language (DSL) used to define communication endpoints for IPC.
+IPC files are written in domain-specific language (DSL), which is loosely inspired by C++ headers, to define IPC
+protocols that are used to communicate with any services in the system.
 
 ## Description
 
@@ -80,5 +81,5 @@ Synchronous function is `post_message`, asynchronous variant is `send_sync`.
 
 ## See also
 
-- [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/).
-- [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation)
+- [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp)
+- [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation) 
