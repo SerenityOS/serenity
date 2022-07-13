@@ -33,7 +33,7 @@ ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> 
         return (intptr_t) nullptr;
     }))
 {
-    m_background_audio_enqueuer->start();
+    async_pause_playback();
     set_buffer(*m_buffer);
 }
 
@@ -56,6 +56,9 @@ void ConnectionToServer::die()
 
 ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
 {
+    if (!m_background_audio_enqueuer->is_started())
+        m_background_audio_enqueuer->start();
+
     update_good_sleep_time();
     m_user_queue->append(move(samples));
     // Wake the background thread to make sure it starts enqueuing audio.
