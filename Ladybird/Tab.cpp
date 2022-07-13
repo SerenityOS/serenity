@@ -9,7 +9,8 @@
 #include "BrowserWindow.h"
 #include "History.h"
 #include <QCoreApplication>
-#include <QStatusBar>
+#include <QPoint>
+#include <QToolTip>
 
 extern String s_serenity_resource_root;
 
@@ -48,8 +49,13 @@ Tab::Tab(QMainWindow* window)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
-    QObject::connect(m_view, &WebView::linkHovered, m_window->statusBar(), &QStatusBar::showMessage);
-    QObject::connect(m_view, &WebView::linkUnhovered, m_window->statusBar(), &QStatusBar::clearMessage);
+    QObject::connect(m_view, &WebView::linkHovered, [this](QString const& title) {
+        const QPoint* pos = new QPoint(0, size().height() - 15);
+        QToolTip::showText(*pos, title, this);
+    });
+    QObject::connect(m_view, &WebView::linkUnhovered, [this] {
+        QToolTip::hideText();
+    });
 
     QObject::connect(m_view, &WebView::loadStarted, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
