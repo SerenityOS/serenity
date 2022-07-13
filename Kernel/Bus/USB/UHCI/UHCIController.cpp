@@ -86,6 +86,7 @@ UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
+    , m_schedule_lock(LockRank::None)
 {
 }
 
@@ -129,12 +130,13 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
 {
     m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
 
+    // Used as a sentinel value to loop back to the beginning of the list
+    m_schedule_begin_anchor = allocate_queue_head();
     // Create the Full Speed, Low Speed Control and Bulk Queue Heads
-    m_interrupt_transfer_queue = allocate_queue_head();
-    m_lowspeed_control_qh = allocate_queue_head();
-    m_fullspeed_control_qh = allocate_queue_head();
-    m_bulk_qh = allocate_queue_head();
-    m_dummy_qh = allocate_queue_head();
+    m_interrupt_qh_anchor = allocate_queue_head();
+    m_ls_control_qh_anchor = allocate_queue_head();
+    m_fs_control_qh_anchor = allocate_queue_head();
+    m_bulk_qh_anchor = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
     m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
@@ -155,7 +157,7 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
         auto transfer_descriptor = m_iso_td_list.at(i);
         transfer_descriptor->set_in_use(true); // Isochronous transfers are ALWAYS marked as in use (in case we somehow get allocated one...)
         transfer_descriptor->set_isochronous();
-        transfer_descriptor->link_queue_head(m_interrupt_transfer_queue->paddr());
+        transfer_descriptor->link_queue_head(m_interrupt_qh_anchor->paddr());
 
         if constexpr (UHCI_VERBOSE_DEBUG)
             transfer_descriptor->print();
@@ -194,29 +196,25 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     // Not specified in the datasheet, however, is another Queue Head with an "inactive" Transfer Descriptor. This
     // is to circumvent a bug in the silicon of the PIIX4's UHCI controller.
     // https://github.com/openbsd/src/blob/master/sys/dev/usb/uhci.c#L390
-    //
+    m_schedule_begin_anchor->link_next_queue_head(m_interrupt_qh_anchor);
+    m_schedule_begin_anchor->terminate_element_link_ptr();
 
-    m_interrupt_transfer_queue->link_next_queue_head(m_lowspeed_control_qh);
-    m_interrupt_transfer_queue->terminate_element_link_ptr();
+    m_interrupt_qh_anchor->link_next_queue_head(m_ls_control_qh_anchor);
+    m_interrupt_qh_anchor->terminate_element_link_ptr();
 
-    m_lowspeed_control_qh->link_next_queue_head(m_fullspeed_control_qh);
-    m_lowspeed_control_qh->terminate_element_link_ptr();
+    m_ls_control_qh_anchor->link_next_queue_head(m_fs_control_qh_anchor);
+    m_ls_control_qh_anchor->terminate_element_link_ptr();
 
-    m_fullspeed_control_qh->link_next_queue_head(m_bulk_qh);
-    m_fullspeed_control_qh->terminate_element_link_ptr();
-
-    m_bulk_qh->link_next_queue_head(m_dummy_qh);
-    m_bulk_qh->terminate_element_link_ptr();
+    m_fs_control_qh_anchor->link_next_queue_head(m_bulk_qh_anchor);
+    m_fs_control_qh_anchor->terminate_element_link_ptr();
 
     auto piix4_td_hack = allocate_transfer_descriptor();
     piix4_td_hack->terminate();
     piix4_td_hack->set_max_len(0x7ff); // Null data packet
     piix4_td_hack->set_device_address(0x7f);
     piix4_td_hack->set_packet_id(PacketID::IN);
-    m_dummy_qh->attach_transfer_descriptor_chain(piix4_td_hack);
-    // Cyclically link to the full speed control QH to allow for full speed
-    // bandwidth reclamation during frame idle time
-    m_dummy_qh->link_next_queue_head(m_fullspeed_control_qh);
+    m_bulk_qh_anchor->link_next_queue_head(m_fs_control_qh_anchor);
+    m_bulk_qh_anchor->attach_transfer_descriptor_chain(piix4_td_hack);
 
     u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
     for (int frame = 0; frame < UHCI_NUMBER_OF_FRAMES; frame++) {
@@ -224,11 +222,10 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
         framelist[frame] = m_iso_td_list.at(frame % UHCI_NUMBER_OF_ISOCHRONOUS_TDS)->paddr();
     }
 
-    m_interrupt_transfer_queue->print();
-    m_lowspeed_control_qh->print();
-    m_fullspeed_control_qh->print();
-    m_bulk_qh->print();
-    m_dummy_qh->print();
+    m_interrupt_qh_anchor->print();
+    m_ls_control_qh_anchor->print();
+    m_fs_control_qh_anchor->print();
+    m_bulk_qh_anchor->print();
 }
 
 QueueHead* UHCIController::allocate_queue_head()
@@ -357,6 +354,21 @@ void UHCIController::free_descriptor_chain(TransferDescriptor* first_descriptor)
     }
 }
 
+void UHCIController::enqueue_qh(QueueHead* transfer_queue, QueueHead* anchor)
+{
+    SpinlockLocker locker(m_schedule_lock);
+
+    auto prev_qh = anchor->prev_qh();
+    prev_qh->link_next_queue_head(transfer_queue);
+    transfer_queue->link_next_queue_head(anchor);
+}
+
+void UHCIController::dequeue_qh(QueueHead* transfer_queue)
+{
+    SpinlockLocker locker(m_schedule_lock);
+    transfer_queue->prev_qh()->link_next_queue_head(transfer_queue->next_qh());
+}
+
 ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 {
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
@@ -419,12 +431,15 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     transfer_queue->attach_transfer_descriptor_chain(setup_td);
     transfer_queue->set_transfer(&transfer);
 
-    m_fullspeed_control_qh->attach_transfer_queue(*transfer_queue);
+    enqueue_qh(transfer_queue, m_fs_control_qh_anchor);
 
     size_t transfer_size = 0;
-    while (!transfer.complete())
+    while (!transfer.complete()) {
+        dbgln_if(USB_DEBUG, "Control transfer size: {}", transfer_size);
         transfer_size = poll_transfer_queue(*transfer_queue);
+    }
 
+    dequeue_qh(transfer_queue);
     free_descriptor_chain(transfer_queue->get_first_td());
     transfer_queue->free();
     m_queue_head_pool->release_to_pool(transfer_queue);
@@ -461,14 +476,15 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
     transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
     transfer_queue->set_transfer(&transfer);
 
-    m_bulk_qh->attach_transfer_queue(*transfer_queue);
+    enqueue_qh(transfer_queue, m_bulk_qh_anchor);
 
     size_t transfer_size = 0;
     while (!transfer.complete()) {
         transfer_size = poll_transfer_queue(*transfer_queue);
-        dbgln_if(USB_DEBUG, "Transfer size: {}", transfer_size);
+        dbgln_if(USB_DEBUG, "Bulk transfer size: {}", transfer_size);
     }
 
+    dequeue_qh(transfer_queue);
     free_descriptor_chain(transfer_queue->get_first_td());
     transfer_queue->free();
     m_queue_head_pool->release_to_pool(transfer_queue);
