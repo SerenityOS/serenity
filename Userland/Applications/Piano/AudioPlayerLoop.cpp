@@ -31,12 +31,12 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
     // FIXME: I said I would never write such a hack again, but here we are.
     // This code should die as soon as possible anyways, so it doesn't matter.
     // Please don't use this as an example to write good audio code; it's just here as a temporary hack.
-    Core::EventLoop::register_timer(*this, 10, true, Core::TimerShouldFireWhenNotVisible::Yes);
+    Core::EventLoop::register_timer(*this, 5, true, Core::TimerShouldFireWhenNotVisible::Yes);
 }
 
 void AudioPlayerLoop::timer_event(Core::TimerEvent&)
 {
-    if (m_audio_client->remaining_samples() < sample_count)
+    while (m_audio_client->remaining_samples() < sample_count)
         enqueue_audio();
 }
 
