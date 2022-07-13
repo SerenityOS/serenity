@@ -105,7 +105,7 @@ ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
     return data_length;
 }
 
-ErrorOr<void> UDPSocket::protocol_connect(OpenFileDescription&, ShouldBlock)
+ErrorOr<void> UDPSocket::protocol_connect(OpenFileDescription&)
 {
     set_role(Role::Connected);
     set_connected(true);

@@ -420,7 +420,7 @@ ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
     return {};
 }
 
-ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBlock should_block)
+ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
 {
     MutexLocker locker(mutex());
 
@@ -444,7 +444,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description, Shou
 
     evaluate_block_conditions();
 
-    if (should_block == ShouldBlock::Yes) {
+    if (description.is_blocking()) {
         locker.unlock();
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())

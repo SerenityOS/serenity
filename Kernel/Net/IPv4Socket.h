@@ -33,7 +33,7 @@ public:
 
     virtual ErrorOr<void> close() override;
     virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) override;
-    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t) override;
     virtual ErrorOr<void> listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
@@ -82,7 +82,7 @@ protected:
     virtual ErrorOr<void> protocol_listen([[maybe_unused]] bool did_allocate_port) { return {}; }
     virtual ErrorOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return ENOTIMPL; }
     virtual ErrorOr<size_t> protocol_send(UserOrKernelBuffer const&, size_t) { return ENOTIMPL; }
-    virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) { return {}; }
+    virtual ErrorOr<void> protocol_connect(OpenFileDescription&) { return {}; }
     virtual ErrorOr<u16> protocol_allocate_local_port() { return ENOPROTOOPT; }
     virtual ErrorOr<size_t> protocol_size(ReadonlyBytes /* raw_ipv4_packet */) { return ENOTIMPL; }
     virtual bool protocol_is_disconnected() const { return false; }

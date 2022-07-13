@@ -138,7 +138,7 @@ ErrorOr<void> IPv4Socket::listen(size_t backlog)
     return protocol_listen(result.did_allocate);
 }
 
-ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size, ShouldBlock should_block)
+ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size)
 {
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);
@@ -158,7 +158,7 @@ ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<so
         m_peer_address = IPv4Address { 127, 0, 0, 1 };
     m_peer_port = ntohs(safe_address.sin_port);
 
-    return protocol_connect(description, should_block);
+    return protocol_connect(description);
 }
 
 bool IPv4Socket::can_read(OpenFileDescription const&, u64) const
