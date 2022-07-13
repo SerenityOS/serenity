@@ -62,8 +62,7 @@ ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
     update_good_sleep_time();
     m_user_queue->append(move(samples));
     // Wake the background thread to make sure it starts enqueuing audio.
-    if (!m_audio_enqueuer_active.load())
-        m_enqueuer_loop->post_event(*this, make<Core::CustomEvent>(0), Core::EventLoop::ShouldWake::Yes);
+    m_enqueuer_loop->wake_once(*this, 0);
     async_start_playback();
 
     return {};
@@ -87,8 +86,6 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
 {
     Array<Sample, AUDIO_BUFFER_SIZE> next_chunk;
     while (true) {
-        m_audio_enqueuer_active.store(true);
-
         if (m_user_queue->is_empty()) {
             dbgln("Reached end of provided audio data, going to sleep");
             break;
@@ -107,7 +104,6 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
         if (result.is_error())
             dbgln("Error while writing samples to shared buffer: {}", result.error());
     }
-    m_audio_enqueuer_active.store(false);
 }
 
 ErrorOr<void, AudioQueue::QueueStatus> ConnectionToServer::realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples)
