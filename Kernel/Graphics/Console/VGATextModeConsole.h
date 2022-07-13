@@ -12,9 +12,9 @@
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::Graphics {
-class TextModeConsole final : public Console {
+class VGATextModeConsole final : public Console {
 public:
-    static NonnullRefPtr<TextModeConsole> initialize();
+    static NonnullRefPtr<VGATextModeConsole> initialize();
     virtual size_t chars_per_line() const override { return width(); };
 
     virtual bool has_hardware_cursor() const override { return true; }
@@ -36,7 +36,7 @@ public:
 private:
     void clear_vga_row(u16 row);
 
-    TextModeConsole();
+    VGATextModeConsole();
 
     mutable Spinlock m_vga_lock;
 

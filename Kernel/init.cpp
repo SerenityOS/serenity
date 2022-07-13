@@ -35,7 +35,7 @@
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/Graphics/Console/TextModeConsole.h>
+#include <Kernel/Graphics/Console/VGATextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -208,7 +208,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         if (!multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
         } else {
-            g_boot_console = &Graphics::TextModeConsole::initialize().leak_ref();
+            g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
         }
     }
     dmesgln("Starting SerenityOS...");
