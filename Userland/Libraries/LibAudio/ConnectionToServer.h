@@ -83,7 +83,6 @@ private:
     NonnullRefPtr<Threading::Thread> m_background_audio_enqueuer;
     Core::EventLoop* m_enqueuer_loop;
     Threading::Mutex m_enqueuer_loop_destruction;
-    Atomic<bool> m_audio_enqueuer_active { false };
 
     // A good amount of time to sleep when the queue is full.
     // (Only used for non-realtime enqueues)

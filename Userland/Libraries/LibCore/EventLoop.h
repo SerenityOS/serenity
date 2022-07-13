@@ -56,6 +56,7 @@ public:
     void spin_until(Function<bool()>);
 
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&, ShouldWake = ShouldWake::No);
+    void wake_once(Object& receiver, int custom_event_type);
 
     static EventLoop& current();
 

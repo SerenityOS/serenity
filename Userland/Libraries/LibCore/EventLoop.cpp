@@ -501,6 +501,23 @@ void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event, Shoul
         wake();
 }
 
+void EventLoop::wake_once(Object& receiver, int custom_event_type)
+{
+    Threading::MutexLocker lock(m_private->lock);
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::wake_once: event type {}", custom_event_type);
+    auto identical_events = m_queued_events.find_if([&](auto& queued_event) {
+        if (queued_event.receiver.is_null())
+            return false;
+        auto const& event = queued_event.event;
+        auto is_receiver_identical = queued_event.receiver.ptr() == &receiver;
+        auto event_id_matches = event->type() == Event::Type::Custom && static_cast<CustomEvent const*>(event.ptr())->custom_type() == custom_event_type;
+        return is_receiver_identical && event_id_matches;
+    });
+    // Event is not in the queue yet, so we want to wake.
+    if (identical_events.is_end())
+        post_event(receiver, make<CustomEvent>(custom_event_type), ShouldWake::Yes);
+}
+
 SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
     : m_signo(signo)
     , m_original_handler(signal(signo, handle_signal))
