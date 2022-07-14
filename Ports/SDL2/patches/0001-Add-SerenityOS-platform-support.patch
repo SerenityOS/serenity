@@ -633,7 +633,7 @@ index 0000000..ac5e358
 +
 +extern "C" int SERENITY_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
 +{
-+    GUI::MessageBox::show(nullptr, messageboxdata->message, messageboxdata->title);
++    GUI::MessageBox::show(nullptr, { messageboxdata->message, strlen(messageboxdata->message) }, { messageboxdata->title, strlen(messageboxdata->title) });
 +    return 0;
 +}
 +
