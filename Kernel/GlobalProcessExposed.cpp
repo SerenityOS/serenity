@@ -446,10 +446,10 @@ private:
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
         TRY(json.add("kmalloc_allocated"sv, stats.bytes_allocated));
         TRY(json.add("kmalloc_available"sv, stats.bytes_free));
-        TRY(json.add("user_physical_allocated"sv, system_memory.user_physical_pages_used));
-        TRY(json.add("user_physical_available"sv, system_memory.user_physical_pages - system_memory.user_physical_pages_used));
-        TRY(json.add("user_physical_committed"sv, system_memory.user_physical_pages_committed));
-        TRY(json.add("user_physical_uncommitted"sv, system_memory.user_physical_pages_uncommitted));
+        TRY(json.add("physical_allocated"sv, system_memory.physical_pages_used));
+        TRY(json.add("physical_available"sv, system_memory.physical_pages - system_memory.physical_pages_used));
+        TRY(json.add("physical_committed"sv, system_memory.physical_pages_committed));
+        TRY(json.add("physical_uncommitted"sv, system_memory.physical_pages_uncommitted));
         TRY(json.add("kmalloc_call_count"sv, stats.kmalloc_call_count));
         TRY(json.add("kfree_call_count"sv, stats.kfree_call_count));
         TRY(json.finish());

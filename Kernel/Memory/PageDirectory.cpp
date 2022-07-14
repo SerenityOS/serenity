@@ -33,13 +33,13 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
     SpinlockLocker lock(s_mm_lock);
 
 #if ARCH(X86_64)
-    directory->m_pml4t = TRY(MM.allocate_user_physical_page());
+    directory->m_pml4t = TRY(MM.allocate_physical_page());
 #endif
 
-    directory->m_directory_table = TRY(MM.allocate_user_physical_page());
+    directory->m_directory_table = TRY(MM.allocate_physical_page());
     auto kernel_pd_index = (kernel_mapping_base >> 30) & 0x1ffu;
     for (size_t i = 0; i < kernel_pd_index; i++) {
-        directory->m_directory_pages[i] = TRY(MM.allocate_user_physical_page());
+        directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
     }
 
     // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)

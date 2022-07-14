@@ -22,7 +22,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    auto identify_buffer_page = MUST(MM.allocate_user_physical_page());
+    auto identify_buffer_page = MUST(MM.allocate_physical_page());
     auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(controller, move(identify_buffer_page), hba_capabilities, registers, port_index)));
     TRY(port->allocate_resources_and_initialize_ports());
     return port;
@@ -35,14 +35,14 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
         return {};
     }
 
-    m_fis_receive_page = TRY(MM.allocate_user_physical_page());
+    m_fis_receive_page = TRY(MM.allocate_physical_page());
 
     for (size_t index = 0; index < 1; index++) {
-        auto dma_page = TRY(MM.allocate_user_physical_page());
+        auto dma_page = TRY(MM.allocate_physical_page());
         m_dma_buffers.append(move(dma_page));
     }
     for (size_t index = 0; index < 1; index++) {
-        auto command_table_page = TRY(MM.allocate_user_physical_page());
+        auto command_table_page = TRY(MM.allocate_physical_page());
         m_command_table_pages.append(move(command_table_page));
     }
 
