@@ -73,8 +73,10 @@ Tab::Tab(QMainWindow* window)
     QObject::connect(focus_location_edit_action, &QAction::triggered, m_location_edit, &QLineEdit::selectAll);
 }
 
-void Tab::navigate(QString const& url)
+void Tab::navigate(QString url)
 {
+    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive))
+        url = "http://" + url;
     view().load(url.toUtf8().data());
 }
 
