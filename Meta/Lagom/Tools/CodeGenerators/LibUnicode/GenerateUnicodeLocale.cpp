@@ -413,7 +413,7 @@ static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData&
 
 static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, UnicodeLocaleData& locale_data)
 {
-    constexpr auto desired_keywords = Array { "ca"sv, "kf"sv, "kn"sv, "nu"sv };
+    constexpr auto desired_keywords = Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
     auto keywords = TRY(read_json_file(bcp47_path));
 
     auto const& keyword_object = keywords.as_object().get("keyword"sv);
@@ -430,8 +430,21 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
 
         auto& keywords = locale_data.keywords.ensure(key);
 
+        // FIXME: ECMA-402 requires the list of supported collation types to include "default", but
+        //        that type does not appear in collation.json.
+        if (key == "co" && !keywords.contains_slow("default"sv))
+            keywords.append("default"sv);
+
         value.as_object().for_each_member([&](auto const& keyword, auto const& properties) {
             if (!properties.is_object())
+                return;
+
+            // Filter out values not permitted by ECMA-402.
+            // https://tc39.es/ecma402/#sec-intl-collator-internal-slots
+            if (key == "co"sv && keyword.is_one_of("search"sv, "standard"sv))
+                return;
+            // https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
+            if (key == "nu"sv && keyword.is_one_of("finance"sv, "native"sv, "traditio"sv))
                 return;
 
             if (auto const& preferred = properties.as_object().get("_preferred"sv); preferred.is_string()) {
@@ -441,6 +454,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
 
             if (auto const& alias = properties.as_object().get("_alias"sv); alias.is_string())
                 locale_data.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
+
             keywords.append(keyword);
         });
     });
@@ -1127,8 +1141,20 @@ struct TextLayout {
 };
 )~~~");
 
-    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value);
-    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value, locale_data.keyword_aliases.find("nu"sv)->value);
+    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value,
+        [](auto calendar) {
+            // FIXME: Remove this filter when we support all calendars.
+            return calendar.is_one_of("gregory"sv, "iso8601"sv);
+        });
+    generate_available_values(generator, "get_available_collation_case_orderings"sv, locale_data.keywords.find("kf"sv)->value, locale_data.keyword_aliases.find("kf"sv)->value);
+    generate_available_values(generator, "get_available_collation_numeric_orderings"sv, locale_data.keywords.find("kn"sv)->value, locale_data.keyword_aliases.find("kn"sv)->value);
+    generate_available_values(generator, "get_available_collation_types"sv, locale_data.keywords.find("co"sv)->value, locale_data.keyword_aliases.find("co"sv)->value,
+        [](auto collation) {
+            // FIXME: Remove this filter when we support all collation types.
+            return collation == "default"sv;
+        });
+    generate_available_values(generator, "get_available_hour_cycles"sv, locale_data.keywords.find("hc"sv)->value);
+    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value);
     generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
 
     locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
@@ -1511,6 +1537,10 @@ Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
 
         return values;
     }
+
+    // FIXME: Generate locale-preferred collation data when available in the CLDR.
+    if (key == "co"sv)
+        return Vector<StringView> { get_available_collation_types() };
 
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())

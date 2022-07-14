@@ -526,18 +526,20 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
 }
 
 template<typename T>
-void generate_available_values(SourceGenerator& generator, StringView name, Vector<T> const& values, Vector<Alias> const& aliases = {})
+void generate_available_values(SourceGenerator& generator, StringView name, Vector<T> const& values, Vector<Alias> const& aliases = {}, Function<bool(StringView)> value_filter = {})
 {
     generator.set("name", name);
-    generator.set("size", String::number(values.size()));
 
     generator.append(R"~~~(
 Span<StringView const> @name@()
 {
-    static constexpr Array<StringView, @size@> values { {)~~~");
+    static constexpr auto values = Array {)~~~");
 
     bool first = true;
     for (auto const& value : values) {
+        if (value_filter && !value_filter(value))
+            continue;
+
         generator.append(first ? " "sv : ", "sv);
         first = false;
 
@@ -547,7 +549,7 @@ Span<StringView const> @name@()
             generator.append(String::formatted("\"{}\"sv", value));
     }
 
-    generator.append(R"~~~( } };
+    generator.append(R"~~~( };
     return values.span();
 }
 )~~~");

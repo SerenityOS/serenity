@@ -146,6 +146,10 @@ String const& default_locale();
 bool is_locale_available(StringView locale);
 
 Span<StringView const> get_available_calendars();
+Span<StringView const> get_available_collation_case_orderings();
+Span<StringView const> get_available_collation_numeric_orderings();
+Span<StringView const> get_available_collation_types();
+Span<StringView const> get_available_hour_cycles();
 Span<StringView const> get_available_number_systems();
 
 Style style_from_string(StringView style);
@@ -161,6 +165,8 @@ Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_
 
 Optional<Key> key_from_string(StringView key);
 Optional<KeywordCalendar> keyword_ca_from_string(StringView ca);
+Optional<KeywordCollation> keyword_co_from_string(StringView co);
+Optional<KeywordHours> keyword_hc_from_string(StringView hc);
 Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
 Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
 Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);

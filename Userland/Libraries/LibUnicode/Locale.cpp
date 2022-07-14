@@ -767,6 +767,10 @@ StringView style_to_string(Style style)
 }
 
 Span<StringView const> __attribute__((weak)) get_available_calendars() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_collation_case_orderings() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_collation_numeric_orderings() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_collation_types() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_hour_cycles() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_number_systems() { return {}; }
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
@@ -777,6 +781,8 @@ Optional<DateField> __attribute__((weak)) date_field_from_string(StringView) { r
 Optional<ListPatternType> __attribute__((weak)) list_pattern_type_from_string(StringView) { return {}; }
 Optional<Key> __attribute__((weak)) key_from_string(StringView) { return {}; }
 Optional<KeywordCalendar> __attribute__((weak)) keyword_ca_from_string(StringView) { return {}; }
+Optional<KeywordCollation> __attribute__((weak)) keyword_co_from_string(StringView) { return {}; }
+Optional<KeywordHours> __attribute__((weak)) keyword_hc_from_string(StringView) { return {}; }
 Optional<KeywordColCaseFirst> __attribute__((weak)) keyword_kf_from_string(StringView) { return {}; }
 Optional<KeywordColNumeric> __attribute__((weak)) keyword_kn_from_string(StringView) { return {}; }
 Optional<KeywordNumbers> __attribute__((weak)) keyword_nu_from_string(StringView) { return {}; }
