@@ -29,14 +29,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
 
     // FIXME: Port this to Core::Stream when it gets read_all.
-    auto proc_net_adapters_file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
+    auto proc_net_adapters_file = TRY(Core::File::open("/proc/net/adapters"sv, Core::OpenMode::ReadOnly));
     auto data = proc_net_adapters_file->read_all();
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());
 
     // Kill all previously running DHCPServers that may manage to re-assign the IP
     // address before we clear it manually.
-    MUST(Core::command("killall", { "DHCPClient" }, {}));
+    MUST(Core::command("killall"sv, { "DHCPClient" }, {}));
 
     auto groups = config_file->groups();
     dbgln("Interfaces to configure: {}", groups);
@@ -44,9 +44,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     struct InterfaceConfig {
         bool enabled = false;
         bool dhcp_enabled = false;
-        String ipv4_address = "0.0.0.0";
-        String ipv4_netmask = "0.0.0.0";
-        String ipv4_gateway = "0.0.0.0";
+        String ipv4_address = "0.0.0.0"sv;
+        String ipv4_netmask = "0.0.0.0"sv;
+        String ipv4_gateway = "0.0.0.0"sv;
     };
 
     Vector<String> interfaces_with_dhcp_enabled;
@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         auto& if_object = value.as_object();
         auto ifname = if_object.get("name"sv).to_string();
 
-        if (ifname == "loop")
+        if (ifname == "loop"sv)
             return;
 
         InterfaceConfig config;
@@ -62,12 +62,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
             dbgln("Config for interface {} doesn't exist, enabling DHCP for it", ifname);
             interfaces_with_dhcp_enabled.append(ifname);
         } else {
-            config.enabled = config_file->read_bool_entry(ifname, "Enabled", true);
-            config.dhcp_enabled = config_file->read_bool_entry(ifname, "DHCP", false);
+            config.enabled = config_file->read_bool_entry(ifname, "Enabled"sv, true);
+            config.dhcp_enabled = config_file->read_bool_entry(ifname, "DHCP"sv, false);
             if (!config.dhcp_enabled) {
-                config.ipv4_address = config_file->read_entry(ifname, "IPv4Address", "0.0.0.0");
-                config.ipv4_netmask = config_file->read_entry(ifname, "IPv4Netmask", "0.0.0.0");
-                config.ipv4_gateway = config_file->read_entry(ifname, "IPv4Gateway", "0.0.0.0");
+                config.ipv4_address = config_file->read_entry(ifname, "IPv4Address"sv, "0.0.0.0"sv);
+                config.ipv4_netmask = config_file->read_entry(ifname, "IPv4Netmask"sv, "0.0.0.0"sv);
+                config.ipv4_gateway = config_file->read_entry(ifname, "IPv4Gateway"sv, "0.0.0.0"sv);
             }
         }
         if (config.enabled) {
@@ -86,8 +86,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
         } else {
             // FIXME: Propagate errors
             dbgln("Disabling interface {}", ifname);
-            MUST(Core::command("route", { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
-            MUST(Core::command("ifconfig", { "-a", ifname.characters(), "-i", "0.0.0.0", "-m", "0.0.0.0" }, {}));
+            MUST(Core::command("route"sv, { "del", "-n", "0.0.0.0", "-m", "0.0.0.0", "-i", ifname }, {}));
+            MUST(Core::command("ifconfig"sv, { "-a", ifname.characters(), "-i", "0.0.0.0", "-m", "0.0.0.0" }, {}));
         }
     });
 
