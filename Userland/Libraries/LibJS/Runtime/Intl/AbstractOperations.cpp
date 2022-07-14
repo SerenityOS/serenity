@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -425,13 +425,15 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
         // b. Assert: Type(foundLocaleData) is Record.
         // c. Let keyLocaleData be foundLocaleData.[[<key>]].
         // d. Assert: Type(keyLocaleData) is List.
-        auto key_locale_data = Unicode::get_keywords_for_locale(found_locale, key);
+        auto key_locale_data = Unicode::get_available_keyword_values(key);
 
         // e. Let value be keyLocaleData[0].
         // f. Assert: Type(value) is either String or Null.
+        // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
+        //       alphabetically, so we get the locale's preferred value from LibUnicode.
         Optional<String> value;
-        if (!key_locale_data.is_empty())
-            value = key_locale_data[0];
+        if (auto preference = Unicode::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
+            value = *preference;
 
         // g. Let supportedExtensionAddition be "".
         Optional<Unicode::Keyword> supported_extension_addition {};
