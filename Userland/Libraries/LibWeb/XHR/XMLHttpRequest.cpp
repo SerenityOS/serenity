@@ -26,6 +26,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Origin.h>
@@ -117,8 +118,11 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        // FIXME: Implement this once we have 'Blob'.
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "XHR Blob type not implemented" };
+        auto blob_part_or_error = try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type());
+        if (blob_part_or_error.is_error())
+            return DOM::UnknownError::create("Out of memory."sv);
+        auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { blob_part_or_error.release_value() }));
+        m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(global_object)));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
