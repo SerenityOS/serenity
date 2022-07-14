@@ -14,6 +14,7 @@
 __BEGIN_DECLS
 
 #define SEM_FLAG_PROCESS_SHARED (1 << 0)
+#define SEM_FLAG_NAMED (1 << 1)
 typedef struct {
     uint32_t magic;
     uint32_t value;
