@@ -351,19 +351,18 @@ void Terminal::XTERM_WM(Parameters params)
         return;
     switch (params[0]) {
     case 22: {
+#ifndef KERNEL
         if (params.size() > 1 && params[1] == 1) {
             dbgln("FIXME: we don't support icon titles");
             return;
         }
         dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
-#ifdef KERNEL
-        (void)m_title_stack.try_append(m_current_window_title.release_nonnull()); // FIXME: Propagate Error
-#else
         (void)m_title_stack.try_append(move(m_current_window_title));
 #endif
         break;
     }
     case 23: {
+#ifndef KERNEL
         if (params.size() > 1 && params[1] == 1)
             return;
         if (m_title_stack.is_empty()) {
@@ -372,9 +371,6 @@ void Terminal::XTERM_WM(Parameters params)
         }
         m_current_window_title = m_title_stack.take_last();
         dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
-#ifdef KERNEL
-        m_client.set_window_title(m_current_window_title->view());
-#else
         m_client.set_window_title(m_current_window_title);
 #endif
         break;
@@ -1267,10 +1263,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         } else {
             // FIXME: the split breaks titles containing semicolons.
             // Should we expose the raw OSC string from the parser? Or join by semicolon?
-#ifdef KERNEL
-            m_current_window_title = Kernel::KString::try_create(stringview_ify(1)).release_value_but_fixme_should_propagate_errors();
-            m_client.set_window_title(m_current_window_title->view());
-#else
+#ifndef KERNEL
             m_current_window_title = stringview_ify(1).to_string();
             m_client.set_window_title(m_current_window_title);
 #endif

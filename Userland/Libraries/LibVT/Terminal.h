@@ -435,10 +435,7 @@ protected:
     Attribute m_current_attribute;
     Attribute m_saved_attribute;
 
-#ifdef KERNEL
-    OwnPtr<Kernel::KString> m_current_window_title;
-    NonnullOwnPtrVector<Kernel::KString> m_title_stack;
-#else
+#ifndef KERNEL
     String m_current_window_title;
     Vector<String> m_title_stack;
 #endif
