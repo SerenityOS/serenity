@@ -14,6 +14,7 @@
 __BEGIN_DECLS
 
 typedef struct {
+    uint32_t magic;
     uint32_t value;
 } sem_t;
 
