@@ -120,9 +120,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 3. Else if key is "collation", then
     else if (key == "collation"sv) {
         // a. Let list be ! AvailableCollations( ).
-        // FIXME: We don't yet parse any collation data, but "default" is allowed. This matches Intl.Locale.prototype.collations.
-        static constexpr auto collations = AK::Array { "default"sv };
-        list = collations.span();
+        list = Unicode::get_available_collation_types();
     }
     // 4. Else if key is "currency", then
     else if (key == "currency"sv) {
