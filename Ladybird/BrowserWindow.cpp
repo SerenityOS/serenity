@@ -1,17 +1,22 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "BrowserWindow.h"
+#include "Settings.h"
+#include "SettingsDialog.h"
 #include "WebView.h"
 #include <LibCore/EventLoop.h>
 #include <QAction>
+#include <QDialog>
 #include <QPlainTextEdit>
 
 extern String s_serenity_resource_root;
+extern Browser::Settings* s_settings;
 
 BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     : m_event_loop(event_loop)
@@ -29,6 +34,10 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     auto* new_tab_action = new QAction("New &Tab");
     new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     menu->addAction(new_tab_action);
+
+    auto* settings_action = new QAction("&Settings");
+    settings_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    menu->addAction(settings_action);
 
     auto* close_current_tab_action = new QAction("Close Current Tab");
     close_current_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
@@ -163,6 +172,9 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
+    QObject::connect(settings_action, &QAction::triggered, this, [this] {
+        new SettingsDialog(this);
+    });
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
