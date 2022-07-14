@@ -35,13 +35,6 @@ static float get_pixel_size(FormattingState const& state, Box const& box, Option
     return length_percentage->resolved(box, inner_main_size).to_px(box);
 }
 
-static bool is_undefined_or_auto(Optional<CSS::LengthPercentage> const& length_percentage)
-{
-    if (!length_percentage.has_value())
-        return true;
-    return length_percentage->is_length() && length_percentage->length().is_auto();
-}
-
 FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& flex_container, FormattingContext* parent)
     : FormattingContext(Type::Flex, state, flex_container, parent)
     , m_flex_container_state(m_state.get_mutable(flex_container))
@@ -306,14 +299,14 @@ float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
 
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
 {
-    auto value = is_row_layout() ? box.computed_values().min_width() : box.computed_values().min_height();
-    return !is_undefined_or_auto(value);
+    auto const& value = is_row_layout() ? box.computed_values().min_width() : box.computed_values().min_height();
+    return !value.is_auto();
 }
 
 bool FlexFormattingContext::has_cross_min_size(Box const& box) const
 {
-    auto value = is_row_layout() ? box.computed_values().min_height() : box.computed_values().min_width();
-    return !is_undefined_or_auto(value);
+    auto const& value = is_row_layout() ? box.computed_values().min_height() : box.computed_values().min_width();
+    return !value.is_auto();
 }
 
 bool FlexFormattingContext::has_definite_cross_size(Box const& box) const
@@ -344,16 +337,14 @@ float FlexFormattingContext::specified_cross_min_size(Box const& box) const
 
 bool FlexFormattingContext::has_main_max_size(Box const& box) const
 {
-    return is_row_layout()
-        ? !is_undefined_or_auto(box.computed_values().max_width())
-        : !is_undefined_or_auto(box.computed_values().max_height());
+    auto const& value = is_row_layout() ? box.computed_values().max_width() : box.computed_values().max_height();
+    return !value.is_auto();
 }
 
 bool FlexFormattingContext::has_cross_max_size(Box const& box) const
 {
-    return is_row_layout()
-        ? !is_undefined_or_auto(box.computed_values().max_height())
-        : !is_undefined_or_auto(box.computed_values().max_width());
+    auto const& value = !is_row_layout() ? box.computed_values().max_width() : box.computed_values().max_height();
+    return !value.is_auto();
 }
 
 float FlexFormattingContext::specified_main_max_size(Box const& box) const
