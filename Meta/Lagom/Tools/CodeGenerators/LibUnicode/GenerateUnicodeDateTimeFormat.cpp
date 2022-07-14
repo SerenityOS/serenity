@@ -2089,21 +2089,32 @@ static CalendarData const* find_calendar_data(StringView locale, StringView cale
     if (!locale_value.has_value())
         return nullptr;
 
-    auto calendar_keyword = keyword_ca_from_string(calendar);
-    if (!calendar_keyword.has_value())
-        return {};
-
-    auto calendar_value = keyword_to_calendar(*calendar_keyword);
-    if (!calendar_value.has_value())
-        return {};
-
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    size_t calendar_index = to_underlying(*calendar_value);
-
     auto const& calendar_indices = s_locale_calendars.at(locale_index);
-    calendar_index = calendar_indices[calendar_index];
 
-    return &s_calendars[calendar_index];
+    auto lookup_calendar = [&](auto calendar_name) -> CalendarData const* {
+        auto calendar_keyword = keyword_ca_from_string(calendar_name);
+        if (!calendar_keyword.has_value())
+            return nullptr;
+
+        auto calendar_value = keyword_to_calendar(*calendar_keyword);
+        if (!calendar_value.has_value())
+            return nullptr;
+
+        size_t calendar_index = to_underlying(*calendar_value);
+        calendar_index = calendar_indices[calendar_index];
+
+        return &s_calendars[calendar_index];
+    };
+
+    if (auto const* calendar_data = lookup_calendar(calendar))
+        return calendar_data;
+
+    auto default_calendar = get_preferred_keyword_value_for_locale(locale, "ca"sv);
+    if (!default_calendar.has_value())
+        return nullptr;
+
+    return lookup_calendar(*default_calendar);
 }
 
 Optional<CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar)
