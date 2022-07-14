@@ -23,7 +23,7 @@ public:
 
     WebView& view() { return *m_view; }
 
-    void navigate(QString const&);
+    void navigate(QString);
 
     void debug_request(String const& request, String const& argument);
 
