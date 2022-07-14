@@ -465,6 +465,15 @@ static ErrorOr<void> create_tmp_coredump_directory()
     return {};
 }
 
+static ErrorOr<void> create_tmp_semaphore_directory()
+{
+    dbgln("Creating /tmp/semaphore directory");
+    auto old_umask = umask(0);
+    TRY(Core::System::mkdir("/tmp/semaphore"sv, 0777));
+    umask(old_umask);
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool user = false;
@@ -481,6 +490,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!user) {
         TRY(create_tmp_coredump_directory());
+        TRY(create_tmp_semaphore_directory());
         TRY(determine_system_mode());
     }
 
