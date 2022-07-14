@@ -247,7 +247,7 @@ static Optional<String> format_time_zone_offset(StringView locale, CalendarPatte
     if (!formats.has_value())
         return {};
 
-    auto number_system = get_default_number_system(locale);
+    auto number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
     if (!number_system.has_value())
         return {};
 
