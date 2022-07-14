@@ -362,6 +362,13 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
             ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/SyscallEntry.cpp
         )
     endif()
+
+    if ("${SERENITY_ARCH}" STREQUAL "i686")
+        set(KERNEL_SOURCES
+            ${KERNEL_SOURCES}
+            ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Atomics.cpp
+        )
+    endif()
 endif()
 
 set(AK_SOURCES
