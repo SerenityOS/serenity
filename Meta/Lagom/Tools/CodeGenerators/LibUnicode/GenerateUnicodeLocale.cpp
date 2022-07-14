@@ -1157,6 +1157,32 @@ struct TextLayout {
     generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value);
     generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
 
+    generator.append(R"~~~(
+Span<StringView const> get_available_keyword_values(StringView key)
+{
+    auto key_value = key_from_string(key);
+    if (!key_value.has_value())
+        return {};
+
+    switch (*key_value) {
+    case Key::Ca:
+        return get_available_calendars();
+    case Key::Co:
+        return get_available_collation_types();
+    case Key::Hc:
+        return get_available_hour_cycles();
+    case Key::Kf:
+        return get_available_collation_case_orderings();
+    case Key::Kn:
+        return get_available_collation_numeric_orderings();
+    case Key::Nu:
+        return get_available_number_systems();
+    }
+
+    VERIFY_NOT_REACHED();
+}
+)~~~");
+
     locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
     locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
     locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
