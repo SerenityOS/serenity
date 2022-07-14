@@ -54,6 +54,7 @@ set(SOURCES
     WebView.cpp
     History.cpp
     Settings.cpp
+    SettingsDialog.cpp
     Tab.cpp
 )
 
