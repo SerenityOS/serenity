@@ -22,13 +22,6 @@ Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(S
 Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
 Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
 
-Optional<StringView> get_default_number_system(StringView locale)
-{
-    if (auto systems = get_keywords_for_locale(locale, "nu"sv); !systems.is_empty())
-        return systems[0];
-    return {};
-}
-
 Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(StringView)
 {
     // Fall back to "latn" digits when Unicode data generation is disabled.
