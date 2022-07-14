@@ -40,13 +40,8 @@ int sem_unlink(char const*)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_init.html
-int sem_init(sem_t* sem, int shared, unsigned int value)
+int sem_init(sem_t* sem, int process_shared, unsigned int value)
 {
-    if (shared) {
-        errno = ENOSYS;
-        return -1;
-    }
-
     if (value > SEM_VALUE_MAX) {
         errno = EINVAL;
         return -1;
@@ -54,6 +49,7 @@ int sem_init(sem_t* sem, int shared, unsigned int value)
 
     sem->magic = SEM_MAGIC;
     sem->value = value;
+    sem->flags = process_shared ? SEM_FLAG_PROCESS_SHARED : 0;
     return 0;
 }
 
@@ -102,7 +98,7 @@ int sem_post(sem_t* sem)
     // Check if another sem_post() call has handled it already.
     if (!(value & POST_WAKES)) [[likely]]
         return 0;
-    int rc = futex_wake(&sem->value, 1, false);
+    int rc = futex_wake(&sem->value, 1, sem->flags & SEM_FLAG_PROCESS_SHARED);
     VERIFY(rc >= 0);
     return 0;
 }
@@ -153,6 +149,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
 
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
     bool responsible_for_waking = false;
+    bool process_shared = sem->flags & SEM_FLAG_PROCESS_SHARED;
 
     while (true) {
         u32 count = value & ~POST_WAKES;
@@ -179,7 +176,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
                 // Re-evaluate.
                 continue;
             if (going_to_wake) [[unlikely]] {
-                int rc = futex_wake(&sem->value, count - 1, false);
+                int rc = futex_wake(&sem->value, count - 1, process_shared);
                 VERIFY(rc >= 0);
             }
             return 0;
@@ -196,7 +193,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
         }
         // At this point, we're committed to sleeping.
         responsible_for_waking = true;
-        futex_wait(&sem->value, value, abstime, CLOCK_REALTIME, false);
+        futex_wait(&sem->value, value, abstime, CLOCK_REALTIME, process_shared);
         // This is the state we will probably see upon being waked:
         value = 1;
     }
