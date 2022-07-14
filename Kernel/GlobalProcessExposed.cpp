@@ -582,23 +582,20 @@ private:
             return {};
         };
 
-        SpinlockLocker lock(g_scheduler_lock);
         {
-            {
-                auto array = TRY(json.add_array("processes"sv));
-                TRY(build_process(array, *Scheduler::colonel()));
-                TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
-                    for (auto& process : processes)
-                        TRY(build_process(array, process));
-                    return {};
-                }));
-                TRY(array.finish());
-            }
-
-            auto total_time_scheduled = Scheduler::get_total_time_scheduled();
-            TRY(json.add("total_time"sv, total_time_scheduled.total));
-            TRY(json.add("total_time_kernel"sv, total_time_scheduled.total_kernel));
+            auto array = TRY(json.add_array("processes"sv));
+            TRY(build_process(array, *Scheduler::colonel()));
+            TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
+                for (auto& process : processes)
+                    TRY(build_process(array, process));
+                return {};
+            }));
+            TRY(array.finish());
         }
+
+        auto total_time_scheduled = Scheduler::get_total_time_scheduled();
+        TRY(json.add("total_time"sv, total_time_scheduled.total));
+        TRY(json.add("total_time_kernel"sv, total_time_scheduled.total_kernel));
         TRY(json.finish());
         return {};
     }
