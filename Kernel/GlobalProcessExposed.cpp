@@ -450,8 +450,6 @@ private:
         TRY(json.add("user_physical_available"sv, system_memory.user_physical_pages - system_memory.user_physical_pages_used));
         TRY(json.add("user_physical_committed"sv, system_memory.user_physical_pages_committed));
         TRY(json.add("user_physical_uncommitted"sv, system_memory.user_physical_pages_uncommitted));
-        TRY(json.add("super_physical_allocated"sv, system_memory.super_physical_pages_used));
-        TRY(json.add("super_physical_available"sv, system_memory.super_physical_pages - system_memory.super_physical_pages_used));
         TRY(json.add("kmalloc_call_count"sv, stats.kmalloc_call_count));
         TRY(json.add("kfree_call_count"sv, stats.kfree_call_count));
         TRY(json.finish());

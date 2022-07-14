@@ -62,7 +62,6 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
 
     m_user_physical_pages_label = build_widgets_for_label("Physical memory:");
     m_user_physical_pages_committed_label = build_widgets_for_label("Committed memory:");
-    m_supervisor_physical_pages_label = build_widgets_for_label("Supervisor physical:");
     m_kmalloc_space_label = build_widgets_for_label("Kernel heap:");
     m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:");
     m_kfree_count_label = build_widgets_for_label("Calls kfree:");
@@ -120,23 +119,19 @@ void MemoryStatsWidget::refresh()
     u64 user_physical_available = json.get("user_physical_available"sv).to_u64();
     u64 user_physical_committed = json.get("user_physical_committed"sv).to_u64();
     u64 user_physical_uncommitted = json.get("user_physical_uncommitted"sv).to_u64();
-    u64 super_physical_alloc = json.get("super_physical_allocated"sv).to_u64();
-    u64 super_physical_free = json.get("super_physical_available"sv).to_u64();
     u32 kmalloc_call_count = json.get("kmalloc_call_count"sv).to_u32();
     u32 kfree_call_count = json.get("kfree_call_count"sv).to_u32();
 
     u64 kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
     u64 user_physical_pages_total = user_physical_allocated + user_physical_available;
-    u64 supervisor_pages_total = super_physical_alloc + super_physical_free;
 
-    u64 physical_pages_total = user_physical_pages_total + supervisor_pages_total;
-    u64 physical_pages_in_use = user_physical_allocated + super_physical_alloc;
+    u64 physical_pages_total = user_physical_pages_total;
+    u64 physical_pages_in_use = user_physical_allocated;
     u64 total_userphysical_and_swappable_pages = user_physical_allocated + user_physical_committed + user_physical_uncommitted;
 
     m_kmalloc_space_label->set_text(String::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
     m_user_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
     m_user_physical_pages_committed_label->set_text(String::formatted("{}", human_readable_size(page_count_to_bytes(user_physical_committed))));
-    m_supervisor_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(super_physical_alloc)), human_readable_size(page_count_to_bytes(supervisor_pages_total))));
     m_kmalloc_count_label->set_text(String::formatted("{}", kmalloc_call_count));
     m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count));
     m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
