@@ -207,6 +207,21 @@ describe("style=decimal", () => {
         expect(en.format(12000000)).toBe("12 million");
         expect(en.format(12900000)).toBe("13 million");
 
+        const enFullwide = new Intl.NumberFormat("en", {
+            notation: "compact",
+            compactDisplay: "long",
+            numberingSystem: "fullwide",
+        });
+        expect(enFullwide.format(1)).toBe("１");
+        expect(enFullwide.format(1200)).toBe("１.２ thousand");
+        expect(enFullwide.format(1290)).toBe("１.３ thousand");
+        expect(enFullwide.format(12000)).toBe("１２ thousand");
+        expect(enFullwide.format(12900)).toBe("１３ thousand");
+        expect(enFullwide.format(1200000)).toBe("１.２ million");
+        expect(enFullwide.format(1290000)).toBe("１.３ million");
+        expect(enFullwide.format(12000000)).toBe("１２ million");
+        expect(enFullwide.format(12900000)).toBe("１３ million");
+
         const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "long" });
         expect(ar.format(1)).toBe("\u0661");
         expect(ar.format(1200)).toBe("\u0661\u066b\u0662 ألف");
@@ -578,6 +593,19 @@ describe("style=percent", () => {
         expect(en.format(0.12)).toBe("12%");
         expect(en.format(0.123)).toBe("12%");
         expect(en.format(0.1234)).toBe("12%");
+
+        const enFullwide = new Intl.NumberFormat("en", {
+            style: "percent",
+            notation: "compact",
+            numberingSystem: "fullwide",
+        });
+        expect(enFullwide.format(0.01)).toBe("１%");
+        expect(enFullwide.format(0.012)).toBe("１.２%");
+        expect(enFullwide.format(0.0123)).toBe("１.２%");
+        expect(enFullwide.format(0.0129)).toBe("１.３%");
+        expect(enFullwide.format(0.12)).toBe("１２%");
+        expect(enFullwide.format(0.123)).toBe("１２%");
+        expect(enFullwide.format(0.1234)).toBe("１２%");
 
         const ar = new Intl.NumberFormat("ar", { style: "percent", notation: "compact" });
         expect(ar.format(0.01)).toBe("\u0661\u066a\u061c");

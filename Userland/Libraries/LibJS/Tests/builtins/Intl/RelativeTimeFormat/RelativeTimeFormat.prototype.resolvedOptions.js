@@ -36,12 +36,12 @@ describe("correct behavior", () => {
     });
 
     test("numberingSystem option limited to known 'nu' values", () => {
-        ["latn", "arab"].forEach(numberingSystem => {
+        ["latn", "foo"].forEach(numberingSystem => {
             const en = new Intl.RelativeTimeFormat("en", { numberingSystem: numberingSystem });
             expect(en.resolvedOptions().numberingSystem).toBe("latn");
         });
 
-        ["latn", "arab"].forEach(numberingSystem => {
+        ["latn", "foo"].forEach(numberingSystem => {
             const en = new Intl.RelativeTimeFormat(`en-u-nu-${numberingSystem}`);
             expect(en.resolvedOptions().numberingSystem).toBe("latn");
         });
