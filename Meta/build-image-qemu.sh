@@ -31,8 +31,7 @@ if [ "$(id -u)" != 0 ]; then
     if [ -x "$FUSE2FS_PATH" ] && $FUSE2FS_PATH --help 2>&1 |grep fakeroot > /dev/null; then
         USE_FUSE2FS=1
     else
-        ${SUDO} -E -- "$0" "$@" || die "this script needs to run as root"
-        exit 0
+        exec ${SUDO} -E -- "$0" "$@" || die "this script needs to run as root"
     fi
 else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
