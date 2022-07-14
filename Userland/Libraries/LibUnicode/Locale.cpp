@@ -766,6 +766,7 @@ StringView style_to_string(Style style)
     }
 }
 
+Span<StringView const> __attribute__((weak)) get_available_keyword_values(StringView) { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_calendars() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_collation_case_orderings() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_collation_numeric_orderings() { return {}; }

@@ -145,6 +145,7 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Span<StringView const> get_available_keyword_values(StringView key);
 Span<StringView const> get_available_calendars();
 Span<StringView const> get_available_collation_case_orderings();
 Span<StringView const> get_available_collation_numeric_orderings();
