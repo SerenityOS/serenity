@@ -310,7 +310,8 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderLis
     return mime_type;
 }
 
-static XMLHttpRequest::BodyWithType safely_extract_body(XMLHttpRequestBodyInit& body)
+// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+static XMLHttpRequest::BodyWithType extract_body(XMLHttpRequestBodyInit& body)
 {
     if (body.has<NonnullRefPtr<URL::URLSearchParams>>()) {
         return {
@@ -464,7 +465,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? safely_extract_body(body.value()) : XMLHttpRequest::BodyWithType {};
+    auto body_with_type = body.has_value() ? extract_body(body.value()) : XMLHttpRequest::BodyWithType {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
