@@ -27,7 +27,7 @@ index d285ed9..10fbd7f 100644
  
 diff --git a/src/unix/serenity-core.c b/src/unix/serenity-core.c
 new file mode 100644
-index 0000000..4438d15
+index 0000000..5c34b75
 --- /dev/null
 +++ b/src/unix/serenity-core.c
 @@ -0,0 +1,112 @@
@@ -85,12 +85,12 @@ index 0000000..4438d15
 +}
 +
 +uint64_t uv_get_free_memory(void) {
-+  return uv__read_proc_memstat("user_physical_available\":") * PAGE_SIZE;
++  return uv__read_proc_memstat("physical_available\":") * PAGE_SIZE;
 +}
 +
 +
 +uint64_t uv_get_total_memory(void) {
-+  return (uv__read_proc_memstat("user_physical_allocated\":") + uv__read_proc_memstat("user_physical_available\":")) * PAGE_SIZE;
++  return (uv__read_proc_memstat("physical_allocated\":") + uv__read_proc_memstat("physical_available\":")) * PAGE_SIZE;
 +}
 +
 +void uv_loadavg(double avg[3]) {
