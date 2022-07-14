@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <QBoxLayout>
 #include <QDialog>
+#include <QFormLayout>
+#include <QLineEdit>
 #include <QMainWindow>
+#include <QPushButton>
 
 #pragma once
 
@@ -15,7 +17,13 @@ class SettingsDialog : public QDialog {
 public:
     explicit SettingsDialog(QMainWindow* window);
 
+    void save();
+
+    virtual void closeEvent(QCloseEvent*) override;
+
 private:
-    QBoxLayout* m_layout;
+    QFormLayout* m_layout;
+    QPushButton* m_ok_button { nullptr };
+    QLineEdit* m_homepage { nullptr };
     QMainWindow* m_window { nullptr };
 };
