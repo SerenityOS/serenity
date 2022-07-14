@@ -26,7 +26,7 @@ if (ENABLE_UNDEFINED_SANITIZER)
 endif()
 
 # pthread requires thread local storage, which DynamicLoader does not have.
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/pthread\\.cpp")
+list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
