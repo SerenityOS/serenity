@@ -19,10 +19,10 @@ constexpr void const* bitap_bitwise(void const* haystack, size_t haystack_length
 {
     VERIFY(needle_length < 32);
 
-    u64 lookup = 0xfffffffe;
+    u32 lookup = 0xfffffffe;
 
     constexpr size_t mask_length = (size_t)((u8)-1) + 1;
-    u64 needle_mask[mask_length];
+    u32 needle_mask[mask_length];
 
     for (size_t i = 0; i < mask_length; ++i)
         needle_mask[i] = 0xffffffff;

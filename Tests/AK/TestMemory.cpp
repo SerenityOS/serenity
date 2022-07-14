@@ -27,6 +27,13 @@ TEST_CASE(bitap)
     EXPECT_EQ(result_1, &haystack[2]);
     EXPECT_EQ(result_2, &haystack[4]);
     EXPECT_EQ(result_3, nullptr);
+
+    auto haystack_string = "Main function must return c_int\n"sv;
+    auto needle_string = "Main function must return c_int"sv;
+
+    auto result = AK::Detail::bitap_bitwise(haystack_string.characters_without_null_termination(), haystack_string.length(), needle_string.characters_without_null_termination(), needle_string.length());
+
+    EXPECT_NE(result, nullptr);
 }
 
 TEST_CASE(kmp_one_chunk)
