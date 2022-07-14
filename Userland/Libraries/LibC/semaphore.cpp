@@ -12,6 +12,8 @@
 #include <semaphore.h>
 #include <serenity.h>
 
+static constexpr u32 SEM_MAGIC = 0x78951230;
+
 // Whether sem_wait() or sem_post() is responsible for waking any sleeping
 // threads.
 static constexpr u32 POST_WAKES = 1 << 31;
@@ -50,19 +52,31 @@ int sem_init(sem_t* sem, int shared, unsigned int value)
         return -1;
     }
 
+    sem->magic = SEM_MAGIC;
     sem->value = value;
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_destroy.html
-int sem_destroy(sem_t*)
+int sem_destroy(sem_t* sem)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    sem->magic = 0;
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_getvalue.html
 int sem_getvalue(sem_t* sem, int* sval)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
     *sval = value & ~POST_WAKES;
     return 0;
@@ -71,6 +85,11 @@ int sem_getvalue(sem_t* sem, int* sval)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_post.html
 int sem_post(sem_t* sem)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
     u32 value = AK::atomic_fetch_add(&sem->value, 1u, AK::memory_order_release);
     // Fast path: no need to wake.
     if (!(value & POST_WAKES)) [[likely]]
@@ -91,6 +110,11 @@ int sem_post(sem_t* sem)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_trywait.html
 int sem_trywait(sem_t* sem)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
     u32 count = value & ~POST_WAKES;
     if (count == 0) {
@@ -111,12 +135,22 @@ int sem_trywait(sem_t* sem)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_wait.html
 int sem_wait(sem_t* sem)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return sem_timedwait(sem, nullptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_timedwait.html
 int sem_timedwait(sem_t* sem, const struct timespec* abstime)
 {
+    if (sem->magic != SEM_MAGIC) {
+        errno = EINVAL;
+        return -1;
+    }
+
     u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
     bool responsible_for_waking = false;
 
