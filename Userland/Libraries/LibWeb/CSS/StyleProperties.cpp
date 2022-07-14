@@ -261,7 +261,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         auto& transformation_style_value = it.as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
-        Vector<Variant<CSS::LengthPercentage, float>> values;
+        Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value.is_length()) {
                 values.append({ transformation_value.to_length() });
@@ -270,7 +270,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             } else if (transformation_value.is_numeric()) {
                 values.append({ transformation_value.to_number() });
             } else if (transformation_value.is_angle()) {
-                values.append({ transformation_value.as_angle().angle().to_degrees() });
+                values.append({ transformation_value.as_angle().angle() });
             } else {
                 dbgln("FIXME: Unsupported value in transform!");
             }

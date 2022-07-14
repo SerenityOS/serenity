@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/ExtraMathConstants.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/AffineTransform.h>
@@ -169,10 +170,13 @@ void StackingContext::paint_internal(PaintContext& context) const
 Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformation const& transformation) const
 {
     auto count = transformation.values.size();
-    auto value = [this, transformation](size_t index, CSS::Length& reference) -> float {
+    auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
-            [this, reference](CSS::LengthPercentage const& value) {
-                return value.resolved(m_box, reference).to_px(m_box);
+            [this, reference_length](CSS::LengthPercentage const& value) {
+                return value.resolved(m_box, reference_length.value()).to_px(m_box);
+            },
+            [](CSS::Angle const& value) {
+                return value.to_degrees() * static_cast<float>(M_DEG2RAD);
             },
             [](float value) {
                 return value;
@@ -186,8 +190,8 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     switch (transformation.function) {
     case CSS::TransformFunction::Matrix:
         if (count == 6)
-            return Gfx::FloatMatrix4x4(value(0, width), value(2, width), 0, value(4, width),
-                value(1, height), value(3, height), 0, value(5, height),
+            return Gfx::FloatMatrix4x4(value(0), value(2), 0, value(4),
+                value(1), value(3), 0, value(5),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
@@ -219,19 +223,19 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
         break;
     case CSS::TransformFunction::Scale:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
-                0, value(0, height), 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         if (count == 2)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
-                0, value(0, height), 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::ScaleX:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
@@ -239,7 +243,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     case CSS::TransformFunction::ScaleY:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, value(0, height), 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
