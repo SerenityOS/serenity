@@ -47,6 +47,8 @@ public:
     JS::Promise* text();
     JS::Promise* array_buffer();
 
+    virtual JS::Object* create_wrapper(JS::GlobalObject&);
+
 private:
     Blob() = default;
     static DOM::ExceptionOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);

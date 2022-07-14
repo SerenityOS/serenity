@@ -194,4 +194,9 @@ JS::Promise* Blob::array_buffer()
     return promise;
 }
 
+JS::Object* Blob::create_wrapper(JS::GlobalObject& global_object)
+{
+    return wrap(global_object, *this);
+}
+
 }
