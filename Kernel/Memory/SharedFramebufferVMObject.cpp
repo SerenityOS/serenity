@@ -14,7 +14,7 @@ ErrorOr<NonnullRefPtr<SharedFramebufferVMObject>> SharedFramebufferVMObject::try
 {
     auto real_framebuffer_vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
-    auto committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
+    auto committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     auto vm_object = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedFramebufferVMObject(move(new_physical_pages), move(committed_pages), real_framebuffer_vmobject)));
     TRY(vm_object->create_fake_writes_framebuffer_vm_object());
     TRY(vm_object->create_real_writes_framebuffer_vm_object());
@@ -25,7 +25,7 @@ ErrorOr<NonnullRefPtr<SharedFramebufferVMObject>> SharedFramebufferVMObject::try
 {
     auto real_framebuffer_vmobject = TRY(AnonymousVMObject::try_create_with_size(size, AllocationStrategy::AllocateNow));
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
-    auto committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
+    auto committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     auto vm_object = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedFramebufferVMObject(move(new_physical_pages), move(committed_pages), real_framebuffer_vmobject)));
     TRY(vm_object->create_fake_writes_framebuffer_vm_object());
     TRY(vm_object->create_real_writes_framebuffer_vm_object());

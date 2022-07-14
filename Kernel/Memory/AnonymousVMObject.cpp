@@ -42,7 +42,7 @@ ErrorOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
-    auto committed_pages = TRY(MM.commit_user_physical_pages(new_cow_pages_needed));
+    auto committed_pages = TRY(MM.commit_physical_pages(new_cow_pages_needed));
 
     // Create or replace the committed cow pages. When cloning a previously
     // cloned vmobject, we want to essentially "fork", leaving us and the
@@ -79,7 +79,7 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_siz
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
+        committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
@@ -89,7 +89,7 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_siz
 
 ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
 {
-    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_user_physical_pages(size));
+    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_physical_pages(size));
 
     auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalPage>>::try_create(contiguous_physical_pages.span()));
 
@@ -100,7 +100,7 @@ ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeabl
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = TRY(MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
+        committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
     }
 
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
@@ -257,7 +257,7 @@ ErrorOr<void> AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged
         return {};
     }
 
-    m_unused_committed_pages = TRY(MM.commit_user_physical_pages(committed_pages_needed));
+    m_unused_committed_pages = TRY(MM.commit_physical_pages(committed_pages_needed));
 
     for (auto& page : m_physical_pages) {
         if (page->is_shared_zero_page())
@@ -351,7 +351,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
         page = m_shared_committed_cow_pages->take_one();
     } else {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page and it's time to COW!");
-        auto page_or_error = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+        auto page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::No);
         if (page_or_error.is_error()) {
             dmesgln("MM: handle_cow_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
