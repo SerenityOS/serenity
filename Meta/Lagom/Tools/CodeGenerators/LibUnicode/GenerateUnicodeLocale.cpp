@@ -1547,27 +1547,8 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, locale_data.character_orders);
 
     generator.append(R"~~~(
-Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
+static Span<@string_index_type@ const> find_keyword_indices(StringView locale, StringView key)
 {
-    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
-    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
-    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
-    if (key == "hc"sv) {
-        auto hour_cycles = get_locale_hour_cycles(locale);
-
-        Vector<StringView> values;
-        values.ensure_capacity(hour_cycles.size());
-
-        for (auto hour_cycle : hour_cycles)
-            values.unchecked_append(hour_cycle_to_string(hour_cycle));
-
-        return values;
-    }
-
-    // FIXME: Generate locale-preferred collation data when available in the CLDR.
-    if (key == "co"sv)
-        return Vector<StringView> { get_available_collation_types() };
-
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
         return {};
@@ -1596,7 +1577,60 @@ Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
         VERIFY_NOT_REACHED();
     }
 
-    auto keyword_indices = s_keyword_lists.at(keywords_index);
+    return s_keyword_lists.at(keywords_index);
+}
+
+Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key)
+{
+    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
+    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
+    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
+    if (key == "hc"sv) {
+        auto hour_cycles = get_locale_hour_cycles(locale);
+        if (hour_cycles.is_empty())
+            return {};
+
+        return hour_cycle_to_string(hour_cycles[0]);
+    }
+
+    // FIXME: Generate locale-preferred collation data when available in the CLDR.
+    if (key == "co"sv) {
+        auto collations = get_available_collation_types();
+        if (collations.is_empty())
+            return {};
+
+        return collations[0];
+    }
+
+    auto keyword_indices = find_keyword_indices(locale, key);
+    if (keyword_indices.is_empty())
+        return {};
+
+    return s_string_list[keyword_indices[0]];
+}
+
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
+{
+    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
+    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
+    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
+    if (key == "hc"sv) {
+        auto hour_cycles = get_locale_hour_cycles(locale);
+
+        Vector<StringView> values;
+        values.ensure_capacity(hour_cycles.size());
+
+        for (auto hour_cycle : hour_cycles)
+            values.unchecked_append(hour_cycle_to_string(hour_cycle));
+
+        return values;
+    }
+
+    // FIXME: Generate locale-preferred collation data when available in the CLDR.
+    if (key == "co"sv)
+        return Vector<StringView> { get_available_collation_types() };
+
+    auto keyword_indices = find_keyword_indices(locale, key);
 
     Vector<StringView> keywords;
     keywords.ensure_capacity(keyword_indices.size());
