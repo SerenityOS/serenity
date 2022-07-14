@@ -13,9 +13,11 @@
 
 __BEGIN_DECLS
 
+#define SEM_FLAG_PROCESS_SHARED (1 << 0)
 typedef struct {
     uint32_t magic;
     uint32_t value;
+    uint8_t flags;
 } sem_t;
 
 int sem_close(sem_t*);
