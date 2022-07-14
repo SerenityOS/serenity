@@ -175,8 +175,6 @@ public:
 
     NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
     ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
-    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_supervisor_physical_page();
-    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_supervisor_physical_pages(size_t size);
     ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_user_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
@@ -196,8 +194,6 @@ public:
         PhysicalSize user_physical_pages_used { 0 };
         PhysicalSize user_physical_pages_committed { 0 };
         PhysicalSize user_physical_pages_uncommitted { 0 };
-        PhysicalSize super_physical_pages { 0 };
-        PhysicalSize super_physical_pages_used { 0 };
     };
 
     SystemMemoryInfo get_system_memory_info()
@@ -301,7 +297,6 @@ private:
     SystemMemoryInfo m_system_memory_info;
 
     NonnullOwnPtrVector<PhysicalRegion> m_user_physical_regions;
-    OwnPtr<PhysicalRegion> m_super_physical_region;
     OwnPtr<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
