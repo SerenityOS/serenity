@@ -313,17 +313,17 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderLis
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 static XMLHttpRequest::BodyWithType extract_body(XMLHttpRequestBodyInit const& body)
 {
-    if (body.has<NonnullRefPtr<URL::URLSearchParams>>()) {
-        return {
-            body.get<NonnullRefPtr<URL::URLSearchParams>>()->to_string().to_byte_buffer(),
-            "application/x-www-form-urlencoded;charset=UTF-8"
-        };
-    }
-    VERIFY(body.has<String>());
-    return {
-        body.get<String>().to_byte_buffer(),
-        "text/plain;charset=UTF-8"
-    };
+    XMLHttpRequest::BodyWithType body_with_type {};
+    body.visit(
+        [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) {
+            body_with_type.body = url_search_params->to_string().to_byte_buffer();
+            body_with_type.type = "application/x-www-form-urlencoded;charset=UTF-8";
+        },
+        [&](String const& string) {
+            body_with_type.body = string.to_byte_buffer();
+            body_with_type.type = "text/plain;charset=UTF-8";
+        });
+    return body_with_type;
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
