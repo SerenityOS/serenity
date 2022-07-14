@@ -7,9 +7,9 @@ makeopts=("bzip2")
 installopts=("PREFIX=${SERENITY_INSTALL_ROOT}/usr/local")
 
 build() {
-    run make CC="${CC}" "${makeopts[@]}" bzip2
+    run make CC="${CC}" AR="${AR}" RANLIB="${RANLIB}" "${makeopts[@]}" bzip2
 }
 
 install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} CC="${CC}" "${installopts[@]}" install
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} CC="${CC}" AR="${AR}" RANLIB="${RANLIB}" "${installopts[@]}" install
 }
