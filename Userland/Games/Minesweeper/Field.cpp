@@ -112,12 +112,12 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
 {
-    m_timer = add<Core::Timer>();
-    m_timer->on_timeout = [this] {
-        ++m_time_elapsed;
-        m_time_label.set_text(String::formatted("{}.{}", m_time_elapsed / 10, m_time_elapsed % 10));
-    };
-    m_timer->set_interval(100);
+    m_timer = Core::Timer::create_repeating(
+        1000, [this] {
+            ++m_time_elapsed;
+            m_time_label.set_text(String::number(m_time_elapsed));
+        },
+        this);
     m_mine_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/mine.png"sv).release_value_but_fixme_should_propagate_errors();
     m_flag_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png"sv).release_value_but_fixme_should_propagate_errors();
     m_badflag_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/badflag.png"sv).release_value_but_fixme_should_propagate_errors();
@@ -341,8 +341,10 @@ void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
         return;
     if (square.is_considering)
         return;
-    if (!m_timer->is_active())
+    if (!m_timer->is_active()) {
+        m_timer->on_timeout();
         m_timer->start();
+    }
     update();
     square.is_swept = true;
     square.button->set_visible(false);
