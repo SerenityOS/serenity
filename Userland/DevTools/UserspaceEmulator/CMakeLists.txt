@@ -23,4 +23,4 @@ set(SOURCES
 add_compile_options(-mmmx -Wno-psabi -frounding-math)
 
 serenity_bin(UserspaceEmulator)
-target_link_libraries(UserspaceEmulator LibX86 LibDebug LibCore LibPthread LibLine)
+target_link_libraries(UserspaceEmulator LibX86 LibDebug LibCore LibLine)
