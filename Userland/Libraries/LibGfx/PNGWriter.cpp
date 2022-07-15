@@ -250,7 +250,7 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         uncompressed_block_data.append(best_filter.buffer);
     }
 
-    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data);
+    auto maybe_zlib_buffer = Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best);
     if (!maybe_zlib_buffer.has_value()) {
         // FIXME: Handle errors.
         VERIFY_NOT_REACHED();
