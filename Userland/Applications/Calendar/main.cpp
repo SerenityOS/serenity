@@ -6,12 +6,12 @@
 
 #include "AddEventDialog.h"
 #include <Applications/Calendar/CalendarWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -25,6 +25,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
+
+    Config::pledge_domain("Calendar");
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/etc/timezone", "r"));

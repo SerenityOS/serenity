@@ -6,6 +6,7 @@
  */
 
 #include <AK/DateConstants.h>
+#include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Painter.h>
@@ -26,6 +27,9 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
     : m_selected_date(date_time)
     , m_mode(mode)
 {
+    auto first_day_of_week = Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv);
+    m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(first_day_of_week));
+
     set_fill_with_background_color(true);
 
     for (int i = 0; i < 7; i++) {
@@ -735,5 +739,11 @@ void Calendar::doubleclick_event(GUI::MouseEvent& event)
             }
         }
     }
+}
+
+size_t Calendar::day_of_week_index(String const& day_name)
+{
+    auto const& day_names = AK::long_day_names;
+    return AK::find_index(day_names.begin(), day_names.end(), day_name);
 }
 }
