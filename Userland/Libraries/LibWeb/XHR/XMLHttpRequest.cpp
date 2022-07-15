@@ -25,6 +25,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -311,19 +312,43 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderLis
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-static XMLHttpRequest::BodyWithType extract_body(XMLHttpRequestBodyInit const& body)
+// FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
+static Fetch::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
 {
-    XMLHttpRequest::BodyWithType body_with_type {};
-    body.visit(
+    // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
+    Fetch::Body::ReadableStreamDummy stream {};
+    // FIXME: 2. Let action be null.
+    // 3. Let source be null.
+    Fetch::Body::SourceType source {};
+    // 4. Let length be null.
+    Optional<u64> length {};
+    // 5. Let type be null.
+    Optional<ByteBuffer> type {};
+
+    // 6. Switch on object.
+    // FIXME: Still need to support Blob, BufferSource and FormData
+    body_init.visit(
         [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) {
-            body_with_type.body = url_search_params->to_string().to_byte_buffer();
-            body_with_type.type = "application/x-www-form-urlencoded;charset=UTF-8";
+            // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
+            source = url_search_params->to_string().to_byte_buffer();
+            // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
+            type = MUST(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
         },
-        [&](String const& string) {
-            body_with_type.body = string.to_byte_buffer();
-            body_with_type.type = "text/plain;charset=UTF-8";
+        [&](String const& scalar_value_string) {
+            // NOTE: AK::String is always UTF-8.
+            // Set source to the UTF-8 encoding of object.
+            source = scalar_value_string.to_byte_buffer();
+            // Set type to `text/plain;charset=UTF-8`.
+            type = MUST(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
         });
-    return body_with_type;
+
+    // FIXME: 7. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
+    // FIXME: 8. If action is non-null, then run these steps in in parallel:
+
+    // 9. Let body be a body whose stream is stream, source is source, and length is length.
+    auto body = Fetch::Body { move(stream), move(source), move(length) };
+    // 10. Return (body, type).
+    return { .body = move(body), .type = move(type) };
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
@@ -465,7 +490,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? extract_body(body.value()) : XMLHttpRequest::BodyWithType {};
+    auto body_with_type = body.has_value() ? extract_body(body.value()) : Optional<Fetch::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
@@ -486,10 +511,12 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
-    if (!body_with_type.body.is_empty()) {
-        request.set_body(body_with_type.body);
-        if (!body_with_type.type.is_empty())
-            request.set_header("Content-Type", body_with_type.type);
+    if (body_with_type.has_value()) {
+        body_with_type->body.source().visit(
+            [&](ByteBuffer const& buffer) { request.set_body(buffer); },
+            [](auto&) {});
+        if (body_with_type->type.has_value())
+            request.set_header("Content-Type", String { body_with_type->type->span() });
     }
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
