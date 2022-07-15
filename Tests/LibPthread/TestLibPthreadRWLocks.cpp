@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibPthread/pthread.h>
 #include <LibTest/TestCase.h>
+#include <pthread.h>
 
 TEST_CASE(rwlock_init)
 {

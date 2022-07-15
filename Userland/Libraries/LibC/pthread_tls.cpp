@@ -5,8 +5,8 @@
  */
 
 #include <AK/Atomic.h>
-#include <LibPthread/pthread.h>
 #include <errno.h>
+#include <pthread.h>
 #include <unistd.h>
 
 #ifndef _DYNAMIC_LOADER

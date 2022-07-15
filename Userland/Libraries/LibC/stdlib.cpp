@@ -12,12 +12,12 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibELF/AuxiliaryVector.h>
-#include <LibPthread/pthread.h>
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
