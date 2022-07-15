@@ -128,6 +128,17 @@ private:
     Gfx::IntSize m_event_size;
     Gfx::IntSize m_month_size[12];
     Mode m_mode { Month };
+
+    enum class DayOfWeek {
+        Sunday,
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday,
+        Saturday
+    };
+    DayOfWeek m_first_day_of_week { DayOfWeek::Sunday };
 };
 
 }

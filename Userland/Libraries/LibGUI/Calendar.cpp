@@ -271,7 +271,7 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
             view_month = i + 1;
 
         auto first_day_of_current_month = Core::DateTime::create(view_year, view_month, 1);
-        unsigned start_of_month = first_day_of_current_month.weekday();
+        unsigned start_of_month = (first_day_of_current_month.weekday() - to_underlying(m_first_day_of_week) + 7) % 7;
         unsigned days_from_previous_month_to_show = start_of_month == 0 ? 7 : start_of_month;
 
         for (unsigned j = 0; j < 42; j++) {
@@ -425,7 +425,8 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 y_offset,
                 m_days[i].width,
                 16);
-            painter.draw_text(day_rect, m_days[i].name, small_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+            auto const& day_name = m_days[(i + to_underlying(m_first_day_of_week)) % 7].name;
+            painter.draw_text(day_rect, day_name, small_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
         }
         y_offset += days_of_the_week_rect.height();
         painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow2(), 1);
