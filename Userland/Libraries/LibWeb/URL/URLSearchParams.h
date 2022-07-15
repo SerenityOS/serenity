@@ -41,7 +41,7 @@ public:
 
     void sort();
 
-    String to_string();
+    String to_string() const;
 
     using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
