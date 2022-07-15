@@ -50,11 +50,3 @@ set(LIBTEST_BASED_SOURCES
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
     serenity_test("${libtest_source}" Kernel)
 endforeach()
-
-target_link_libraries(elf-execve-mmap-race LibPthread)
-target_link_libraries(kill-pidtid-confusion LibPthread)
-target_link_libraries(nanosleep-race-outbuf-munmap LibPthread)
-target_link_libraries(null-deref-close-during-select LibPthread)
-target_link_libraries(null-deref-crash-during-pthread_join LibPthread)
-target_link_libraries(uaf-close-while-blocked-in-read LibPthread)
-target_link_libraries(pthread-cond-timedwait-example LibPthread)
