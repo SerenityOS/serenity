@@ -96,7 +96,7 @@ index 000000000..dc2f5361e
 +/* Default arguments you want when running your
 +   i686-serenity-gcc/x86_64-serenity-gcc toolchain */
 +#undef LIB_SPEC
-+#define LIB_SPEC "%{pthread:-lpthread} -lc" /* link against C standard library */
++#define LIB_SPEC "-lc" /* link against C standard library */
 +
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
