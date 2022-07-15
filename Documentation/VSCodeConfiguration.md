@@ -46,7 +46,6 @@ These extensions can be used as-is, but you need to point them to the custom Ser
                 "${workspaceFolder}/Userland/Libraries",
                 "${workspaceFolder}/Userland/Libraries/LibC",
                 "${workspaceFolder}/Userland/Libraries/LibM",
-                "${workspaceFolder}/Userland/Libraries/LibPthread",
                 "${workspaceFolder}/Userland/Services",
                 "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
             ],
@@ -77,7 +76,6 @@ These extensions can be used as-is, but you need to point them to the custom Ser
                     "${workspaceFolder}/Userland/Libraries",
                     "${workspaceFolder}/Userland/Libraries/LibC",
                     "${workspaceFolder}/Userland/Libraries/LibM",
-                    "${workspaceFolder}/Userland/Libraries/LibPthread",
                     "${workspaceFolder}/Userland/Services",
                     "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
                 ],
