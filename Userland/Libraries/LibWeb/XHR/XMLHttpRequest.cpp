@@ -311,7 +311,7 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderLis
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-static XMLHttpRequest::BodyWithType extract_body(XMLHttpRequestBodyInit& body)
+static XMLHttpRequest::BodyWithType extract_body(XMLHttpRequestBodyInit const& body)
 {
     if (body.has<NonnullRefPtr<URL::URLSearchParams>>()) {
         return {
