@@ -187,7 +187,7 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
@@ -201,7 +201,7 @@ ErrorOr<void> Image::export_bmp_to_file(Core::File& file, bool preserve_alpha_ch
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_png_to_file(Core::File& file, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
