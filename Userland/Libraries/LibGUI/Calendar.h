@@ -75,6 +75,8 @@ private:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
     virtual ~Calendar() override = default;
 
+    static size_t day_of_week_index(String const&);
+
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
