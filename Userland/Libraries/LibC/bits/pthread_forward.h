@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibPthread/pthread.h>
+#include <pthread.h>
 
 struct PthreadFunctions {
     int (*pthread_mutex_trylock)(pthread_mutex_t* mutex);
