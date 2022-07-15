@@ -39,7 +39,7 @@
                     text: "Backspace"
                     fixed_width: 65
                     fixed_height: 28
-                    foreground_color: "brown"
+                    foreground_role: "SyntaxControlKeyword"
                     focus_policy: "NoFocus"
                 }
 
@@ -48,7 +48,7 @@
                     text: "CE"
                     fixed_width: 56
                     fixed_height: 28
-                    foreground_color: "brown"
+                    foreground_role: "SyntaxControlKeyword"
                     focus_policy: "NoFocus"
                 }
 
@@ -57,7 +57,7 @@
                     text: "C"
                     fixed_width: 60
                     fixed_height: 28
-                    foreground_color: "brown"
+                    foreground_role: "SyntaxControlKeyword"
                     focus_policy: "NoFocus"
                 }
             }
@@ -70,7 +70,7 @@
                     text: "MC"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "red"
+                    foreground_role: "SyntaxPreprocessorValue"
                     focus_policy: "NoFocus"
                 }
 
@@ -83,7 +83,7 @@
                     text: "7"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -92,7 +92,7 @@
                     text: "8"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -101,7 +101,7 @@
                     text: "9"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -110,6 +110,7 @@
                     text: "/"
                     fixed_width: 35
                     fixed_height: 28
+                    foreground_role: "SyntaxOperator"
                     focus_policy: "NoFocus"
                 }
 
@@ -118,7 +119,7 @@
                     text: "sqrt"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxFunction"
                     focus_policy: "NoFocus"
                 }
             }
@@ -131,7 +132,7 @@
                     text: "MR"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "red"
+                    foreground_role: "SyntaxPreprocessorValue"
                     focus_policy: "NoFocus"
                 }
 
@@ -144,7 +145,7 @@
                     text: "4"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -153,7 +154,7 @@
                     text: "5"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -162,7 +163,7 @@
                     text: "6"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -171,6 +172,7 @@
                     text: "*"
                     fixed_width: 35
                     fixed_height: 28
+                    foreground_role: "SyntaxOperator"
                     focus_policy: "NoFocus"
                 }
 
@@ -179,7 +181,7 @@
                     text: "%"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxFunction"
                     focus_policy: "NoFocus"
                 }
             }
@@ -192,7 +194,7 @@
                     text: "MS"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "red"
+                    foreground_role: "SyntaxPreprocessorValue"
                     focus_policy: "NoFocus"
                 }
 
@@ -205,7 +207,7 @@
                     text: "1"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -214,7 +216,7 @@
                     text: "2"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -223,7 +225,7 @@
                     text: "3"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -232,6 +234,7 @@
                     text: "-"
                     fixed_width: 35
                     fixed_height: 28
+                    foreground_role: "SyntaxOperator"
                     focus_policy: "NoFocus"
                 }
 
@@ -240,7 +243,7 @@
                     text: "1/x"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxFunction"
                     focus_policy: "NoFocus"
                 }
             }
@@ -253,7 +256,7 @@
                     text: "M+"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "red"
+                    foreground_role: "SyntaxPreprocessorValue"
                     focus_policy: "NoFocus"
                 }
 
@@ -266,7 +269,7 @@
                     text: "0"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -275,7 +278,7 @@
                     text: "+/-"
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -284,7 +287,7 @@
                     text: "."
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "blue"
+                    foreground_role: "SyntaxNumber"
                     focus_policy: "NoFocus"
                 }
 
@@ -293,6 +296,7 @@
                     text: "+"
                     fixed_width: 35
                     fixed_height: 28
+                    foreground_role: "SyntaxOperator"
                     focus_policy: "NoFocus"
                 }
 
@@ -301,7 +305,7 @@
                     text: "="
                     fixed_width: 35
                     fixed_height: 28
-                    foreground_color: "red"
+                    foreground_role: "SyntaxPreprocessorValue"
                 }
             }
         }
