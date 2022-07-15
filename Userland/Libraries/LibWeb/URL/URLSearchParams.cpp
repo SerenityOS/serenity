@@ -234,7 +234,7 @@ void URLSearchParams::sort()
     update();
 }
 
-String URLSearchParams::to_string()
+String URLSearchParams::to_string() const
 {
     // return the serialization of this’s list.
     return url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded);
