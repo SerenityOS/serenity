@@ -38,11 +38,6 @@ public:
         Done = 4,
     };
 
-    struct BodyWithType {
-        ByteBuffer body;
-        String type;
-    };
-
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
     static NonnullRefPtr<XMLHttpRequest> create(HTML::Window& window)

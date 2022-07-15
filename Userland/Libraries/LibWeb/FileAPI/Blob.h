@@ -54,6 +54,8 @@ private:
 
     ByteBuffer m_byte_buffer {};
     String m_type {};
+
+    friend class XHR::XMLHttpRequest;
 };
 
 }
