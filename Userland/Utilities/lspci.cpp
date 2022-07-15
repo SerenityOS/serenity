@@ -45,15 +45,17 @@ static u32 convert_sysfs_value_to_uint(String const& value)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/res/pci.ids", "r"));
-    TRY(Core::System::unveil("/sys/bus/pci", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
     args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v');
     args_parser.parse(arguments);
+
+    if (!flag_show_numerical)
+        TRY(Core::System::unveil("/res/pci.ids", "r"));
+    TRY(Core::System::unveil("/sys/bus/pci", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto const format = flag_show_numerical ? format_numerical : format_textual;
 
