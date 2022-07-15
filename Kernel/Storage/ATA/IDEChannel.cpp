@@ -159,7 +159,7 @@ static void print_ide_status(u8 status)
 
 void IDEChannel::try_disambiguate_error()
 {
-    VERIFY(m_lock.is_locked());
+    VERIFY(m_request_lock.is_locked());
     dbgln("IDEChannel: Error cause:");
 
     switch (m_device_error) {
