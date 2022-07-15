@@ -179,3 +179,8 @@ target_link_libraries(LibC ssp system LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
 add_dependencies(LibC LibM LibSystem LibCStatic)
+
+# Provide a dummy target and a linker script for LibPthread that tells everything to link against LibC instead.
+add_library(LibPthread INTERFACE)
+target_link_libraries(LibPthread INTERFACE LibC)
+file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
