@@ -19,8 +19,6 @@ class GenericGraphicsAdapter
 public:
     virtual ~GenericGraphicsAdapter() = default;
 
-    virtual bool vga_compatible() const = 0;
-
 protected:
     GenericGraphicsAdapter() = default;
 };

@@ -34,8 +34,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
     : PCI::Device(pci_device_identifier.address())
 {
-    if (pci_device_identifier.class_code().value() == 0x3 && pci_device_identifier.subclass_code().value() == 0x0)
-        m_is_vga_capable = true;
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::DeviceIdentifier const& pci_device_identifier)
@@ -65,11 +63,6 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     TRY(m_display_connector->set_safe_mode_setting());
 
     return {};
-}
-
-bool BochsGraphicsAdapter::vga_compatible() const
-{
-    return m_is_vga_capable;
 }
 
 }
