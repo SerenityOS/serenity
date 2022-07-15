@@ -188,9 +188,4 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
     return {};
 }
 
-bool VMWareGraphicsAdapter::vga_compatible() const
-{
-    return false;
-}
-
 }

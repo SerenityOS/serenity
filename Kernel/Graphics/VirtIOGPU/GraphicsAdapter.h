@@ -39,9 +39,6 @@ class VirtIOGraphicsAdapter final
 public:
     static NonnullRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
 
-    // FIXME: There's a VirtIO VGA GPU variant, so we should consider that
-    virtual bool vga_compatible() const override { return false; }
-
     virtual void initialize() override;
     void initialize_3d_device();
 
