@@ -8,6 +8,8 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/Directory.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
@@ -21,7 +23,7 @@ namespace Kernel {
 #define DEVICE_EVENTS_CLEAR 0x4
 #define DEVICE_NUM_SCANOUTS 0x8
 
-NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::DeviceIdentifier const& device_identifier)
+NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::create_instance(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(device_identifier.hardware_id().vendor_id == PCI::VendorID::VirtIO);
     // Setup memory transfer region
@@ -30,10 +32,22 @@ NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::Devi
         "VirtGPU Scratch Space"sv,
         Memory::Region::Access::ReadWrite));
 
-    auto adapter = adopt_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(scratch_space_region)));
-    adapter->initialize();
-    MUST(adapter->initialize_adapter());
-    return adapter;
+    return adopt_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(scratch_space_region)));
+}
+
+ErrorOr<void> VirtIOGraphicsAdapter::initialize_after_sysfs_directory_creation()
+{
+    VERIFY(m_sysfs_directory);
+    initialize();
+    TRY(initialize_adapter());
+    return {};
+}
+
+void VirtIOGraphicsAdapter::after_inserting()
+{
+    auto sysfs_graphics_adapter_directory = GraphicsAdapterSysFSDirectory::create(SysFSGraphicsAdaptersDirectory::the(), adapter_id());
+    m_sysfs_directory = sysfs_graphics_adapter_directory;
+    SysFSGraphicsAdaptersDirectory::the().plug_virtio_adapter({}, *sysfs_graphics_adapter_directory);
 }
 
 ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()

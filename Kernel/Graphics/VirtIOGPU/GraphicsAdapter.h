@@ -38,7 +38,7 @@ class VirtIOGraphicsAdapter final
     friend class VirtIOGPU3DDevice;
 
 public:
-    static NonnullRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static NonnullRefPtr<VirtIOGraphicsAdapter> create_instance(PCI::DeviceIdentifier const&);
 
     virtual void initialize() override;
     void initialize_3d_device();
@@ -54,6 +54,10 @@ public:
     void transfer_framebuffer_data_to_host(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& rect, bool main_buffer);
 
 private:
+    virtual ErrorOr<void> initialize_after_sysfs_directory_creation() override;
+
+    virtual void after_inserting() override;
+
     ErrorOr<void> attach_physical_range_to_framebuffer(VirtIODisplayConnector& connector, bool main_buffer, size_t framebuffer_offset, size_t framebuffer_size);
 
     void flush_dirty_rectangle(Graphics::VirtIOGPU::ScanoutID, Graphics::VirtIOGPU::ResourceID, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect);

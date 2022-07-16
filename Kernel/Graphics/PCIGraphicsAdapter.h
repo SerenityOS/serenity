@@ -22,6 +22,8 @@ public:
 
 protected:
     explicit PCIGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier);
+
+    virtual void after_inserting() override final;
 };
 
 }

@@ -24,14 +24,18 @@ class BochsGraphicsAdapter final : public PCIGraphicsAdapter {
     friend class GraphicsManagement;
 
 public:
-    static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static NonnullRefPtr<BochsGraphicsAdapter> create_instance(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
 
 private:
-    ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
+    virtual ErrorOr<void> initialize_after_sysfs_directory_creation() override;
+
+    ErrorOr<void> initialize_adapter();
 
     explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
+    bool const bochs_hardware { false };
+    bool const virtual_box_hardware { false };
     RefPtr<BochsDisplayConnector> m_display_connector;
 };
 }

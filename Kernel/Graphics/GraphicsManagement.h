@@ -43,6 +43,8 @@ public:
     void deactivate_graphical_mode();
     void activate_graphical_mode();
 
+    static u32 generate_adapter_id();
+
 private:
     void enable_vga_text_mode_console_cursor();
 

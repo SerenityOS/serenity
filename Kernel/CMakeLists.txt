@@ -80,6 +80,7 @@ set(KERNEL_SOURCES
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/VGATextModeConsole.cpp
     Graphics/DisplayConnector.cpp
+    Graphics/GenericGraphicsAdapter.cpp
     Graphics/Generic/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/PCIGraphicsAdapter.cpp
@@ -152,6 +153,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.cpp

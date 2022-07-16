@@ -18,11 +18,13 @@ class IntelNativeDisplayConnector;
 class IntelNativeGraphicsAdapter final : public PCIGraphicsAdapter {
 
 public:
-    static RefPtr<IntelNativeGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<IntelNativeGraphicsAdapter> create_instance(PCI::DeviceIdentifier const&);
 
     virtual ~IntelNativeGraphicsAdapter() = default;
 
 private:
+    virtual ErrorOr<void> initialize_after_sysfs_directory_creation() override;
+
     ErrorOr<void> initialize_adapter();
 
     explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);

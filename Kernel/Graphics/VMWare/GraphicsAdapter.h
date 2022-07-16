@@ -24,7 +24,7 @@ class VMWareGraphicsAdapter final : public PCIGraphicsAdapter {
     friend class GraphicsManagement;
 
 public:
-    static RefPtr<VMWareGraphicsAdapter> try_initialize(PCI::DeviceIdentifier const&);
+    static RefPtr<VMWareGraphicsAdapter> try_create_instance(PCI::DeviceIdentifier const&);
     virtual ~VMWareGraphicsAdapter() = default;
 
     ErrorOr<void> modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height);
@@ -34,6 +34,8 @@ public:
     void primary_screen_flush(Badge<VMWareDisplayConnector>, size_t current_width, size_t current_height);
 
 private:
+    virtual ErrorOr<void> initialize_after_sysfs_directory_creation() override;
+
     ErrorOr<void> initialize_adapter();
     ErrorOr<void> initialize_fifo_registers();
     ErrorOr<void> negotiate_device_version();

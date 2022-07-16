@@ -23,6 +23,8 @@ namespace Kernel {
 
 static Singleton<GraphicsManagement> s_the;
 
+static Atomic<u32> s_adapter_id;
+
 extern Atomic<Graphics::Console*> g_boot_console;
 
 GraphicsManagement& GraphicsManagement::the()
@@ -123,6 +125,13 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
+u32 GraphicsManagement::generate_adapter_id()
+{
+    auto adapter_id = s_adapter_id.load();
+    s_adapter_id++;
+    return adapter_id;
+}
+
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
@@ -132,21 +141,21 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         switch (device_identifier.hardware_id().vendor_id) {
         case PCI::VendorID::QEMUOld:
             if (device_identifier.hardware_id().device_id == 0x1111)
-                adapter = BochsGraphicsAdapter::initialize(device_identifier);
+                adapter = BochsGraphicsAdapter::create_instance(device_identifier);
             break;
         case PCI::VendorID::VirtualBox:
             if (device_identifier.hardware_id().device_id == 0xbeef)
-                adapter = BochsGraphicsAdapter::initialize(device_identifier);
+                adapter = BochsGraphicsAdapter::create_instance(device_identifier);
             break;
         case PCI::VendorID::Intel:
-            adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
+            adapter = IntelNativeGraphicsAdapter::create_instance(device_identifier);
             break;
         case PCI::VendorID::VirtIO:
             dmesgln("Graphics: Using VirtIO console");
-            adapter = VirtIOGraphicsAdapter::initialize(device_identifier);
+            adapter = VirtIOGraphicsAdapter::create_instance(device_identifier);
             break;
         case PCI::VendorID::VMWare:
-            adapter = VMWareGraphicsAdapter::try_initialize(device_identifier);
+            adapter = VMWareGraphicsAdapter::try_create_instance(device_identifier);
             break;
         default:
             break;
@@ -156,6 +165,14 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     if (!adapter)
         return false;
     m_graphics_devices.append(*adapter);
+
+    adapter->after_inserting();
+    // Note: Ensure the after_inserting method actually added a SysFS directory.
+    VERIFY(adapter->m_sysfs_directory);
+
+    if (auto result = adapter->initialize_after_sysfs_directory_creation(); result.is_error())
+        return false;
+
     return true;
 }
 

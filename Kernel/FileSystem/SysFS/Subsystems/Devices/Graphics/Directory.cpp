@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
 #include <Kernel/Sections.h>
@@ -15,6 +16,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGraphicsDirectory> SysFSGraphicsDirectory::m
     auto directory = adopt_ref(*new (nothrow) SysFSGraphicsDirectory(parent_directory));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSDisplayConnectorsDirectory::must_create(*directory));
+        list.append(SysFSGraphicsAdaptersDirectory::must_create(*directory));
         return {};
     }));
     return directory;

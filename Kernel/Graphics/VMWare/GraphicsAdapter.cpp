@@ -21,7 +21,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT RefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT RefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_create_instance(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
     VERIFY(id.vendor_id == PCI::VendorID::VMWare);
@@ -29,8 +29,14 @@ UNMAP_AFTER_INIT RefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_initia
     if (id.device_id != 0x0405)
         return {};
     auto adapter = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier)));
-    MUST(adapter->initialize_adapter());
     return adapter;
+}
+
+UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_after_sysfs_directory_creation()
+{
+    VERIFY(m_sysfs_directory);
+    TRY(initialize_adapter());
+    return {};
 }
 
 UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
