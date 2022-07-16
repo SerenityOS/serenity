@@ -16,6 +16,8 @@ public:
     virtual StringView name() const override { return "pci"sv; }
 
 private:
+    void enumerate_all_devices_and_add_pci_device_directories();
+
     PCIBusSysFSDirectory();
 };
 
