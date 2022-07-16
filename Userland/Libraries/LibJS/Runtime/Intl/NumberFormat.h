@@ -129,13 +129,6 @@ public:
         Accounting,
     };
 
-    enum class RoundingType {
-        Invalid,
-        SignificantDigits,
-        FractionDigits,
-        CompactRounding,
-    };
-
     enum class Notation {
         Invalid,
         Standard,
