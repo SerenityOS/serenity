@@ -33,8 +33,7 @@ class Blob
 
 public:
     using WrapperType = Bindings::BlobWrapper;
-
-    Blob(ByteBuffer const& byte_buffer, String const& type);
+    Blob(ByteBuffer byte_buffer, String type);
 
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create(Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});

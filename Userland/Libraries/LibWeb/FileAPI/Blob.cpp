@@ -12,7 +12,7 @@
 
 namespace Web::FileAPI {
 
-Blob::Blob(ByteBuffer const& byte_buffer, String const& type)
+Blob::Blob(ByteBuffer byte_buffer, String type)
     : m_byte_buffer(move(byte_buffer))
     , m_type(move(type))
 {
@@ -41,7 +41,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
-    return adopt_ref(*new Blob(byte_buffer, type));
+    return adopt_ref(*new Blob(move(byte_buffer), move(type)));
 }
 
 DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
@@ -149,7 +149,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::slice(Optional<i64> start, Optional<
     auto byte_buffer_or_error = m_byte_buffer.slice(relative_start, span);
     if (byte_buffer_or_error.is_error())
         return DOM::UnknownError::create("Out of memory."sv);
-    return adopt_ref(*new Blob(byte_buffer_or_error.release_value(), relative_content_type));
+    return adopt_ref(*new Blob(byte_buffer_or_error.release_value(), move(relative_content_type)));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text
