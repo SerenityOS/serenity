@@ -24,7 +24,7 @@ NonnullRefPtr<GenericDisplayConnector> GenericDisplayConnector::must_create_with
 }
 
 GenericDisplayConnector::GenericDisplayConnector(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
-    : DisplayConnector(framebuffer_address, height * pitch, true)
+    : DisplayConnector(0, framebuffer_address, height * pitch, true)
 {
     m_current_mode_setting.horizontal_active = width;
     m_current_mode_setting.vertical_active = height;

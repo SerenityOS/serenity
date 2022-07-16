@@ -54,7 +54,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
 {
     VERIFY(m_num_scanouts <= VIRTIO_GPU_MAX_SCANOUTS);
     for (size_t index = 0; index < m_num_scanouts; index++) {
-        auto display_connector = VirtIODisplayConnector::must_create(*this, index);
+        auto display_connector = VirtIODisplayConnector::must_create(index, *this, index);
         m_scanouts[index].display_connector = display_connector;
         MUST(query_and_set_edid(index, *display_connector));
         display_connector->set_safe_mode_setting_after_initialization({});

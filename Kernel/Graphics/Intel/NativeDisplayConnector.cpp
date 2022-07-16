@@ -175,10 +175,10 @@ Optional<IntelGraphics::PLLSettings> IntelNativeDisplayConnector::create_pll_set
     return {};
 }
 
-NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(IntelNativeGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length)
+NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(size_t display_connector_index, IntelNativeGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length)
 {
     auto registers_region = MUST(MM.allocate_kernel_region(PhysicalAddress(registers_region_address), registers_region_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
-    auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size, move(registers_region));
+    auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(display_connector_index, parent_adapter, framebuffer_address, framebuffer_resource_size, move(registers_region));
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->initialize_gmbus_settings_and_read_edid());
@@ -233,8 +233,8 @@ ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console()
     return {};
 }
 
-IntelNativeDisplayConnector::IntelNativeDisplayConnector(IntelNativeGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, true)
+IntelNativeDisplayConnector::IntelNativeDisplayConnector(size_t display_connector_index, IntelNativeGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region)
+    : DisplayConnector(display_connector_index, framebuffer_address, framebuffer_resource_size, true)
     , m_registers_region(move(registers_region))
     , m_parent_graphics_adapter(parent_adapter)
 {

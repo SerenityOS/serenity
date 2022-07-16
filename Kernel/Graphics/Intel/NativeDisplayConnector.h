@@ -83,7 +83,7 @@ class IntelNativeDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(size_t display_connector_index, IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector
@@ -106,7 +106,7 @@ private:
 
     ErrorOr<void> initialize_gmbus_settings_and_read_edid();
 
-    IntelNativeDisplayConnector(IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region);
+    IntelNativeDisplayConnector(size_t display_connector_index, IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region);
 
     ErrorOr<void> create_attached_framebuffer_console();
 

@@ -13,9 +13,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent>> SysFSSymbolicLinkLinkedDisplayConnectorComponent::try_create(SysFSDirectory const& parent_directory, MinorNumber display_connector_minor_number, SysFSComponent const& pointed_component)
+ErrorOr<NonnullRefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent>> SysFSSymbolicLinkLinkedDisplayConnectorComponent::try_create(SysFSDirectory const& parent_directory, size_t display_connector_index, SysFSComponent const& pointed_component)
 {
-    auto node_name = MUST(KString::formatted("{}", display_connector_minor_number.value()));
+    auto node_name = MUST(KString::formatted("{}", display_connector_index));
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSSymbolicLinkLinkedDisplayConnectorComponent(move(node_name), parent_directory, pointed_component));
 }
 

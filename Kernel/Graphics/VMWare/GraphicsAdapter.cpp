@@ -189,7 +189,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
 
     auto bar1_space_size = PCI::get_BAR_space_size(pci_address(), 1);
 
-    m_display_connector = VMWareDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR1(pci_address()) & 0xfffffff0), bar1_space_size);
+    m_display_connector = VMWareDisplayConnector::must_create(0, *this, PhysicalAddress(PCI::get_BAR1(pci_address()) & 0xfffffff0), bar1_space_size);
     TRY(m_display_connector->set_safe_mode_setting());
     return {};
 }

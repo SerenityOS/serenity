@@ -109,8 +109,8 @@ public:
 protected:
     void set_edid_bytes(Array<u8, 128> const& edid_bytes);
 
-    DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization);
-    DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization);
+    DisplayConnector(size_t relative_display_connector_index, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization);
+    DisplayConnector(size_t relative_display_connector_index, size_t framebuffer_resource_size, bool enable_write_combine_optimization);
     virtual void enable_console() = 0;
     virtual void disable_console() = 0;
     virtual ErrorOr<void> flush_first_surface() = 0;
@@ -174,5 +174,9 @@ private:
     IntrusiveListNode<DisplayConnector, RefPtr<DisplayConnector>> m_list_node;
 
     RefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent> m_symlink_linked_display_connector_component;
+
+    // Note: This number is relative to a Graphics adapter, so even if the major number is for example 2,
+    // but this is the first "port" on a graphics card, the index here is 0.
+    const size_t m_relative_display_connector_index { 0 };
 };
 }

@@ -18,7 +18,7 @@ class SysFSSymbolicLinkLinkedDisplayConnectorComponent final
     friend class SysFSComponentRegistry;
 
 public:
-    static ErrorOr<NonnullRefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent>> try_create(SysFSDirectory const& parent_directory, MinorNumber display_connector_minor_number, SysFSComponent const& pointed_component);
+    static ErrorOr<NonnullRefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent>> try_create(SysFSDirectory const& parent_directory, size_t display_connector_index, SysFSComponent const& pointed_component);
     virtual StringView name() const override { return m_symlink_name->view(); }
 
 private:

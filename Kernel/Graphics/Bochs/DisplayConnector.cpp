@@ -28,7 +28,7 @@ NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(BochsGra
 }
 
 BochsDisplayConnector::BochsDisplayConnector(BochsGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
+    : DisplayConnector(0, framebuffer_address, framebuffer_resource_size, false)
     , m_parent_adapter(parent_adapter)
 {
 }

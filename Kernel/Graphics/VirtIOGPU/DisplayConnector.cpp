@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+NonnullRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(size_t display_connector_index, VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
 {
-    auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id);
+    auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(display_connector_index, graphics_adapter, scanout_id);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     connector->initialize_console();
@@ -26,8 +26,8 @@ NonnullRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIO
 
 static_assert((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2) % PAGE_SIZE == 0);
 
-VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
-    : DisplayConnector((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), false)
+VirtIODisplayConnector::VirtIODisplayConnector(size_t display_connector_index, VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+    : DisplayConnector(display_connector_index, (MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), false)
     , m_graphics_adapter(graphics_adapter)
     , m_scanout_id(scanout_id)
 {

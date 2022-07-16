@@ -30,7 +30,7 @@ class VirtIODisplayConnector final : public DisplayConnector {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VirtIODisplayConnector> must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    static NonnullRefPtr<VirtIODisplayConnector> must_create(size_t display_connector_index, VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
 
     void set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes);
     void set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>);
@@ -68,7 +68,7 @@ private:
     virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return m_graphics_adapter; }
 
 private:
-    VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    VirtIODisplayConnector(size_t display_connector_index, VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
 
     void flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     void set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);

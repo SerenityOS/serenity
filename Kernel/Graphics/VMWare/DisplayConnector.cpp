@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(size_t display_connector_index, VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
-    auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
+    auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(display_connector_index, parent_adapter, framebuffer_address, framebuffer_resource_size));
     MUST(connector->create_attached_framebuffer_console());
     MUST(connector->initialize_edid_for_generic_monitor(Array<u8, 3> { 'V', 'M', 'W' }));
     return connector;
@@ -27,8 +27,8 @@ ErrorOr<void> VMWareDisplayConnector::create_attached_framebuffer_console()
     return {};
 }
 
-VMWareDisplayConnector::VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
+VMWareDisplayConnector::VMWareDisplayConnector(size_t display_connector_index, VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+    : DisplayConnector(display_connector_index, framebuffer_address, framebuffer_resource_size, false)
     , m_parent_adapter(parent_adapter)
 {
 }

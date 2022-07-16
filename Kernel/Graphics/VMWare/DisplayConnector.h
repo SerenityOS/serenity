@@ -23,10 +23,10 @@ class VMWareDisplayConnector : public DisplayConnector {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static NonnullRefPtr<VMWareDisplayConnector> must_create(size_t display_connector_index, VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
 private:
-    VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    VMWareDisplayConnector(size_t display_connector_index, VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
     ErrorOr<void> create_attached_framebuffer_console();
 
     virtual bool mutable_mode_setting_capable() const override { return true; }

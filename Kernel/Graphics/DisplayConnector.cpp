@@ -14,21 +14,23 @@
 
 namespace Kernel {
 
-DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
+DisplayConnector::DisplayConnector(size_t relative_display_connector_index, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
     : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(false)
     , m_framebuffer_address(framebuffer_address)
     , m_framebuffer_resource_size(framebuffer_resource_size)
+    , m_relative_display_connector_index(relative_display_connector_index)
 {
 }
 
-DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization)
+DisplayConnector::DisplayConnector(size_t relative_display_connector_index, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
     : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(true)
     , m_framebuffer_address({})
     , m_framebuffer_resource_size(framebuffer_resource_size)
+    , m_relative_display_connector_index(relative_display_connector_index)
 {
 }
 
@@ -97,7 +99,7 @@ void DisplayConnector::after_inserting()
     if (parent_graphics_adapter()) {
         auto graphics_adapter_display_connector_symlinks_sysfs_directory = parent_graphics_adapter()->graphics_adapter_display_connector_symlinks_sysfs_directory();
         VERIFY(graphics_adapter_display_connector_symlinks_sysfs_directory);
-        auto symlink_linked_display_connector_component = MUST(SysFSSymbolicLinkLinkedDisplayConnectorComponent::try_create(*graphics_adapter_display_connector_symlinks_sysfs_directory, minor(), *m_symlink_sysfs_component));
+        auto symlink_linked_display_connector_component = MUST(SysFSSymbolicLinkLinkedDisplayConnectorComponent::try_create(*graphics_adapter_display_connector_symlinks_sysfs_directory, m_relative_display_connector_index, *m_symlink_sysfs_component));
         m_symlink_linked_display_connector_component = symlink_linked_display_connector_component;
     }
 
