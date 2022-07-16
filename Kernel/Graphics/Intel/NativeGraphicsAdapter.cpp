@@ -33,7 +33,7 @@ RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::D
     VERIFY(pci_device_identifier.hardware_id().vendor_id == 0x8086);
     if (!is_supported_model(pci_device_identifier.hardware_id().device_id))
         return {};
-    auto adapter = adopt_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier.address()));
+    auto adapter = adopt_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier));
     MUST(adapter->initialize_adapter());
     return adapter;
 }
@@ -53,9 +53,8 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
     return {};
 }
 
-IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
-    : GenericGraphicsAdapter()
-    , PCI::Device(address)
+IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
+    : PCIGraphicsAdapter(pci_device_identifier)
 {
 }
 

@@ -34,7 +34,7 @@ UNMAP_AFTER_INIT RefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_initia
 }
 
 UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
-    : PCI::Device(pci_device_identifier.address())
+    : PCIGraphicsAdapter(pci_device_identifier)
     , m_io_registers_base(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0)
 {
     dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_io_registers_base);

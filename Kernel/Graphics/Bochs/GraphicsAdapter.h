@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
+#include <Kernel/Graphics/PCIGraphicsAdapter.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -20,8 +20,7 @@ class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
 class BochsDisplayConnector;
-class BochsGraphicsAdapter final : public GenericGraphicsAdapter
-    , public PCI::Device {
+class BochsGraphicsAdapter final : public PCIGraphicsAdapter {
     friend class GraphicsManagement;
 
 public:

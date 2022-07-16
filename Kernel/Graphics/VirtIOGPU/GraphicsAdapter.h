@@ -30,6 +30,7 @@ namespace Kernel {
 
 class VirtIODisplayConnector;
 class VirtIOGPU3DDevice;
+// FIXME: Make this to inherit from PCIGraphicsAdapter eventually.
 class VirtIOGraphicsAdapter final
     : public GenericGraphicsAdapter
     , public VirtIO::Device {

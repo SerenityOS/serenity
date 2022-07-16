@@ -8,8 +8,8 @@
 
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
+#include <Kernel/Graphics/PCIGraphicsAdapter.h>
 #include <Kernel/Graphics/VMWare/Definitions.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -20,9 +20,7 @@ namespace Kernel {
 class GraphicsManagement;
 
 class VMWareDisplayConnector;
-class VMWareGraphicsAdapter final
-    : public GenericGraphicsAdapter
-    , public PCI::Device {
+class VMWareGraphicsAdapter final : public PCIGraphicsAdapter {
     friend class GraphicsManagement;
 
 public:

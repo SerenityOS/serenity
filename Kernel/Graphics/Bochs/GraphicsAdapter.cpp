@@ -32,7 +32,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 }
 
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
-    : PCI::Device(pci_device_identifier.address())
+    : PCIGraphicsAdapter(pci_device_identifier)
 {
 }
 

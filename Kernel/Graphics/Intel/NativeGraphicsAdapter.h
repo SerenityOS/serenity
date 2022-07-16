@@ -7,17 +7,15 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
+#include <Kernel/Graphics/PCIGraphicsAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
 
 namespace Kernel {
 
 class IntelNativeDisplayConnector;
-class IntelNativeGraphicsAdapter final
-    : public GenericGraphicsAdapter
-    , public PCI::Device {
+class IntelNativeGraphicsAdapter final : public PCIGraphicsAdapter {
 
 public:
     static RefPtr<IntelNativeGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
@@ -27,7 +25,7 @@ public:
 private:
     ErrorOr<void> initialize_adapter();
 
-    explicit IntelNativeGraphicsAdapter(PCI::Address);
+    explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
 
     RefPtr<IntelNativeDisplayConnector> m_display_connector;
 };
