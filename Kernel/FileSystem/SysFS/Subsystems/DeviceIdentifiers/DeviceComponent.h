@@ -24,7 +24,7 @@ public:
     bool is_block_device() const { return m_block_device; }
 
 private:
-    SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const&);
+    SysFSDeviceComponent(SysFSDirectory const& parent_directory, NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const&);
     bool m_block_device;
 
     NonnullOwnPtr<KString> m_major_minor_formatted_device_name;
