@@ -159,8 +159,6 @@ StringView NumberFormatBase::rounding_type_string() const
         return "significantDigits"sv;
     case RoundingType::FractionDigits:
         return "fractionDigits"sv;
-    case RoundingType::CompactRounding:
-        return "compactRounding"sv;
     case RoundingType::MorePrecision:
         return "morePrecision"sv;
     case RoundingType::LessPrecision:
@@ -483,6 +481,7 @@ int currency_digits(StringView currency)
 }
 
 // 15.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
+// 1.1.5 FormatNumericToString ( intlObject, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumberstring
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number)
 {
     // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
@@ -510,20 +509,46 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         break;
 
     // 5. Else,
-    case NumberFormatBase::RoundingType::MorePrecision: // FIXME: Handle this case for NumberFormat V3.
-    case NumberFormatBase::RoundingType::LessPrecision: // FIXME: Handle this case for NumberFormat V3.
-    case NumberFormatBase::RoundingType::CompactRounding:
-        // a. Assert: intlObject.[[RoundingType]] is compactRounding.
-        // b. Let result be ToRawPrecision(x, 1, 2).
-        result = to_raw_precision(global_object, number, 1, 2);
+    case NumberFormatBase::RoundingType::MorePrecision:
+    case NumberFormatBase::RoundingType::LessPrecision: {
+        // a. Let sResult be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]], unsignedRoundingMode).
+        auto significant_result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
 
-        // c. If result.[[IntegerDigitsCount]] > 1, then
-        if (result.digits > 1) {
-            // i. Let result be ToRawFixed(x, 0, 0).
-            result = to_raw_fixed(global_object, number, 0, 0);
+        // b. Let fResult be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]], intlObject.[[RoundingIncrement]], unsignedRoundingMode).
+        auto fraction_result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
+
+        // c. If intlObj.[[RoundingType]] is morePrecision, then
+        if (intl_object.rounding_type() == NumberFormatBase::RoundingType::MorePrecision) {
+            // i. If sResult.[[RoundingMagnitude]] ≤ fResult.[[RoundingMagnitude]], then
+            if (significant_result.rounding_magnitude <= fraction_result.rounding_magnitude) {
+                // 1. Let result be sResult.
+                result = move(significant_result);
+            }
+            // ii. Else,
+            else {
+                // 2. Let result be fResult.
+                result = move(fraction_result);
+            }
+        }
+        // d. Else,
+        else {
+            // i. Assert: intlObj.[[RoundingType]] is lessPrecision.
+            VERIFY(intl_object.rounding_type() == NumberFormatBase::RoundingType::LessPrecision);
+
+            // ii. If sResult.[[RoundingMagnitude]] ≤ fResult.[[RoundingMagnitude]], then
+            if (significant_result.rounding_magnitude <= fraction_result.rounding_magnitude) {
+                // 1. Let result be fResult.
+                result = move(fraction_result);
+            }
+            // iii. Else,
+            else {
+                // 1. Let result be sResult.
+                result = move(significant_result);
+            }
         }
 
         break;
+    }
 
     default:
         VERIFY_NOT_REACHED();
@@ -1102,7 +1127,8 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
     }
 
-    // 9. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
+    // 9. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: e–p+1 }.
+    result.rounding_magnitude = exponent - precision + 1;
     return result;
 }
 
@@ -1164,7 +1190,8 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
     // Steps 9-10 are implemented by cut_trailing_zeroes.
     result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
 
-    // 11. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int }.
+    // 11. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: –f }.
+    result.rounding_magnitude = -fraction;
     return result;
 }
 
