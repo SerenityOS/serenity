@@ -371,7 +371,7 @@ class ButtonBox;
 class CheckBox;
 class FlexFormattingContext;
 class FormattingContext;
-struct FormattingState;
+struct LayoutState;
 class InitialContainingBlock;
 class InlineFormattingContext;
 class Label;

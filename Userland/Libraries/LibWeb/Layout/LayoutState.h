@@ -20,22 +20,22 @@ enum class SizeConstraint {
     MaxContent,
 };
 
-struct FormattingState {
-    FormattingState()
+struct LayoutState {
+    LayoutState()
         : m_root(*this)
     {
     }
 
-    explicit FormattingState(FormattingState const* parent)
+    explicit LayoutState(LayoutState const* parent)
         : m_parent(parent)
         , m_root(find_root())
     {
         nodes.resize(m_root.nodes.size());
     }
 
-    FormattingState const& find_root() const
+    LayoutState const& find_root() const
     {
-        FormattingState const* root = this;
+        LayoutState const* root = this;
         for (auto* state = m_parent; state; state = state->m_parent)
             root = state;
         return *root;
@@ -124,12 +124,12 @@ struct FormattingState {
 
     HashMap<Box const*, float> mutable flex_item_size_cache;
 
-    FormattingState const* m_parent { nullptr };
-    FormattingState const& m_root;
+    LayoutState const* m_parent { nullptr };
+    LayoutState const& m_root;
 };
 
-Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);
-Gfx::FloatRect margin_box_rect(Box const&, FormattingState const&);
-Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, FormattingState const&);
+Gfx::FloatRect absolute_content_rect(Box const&, LayoutState const&);
+Gfx::FloatRect margin_box_rect(Box const&, LayoutState const&);
+Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
 
 }

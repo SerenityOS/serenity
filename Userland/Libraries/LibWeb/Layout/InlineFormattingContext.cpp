@@ -20,7 +20,7 @@ namespace Web::Layout {
 
 constexpr float text_justification_threshold = 0.1;
 
-InlineFormattingContext::InlineFormattingContext(FormattingState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
+InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
     , m_containing_block_state(state.get(containing_block))
 {

@@ -27,7 +27,7 @@ template<typename T>
     return ::max(min, ::min(value, max));
 }
 
-static float get_pixel_size(FormattingState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
+static float get_pixel_size(LayoutState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
 {
     if (!length_percentage.has_value())
         return 0;
@@ -35,7 +35,7 @@ static float get_pixel_size(FormattingState const& state, Box const& box, Option
     return length_percentage->resolved(box, inner_main_size).to_px(box);
 }
 
-FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& flex_container, FormattingContext* parent)
+FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex_container, FormattingContext* parent)
     : FormattingContext(Type::Flex, state, flex_container, parent)
     , m_flex_container_state(m_state.get_mutable(flex_container))
     , m_flex_direction(flex_container.computed_values().flex_direction())
@@ -526,7 +526,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
     // then layout with that and see what height comes out of it.
     float fit_content_cross_size = calculate_fit_content_width(item.box, m_available_space->cross);
 
-    FormattingState throwaway_state(&m_state);
+    LayoutState throwaway_state(&m_state);
     auto& box_state = throwaway_state.get_mutable(item.box);
 
     // Item has definite cross size, layout with that as the used cross size.
@@ -619,7 +619,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
             return specified_main_size_of_child_box(child_box);
 
         // NOTE: To avoid repeated layout work, we keep a cache of flex item main sizes on the
-        //       root FormattingState object. It's available through a full layout cycle.
+        //       root LayoutState object. It's available through a full layout cycle.
         // FIXME: Make sure this cache isn't overly permissive..
         auto& size_cache = m_state.m_root.flex_item_size_cache;
         auto it = size_cache.find(&flex_item.box);
@@ -976,7 +976,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     if (has_definite_main_size(item.box)) {
         // For indefinite cross sizes, we perform a throwaway layout and then measure it.
-        FormattingState throwaway_state(&m_state);
+        LayoutState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
         // Item has definite main size, layout with that as the used main size.

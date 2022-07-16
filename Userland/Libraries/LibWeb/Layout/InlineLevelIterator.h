@@ -48,7 +48,7 @@ public:
         }
     };
 
-    InlineLevelIterator(Layout::InlineFormattingContext&, FormattingState&, Layout::BlockContainer const&, LayoutMode);
+    InlineLevelIterator(Layout::InlineFormattingContext&, LayoutState&, Layout::BlockContainer const&, LayoutMode);
 
     Optional<Item> next(float available_width);
 
@@ -66,9 +66,9 @@ private:
     Layout::Node const* next_inline_node_in_pre_order(Layout::Node const& current, Layout::Node const* stay_within);
 
     Layout::InlineFormattingContext& m_inline_formatting_context;
-    Layout::FormattingState& m_formatting_state;
+    Layout::LayoutState& m_formatting_state;
     Layout::BlockContainer const& m_container;
-    Layout::FormattingState::NodeState const& m_container_state;
+    Layout::LayoutState::NodeState const& m_container_state;
     Layout::Node const* m_current_node { nullptr };
     Layout::Node const* m_next_node { nullptr };
     LayoutMode const m_layout_mode;

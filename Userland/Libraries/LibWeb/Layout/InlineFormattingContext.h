@@ -15,7 +15,7 @@ namespace Web::Layout {
 
 class InlineFormattingContext final : public FormattingContext {
 public:
-    InlineFormattingContext(FormattingState&, BlockContainer const& containing_block, BlockFormattingContext& parent);
+    InlineFormattingContext(LayoutState&, BlockContainer const& containing_block, BlockFormattingContext& parent);
     ~InlineFormattingContext();
 
     BlockFormattingContext& parent();
@@ -36,7 +36,7 @@ private:
     void generate_line_boxes(LayoutMode);
     void apply_justification_to_fragments(CSS::TextJustify, LineBox&, bool is_last_line);
 
-    FormattingState::NodeState const& m_containing_block_state;
+    LayoutState::NodeState const& m_containing_block_state;
     float m_effective_containing_block_width { 0 };
 };
 

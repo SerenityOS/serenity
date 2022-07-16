@@ -9,7 +9,7 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state, LayoutMode layout_mode)
+LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& formatting_state, LayoutMode layout_mode)
     : m_context(context)
     , m_formatting_state(formatting_state)
     , m_containing_block_state(formatting_state.get_mutable(context.containing_block()))
@@ -76,7 +76,7 @@ bool LineBuilder::should_break(float next_item_width)
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
-static float box_baseline(FormattingState const& state, Box const& box)
+static float box_baseline(LayoutState const& state, Box const& box)
 {
     auto const& box_state = state.get(box);
 

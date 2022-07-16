@@ -19,7 +19,7 @@
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(FormattingState& state, BlockContainer const& root, FormattingContext* parent)
+BlockFormattingContext::BlockFormattingContext(LayoutState& state, BlockContainer const& root, FormattingContext* parent)
     : FormattingContext(Type::Block, state, root, parent)
 {
 }
@@ -308,7 +308,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     m_state.get_mutable(box).content_width = compute_width_for_replaced_element(m_state, box);
 }
 
-float BlockFormattingContext::compute_theoretical_height(FormattingState const& state, Box const& box)
+float BlockFormattingContext::compute_theoretical_height(LayoutState const& state, Box const& box)
 {
     auto const& computed_values = box.computed_values();
     auto const& containing_block = *box.containing_block();
@@ -342,7 +342,7 @@ float BlockFormattingContext::compute_theoretical_height(FormattingState const& 
     return height;
 }
 
-void BlockFormattingContext::compute_height(Box const& box, FormattingState& state)
+void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
 {
     auto const& computed_values = box.computed_values();
     auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
@@ -609,7 +609,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     box_state.offset = Gfx::FloatPoint { x, box_state.offset.y() };
 }
 
-static void measure_scrollable_overflow(FormattingState const& state, Box const& box, float& bottom_edge, float& right_edge)
+static void measure_scrollable_overflow(LayoutState const& state, Box const& box, float& bottom_edge, float& right_edge)
 {
     auto const& child_state = state.get(box);
     auto child_rect = absolute_content_rect(box, state);
@@ -644,7 +644,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     measure_scrollable_overflow(m_state, icb, bottom_edge, right_edge);
 
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
-        // FIXME: Move overflow data to FormattingState!
+        // FIXME: Move overflow data to LayoutState!
         auto& overflow_data = icb_state.ensure_overflow_data();
         overflow_data.scrollable_overflow_rect = viewport_rect.to_type<float>();
         // NOTE: The edges are *within* the rectangle, so we add 1 to get the width and height.

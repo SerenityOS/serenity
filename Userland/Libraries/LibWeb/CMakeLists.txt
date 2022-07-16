@@ -257,7 +257,6 @@ set(SOURCES
     Layout/CheckBox.cpp
     Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
-    Layout/FormattingState.cpp
     Layout/FrameBox.cpp
     Layout/ImageBox.cpp
     Layout/InitialContainingBlock.cpp
@@ -267,6 +266,7 @@ set(SOURCES
     Layout/Label.cpp
     Layout/LabelableNode.cpp
     Layout/LayoutPosition.cpp
+    Layout/LayoutState.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
     Layout/LineBuilder.cpp

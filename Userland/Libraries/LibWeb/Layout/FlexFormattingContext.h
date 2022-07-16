@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class FlexFormattingContext final : public FormattingContext {
 public:
-    FlexFormattingContext(FormattingState&, Box const& flex_container, FormattingContext* parent);
+    FlexFormattingContext(LayoutState&, Box const& flex_container, FormattingContext* parent);
     ~FlexFormattingContext();
 
     virtual bool inhibits_floating() const override { return true; }
@@ -155,7 +155,7 @@ private:
 
     CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
 
-    FormattingState::NodeState& m_flex_container_state;
+    LayoutState::NodeState& m_flex_container_state;
 
     Vector<FlexLine> m_flex_lines;
     Vector<FlexItem> m_flex_items;

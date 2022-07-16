@@ -67,9 +67,9 @@ public:
 
     Gfx::FloatRect selection_rect(Gfx::Font const&) const;
 
-    float height_of_inline_level_box(FormattingState const&) const;
-    float top_of_inline_level_box(FormattingState const&) const;
-    float bottom_of_inline_level_box(FormattingState const&) const;
+    float height_of_inline_level_box(LayoutState const&) const;
+    float top_of_inline_level_box(LayoutState const&) const;
+    float bottom_of_inline_level_box(LayoutState const&) const;
 
 private:
     Node const& m_layout_node;

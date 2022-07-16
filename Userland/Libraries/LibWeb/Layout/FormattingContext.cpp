@@ -18,7 +18,7 @@
 
 namespace Web::Layout {
 
-FormattingContext::FormattingContext(Type type, FormattingState& state, Box const& context_box, FormattingContext* parent)
+FormattingContext::FormattingContext(Type type, LayoutState& state, Box const& context_box, FormattingContext* parent)
     : m_type(type)
     , m_parent(parent)
     , m_context_box(context_box)
@@ -85,7 +85,7 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
     return false;
 }
 
-OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(FormattingState& state, Box const& child_box)
+OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(LayoutState& state, Box const& child_box)
 {
     if (child_box.is_replaced_box() && !child_box.can_have_children()) {
         // NOTE: This is a bit strange.
@@ -94,7 +94,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
         //       without having separate code to handle replaced elements.
         // FIXME: Find a better abstraction for this.
         struct ReplacedFormattingContext : public FormattingContext {
-            ReplacedFormattingContext(FormattingState& state, Box const& box)
+            ReplacedFormattingContext(LayoutState& state, Box const& box)
                 : FormattingContext(Type::Block, state, box)
             {
             }
@@ -131,7 +131,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
         // FIXME: Remove this once it's no longer needed. It currently swallows problem with standalone
         //        table-related boxes that don't get fixed up by CSS anonymous table box generation.
         struct DummyFormattingContext : public FormattingContext {
-            DummyFormattingContext(FormattingState& state, Box const& box)
+            DummyFormattingContext(LayoutState& state, Box const& box)
                 : FormattingContext(Type::Block, state, box)
             {
             }
@@ -181,7 +181,7 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
     };
 }
 
-static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& state, float w, float h, ReplacedBox const& box)
+static Gfx::FloatSize solve_replaced_size_constraint(LayoutState const& state, float w, float h, ReplacedBox const& box)
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
@@ -223,7 +223,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& stat
     return { w, h };
 }
 
-float FormattingContext::compute_auto_height_for_block_level_element(FormattingState const& state, Box const& box)
+float FormattingContext::compute_auto_height_for_block_level_element(LayoutState const& state, Box const& box)
 {
     if (creates_block_formatting_context(box))
         return compute_auto_height_for_block_formatting_context_root(state, verify_cast<BlockContainer>(box));
@@ -272,7 +272,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
 }
 
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
-float FormattingContext::compute_auto_height_for_block_formatting_context_root(FormattingState const& state, BlockContainer const& root)
+float FormattingContext::compute_auto_height_for_block_formatting_context_root(LayoutState const& state, BlockContainer const& root)
 {
     // 10.6.7 'Auto' heights for block formatting context roots
     Optional<float> top;
@@ -335,7 +335,7 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
 }
 
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
-float FormattingContext::tentative_width_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_width)
+float FormattingContext::tentative_width_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_width)
 {
     auto const& containing_block = *box.containing_block();
     auto height_of_containing_block = CSS::Length::make_px(state.get(containing_block).content_height);
@@ -392,7 +392,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_element(Box con
         compute_height_for_absolutely_positioned_non_replaced_element(box);
 }
 
-float FormattingContext::compute_width_for_replaced_element(FormattingState const& state, ReplacedBox const& box)
+float FormattingContext::compute_width_for_replaced_element(LayoutState const& state, ReplacedBox const& box)
 {
     // 10.3.4 Block-level, replaced elements in normal flow...
     // 10.3.2 Inline, replaced elements
@@ -437,7 +437,7 @@ float FormattingContext::compute_width_for_replaced_element(FormattingState cons
 
 // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow, 'inline-block' replaced elements in normal flow and floating replaced elements
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
-float FormattingContext::tentative_height_for_replaced_element(FormattingState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_height)
+float FormattingContext::tentative_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_height)
 {
     auto computed_width = box.computed_values().width();
 
@@ -465,7 +465,7 @@ float FormattingContext::tentative_height_for_replaced_element(FormattingState c
     return computed_height.resolved(box, CSS::Length::make_px(containing_block_height_for(box, state))).to_px(box);
 }
 
-float FormattingContext::compute_height_for_replaced_element(FormattingState const& state, ReplacedBox const& box)
+float FormattingContext::compute_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box)
 {
     // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
     // 'inline-block' replaced elements in normal flow and floating replaced elements
@@ -845,7 +845,7 @@ float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Op
     return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), available_space);
 }
 
-float FormattingContext::calculate_auto_height(FormattingState const& state, Box const& box)
+float FormattingContext::calculate_auto_height(LayoutState const& state, Box const& box)
 {
     if (is<ReplacedBox>(box)) {
         return compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
@@ -861,11 +861,11 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
 
     auto& root_state = m_state.m_root;
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
     if (cache.min_content_width.has_value())
         return *cache.min_content_width;
 
-    FormattingState throwaway_state(&m_state);
+    LayoutState throwaway_state(&m_state);
     auto const& containing_block = *box.containing_block();
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.content_width = 0;
@@ -901,11 +901,11 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
 
     auto& root_state = m_state.m_root;
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
     if (cache.max_content_width.has_value())
         return *cache.max_content_width;
 
-    FormattingState throwaway_state(&m_state);
+    LayoutState throwaway_state(&m_state);
     auto const& containing_block = *box.containing_block();
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.content_width = INFINITY;
@@ -941,11 +941,11 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
 
     auto& root_state = m_state.m_root;
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
     if (cache.min_content_height.has_value())
         return *cache.min_content_height;
 
-    FormattingState throwaway_state(&m_state);
+    LayoutState throwaway_state(&m_state);
     auto const& containing_block = *box.containing_block();
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.content_height = 0;
@@ -981,11 +981,11 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
 
     auto& root_state = m_state.m_root;
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new FormattingState::IntrinsicSizes); });
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
     if (cache.max_content_height.has_value())
         return *cache.max_content_height;
 
-    FormattingState throwaway_state(&m_state);
+    LayoutState throwaway_state(&m_state);
     auto const& containing_block = *box.containing_block();
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.content_height = INFINITY;
@@ -1014,7 +1014,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
     return *cache.max_content_height;
 }
 
-float FormattingContext::containing_block_width_for(Box const& box, FormattingState const& state)
+float FormattingContext::containing_block_width_for(Box const& box, LayoutState const& state)
 {
     auto& containing_block_state = state.get(*box.containing_block());
     auto& box_state = state.get(box);
@@ -1030,7 +1030,7 @@ float FormattingContext::containing_block_width_for(Box const& box, FormattingSt
     VERIFY_NOT_REACHED();
 }
 
-float FormattingContext::containing_block_height_for(Box const& box, FormattingState const& state)
+float FormattingContext::containing_block_height_for(Box const& box, LayoutState const& state)
 {
     auto& containing_block_state = state.get(*box.containing_block());
     auto& box_state = state.get(box);

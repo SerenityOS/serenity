@@ -5,12 +5,12 @@
  */
 
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/FormattingState.h>
+#include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::Layout {
 
-FormattingState::NodeState& FormattingState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
+LayoutState::NodeState& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
 {
     auto serial_id = box.serial_id();
     if (nodes[serial_id])
@@ -30,7 +30,7 @@ FormattingState::NodeState& FormattingState::get_mutable(NodeWithStyleAndBoxMode
     return *nodes[serial_id];
 }
 
-FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelMetrics const& box) const
+LayoutState::NodeState const& LayoutState::get(NodeWithStyleAndBoxModelMetrics const& box) const
 {
     auto serial_id = box.serial_id();
     if (nodes[serial_id])
@@ -40,14 +40,14 @@ FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelM
         if (ancestor->nodes[serial_id])
             return *ancestor->nodes[serial_id];
     }
-    const_cast<FormattingState*>(this)->nodes[serial_id] = adopt_own(*new NodeState);
-    const_cast<FormattingState*>(this)->nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    const_cast<LayoutState*>(this)->nodes[serial_id] = adopt_own(*new NodeState);
+    const_cast<LayoutState*>(this)->nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
     return *nodes[serial_id];
 }
 
-void FormattingState::commit()
+void LayoutState::commit()
 {
-    // Only the top-level FormattingState should ever be committed.
+    // Only the top-level LayoutState should ever be committed.
     VERIFY(!m_parent);
 
     HashTable<Layout::TextNode*> text_nodes;
@@ -91,7 +91,7 @@ void FormattingState::commit()
         text_node->set_paintable(text_node->create_paintable());
 }
 
-Gfx::FloatRect margin_box_rect(Box const& box, FormattingState const& state)
+Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
     auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width, box_state.content_height } };
@@ -102,7 +102,7 @@ Gfx::FloatRect margin_box_rect(Box const& box, FormattingState const& state)
     return rect;
 }
 
-Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, FormattingState const& state)
+Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = margin_box_rect(box, state);
     for (auto const* current = box.parent(); current; current = current->parent()) {
@@ -116,7 +116,7 @@ Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box 
     return rect;
 }
 
-Gfx::FloatRect absolute_content_rect(Box const& box, FormattingState const& state)
+Gfx::FloatRect absolute_content_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
     Gfx::FloatRect rect { box_state.offset, { box_state.content_width, box_state.content_height } };

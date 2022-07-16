@@ -614,7 +614,7 @@ void Document::update_layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::FormattingState formatting_state;
+    Layout::LayoutState formatting_state;
     formatting_state.nodes.resize(layout_node_count());
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
 
