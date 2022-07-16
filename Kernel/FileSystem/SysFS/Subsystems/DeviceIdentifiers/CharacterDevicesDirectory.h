@@ -13,7 +13,10 @@
 namespace Kernel {
 
 class Device;
+class DisplayConnector;
 class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
+    friend class DisplayConnector;
+
 public:
     virtual StringView name() const override { return "char"sv; }
     static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
