@@ -56,6 +56,8 @@ class SysFS;
 class SysFSDirectory;
 class SysFSRootDirectory;
 class SysFSBusDirectory;
+class PCIDeviceSysFSDirectory;
+class PCIBusSysFSDirectory;
 class SysFSDevicesDirectory;
 class SysFSDirectoryInode;
 class SysFSInode;

@@ -22,6 +22,16 @@ ErrorOr<void> enumerate(Function<void(DeviceIdentifier const&)> callback)
     return Access::the().fast_enumerate(callback);
 }
 
+ErrorOr<void> enumerate_locked(Function<void(DeviceIdentifier&)> callback)
+{
+    return Access::the().enumerate_locked(callback);
+}
+
+RefPtr<PCIDeviceSysFSDirectory> get_sysfs_pci_device_directory(Address address)
+{
+    return Access::the().get_sysfs_pci_device_directory(address);
+}
+
 DeviceIdentifier get_device_identifier(Address address)
 {
     return Access::the().get_device_identifier(address);

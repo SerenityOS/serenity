@@ -6,6 +6,7 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>

@@ -23,6 +23,10 @@ public:
     static bool initialize_for_one_pci_domain();
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
+    ErrorOr<void> enumerate_locked(Function<void(DeviceIdentifier&)>&);
+
+    RefPtr<PCIDeviceSysFSDirectory> get_sysfs_pci_device_directory(Address address);
+
     void rescan_hardware();
 
     static Access& the();

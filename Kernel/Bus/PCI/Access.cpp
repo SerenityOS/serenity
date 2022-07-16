@@ -174,6 +174,29 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     }
 }
 
+RefPtr<PCIDeviceSysFSDirectory> Access::get_sysfs_pci_device_directory(Address address)
+{
+    SpinlockLocker locker(m_access_lock);
+    VERIFY(!m_device_identifiers.is_empty());
+
+    for (auto& device_identifier : m_device_identifiers) {
+        if (device_identifier.address() == address)
+            return device_identifier.sysfs_pci_device_directory();
+    }
+    return {};
+}
+
+ErrorOr<void> Access::enumerate_locked(Function<void(DeviceIdentifier&)>& callback)
+{
+    SpinlockLocker locker(m_access_lock);
+    VERIFY(!m_device_identifiers.is_empty());
+
+    for (auto& device_identifier : m_device_identifiers) {
+        callback(device_identifier);
+    }
+    return {};
+}
+
 ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
 {
     // Note: We hold the m_access_lock for a brief moment just to ensure we get

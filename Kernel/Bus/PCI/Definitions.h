@@ -11,7 +11,10 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Bus/PCI/Address.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>
+#include <Kernel/Forward.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::PCI {
@@ -143,58 +146,6 @@ private:
     u8 m_end_bus;
 };
 
-struct Address {
-public:
-    Address() = default;
-    Address(u32 domain)
-        : m_domain(domain)
-        , m_bus(0)
-        , m_device(0)
-        , m_function(0)
-    {
-    }
-    Address(u32 domain, u8 bus, u8 device, u8 function)
-        : m_domain(domain)
-        , m_bus(bus)
-        , m_device(device)
-        , m_function(function)
-    {
-    }
-
-    Address(Address const& address) = default;
-
-    bool is_null() const { return !m_bus && !m_device && !m_function; }
-    operator bool() const { return !is_null(); }
-
-    // Disable default implementations that would use surprising integer promotion.
-    bool operator<=(Address const&) const = delete;
-    bool operator>=(Address const&) const = delete;
-    bool operator<(Address const&) const = delete;
-    bool operator>(Address const&) const = delete;
-
-    bool operator==(Address const& other) const
-    {
-        if (this == &other)
-            return true;
-        return m_domain == other.m_domain && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
-    }
-    bool operator!=(Address const& other) const
-    {
-        return !(*this == other);
-    }
-
-    u32 domain() const { return m_domain; }
-    u8 bus() const { return m_bus; }
-    u8 device() const { return m_device; }
-    u8 function() const { return m_function; }
-
-private:
-    u32 m_domain { 0 };
-    u8 m_bus { 0 };
-    u8 m_device { 0 };
-    u8 m_function { 0 };
-};
-
 class Capability {
 public:
     Capability(Address const& address, u8 id, u8 ptr)
@@ -273,6 +224,9 @@ public:
         m_prog_if = new_progif;
     }
 
+    RefPtr<PCIDeviceSysFSDirectory> sysfs_pci_device_directory() const;
+    void set_sysfs_pci_device_directory(Badge<PCIBusSysFSDirectory>, PCIDeviceSysFSDirectory const& pci_device_directory);
+
 private:
     Address m_address;
     HardwareID m_hardware_id;
@@ -288,6 +242,8 @@ private:
     InterruptPin m_interrupt_pin;
 
     Vector<Capability> m_capabilities;
+
+    RefPtr<PCIDeviceSysFSDirectory> m_pci_device_directory;
 };
 
 class Domain;

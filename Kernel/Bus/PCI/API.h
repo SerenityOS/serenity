@@ -22,6 +22,7 @@ u32 read32(Address address, PCI::RegisterOffset field);
 HardwareID get_hardware_id(PCI::Address);
 bool is_io_space_enabled(Address);
 ErrorOr<void> enumerate(Function<void(DeviceIdentifier const&)> callback);
+ErrorOr<void> enumerate_locked(Function<void(DeviceIdentifier&)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 void raw_access(Address, u32, size_t, u32);
@@ -40,5 +41,7 @@ void disable_io_space(Address);
 void enable_memory_space(Address);
 void disable_memory_space(Address);
 DeviceIdentifier get_device_identifier(Address address);
+
+RefPtr<PCIDeviceSysFSDirectory> get_sysfs_pci_device_directory(Address address);
 
 }

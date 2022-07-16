@@ -6,6 +6,7 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
@@ -24,9 +25,10 @@ UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
     : SysFSDirectory(SysFSComponentRegistry::the().buses_directory())
 {
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
-        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-            auto pci_device = PCIDeviceSysFSDirectory::create(*this, device_identifier.address());
-            list.append(pci_device);
+        MUST(PCI::enumerate_locked([&](PCI::DeviceIdentifier& device_identifier) {
+            auto pci_device_directory = PCIDeviceSysFSDirectory::create(*this, device_identifier.address());
+            list.append(pci_device_directory);
+            device_identifier.set_sysfs_pci_device_directory({}, *pci_device_directory);
         }));
         return {};
     }));
