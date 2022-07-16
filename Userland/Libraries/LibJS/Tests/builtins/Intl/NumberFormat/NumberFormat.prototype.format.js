@@ -523,6 +523,50 @@ describe("style=decimal", () => {
         expect(plPl.format(123456)).toBe("123456");
         expect(plPl.format(1234567)).toBe("1234567");
     });
+
+    test("roundingPriority=lessPrecision", () => {
+        const nf = (locale, minSignificant, maxSignificant, minFraction, maxFraction) => {
+            return new Intl.NumberFormat(locale, {
+                roundingPriority: "lessPrecision",
+                minimumSignificantDigits: minSignificant,
+                maximumSignificantDigits: maxSignificant,
+                minimumFractionDigits: minFraction,
+                maximumFractionDigits: maxFraction,
+            });
+        };
+
+        expect(nf("en", 2, undefined, 2, undefined).format(1)).toBe("1.00");
+        expect(nf("en", 3, undefined, 1, undefined).format(1)).toBe("1.0");
+        expect(nf("en", undefined, 2, undefined, 2).format(1.23)).toBe("1.2");
+        expect(nf("en", undefined, 3, undefined, 1).format(1.23)).toBe("1.2");
+
+        expect(nf("ar", 2, undefined, 2, undefined).format(1)).toBe("\u0661\u066b\u0660\u0660");
+        expect(nf("ar", 3, undefined, 1, undefined).format(1)).toBe("\u0661\u066b\u0660");
+        expect(nf("ar", undefined, 2, undefined, 2).format(1.23)).toBe("\u0661\u066b\u0662");
+        expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662");
+    });
+
+    test("roundingPriority=morePrecision", () => {
+        const nf = (locale, minSignificant, maxSignificant, minFraction, maxFraction) => {
+            return new Intl.NumberFormat(locale, {
+                roundingPriority: "morePrecision",
+                minimumSignificantDigits: minSignificant,
+                maximumSignificantDigits: maxSignificant,
+                minimumFractionDigits: minFraction,
+                maximumFractionDigits: maxFraction,
+            });
+        };
+
+        expect(nf("en", 2, undefined, 2, undefined).format(1)).toBe("1.0");
+        expect(nf("en", 3, undefined, 1, undefined).format(1)).toBe("1.00");
+        expect(nf("en", undefined, 2, undefined, 2).format(1.23)).toBe("1.23");
+        expect(nf("en", undefined, 3, undefined, 1).format(1.23)).toBe("1.23");
+
+        expect(nf("ar", 2, undefined, 2, undefined).format(1)).toBe("\u0661\u066b\u0660");
+        expect(nf("ar", 3, undefined, 1, undefined).format(1)).toBe("\u0661\u066b\u0660\u0660");
+        expect(nf("ar", undefined, 2, undefined, 2).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
+        expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
+    });
 });
 
 describe("style=percent", () => {

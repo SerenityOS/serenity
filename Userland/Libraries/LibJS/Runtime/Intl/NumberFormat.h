@@ -24,7 +24,6 @@ public:
         Invalid,
         SignificantDigits,
         FractionDigits,
-        CompactRounding, // FIXME: Remove this when corresponding AOs are updated for NumberFormat V3.
         MorePrecision,
         LessPrecision,
     };
@@ -255,7 +254,8 @@ struct FormatResult {
 };
 
 struct RawFormatResult : public FormatResult {
-    int digits { 0 }; // [[IntegerDigitsCount]]
+    int digits { 0 };             // [[IntegerDigitsCount]]
+    int rounding_magnitude { 0 }; // [[RoundingMagnitude]]
 };
 
 int currency_digits(StringView currency);
