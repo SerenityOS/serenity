@@ -233,11 +233,7 @@ ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
 
 ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    if (request != GRAPHICS_IOCTL_GET_HEAD_EDID) {
-        // Allow anyone to query the EDID. Eventually we'll publish the current EDID on /sys
-        // so it doesn't really make sense to require the video pledge to query it.
-        TRY(Process::current().require_promise(Pledge::video));
-    }
+    TRY(Process::current().require_promise(Pledge::video));
 
     // TODO: We really should have ioctls for destroying resources as well
     switch (request) {
@@ -271,25 +267,6 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             head_mode_setting.vertical_offset = m_current_mode_setting.vertical_offset;
         }
         return copy_to_user(user_head_mode_setting, &head_mode_setting);
-    }
-    case GRAPHICS_IOCTL_GET_HEAD_EDID: {
-        auto user_head_edid = static_ptr_cast<GraphicsHeadEDID*>(arg);
-        GraphicsHeadEDID head_edid {};
-        TRY(copy_from_user(&head_edid, user_head_edid));
-
-        auto edid_bytes = TRY(get_edid());
-        if (head_edid.bytes != nullptr) {
-            // Only return the EDID if a buffer was provided. Either way,
-            // we'll write back the bytes_size with the actual size
-            if (head_edid.bytes_size < edid_bytes.size()) {
-                head_edid.bytes_size = edid_bytes.size();
-                TRY(copy_to_user(user_head_edid, &head_edid));
-                return Error::from_errno(EOVERFLOW);
-            }
-            TRY(copy_to_user(head_edid.bytes, (void const*)edid_bytes.data(), edid_bytes.size()));
-        }
-        head_edid.bytes_size = edid_bytes.size();
-        return copy_to_user(user_head_edid, &head_edid);
     }
     case GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING: {
         auto user_mode_setting = static_ptr_cast<GraphicsHeadModeSetting const*>(arg);
