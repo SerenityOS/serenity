@@ -124,13 +124,14 @@
     __JS_ENUMERATE(toPrimitive, to_primitive)                \
     __JS_ENUMERATE(toStringTag, to_string_tag)
 
-#define JS_ENUMERATE_REGEXP_FLAGS              \
-    __JS_ENUMERATE(hasIndices, has_indices, d) \
-    __JS_ENUMERATE(global, global, g)          \
-    __JS_ENUMERATE(ignoreCase, ignore_case, i) \
-    __JS_ENUMERATE(multiline, multiline, m)    \
-    __JS_ENUMERATE(dotAll, dot_all, s)         \
-    __JS_ENUMERATE(unicode, unicode, u)        \
+#define JS_ENUMERATE_REGEXP_FLAGS                \
+    __JS_ENUMERATE(hasIndices, has_indices, d)   \
+    __JS_ENUMERATE(global, global, g)            \
+    __JS_ENUMERATE(ignoreCase, ignore_case, i)   \
+    __JS_ENUMERATE(multiline, multiline, m)      \
+    __JS_ENUMERATE(dotAll, dot_all, s)           \
+    __JS_ENUMERATE(unicodeSets, unicode_sets, v) \
+    __JS_ENUMERATE(unicode, unicode, u)          \
     __JS_ENUMERATE(sticky, sticky, y)
 
 namespace JS {

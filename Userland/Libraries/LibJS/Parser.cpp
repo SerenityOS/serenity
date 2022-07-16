@@ -1522,7 +1522,14 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
             parsed_flags = parsed_flags_or_error.release_value();
     }
 
-    auto parsed_pattern = parse_regex_pattern(pattern, parsed_flags.has_flag_set(ECMAScriptFlags::Unicode));
+    String parsed_pattern;
+    auto parsed_pattern_result = parse_regex_pattern(pattern, parsed_flags.has_flag_set(ECMAScriptFlags::Unicode), parsed_flags.has_flag_set(ECMAScriptFlags::UnicodeSets));
+    if (parsed_pattern_result.is_error()) {
+        syntax_error(parsed_pattern_result.release_error().error, rule_start.position());
+        parsed_pattern = String::empty();
+    } else {
+        parsed_pattern = parsed_pattern_result.release_value();
+    }
     auto parsed_regex = Regex<ECMA262>::parse_pattern(parsed_pattern, parsed_flags);
 
     if (parsed_regex.error != regex::Error::NoError)
