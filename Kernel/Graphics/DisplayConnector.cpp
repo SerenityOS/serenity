@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -57,12 +60,31 @@ ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelB
 void DisplayConnector::will_be_destroyed()
 {
     GraphicsManagement::the().detach_display_connector({}, *this);
-    Device::will_be_destroyed();
+
+    VERIFY(m_symlink_sysfs_component);
+    VERIFY(!is_block_device());
+    SysFSCharacterDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
+        list.remove(*m_symlink_sysfs_component);
+    });
+    m_symlink_sysfs_component.clear();
+    SysFSDisplayConnectorsDirectory::the().unplug({}, *m_sysfs_device_directory);
+    before_will_be_destroyed_remove_from_device_management();
 }
 
 void DisplayConnector::after_inserting()
 {
-    Device::after_inserting();
+    after_inserting_add_to_device_management();
+    auto sysfs_display_connector_device_directory = DisplayConnectorSysFSDirectory::create(SysFSDisplayConnectorsDirectory::the(), *this);
+    m_sysfs_device_directory = sysfs_display_connector_device_directory;
+    SysFSDisplayConnectorsDirectory::the().plug({}, *sysfs_display_connector_device_directory);
+    VERIFY(!m_symlink_sysfs_component);
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSDeviceIdentifiersDirectory::the(), *this, *m_sysfs_device_directory));
+    m_symlink_sysfs_component = sys_fs_component;
+    VERIFY(!is_block_device());
+    SysFSCharacterDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
+        list.append(*m_symlink_sysfs_component);
+    });
+
     auto rounded_size = MUST(Memory::page_round_up(m_framebuffer_resource_size));
 
     if (!m_framebuffer_at_arbitrary_physical_range) {
