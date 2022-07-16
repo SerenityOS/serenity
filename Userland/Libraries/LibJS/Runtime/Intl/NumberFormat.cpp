@@ -446,7 +446,7 @@ static ALWAYS_INLINE bool is_zero(Value number)
 {
     if (number.is_number())
         return number.as_double() == 0.0;
-    return number.as_bigint().big_integer() == Crypto::SignedBigInteger::create_from(0);
+    return number.as_bigint().big_integer().is_zero();
 }
 
 static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)

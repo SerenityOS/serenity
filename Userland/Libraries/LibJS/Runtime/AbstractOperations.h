@@ -183,7 +183,7 @@ auto modulo(T x, U y) requires(IsArithmetic<T>, IsArithmetic<U>)
 
 auto modulo(Crypto::BigInteger auto const& x, Crypto::BigInteger auto const& y)
 {
-    VERIFY(y != "0"_bigint);
+    VERIFY(!y.is_zero());
     auto result = x.divided_by(y).remainder;
     if (result.is_negative())
         result = result.plus(y);
