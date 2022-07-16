@@ -25,7 +25,7 @@ enum class LayoutMode {
     Normal,
 
     // Intrinsic size determination.
-    // Boxes honor min-content and max-content constraints (set via LayoutState::NodeState::{width,height}_constraint)
+    // Boxes honor min-content and max-content constraints (set via LayoutState::UsedValues::{width,height}_constraint)
     // by considering their containing block to be 0-sized or infinitely large in the relevant axis.
     IntrinsicSizeDetermination,
 };

@@ -10,39 +10,39 @@
 
 namespace Web::Layout {
 
-LayoutState::NodeState& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
+LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
 {
     auto serial_id = box.serial_id();
-    if (nodes[serial_id])
-        return *nodes[serial_id];
+    if (used_values_per_layout_node[serial_id])
+        return *used_values_per_layout_node[serial_id];
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (ancestor->nodes[serial_id]) {
-            auto cow_node_state = adopt_own(*new NodeState(*ancestor->nodes[serial_id]));
-            auto* cow_node_state_ptr = cow_node_state.ptr();
-            nodes[serial_id] = move(cow_node_state);
-            return *cow_node_state_ptr;
+        if (ancestor->used_values_per_layout_node[serial_id]) {
+            auto cow_used_values = adopt_own(*new UsedValues(*ancestor->used_values_per_layout_node[serial_id]));
+            auto* cow_used_values_ptr = cow_used_values.ptr();
+            used_values_per_layout_node[serial_id] = move(cow_used_values);
+            return *cow_used_values_ptr;
         }
     }
 
-    nodes[serial_id] = adopt_own(*new NodeState);
-    nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
-    return *nodes[serial_id];
+    used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
+    used_values_per_layout_node[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    return *used_values_per_layout_node[serial_id];
 }
 
-LayoutState::NodeState const& LayoutState::get(NodeWithStyleAndBoxModelMetrics const& box) const
+LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics const& box) const
 {
     auto serial_id = box.serial_id();
-    if (nodes[serial_id])
-        return *nodes[serial_id];
+    if (used_values_per_layout_node[serial_id])
+        return *used_values_per_layout_node[serial_id];
 
     for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (ancestor->nodes[serial_id])
-            return *ancestor->nodes[serial_id];
+        if (ancestor->used_values_per_layout_node[serial_id])
+            return *ancestor->used_values_per_layout_node[serial_id];
     }
-    const_cast<LayoutState*>(this)->nodes[serial_id] = adopt_own(*new NodeState);
-    const_cast<LayoutState*>(this)->nodes[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
-    return *nodes[serial_id];
+    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
+    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    return *used_values_per_layout_node[serial_id];
 }
 
 void LayoutState::commit()
@@ -52,17 +52,17 @@ void LayoutState::commit()
 
     HashTable<Layout::TextNode*> text_nodes;
 
-    for (auto& node_state_ptr : nodes) {
-        if (!node_state_ptr)
+    for (auto& used_values_ptr : used_values_per_layout_node) {
+        if (!used_values_ptr)
             continue;
-        auto& node_state = *node_state_ptr;
-        auto& node = *node_state.node;
+        auto& used_values = *used_values_ptr;
+        auto& node = *used_values.node;
 
         // Transfer box model metrics.
-        node.box_model().inset = { node_state.inset_top, node_state.inset_right, node_state.inset_bottom, node_state.inset_left };
-        node.box_model().padding = { node_state.padding_top, node_state.padding_right, node_state.padding_bottom, node_state.padding_left };
-        node.box_model().border = { node_state.border_top, node_state.border_right, node_state.border_bottom, node_state.border_left };
-        node.box_model().margin = { node_state.margin_top, node_state.margin_right, node_state.margin_bottom, node_state.margin_left };
+        node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
+        node.box_model().padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
+        node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
+        node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
 
         node.set_paintable(node.create_paintable());
 
@@ -70,19 +70,19 @@ void LayoutState::commit()
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box&>(node);
             auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
-            paint_box.set_offset(node_state.offset);
-            paint_box.set_content_size(node_state.content_width, node_state.content_height);
-            paint_box.set_overflow_data(move(node_state.overflow_data));
-            paint_box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
+            paint_box.set_offset(used_values.offset);
+            paint_box.set_content_size(used_values.content_width, used_values.content_height);
+            paint_box.set_overflow_data(move(used_values.overflow_data));
+            paint_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
 
             if (is<Layout::BlockContainer>(box)) {
-                for (auto& line_box : node_state.line_boxes) {
+                for (auto& line_box : used_values.line_boxes) {
                     for (auto& fragment : line_box.fragments()) {
                         if (fragment.layout_node().is_text_node())
                             text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
                     }
                 }
-                static_cast<Painting::PaintableWithLines&>(paint_box).set_line_boxes(move(node_state.line_boxes));
+                static_cast<Painting::PaintableWithLines&>(paint_box).set_line_boxes(move(used_values.line_boxes));
             }
         }
     }

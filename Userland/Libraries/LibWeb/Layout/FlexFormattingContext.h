@@ -155,7 +155,7 @@ private:
 
     CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
 
-    LayoutState::NodeState& m_flex_container_state;
+    LayoutState::UsedValues& m_flex_container_state;
 
     Vector<FlexLine> m_flex_lines;
     Vector<FlexItem> m_flex_items;

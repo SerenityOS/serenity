@@ -30,7 +30,7 @@ struct LayoutState {
         : m_parent(parent)
         , m_root(find_root())
     {
-        nodes.resize(m_root.nodes.size());
+        used_values_per_layout_node.resize(m_root.used_values_per_layout_node.size());
     }
 
     LayoutState const& find_root() const
@@ -41,7 +41,7 @@ struct LayoutState {
         return *root;
     }
 
-    struct NodeState {
+    struct UsedValues {
         Layout::NodeWithStyleAndBoxModelMetrics* node { nullptr };
 
         float content_width { 0 };
@@ -103,13 +103,13 @@ struct LayoutState {
 
     void commit();
 
-    // NOTE: get_mutable() will CoW the NodeState if it's inherited from an ancestor state;
-    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
+    // NOTE: get_mutable() will CoW the UsedValues if it's inherited from an ancestor state;
+    UsedValues& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
 
-    // NOTE: get() will not CoW the NodeState.
-    NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
+    // NOTE: get() will not CoW the UsedValues.
+    UsedValues const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    Vector<OwnPtr<NodeState>> nodes;
+    Vector<OwnPtr<UsedValues>> used_values_per_layout_node;
 
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.

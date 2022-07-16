@@ -614,12 +614,12 @@ void Document::update_layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::LayoutState formatting_state;
-    formatting_state.nodes.resize(layout_node_count());
-    Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
+    Layout::LayoutState layout_state;
+    layout_state.used_values_per_layout_node.resize(layout_node_count());
+    Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
 
     auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
-    auto& icb_state = formatting_state.get_mutable(icb);
+    auto& icb_state = layout_state.get_mutable(icb);
     icb_state.content_width = viewport_rect.width();
     icb_state.content_height = viewport_rect.height();
 
@@ -627,7 +627,7 @@ void Document::update_layout()
     icb.set_has_definite_height(true);
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
-    formatting_state.commit();
+    layout_state.commit();
 
     browsing_context()->set_needs_display();
 

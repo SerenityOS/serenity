@@ -36,7 +36,7 @@ private:
     void generate_line_boxes(LayoutMode);
     void apply_justification_to_fragments(CSS::TextJustify, LineBox&, bool is_last_line);
 
-    LayoutState::NodeState const& m_containing_block_state;
+    LayoutState::UsedValues const& m_containing_block_state;
     float m_effective_containing_block_width { 0 };
 };
 
