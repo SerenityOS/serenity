@@ -510,6 +510,18 @@ RefPtr<AST::Node> Parser::parse_pipe_sequence()
 
     auto before_pipe = save_offset();
     consume();
+    auto also_pipe_stderr = peek() == '&';
+    if (also_pipe_stderr) {
+        consume();
+
+        RefPtr<AST::Node> redirection;
+        {
+            auto redirection_start = push_start();
+            redirection = create<AST::Fd2FdRedirection>(STDERR_FILENO, STDOUT_FILENO);
+        }
+
+        left = create<AST::Join>(left.release_nonnull(), redirection.release_nonnull());
+    }
 
     if (auto pipe_seq = parse_pipe_sequence()) {
         return create<AST::Pipe>(left.release_nonnull(), pipe_seq.release_nonnull()); // Pipe
