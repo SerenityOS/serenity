@@ -8,6 +8,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DisplayConnectorsDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/SymbolicLinkLinkedGraphicsDeviceComponent.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Sections.h>
@@ -25,9 +26,16 @@ UNMAP_AFTER_INIT NonnullRefPtr<GraphicsAdapterSysFSDirectory> GraphicsAdapterSys
 
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSSymbolicLinkLinkedGraphicsDeviceComponent::try_create(*directory, *sysfs_pci_device_directory).release_value_but_fixme_should_propagate_errors());
+        directory->m_display_connectors_symlinks_directory = GraphicsAdapterDisplayConnectorsSysFSDirectory::try_create(*directory).release_value_but_fixme_should_propagate_errors();
+        list.append(*directory->m_display_connectors_symlinks_directory);
         return {};
     }));
     return directory;
+}
+
+RefPtr<GraphicsAdapterDisplayConnectorsSysFSDirectory> GraphicsAdapterSysFSDirectory::display_connectors_symlinks_directory() const
+{
+    return m_display_connectors_symlinks_directory;
 }
 
 UNMAP_AFTER_INIT GraphicsAdapterSysFSDirectory::GraphicsAdapterSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory)

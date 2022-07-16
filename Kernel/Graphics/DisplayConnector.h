@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Graphics/GenericGraphicsAdapter.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/SymbolicLinkLinkedDisplayConnectorComponent.h>
 #include <Kernel/Memory/SharedFramebufferVMObject.h>
 #include <LibC/sys/ioctl_numbers.h>
 #include <LibEDID/EDID.h>
@@ -16,6 +16,7 @@
 namespace Kernel {
 
 class GraphicsManagement;
+class GenericGraphicsAdapter;
 class DisplayConnector : public CharacterDevice {
     friend class GraphicsManagement;
     friend class DeviceManagement;
@@ -171,5 +172,7 @@ private:
     Spinlock m_responsible_process_lock;
 
     IntrusiveListNode<DisplayConnector, RefPtr<DisplayConnector>> m_list_node;
+
+    RefPtr<SysFSSymbolicLinkLinkedDisplayConnectorComponent> m_symlink_linked_display_connector_component;
 };
 }

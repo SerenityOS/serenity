@@ -94,6 +94,13 @@ void DisplayConnector::after_inserting()
     m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
     m_fake_writes_framebuffer_region = MUST(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->fake_writes_framebuffer_vmobject(), rounded_size, "Fake Writes Framebuffer"sv, Memory::Region::Access::ReadWrite));
 
+    if (parent_graphics_adapter()) {
+        auto graphics_adapter_display_connector_symlinks_sysfs_directory = parent_graphics_adapter()->graphics_adapter_display_connector_symlinks_sysfs_directory();
+        VERIFY(graphics_adapter_display_connector_symlinks_sysfs_directory);
+        auto symlink_linked_display_connector_component = MUST(SysFSSymbolicLinkLinkedDisplayConnectorComponent::try_create(*graphics_adapter_display_connector_symlinks_sysfs_directory, minor(), *m_symlink_sysfs_component));
+        m_symlink_linked_display_connector_component = symlink_linked_display_connector_component;
+    }
+
     GraphicsManagement::the().attach_new_display_connector({}, *this);
     if (m_enable_write_combine_optimization) {
         [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);

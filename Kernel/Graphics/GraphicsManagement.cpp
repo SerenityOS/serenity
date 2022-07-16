@@ -9,6 +9,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DisplayConnectorsDirectory.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
@@ -100,12 +101,23 @@ void GraphicsManagement::activate_graphical_mode()
 
 void GraphicsManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
 {
-    return m_display_connector_nodes.with([&](auto& display_connectors) {
+    m_display_connector_nodes.with([&](auto& display_connectors) {
         display_connectors.append(connector);
     });
+    if (connector.m_symlink_linked_display_connector_component) {
+        VERIFY(connector.parent_graphics_adapter());
+        auto graphics_adapter_display_connector_symlinks_sysfs_directory = connector.parent_graphics_adapter()->graphics_adapter_display_connector_symlinks_sysfs_directory();
+        VERIFY(graphics_adapter_display_connector_symlinks_sysfs_directory);
+        graphics_adapter_display_connector_symlinks_sysfs_directory->plug_symlink_for_device({}, *connector.m_symlink_linked_display_connector_component);
+    }
 }
 void GraphicsManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
 {
+    if (connector.m_symlink_linked_display_connector_component) {
+        auto graphics_adapter_display_connector_symlinks_sysfs_directory = connector.parent_graphics_adapter()->graphics_adapter_display_connector_symlinks_sysfs_directory();
+        VERIFY(graphics_adapter_display_connector_symlinks_sysfs_directory);
+        graphics_adapter_display_connector_symlinks_sysfs_directory->unplug_symlink_for_device({}, *connector.m_symlink_linked_display_connector_component);
+    }
     return m_display_connector_nodes.with([&](auto& display_connectors) {
         display_connectors.remove(connector);
     });
