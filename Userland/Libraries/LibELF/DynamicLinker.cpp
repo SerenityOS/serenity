@@ -55,6 +55,8 @@ static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
 static bool s_allowed_to_check_environment_variables { false };
 static bool s_do_breakpoint_trap_before_entry { false };
 static StringView s_ld_library_path;
+static StringView s_main_program_pledge_promises;
+static String s_loader_pledge_promises;
 
 static Result<void, DlErrorMessage> __dlclose(void* handle);
 static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
@@ -339,6 +341,25 @@ static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String con
     return loaders;
 }
 
+static void drop_loader_promise(StringView promise_to_drop)
+{
+    if (s_main_program_pledge_promises.is_empty() || s_loader_pledge_promises.is_empty())
+        return;
+
+    s_loader_pledge_promises = s_loader_pledge_promises.replace(promise_to_drop, ""sv, ReplaceMode::All);
+
+    auto extended_promises = String::formatted("{} {}", s_main_program_pledge_promises, s_loader_pledge_promises);
+    Syscall::SC_pledge_params params {
+        { extended_promises.characters(), extended_promises.length() },
+        { nullptr, 0 },
+    };
+    int rc = syscall(SC_pledge, &params);
+    if (rc < 0 && rc > -EMAXERRNO) {
+        warnln("Failed to drop loader pledge promise: {}. errno={}", promise_to_drop, errno);
+        _exit(1);
+    }
+}
+
 static Result<void, DlErrorMessage> link_main_library(String const& name, int flags)
 {
     auto loaders = collect_loaders_for_library(name);
@@ -374,6 +395,8 @@ static Result<void, DlErrorMessage> link_main_library(String const& name, int fl
             initialize_libc(*object);
         }
     }
+
+    drop_loader_promise("prot_exec"sv);
 
     for (auto& loader : loaders) {
         loader.load_stage_4();
@@ -562,6 +585,16 @@ static void read_environment_variables()
         if (env_string.starts_with(library_path_string)) {
             s_ld_library_path = env_string.substring_view(library_path_string.length());
         }
+
+        constexpr auto main_pledge_promises_key = "_LOADER_MAIN_PROGRAM_PLEDGE_PROMISES="sv;
+        if (env_string.starts_with(main_pledge_promises_key)) {
+            s_main_program_pledge_promises = env_string.substring_view(main_pledge_promises_key.length());
+        }
+
+        constexpr auto loader_pledge_promises_key = "_LOADER_PLEDGE_PROMISES="sv;
+        if (env_string.starts_with(loader_pledge_promises_key)) {
+            s_loader_pledge_promises = env_string.substring_view(loader_pledge_promises_key.length());
+        }
     }
 }
 
@@ -608,6 +641,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
             warnln("{}", result.error().text);
             _exit(1);
         }
+
+        drop_loader_promise("rpath"sv);
+
         auto& main_executable_loader = *s_loaders.get(library_name);
         auto entry_point = main_executable_loader->image().entry();
         if (main_executable_loader->is_dynamic())
