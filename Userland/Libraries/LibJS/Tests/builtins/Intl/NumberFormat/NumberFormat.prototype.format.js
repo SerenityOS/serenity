@@ -78,6 +78,34 @@ describe("style=decimal", () => {
         expect(en.format(12.3456)).toBe("12.3456");
         expect(en.format(12.34567)).toBe("12.3457");
         expect(en.format(12.34561)).toBe("12.3456");
+        expect(en.format(0.00000000000000000000000000000123)).toBe(
+            "0.000000000000000000000000000001230"
+        );
+        expect(en.format(-0.00000000000000000000000000000123)).toBe(
+            "-0.000000000000000000000000000001230"
+        );
+        expect(en.format(12344501000000000000000000000000000)).toBe(
+            "12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(-12344501000000000000000000000000000)).toBe(
+            "-12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(12344501000000000000000000000000000n)).toBe(
+            "12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(-12344501000000000000000000000000000n)).toBe(
+            "-12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+
+        const enLargeMaxSignificantDigits = new Intl.NumberFormat("en", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 21,
+        });
+        expect(enLargeMaxSignificantDigits.format(1)).toBe("1.000");
+        expect(enLargeMaxSignificantDigits.format(1n)).toBe("1.000");
+        expect(enLargeMaxSignificantDigits.format(123456789123456789123456789123456789n)).toBe(
+            "123,456,789,123,456,789,123,000,000,000,000,000"
+        );
 
         const ar = new Intl.NumberFormat("ar", {
             minimumSignificantDigits: 4,

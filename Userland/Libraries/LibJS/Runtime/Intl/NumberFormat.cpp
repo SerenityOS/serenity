@@ -375,7 +375,7 @@ static ALWAYS_INLINE int log10floor(Value number)
     return as_string.length() - 1;
 }
 
-static Value multiply(GlobalObject& global_object, Value lhs, i64 rhs)
+static Value multiply(GlobalObject& global_object, Value lhs, i8 rhs)
 {
     if (lhs.is_number())
         return Value(lhs.as_double() * rhs);
@@ -384,7 +384,7 @@ static Value multiply(GlobalObject& global_object, Value lhs, i64 rhs)
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().multiplied_by(rhs_bigint));
 }
 
-static Value divide(GlobalObject& global_object, Value lhs, i64 rhs)
+static Value divide(GlobalObject& global_object, Value lhs, i8 rhs)
 {
     if (lhs.is_number())
         return Value(lhs.as_double() / rhs);
@@ -393,18 +393,48 @@ static Value divide(GlobalObject& global_object, Value lhs, i64 rhs)
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs_bigint).quotient);
 }
 
-static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
+static Crypto::SignedBigInteger bigint_power(i8 base, i8 exponent)
 {
-    if (exponent < 0)
-        return divide(global_object, number, pow(10, -exponent));
-    return multiply(global_object, number, pow(10, exponent));
+    VERIFY(exponent >= 0);
+
+    auto base_bigint = Crypto::SignedBigInteger::create_from(base);
+    auto result = Crypto::SignedBigInteger::create_from(1);
+
+    for (i8 i = 0; i < exponent; ++i)
+        result = result.multiplied_by(base_bigint);
+
+    return result;
 }
 
-static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i64 exponent)
+static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i8 exponent)
 {
-    if (exponent < 0)
-        return multiply(global_object, number, pow(10, -exponent));
-    return divide(global_object, number, pow(10, exponent));
+    if (number.is_number())
+        return Value(number.as_double() * pow(10, exponent));
+
+    if (exponent < 0) {
+        auto exponent_bigint = bigint_power(10, -exponent);
+        return js_bigint(global_object.vm(), number.as_bigint().big_integer().divided_by(exponent_bigint).quotient);
+    }
+
+    auto exponent_bigint = bigint_power(10, exponent);
+    return js_bigint(global_object.vm(), number.as_bigint().big_integer().multiplied_by(exponent_bigint));
+}
+
+static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i8 exponent)
+{
+    if (number.is_number()) {
+        if (exponent < 0)
+            return Value(number.as_double() * pow(10, -exponent));
+        return Value(number.as_double() / pow(10, exponent));
+    }
+
+    if (exponent < 0) {
+        auto exponent_bigint = bigint_power(10, -exponent);
+        return js_bigint(global_object.vm(), number.as_bigint().big_integer().multiplied_by(exponent_bigint));
+    }
+
+    auto exponent_bigint = bigint_power(10, exponent);
+    return js_bigint(global_object.vm(), number.as_bigint().big_integer().divided_by(exponent_bigint).quotient);
 }
 
 static ALWAYS_INLINE Value rounded(Value number)
