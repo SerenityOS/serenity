@@ -1613,7 +1613,7 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(String
     if (result == GUI::MessageBox::ExecResult::Yes) {
         for (auto& editor_wrapper : m_all_editor_wrappers) {
             if (editor_wrapper.editor().document().is_modified()) {
-                if (active_file().is_empty())
+                if (editor_wrapper.filename().is_null())
                     m_save_as_action->activate();
                 else
                     editor_wrapper.save();
