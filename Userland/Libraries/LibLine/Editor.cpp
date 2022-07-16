@@ -463,6 +463,8 @@ Editor::CodepointRange Editor::byte_offset_range_to_code_point_offset_range(size
 
 void Editor::stylize(Span const& span, Style const& style)
 {
+    if (!span.is_empty())
+        return;
     if (style.is_empty())
         return;
 
