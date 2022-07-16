@@ -452,7 +452,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     auto day_length_ns = ns_per_day_bigint;
 
     // 2. If nanoseconds = 0, then
-    if (nanoseconds == "0"_bigint) {
+    if (nanoseconds.is_zero()) {
         // a. Return the Record { [[Days]]: 0, [[Nanoseconds]]: 0, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult { .days = 0, .nanoseconds = "0"_sbigint, .day_length = day_length_ns.to_double() };
     }

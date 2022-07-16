@@ -1530,7 +1530,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     i32 direction;
 
     // 3. If timeRemainderNs = 0, let direction be 0.
-    if (time_remainder_ns == "0"_bigint)
+    if (time_remainder_ns.is_zero())
         direction = 0;
     // 4. Else if timeRemainderNs < 0, let direction be -1.
     else if (time_remainder_ns.is_negative())
