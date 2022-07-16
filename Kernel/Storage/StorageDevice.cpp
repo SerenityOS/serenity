@@ -35,7 +35,7 @@ void StorageDevice::after_inserting()
     m_sysfs_device_directory = sysfs_storage_device_directory;
     SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
     VERIFY(!m_symlink_sysfs_component);
-    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSDeviceIdentifiersDirectory::the(), *this, *m_sysfs_device_directory));
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
 }

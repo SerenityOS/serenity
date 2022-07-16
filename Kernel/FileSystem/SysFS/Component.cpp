@@ -91,7 +91,8 @@ static ErrorOr<NonnullOwnPtr<KString>> generate_return_path_to_mount_point(Nonnu
 
 ErrorOr<NonnullOwnPtr<KString>> SysFSSymbolicLink::try_generate_return_path_to_mount_point() const
 {
-    auto hops_from_mountpoint = TRY(relative_path_hops_count_from_mountpoint());
+    VERIFY(m_parent_directory);
+    auto hops_from_mountpoint = TRY(m_parent_directory->relative_path_hops_count_from_mountpoint());
     if (hops_from_mountpoint == 0)
         return KString::try_create("./"sv);
     auto start_return_path = TRY(KString::try_create("./"sv));
