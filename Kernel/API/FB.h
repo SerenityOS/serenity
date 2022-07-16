@@ -7,9 +7,16 @@
 #pragma once
 
 #include <AK/Platform.h>
+#include <AK/ScopeGuard.h>
+#include <AK/String.h>
+#include <fcntl.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <sys/cdefs.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <unistd.h>
 
 __BEGIN_DECLS
 
@@ -20,7 +27,27 @@ ALWAYS_INLINE int graphics_connector_get_properties(int fd, GraphicsConnectorPro
 
 ALWAYS_INLINE int graphics_connector_get_head_edid(int fd, GraphicsHeadEDID* info)
 {
-    return ioctl(fd, GRAPHICS_IOCTL_GET_HEAD_EDID, info);
+    // FIXME: Optimize this function to get a minor number instead of a file descriptor.
+    struct stat display_connector_stat;
+    if (auto rc = fstat(fd, &display_connector_stat); rc < 0) {
+        return rc;
+    }
+    auto minor_number = minor(display_connector_stat.st_rdev);
+
+    auto edid_fd = open(String::formatted("/sys/devices/graphics/connectors/{}/edid", minor_number).characters(), O_RDONLY);
+    if (edid_fd < 0) {
+        return edid_fd;
+    }
+
+    ScopeGuard close_on_return([&]() {
+        close(edid_fd);
+    });
+
+    if (auto rc = read(edid_fd, info->bytes, info->bytes_size); rc < 0) {
+        return rc;
+    }
+
+    return 0;
 }
 
 ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, GraphicsHeadVerticalOffset* vertical_offset)
