@@ -12,6 +12,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -931,6 +932,22 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 }
 #endif
 
+ErrorOr<String> find_file_in_path(StringView filename)
+{
+    auto const* path_ptr = getenv("PATH");
+    StringView path { path_ptr, strlen(path_ptr) };
+    if (path.is_empty())
+        path = "/bin:/usr/bin"sv;
+    auto parts = path.split_view(':');
+    for (auto& part : parts) {
+        auto candidate = String::formatted("{}/{}", part, filename);
+        if (Core::File::exists(candidate)) {
+            return candidate;
+        }
+    }
+    return Error::from_errno(ENOENT);
+}
+
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
 {
 #ifdef __serenity__
@@ -971,28 +988,10 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
         return {};
     };
 
-    if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-        auto const* path_ptr = getenv("PATH");
-        StringView path { path_ptr, strlen(path_ptr) };
-        if (path.is_empty())
-            path = "/bin:/usr/bin"sv;
-        auto parts = path.split_view(':');
-        for (auto& part : parts) {
-            auto candidate = String::formatted("{}/{}", part, filename);
-            params.path = { candidate.characters(), candidate.length() };
-            auto result = run_exec(params);
-            if (result.is_error()) {
-                if (result.error().code() != ENOENT)
-                    return result.error();
-            } else {
-                VERIFY_NOT_REACHED();
-            }
-        }
-        return Error::from_syscall("exec"sv, -ENOENT);
-    } else {
-        params.path = { filename.characters_without_null_termination(), filename.length() };
-    }
+    bool should_search_in_path = search_in_path == SearchInPath::Yes && !filename.contains('/');
+    String exec_filename = should_search_in_path ? TRY(find_file_in_path(filename)) : filename.to_string();
 
+    params.path = { exec_filename.characters(), exec_filename.length() };
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
