@@ -1187,7 +1187,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln(error.to_string());
+            outln("{}", error.to_string());
             result = interpreter.vm().throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
