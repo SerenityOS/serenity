@@ -41,7 +41,14 @@ protected:
 protected:
     virtual bool is_block_device() const final { return true; }
 
+    virtual void after_inserting_add_symlink_to_device_identifier_directory() override final;
+    virtual void before_will_be_destroyed_remove_symlink_from_device_identifier_directory() override final;
+
 private:
+    // FIXME: These methods will be eventually removed after all nodes in /sys/dev/block/ are symlinks
+    virtual void after_inserting_add_to_device_identifier_directory() override final;
+    virtual void before_will_be_destroyed_remove_from_device_identifier_directory() override final;
+
     size_t m_block_size { 0 };
     u8 m_block_size_log { 0 };
 };

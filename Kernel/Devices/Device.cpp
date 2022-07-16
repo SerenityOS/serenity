@@ -38,31 +38,13 @@ void Device::after_inserting()
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
-    if (is_block_device()) {
-        SysFSBlockDevicesDirectory::the().devices_list({}).with([&](auto& list) -> void {
-            list.append(sys_fs_component);
-        });
-        return;
-    }
-    VERIFY(is_character_device());
-    SysFSCharacterDevicesDirectory::the().devices_list({}).with([&](auto& list) -> void {
-        list.append(sys_fs_component);
-    });
+    after_inserting_add_to_device_identifier_directory();
 }
 
 void Device::will_be_destroyed()
 {
     VERIFY(m_sysfs_component);
-    if (is_block_device()) {
-        SysFSBlockDevicesDirectory::the().devices_list({}).with([&](auto& list) -> void {
-            list.remove(*m_sysfs_component);
-        });
-    } else {
-        VERIFY(is_character_device());
-        SysFSCharacterDevicesDirectory::the().devices_list({}).with([&](auto& list) -> void {
-            list.remove(*m_sysfs_component);
-        });
-    }
+    before_will_be_destroyed_remove_from_device_identifier_directory();
     before_will_be_destroyed_remove_from_device_management();
 }
 

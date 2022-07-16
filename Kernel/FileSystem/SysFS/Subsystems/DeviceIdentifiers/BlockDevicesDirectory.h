@@ -12,11 +12,8 @@
 
 namespace Kernel {
 
-class Device;
-class StorageDevice;
+class BlockDevice;
 class SysFSBlockDevicesDirectory final : public SysFSDirectory {
-    friend class Device;
-    friend class StorageDevice;
 
 public:
     virtual StringView name() const override { return "block"sv; }
@@ -24,7 +21,7 @@ public:
 
     static SysFSBlockDevicesDirectory& the();
 
-    ChildList& devices_list(Badge<Device>) { return m_child_components; }
+    ChildList& devices_list(Badge<BlockDevice>) { return m_child_components; }
 
 private:
     explicit SysFSBlockDevicesDirectory(SysFSDeviceIdentifiersDirectory const&);
