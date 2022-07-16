@@ -44,11 +44,11 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
     auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), 0);
     if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
-        m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, virtual_box_hardware);
+        m_display_connector = BochsDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, virtual_box_hardware);
     } else {
         auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)));
         VERIFY(registers_mapping.region);
-        m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, move(registers_mapping));
+        m_display_connector = QEMUDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, move(registers_mapping));
     }
 
     // Note: According to Gerd Hoffmann - "The linux driver simply does

@@ -14,9 +14,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
+NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(BochsGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
-    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size);
+    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
@@ -27,8 +27,9 @@ NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(Physical
     return connector;
 }
 
-BochsDisplayConnector::BochsDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+BochsDisplayConnector::BochsDisplayConnector(BochsGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
     : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
+    , m_parent_adapter(parent_adapter)
 {
 }
 

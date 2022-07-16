@@ -11,6 +11,7 @@
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
@@ -75,16 +76,18 @@ enum GMBusCycle {
 };
 }
 
+class IntelNativeGraphicsAdapter;
 class IntelNativeDisplayConnector final
     : public DisplayConnector {
     friend class IntelNativeGraphicsAdapter;
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return m_parent_graphics_adapter; }
     // FIXME: Implement modesetting capabilities in runtime from userland...
     virtual bool mutable_mode_setting_capable() const override { return false; }
     // FIXME: Implement double buffering capabilities in runtime from userland...
@@ -103,7 +106,7 @@ private:
 
     ErrorOr<void> initialize_gmbus_settings_and_read_edid();
 
-    IntelNativeDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region);
+    IntelNativeDisplayConnector(IntelNativeGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, NonnullOwnPtr<Memory::Region> registers_region);
 
     ErrorOr<void> create_attached_framebuffer_console();
 
@@ -159,5 +162,7 @@ private:
 
     const PhysicalAddress m_registers;
     NonnullOwnPtr<Memory::Region> m_registers_region;
+
+    NonnullRefPtr<IntelNativeGraphicsAdapter> m_parent_graphics_adapter;
 };
 }

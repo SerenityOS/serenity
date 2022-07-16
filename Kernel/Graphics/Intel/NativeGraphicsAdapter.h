@@ -9,12 +9,12 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
-#include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
 #include <Kernel/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
 
 namespace Kernel {
 
+class IntelNativeDisplayConnector;
 class IntelNativeGraphicsAdapter final
     : public GenericGraphicsAdapter
     , public PCI::Device {

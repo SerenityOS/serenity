@@ -9,6 +9,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
+#include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -16,6 +17,7 @@
 
 namespace Kernel {
 
+class BochsGraphicsAdapter;
 class BochsDisplayConnector
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
@@ -24,14 +26,16 @@ class BochsDisplayConnector
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
+    static NonnullRefPtr<BochsDisplayConnector> must_create(BochsGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
 
     virtual IndexID index_id() const;
 
 protected:
     ErrorOr<void> create_attached_framebuffer_console();
 
-    BochsDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    BochsDisplayConnector(BochsGraphicsAdapter const&, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return m_parent_adapter; }
 
     virtual bool mutable_mode_setting_capable() const override final { return true; }
     virtual bool double_framebuffering_capable() const override { return false; }
@@ -51,5 +55,6 @@ protected:
     virtual void disable_console() override final;
 
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    NonnullRefPtr<BochsGraphicsAdapter> m_parent_adapter;
 };
 }

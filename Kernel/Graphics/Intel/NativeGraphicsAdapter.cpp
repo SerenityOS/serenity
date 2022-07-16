@@ -9,6 +9,7 @@
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -48,7 +49,7 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
     dmesgln("Intel Native Graphics Adapter @ {}, framebuffer @ {}", address, PhysicalAddress(PCI::get_BAR2(address)));
     PCI::enable_bus_mastering(address);
 
-    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
+    m_display_connector = IntelNativeDisplayConnector::must_create(*this, PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
     return {};
 }
 

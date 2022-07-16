@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<QEMUDisplayConnector> QEMUDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
+NonnullRefPtr<QEMUDisplayConnector> QEMUDisplayConnector::must_create(BochsGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
 {
-    auto device_or_error = DeviceManagement::try_create_device<QEMUDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping));
+    auto device_or_error = DeviceManagement::try_create_device<QEMUDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size, move(registers_mapping));
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
@@ -31,8 +31,8 @@ ErrorOr<void> QEMUDisplayConnector::fetch_and_initialize_edid()
     return {};
 }
 
-QEMUDisplayConnector::QEMUDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
-    : BochsDisplayConnector(framebuffer_address, framebuffer_resource_size)
+QEMUDisplayConnector::QEMUDisplayConnector(BochsGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
+    : BochsDisplayConnector(parent_adapter, framebuffer_address, framebuffer_resource_size)
     , m_registers(move(registers_mapping))
 {
 }

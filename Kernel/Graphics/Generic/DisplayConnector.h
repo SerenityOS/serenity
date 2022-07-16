@@ -23,6 +23,10 @@ public:
     static NonnullRefPtr<GenericDisplayConnector> must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
 
 protected:
+    // Note: A GenericDisplayConnector is technically attached to some sort of video hardware,
+    // We might be not supporting it and we definitely don't know which is it, therefore we can't return the parent device.
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return {}; }
+
     ErrorOr<void> create_attached_framebuffer_console();
 
     GenericDisplayConnector(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);

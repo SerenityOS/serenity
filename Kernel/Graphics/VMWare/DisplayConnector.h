@@ -47,6 +47,8 @@ private:
     virtual void enable_console() override;
     virtual void disable_console() override;
 
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return m_parent_adapter; }
+
 private:
     NonnullRefPtr<VMWareGraphicsAdapter> m_parent_adapter;
     RefPtr<VMWareFramebufferConsole> m_framebuffer_console;

@@ -65,6 +65,8 @@ private:
         return buffer_index == 0 || buffer_index == 1;
     }
 
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const override { return m_graphics_adapter; }
+
 private:
     VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
 

@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Memory/SharedFramebufferVMObject.h>
 #include <LibC/sys/ioctl_numbers.h>
 #include <LibEDID/EDID.h>
@@ -101,6 +102,8 @@ public:
     void set_display_mode(Badge<GraphicsManagement>, DisplayMode);
 
     Memory::Region const& framebuffer_region() const { return *m_framebuffer_region; }
+
+    virtual RefPtr<GenericGraphicsAdapter> parent_graphics_adapter() const = 0;
 
 protected:
     void set_edid_bytes(Array<u8, 128> const& edid_bytes);
