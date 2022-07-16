@@ -156,6 +156,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/DeviceDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Graphics/Adapter/SymbolicLinkLinkedGraphicsDeviceComponent.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.cpp

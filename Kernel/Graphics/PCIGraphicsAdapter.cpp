@@ -17,7 +17,7 @@ PCIGraphicsAdapter::PCIGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_i
 
 void PCIGraphicsAdapter::after_inserting()
 {
-    auto sysfs_graphics_adapter_directory = GraphicsAdapterSysFSDirectory::create(SysFSGraphicsAdaptersDirectory::the(), adapter_id());
+    auto sysfs_graphics_adapter_directory = GraphicsAdapterSysFSDirectory::create(SysFSGraphicsAdaptersDirectory::the(), pci_address(), adapter_id());
     m_sysfs_directory = sysfs_graphics_adapter_directory;
     SysFSGraphicsAdaptersDirectory::the().plug_pci_adapter({}, *sysfs_graphics_adapter_directory);
 }

@@ -45,7 +45,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_after_sysfs_directory_creation()
 
 void VirtIOGraphicsAdapter::after_inserting()
 {
-    auto sysfs_graphics_adapter_directory = GraphicsAdapterSysFSDirectory::create(SysFSGraphicsAdaptersDirectory::the(), adapter_id());
+    auto sysfs_graphics_adapter_directory = GraphicsAdapterSysFSDirectory::create(SysFSGraphicsAdaptersDirectory::the(), pci_address(), adapter_id());
     m_sysfs_directory = sysfs_graphics_adapter_directory;
     SysFSGraphicsAdaptersDirectory::the().plug_virtio_adapter({}, *sysfs_graphics_adapter_directory);
 }

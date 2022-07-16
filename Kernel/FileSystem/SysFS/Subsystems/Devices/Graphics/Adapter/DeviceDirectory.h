@@ -15,7 +15,7 @@ namespace Kernel {
 class GraphicsAdapterAttributeSysFSComponent;
 class GraphicsAdapterSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<GraphicsAdapterSysFSDirectory> create(SysFSDirectory const& parent_directory, u32 adapter_index);
+    static NonnullRefPtr<GraphicsAdapterSysFSDirectory> create(SysFSDirectory const& parent_directory, PCI::Address const&, u32 adapter_index);
 
     virtual StringView name() const override { return m_device_directory_name->view(); }
 
