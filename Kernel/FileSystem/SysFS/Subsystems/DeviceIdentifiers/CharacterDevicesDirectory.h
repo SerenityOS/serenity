@@ -12,10 +12,8 @@
 
 namespace Kernel {
 
-class Device;
-class DisplayConnector;
+class CharacterDevice;
 class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
-    friend class DisplayConnector;
 
 public:
     virtual StringView name() const override { return "char"sv; }
@@ -23,7 +21,7 @@ public:
 
     static SysFSCharacterDevicesDirectory& the();
 
-    ChildList& devices_list(Badge<Device>) { return m_child_components; }
+    ChildList& devices_list(Badge<CharacterDevice>) { return m_child_components; }
 
 private:
     explicit SysFSCharacterDevicesDirectory(SysFSDeviceIdentifiersDirectory const&);

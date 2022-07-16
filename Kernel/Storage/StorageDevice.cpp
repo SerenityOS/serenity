@@ -37,19 +37,13 @@ void StorageDevice::after_inserting()
     VERIFY(!m_symlink_sysfs_component);
     auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSDeviceIdentifiersDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
-    VERIFY(is_block_device());
-    SysFSBlockDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
-        list.append(sys_fs_component);
-    });
+    after_inserting_add_symlink_to_device_identifier_directory();
 }
 
 void StorageDevice::will_be_destroyed()
 {
     VERIFY(m_symlink_sysfs_component);
-    VERIFY(is_block_device());
-    SysFSBlockDevicesDirectory::the().m_child_components.with([&](auto& list) -> void {
-        list.remove(*m_symlink_sysfs_component);
-    });
+    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
     m_symlink_sysfs_component.clear();
     SysFSStorageDirectory::the().unplug({}, *m_sysfs_device_directory);
     before_will_be_destroyed_remove_from_device_management();
