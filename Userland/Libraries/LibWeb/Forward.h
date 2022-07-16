@@ -174,6 +174,7 @@ class Body;
 struct Header;
 class HeaderList;
 class Request;
+class Response;
 }
 
 namespace Web::Geometry {
