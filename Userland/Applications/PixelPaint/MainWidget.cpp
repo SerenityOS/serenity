@@ -171,7 +171,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "bmp");
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -186,7 +186,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "png");
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -200,7 +200,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             "As &QOI", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "qoi");
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, editor->title(), "qoi");
                 if (response.is_error())
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value());
