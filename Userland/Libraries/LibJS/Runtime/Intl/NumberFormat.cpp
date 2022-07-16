@@ -6,6 +6,7 @@
 
 #include <AK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -449,6 +450,15 @@ static ALWAYS_INLINE bool is_zero(Value number)
     return number.as_bigint().big_integer().is_zero();
 }
 
+static bool modulo_is_zero(Value lhs, i8 rhs)
+{
+    if (lhs.is_number())
+        return modulo(lhs.as_double(), rhs) == 0;
+
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    return modulo(lhs.as_bigint().big_integer(), rhs_bigint).is_zero();
+}
+
 static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
 {
     if (number.is_number())
@@ -560,13 +570,22 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
     // 7. Let string be result.[[FormattedString]].
     auto string = move(result.formatted_string);
 
-    // 8. Let int be result.[[IntegerDigitsCount]].
+    // 8. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
+    if ((intl_object.trailing_zero_display() == NumberFormat::TrailingZeroDisplay::StripIfInteger) && modulo_is_zero(number, 1)) {
+        // a. If string contains ".", then
+        if (auto index = string.find('.'); index.has_value()) {
+            // i. Set string to the substring of string from index 0 to the index of ".".
+            string = string.substring(0, *index);
+        }
+    }
+
+    // 9. Let int be result.[[IntegerDigitsCount]].
     int digits = result.digits;
 
-    // 9. Let minInteger be intlObject.[[MinimumIntegerDigits]].
+    // 10. Let minInteger be intlObject.[[MinimumIntegerDigits]].
     int min_integer = intl_object.min_integer_digits();
 
-    // 10. If int < minInteger, then
+    // 11. If int < minInteger, then
     if (digits < min_integer) {
         // a. Let forwardZeros be the String consisting of minInteger–int occurrences of the character "0".
         auto forward_zeros = String::repeated('0', min_integer - digits);
@@ -575,13 +594,13 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         string = String::formatted("{}{}", forward_zeros, string);
     }
 
-    // 11. If isNegative, then
+    // 12. If isNegative, then
     if (is_negative) {
         // a. Let x be -x.
         number = multiply(global_object, number, -1);
     }
 
-    // 12. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
+    // 13. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
     return { move(string), number };
 }
 

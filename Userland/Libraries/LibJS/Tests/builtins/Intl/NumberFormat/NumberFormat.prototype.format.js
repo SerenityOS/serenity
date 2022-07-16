@@ -567,6 +567,50 @@ describe("style=decimal", () => {
         expect(nf("ar", undefined, 2, undefined, 2).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
         expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
     });
+
+    test("trailingZeroDisplay=auto", () => {
+        const en = new Intl.NumberFormat("en", {
+            trailingZeroDisplay: "auto",
+            minimumSignificantDigits: 5,
+        });
+        expect(en.format(1)).toBe("1.0000");
+        expect(en.format(1n)).toBe("1.0000");
+        expect(en.format(12)).toBe("12.000");
+        expect(en.format(12n)).toBe("12.000");
+        expect(en.format(1.2)).toBe("1.2000");
+
+        const ar = new Intl.NumberFormat("ar", {
+            trailingZeroDisplay: "auto",
+            minimumSignificantDigits: 5,
+        });
+        expect(ar.format(1)).toBe("\u0661\u066b\u0660\u0660\u0660\u0660");
+        expect(ar.format(1n)).toBe("\u0661\u066b\u0660\u0660\u0660\u0660");
+        expect(ar.format(12)).toBe("\u0661\u0662\u066b\u0660\u0660\u0660");
+        expect(ar.format(12n)).toBe("\u0661\u0662\u066b\u0660\u0660\u0660");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u0660\u0660");
+    });
+
+    test("trailingZeroDisplay=stripIfInteger", () => {
+        const en = new Intl.NumberFormat("en", {
+            trailingZeroDisplay: "stripIfInteger",
+            minimumSignificantDigits: 5,
+        });
+        expect(en.format(1)).toBe("1");
+        expect(en.format(1n)).toBe("1");
+        expect(en.format(12)).toBe("12");
+        expect(en.format(12n)).toBe("12");
+        expect(en.format(1.2)).toBe("1.2000");
+
+        const ar = new Intl.NumberFormat("ar", {
+            trailingZeroDisplay: "stripIfInteger",
+            minimumSignificantDigits: 5,
+        });
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(1n)).toBe("\u0661");
+        expect(ar.format(12)).toBe("\u0661\u0662");
+        expect(ar.format(12n)).toBe("\u0661\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u0660\u0660");
+    });
 });
 
 describe("style=percent", () => {
