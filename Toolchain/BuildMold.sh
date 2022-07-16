@@ -29,7 +29,7 @@ if [ "$1" = "--git" ]; then
 
     git pull
 else
-    VERSION=1.0.3
+    VERSION=1.3.1
     [ ! -e mold-$VERSION.tar.gz ] && curl -L "https://github.com/rui314/mold/archive/refs/tags/v$VERSION.tar.gz" -o mold-$VERSION.tar.gz
     [ ! -e mold-$VERSION ] && tar -xzf mold-$VERSION.tar.gz
     cd mold-$VERSION
@@ -37,8 +37,7 @@ fi
 
 make clean
 export DESTDIR="$DIR"/Local/mold
-export PREFIX=
 make -j "$MAKEJOBS"
-make install
+make install PREFIX=
 
 popd
