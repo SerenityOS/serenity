@@ -46,8 +46,8 @@ static void login(Core::Account const& account, LoginWindow& window)
     pid_t rc = waitpid(pid, &wstatus, 0);
     if (rc == -1)
         dbgln("waitpid failed: {}", strerror(errno));
-    if (rc != 0)
-        dbgln("SystemServer exited with non-zero status: {}", rc);
+    if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
+        dbgln("SystemServer exited with non-zero status: {}", WEXITSTATUS(wstatus));
 
     window.show();
 }
