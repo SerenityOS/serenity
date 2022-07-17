@@ -65,9 +65,12 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
         object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
-    case PropertyKind::KeyValue:
-        TRY(object->set(name, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    case PropertyKind::KeyValue: {
+        bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
+        if (!succeeded && interpreter.vm().in_strict_mode())
+            return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
         break;
+    }
     case PropertyKind::Spread:
         TRY(object->copy_data_properties(value, {}, interpreter.global_object()));
         break;
