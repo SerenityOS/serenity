@@ -12,8 +12,8 @@
 #include <AK/NonnullRefPtr.h>
 
 TrackManager::TrackManager()
-    : m_transport(make_ref_counted<LibDSP::Transport>(120, 4))
-    , m_keyboard(make_ref_counted<LibDSP::Keyboard>(m_transport))
+    : m_transport(make_ref_counted<DSP::Transport>(120, 4))
+    , m_keyboard(make_ref_counted<DSP::Keyboard>(m_transport))
 {
     add_track();
     m_tracks[m_current_track]->set_active(true);

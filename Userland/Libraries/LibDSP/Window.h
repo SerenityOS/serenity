@@ -9,7 +9,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Math.h>
 
-namespace LibDSP {
+namespace DSP {
 
 template<typename T>
 class Window final {

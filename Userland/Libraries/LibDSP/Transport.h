@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
-namespace LibDSP {
+namespace DSP {
 
 // The DAW-wide timekeeper and synchronizer
 class Transport final : public RefCounted<Transport> {

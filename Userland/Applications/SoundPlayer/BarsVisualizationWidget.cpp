@@ -32,7 +32,7 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<float> c
 
     AK::TypedTransfer<float>::copy(m_previous_samples.data(), samples.data(), samples.size());
 
-    LibDSP::fft(m_fft_samples.span(), false);
+    DSP::fft(m_fft_samples.span(), false);
 
     Array<float, bar_count> groups {};
 
@@ -102,7 +102,7 @@ BarsVisualizationWidget::BarsVisualizationWidget()
     logarithmic_spectrum_action->set_checked(true);
     m_context_menu->add_action(logarithmic_spectrum_action);
 
-    m_fft_window = LibDSP::Window<float>::hann<fft_size>();
+    m_fft_window = DSP::Window<float>::hann<fft_size>();
 
     // As we use full-overlapping windows, the passed-in data is only half the size of one FFT operation.
     MUST(set_render_sample_count(fft_size / 2));

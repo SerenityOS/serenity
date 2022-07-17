@@ -8,7 +8,7 @@
 
 #include <AK/StdLibExtras.h>
 
-namespace LibDSP {
+namespace DSP {
 
 // For now, this cannot be optimal as clang doesn't know underlying type specifications.
 enum EnvelopeState {

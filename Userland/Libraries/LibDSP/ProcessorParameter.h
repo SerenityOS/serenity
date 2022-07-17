@@ -14,7 +14,7 @@
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
-namespace LibDSP {
+namespace DSP {
 
 using ParameterFixedPoint = FixedPoint<8, i64>;
 
@@ -78,7 +78,7 @@ public:
     ParameterT value() const { return m_value; };
     void set_value(ParameterT value)
     {
-        set_value_sneaky(value, LibDSP::Detail::ProcessorParameterSetValueTag {});
+        set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});
         if (did_change_value)
             did_change_value(value);
     }
@@ -151,14 +151,14 @@ public:
 
 }
 template<>
-struct AK::Formatter<LibDSP::ProcessorRangeParameter> : AK::StandardFormatter {
+struct AK::Formatter<DSP::ProcessorRangeParameter> : AK::StandardFormatter {
 
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
-    ErrorOr<void> format(FormatBuilder& builder, LibDSP::ProcessorRangeParameter value)
+    ErrorOr<void> format(FormatBuilder& builder, DSP::ProcessorRangeParameter value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };

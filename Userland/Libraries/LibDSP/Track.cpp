@@ -14,7 +14,7 @@
 #include <LibDSP/Processor.h>
 #include <LibDSP/Track.h>
 
-namespace LibDSP {
+namespace DSP {
 
 bool Track::add_processor(NonnullRefPtr<Processor> new_processor)
 {

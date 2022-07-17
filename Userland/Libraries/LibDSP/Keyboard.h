@@ -11,7 +11,7 @@
 #include <LibDSP/Music.h>
 #include <LibDSP/Transport.h>
 
-namespace LibDSP {
+namespace DSP {
 
 class Keyboard : public RefCounted<Keyboard> {
 

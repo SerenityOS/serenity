@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ImageWidget.h>

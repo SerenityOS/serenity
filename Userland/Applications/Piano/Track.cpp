@@ -16,10 +16,10 @@
 #include <LibDSP/Music.h>
 #include <math.h>
 
-Track::Track(NonnullRefPtr<LibDSP::Transport> transport, NonnullRefPtr<LibDSP::Keyboard> keyboard)
+Track::Track(NonnullRefPtr<DSP::Transport> transport, NonnullRefPtr<DSP::Keyboard> keyboard)
     : m_transport(move(transport))
-    , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_transport))
-    , m_synth(make_ref_counted<LibDSP::Synthesizers::Classic>(m_transport))
+    , m_delay(make_ref_counted<DSP::Effects::Delay>(m_transport))
+    , m_synth(make_ref_counted<DSP::Synthesizers::Classic>(m_transport))
     , m_keyboard(move(keyboard))
 {
     set_volume(volume_max);
@@ -27,7 +27,7 @@ Track::Track(NonnullRefPtr<LibDSP::Transport> transport, NonnullRefPtr<LibDSP::K
 
 void Track::fill_sample(Sample& sample)
 {
-    auto playing_notes = LibDSP::RollNotes {};
+    auto playing_notes = DSP::RollNotes {};
 
     for (size_t i = 0; i < note_count; ++i) {
         bool has_roll_notes = false;
@@ -48,9 +48,9 @@ void Track::fill_sample(Sample& sample)
         }
     }
 
-    auto synthesized_sample = LibDSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
+    auto synthesized_sample = DSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
     m_synth->process(playing_notes, synthesized_sample);
-    auto delayed_signal = LibDSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
+    auto delayed_signal = DSP::Signal { FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(1) };
     m_delay->process(synthesized_sample, delayed_signal);
     auto delayed_sample = delayed_signal.get<FixedArray<Audio::Sample>>()[0];
 

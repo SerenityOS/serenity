@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
-namespace LibDSP {
+namespace DSP {
 
 // A clip is a self-contained snippet of notes or audio that can freely move inside and in between tracks.
 class Clip : public RefCounted<Clip> {

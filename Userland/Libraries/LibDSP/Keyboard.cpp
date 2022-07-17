@@ -9,7 +9,7 @@
 #include <AK/Error.h>
 #include <AK/NumericLimits.h>
 
-namespace LibDSP {
+namespace DSP {
 
 void Keyboard::set_keyboard_note(u8 pitch, Keyboard::Switch note_switch)
 {

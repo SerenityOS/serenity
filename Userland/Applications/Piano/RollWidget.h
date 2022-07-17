@@ -15,7 +15,7 @@
 #include <LibGUI/AbstractScrollableWidget.h>
 
 class TrackManager;
-using LibDSP::RollNote;
+using DSP::RollNote;
 
 class RollWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(RollWidget)

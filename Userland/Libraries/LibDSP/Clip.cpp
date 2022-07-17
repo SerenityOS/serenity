@@ -6,7 +6,7 @@
 
 #include "Clip.h"
 
-namespace LibDSP {
+namespace DSP {
 
 Sample AudioClip::sample_at(u32 time)
 {

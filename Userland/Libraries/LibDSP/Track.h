@@ -13,7 +13,7 @@
 #include <LibDSP/Music.h>
 #include <LibDSP/Processor.h>
 
-namespace LibDSP {
+namespace DSP {
 
 // A track is also known as a channel and serves as a container for the audio pipeline: clips -> processors -> mixing & output
 class Track : public RefCounted<Track> {

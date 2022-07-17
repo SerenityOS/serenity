@@ -10,7 +10,7 @@
 #include <AK/Math.h>
 #include <AK/Span.h>
 
-namespace LibDSP {
+namespace DSP {
 
 constexpr void fft(Span<Complex<float>> sample_data, bool invert = false)
 {
