@@ -697,6 +697,15 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
 void FormattingContext::layout_absolutely_positioned_element(Box const& box)
 {
+    // https://drafts.csswg.org/css-sizing-3/#definite
+    // Additionally, the size of the containing block of an absolutely positioned element is always definite with respect to that element.
+    auto& containing_block_state = m_state.get_mutable(*box.containing_block());
+    auto containing_block_had_definite_width = containing_block_state.has_definite_width();
+    containing_block_state.set_has_definite_width(true);
+    auto containing_block_definite_width_guard = ScopeGuard([&] {
+        containing_block_state.set_has_definite_width(containing_block_had_definite_width);
+    });
+
     auto width_of_containing_block = containing_block_width_for(box);
     auto height_of_containing_block = containing_block_height_for(box);
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
