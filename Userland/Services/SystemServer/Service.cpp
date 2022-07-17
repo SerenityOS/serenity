@@ -416,3 +416,11 @@ ErrorOr<void> Service::determine_account(int fd)
     m_account = TRY(Core::Account::from_uid(stat.st_uid));
     return {};
 }
+
+Service::~Service()
+{
+    for (auto& socket : m_sockets) {
+        if (auto rc = remove(socket.path.characters()); rc != 0)
+            dbgln("{}", Error::from_errno(errno));
+    }
+}

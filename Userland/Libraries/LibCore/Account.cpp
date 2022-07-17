@@ -10,6 +10,7 @@
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
+#include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibCore/UmaskScope.h>
 #include <errno.h>
@@ -149,6 +150,10 @@ bool Account::login() const
 
     if (setuid(m_uid) < 0)
         return false;
+
+    auto const temporary_directory = String::formatted("/tmp/{}", m_uid);
+    if (auto result = Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::No); result.is_error())
+        dbgln("{}", result.release_error());
 
     return true;
 }

@@ -18,6 +18,7 @@ class Service final : public Core::Object {
 
 public:
     static ErrorOr<NonnullRefPtr<Service>> try_create(Core::ConfigFile const& config, StringView name);
+    ~Service();
 
     bool is_enabled() const;
     void activate();
