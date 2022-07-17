@@ -10,7 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/Event.h>
 #include <LibThreading/Mutex.h>
@@ -18,7 +18,7 @@
 
 namespace Audio {
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
     : IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>(*this, move(socket))
     , m_buffer(make<AudioQueue>(MUST(AudioQueue::try_create())))
     , m_user_queue(make<UserSampleQueue>())
@@ -37,12 +37,12 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     set_buffer(*m_buffer);
 }
 
-ConnectionFromClient::~ConnectionFromClient()
+ConnectionToServer::~ConnectionToServer()
 {
     die();
 }
 
-void ConnectionFromClient::die()
+void ConnectionToServer::die()
 {
     // We're sometimes getting here after the other thread has already exited and its event loop does no longer exist.
     m_enqueuer_loop_destruction.lock();
@@ -54,7 +54,7 @@ void ConnectionFromClient::die()
     (void)m_background_audio_enqueuer->join();
 }
 
-ErrorOr<void> ConnectionFromClient::async_enqueue(FixedArray<Sample>&& samples)
+ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
 {
     update_good_sleep_time();
     m_user_queue->append(move(samples));
@@ -66,12 +66,12 @@ ErrorOr<void> ConnectionFromClient::async_enqueue(FixedArray<Sample>&& samples)
     return {};
 }
 
-void ConnectionFromClient::clear_client_buffer()
+void ConnectionToServer::clear_client_buffer()
 {
     m_user_queue->clear();
 }
 
-void ConnectionFromClient::update_good_sleep_time()
+void ConnectionToServer::update_good_sleep_time()
 {
     auto sample_rate = static_cast<double>(get_sample_rate());
     auto buffer_play_time_ns = 1'000'000'000.0 / (sample_rate / static_cast<double>(AUDIO_BUFFER_SIZE));
@@ -80,7 +80,7 @@ void ConnectionFromClient::update_good_sleep_time()
 }
 
 // Non-realtime audio writing loop
-void ConnectionFromClient::custom_event(Core::CustomEvent&)
+void ConnectionToServer::custom_event(Core::CustomEvent&)
 {
     Array<Sample, AUDIO_BUFFER_SIZE> next_chunk;
     while (true) {
@@ -107,39 +107,39 @@ void ConnectionFromClient::custom_event(Core::CustomEvent&)
     m_audio_enqueuer_active.store(false);
 }
 
-ErrorOr<void, AudioQueue::QueueStatus> ConnectionFromClient::realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples)
+ErrorOr<void, AudioQueue::QueueStatus> ConnectionToServer::realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples)
 {
     return m_buffer->try_enqueue(samples);
 }
 
-unsigned ConnectionFromClient::total_played_samples() const
+unsigned ConnectionToServer::total_played_samples() const
 {
     return m_buffer->weak_tail() * AUDIO_BUFFER_SIZE;
 }
 
-unsigned ConnectionFromClient::remaining_samples()
+unsigned ConnectionToServer::remaining_samples()
 {
     return static_cast<unsigned>(m_user_queue->remaining_samples());
 }
 
-size_t ConnectionFromClient::remaining_buffers() const
+size_t ConnectionToServer::remaining_buffers() const
 {
     return m_buffer->size() - m_buffer->weak_remaining_capacity();
 }
 
-void ConnectionFromClient::main_mix_muted_state_changed(bool muted)
+void ConnectionToServer::main_mix_muted_state_changed(bool muted)
 {
     if (on_main_mix_muted_state_change)
         on_main_mix_muted_state_change(muted);
 }
 
-void ConnectionFromClient::main_mix_volume_changed(double volume)
+void ConnectionToServer::main_mix_volume_changed(double volume)
 {
     if (on_main_mix_volume_change)
         on_main_mix_volume_change(volume);
 }
 
-void ConnectionFromClient::client_volume_changed(double volume)
+void ConnectionToServer::client_volume_changed(double volume)
 {
     if (on_client_volume_change)
         on_client_volume_change(volume);

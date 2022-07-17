@@ -11,7 +11,7 @@
 #include "MainWidget.h"
 #include "TrackManager.h"
 #include <AK/Queue.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
