@@ -12,6 +12,10 @@
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <QAbstractScrollArea>
+#include <QPointer>
+
+class QTextEdit;
+class QLineEdit;
 
 class HeadlessBrowserPageClient;
 
@@ -34,6 +38,13 @@ public:
 
     String source() const;
 
+    void run_javascript(String const& js_source) const;
+
+    void did_output_js_console_message(i32 message_index);
+    void did_get_js_console_messages(i32 start_index, Vector<String> message_types, Vector<String> messages);
+
+    void show_js_console();
+
 signals:
     void linkHovered(QString, int timeout = 0);
     void linkUnhovered();
@@ -48,4 +59,8 @@ private:
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
+
+    QPointer<QWidget> m_js_console_widget;
+    QTextEdit* m_js_console_output_edit { nullptr };
+    QLineEdit* m_js_console_input_edit { nullptr };
 };

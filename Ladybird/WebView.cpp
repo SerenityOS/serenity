@@ -8,6 +8,7 @@
 #define AK_DONT_REPLACE_STD
 
 #include "WebView.h"
+#include "ConsoleClient.h"
 #include "CookieJar.h"
 #include "RequestManagerQt.h"
 #include <AK/Assertions.h>
@@ -30,12 +31,14 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Rect.h>
+#include <LibJS/Interpreter.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/ImageDecoding.h>
@@ -50,11 +53,25 @@
 #include <LibWebSocket/WebSocket.h>
 #include <QCursor>
 #include <QIcon>
+#include <QLineEdit>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
+#include <QTextEdit>
+#include <QVBoxLayout>
 #include <stdlib.h>
+
+AK::String akstring_from_qstring(QString const& qstring)
+{
+    return AK::String(qstring.toUtf8().data());
+}
+
+QString qstring_from_akstring(AK::String const& akstring)
+{
+    return QString::fromUtf8(akstring.characters(), akstring.length());
+}
 
 String s_serenity_resource_root = [] {
     auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
@@ -162,6 +179,20 @@ public:
 
     virtual void page_did_finish_loading(AK::URL const&) override
     {
+        initialize_js_console();
+        m_console_client->send_messages(0);
+    }
+
+    void initialize_js_console()
+    {
+        auto* document = page().top_level_browsing_context().active_document();
+        auto interpreter = document->interpreter().make_weak_ptr();
+        if (m_interpreter.ptr() == interpreter.ptr())
+            return;
+
+        m_interpreter = interpreter;
+        m_console_client = make<Ladybird::ConsoleClient>(interpreter->global_object().console(), interpreter, m_view);
+        interpreter->global_object().console().set_client(*m_console_client.ptr());
     }
 
     virtual void page_did_change_selection() override
@@ -290,7 +321,6 @@ public:
 
     void set_should_show_line_box_borders(bool state) { m_should_show_line_box_borders = state; }
 
-private:
     HeadlessBrowserPageClient(WebView& view)
         : m_view(view)
         , m_page(make<Web::Page>(*this))
@@ -301,6 +331,8 @@ private:
     NonnullOwnPtr<Web::Page> m_page;
     Browser::CookieJar m_cookie_jar;
 
+    OwnPtr<Ladybird::ConsoleClient> m_console_client;
+    WeakPtr<JS::Interpreter> m_interpreter;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_viewport_rect { 0, 0, 800, 600 };
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
@@ -674,4 +706,70 @@ String WebView::source() const
     if (!document)
         return String::empty();
     return document->source();
+}
+
+void WebView::run_javascript(String const& js_source) const
+{
+    auto* active_document = const_cast<Web::DOM::Document*>(m_page_client->page().top_level_browsing_context().active_document());
+
+    if (!active_document)
+        return;
+
+    // This is partially based on "execute a javascript: URL request" https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
+
+    // Let settings be browsingContext's active document's relevant settings object.
+    auto& settings = active_document->relevant_settings_object();
+
+    // Let baseURL be settings's API base URL.
+    auto base_url = settings.api_base_url();
+
+    // Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
+    // FIXME: This doesn't pass in "default classic script fetch options"
+    // FIXME: What should the filename be here?
+    auto script = Web::HTML::ClassicScript::create("(client connection run_javascript)", js_source, settings, base_url);
+
+    // Let evaluationStatus be the result of running the classic script script.
+    auto evaluation_status = script->run();
+
+    if (evaluation_status.is_error())
+        dbgln("Exception :(");
+}
+
+void WebView::did_output_js_console_message(i32 message_index)
+{
+    m_page_client->m_console_client->send_messages(message_index);
+}
+
+void WebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
+{
+    for (auto& message : messages) {
+        m_js_console_output_edit->append(qstring_from_akstring(message).trimmed());
+    }
+}
+
+void WebView::show_js_console()
+{
+    if (!m_js_console_widget) {
+        m_js_console_widget = new QWidget;
+        m_js_console_widget->setWindowTitle("JS Console");
+        auto* layout = new QVBoxLayout;
+        m_js_console_widget->setLayout(layout);
+        m_js_console_output_edit = new QTextEdit;
+        m_js_console_output_edit->setReadOnly(true);
+        m_js_console_input_edit = new QLineEdit;
+        layout->addWidget(m_js_console_output_edit);
+        layout->addWidget(m_js_console_input_edit);
+        m_js_console_widget->resize(640, 480);
+
+        QObject::connect(m_js_console_input_edit, &QLineEdit::returnPressed, [this] {
+            auto code = m_js_console_input_edit->text().trimmed();
+            m_js_console_input_edit->clear();
+
+            m_js_console_output_edit->append(QString("> %1").arg(code));
+
+            m_page_client->m_console_client->handle_input(akstring_from_qstring(code));
+        });
+    }
+    m_js_console_widget->show();
+    m_js_console_input_edit->setFocus();
 }
