@@ -6,7 +6,7 @@
 
 #include <LibWeb/Fetch/Infrastructure/URL.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#is-local
 bool is_local_url(AK::URL const& url)

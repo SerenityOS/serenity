@@ -14,7 +14,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-header
 // A header is a tuple that consists of a name (a header name) and value (a header value).

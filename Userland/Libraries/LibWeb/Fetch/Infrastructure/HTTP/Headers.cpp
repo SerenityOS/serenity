@@ -16,7 +16,7 @@
 #include <LibWeb/Infra/ByteSequences.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 template<typename T>
 requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Traits<Span<T>> {

@@ -6,7 +6,7 @@
 
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 Body::Body(ReadableStreamDummy stream)
     : m_stream(stream)

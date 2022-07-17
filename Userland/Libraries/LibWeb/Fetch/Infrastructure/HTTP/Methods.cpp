@@ -11,7 +11,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/Infra/ByteSequences.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-method
 bool is_method(ReadonlyBytes method)

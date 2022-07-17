@@ -13,7 +13,7 @@
 #include <AK/Variant.h>
 #include <LibWeb/FileAPI/Blob.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-body
 class Body final {

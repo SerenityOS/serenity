@@ -8,7 +8,7 @@
 
 #include <AK/Forward.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-status
 // A status is an integer in the range 0 to 999, inclusive.

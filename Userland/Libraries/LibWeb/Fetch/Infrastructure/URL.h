@@ -9,7 +9,7 @@
 #include <AK/Array.h>
 #include <AK/URL.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#local-scheme
 // A local scheme is "about", "blob", or "data".

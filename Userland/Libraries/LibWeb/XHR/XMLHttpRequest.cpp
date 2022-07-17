@@ -203,9 +203,9 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
     // FIXME: Use an actual HeaderList for XHR headers.
-    Fetch::HeaderList header_list;
+    Fetch::Infrastructure::HeaderList header_list;
     for (auto const& entry : m_response_headers) {
-        auto header = Fetch::Header {
+        auto header = Fetch::Infrastructure::Header {
             .name = MUST(ByteBuffer::copy(entry.key.bytes())),
             .value = MUST(ByteBuffer::copy(entry.value.bytes())),
         };
@@ -257,7 +257,7 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
 // FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderList const& header_list) const
+Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const
 {
     // 1. Let charset be null.
     Optional<String> charset;
@@ -313,13 +313,13 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderLis
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 // FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-static Fetch::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
+static Fetch::Infrastructure::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
 {
     // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
-    Fetch::Body::ReadableStreamDummy stream {};
+    Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
     // FIXME: 2. Let action be null.
     // 3. Let source be null.
-    Fetch::Body::SourceType source {};
+    Fetch::Infrastructure::Body::SourceType source {};
     // 4. Let length be null.
     Optional<u64> length {};
     // 5. Let type be null.
@@ -356,7 +356,7 @@ static Fetch::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
     // FIXME: 8. If action is non-null, then run these steps in in parallel:
 
     // 9. Let body be a body whose stream is stream, source is source, and length is length.
-    auto body = Fetch::Body { move(stream), move(source), move(length) };
+    auto body = Fetch::Infrastructure::Body { move(stream), move(source), move(length) };
     // 10. Return (body, type).
     return { .body = move(body), .type = move(type) };
 }
@@ -376,16 +376,16 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_str
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // 3. Normalize value.
-    value = MUST(Fetch::normalize_header_value(value));
+    value = MUST(Fetch::Infrastructure::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
-    if (!Fetch::is_header_name(name))
+    if (!Fetch::Infrastructure::is_header_name(name))
         return DOM::SyntaxError::create("Header name contains invalid characters.");
-    if (!Fetch::is_header_value(value))
+    if (!Fetch::Infrastructure::is_header_value(value))
         return DOM::SyntaxError::create("Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
-    if (Fetch::is_forbidden_header_name(name))
+    if (Fetch::Infrastructure::is_forbidden_header_name(name))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
@@ -423,15 +423,15 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
         return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
-    if (!Fetch::is_method(method))
+    if (!Fetch::Infrastructure::is_method(method))
         return DOM::SyntaxError::create("An invalid or illegal string was specified.");
 
     // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
-    if (Fetch::is_forbidden_method(method))
+    if (Fetch::Infrastructure::is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     // 5. Normalize method.
-    method = MUST(Fetch::normalize_method(method));
+    method = MUST(Fetch::Infrastructure::normalize_method(method));
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
     auto parsed_url = settings_object.api_base_url().complete_url(url);
@@ -500,7 +500,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? extract_body(body.value()) : Optional<Fetch::BodyWithType> {};
+    auto body_with_type = body.has_value() ? extract_body(body.value()) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);

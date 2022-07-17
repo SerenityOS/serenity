@@ -9,7 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#collect-an-http-quoted-string
 String collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value)

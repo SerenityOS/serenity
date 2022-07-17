@@ -16,7 +16,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-response
 class Response {
