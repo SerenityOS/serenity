@@ -521,6 +521,8 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
     return {};
 }
 
+static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode, Bytecode::Register const& value_reg);
+
 Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_op == AssignmentOp::Assignment) {
@@ -600,7 +602,18 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
             },
             // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
             [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
-                TODO();
+                // 3. Let rref be the result of evaluating AssignmentExpression.
+                // 4. Let rval be ? GetValue(rref).
+                TRY(m_rhs->generate_bytecode(generator));
+                auto value_register = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(value_register);
+
+                // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern with argument rval.
+                TRY(generate_binding_pattern_bytecode(generator, pattern, Bytecode::Op::SetVariable::InitializationMode::Set, value_register));
+
+                // 6. Return rval.
+                generator.emit<Bytecode::Op::Load>(value_register);
+                return {};
             });
     }
 
@@ -1106,8 +1119,6 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
 
     return {};
 }
-
-static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode, Bytecode::Register const& value_reg);
 
 static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg)
 {
