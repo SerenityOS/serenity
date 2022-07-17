@@ -232,12 +232,18 @@ void HTMLParser::the_end()
     }
 
     // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
-    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document]() mutable {
+    WeakPtr<DOM::Document> weak_document = m_document;
+    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [weak_document]() mutable {
         // FIXME: 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
+
+        auto document = weak_document.strong_ref();
+        if (!document)
+            return;
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
         auto content_loaded_event = DOM::Event::create(HTML::EventNames::DOMContentLoaded);
         content_loaded_event->set_bubbles(true);
+
         document->dispatch_event(content_loaded_event);
 
         // FIXME: 3. Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
@@ -259,7 +265,11 @@ void HTMLParser::the_end()
     });
 
     // 9. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
-    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document]() mutable {
+    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [weak_document]() mutable {
+        auto document = weak_document.strong_ref();
+        if (!document)
+            return;
+
         // 1. Update the current document readiness to "complete".
         document->update_readiness(HTML::DocumentReadyState::Complete);
 

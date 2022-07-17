@@ -48,7 +48,7 @@ private:
 
     Source m_source { Source::Unspecified };
     Function<void()> m_steps;
-    RefPtr<DOM::Document> m_document;
+    WeakPtr<DOM::Document> m_document;
 };
 
 }
