@@ -827,9 +827,6 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
 
     bool has_lexical_environment = false;
 
-    // The breakable scope needs to start here to unwind the potentially created lexical environment for the init bytecode.
-    generator.begin_breakable_scope(Bytecode::Label { end_block }, label_set);
-
     if (m_init) {
         if (m_init->is_variable_declaration()) {
             auto& variable_declaration = verify_cast<VariableDeclaration>(*m_init);
@@ -882,7 +879,9 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
 
     generator.switch_to_basic_block(*body_block_ptr);
     generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr }, label_set);
+    generator.begin_breakable_scope(Bytecode::Label { end_block }, label_set);
     TRY(m_body->generate_bytecode(generator));
+    generator.end_breakable_scope();
     generator.end_continuable_scope();
 
     if (!generator.is_current_block_terminated()) {
@@ -906,7 +905,6 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
     if (has_lexical_environment)
         generator.end_variable_scope();
 
-    generator.end_breakable_scope();
     return {};
 }
 
