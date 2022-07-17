@@ -1270,6 +1270,8 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
         VERIFY(name.has<Empty>());
 
         if (is_rest) {
+            VERIFY(!initializer);
+
             if (first) {
                 // The iterator has not been called, and is thus known to be not exhausted
                 generator.emit<Bytecode::Op::Load>(iterator_reg);
@@ -1357,6 +1359,21 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
         // accumulator. We can proceed, processing the alias as a nested  destructuring
         // pattern if necessary.
         generator.switch_to_basic_block(create_binding_block);
+
+        if (initializer) {
+            auto& value_is_undefined_block = generator.make_block();
+            auto& value_is_not_undefined_block = generator.make_block();
+
+            generator.emit<Bytecode::Op::JumpUndefined>().set_targets(
+                Bytecode::Label { value_is_undefined_block },
+                Bytecode::Label { value_is_not_undefined_block });
+
+            generator.switch_to_basic_block(value_is_undefined_block);
+            TRY(initializer->generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Jump>(Bytecode::Label { value_is_not_undefined_block });
+
+            generator.switch_to_basic_block(value_is_not_undefined_block);
+        }
 
         TRY(assign_accumulator_to_alias(alias));
 
