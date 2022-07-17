@@ -289,13 +289,17 @@ public:
     {
     }
 
-    virtual void page_did_request_alert(String const&) override
+    virtual void page_did_request_alert(String const& message) override
     {
+        QMessageBox::warning(&m_view, "Ladybird", qstring_from_akstring(message));
     }
 
-    virtual bool page_did_request_confirm(String const&) override
+    virtual bool page_did_request_confirm(String const& message) override
     {
-        return false;
+        auto result = QMessageBox::question(&m_view, "Ladybird", qstring_from_akstring(message),
+            QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+
+        return result == QMessageBox::StandardButton::Ok;
     }
 
     virtual String page_did_request_prompt(String const&, String const&) override
