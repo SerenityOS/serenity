@@ -25,8 +25,10 @@ LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetric
         }
     }
 
+    auto const* containing_block_used_values = box.is_initial_containing_block_box() ? nullptr : &get(*box.containing_block());
+
     used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
-    used_values_per_layout_node[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
     return *used_values_per_layout_node[serial_id];
 }
 
@@ -40,8 +42,11 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics 
         if (ancestor->used_values_per_layout_node[serial_id])
             return *ancestor->used_values_per_layout_node[serial_id];
     }
+
+    auto const* containing_block_used_values = box.is_initial_containing_block_box() ? nullptr : &get(*box.containing_block());
+
     const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
-    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id]->node = const_cast<NodeWithStyleAndBoxModelMetrics*>(&box);
+    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
     return *used_values_per_layout_node[serial_id];
 }
 
@@ -56,7 +61,7 @@ void LayoutState::commit()
         if (!used_values_ptr)
             continue;
         auto& used_values = *used_values_ptr;
-        auto& node = *used_values.node;
+        auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
 
         // Transfer box model metrics.
         node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
@@ -68,7 +73,7 @@ void LayoutState::commit()
 
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
-            auto& box = static_cast<Layout::Box&>(node);
+            auto& box = static_cast<Layout::Box const&>(node);
             auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
             paint_box.set_offset(used_values.offset);
             paint_box.set_content_size(used_values.content_width(), used_values.content_height());
@@ -123,6 +128,40 @@ Gfx::FloatRect absolute_content_rect(Box const& box, LayoutState const& state)
     for (auto* block = box.containing_block(); block; block = block->containing_block())
         rect.translate_by(state.get(*block).offset);
     return rect;
+}
+
+void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, UsedValues const* containing_block_used_values)
+{
+    m_node = &node;
+
+    auto const& computed_values = node.computed_values();
+
+    auto is_definite_size = [&](CSS::LengthPercentage const& size, bool width) {
+        // A size that can be determined without performing layout; that is,
+        // a <length>,
+        // a measure of text (without consideration of line-wrapping),
+        // a size of the initial containing block,
+        // or a <percentage> or other formula (such as the “stretch-fit” sizing of non-replaced blocks [CSS2]) that is resolved solely against definite sizes.
+
+        auto containing_block_has_definite_size = containing_block_used_values ? (width ? containing_block_used_values->has_definite_width() : containing_block_used_values->has_definite_height()) : false;
+
+        if (size.is_auto()) {
+            // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
+            if (width && node.parent() && !node.parent()->computed_values().display().is_flex_inside())
+                return containing_block_has_definite_size;
+            return false;
+        }
+
+        if (size.is_length())
+            return true;
+        if (size.is_percentage())
+            return containing_block_has_definite_size;
+        // FIXME: Determine if calc() value is definite.
+        return false;
+    };
+
+    m_has_definite_width = is_definite_size(computed_values.width(), true);
+    m_has_definite_height = is_definite_size(computed_values.height(), false);
 }
 
 void LayoutState::UsedValues::set_content_width(float width)

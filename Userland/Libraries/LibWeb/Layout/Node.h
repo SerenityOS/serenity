@@ -169,12 +169,6 @@ public:
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
-    bool has_definite_height() const { return m_has_definite_height; }
-    bool has_definite_width() const { return m_has_definite_width; }
-
-    void set_has_definite_height(bool b) { m_has_definite_height = b; }
-    void set_has_definite_width(bool b) { m_has_definite_width = b; }
-
     void did_insert_into_layout_tree(CSS::StyleProperties const&);
 
 protected:
@@ -186,9 +180,6 @@ private:
     RefPtr<Gfx::Font> m_font;
     float m_line_height { 0 };
     RefPtr<CSS::ImageStyleValue> m_list_style_image;
-
-    bool m_has_definite_height { false };
-    bool m_has_definite_width { false };
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {

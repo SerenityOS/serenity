@@ -32,10 +32,10 @@ void FormattingContext::run_intrinsic_size_determination(Box const& box)
 {
     auto& box_state = m_state.get_mutable(box);
 
-    if (box.has_definite_width())
+    if (box_state.has_definite_width())
         box_state.set_content_width(box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box));
 
-    if (box.has_definite_height())
+    if (box_state.has_definite_height())
         box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
 
     run(box, LayoutMode::IntrinsicSizeDetermination);
@@ -866,7 +866,7 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.set_content_width(0);
 
-    if (!containing_block.has_definite_height())
+    if (!containing_block_state.has_definite_height())
         containing_block_state.set_content_height(INFINITY);
     else if (containing_block.computed_values().height().is_auto())
         containing_block_state.set_content_height(containing_block_height_for(containing_block));
@@ -908,7 +908,7 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.set_content_width(INFINITY);
 
-    if (!containing_block.has_definite_height())
+    if (!containing_block_state.has_definite_height())
         containing_block_state.set_content_height(INFINITY);
     else if (containing_block.computed_values().height().is_auto())
         containing_block_state.set_content_height(containing_block_height_for(containing_block));
@@ -950,7 +950,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.set_content_height(0);
 
-    if (!containing_block.has_definite_width())
+    if (!containing_block_state.has_definite_width())
         containing_block_state.set_content_width(INFINITY);
     else if (containing_block.computed_values().width().is_auto())
         containing_block_state.set_content_width(containing_block_width_for(containing_block));
@@ -992,7 +992,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
     auto& containing_block_state = throwaway_state.get_mutable(containing_block);
     containing_block_state.set_content_height(INFINITY);
 
-    if (!containing_block.has_definite_width())
+    if (!containing_block_state.has_definite_width())
         containing_block_state.set_content_width(INFINITY);
     else if (containing_block.computed_values().width().is_auto())
         containing_block_state.set_content_width(containing_block_width_for(containing_block));

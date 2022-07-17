@@ -418,7 +418,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     if (is<ReplacedBox>(box) || is<BlockContainer>(box))
         place_block_level_element_in_normal_flow_vertically(box, block_container);
 
-    if (box.has_definite_height()) {
+    if (box_state.has_definite_height()) {
         compute_height(box, m_state);
     }
 
@@ -456,10 +456,10 @@ void BlockFormattingContext::run_intrinsic_size_determination(Box const& box)
 {
     auto& box_state = m_state.get_mutable(box);
 
-    if (box.has_definite_width())
+    if (box_state.has_definite_width())
         box_state.set_content_width(box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box));
 
-    if (box.has_definite_height())
+    if (box_state.has_definite_height())
         box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
 
     run(box, LayoutMode::IntrinsicSizeDetermination);

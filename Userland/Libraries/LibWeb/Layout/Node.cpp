@@ -192,41 +192,8 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     m_font = Gfx::FontDatabase::default_font();
 }
 
-void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const& style)
+void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const&)
 {
-    // https://drafts.csswg.org/css-sizing-3/#definite
-    auto is_definite_size = [&](CSS::PropertyID property_id, bool width) {
-        // A size that can be determined without performing layout; that is,
-        // a <length>,
-        // a measure of text (without consideration of line-wrapping),
-        // a size of the initial containing block,
-        // or a <percentage> or other formula (such as the “stretch-fit” sizing of non-replaced blocks [CSS2]) that is resolved solely against definite sizes.
-        auto maybe_value = style.property(property_id);
-
-        auto const* containing_block = this->containing_block();
-        auto containing_block_has_definite_size = containing_block && (width ? containing_block->m_has_definite_width : containing_block->m_has_definite_height);
-
-        if (maybe_value->has_auto()) {
-            // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
-            if (width && is_block_container() && parent() && !parent()->computed_values().display().is_flex_inside())
-                return containing_block_has_definite_size;
-            return false;
-        }
-
-        auto maybe_length_percentage = style.length_percentage(property_id);
-        if (!maybe_length_percentage.has_value())
-            return false;
-        auto length_percentage = maybe_length_percentage.release_value();
-        if (length_percentage.is_length())
-            return true;
-        if (length_percentage.is_percentage())
-            return containing_block_has_definite_size;
-        // FIXME: Determine if calc() value is definite.
-        return false;
-    };
-
-    m_has_definite_width = is_definite_size(CSS::PropertyID::Width, true);
-    m_has_definite_height = is_definite_size(CSS::PropertyID::Height, false);
 }
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)

@@ -622,8 +622,8 @@ void Document::update_layout()
 
         auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
         auto& icb_state = layout_state.get_mutable(icb);
-        icb.set_has_definite_width(true);
-        icb.set_has_definite_height(true);
+        icb_state.set_has_definite_width(true);
+        icb_state.set_has_definite_height(true);
         icb_state.set_content_width(viewport_rect.width());
         icb_state.set_content_height(viewport_rect.height());
 

@@ -42,13 +42,18 @@ struct LayoutState {
     }
 
     struct UsedValues {
-        Layout::NodeWithStyleAndBoxModelMetrics* node { nullptr };
+        NodeWithStyleAndBoxModelMetrics const& node() const { return *m_node; }
+        void set_node(NodeWithStyleAndBoxModelMetrics&, UsedValues const* containing_block_used_values);
 
         float content_width() const { return m_content_width; }
         float content_height() const { return m_content_height; }
-
         void set_content_width(float);
         void set_content_height(float);
+
+        bool has_definite_width() const { return m_has_definite_width && width_constraint == SizeConstraint::None; }
+        bool has_definite_height() const { return m_has_definite_height && height_constraint == SizeConstraint::None; }
+        void set_has_definite_width(bool value) { m_has_definite_width = value; }
+        void set_has_definite_height(bool value) { m_has_definite_height = value; }
 
         Gfx::FloatPoint offset;
 
@@ -105,8 +110,13 @@ struct LayoutState {
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
 
     private:
+        Layout::NodeWithStyleAndBoxModelMetrics* m_node { nullptr };
+
         float m_content_width { 0 };
         float m_content_height { 0 };
+
+        bool m_has_definite_width { false };
+        bool m_has_definite_height { false };
     };
 
     void commit();
