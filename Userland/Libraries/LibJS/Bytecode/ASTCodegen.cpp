@@ -523,13 +523,89 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
 
 Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    // FIXME: Implement this for BindingPatterns too.
-    auto& lhs = m_lhs.get<NonnullRefPtr<Expression>>();
-
     if (m_op == AssignmentOp::Assignment) {
-        TRY(m_rhs->generate_bytecode(generator));
-        return generator.emit_store_to_reference(lhs);
+        // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
+        return m_lhs.visit(
+            // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
+            [&](NonnullRefPtr<Expression> const& lhs) -> Bytecode::CodeGenerationErrorOr<void> {
+                // a. Let lref be the result of evaluating LeftHandSideExpression.
+                // b. ReturnIfAbrupt(lref).
+                Optional<Bytecode::Register> base_object_register;
+                Optional<Bytecode::Register> computed_property_register;
+
+                if (is<MemberExpression>(*lhs)) {
+                    auto& expression = static_cast<MemberExpression const&>(*lhs);
+                    TRY(expression.object().generate_bytecode(generator));
+
+                    base_object_register = generator.allocate_register();
+                    generator.emit<Bytecode::Op::Store>(*base_object_register);
+
+                    if (expression.is_computed()) {
+                        TRY(expression.property().generate_bytecode(generator));
+                        computed_property_register = generator.allocate_register();
+                        generator.emit<Bytecode::Op::Store>(*computed_property_register);
+
+                        // To be continued later with PutByValue.
+                    } else if (expression.property().is_identifier()) {
+                        // Do nothing, this will be handled by PutById later.
+                    } else {
+                        return Bytecode::CodeGenerationError {
+                            &expression,
+                            "Unimplemented non-computed member expression"sv
+                        };
+                    }
+                } else if (is<Identifier>(*lhs)) {
+                    // NOTE: For Identifiers, we cannot perform GetVariable and then write into the reference it retrieves, only SetVariable can do this.
+                    // FIXME: However, this breaks spec as we are doing variable lookup after evaluating the RHS. This is observable in an object environment, where we visibly perform HasOwnProperty and Get(@@unscopables) on the binded object.
+                } else {
+                    TRY(lhs->generate_bytecode(generator));
+                }
+
+                // FIXME: c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
+                //           i. Let rval be ? NamedEvaluation of AssignmentExpression with argument lref.[[ReferencedName]].
+
+                // d. Else,
+                // i. Let rref be the result of evaluating AssignmentExpression.
+                // ii. Let rval be ? GetValue(rref).
+                TRY(m_rhs->generate_bytecode(generator));
+
+                // e. Perform ? PutValue(lref, rval).
+                if (is<Identifier>(*lhs)) {
+                    auto& identifier = static_cast<Identifier const&>(*lhs);
+                    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier.string()));
+                } else if (is<MemberExpression>(*lhs)) {
+                    auto& expression = static_cast<MemberExpression const&>(*lhs);
+
+                    if (expression.is_computed()) {
+                        generator.emit<Bytecode::Op::PutByValue>(*base_object_register, *computed_property_register);
+                    } else if (expression.property().is_identifier()) {
+                        auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                        generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref);
+                    } else {
+                        return Bytecode::CodeGenerationError {
+                            &expression,
+                            "Unimplemented non-computed member expression"sv
+                        };
+                    }
+                } else {
+                    return Bytecode::CodeGenerationError {
+                        lhs,
+                        "Unimplemented/invalid node used a reference"sv
+                    };
+                }
+
+                // f. Return rval.
+                // NOTE: This is already in the accumulator.
+                return {};
+            },
+            // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
+            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+                TODO();
+            });
     }
+
+    VERIFY(m_lhs.has<NonnullRefPtr<Expression>>());
+    auto& lhs = m_lhs.get<NonnullRefPtr<Expression>>();
 
     TRY(generator.emit_load_from_reference(lhs));
 
