@@ -30,6 +30,13 @@
 #include <unistd.h>
 
 String g_system_mode = "graphical";
+NonnullRefPtrVector<Service> g_services;
+
+// NOTE: This handler ensures that the destructor of g_services is called.
+static void sigterm_handler(int)
+{
+    exit(0);
+}
 
 static void sigchld_handler(int)
 {
@@ -480,22 +487,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::EventLoop event_loop;
 
     event_loop.register_signal(SIGCHLD, sigchld_handler);
+    event_loop.register_signal(SIGTERM, sigterm_handler);
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
-    NonnullRefPtrVector<Service> services;
     auto config = (user)
         ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
         : TRY(Core::ConfigFile::open_for_system("SystemServer"));
     for (auto const& name : config->groups()) {
         auto service = TRY(Service::try_create(*config, name));
         if (service->is_enabled())
-            services.append(service);
+            g_services.append(move(service));
     }
 
     // After we've set them all up, activate them!
-    dbgln("Activating {} services...", services.size());
-    for (auto& service : services)
+    dbgln("Activating {} services...", g_services.size());
+    for (auto& service : g_services)
         service.activate();
 
     return event_loop.exec();
