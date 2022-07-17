@@ -132,8 +132,12 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
 
     // Used as a sentinel value to loop back to the beginning of the list
     m_schedule_begin_anchor = allocate_queue_head();
+    // Each interrupt QH anchor in the array is linked into the schedule so that
+    // it is executed once every (2^i) milliseconds, where i is it's index
+    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS; i++) {
+        m_interrupt_qh_anchor_arr[i] = allocate_queue_head();
+    }
     // Create the Full Speed, Low Speed Control and Bulk Queue Heads
-    m_interrupt_qh_anchor = allocate_queue_head();
     m_ls_control_qh_anchor = allocate_queue_head();
     m_fs_control_qh_anchor = allocate_queue_head();
     m_bulk_qh_anchor = allocate_queue_head();
@@ -157,7 +161,6 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
         auto transfer_descriptor = m_iso_td_list.at(i);
         transfer_descriptor->set_in_use(true); // Isochronous transfers are ALWAYS marked as in use (in case we somehow get allocated one...)
         transfer_descriptor->set_isochronous();
-        transfer_descriptor->link_queue_head(m_interrupt_qh_anchor->paddr());
 
         if constexpr (UHCI_VERBOSE_DEBUG)
             transfer_descriptor->print();
@@ -196,11 +199,15 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     // Not specified in the datasheet, however, is another Queue Head with an "inactive" Transfer Descriptor. This
     // is to circumvent a bug in the silicon of the PIIX4's UHCI controller.
     // https://github.com/openbsd/src/blob/master/sys/dev/usb/uhci.c#L390
-    m_schedule_begin_anchor->link_next_queue_head(m_interrupt_qh_anchor);
+    m_schedule_begin_anchor->link_next_queue_head(m_interrupt_qh_anchor_arr[0]);
     m_schedule_begin_anchor->terminate_element_link_ptr();
 
-    m_interrupt_qh_anchor->link_next_queue_head(m_ls_control_qh_anchor);
-    m_interrupt_qh_anchor->terminate_element_link_ptr();
+    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS - 1; i++) {
+        m_interrupt_qh_anchor_arr[i]->link_next_queue_head(m_interrupt_qh_anchor_arr[i + 1]);
+        m_interrupt_qh_anchor_arr[i]->terminate_element_link_ptr();
+    }
+    m_interrupt_qh_anchor_arr[NUMBER_OF_INTERRUPT_QHS - 1]->link_next_queue_head(m_ls_control_qh_anchor);
+    m_interrupt_qh_anchor_arr[NUMBER_OF_INTERRUPT_QHS - 1]->terminate_element_link_ptr();
 
     m_ls_control_qh_anchor->link_next_queue_head(m_fs_control_qh_anchor);
     m_ls_control_qh_anchor->terminate_element_link_ptr();
@@ -217,12 +224,21 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     m_bulk_qh_anchor->attach_transfer_descriptor_chain(piix4_td_hack);
 
     u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
-    for (int frame = 0; frame < UHCI_NUMBER_OF_FRAMES; frame++) {
+    for (int frame_num = 0; frame_num < UHCI_NUMBER_OF_FRAMES; frame_num++) {
+        auto frame_iso_td = m_iso_td_list.at(frame_num % UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
         // Each frame pointer points to iso_td % NUM_ISO_TDS
-        framelist[frame] = m_iso_td_list.at(frame % UHCI_NUMBER_OF_ISOCHRONOUS_TDS)->paddr();
+        for (int i = NUMBER_OF_INTERRUPT_QHS - 1; i >= 0; i--) {
+            if (frame_num % (1 << i) == 0) {
+                frame_iso_td->link_queue_head(m_interrupt_qh_anchor_arr[i]->paddr());
+                break;
+            }
+        }
+        framelist[frame_num] = frame_iso_td->paddr();
     }
 
-    m_interrupt_qh_anchor->print();
+    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS; i++) {
+        m_interrupt_qh_anchor_arr[i]->print();
+    }
     m_ls_control_qh_anchor->print();
     m_fs_control_qh_anchor->print();
     m_bulk_qh_anchor->print();
