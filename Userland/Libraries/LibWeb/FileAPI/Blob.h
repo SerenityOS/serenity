@@ -50,7 +50,7 @@ public:
 
 private:
     Blob() = default;
-    static DOM::ExceptionOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
+    static ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
 
     ByteBuffer m_byte_buffer {};
     String m_type {};
