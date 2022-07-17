@@ -24,6 +24,8 @@ public:
     PrimitiveString(PrimitiveString const&) = delete;
     PrimitiveString& operator=(PrimitiveString const&) = delete;
 
+    bool is_empty() const;
+
     String const& string() const;
     bool has_utf8_string() const { return m_has_utf8_string; }
 

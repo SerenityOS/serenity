@@ -382,7 +382,7 @@ bool Value::to_boolean() const
             return false;
         return m_value.as_double != 0;
     case Type::String:
-        return !m_value.as_string->string().is_empty();
+        return !m_value.as_string->is_empty();
     case Type::Symbol:
         return true;
     case Type::BigInt:

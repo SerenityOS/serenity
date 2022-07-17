@@ -32,6 +32,15 @@ PrimitiveString::~PrimitiveString()
     vm().string_cache().remove(m_utf8_string);
 }
 
+bool PrimitiveString::is_empty() const
+{
+    if (m_has_utf16_string)
+        return m_utf16_string.is_empty();
+    if (m_has_utf8_string)
+        return m_utf8_string.is_empty();
+    VERIFY_NOT_REACHED();
+}
+
 String const& PrimitiveString::string() const
 {
     if (!m_has_utf8_string) {
