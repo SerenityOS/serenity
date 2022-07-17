@@ -45,7 +45,9 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             auto is_constant_declaration = declaration.is_constant_declaration();
             declaration.for_each_bound_name([&](auto const& name) {
                 auto index = generator.intern_identifier(name);
-                if (is_constant_declaration || !generator.has_binding(index)) {
+                // NOTE: BlockDeclarationInstantiation takes as input the new lexical environment that was created and checks if there is a binding for the current name only in this new scope.
+                //       For example: `{ let a = 1; { let a = 2; } }`. The second `a` will shadow the first `a` instead of re-initializing or setting it.
+                if (is_constant_declaration || !generator.has_binding_in_current_scope(index)) {
                     generator.register_binding(index);
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
                 }

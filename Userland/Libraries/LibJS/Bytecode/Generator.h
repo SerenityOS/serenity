@@ -138,7 +138,7 @@ public:
     {
         m_variable_scopes.last_matching([&](auto& x) { return x.mode == BindingMode::Global || x.mode == mode; })->known_bindings.set(identifier);
     }
-    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {})
+    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {}) const
     {
         for (auto index = m_variable_scopes.size(); index > 0; --index) {
             auto& scope = m_variable_scopes[index - 1];
@@ -150,6 +150,13 @@ public:
                 return true;
         }
         return false;
+    }
+    bool has_binding_in_current_scope(IdentifierTableIndex identifier) const
+    {
+        if (m_variable_scopes.is_empty())
+            return false;
+
+        return m_variable_scopes.last().known_bindings.contains(identifier);
     }
 
     void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block);
