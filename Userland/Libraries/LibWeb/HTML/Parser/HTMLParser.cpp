@@ -3400,7 +3400,6 @@ NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& con
     auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML);
     parser->document().append_child(root);
     parser->m_stack_of_open_elements.push(root);
-
     if (context_element.local_name() == HTML::TagNames::template_) {
         parser->m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
     }
@@ -3424,6 +3423,8 @@ NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& con
         context_element.document().adopt_node(*child);
         children.append(*child);
     }
+    parser->document().remove_child(root);
+
     return children;
 }
 
