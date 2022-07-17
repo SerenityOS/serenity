@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Platform.h>
-
+#include <AK/Array.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/Platform.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
@@ -31,6 +31,7 @@ class UHCIController final
 
     static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
     static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
+    static constexpr u8 NUMBER_OF_INTERRUPT_QHS = 11;
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
@@ -102,7 +103,7 @@ private:
     Vector<TransferDescriptor*> m_iso_td_list;
 
     QueueHead* m_schedule_begin_anchor;
-    QueueHead* m_interrupt_qh_anchor;
+    Array<QueueHead*, NUMBER_OF_INTERRUPT_QHS> m_interrupt_qh_anchor_arr;
     QueueHead* m_ls_control_qh_anchor;
     QueueHead* m_fs_control_qh_anchor;
     // Always final queue in the schedule, may loop back to previous QH for bandwidth
