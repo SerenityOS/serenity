@@ -41,12 +41,24 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
             generator.emit<Bytecode::Op::Yield>(nullptr);
         }
     }
+
+    bool is_strict_mode = false;
+    if (is<Program>(node))
+        is_strict_mode = static_cast<Program const&>(node).is_strict_mode();
+    else if (is<FunctionBody>(node))
+        is_strict_mode = static_cast<FunctionBody const&>(node).in_strict_mode();
+    else if (is<FunctionDeclaration>(node))
+        is_strict_mode = static_cast<FunctionDeclaration const&>(node).is_strict_mode();
+    else if (is<FunctionExpression>(node))
+        is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
+
     return adopt_own(*new Executable {
         .name = {},
         .basic_blocks = move(generator.m_root_basic_blocks),
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
-        .number_of_registers = generator.m_next_register });
+        .number_of_registers = generator.m_next_register,
+        .is_strict_mode = is_strict_mode });
 }
 
 void Generator::grow(size_t additional_size)

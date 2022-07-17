@@ -20,6 +20,7 @@ struct Executable {
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     size_t number_of_registers { 0 };
+    bool is_strict_mode { false };
 
     String const& get_string(StringTableIndex index) const { return string_table->get(index); }
     FlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
