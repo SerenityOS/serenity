@@ -37,8 +37,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode)
                 auto& layout_node = *svg_svg_element.layout_node();
 
                 // FIXME: Allow for relative lengths here
-                geometry_box_state.content_width = layout_node.computed_values().width().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
-                geometry_box_state.content_height = layout_node.computed_values().height().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node);
+                geometry_box_state.set_content_width(layout_node.computed_values().width().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node));
+                geometry_box_state.set_content_height(layout_node.computed_values().height().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node));
 
                 return IterationDecision::Continue;
             }
@@ -64,15 +64,15 @@ void SVGFormattingContext::run(Box const& box, LayoutMode)
                 Gfx::FloatPoint viewbox_offset = { view_box.min_x, view_box.min_y };
                 geometry_box_state.offset = path_bounding_box.top_left() + viewbox_offset;
 
-                geometry_box_state.content_width = view_box.width;
-                geometry_box_state.content_height = view_box.height;
+                geometry_box_state.set_content_width(view_box.width);
+                geometry_box_state.set_content_height(view_box.height);
 
                 return IterationDecision::Continue;
             }
 
             geometry_box_state.offset = path_bounding_box.top_left();
-            geometry_box_state.content_width = path_bounding_box.width();
-            geometry_box_state.content_height = path_bounding_box.height();
+            geometry_box_state.set_content_width(path_bounding_box.width());
+            geometry_box_state.set_content_height(path_bounding_box.height());
         }
 
         return IterationDecision::Continue;

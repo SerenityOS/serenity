@@ -71,7 +71,7 @@ void LayoutState::commit()
             auto& box = static_cast<Layout::Box&>(node);
             auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
             paint_box.set_offset(used_values.offset);
-            paint_box.set_content_size(used_values.content_width, used_values.content_height);
+            paint_box.set_content_size(used_values.content_width(), used_values.content_height());
             paint_box.set_overflow_data(move(used_values.overflow_data));
             paint_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
 
@@ -94,7 +94,7 @@ void LayoutState::commit()
 Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width, box_state.content_height } };
+    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
     rect.set_x(rect.x() - box_state.margin_box_left());
     rect.set_width(rect.width() + box_state.margin_box_left() + box_state.margin_box_right());
     rect.set_y(rect.y() - box_state.margin_box_top());
@@ -119,10 +119,20 @@ Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box 
 Gfx::FloatRect absolute_content_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    Gfx::FloatRect rect { box_state.offset, { box_state.content_width, box_state.content_height } };
+    Gfx::FloatRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
     for (auto* block = box.containing_block(); block; block = block->containing_block())
         rect.translate_by(state.get(*block).offset);
     return rect;
+}
+
+void LayoutState::UsedValues::set_content_width(float width)
+{
+    m_content_width = width;
+}
+
+void LayoutState::UsedValues::set_content_height(float height)
+{
+    m_content_height = height;
 }
 
 }

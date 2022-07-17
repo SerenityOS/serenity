@@ -44,8 +44,12 @@ struct LayoutState {
     struct UsedValues {
         Layout::NodeWithStyleAndBoxModelMetrics* node { nullptr };
 
-        float content_width { 0 };
-        float content_height { 0 };
+        float content_width() const { return m_content_width; }
+        float content_height() const { return m_content_height; }
+
+        void set_content_width(float);
+        void set_content_height(float);
+
         Gfx::FloatPoint offset;
 
         SizeConstraint width_constraint { SizeConstraint::None };
@@ -78,16 +82,16 @@ struct LayoutState {
         float margin_box_top() const { return margin_top + border_top + padding_top; }
         float margin_box_bottom() const { return margin_bottom + border_bottom + padding_bottom; }
 
-        float margin_box_width() const { return margin_box_left() + content_width + margin_box_right(); }
-        float margin_box_height() const { return margin_box_top() + content_height + margin_box_bottom(); }
+        float margin_box_width() const { return margin_box_left() + content_width() + margin_box_right(); }
+        float margin_box_height() const { return margin_box_top() + content_height() + margin_box_bottom(); }
 
         float border_box_left() const { return border_left + padding_left; }
         float border_box_right() const { return border_right + padding_right; }
         float border_box_top() const { return border_top + padding_top; }
         float border_box_bottom() const { return border_bottom + padding_bottom; }
 
-        float border_box_width() const { return border_box_left() + content_width + border_box_right(); }
-        float border_box_height() const { return border_box_top() + content_height + border_box_bottom(); }
+        float border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
+        float border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
 
         Optional<Painting::PaintableBox::OverflowData> overflow_data;
 
@@ -99,6 +103,10 @@ struct LayoutState {
         }
 
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
+
+    private:
+        float m_content_width { 0 };
+        float m_content_height { 0 };
     };
 
     void commit();

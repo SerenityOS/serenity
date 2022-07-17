@@ -52,7 +52,7 @@ void LineBuilder::append_box(Box const& box, float leading_size, float trailing_
 {
     auto& box_state = m_layout_state.get_mutable(box);
     auto& line_box = ensure_last_line_box();
-    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
+    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width(), box_state.content_height(), box_state.border_box_top(), box_state.border_box_bottom());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.border_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
@@ -86,7 +86,7 @@ static float box_baseline(LayoutState const& state, Box const& box)
         case CSS::VerticalAlign::Top:
             return box_state.border_box_top();
         case CSS::VerticalAlign::Bottom:
-            return box_state.content_height + box_state.border_box_bottom();
+            return box_state.content_height() + box_state.border_box_bottom();
         default:
             break;
         }
@@ -215,7 +215,7 @@ void LineBuilder::update_last_line()
             if (fragment.layout_node().is_replaced_box() || fragment.layout_node().is_inline_block()) {
                 auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
                 top_of_inline_box = fragment.offset().y() - fragment_box_state.margin_box_top();
-                bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height + fragment_box_state.margin_box_bottom();
+                bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom();
             } else {
                 auto font_metrics = fragment.layout_node().font().pixel_metrics();
                 auto typographic_height = font_metrics.ascent + font_metrics.descent;

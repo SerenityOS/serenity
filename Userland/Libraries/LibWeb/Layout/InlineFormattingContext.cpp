@@ -32,7 +32,7 @@ InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContai
         m_effective_containing_block_width = INFINITY;
         break;
     default:
-        m_effective_containing_block_width = m_containing_block_state.content_width;
+        m_effective_containing_block_width = m_containing_block_state.content_width();
         break;
     }
 }
@@ -74,7 +74,7 @@ float InlineFormattingContext::available_space_for_line(float y) const
     auto const& root_block_state = m_state.get(parent().root());
 
     space.left = max(space.left, m_containing_block_state.offset.x()) - m_containing_block_state.offset.x();
-    space.right = min(root_block_state.content_width - space.right, m_containing_block_state.offset.x() + m_effective_containing_block_width);
+    space.right = min(root_block_state.content_width() - space.right, m_containing_block_state.offset.x() + m_effective_containing_block_width);
 
     return space.right - space.left;
 }
@@ -113,8 +113,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         if (is<SVGSVGBox>(box))
             (void)layout_inside(replaced, layout_mode);
 
-        box_state.content_width = compute_width_for_replaced_element(m_state, replaced);
-        box_state.content_height = compute_height_for_replaced_element(m_state, replaced);
+        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced));
+        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced));
         return;
     }
 
@@ -125,7 +125,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         if (width_value.is_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
-            auto available_width = m_containing_block_state.content_width
+            auto available_width = m_containing_block_state.content_width()
                 - box_state.margin_left
                 - box_state.border_left
                 - box_state.padding_left
@@ -134,10 +134,10 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
                 - box_state.margin_right;
 
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
-            box_state.content_width = width;
+            box_state.set_content_width(width);
         } else {
             auto container_width = CSS::Length::make_px(m_effective_containing_block_width);
-            box_state.content_width = width_value.resolved(box, container_width).to_px(inline_block);
+            box_state.set_content_width(width_value.resolved(box, container_width).to_px(inline_block));
         }
         auto independent_formatting_context = layout_inside(inline_block, layout_mode);
 
@@ -146,8 +146,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
             BlockFormattingContext::compute_height(inline_block, m_state);
         } else {
-            auto container_height = CSS::Length::make_px(m_containing_block_state.content_height);
-            box_state.content_height = height_value.resolved(box, container_height).to_px(inline_block);
+            auto container_height = CSS::Length::make_px(m_containing_block_state.content_height());
+            box_state.set_content_height(height_value.resolved(box, container_height).to_px(inline_block));
         }
 
         independent_formatting_context->parent_context_did_dimension_child_root_box();

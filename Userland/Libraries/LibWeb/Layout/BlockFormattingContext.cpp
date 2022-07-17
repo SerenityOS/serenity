@@ -222,7 +222,7 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
     auto& box_state = m_state.get_mutable(box);
 
     if (!is<ReplacedBox>(box))
-        box_state.content_width = used_width.to_px(box);
+        box_state.set_content_width(used_width.to_px(box));
 
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
@@ -294,7 +294,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
     }
 
     auto& box_state = m_state.get_mutable(box);
-    box_state.content_width = width.to_px(box);
+    box_state.set_content_width(width.to_px(box));
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
     box_state.border_left = computed_values.border_left().width;
@@ -305,7 +305,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box)
 {
-    m_state.get_mutable(box).content_width = compute_width_for_replaced_element(m_state, box);
+    m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box));
 }
 
 float BlockFormattingContext::compute_theoretical_height(LayoutState const& state, Box const& box)
@@ -359,7 +359,7 @@ void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
     box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
 
-    box_state.content_height = compute_theoretical_height(state, box);
+    box_state.set_content_height(compute_theoretical_height(state, box));
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode)
@@ -370,9 +370,9 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
-            block_container_state.content_width = containing_block_width_for(block_container);
+            block_container_state.set_content_width(containing_block_width_for(block_container));
         if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
-            block_container_state.content_height = containing_block_height_for(block_container);
+            block_container_state.set_content_height(containing_block_height_for(block_container));
     }
 
     InlineFormattingContext context(m_state, block_container, *this);
@@ -388,11 +388,11 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
-            block_container_state.content_width = max_line_width;
+            block_container_state.set_content_width(max_line_width);
     }
 
     // FIXME: This is weird. Figure out a way to make callers responsible for setting the content height.
-    block_container_state.content_height = content_height;
+    block_container_state.set_content_height(content_height);
 }
 
 void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& content_height)
@@ -410,7 +410,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     if (box.is_floating()) {
         layout_floating_box(box, block_container, layout_mode);
-        content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
+        content_height = max(content_height, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
 
@@ -446,7 +446,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         layout_list_item_marker(static_cast<ListItemBox const&>(box));
     }
 
-    content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
+    content_height = max(content_height, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
@@ -457,10 +457,10 @@ void BlockFormattingContext::run_intrinsic_size_determination(Box const& box)
     auto& box_state = m_state.get_mutable(box);
 
     if (box.has_definite_width())
-        box_state.content_width = box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box);
+        box_state.set_content_width(box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box));
 
     if (box.has_definite_height())
-        box_state.content_height = box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box);
+        box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
 
     run(box, LayoutMode::IntrinsicSizeDetermination);
 }
@@ -474,9 +474,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
-            block_container_state.content_width = containing_block_width_for(block_container);
+            block_container_state.set_content_width(containing_block_width_for(block_container));
         if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
-            block_container_state.content_height = containing_block_height_for(block_container);
+            block_container_state.set_content_height(containing_block_height_for(block_container));
     }
 
     block_container.for_each_child_of_type<Box>([&](Box& box) {
@@ -487,9 +487,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
         auto& block_container_state = m_state.get_mutable(block_container);
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
-            block_container_state.content_width = greatest_child_width(block_container);
+            block_container_state.set_content_width(greatest_child_width(block_container));
         if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
-            block_container_state.content_height = content_height;
+            block_container_state.set_content_height(content_height);
     }
 }
 
@@ -559,7 +559,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
         auto const& relevant_sibling_state = m_state.get(*relevant_sibling);
         y += relevant_sibling_state.offset.y()
-            + relevant_sibling_state.content_height
+            + relevant_sibling_state.content_height()
             + relevant_sibling_state.border_box_bottom()
             + collapsed_margin;
     } else {
@@ -601,7 +601,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     }
 
     if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
-        x += (available_width_within_containing_block / 2) - box_state.content_width / 2;
+        x += (available_width_within_containing_block / 2) - box_state.content_width() / 2;
     } else {
         x += box_state.margin_box_left();
     }
@@ -682,7 +682,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             if (side == FloatSide::Left)
                 offset_from_edge = box_state.margin_box_left();
             else
-                offset_from_edge = box_state.content_width + box_state.margin_box_right();
+                offset_from_edge = box_state.content_width() + box_state.margin_box_right();
         };
 
         auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
@@ -701,9 +701,9 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
             if (side == FloatSide::Left) {
                 wanted_offset_from_edge = side_data.current_width + box_state.margin_box_left();
-                fits_on_line = (wanted_offset_from_edge + box_state.content_width + box_state.margin_box_right()) <= width_of_containing_block;
+                fits_on_line = (wanted_offset_from_edge + box_state.content_width() + box_state.margin_box_right()) <= width_of_containing_block;
             } else {
-                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_right() + box_state.content_width;
+                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_right() + box_state.content_width();
                 fits_on_line = (wanted_offset_from_edge - box_state.margin_box_left()) >= 0;
             }
 
@@ -739,12 +739,12 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             .box = box,
             .offset_from_edge = offset_from_edge,
             .top_margin_edge = y - box_state.margin_box_top(),
-            .bottom_margin_edge = y + box_state.content_height + box_state.margin_box_bottom(),
+            .bottom_margin_edge = y + box_state.content_height() + box_state.margin_box_bottom(),
         }));
         side_data.current_boxes.append(*side_data.all_boxes.last());
 
         if (side == FloatSide::Left) {
-            side_data.current_width = offset_from_edge + box_state.content_width + box_state.margin_box_right();
+            side_data.current_width = offset_from_edge + box_state.content_width() + box_state.margin_box_right();
         } else {
             side_data.current_width = offset_from_edge + box_state.margin_box_left();
         }
@@ -782,21 +782,21 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
     int default_marker_width = max(4, marker.font().glyph_height() - 4);
 
     if (marker.text().is_empty()) {
-        marker_state.content_width = image_width + default_marker_width;
+        marker_state.set_content_width(image_width + default_marker_width);
     } else {
         auto text_width = marker.font().width(marker.text());
-        marker_state.content_width = image_width + text_width;
+        marker_state.set_content_width(image_width + text_width);
     }
 
-    marker_state.content_height = max(image_height, marker.font().glyph_height() + 1);
+    marker_state.set_content_height(max(image_height, marker.font().glyph_height() + 1));
 
     marker_state.offset = {
-        -(marker_state.content_width + default_marker_width),
-        max(0.f, (marker.line_height() - marker_state.content_height) / 2.f)
+        -(marker_state.content_width() + default_marker_width),
+        max(0.f, (marker.line_height() - marker_state.content_height()) / 2.f)
     };
 
-    if (marker_state.content_height > list_item_state.content_height)
-        list_item_state.content_height = marker_state.content_height;
+    if (marker_state.content_height() > list_item_state.content_height())
+        list_item_state.set_content_height(marker_state.content_height());
 }
 
 BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_floats(float y) const
@@ -809,7 +809,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
             space_used_by_floats.left = floating_box.offset_from_edge
-                + floating_box_state.content_width
+                + floating_box_state.content_width()
                 + floating_box_state.margin_box_right();
             break;
         }
@@ -841,7 +841,7 @@ float BlockFormattingContext::greatest_child_width(Box const& box)
             for (auto& left_float : m_left_floats.all_boxes) {
                 if (line_box.baseline() >= left_float->top_margin_edge || line_box.baseline() <= left_float->bottom_margin_edge) {
                     auto const& left_float_state = m_state.get(left_float->box);
-                    extra_width_from_left_floats = max(extra_width_from_left_floats, left_float->offset_from_edge + left_float_state.content_width + left_float_state.margin_box_right());
+                    extra_width_from_left_floats = max(extra_width_from_left_floats, left_float->offset_from_edge + left_float_state.content_width() + left_float_state.margin_box_right());
                 }
             }
             float extra_width_from_right_floats = 0;
