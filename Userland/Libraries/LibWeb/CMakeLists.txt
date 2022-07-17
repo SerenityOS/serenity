@@ -309,6 +309,7 @@ set(SOURCES
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
+    Painting/GradientPainting.cpp
     Painting/ImagePaintable.cpp
     Painting/InlinePaintable.cpp
     Painting/LabelablePaintable.cpp
@@ -323,9 +324,9 @@ set(SOURCES
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
-    Painting/TextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
+    Painting/TextPaintable.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
     SVG/AttributeNames.cpp
