@@ -181,9 +181,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                 // ii. If declaredFunctionOrVarNames does not contain F, then
                 if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
                     // i. Perform ? env.CreateGlobalVarBinding(F, false).
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false);
-                    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-                    generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false, true);
 
                     // ii. Append F to declaredFunctionOrVarNames.
                     declared_function_names.set(function_name);
@@ -238,9 +236,12 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
         }
 
         // 17. For each String vn of declaredVarNames, do
-        // a. Perform ? env.CreateGlobalVarBinding(vn, false).
-        for (auto& var_name : declared_var_names)
-            generator.register_binding(generator.intern_identifier(var_name), Bytecode::Generator::BindingMode::Var);
+        for (auto& var_name : declared_var_names) {
+            // a. Perform ? env.CreateGlobalVarBinding(vn, false).
+            auto index = generator.intern_identifier(var_name);
+            generator.register_binding(index, Bytecode::Generator::BindingMode::Var);
+            generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false, true);
+        }
     } else {
         // Perform the steps of FunctionDeclarationInstantiation.
         generator.begin_variable_scope(Bytecode::Generator::BindingMode::Var, Bytecode::Generator::SurroundingScopeKind::Function);
