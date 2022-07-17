@@ -16,22 +16,24 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Calendar");
     Config::monitor_domain("Calendar");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin/CalendarSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-calendar"sv));
@@ -104,6 +106,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (default_view == "Year")
         view_year_action->set_checked(true);
 
+    auto open_settings_action = GUI::Action::create("&Settings", {}, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
+        GUI::Process::spawn_or_show_error(window, "/bin/CalendarSettings"sv);
+    });
+
     (void)TRY(toolbar->try_add_action(prev_date_action));
     (void)TRY(toolbar->try_add_action(next_date_action));
     TRY(toolbar->try_add_separator());
@@ -112,6 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(toolbar->try_add_separator());
     (void)TRY(toolbar->try_add_action(view_month_action));
     (void)TRY(toolbar->try_add_action(view_year_action));
+    (void)TRY(toolbar->try_add_action(open_settings_action));
 
     calendar->on_tile_doubleclick = [&] {
         AddEventDialog::show(calendar->selected_date(), window);
@@ -126,6 +133,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](const GUI::Action&) {
             AddEventDialog::show(calendar->selected_date(), window);
         }));
+    file_menu.add_action(open_settings_action);
 
     TRY(file_menu.try_add_separator());
 
