@@ -10,7 +10,7 @@
 #include "TrackManager.h"
 #include <AK/FixedArray.h>
 #include <AK/NumericLimits.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/Sample.h>
 #include <LibCore/EventLoop.h>
@@ -29,7 +29,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
     , m_need_to_write_wav(need_to_write_wav)
     , m_wav_writer(wav_writer)
 {
-    m_audio_client = Audio::ConnectionFromClient::try_create().release_value_but_fixme_should_propagate_errors();
+    m_audio_client = Audio::ConnectionToServer::try_create().release_value_but_fixme_should_propagate_errors();
 
     auto target_sample_rate = m_audio_client->get_sample_rate();
     if (target_sample_rate == 0)

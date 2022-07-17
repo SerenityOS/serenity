@@ -13,7 +13,7 @@
 #include "VisualizationWidget.h"
 #include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 
@@ -53,7 +53,7 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
-    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionFromClient&);
+    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionToServer&);
 
     void sync_previous_next_actions();
 

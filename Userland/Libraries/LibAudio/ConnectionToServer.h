@@ -23,12 +23,12 @@
 
 namespace Audio {
 
-class ConnectionFromClient final
+class ConnectionToServer final
     : public IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionFromClient, "/tmp/portal/audio")
+    IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/portal/audio")
 public:
-    virtual ~ConnectionFromClient() override;
+    virtual ~ConnectionToServer() override;
 
     // Both of these APIs are for convenience and when you don't care about real-time behavior.
     // They will not work properly in conjunction with realtime_enqueue.
@@ -61,7 +61,7 @@ public:
     Function<void(double volume)> on_client_volume_change;
 
 private:
-    ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual void main_mix_muted_state_changed(bool) override;
     virtual void main_mix_volume_changed(double) override;

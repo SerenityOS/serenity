@@ -7,7 +7,7 @@
 
 #include "PlaybackManager.h"
 
-PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionFromClient> connection)
+PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connection)
     : m_connection(connection)
 {
     // FIXME: The buffer enqueuing should happen on a wholly independent second thread.
