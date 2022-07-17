@@ -563,15 +563,23 @@ void Node::remove(bool suppress_observers)
         return IterationDecision::Continue;
     });
 
-    // FIXME: 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
-    //      if registered’s options["subtree"] is true, then append a new transient registered observer
-    //      whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
+    // 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
+    //     if registered’s options["subtree"] is true, then append a new transient registered observer
+    //     whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
+    for (auto* inclusive_ancestor = parent; inclusive_ancestor; inclusive_ancestor = inclusive_ancestor->parent()) {
+        for (auto& registered : inclusive_ancestor->m_registered_observer_list) {
+            if (registered.options.subtree) {
+                auto transient_observer = TransientRegisteredObserver::create(registered.observer, registered.options, registered);
+                m_registered_observer_list.append(move(transient_observer));
+            }
+        }
+    }
 
     // 20. If suppress observers flag is unset, then queue a tree mutation record for parent with « », « node », oldPreviousSibling, and oldNextSibling.
     if (!suppress_observers) {
         NonnullRefPtrVector<Node> removed_nodes;
         removed_nodes.append(*this);
-        queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling, old_next_sibling);
+        parent->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling, old_next_sibling);
     }
 
     // 21. Run the children changed steps for parent.
