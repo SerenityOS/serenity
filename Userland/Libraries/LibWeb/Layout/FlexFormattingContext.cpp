@@ -568,11 +568,11 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     auto& child_box = flex_item.box;
 
     flex_item.flex_base_size = [&] {
-        auto used_flex_basis = used_flex_basis_for_item(flex_item);
+        flex_item.used_flex_basis = used_flex_basis_for_item(flex_item);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
-        if (used_flex_basis.is_definite()) {
-            return get_pixel_size(m_state, child_box, used_flex_basis.length_percentage.value());
+        if (flex_item.used_flex_basis.is_definite()) {
+            return get_pixel_size(m_state, child_box, flex_item.used_flex_basis.length_percentage.value());
         }
 
         // B. If the flex item has ...
@@ -580,7 +580,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    - a used flex basis of content, and
         //    - a definite cross size,
         if (flex_item.box.has_intrinsic_aspect_ratio()
-            && used_flex_basis.type == CSS::FlexBasis::Content
+            && flex_item.used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(flex_item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
             return resolved_definite_cross_size(flex_item.box) * flex_item.box.intrinsic_aspect_ratio().value();
@@ -591,7 +591,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    (e.g. when performing automatic table layout [CSS21]), size the item under that constraint.
         //    The flex base size is the item’s resulting main size.
         auto flex_container_main_size_constraint = is_row_layout() ? m_flex_container_state.width_constraint : m_flex_container_state.height_constraint;
-        if (used_flex_basis.type == CSS::FlexBasis::Content && flex_container_main_size_constraint != SizeConstraint::None) {
+        if (flex_item.used_flex_basis.type == CSS::FlexBasis::Content && flex_container_main_size_constraint != SizeConstraint::None) {
             if (flex_container_main_size_constraint == SizeConstraint::MinContent)
                 return calculate_min_content_main_size(flex_item);
             return calculate_max_content_main_size(flex_item);
@@ -601,7 +601,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    the available main size is infinite, and the flex item’s inline axis is parallel to the main axis,
         //    lay the item out using the rules for a box in an orthogonal flow [CSS3-WRITING-MODES].
         //    The flex base size is the item’s max-content main size.
-        if (used_flex_basis.type == CSS::FlexBasis::Content
+        if (flex_item.used_flex_basis.type == CSS::FlexBasis::Content
             // FIXME: && main_size is infinite && inline axis is parallel to the main axis
             && false && false) {
             TODO();
