@@ -17,7 +17,7 @@ NonnullRefPtr<NamedNodeMap> NamedNodeMap::create(Element& associated_element)
 }
 
 NamedNodeMap::NamedNodeMap(Element& associated_element)
-    : RefCountForwarder(associated_element)
+    : m_associated_element(associated_element)
 {
 }
 

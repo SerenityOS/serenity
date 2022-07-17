@@ -20,7 +20,7 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#interface-namednodemap
 class NamedNodeMap final
-    : public RefCountForwarder<Element>
+    : public RefCounted<NamedNodeMap>
     , public Bindings::Wrappable {
 
 public:
@@ -52,11 +52,12 @@ public:
 private:
     explicit NamedNodeMap(Element& associated_element);
 
-    Element& associated_element() { return ref_count_target(); }
-    Element const& associated_element() const { return ref_count_target(); }
+    Element& associated_element() { return m_associated_element; }
+    Element const& associated_element() const { return m_associated_element; }
 
     void remove_attribute_at_index(size_t attribute_index);
 
+    Element& m_associated_element;
     NonnullRefPtrVector<Attribute> m_attributes;
 };
 
