@@ -8,7 +8,7 @@
 #include <AK/Array.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#null-body-status
 bool is_null_body_status(Status status)

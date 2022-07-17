@@ -7,7 +7,7 @@
 #include <AK/Array.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-request-url
 AK::URL const& Request::url() const

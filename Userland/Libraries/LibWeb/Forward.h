@@ -170,7 +170,7 @@ namespace Web::Encoding {
 class TextEncoder;
 }
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 class Body;
 struct Header;
 class HeaderList;

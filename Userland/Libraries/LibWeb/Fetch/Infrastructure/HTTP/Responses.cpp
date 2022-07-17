@@ -6,7 +6,7 @@
 
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#ref-for-concept-network-error%E2%91%A3
 // A network error is a response whose status is always 0, status message is always

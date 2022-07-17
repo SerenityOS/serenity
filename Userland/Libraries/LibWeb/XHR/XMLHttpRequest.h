@@ -55,7 +55,7 @@ public:
     using RefCounted::unref;
 
     ReadyState ready_state() const { return m_ready_state; };
-    Fetch::Status status() const { return m_status; };
+    Fetch::Infrastructure::Status status() const { return m_status; };
     DOM::ExceptionOr<String> response_text() const;
     DOM::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
@@ -84,7 +84,7 @@ private:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void set_ready_state(ReadyState);
-    void set_status(Fetch::Status status) { m_status = status; }
+    void set_status(Fetch::Infrastructure::Status status) { m_status = status; }
     void fire_progress_event(String const&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
@@ -93,14 +93,14 @@ private:
 
     String get_text_response() const;
 
-    Optional<MimeSniff::MimeType> extract_mime_type(Fetch::HeaderList const& header_list) const;
+    Optional<MimeSniff::MimeType> extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const;
 
     explicit XMLHttpRequest(HTML::Window&);
 
     NonnullRefPtr<HTML::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
-    Fetch::Status m_status { 0 };
+    Fetch::Infrastructure::Status m_status { 0 };
     bool m_send { false };
     u32 m_timeout { 0 };
 

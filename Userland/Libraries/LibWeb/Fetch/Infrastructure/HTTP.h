@@ -10,7 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/StringView.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#http-tab-or-space
 // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.

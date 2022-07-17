@@ -8,7 +8,7 @@
 
 #include <AK/Forward.h>
 
-namespace Web::Fetch {
+namespace Web::Fetch::Infrastructure {
 
 [[nodiscard]] bool is_method(ReadonlyBytes);
 [[nodiscard]] bool is_cors_safelisted_method(ReadonlyBytes);
