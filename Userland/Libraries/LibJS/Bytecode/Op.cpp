@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -339,6 +340,8 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
 
     if (m_mode == EnvironmentMode::Lexical) {
+        VERIFY(!m_is_global);
+
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
@@ -349,10 +352,16 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         else
             vm.lexical_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
     } else {
-        if (m_is_immutable)
-            vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
-        else
-            vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        if (!m_is_global) {
+            if (m_is_immutable)
+                vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+            else
+                vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        } else {
+            // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
+            //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
+            verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
+        }
     }
     return {};
 }
@@ -882,7 +891,7 @@ String CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
 String CreateVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
+    return String::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String EnterObjectEnvironment::to_string_impl(Executable const&) const
