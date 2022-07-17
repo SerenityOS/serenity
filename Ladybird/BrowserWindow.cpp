@@ -52,6 +52,16 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
         }
     });
 
+    auto* js_console_action = new QAction("Show &JS Console");
+    js_console_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-javascript.png").arg(s_serenity_resource_root.characters())));
+    js_console_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
+    inspect_menu->addAction(js_console_action);
+    QObject::connect(js_console_action, &QAction::triggered, this, [this] {
+        if (m_current_tab) {
+            m_current_tab->view().show_js_console();
+        }
+    });
+
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
     auto* dump_dom_tree_action = new QAction("Dump DOM Tree");
