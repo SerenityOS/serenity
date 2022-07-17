@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+
 #include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/Forward.h>
@@ -37,18 +38,21 @@ public:
 
     bool delete_existing_named_property(String const&);
 
-private:
+    DOM::Element& associated_element() { return m_associated_element; }
+    DOM::Element const& associated_element() const { return m_associated_element; }
+
     DOMStringMap(DOM::Element&);
 
+private:
     struct NameValuePair {
         String name;
         String value;
     };
 
-    Vector<NameValuePair> get_name_value_pairs() const;
-
     // https://html.spec.whatwg.org/multipage/dom.html#concept-domstringmap-element
-    NonnullRefPtr<DOM::Element> m_associated_element;
+    DOM::Element& m_associated_element;
+
+    Vector<NameValuePair> get_name_value_pairs() const;
 };
 
 }

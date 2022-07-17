@@ -26,7 +26,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
     // 2. For each content attribute on the DOMStringMap's associated element whose first five characters are the string "data-" and whose remaining characters (if any) do not include any ASCII upper alphas,
     //    in the order that those attributes are listed in the element's attribute list, add a name-value pair to list whose name is the attribute's name with the first five characters removed and whose value
     //    is the attribute's value.
-    m_associated_element->for_each_attribute([&](auto& name, auto& value) {
+    associated_element().for_each_attribute([&](auto& name, auto& value) {
         if (!name.starts_with("data-"sv))
             return;
 
@@ -129,8 +129,8 @@ DOM::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String cons
     // FIXME: 4. If name does not match the XML Name production, throw an "InvalidCharacterError" DOMException.
 
     // 5. Set an attribute value for the DOMStringMap's associated element using name and value.
-    m_associated_element->set_attribute(data_name, value);
 
+    associated_element().set_attribute(data_name, value);
     return {};
 }
 
@@ -162,7 +162,7 @@ bool DOMStringMap::delete_existing_named_property(String const& name)
 
     // Remove an attribute by name given name and the DOMStringMap's associated element.
     auto data_name = builder.to_string();
-    m_associated_element->remove_attribute(data_name);
+    associated_element().remove_attribute(data_name);
 
     // The spec doesn't have the step. This indicates that the deletion was successful.
     return true;
