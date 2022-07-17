@@ -28,7 +28,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     ByteBuffer byte_buffer {};
     // 2. Let bytes be the result of processing blob parts given blobParts and options.
     if (blob_parts.has_value()) {
-        byte_buffer = TRY(process_blob_parts(blob_parts.value()));
+        byte_buffer = TRY_OR_RETURN_OOM(process_blob_parts(blob_parts.value()));
     }
 
     String type = String::empty();
@@ -50,14 +50,14 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(Bindings::
 }
 
 // https://w3c.github.io/FileAPI/#process-blob-parts
-DOM::ExceptionOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& blob_parts)
+ErrorOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& blob_parts)
 {
     // 1. Let bytes be an empty sequence of bytes.
     ByteBuffer bytes {};
 
     // 2. For each element in parts:
     for (auto const& blob_part : blob_parts) {
-        auto error = blob_part.visit(
+        TRY(blob_part.visit(
             // 1. If element is a USVString, run the following sub-steps:
             [&](String const& string) -> ErrorOr<void> {
                 // NOTE: This step is handled by the lambda expression.
@@ -79,9 +79,7 @@ DOM::ExceptionOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& bl
             // 3. If element is a Blob, append the bytes it represents to bytes.
             [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {
                 return bytes.try_append(blob->m_byte_buffer.bytes());
-            });
-        if (error.is_error())
-            return DOM::UnknownError::create("Out of memory. Failed to process blob parts."sv);
+            }));
     }
     return bytes;
 }
@@ -146,10 +144,8 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::slice(Optional<i64> start, Optional<
     // a. S refers to span consecutive bytes from this, beginning with the byte at byte-order position relativeStart.
     // b. S.size = span.
     // c. S.type = relativeContentType.
-    auto byte_buffer_or_error = m_byte_buffer.slice(relative_start, span);
-    if (byte_buffer_or_error.is_error())
-        return DOM::UnknownError::create("Out of memory."sv);
-    return adopt_ref(*new Blob(byte_buffer_or_error.release_value(), move(relative_content_type)));
+    auto byte_buffer = TRY_OR_RETURN_OOM(m_byte_buffer.slice(relative_start, span));
+    return adopt_ref(*new Blob(move(byte_buffer), move(relative_content_type)));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text

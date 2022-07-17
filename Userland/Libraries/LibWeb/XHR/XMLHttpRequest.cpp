@@ -118,10 +118,8 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto blob_part_or_error = try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type());
-        if (blob_part_or_error.is_error())
-            return DOM::UnknownError::create("Out of memory."sv);
-        auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { blob_part_or_error.release_value() }));
+        auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
+        auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
         m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(global_object)));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
