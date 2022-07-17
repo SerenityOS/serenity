@@ -14,10 +14,10 @@
 #include <LibDSP/Processor.h>
 #include <LibDSP/Synthesizers.h>
 
-namespace LibDSP::Synthesizers {
+namespace DSP::Synthesizers {
 
 Classic::Classic(NonnullRefPtr<Transport> transport)
-    : LibDSP::SynthesizerProcessor(transport)
+    : DSP::SynthesizerProcessor(transport)
     , m_waveform("Waveform"sv, Waveform::Saw)
     , m_attack("Attack"sv, 0.01, 2000, 5, Logarithmic::Yes)
     , m_decay("Decay"sv, 0.01, 20'000, 80, Logarithmic::Yes)

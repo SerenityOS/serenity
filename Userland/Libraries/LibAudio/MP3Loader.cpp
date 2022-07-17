@@ -13,8 +13,8 @@
 
 namespace Audio {
 
-LibDSP::MDCT<12> MP3LoaderPlugin::s_mdct_12;
-LibDSP::MDCT<36> MP3LoaderPlugin::s_mdct_36;
+DSP::MDCT<12> MP3LoaderPlugin::s_mdct_12;
+DSP::MDCT<36> MP3LoaderPlugin::s_mdct_36;
 
 MP3LoaderPlugin::MP3LoaderPlugin(StringView path)
     : m_file(Core::File::construct(path))

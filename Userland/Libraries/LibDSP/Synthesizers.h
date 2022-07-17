@@ -12,7 +12,7 @@
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Transport.h>
 
-namespace LibDSP::Synthesizers {
+namespace DSP::Synthesizers {
 
 enum Waveform : u8 {
     Sine,

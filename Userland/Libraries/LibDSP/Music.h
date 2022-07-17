@@ -15,7 +15,7 @@
 #include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 
-namespace LibDSP {
+namespace DSP {
 
 using Sample = Audio::Sample;
 

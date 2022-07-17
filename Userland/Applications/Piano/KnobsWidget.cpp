@@ -70,23 +70,23 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     for (auto& raw_parameter : m_track_manager.current_track().synth()->parameters()) {
         // The synth has range and enum parameters
         switch (raw_parameter.type()) {
-        case LibDSP::ParameterType::Range: {
-            auto& parameter = static_cast<LibDSP::ProcessorRangeParameter&>(raw_parameter);
+        case DSP::ParameterType::Range: {
+            auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
             m_synth_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
             auto& parameter_knob_value = m_synth_values.last();
             m_synth_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Synth: {}", parameter.name())));
             m_synth_knobs.append(m_knobs_container->add<ProcessorParameterSlider>(Orientation::Vertical, parameter, parameter_knob_value));
             break;
         }
-        case LibDSP::ParameterType::Enum: {
+        case DSP::ParameterType::Enum: {
             // FIXME: We shouldn't do that, but we know the synth and it is nice
-            auto& parameter = static_cast<LibDSP::ProcessorEnumParameter<LibDSP::Synthesizers::Waveform>&>(raw_parameter);
+            auto& parameter = static_cast<DSP::ProcessorEnumParameter<DSP::Synthesizers::Waveform>&>(raw_parameter);
             // The value is empty for enum parameters
             m_synth_values.append(m_values_container->add<GUI::Label>(String::empty()));
             m_synth_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Synth: {}", parameter.name())));
             auto enum_strings = Vector<String> { "Sine", "Triangle", "Square", "Saw", "Noise" };
-            m_synth_knobs.append(m_knobs_container->add<ProcessorParameterDropdown<LibDSP::Synthesizers::Waveform>>(parameter, move(enum_strings)));
-            m_synth_waveform = static_cast<ProcessorParameterDropdown<LibDSP::Synthesizers::Waveform>&>(m_synth_knobs.last());
+            m_synth_knobs.append(m_knobs_container->add<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>>(parameter, move(enum_strings)));
+            m_synth_waveform = static_cast<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>&>(m_synth_knobs.last());
             break;
         }
         default:
@@ -96,7 +96,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     for (auto& raw_parameter : m_track_manager.current_track().delay()->parameters()) {
         // FIXME: We shouldn't do that, but we know the effect and it's nice.
-        auto& parameter = static_cast<LibDSP::ProcessorRangeParameter&>(raw_parameter);
+        auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
         m_delay_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
         auto& parameter_knob_value = m_delay_values.last();
         m_delay_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Delay: {}", parameter.name())));

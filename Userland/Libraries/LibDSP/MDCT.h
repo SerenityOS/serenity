@@ -10,7 +10,7 @@
 #include <AK/Math.h>
 #include <AK/Span.h>
 
-namespace LibDSP {
+namespace DSP {
 
 template<size_t N>
 requires(N % 2 == 0) class MDCT {

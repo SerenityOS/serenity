@@ -8,7 +8,7 @@
 #include <AK/FixedArray.h>
 #include <math.h>
 
-namespace LibDSP::Effects {
+namespace DSP::Effects {
 
 Delay::Delay(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))

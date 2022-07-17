@@ -19,7 +19,7 @@
 #include <LibDSP/Synthesizers.h>
 #include <LibDSP/Transport.h>
 
-using LibDSP::RollNote;
+using DSP::RollNote;
 using RollIter = AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
 
 class Track {
@@ -27,14 +27,14 @@ class Track {
     AK_MAKE_NONMOVABLE(Track);
 
 public:
-    Track(NonnullRefPtr<LibDSP::Transport>, NonnullRefPtr<LibDSP::Keyboard>);
+    Track(NonnullRefPtr<DSP::Transport>, NonnullRefPtr<DSP::Keyboard>);
     ~Track() = default;
 
     Vector<Audio::Sample> const& recorded_sample() const { return m_recorded_sample; }
     SinglyLinkedList<RollNote> const& roll_notes(int note) const { return m_roll_notes[note]; }
     int volume() const { return m_volume; }
-    NonnullRefPtr<LibDSP::Synthesizers::Classic> synth() { return m_synth; }
-    NonnullRefPtr<LibDSP::Effects::Delay> delay() { return m_delay; }
+    NonnullRefPtr<DSP::Synthesizers::Classic> synth() { return m_synth; }
+    NonnullRefPtr<DSP::Effects::Delay> delay() { return m_delay; }
 
     void fill_sample(Sample& sample);
     void reset();
@@ -52,12 +52,12 @@ private:
 
     int m_volume;
 
-    NonnullRefPtr<LibDSP::Transport> m_transport;
-    NonnullRefPtr<LibDSP::Effects::Delay> m_delay;
-    NonnullRefPtr<LibDSP::Synthesizers::Classic> m_synth;
+    NonnullRefPtr<DSP::Transport> m_transport;
+    NonnullRefPtr<DSP::Effects::Delay> m_delay;
+    NonnullRefPtr<DSP::Synthesizers::Classic> m_synth;
 
     SinglyLinkedList<RollNote> m_roll_notes[note_count];
     RollIter m_roll_iterators[note_count];
-    NonnullRefPtr<LibDSP::Keyboard> m_keyboard;
+    NonnullRefPtr<DSP::Keyboard> m_keyboard;
     bool m_is_active_track { false };
 };

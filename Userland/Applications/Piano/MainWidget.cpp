@@ -85,7 +85,7 @@ void MainWidget::keydown_event(GUI::KeyEvent& event)
     else
         m_keys_pressed[event.key()] = true;
 
-    note_key_action(event.key(), LibDSP::Keyboard::Switch::On);
+    note_key_action(event.key(), DSP::Keyboard::Switch::On);
     special_key_action(event.key());
     m_keys_widget->update();
 }
@@ -94,11 +94,11 @@ void MainWidget::keyup_event(GUI::KeyEvent& event)
 {
     m_keys_pressed[event.key()] = false;
 
-    note_key_action(event.key(), LibDSP::Keyboard::Switch::Off);
+    note_key_action(event.key(), DSP::Keyboard::Switch::Off);
     m_keys_widget->update();
 }
 
-void MainWidget::note_key_action(int key_code, LibDSP::Keyboard::Switch switch_note)
+void MainWidget::note_key_action(int key_code, DSP::Keyboard::Switch switch_note)
 {
     auto key = m_keys_widget->key_code_to_key(key_code);
     if (key == -1)
@@ -110,10 +110,10 @@ void MainWidget::special_key_action(int key_code)
 {
     switch (key_code) {
     case Key_Z:
-        set_octave_and_ensure_note_change(LibDSP::Keyboard::Direction::Down);
+        set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Down);
         break;
     case Key_X:
-        set_octave_and_ensure_note_change(LibDSP::Keyboard::Direction::Up);
+        set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Up);
         break;
     case Key_C:
         m_knobs_widget->cycle_waveform();
@@ -127,20 +127,20 @@ void MainWidget::special_key_action(int key_code)
 void MainWidget::turn_off_pressed_keys()
 {
     if (m_keys_widget->mouse_note() != -1)
-        m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), LibDSP::Keyboard::Switch::Off);
+        m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), DSP::Keyboard::Switch::Off);
     for (int i = 0; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
-            note_key_action(i, LibDSP::Keyboard::Switch::Off);
+            note_key_action(i, DSP::Keyboard::Switch::Off);
     }
 }
 
 void MainWidget::turn_on_pressed_keys()
 {
     if (m_keys_widget->mouse_note() != -1)
-        m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), LibDSP::Keyboard::Switch::On);
+        m_track_manager.keyboard()->set_keyboard_note_in_active_octave(m_keys_widget->mouse_note(), DSP::Keyboard::Switch::On);
     for (int i = 0; i < key_code_count; ++i) {
         if (m_keys_pressed[i])
-            note_key_action(i, LibDSP::Keyboard::Switch::On);
+            note_key_action(i, DSP::Keyboard::Switch::On);
     }
 }
 
@@ -154,7 +154,7 @@ void MainWidget::set_octave_and_ensure_note_change(int octave)
     m_keys_widget->update();
 }
 
-void MainWidget::set_octave_and_ensure_note_change(LibDSP::Keyboard::Direction direction)
+void MainWidget::set_octave_and_ensure_note_change(DSP::Keyboard::Direction direction)
 {
     turn_off_pressed_keys();
     m_track_manager.keyboard()->change_virtual_keyboard_octave(direction);

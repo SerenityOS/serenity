@@ -20,11 +20,11 @@ class ProcessorParameterSlider
     C_OBJECT(ProcessorParameterSlider);
 
 public:
-    ProcessorParameterSlider(Orientation, LibDSP::ProcessorRangeParameter&, RefPtr<GUI::Label>);
-    constexpr bool is_logarithmic() const { return m_parameter.is_logarithmic() == LibDSP::Logarithmic::Yes; }
+    ProcessorParameterSlider(Orientation, DSP::ProcessorRangeParameter&, RefPtr<GUI::Label>);
+    constexpr bool is_logarithmic() const { return m_parameter.is_logarithmic() == DSP::Logarithmic::Yes; }
 
 protected:
-    LibDSP::ProcessorRangeParameter& m_parameter;
+    DSP::ProcessorRangeParameter& m_parameter;
 
 private:
     // Converts based on processor parameter boundaries.
