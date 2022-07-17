@@ -98,7 +98,6 @@ void ConsoleClient::send_messages(i32 start_index)
         // When the console is first created, it requests any messages that happened before
         // then, by requesting with start_index=0. If we don't have any messages at all, that
         // is still a valid request, and we can just ignore it.
-        dbgln("Requested non-existent console message index.");
         return;
     }
 
