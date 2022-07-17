@@ -936,7 +936,7 @@ public:
         return m_color_stop_list;
     }
 
-    float angle(Gfx::FloatRect const& background_box) const;
+    float angle_degrees(Gfx::FloatRect const& gradient_rect) const;
 
 private:
     LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list)

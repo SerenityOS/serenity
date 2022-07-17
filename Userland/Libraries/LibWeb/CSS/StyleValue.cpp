@@ -1502,9 +1502,11 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
     return true;
 }
 
-float LinearGradientStyleValue::angle(Gfx::FloatRect const& background_box) const
+float LinearGradientStyleValue::angle_degrees(Gfx::FloatRect const& gradient_rect) const
 {
-    (void)background_box;
+    auto corner_angle_degrees = [&] {
+        return static_cast<float>(atan2(gradient_rect.height(), gradient_rect.width())) * 180 / AK::Pi<float>;
+    };
     return m_direction.visit(
         [&](SideOrCorner side_or_corner) {
             switch (side_or_corner) {
@@ -1516,9 +1518,16 @@ float LinearGradientStyleValue::angle(Gfx::FloatRect const& background_box) cons
                 return 270.0f;
             case SideOrCorner::Right:
                 return 90.0f;
+            case SideOrCorner::TopRight:
+                return corner_angle_degrees();
+            case SideOrCorner::BottomLeft:
+                return corner_angle_degrees() + 180.0f;
+            case SideOrCorner::TopLeft:
+                return -corner_angle_degrees();
+            case SideOrCorner::BottomRight:
+                return -(corner_angle_degrees() + 180.0f);
             default:
-                // FIXME: Angle gradients towards corners
-                return 0.0f;
+                VERIFY_NOT_REACHED();
             }
         },
         [&](Angle const& angle) {

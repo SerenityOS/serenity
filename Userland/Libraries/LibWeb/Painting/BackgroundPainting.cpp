@@ -27,7 +27,7 @@ static Optional<GfxGradient> linear_gradient_to_gfx_gradient(CSS::LinearGradient
     if (linear_gradient.color_stop_list().size() != 2)
         return {};
 
-    auto angle = round_to<int>(linear_gradient.angle(background_rect));
+    auto angle = round_to<int>(linear_gradient.angle_degrees(background_rect));
     auto color_a = linear_gradient.color_stop_list()[0].color_stop.color;
     auto color_b = linear_gradient.color_stop_list()[1].color_stop.color;
     auto orientation = [&]() -> Optional<Gfx::Orientation> {
