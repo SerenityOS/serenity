@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Debounce.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
@@ -63,9 +64,10 @@ MainWidget::MainWidget()
     else
         VERIFY_NOT_REACHED();
 
-    m_editor->on_change = [this] {
+    m_editor->on_change = Core::debounce([this] {
         update_preview();
-    };
+    },
+        100);
 
     m_editor->on_modified_change = [this](bool modified) {
         window()->set_modified(modified);
