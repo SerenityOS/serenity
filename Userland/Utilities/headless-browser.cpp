@@ -94,10 +94,14 @@ public:
         m_palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer);
     }
 
+    void set_viewport_rect(Gfx::IntRect viewport_rect)
+    {
+        page().top_level_browsing_context().set_viewport_rect(viewport_rect);
+    }
+
     void set_screen_rect(Gfx::IntRect screen_rect)
     {
         m_screen_rect = screen_rect;
-        page().top_level_browsing_context().set_viewport_rect(screen_rect);
     }
 
     // ^Web::PageClient
@@ -705,6 +709,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     page_client->load(AK::URL(url));
 
     // FIXME: Allow passing these values as arguments
+    page_client->set_viewport_rect({ 0, 0, 800, 600 });
     page_client->set_screen_rect({ 0, 0, 800, 600 });
 
     dbgln("Taking screenshot after {} seconds !", take_screenshot_after);
