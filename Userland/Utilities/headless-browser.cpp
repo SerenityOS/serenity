@@ -8,6 +8,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/HashTable.h>
+#include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -666,19 +667,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int take_screenshot_after = 1;
     StringView url;
-    StringView fonts_database;
-    StringView favicon_path;
-    StringView theme_path;
+    StringView resources_folder;
     StringView error_page_url;
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(take_screenshot_after, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
-    args_parser.add_option(fonts_database, "Path of the fonts on your system", "fonts", 'f', "font-database-path");
-    args_parser.add_option(favicon_path, "Path of the default favicon", "favicon", 'i', "default-favicon-path");
-    args_parser.add_option(theme_path, "Path of the system theme", "theme", 't', "default-theme-path");
-    args_parser.add_option(error_page_url, "URL for the error page", "error-page", 'e', "error-page-url");
+    args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
+    args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
@@ -686,11 +683,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::ResourceLoader::initialize(HeadlessRequestServer::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
 
-    if (!favicon_path.is_empty())
-        Web::FrameLoader::set_default_favicon_path(favicon_path);
-
-    if (!fonts_database.is_empty())
-        Gfx::FontDatabase::set_default_fonts_lookup_path(fonts_database);
+    if (!resources_folder.is_empty()) {
+        Web::FrameLoader::set_default_favicon_path(LexicalPath::join(resources_folder, "icons/16x16/app-browser.png"sv).string());
+        Gfx::FontDatabase::set_default_fonts_lookup_path(LexicalPath::join(resources_folder, "fonts"sv).string());
+    }
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
@@ -700,8 +696,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto page_client = HeadlessBrowserPageClient::create();
 
-    if (!theme_path.is_empty())
-        page_client->setup_palette(Gfx::load_system_theme(theme_path));
+    if (!resources_folder.is_empty())
+        page_client->setup_palette(Gfx::load_system_theme(LexicalPath::join(resources_folder, "themes/Default.ini"sv).string()));
     else
         page_client->setup_palette(Gfx::load_system_theme("/res/themes/Default.ini"));
 
