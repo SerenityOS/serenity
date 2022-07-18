@@ -377,6 +377,13 @@ static ALWAYS_INLINE int log10floor(Value number)
     return as_string.length() - 1;
 }
 
+static Value subtract(GlobalObject& global_object, Value lhs, Value rhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() - rhs.as_double());
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().minus(rhs.as_bigint().big_integer()));
+}
+
 static Value multiply(GlobalObject& global_object, Value lhs, Checked<i32> rhs)
 {
     if (lhs.is_number())
@@ -393,6 +400,13 @@ static Value divide(GlobalObject& global_object, Value lhs, Checked<i32> rhs)
 
     auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs.value());
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs_bigint).quotient);
+}
+
+static Value divide(GlobalObject& global_object, Value lhs, Value rhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() / rhs.as_double());
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs.as_bigint().big_integer()).quotient);
 }
 
 static Crypto::SignedBigInteger bigint_power(Checked<i32> base, Checked<i32> exponent)
@@ -439,11 +453,13 @@ static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value nu
     return js_bigint(global_object.vm(), number.as_bigint().big_integer().divided_by(exponent_bigint).quotient);
 }
 
-static ALWAYS_INLINE Value rounded(Value number)
+static ALWAYS_INLINE bool is_equal(Value lhs, Value rhs)
 {
-    if (number.is_number())
-        return Value(round(number.as_double()));
-    return number;
+    if (lhs.is_number()) {
+        static constexpr double epsilon = 5e-14;
+        return fabs(lhs.as_double() - rhs.as_double()) < epsilon;
+    }
+    return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 }
 
 static ALWAYS_INLINE bool is_zero(Value number)
@@ -455,8 +471,10 @@ static ALWAYS_INLINE bool is_zero(Value number)
 
 static bool modulo_is_zero(Value lhs, Checked<i32> rhs)
 {
-    if (lhs.is_number())
-        return modulo(lhs.as_double(), rhs.value()) == 0;
+    if (lhs.is_number()) {
+        auto mod = modulo(lhs.as_double(), rhs.value());
+        return is_equal(Value(mod), Value(0));
+    }
 
     auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs.value());
     return modulo(lhs.as_bigint().big_integer(), rhs_bigint).is_zero();
@@ -474,6 +492,13 @@ static ALWAYS_INLINE bool is_less_than_zero(Value number)
     if (number.is_number())
         return number.as_double() < 0;
     return number.as_bigint().big_integer() < "0"_bigint;
+}
+
+static ALWAYS_INLINE bool is_less_than(Value lhs, Value rhs)
+{
+    if (lhs.is_number())
+        return !is_equal(lhs, rhs) && (lhs.as_double() < rhs.as_double());
+    return lhs.as_bigint().big_integer() < rhs.as_bigint().big_integer();
 }
 
 static ALWAYS_INLINE String number_to_string(Value number)
@@ -497,38 +522,59 @@ int currency_digits(StringView currency)
 // 1.1.5 FormatNumericToString ( intlObject, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumberstring
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number)
 {
-    // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
-    bool is_negative = is_less_than_zero(number) || number.is_negative_zero();
+    bool is_negative = false;
 
-    // 2. If isNegative, then
+    // 1. If x is negative-zero, then
+    if (number.is_negative_zero()) {
+        // a. Let isNegative be true.
+        is_negative = true;
+
+        // b. Let x be the mathematical value 0.
+        number = Value(0);
+    }
+
+    // 2. Assert: x is a mathematical value.
+    VERIFY(number.is_number() || number.is_bigint());
+
+    // 3. If x < 0, let isNegative be true; else let isNegative be false.
+    // FIXME: Spec issue: this step would override step 1a, see https://github.com/tc39/proposal-intl-numberformat-v3/issues/67
+    is_negative |= is_less_than_zero(number);
+
+    // 4. If isNegative, then
     if (is_negative) {
         // a. Let x be -x.
         number = multiply(global_object, number, -1);
     }
 
+    // 5. Let unsignedRoundingMode be GetUnsignedRoundingMode(intlObject.[[RoundingMode]], isNegative).
+    // FIXME: Spec issue: Intl.PluralRules does not have [[RoundingMode]], see https://github.com/tc39/proposal-intl-numberformat-v3/issues/103
+    Optional<NumberFormat::UnsignedRoundingMode> unsigned_rounding_mode;
+    if (intl_object.rounding_mode() != NumberFormat::RoundingMode::Invalid)
+        unsigned_rounding_mode = get_unsigned_rounding_mode(intl_object.rounding_mode(), is_negative);
+
     RawFormatResult result {};
 
     switch (intl_object.rounding_type()) {
-    // 3. If intlObject.[[RoundingType]] is significantDigits, then
+    // 6. If intlObject.[[RoundingType]] is significantDigits, then
     case NumberFormatBase::RoundingType::SignificantDigits:
-        // a. Let result be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]]).
-        result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
+        // a. Let result be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]], unsignedRoundingMode).
+        result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits(), unsigned_rounding_mode);
         break;
 
-    // 4. Else if intlObject.[[RoundingType]] is fractionDigits, then
+    // 7. Else if intlObject.[[RoundingType]] is fractionDigits, then
     case NumberFormatBase::RoundingType::FractionDigits:
-        // a. Let result be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]]).
-        result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
+        // a. Let result be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]], intlObject.[[RoundingIncrement]], unsignedRoundingMode).
+        result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits(), intl_object.rounding_increment(), unsigned_rounding_mode);
         break;
 
-    // 5. Else,
+    // 8. Else,
     case NumberFormatBase::RoundingType::MorePrecision:
     case NumberFormatBase::RoundingType::LessPrecision: {
         // a. Let sResult be ToRawPrecision(x, intlObject.[[MinimumSignificantDigits]], intlObject.[[MaximumSignificantDigits]], unsignedRoundingMode).
-        auto significant_result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits());
+        auto significant_result = to_raw_precision(global_object, number, intl_object.min_significant_digits(), intl_object.max_significant_digits(), unsigned_rounding_mode);
 
         // b. Let fResult be ToRawFixed(x, intlObject.[[MinimumFractionDigits]], intlObject.[[MaximumFractionDigits]], intlObject.[[RoundingIncrement]], unsignedRoundingMode).
-        auto fraction_result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits());
+        auto fraction_result = to_raw_fixed(global_object, number, intl_object.min_fraction_digits(), intl_object.max_fraction_digits(), intl_object.rounding_increment(), unsigned_rounding_mode);
 
         // c. If intlObj.[[RoundingType]] is morePrecision, then
         if (intl_object.rounding_type() == NumberFormatBase::RoundingType::MorePrecision) {
@@ -567,13 +613,13 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         VERIFY_NOT_REACHED();
     }
 
-    // 6. Let x be result.[[RoundedNumber]].
+    // 9. Let x be result.[[RoundedNumber]].
     number = result.rounded_number;
 
-    // 7. Let string be result.[[FormattedString]].
+    // 10. Let string be result.[[FormattedString]].
     auto string = move(result.formatted_string);
 
-    // 8. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
+    // 11. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
     if ((intl_object.trailing_zero_display() == NumberFormat::TrailingZeroDisplay::StripIfInteger) && modulo_is_zero(number, 1)) {
         // a. If string contains ".", then
         if (auto index = string.find('.'); index.has_value()) {
@@ -582,13 +628,13 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         }
     }
 
-    // 9. Let int be result.[[IntegerDigitsCount]].
+    // 12. Let int be result.[[IntegerDigitsCount]].
     int digits = result.digits;
 
-    // 10. Let minInteger be intlObject.[[MinimumIntegerDigits]].
+    // 13. Let minInteger be intlObject.[[MinimumIntegerDigits]].
     int min_integer = intl_object.min_integer_digits();
 
-    // 11. If int < minInteger, then
+    // 14. If int < minInteger, then
     if (digits < min_integer) {
         // a. Let forwardZeros be the String consisting of minInteger–int occurrences of the character "0".
         auto forward_zeros = String::repeated('0', min_integer - digits);
@@ -597,13 +643,18 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
         string = String::formatted("{}{}", forward_zeros, string);
     }
 
-    // 12. If isNegative, then
-    if (is_negative) {
-        // a. Let x be -x.
+    // 15. If isNegative and x is 0, then
+    if (is_negative && is_zero(number)) {
+        // a. Let x be -0.
+        number = Value(-0.0);
+    }
+    // 16. Else if isNegative, then
+    else if (is_negative) {
+        // b. Let x be -x.
         number = multiply(global_object, number, -1);
     }
 
-    // 13. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
+    // 17. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
     return { move(string), number };
 }
 
@@ -943,9 +994,8 @@ Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_obj
                     exponent *= -1;
                 }
 
-                // 2. Let exponentResult be ToRawFixed(exponent, 1, 0, 0).
-                // Note: See the implementation of ToRawFixed for why we do not pass the 1.
-                auto exponent_result = to_raw_fixed(global_object, Value(exponent), 0, 0);
+                // 2. Let exponentResult be ToRawFixed(exponent, 0, 0, 1, undefined).
+                auto exponent_result = to_raw_fixed(global_object, Value(exponent), 0, 0, 1, {});
 
                 // FIXME: The spec does not say to do this, but all of major engines perform this replacement.
                 //        Without this, formatting with non-Latin numbering systems will produce non-localized results.
@@ -1048,18 +1098,63 @@ static String cut_trailing_zeroes(StringView string, int cut)
     return string.to_string();
 }
 
+enum class PreferredResult {
+    LessThanNumber,
+    GreaterThanNumber,
+};
+
+// ToRawPrecisionFn, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#eqn-ToRawPrecisionFn
+static auto to_raw_precision_function(GlobalObject& global_object, Value number, int precision, PreferredResult mode)
+{
+    struct {
+        Value number;
+        int exponent { 0 };
+        Value rounded;
+    } result {};
+
+    result.exponent = log10floor(number);
+
+    if (number.is_number()) {
+        result.number = divide_by_power(global_object, number, result.exponent - precision + 1);
+
+        switch (mode) {
+        case PreferredResult::LessThanNumber:
+            result.number = Value(floor(result.number.as_double()));
+            break;
+        case PreferredResult::GreaterThanNumber:
+            result.number = Value(ceil(result.number.as_double()));
+            break;
+        }
+    } else {
+        // NOTE: In order to round the BigInt to the proper precision, this computation is initially off by a
+        //       factor of 10. This lets us inspect the ones digit and then round up if needed.
+        result.number = divide_by_power(global_object, number, result.exponent - precision);
+
+        // FIXME: Can we do this without string conversion?
+        auto digits = result.number.as_bigint().big_integer().to_base(10);
+        auto digit = digits.substring_view(digits.length() - 1);
+
+        result.number = divide(global_object, result.number, 10);
+
+        if (mode == PreferredResult::GreaterThanNumber && digit.to_uint().value() != 0)
+            result.number = js_bigint(global_object.vm(), result.number.as_bigint().big_integer().plus("1"_bigint));
+    }
+
+    result.rounded = multiply_by_power(global_object, result.number, result.exponent - precision + 1);
+    return result;
+}
+
 // 15.5.8 ToRawPrecision ( x, minPrecision, maxPrecision ), https://tc39.es/ecma402/#sec-torawprecision
-RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision)
+// 1.1.10 ToRawPrecision ( x, minPrecision, maxPrecision, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawprecision
+RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
     RawFormatResult result {};
 
-    // 1. Set x to ℝ(x).
-
-    // 2. Let p be maxPrecision.
+    // 1. Let p be maxPrecision.
     int precision = max_precision;
     int exponent = 0;
 
-    // 3. If x = 0, then
+    // 2. If x = 0, then
     if (is_zero(number)) {
         // a. Let m be the String consisting of p occurrences of the character "0".
         result.formatted_string = String::repeated('0', precision);
@@ -1070,42 +1165,52 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         // c. Let xFinal be 0.
         result.rounded_number = Value(0);
     }
-    // 4. Else,
+    // 3. Else,
     else {
         // FIXME: The result of these steps isn't entirely accurate for large values of 'p' (which
         //        defaults to 21, resulting in numbers on the order of 10^21). Either AK::format or
         //        our Number::toString AO (double_to_string in Value.cpp) will need to be improved
         //        to produce more accurate results.
 
-        // a. Let e and n be integers such that 10^(p–1) ≤ n < 10^p and for which n × 10^(e–p+1) – x is as close to zero as possible.
-        //    If there are two such sets of e and n, pick the e and n for which n × 10^(e–p+1) is larger.
-        exponent = log10floor(number);
+        // a. Let n1 and e1 each be an integer and r1 a mathematical value, with r1 = ToRawPrecisionFn(n1, e1, p), such that r1 ≤ x and r1 is maximized.
+        auto [number1, exponent1, rounded1] = to_raw_precision_function(global_object, number, precision, PreferredResult::LessThanNumber);
+
+        // b. Let n2 and e2 each be an integer and r2 a mathematical value, with r2 = ToRawPrecisionFn(n2, e2, p), such that r2 ≥ x and r2 is minimized.
+        auto [number2, exponent2, rounded2] = to_raw_precision_function(global_object, number, precision, PreferredResult::GreaterThanNumber);
+
+        // c. Let r be ApplyUnsignedRoundingMode(x, r1, r2, unsignedRoundingMode).
+        auto rounded = apply_unsigned_rounding_mode(global_object, number, rounded1, rounded2, unsigned_rounding_mode);
+
         Value n;
 
-        if (number.is_number()) {
-            n = rounded(divide_by_power(global_object, number, exponent - precision + 1));
-        } else {
-            // NOTE: In order to round the BigInt to the proper precision, this computation is initially off by a
-            //       factor of 10. This lets us inspect the ones digit and then round up if needed.
-            n = divide_by_power(global_object, number, exponent - precision);
+        // d. If r is r1, then
+        if (is_equal(rounded, rounded1)) {
+            // i. Let n be n1.
+            n = number1;
 
-            // FIXME: Can we do this without string conversion?
-            auto digits = n.as_bigint().big_integer().to_base(10);
-            auto digit = digits.substring_view(digits.length() - 1);
+            // ii. Let e be e1.
+            exponent = exponent1;
 
-            n = divide(global_object, n, 10);
-            if (digit.to_uint().value() >= 5)
-                n = js_bigint(global_object.vm(), n.as_bigint().big_integer().plus(Crypto::SignedBigInteger::create_from(1)));
+            // iii. Let xFinal be r1.
+            result.rounded_number = rounded1;
+        }
+        // e. Else,
+        else {
+            // i. Let n be n2.
+            n = number2;
+
+            // ii. Let e be e2.
+            exponent = exponent2;
+
+            // iii. Let xFinal be r2.
+            result.rounded_number = rounded2;
         }
 
-        // b. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+        // f. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
         result.formatted_string = number_to_string(n);
-
-        // c. Let xFinal be n × 10^(e–p+1).
-        result.rounded_number = multiply_by_power(global_object, n, exponent - precision + 1);
     }
 
-    // 5. If e ≥ p–1, then
+    // 4. If e ≥ p–1, then
     if (exponent >= (precision - 1)) {
         // a. Let m be the string-concatenation of m and e–p+1 occurrences of the character "0".
         result.formatted_string = String::formatted(
@@ -1116,7 +1221,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         // b. Let int be e+1.
         result.digits = exponent + 1;
     }
-    // 6. Else if e ≥ 0, then
+    // 5. Else if e ≥ 0, then
     else if (exponent >= 0) {
         // a. Let m be the string-concatenation of the first e+1 characters of m, the character ".", and the remaining p–(e+1) characters of m.
         result.formatted_string = String::formatted(
@@ -1127,7 +1232,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         // b. Let int be e+1.
         result.digits = exponent + 1;
     }
-    // 7. Else,
+    // 6. Else,
     else {
         // a. Assert: e < 0.
         // b. Let m be the string-concatenation of "0.", –(e+1) occurrences of the character "0", and m.
@@ -1140,7 +1245,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         result.digits = 1;
     }
 
-    // 8. If m contains the character ".", and maxPrecision > minPrecision, then
+    // 7. If m contains the character ".", and maxPrecision > minPrecision, then
     if (result.formatted_string.contains('.') && (max_precision > min_precision)) {
         // a. Let cut be maxPrecision – minPrecision.
         int cut = max_precision - min_precision;
@@ -1149,32 +1254,93 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
     }
 
-    // 9. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: e–p+1 }.
+    // 8. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: e–p+1 }.
     result.rounding_magnitude = exponent - precision + 1;
     return result;
 }
 
+// ToRawFixedFn, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#eqn-ToRawFixedFn
+static auto to_raw_fixed_function(GlobalObject& global_object, Value number, int fraction, int rounding_increment, PreferredResult mode)
+{
+    // FIXME: Handle NumberFormat V3's [[RoundingIncrement]] option.
+    (void)rounding_increment;
+
+    struct {
+        Value number;
+        Value rounded;
+    } result {};
+
+    if (number.is_number()) {
+        result.number = multiply_by_power(global_object, number, fraction);
+
+        switch (mode) {
+        case PreferredResult::LessThanNumber:
+            result.number = Value(floor(result.number.as_double()));
+            break;
+        case PreferredResult::GreaterThanNumber:
+            result.number = Value(ceil(result.number.as_double()));
+            break;
+        }
+    } else {
+        // NOTE: In order to round the BigInt to the proper precision, this computation is initially off by a
+        //       factor of 10. This lets us inspect the ones digit and then round up if needed.
+        result.number = multiply_by_power(global_object, number, fraction - 1);
+
+        // FIXME: Can we do this without string conversion?
+        auto digits = result.number.as_bigint().big_integer().to_base(10);
+        auto digit = digits.substring_view(digits.length() - 1);
+
+        result.number = multiply(global_object, result.number, 10);
+
+        if (mode == PreferredResult::GreaterThanNumber && digit.to_uint().value() != 0)
+            result.number = js_bigint(global_object.vm(), result.number.as_bigint().big_integer().plus("1"_bigint));
+    }
+
+    result.rounded = divide_by_power(global_object, result.number, fraction);
+    return result;
+}
+
 // 15.5.9 ToRawFixed ( x, minInteger, minFraction, maxFraction ), https://tc39.es/ecma402/#sec-torawfixed
-// NOTE: The spec has a mistake here. The minInteger parameter is unused and is not provided by FormatNumericToString.
-RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction)
+// 1.1.11 ToRawFixed ( x, minFraction, maxFraction, roundingIncrement, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawfixed
+RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
     RawFormatResult result {};
 
-    // 1. Set x to ℝ(x).
-
-    // 2. Let f be maxFraction.
+    // 1. Let f be maxFraction.
     int fraction = max_fraction;
 
-    // 3. Let n be an integer for which the exact mathematical value of n / 10^f – x is as close to zero as possible. If there are two such n, pick the larger n.
-    auto n = rounded(multiply_by_power(global_object, number, fraction));
+    // 2. Let n1 be an integer and r1 a mathematical value, with r1 = ToRawFixedFn(n1, f), such that n1 modulo roundingIncrement = 0, r1 ≤ x, and r1 is maximized.
+    auto [number1, rounded1] = to_raw_fixed_function(global_object, number, fraction, rounding_increment, PreferredResult::LessThanNumber);
 
-    // 4. Let xFinal be n / 10^f.
-    result.rounded_number = divide_by_power(global_object, n, fraction);
+    // 3. Let n2 be an integer and r2 a mathematical value, with r2 = ToRawFixedFn(n2, f), such that n2 modulo roundingIncrement = 0, r2 ≥ x, and r2 is minimized.
+    auto [number2, rounded2] = to_raw_fixed_function(global_object, number, fraction, rounding_increment, PreferredResult::GreaterThanNumber);
 
-    // 5. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+    // 4. Let r be ApplyUnsignedRoundingMode(x, r1, r2, unsignedRoundingMode).
+    auto rounded = apply_unsigned_rounding_mode(global_object, number, rounded1, rounded2, unsigned_rounding_mode);
+
+    Value n;
+
+    // 5. If r is r1, then
+    if (is_equal(rounded, rounded1)) {
+        // a. Let n be n1.
+        n = number1;
+
+        // b. Let xFinal be r1.
+        result.rounded_number = rounded1;
+    }
+    // 6. Else,
+    else {
+        // a. Let n be n2.
+        n = number2;
+
+        // b. Let xFinal be r2.
+        result.rounded_number = rounded2;
+    }
+
+    // 7. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     result.formatted_string = is_zero(n) ? String("0"sv) : number_to_string(n);
 
-    // 6. If f ≠ 0, then
+    // 8. If f ≠ 0, then
     if (fraction != 0) {
         // a. Let k be the number of characters in m.
         auto decimals = result.formatted_string.length();
@@ -1201,18 +1367,18 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
         // e. Let int be the number of characters in a.
         result.digits = a.length();
     }
-    // 7. Else, let int be the number of characters in m.
+    // 9. Else, let int be the number of characters in m.
     else {
         result.digits = result.formatted_string.length();
     }
 
-    // 8. Let cut be maxFraction – minFraction.
+    // 10. Let cut be maxFraction – minFraction.
     int cut = max_fraction - min_fraction;
 
-    // Steps 9-10 are implemented by cut_trailing_zeroes.
+    // Steps 11-12 are implemented by cut_trailing_zeroes.
     result.formatted_string = cut_trailing_zeroes(result.formatted_string, cut);
 
-    // 11. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: –f }.
+    // 13. Return the Record { [[FormattedString]]: m, [[RoundedNumber]]: xFinal, [[IntegerDigitsCount]]: int, [[RoundingMagnitude]]: –f }.
     result.rounding_magnitude = -fraction;
     return result;
 }
@@ -1539,6 +1705,103 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+// 1.1.19 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getunsignedroundingmode
+NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative)
+{
+    // 1. If isNegative is true, return the specification type in the third column of Table 2 where the first column is roundingMode and the second column is "negative".
+    // 2. Else, return the specification type in the third column of Table 2 where the first column is roundingMode and the second column is "positive".
+
+    // Table 2: Conversion from rounding mode to unsigned rounding mode, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#table-intl-unsigned-rounding-modes
+    switch (rounding_mode) {
+    case NumberFormat::RoundingMode::Ceil:
+        return is_negative ? NumberFormat::UnsignedRoundingMode::Zero : NumberFormat::UnsignedRoundingMode::Infinity;
+    case NumberFormat::RoundingMode::Floor:
+        return is_negative ? NumberFormat::UnsignedRoundingMode::Infinity : NumberFormat::UnsignedRoundingMode::Zero;
+    case NumberFormat::RoundingMode::Expand:
+        return NumberFormat::UnsignedRoundingMode::Infinity;
+    case NumberFormat::RoundingMode::Trunc:
+        return NumberFormat::UnsignedRoundingMode::Zero;
+    case NumberFormat::RoundingMode::HalfCeil:
+        return is_negative ? NumberFormat::UnsignedRoundingMode::HalfZero : NumberFormat::UnsignedRoundingMode::HalfInfinity;
+    case NumberFormat::RoundingMode::HalfFloor:
+        return is_negative ? NumberFormat::UnsignedRoundingMode::HalfInfinity : NumberFormat::UnsignedRoundingMode::HalfZero;
+    case NumberFormat::RoundingMode::HalfExpand:
+        return NumberFormat::UnsignedRoundingMode::HalfInfinity;
+    case NumberFormat::RoundingMode::HalfTrunc:
+        return NumberFormat::UnsignedRoundingMode::HalfZero;
+    case NumberFormat::RoundingMode::HalfEven:
+        return NumberFormat::UnsignedRoundingMode::HalfEven;
+    default:
+        VERIFY_NOT_REACHED();
+    };
+}
+
+// 1.1.20 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-applyunsignedroundingmode
+Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
+{
+    // 1. If x is equal to r1, return r1.
+    if (is_equal(x, r1))
+        return r1;
+
+    // FIXME: We skip this assertion due floating point inaccuracies. For example, entering "1.2345"
+    //        in the JS REPL results in "1.234499999999999", and may cause this assertion to fail.
+    //
+    //        This should be resolved when the "Intl mathematical value" is implemented to support
+    //        arbitrarily precise decimals.
+    //        https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#intl-mathematical-value
+    // 2. Assert: r1 < x < r2.
+
+    // 3. Assert: unsignedRoundingMode is not undefined.
+    VERIFY(unsigned_rounding_mode.has_value());
+
+    // 4. If unsignedRoundingMode is zero, return r1.
+    if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::Zero)
+        return r1;
+
+    // 5. If unsignedRoundingMode is infinity, return r2.
+    if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::Infinity)
+        return r2;
+
+    // 6. Let d1 be x – r1.
+    auto d1 = subtract(global_object, x, r1);
+
+    // 7. Let d2 be r2 – x.
+    auto d2 = subtract(global_object, r2, x);
+
+    // 8. If d1 < d2, return r1.
+    if (is_less_than(d1, d2))
+        return r1;
+
+    // 9. If d2 < d1, return r2.
+    if (is_less_than(d2, d1))
+        return r2;
+
+    // 10. Assert: d1 is equal to d2.
+    VERIFY(is_equal(d1, d2));
+
+    // 11. If unsignedRoundingMode is half-zero, return r1.
+    if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfZero)
+        return r1;
+
+    // 12. If unsignedRoundingMode is half-infinity, return r2.
+    if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfInfinity)
+        return r2;
+
+    // 13. Assert: unsignedRoundingMode is half-even.
+    VERIFY(unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfEven);
+
+    // 14. Let cardinality be (r1 / (r2 – r1)) modulo 2.
+    auto cardinality = subtract(global_object, r2, r1);
+    cardinality = divide(global_object, r1, cardinality);
+
+    // 15. If cardinality is 0, return r1.
+    if (modulo_is_zero(cardinality, 2))
+        return r1;
+
+    // 16. Return r2.
+    return r2;
 }
 
 }

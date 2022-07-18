@@ -41,6 +41,14 @@ public:
         Trunc,
     };
 
+    enum class UnsignedRoundingMode {
+        HalfEven,
+        HalfInfinity,
+        HalfZero,
+        Infinity,
+        Zero,
+    };
+
     enum class TrailingZeroDisplay {
         Invalid,
         Auto,
@@ -264,11 +272,13 @@ Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, N
 Vector<PatternPartition> partition_notation_sub_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, String formatted_string, int exponent);
 String format_numeric(GlobalObject& global_object, NumberFormat& number_format, Value number);
 Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, Value number);
-RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision);
-RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction);
+RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
+RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
 int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number);
 int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
+NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative);
+Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 
 }

@@ -568,6 +568,222 @@ describe("style=decimal", () => {
         expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
     });
 
+    test("roundingMode=ceil", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "ceil",
+        });
+        expect(en.format(1.11)).toBe("1.2");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "ceil",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=expand", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "expand",
+        });
+        expect(en.format(1.11)).toBe("1.2");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.2");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "expand",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=floor", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "floor",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.2");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "floor",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfCeil", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfCeil",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfCeil",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfEven", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfEven",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfEven",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfExpand", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfExpand",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfExpand",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfFloor", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfFloor",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfFloor",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfTrunc", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfTrunc",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfTrunc",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=trunc", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "trunc",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "trunc",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
     test("trailingZeroDisplay=auto", () => {
         const en = new Intl.NumberFormat("en", {
             trailingZeroDisplay: "auto",
