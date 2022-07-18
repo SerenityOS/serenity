@@ -20,7 +20,12 @@ namespace Web::Fetch::Infrastructure {
 
 template<typename T>
 requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Traits<Span<T>> {
-    static unsigned hash(Span<T> const& span)
+    static constexpr bool equals(Span<T> const& a, Span<T> const& b)
+    {
+        return StringView { a }.equals_ignoring_case(StringView { b });
+    }
+
+    static constexpr unsigned hash(Span<T> const& span)
     {
         if (span.is_empty())
             return 0;
