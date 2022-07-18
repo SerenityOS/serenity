@@ -23,7 +23,7 @@
 
 namespace Web::XHR {
 
-using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<URL::URLSearchParams>, String>;
+using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<FileAPI::Blob>, NonnullRefPtr<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
