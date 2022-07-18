@@ -8,6 +8,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -24,7 +25,6 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
-#include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -201,7 +201,17 @@ MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
 MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
-    auto mime_type = extract_mime_type(m_response_headers);
+    // FIXME: Use an actual HeaderList for XHR headers.
+    Fetch::Infrastructure::HeaderList header_list;
+    for (auto const& entry : m_response_headers) {
+        auto header = Fetch::Infrastructure::Header {
+            .name = MUST(ByteBuffer::copy(entry.key.bytes())),
+            .value = MUST(ByteBuffer::copy(entry.value.bytes())),
+        };
+        MUST(header_list.append(move(header)));
+    }
+
+    auto mime_type = extract_mime_type(header_list);
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
@@ -244,80 +254,9 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
     return encoding;
 }
 
-// https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
-// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
-{
-    // 1. Let initialValue be the result of getting name from list.
-    auto initial_value_iterator = header_list.find(header_name);
-
-    // 2. If initialValue is null, then return null.
-    if (initial_value_iterator == header_list.end())
-        return {};
-
-    auto& initial_value = initial_value_iterator->value;
-
-    // FIXME: 3. Let input be the result of isomorphic decoding initialValue.
-    // NOTE: We don't store raw byte sequences in the header list as per the spec, so we can't do this step.
-    //       The spec no longer uses initialValue after this step. For our purposes, treat any reference to `input` in the spec comments to initial_value.
-
-    // 4. Let position be a position variable for input, initially pointing at the start of input.
-    GenericLexer lexer(initial_value);
-
-    // 5. Let values be a list of strings, initially empty.
-    Vector<String> values;
-
-    // 6. Let value be the empty string.
-    StringBuilder value;
-
-    // 7. While position is not past the end of input:
-    while (!lexer.is_eof()) {
-        // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to value.
-        auto value_part = lexer.consume_until([](char ch) {
-            return ch == '"' || ch == ',';
-        });
-        value.append(value_part);
-
-        // 2. If position is not past the end of input, then:
-        if (!lexer.is_eof()) {
-            // 1. If the code point at position within input is U+0022 ("), then:
-            if (lexer.peek() == '"') {
-                // 1. Append the result of collecting an HTTP quoted string from input, given position, to value.
-                auto quoted_value_part = Fetch::collect_an_http_quoted_string(lexer);
-                value.append(quoted_value_part);
-
-                // 2. If position is not past the end of input, then continue.
-                if (!lexer.is_eof())
-                    continue;
-            }
-
-            // 2. Otherwise:
-            else {
-                // 1. Assert: the code point at position within input is U+002C (,).
-                VERIFY(lexer.peek() == ',');
-
-                // 2. Advance position by 1.
-                lexer.ignore(1);
-            }
-        }
-
-        // 3. Remove all HTTP tab or space from the start and end of value.
-        auto trimmed_value = value.to_string().trim(Fetch::HTTP_TAB_OR_SPACE, TrimMode::Both);
-
-        // 4. Append value to values.
-        values.append(move(trimmed_value));
-
-        // 5. Set value to the empty string.
-        value.clear();
-    }
-
-    // 8. Return values.
-    return values;
-}
-
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
 // FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
+Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const
 {
     // 1. Let charset be null.
     Optional<String> charset;
@@ -329,16 +268,14 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, 
     Optional<MimeSniff::MimeType> mime_type;
 
     // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
-    auto potentially_values = get_decode_and_split("Content-Type"sv, header_list);
+    auto values = MUST(header_list.get_decode_and_split("Content-Type"sv.bytes()));
 
     // 5. If values is null, then return failure.
-    if (!potentially_values.has_value())
+    if (!values.has_value())
         return {};
 
-    auto values = potentially_values.release_value();
-
     // 6. For each value of values:
-    for (auto& value : values) {
+    for (auto const& value : *values) {
         // 1. Let temporaryMimeType be the result of parsing value.
         auto temporary_mime_type = MimeSniff::MimeType::from_string(value);
 

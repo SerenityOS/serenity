@@ -15,6 +15,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/URL/URLSearchParams.h>
@@ -97,8 +98,7 @@ private:
 
     String get_text_response() const;
 
-    Optional<Vector<String>> get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
-    Optional<MimeSniff::MimeType> extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
+    Optional<MimeSniff::MimeType> extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const;
 
     explicit XMLHttpRequest(HTML::Window&);
 
