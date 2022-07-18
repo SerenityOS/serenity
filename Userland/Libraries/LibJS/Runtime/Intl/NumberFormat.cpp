@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -376,44 +377,44 @@ static ALWAYS_INLINE int log10floor(Value number)
     return as_string.length() - 1;
 }
 
-static Value multiply(GlobalObject& global_object, Value lhs, i8 rhs)
+static Value multiply(GlobalObject& global_object, Value lhs, Checked<i32> rhs)
 {
     if (lhs.is_number())
-        return Value(lhs.as_double() * rhs);
+        return Value(lhs.as_double() * rhs.value());
 
-    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs.value());
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().multiplied_by(rhs_bigint));
 }
 
-static Value divide(GlobalObject& global_object, Value lhs, i8 rhs)
+static Value divide(GlobalObject& global_object, Value lhs, Checked<i32> rhs)
 {
     if (lhs.is_number())
-        return Value(lhs.as_double() / rhs);
+        return Value(lhs.as_double() / rhs.value());
 
-    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs.value());
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs_bigint).quotient);
 }
 
-static Crypto::SignedBigInteger bigint_power(i8 base, i8 exponent)
+static Crypto::SignedBigInteger bigint_power(Checked<i32> base, Checked<i32> exponent)
 {
     VERIFY(exponent >= 0);
 
-    auto base_bigint = Crypto::SignedBigInteger::create_from(base);
+    auto base_bigint = Crypto::SignedBigInteger::create_from(base.value());
     auto result = Crypto::SignedBigInteger::create_from(1);
 
-    for (i8 i = 0; i < exponent; ++i)
+    for (i32 i = 0; i < exponent; ++i)
         result = result.multiplied_by(base_bigint);
 
     return result;
 }
 
-static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i8 exponent)
+static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, Checked<i32> exponent)
 {
     if (number.is_number())
-        return Value(number.as_double() * pow(10, exponent));
+        return Value(number.as_double() * pow(10, exponent.value()));
 
     if (exponent < 0) {
-        auto exponent_bigint = bigint_power(10, -exponent);
+        auto exponent_bigint = bigint_power(10, -exponent.value());
         return js_bigint(global_object.vm(), number.as_bigint().big_integer().divided_by(exponent_bigint).quotient);
     }
 
@@ -421,16 +422,16 @@ static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value 
     return js_bigint(global_object.vm(), number.as_bigint().big_integer().multiplied_by(exponent_bigint));
 }
 
-static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i8 exponent)
+static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, Checked<i32> exponent)
 {
     if (number.is_number()) {
         if (exponent < 0)
-            return Value(number.as_double() * pow(10, -exponent));
-        return Value(number.as_double() / pow(10, exponent));
+            return Value(number.as_double() * pow(10, -exponent.value()));
+        return Value(number.as_double() / pow(10, exponent.value()));
     }
 
     if (exponent < 0) {
-        auto exponent_bigint = bigint_power(10, -exponent);
+        auto exponent_bigint = bigint_power(10, -exponent.value());
         return js_bigint(global_object.vm(), number.as_bigint().big_integer().multiplied_by(exponent_bigint));
     }
 
@@ -452,27 +453,27 @@ static ALWAYS_INLINE bool is_zero(Value number)
     return number.as_bigint().big_integer().is_zero();
 }
 
-static bool modulo_is_zero(Value lhs, i8 rhs)
+static bool modulo_is_zero(Value lhs, Checked<i32> rhs)
 {
     if (lhs.is_number())
-        return modulo(lhs.as_double(), rhs) == 0;
+        return modulo(lhs.as_double(), rhs.value()) == 0;
 
-    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs);
+    auto rhs_bigint = Crypto::SignedBigInteger::create_from(rhs.value());
     return modulo(lhs.as_bigint().big_integer(), rhs_bigint).is_zero();
 }
 
-static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
+static ALWAYS_INLINE bool is_greater_than_zero(Value number)
 {
     if (number.is_number())
-        return number.as_double() > rhs;
-    return number.as_bigint().big_integer() > Crypto::SignedBigInteger::create_from(rhs);
+        return number.as_double() > 0;
+    return number.as_bigint().big_integer() > "0"_bigint;
 }
 
-static ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
+static ALWAYS_INLINE bool is_less_than_zero(Value number)
 {
     if (number.is_number())
-        return number.as_double() < rhs;
-    return number.as_bigint().big_integer() < Crypto::SignedBigInteger::create_from(rhs);
+        return number.as_double() < 0;
+    return number.as_bigint().big_integer() < "0"_bigint;
 }
 
 static ALWAYS_INLINE String number_to_string(Value number)
@@ -497,7 +498,7 @@ int currency_digits(StringView currency)
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number)
 {
     // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
-    bool is_negative = is_less_than(number, 0) || number.is_negative_zero();
+    bool is_negative = is_less_than_zero(number) || number.is_negative_zero();
 
     // 2. If isNegative, then
     if (is_negative) {
@@ -1318,7 +1319,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
     // 13. Else if signDisplay is "auto", then
     case NumberFormat::SignDisplay::Auto:
         // a. If x is 0 or x > 0 or x is NaN, then
-        if (is_positive_zero || is_greater_than(number, 0) || is_nan) {
+        if (is_positive_zero || is_greater_than_zero(number) || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
@@ -1332,7 +1333,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
     // 14. Else if signDisplay is "always", then
     case NumberFormat::SignDisplay::Always:
         // a. If x is 0 or x > 0 or x is NaN, then
-        if (is_positive_zero || is_greater_than(number, 0) || is_nan) {
+        if (is_positive_zero || is_greater_than_zero(number) || is_nan) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1351,7 +1352,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
             pattern = patterns->zero_format;
         }
         // b. Else if ℝ(x) > 0, then
-        else if (is_greater_than(number, 0)) {
+        else if (is_greater_than_zero(number)) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1366,7 +1367,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
     case NumberFormat::SignDisplay::Negative:
         // a. Assert: signDisplay is "negative".
         // b. If x is 0 or x is -0 or x > 0 or x is NaN, then
-        if (is_positive_zero || is_negative_zero || is_greater_than(number, 0) || is_nan) {
+        if (is_positive_zero || is_negative_zero || is_greater_than_zero(number) || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
@@ -1444,7 +1445,7 @@ int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, V
     }
 
     // 2. If x < 0, then
-    if (is_less_than(number, 0)) {
+    if (is_less_than_zero(number)) {
         // a. Let x = -x.
         number = multiply(global_object, number, -1);
     }
