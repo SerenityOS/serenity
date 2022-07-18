@@ -85,7 +85,31 @@ int main(int argc, char** argv)
 
     auto& interface = IDL::Parser(path, data, import_base_path).parse();
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "DOMParsing", "Encoding", "Fetch", "FileAPI", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebGL", "WebSockets", "XHR")) {
+    static constexpr Array libweb_interface_namespaces = {
+        "CSS"sv,
+        "Crypto"sv,
+        "DOM"sv,
+        "DOMParsing"sv,
+        "Encoding"sv,
+        "Fetch"sv,
+        "FileAPI"sv,
+        "Geometry"sv,
+        "HTML"sv,
+        "HighResolutionTime"sv,
+        "IntersectionObserver"sv,
+        "NavigationTiming"sv,
+        "RequestIdleCallback"sv,
+        "ResizeObserver"sv,
+        "SVG"sv,
+        "Selection"sv,
+        "UIEvents"sv,
+        "URL"sv,
+        "WebGL"sv,
+        "WebSockets"sv,
+        "XHR"sv,
+    };
+
+    if (libweb_interface_namespaces.span().contains_slow(namespace_)) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::"sv);
