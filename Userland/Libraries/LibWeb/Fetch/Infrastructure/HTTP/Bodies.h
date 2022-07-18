@@ -8,15 +8,17 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Variant.h>
+#include <LibWeb/FileAPI/Blob.h>
 
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#concept-body
 class Body final {
 public:
-    using SourceType = Variant<Empty, ByteBuffer>;
+    using SourceType = Variant<Empty, ByteBuffer, NonnullRefPtr<FileAPI::Blob>>;
 
     struct ReadableStreamDummy { };
 
