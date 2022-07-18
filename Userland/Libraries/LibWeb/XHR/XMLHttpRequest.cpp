@@ -326,8 +326,18 @@ static Fetch::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
     Optional<ByteBuffer> type {};
 
     // 6. Switch on object.
-    // FIXME: Still need to support Blob, BufferSource and FormData
+    // FIXME: Still need to support BufferSource and FormData
     body_init.visit(
+        [&](NonnullRefPtr<FileAPI::Blob> const& blob) {
+            // FIXME: Set action to this step: read object.
+            // Set source to object.
+            source = blob;
+            // Set length to object’s size.
+            length = blob->size();
+            // If object’s type attribute is not the empty byte sequence, set type to its value.
+            if (!blob->type().is_empty())
+                type = blob->type().to_byte_buffer();
+        },
         [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_string().to_byte_buffer();
@@ -514,6 +524,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (body_with_type.has_value()) {
         body_with_type->body.source().visit(
             [&](ByteBuffer const& buffer) { request.set_body(buffer); },
+            [&](NonnullRefPtr<FileAPI::Blob> const& blob) { request.set_body(blob->m_byte_buffer); },
             [](auto&) {});
         if (body_with_type->type.has_value())
             request.set_header("Content-Type", String { body_with_type->type->span() });

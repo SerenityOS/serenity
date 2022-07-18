@@ -1,8 +1,9 @@
 #import <XHR/XMLHttpRequestEventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <FileAPI/Blob.idl>
 #import <URL/URLSearchParams.idl>
 
-typedef (URLSearchParams or USVString) XMLHttpRequestBodyInit;
+typedef (Blob or URLSearchParams or USVString) XMLHttpRequestBodyInit;
 
 enum XMLHttpRequestResponseType {
   "",
