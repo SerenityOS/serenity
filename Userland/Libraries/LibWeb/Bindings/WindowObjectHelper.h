@@ -235,6 +235,8 @@
 #include <LibWeb/Bindings/HTMLUnknownElementPrototype.h>
 #include <LibWeb/Bindings/HTMLVideoElementConstructor.h>
 #include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
+#include <LibWeb/Bindings/HeadersConstructor.h>
+#include <LibWeb/Bindings/HeadersPrototype.h>
 #include <LibWeb/Bindings/HistoryConstructor.h>
 #include <LibWeb/Bindings/HistoryPrototype.h>
 #include <LibWeb/Bindings/IdleDeadlineConstructor.h>
@@ -420,6 +422,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(ErrorEvent)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                                                              \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)                                                        \
+    ADD_WINDOW_OBJECT_INTERFACE(Headers)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(History)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAnchorElement)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAreaElement)                                                    \

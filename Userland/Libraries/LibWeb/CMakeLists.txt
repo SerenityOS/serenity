@@ -117,6 +117,8 @@ set(SOURCES
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
+    Fetch/Headers.cpp
+    Fetch/HeadersIterator.cpp
     Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/URL.cpp
     Fetch/Infrastructure/HTTP/Bodies.cpp

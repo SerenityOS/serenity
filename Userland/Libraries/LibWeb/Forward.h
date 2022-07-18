@@ -170,6 +170,11 @@ namespace Web::Encoding {
 class TextEncoder;
 }
 
+namespace Web::Fetch {
+class Headers;
+class HeadersIterator;
+}
+
 namespace Web::Fetch::Infrastructure {
 class Body;
 struct Header;
@@ -470,6 +475,8 @@ class EventListenerWrapper;
 class EventTargetWrapper;
 class EventWrapper;
 class FocusEventWrapper;
+class HeadersWrapper;
+class HeadersIteratorWrapper;
 class HistoryWrapper;
 class HTMLAnchorElementWrapper;
 class HTMLAreaElementWrapper;
