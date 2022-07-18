@@ -1021,11 +1021,6 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         // NOTE: Flex items should always create an independent formatting context!
         VERIFY(independent_formatting_context);
 
-        if (is_row_layout()) {
-            box_state.set_content_width(resolved_definite_main_size(item.box));
-        } else {
-            box_state.set_content_height(resolved_definite_main_size(item.box));
-        }
         independent_formatting_context->run(item.box, LayoutMode::Normal);
 
         if (is_row_layout())
