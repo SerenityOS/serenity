@@ -414,6 +414,24 @@ void FlexFormattingContext::set_cross_size(Box const& box, float size)
         m_state.get_mutable(box).set_content_width(size);
 }
 
+void FlexFormattingContext::set_has_definite_main_size(Box const& box, bool definite)
+{
+    auto& used_values = m_state.get_mutable(box);
+    if (is_row_layout())
+        used_values.set_has_definite_width(definite);
+    else
+        used_values.set_has_definite_height(definite);
+}
+
+void FlexFormattingContext::set_has_definite_cross_size(Box const& box, bool definite)
+{
+    auto& used_values = m_state.get_mutable(box);
+    if (!is_row_layout())
+        used_values.set_has_definite_width(definite);
+    else
+        used_values.set_has_definite_height(definite);
+}
+
 void FlexFormattingContext::set_offset(Box const& box, float main_offset, float cross_offset)
 {
     if (is_row_layout())
@@ -964,6 +982,14 @@ void FlexFormattingContext::resolve_flexible_lengths()
         // 6.5.
         for (auto& flex_item : flex_line.items) {
             flex_item->main_size = flex_item->target_main_size;
+            set_main_size(flex_item->box, flex_item->main_size);
+
+            // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
+            // 1. If the flex container has a definite main size, then the post-flexing main sizes of its flex items are treated as definite.
+            // 2. If a flex-item’s flex basis is definite, then its post-flexing main size is also definite.
+            if (has_definite_main_size(flex_container()) || flex_item->used_flex_basis.is_definite()) {
+                set_has_definite_main_size(flex_item->box, true);
+            }
         }
 
         flex_line.remaining_free_space = calculate_free_space();

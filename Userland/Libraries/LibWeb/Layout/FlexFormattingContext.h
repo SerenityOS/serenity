@@ -107,6 +107,8 @@ private:
 
     void set_main_size(Box const&, float size);
     void set_cross_size(Box const&, float size);
+    void set_has_definite_main_size(Box const&, bool);
+    void set_has_definite_cross_size(Box const&, bool);
     void set_offset(Box const&, float main_offset, float cross_offset);
     void set_main_axis_first_margin(FlexItem&, float margin);
     void set_main_axis_second_margin(FlexItem&, float margin);
