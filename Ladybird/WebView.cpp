@@ -746,6 +746,8 @@ void WebView::did_output_js_console_message(i32 message_index)
 
 void WebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
 {
+    if (!m_js_console_input_edit)
+        return;
     for (auto& message : messages) {
         m_js_console_output_edit->append(qstring_from_akstring(message).trimmed());
     }
