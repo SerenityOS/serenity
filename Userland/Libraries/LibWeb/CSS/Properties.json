@@ -586,14 +586,14 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "number"
+      "number [0,∞]"
     ]
   },
   "flex-shrink": {
     "inherited": false,
     "initial": "1",
     "valid-types": [
-      "number"
+      "number [0,∞]"
     ]
   },
   "order": {
