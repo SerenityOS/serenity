@@ -220,8 +220,37 @@ ErrorOr<void> HeaderList::combine(Header header)
     return {};
 }
 
-// TODO: https://fetch.spec.whatwg.org/#convert-header-names-to-a-sorted-lowercase-set
-// TODO: https://fetch.spec.whatwg.org/#concept-header-list-sort-and-combine
+// https://fetch.spec.whatwg.org/#concept-header-list-sort-and-combine
+ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
+{
+    // To sort and combine a header list list, run these steps:
+
+    // 1. Let headers be an empty list of headers with the key being the name and value the value.
+    Vector<Header> headers;
+
+    // 2. Let names be the result of convert header names to a sorted-lowercase set with all the names of the headers in list.
+    Vector<ReadonlyBytes> names_list;
+    for (auto const& header : *this)
+        names_list.append(header.name);
+    auto names = TRY(convert_header_names_to_a_sorted_lowercase_set(names_list));
+
+    // 3. For each name in names:
+    for (auto& name : names) {
+        // 1. Let value be the result of getting name from list.
+        // 2. Assert: value is not null.
+        auto value = TRY(get(name)).value();
+
+        // 3. Append (name, value) to headers.
+        auto header = Infrastructure::Header {
+            .name = move(name),
+            .value = move(value),
+        };
+        headers.append(move(header));
+    }
+
+    // 4. Return headers.
+    return headers;
+}
 
 // https://fetch.spec.whatwg.org/#convert-header-names-to-a-sorted-lowercase-set
 ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes> header_names)

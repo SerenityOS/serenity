@@ -37,6 +37,7 @@ public:
     void delete_(ReadonlyBytes name);
     [[nodiscard]] ErrorOr<void> set(Header);
     [[nodiscard]] ErrorOr<void> combine(Header);
+    [[nodiscard]] ErrorOr<Vector<Header>> sort_and_combine() const;
 };
 
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);
