@@ -215,6 +215,8 @@ void NumberFormatBase::set_rounding_mode(StringView rounding_mode)
         m_rounding_mode = RoundingMode::HalfTrunc;
     else if (rounding_mode == "trunc"sv)
         m_rounding_mode = RoundingMode::Trunc;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 StringView NumberFormatBase::trailing_zero_display_string() const
