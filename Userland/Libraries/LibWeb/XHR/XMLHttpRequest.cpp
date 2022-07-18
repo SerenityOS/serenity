@@ -202,9 +202,9 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
     // FIXME: Use an actual HeaderList for XHR headers.
-    Fetch::Infrastructure::HeaderList header_list;
+    Fetch::HeaderList header_list;
     for (auto const& entry : m_response_headers) {
-        auto header = Fetch::Infrastructure::Header {
+        auto header = Fetch::Header {
             .name = MUST(ByteBuffer::copy(entry.key.bytes())),
             .value = MUST(ByteBuffer::copy(entry.value.bytes())),
         };
@@ -256,7 +256,7 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
 // FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const
+Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::HeaderList const& header_list) const
 {
     // 1. Let charset be null.
     Optional<String> charset;

@@ -98,7 +98,7 @@ private:
 
     String get_text_response() const;
 
-    Optional<MimeSniff::MimeType> extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const;
+    Optional<MimeSniff::MimeType> extract_mime_type(Fetch::HeaderList const& header_list) const;
 
     explicit XMLHttpRequest(HTML::Window&);
 
