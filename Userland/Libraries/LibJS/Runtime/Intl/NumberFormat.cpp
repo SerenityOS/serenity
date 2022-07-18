@@ -377,6 +377,20 @@ static ALWAYS_INLINE int log10floor(Value number)
     return as_string.length() - 1;
 }
 
+static Value increment(GlobalObject& global_object, Value lhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() + 1);
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().plus("1"_bigint));
+}
+
+static Value decrement(GlobalObject& global_object, Value lhs)
+{
+    if (lhs.is_number())
+        return Value(lhs.as_double() - 1);
+    return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().minus("1"_bigint));
+}
+
 static Value subtract(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (lhs.is_number())
@@ -1262,9 +1276,6 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
 // ToRawFixedFn, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#eqn-ToRawFixedFn
 static auto to_raw_fixed_function(GlobalObject& global_object, Value number, int fraction, int rounding_increment, PreferredResult mode)
 {
-    // FIXME: Handle NumberFormat V3's [[RoundingIncrement]] option.
-    (void)rounding_increment;
-
     struct {
         Value number;
         Value rounded;
@@ -1294,6 +1305,17 @@ static auto to_raw_fixed_function(GlobalObject& global_object, Value number, int
 
         if (mode == PreferredResult::GreaterThanNumber && digit.to_uint().value() != 0)
             result.number = js_bigint(global_object.vm(), result.number.as_bigint().big_integer().plus("1"_bigint));
+    }
+
+    while (!modulo_is_zero(result.number, rounding_increment)) {
+        switch (mode) {
+        case PreferredResult::LessThanNumber:
+            result.number = decrement(global_object, result.number);
+            break;
+        case PreferredResult::GreaterThanNumber:
+            result.number = increment(global_object, result.number);
+            break;
+        }
     }
 
     result.rounded = divide_by_power(global_object, result.number, fraction);

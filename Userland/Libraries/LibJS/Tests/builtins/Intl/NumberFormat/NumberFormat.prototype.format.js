@@ -784,6 +784,118 @@ describe("style=decimal", () => {
         expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
     });
 
+    test("roundingIncrement", () => {
+        const nf = (roundingIncrement, fractionDigits) => {
+            return new Intl.NumberFormat([], {
+                roundingIncrement: roundingIncrement,
+                minimumFractionDigits: fractionDigits,
+                maximumFractionDigits: fractionDigits,
+            });
+        };
+
+        const nf1 = nf(1, 2);
+        expect(nf1.format(1.01)).toBe("1.01");
+        expect(nf1.format(1.02)).toBe("1.02");
+        expect(nf1.format(1.03)).toBe("1.03");
+        expect(nf1.format(1.04)).toBe("1.04");
+        expect(nf1.format(1.05)).toBe("1.05");
+
+        const nf2 = nf(2, 2);
+        expect(nf2.format(1.01)).toBe("1.02");
+        expect(nf2.format(1.02)).toBe("1.02");
+        expect(nf2.format(1.03)).toBe("1.04");
+        expect(nf2.format(1.04)).toBe("1.04");
+        expect(nf2.format(1.05)).toBe("1.06");
+
+        const nf5 = nf(5, 2);
+        expect(nf5.format(1.01)).toBe("1.00");
+        expect(nf5.format(1.02)).toBe("1.00");
+        expect(nf5.format(1.03)).toBe("1.05");
+        expect(nf5.format(1.04)).toBe("1.05");
+        expect(nf5.format(1.05)).toBe("1.05");
+
+        const nf10 = nf(10, 2);
+        expect(nf10.format(1.1)).toBe("1.10");
+        expect(nf10.format(1.12)).toBe("1.10");
+        expect(nf10.format(1.15)).toBe("1.20");
+        expect(nf10.format(1.2)).toBe("1.20");
+
+        const nf20 = nf(20, 2);
+        expect(nf20.format(1.05)).toBe("1.00");
+        expect(nf20.format(1.1)).toBe("1.20");
+        expect(nf20.format(1.15)).toBe("1.20");
+        expect(nf20.format(1.2)).toBe("1.20");
+
+        const nf25 = nf(25, 2);
+        expect(nf25.format(1.25)).toBe("1.25");
+        expect(nf25.format(1.3125)).toBe("1.25");
+        expect(nf25.format(1.375)).toBe("1.50");
+        expect(nf25.format(1.5)).toBe("1.50");
+
+        const nf50 = nf(50, 2);
+        expect(nf50.format(1.5)).toBe("1.50");
+        expect(nf50.format(1.625)).toBe("1.50");
+        expect(nf50.format(1.75)).toBe("2.00");
+        expect(nf50.format(1.875)).toBe("2.00");
+        expect(nf50.format(2.0)).toBe("2.00");
+
+        const nf100 = nf(100, 3);
+        expect(nf100.format(1.1)).toBe("1.100");
+        expect(nf100.format(1.125)).toBe("1.100");
+        expect(nf100.format(1.15)).toBe("1.200");
+        expect(nf100.format(1.175)).toBe("1.200");
+        expect(nf100.format(1.2)).toBe("1.200");
+
+        const nf200 = nf(200, 3);
+        expect(nf200.format(1.2)).toBe("1.200");
+        expect(nf200.format(1.25)).toBe("1.200");
+        expect(nf200.format(1.3)).toBe("1.400");
+        expect(nf200.format(1.35)).toBe("1.400");
+        expect(nf200.format(1.4)).toBe("1.400");
+
+        const nf250 = nf(250, 3);
+        expect(nf250.format(1.25)).toBe("1.250");
+        expect(nf250.format(1.3125)).toBe("1.250");
+        expect(nf250.format(1.375)).toBe("1.500");
+        expect(nf250.format(1.4375)).toBe("1.500");
+        expect(nf250.format(1.5)).toBe("1.500");
+
+        const nf500 = nf(500, 3);
+        expect(nf500.format(1.5)).toBe("1.500");
+        expect(nf500.format(1.625)).toBe("1.500");
+        expect(nf500.format(1.75)).toBe("2.000");
+        expect(nf500.format(1.875)).toBe("2.000");
+        expect(nf500.format(2.0)).toBe("2.000");
+
+        const nf1000 = nf(1000, 4);
+        expect(nf1000.format(1.1)).toBe("1.1000");
+        expect(nf1000.format(1.125)).toBe("1.1000");
+        expect(nf1000.format(1.15)).toBe("1.2000");
+        expect(nf1000.format(1.175)).toBe("1.2000");
+        expect(nf1000.format(1.2)).toBe("1.2000");
+
+        const nf2000 = nf(2000, 4);
+        expect(nf2000.format(1.2)).toBe("1.2000");
+        expect(nf2000.format(1.25)).toBe("1.2000");
+        expect(nf2000.format(1.3)).toBe("1.4000");
+        expect(nf2000.format(1.35)).toBe("1.4000");
+        expect(nf2000.format(1.4)).toBe("1.4000");
+
+        const nf2500 = nf(2500, 4);
+        expect(nf2500.format(1.25)).toBe("1.2500");
+        expect(nf2500.format(1.3125)).toBe("1.2500");
+        expect(nf2500.format(1.375)).toBe("1.5000");
+        expect(nf2500.format(1.4375)).toBe("1.5000");
+        expect(nf2500.format(1.5)).toBe("1.5000");
+
+        const nf5000 = nf(5000, 4);
+        expect(nf5000.format(1.5)).toBe("1.5000");
+        expect(nf5000.format(1.625)).toBe("1.5000");
+        expect(nf5000.format(1.75)).toBe("2.0000");
+        expect(nf5000.format(1.875)).toBe("2.0000");
+        expect(nf5000.format(2.0)).toBe("2.0000");
+    });
+
     test("trailingZeroDisplay=auto", () => {
         const en = new Intl.NumberFormat("en", {
             trailingZeroDisplay: "auto",
