@@ -129,11 +129,23 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw the background and borders for the context root (steps 1, 2)
     paint_node(m_box, context, PaintPhase::Background);
     paint_node(m_box, context, PaintPhase::Border);
+
+    auto paint_child = [&](auto* child) {
+        auto parent = child->m_box.parent();
+        auto* paintable = parent ? parent->paintable() : nullptr;
+        if (paintable)
+            paintable->before_children_paint(context, PaintPhase::Foreground);
+        child->paint(context);
+        if (paintable)
+            paintable->after_children_paint(context, PaintPhase::Foreground);
+    };
+
     // Draw positioned descendants with negative z-indices (step 3)
     for (auto* child : m_children) {
         if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
-            child->paint(context);
+            paint_child(child);
     }
+
     // Draw the background and borders for block-level children (step 4)
     paint_descendants(context, m_box, StackingContextPaintPhase::BackgroundAndBorders);
     // Draw the non-positioned floats (step 5)
@@ -146,7 +158,7 @@ void StackingContext::paint_internal(PaintContext& context) const
     for (auto* child : m_children) {
         if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
             continue;
-        child->paint(context);
+        paint_child(child);
     }
 
     paint_node(m_box, context, PaintPhase::FocusOutline);
