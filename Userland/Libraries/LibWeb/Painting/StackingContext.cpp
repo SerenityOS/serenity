@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +29,7 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
 
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     : m_box(box)
+    , m_transform(combine_transformations(m_box.computed_values().transformations()))
     , m_parent(parent)
 {
     VERIFY(m_parent != this);
@@ -269,10 +271,9 @@ Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transfo
 
 // FIXME: This extracts the affine 2D part of the full transformation matrix.
 //  Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
-Gfx::AffineTransform StackingContext::combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const
+Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 {
-    auto matrix = combine_transformations(transformations);
-    auto* m = matrix.elements();
+    auto* m = m_transform.elements();
     return Gfx::AffineTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3]);
 }
 
@@ -287,7 +288,7 @@ void StackingContext::paint(PaintContext& context) const
     if (opacity == 0.0f)
         return;
 
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto affine_transform = affine_transform_matrix();
 
     if (opacity < 1.0f || !affine_transform.is_identity()) {
         auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, context.painter().target()->size());
@@ -332,8 +333,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
         return {};
 
     auto transform_origin = this->transform_origin();
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
-    auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
+    auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(position - transform_origin) + transform_origin;
 
     // FIXME: Support more overflow variations.
     if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
@@ -446,7 +446,7 @@ void StackingContext::dump(int indent) const
         builder.append("auto"sv);
     builder.append(')');
 
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto affine_transform = affine_transform_matrix();
     if (!affine_transform.is_identity()) {
         builder.appendff(", transform: {}", affine_transform);
     }
