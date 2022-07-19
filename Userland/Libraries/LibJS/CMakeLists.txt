@@ -114,6 +114,7 @@ set(SOURCES
     Runtime/Intl/Locale.cpp
     Runtime/Intl/LocaleConstructor.cpp
     Runtime/Intl/LocalePrototype.cpp
+    Runtime/Intl/MathematicalValue.cpp
     Runtime/Intl/NumberFormat.cpp
     Runtime/Intl/NumberFormatConstructor.cpp
     Runtime/Intl/NumberFormatFunction.cpp
