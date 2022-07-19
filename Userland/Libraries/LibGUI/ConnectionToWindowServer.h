@@ -16,7 +16,7 @@ namespace GUI {
 class ConnectionToWindowServer final
     : public IPC::ConnectionToServer<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToWindowServer, "/tmp/portal/window")
+    IPC_CLIENT_CONNECTION(ConnectionToWindowServer, "/tmp/portal/window"sv)
 public:
     static ConnectionToWindowServer& the();
     i32 expose_client_id() { return m_client_id; }

@@ -322,7 +322,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
         // Need i here to iterate along with all other vectors.
         for (unsigned i = 0; i < socket_paths.size(); i++) {
-            String& path = socket_paths.at(i);
+            auto const path = Core::Account::parse_path_with_uid(socket_paths.at(i), m_account.has_value() ? m_account.value().uid() : Optional<uid_t> {});
 
             // Socket path (plus NUL) must fit into the structs sent to the Kernel.
             VERIFY(path.length() < UNIX_PATH_MAX);

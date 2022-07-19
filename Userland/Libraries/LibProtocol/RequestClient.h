@@ -20,7 +20,7 @@ class Request;
 class RequestClient final
     : public IPC::ConnectionToServer<RequestClientEndpoint, RequestServerEndpoint>
     , public RequestClientEndpoint {
-    IPC_CLIENT_CONNECTION(RequestClient, "/tmp/portal/request")
+    IPC_CLIENT_CONNECTION(RequestClient, "/tmp/portal/request"sv)
 
 public:
     template<typename RequestHashMapTraits = Traits<String>>
