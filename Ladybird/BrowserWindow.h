@@ -35,6 +35,7 @@ public slots:
     void tab_favicon_changed(int index, QIcon icon);
     void new_tab();
     void close_tab(int index);
+    void close_current_tab();
 
 private:
     void debug_request(String const& request, String const& argument = "");
