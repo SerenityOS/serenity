@@ -111,12 +111,6 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     __RETURN_PTHREAD_ERROR(rc);
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_self.html
-int pthread_self()
-{
-    return __pthread_self();
-}
-
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_create.html
 int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
 {
@@ -206,34 +200,10 @@ int pthread_sigmask(int how, sigset_t const* set, sigset_t* old_set)
     return 0;
 }
 
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_init.html
-int pthread_mutex_init(pthread_mutex_t* mutex, pthread_mutexattr_t const* attributes)
-{
-    return __pthread_mutex_init(mutex, attributes);
-}
-
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_destroy.html
 int pthread_mutex_destroy(pthread_mutex_t*)
 {
     return 0;
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_lock.html
-int pthread_mutex_lock(pthread_mutex_t* mutex)
-{
-    return __pthread_mutex_lock(mutex);
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_trylock.html
-int pthread_mutex_trylock(pthread_mutex_t* mutex)
-{
-    return __pthread_mutex_trylock(mutex);
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_unlock.html
-int pthread_mutex_unlock(pthread_mutex_t* mutex)
-{
-    return __pthread_mutex_unlock(mutex);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutexattr_init.html
@@ -516,30 +486,6 @@ int pthread_setschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] in
 int pthread_cancel(pthread_t)
 {
     TODO();
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_create.html
-int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
-{
-    return __pthread_key_create(key, destructor);
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_delete.html
-int pthread_key_delete(pthread_key_t key)
-{
-    return __pthread_key_delete(key);
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getspecific.html
-void* pthread_getspecific(pthread_key_t key)
-{
-    return __pthread_getspecific(key);
-}
-
-// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setspecific.html
-int pthread_setspecific(pthread_key_t key, void const* value)
-{
-    return __pthread_setspecific(key, value);
 }
 
 int pthread_setname_np(pthread_t thread, char const* name)
