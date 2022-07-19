@@ -1218,7 +1218,8 @@
   },
   "transform": {
     "inherited": false,
-    "initial": "none"
+    "initial": "none",
+    "affects-stacking-context": true
   },
   "transform-origin": {
     "affects-layout": false,
