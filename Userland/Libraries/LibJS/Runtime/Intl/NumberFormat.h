@@ -266,6 +266,11 @@ struct RawFormatResult : public FormatResult {
     int rounding_magnitude { 0 }; // [[RoundingMagnitude]]
 };
 
+enum class RoundingDecision {
+    LowerValue,
+    HigherValue,
+};
+
 int currency_digits(StringView currency);
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase const& intl_object, Value number);
 Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number);
@@ -279,6 +284,6 @@ Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int e
 int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number);
 int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative);
-Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
+RoundingDecision apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 
 }

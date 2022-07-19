@@ -1198,7 +1198,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
         Value n;
 
         // d. If r is r1, then
-        if (is_equal(rounded, rounded1)) {
+        if (rounded == RoundingDecision::LowerValue) {
             // i. Let n be n1.
             n = number1;
 
@@ -1343,7 +1343,7 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
     Value n;
 
     // 5. If r is r1, then
-    if (is_equal(rounded, rounded1)) {
+    if (rounded == RoundingDecision::LowerValue) {
         // a. Let n be n1.
         n = number1;
 
@@ -1761,11 +1761,11 @@ NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::Roun
 }
 
 // 1.1.20 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-applyunsignedroundingmode
-Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
+RoundingDecision apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r1, Value r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
     // 1. If x is equal to r1, return r1.
     if (is_equal(x, r1))
-        return r1;
+        return RoundingDecision::LowerValue;
 
     // FIXME: We skip this assertion due floating point inaccuracies. For example, entering "1.2345"
     //        in the JS REPL results in "1.234499999999999", and may cause this assertion to fail.
@@ -1780,11 +1780,11 @@ Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r
 
     // 4. If unsignedRoundingMode is zero, return r1.
     if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::Zero)
-        return r1;
+        return RoundingDecision::LowerValue;
 
     // 5. If unsignedRoundingMode is infinity, return r2.
     if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::Infinity)
-        return r2;
+        return RoundingDecision::HigherValue;
 
     // 6. Let d1 be x – r1.
     auto d1 = subtract(global_object, x, r1);
@@ -1794,22 +1794,22 @@ Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r
 
     // 8. If d1 < d2, return r1.
     if (is_less_than(d1, d2))
-        return r1;
+        return RoundingDecision::LowerValue;
 
     // 9. If d2 < d1, return r2.
     if (is_less_than(d2, d1))
-        return r2;
+        return RoundingDecision::HigherValue;
 
     // 10. Assert: d1 is equal to d2.
     VERIFY(is_equal(d1, d2));
 
     // 11. If unsignedRoundingMode is half-zero, return r1.
     if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfZero)
-        return r1;
+        return RoundingDecision::LowerValue;
 
     // 12. If unsignedRoundingMode is half-infinity, return r2.
     if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfInfinity)
-        return r2;
+        return RoundingDecision::HigherValue;
 
     // 13. Assert: unsignedRoundingMode is half-even.
     VERIFY(unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::HalfEven);
@@ -1820,10 +1820,10 @@ Value apply_unsigned_rounding_mode(GlobalObject& global_object, Value x, Value r
 
     // 15. If cardinality is 0, return r1.
     if (modulo_is_zero(cardinality, 2))
-        return r1;
+        return RoundingDecision::LowerValue;
 
     // 16. Return r2.
-    return r2;
+    return RoundingDecision::HigherValue;
 }
 
 }
