@@ -181,7 +181,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto value_partitions = partition_number_pattern(global_object, relative_time_format.number_format(), Value(value));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
-    auto plurality = resolve_plural(global_object, relative_time_format.plural_rules(), Value(value));
+    auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
 
     // 22. Let pattern be po.[[<pr>]].
     auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality; });

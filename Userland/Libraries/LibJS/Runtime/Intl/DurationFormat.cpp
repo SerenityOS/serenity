@@ -438,7 +438,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
             auto* plural_rules = TRY(construct(global_object, *global_object.intl_plural_rules_constructor(), js_string(vm, duration_format.locale())));
 
             // ii. Let prv be ! ResolvePlural(pr, value).
-            auto plurality = resolve_plural(global_object, static_cast<PluralRules&>(*plural_rules), value);
+            auto plurality = resolve_plural(static_cast<PluralRules&>(*plural_rules), value);
 
             auto formats = Unicode::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<Unicode::Style>(style));
             auto pattern = formats.find_if([&](auto& p) { return p.plurality == plurality; });
