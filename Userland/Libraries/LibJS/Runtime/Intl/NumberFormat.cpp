@@ -552,11 +552,11 @@ FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatB
 
     // 3. If x < 0, let isNegative be true; else let isNegative be false.
     // FIXME: Spec issue: this step would override step 1a, see https://github.com/tc39/proposal-intl-numberformat-v3/issues/67
-    is_negative |= is_less_than_zero(number);
+    if (is_less_than_zero(number)) {
+        is_negative = true;
 
-    // 4. If isNegative, then
-    if (is_negative) {
-        // a. Let x be -x.
+        // 4. If isNegative, then
+        //     a. Let x be -x.
         number = multiply(global_object, number, -1);
     }
 
