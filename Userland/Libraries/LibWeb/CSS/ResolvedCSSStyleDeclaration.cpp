@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,9 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::CSS {
 
@@ -365,6 +369,40 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_style()));
     case CSS::PropertyID::TextTransform:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_transform()));
+    case CSS::PropertyID::Transform: {
+        // NOTE: The computed value for `transform` serializes as a single `matrix(...)` value, instead of
+        //       the original list of transform functions. So, we produce a StyleValue for that.
+        //       https://www.w3.org/TR/css-transforms-1/#serialization-of-the-computed-value
+        auto transformations = layout_node.computed_values().transformations();
+        if (transformations.is_empty())
+            return IdentifierStyleValue::create(ValueID::None);
+
+        // The transform matrix is held by the StackingContext, so we need to make sure we have one first.
+        auto* initial_containing_block = layout_node.document().layout_node();
+        VERIFY(initial_containing_block);
+        const_cast<Layout::InitialContainingBlock&>(*initial_containing_block).build_stacking_context_tree_if_needed();
+
+        VERIFY(layout_node.paintable());
+        auto const& paintable_box = verify_cast<Painting::PaintableBox const>(layout_node.paintable());
+        VERIFY(paintable_box->stacking_context());
+        auto affine_matrix = paintable_box->stacking_context()->affine_transform_matrix();
+
+        NonnullRefPtrVector<StyleValue> parameters;
+        parameters.ensure_capacity(6);
+        parameters.append(NumericStyleValue::create_float(affine_matrix.a()));
+        parameters.append(NumericStyleValue::create_float(affine_matrix.b()));
+        parameters.append(NumericStyleValue::create_float(affine_matrix.c()));
+        parameters.append(NumericStyleValue::create_float(affine_matrix.d()));
+        parameters.append(NumericStyleValue::create_float(affine_matrix.e()));
+        parameters.append(NumericStyleValue::create_float(affine_matrix.f()));
+
+        NonnullRefPtr<StyleValue> matrix_function = TransformationStyleValue::create(TransformFunction::Matrix, move(parameters));
+        // Elsewhere we always store the transform property's value as a StyleValueList of TransformationStyleValues,
+        // so this is just for consistency.
+        NonnullRefPtrVector<StyleValue> matrix_functions;
+        matrix_functions.append(matrix_function);
+        return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
+    }
     case CSS::PropertyID::VerticalAlign:
         if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
             if (length_percentage->is_length())
