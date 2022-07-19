@@ -586,7 +586,12 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         }
         VERIFY(dynamic_object_of_symbol);
         size_t addend = relocation.addend_used() ? relocation.addend() : *patch_ptr;
-        *patch_ptr = negative_offset_from_tls_block_end(dynamic_object_of_symbol->tls_offset().value(), symbol_value + addend);
+
+        *patch_ptr = addend + dynamic_object_of_symbol->tls_offset().value() + symbol_value;
+
+        // At offset 0 there's the thread's ThreadSpecificData structure, we don't want to collide with it.
+        VERIFY(static_cast<ssize_t>(*patch_ptr) < 0);
+
         break;
     }
 #if ARCH(I386)
@@ -642,41 +647,26 @@ void DynamicLoader::do_relr_relocations()
     });
 }
 
-ssize_t DynamicLoader::negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const
-{
-    ssize_t offset = static_cast<ssize_t>(tls_offset + value_of_symbol);
-    // At offset 0 there's the thread's ThreadSpecificData structure, we don't want to collide with it.
-    VERIFY(offset < 0);
-    return offset;
-}
-
 void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
 {
-    u8 const* tls_data = nullptr;
-    size_t tls_size_in_image = 0;
-
-    image().for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {
+    image().for_each_program_header([this, &buffer](ELF::Image::ProgramHeader program_header) {
         if (program_header.type() != PT_TLS)
             return IterationDecision::Continue;
 
-        tls_data = (const u8*)m_file_data + program_header.offset();
-        tls_size_in_image = program_header.size_in_image();
+        // Note: The "size in image" is only concerned with initialized data. Uninitialized data (.tbss) is
+        // only included in the "size in memory" metric, and is expected to not be touched or read from, as
+        // it is not present in the image and zeroed out in-memory. We will still check that the buffer has
+        // space for both the initialized and the uninitialized data.
+        // Note: The m_tls_offset here is (of course) negative.
+        // TODO: Is the initialized data always in the beginning of the TLS segment, or should we walk the
+        // sections to figure that out?
+        size_t tls_start_in_buffer = buffer.size() + m_tls_offset;
+        VERIFY(program_header.size_in_image() <= program_header.size_in_memory());
+        VERIFY(program_header.size_in_memory() <= m_tls_size_of_current_object);
+        VERIFY(tls_start_in_buffer + program_header.size_in_memory() <= buffer.size());
+        memcpy(buffer.data() + tls_start_in_buffer, static_cast<const u8*>(m_file_data) + program_header.offset(), program_header.size_in_image());
+
         return IterationDecision::Break;
-    });
-
-    if (!tls_data || !tls_size_in_image)
-        return;
-
-    image().for_each_symbol([this, &buffer, tls_data](ELF::Image::Symbol symbol) {
-        if (symbol.type() != STT_TLS)
-            return IterationDecision::Continue;
-
-        ssize_t negative_offset = negative_offset_from_tls_block_end(m_tls_offset, symbol.value());
-        VERIFY(symbol.size() != 0);
-        VERIFY(buffer.size() + negative_offset + symbol.size() <= buffer.size());
-        memcpy(buffer.data() + buffer.size() + negative_offset, tls_data + symbol.value(), symbol.size());
-
-        return IterationDecision::Continue;
     });
 }
 
