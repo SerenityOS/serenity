@@ -98,8 +98,6 @@ struct TransformOrigin {
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
     Optional<CSS::LengthPercentage> length_percentage;
-
-    bool is_definite() const { return type == CSS::FlexBasis::LengthPercentage; }
 };
 
 struct ShadowData {

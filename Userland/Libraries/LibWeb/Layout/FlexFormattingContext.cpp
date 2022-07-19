@@ -599,8 +599,20 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     flex_item.flex_base_size = [&] {
         flex_item.used_flex_basis = used_flex_basis_for_item(flex_item);
 
+        flex_item.used_flex_basis_is_definite = [&](CSS::FlexBasisData const& flex_basis) -> bool {
+            if (flex_basis.type != CSS::FlexBasis::LengthPercentage)
+                return false;
+            if (flex_basis.length_percentage->is_auto())
+                return false;
+            if (flex_basis.length_percentage->is_length())
+                return true;
+            if (is_row_layout())
+                return m_flex_container_state.has_definite_width();
+            return m_flex_container_state.has_definite_height();
+        }(flex_item.used_flex_basis);
+
         // A. If the item has a definite used flex basis, that’s the flex base size.
-        if (flex_item.used_flex_basis.is_definite()) {
+        if (flex_item.used_flex_basis_is_definite) {
             return get_pixel_size(m_state, child_box, flex_item.used_flex_basis.length_percentage.value());
         }
 
@@ -987,7 +999,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
             // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
             // 1. If the flex container has a definite main size, then the post-flexing main sizes of its flex items are treated as definite.
             // 2. If a flex-item’s flex basis is definite, then its post-flexing main size is also definite.
-            if (has_definite_main_size(flex_container()) || flex_item->used_flex_basis.is_definite()) {
+            if (has_definite_main_size(flex_container()) || flex_item->used_flex_basis_is_definite) {
                 set_has_definite_main_size(flex_item->box, true);
             }
         }

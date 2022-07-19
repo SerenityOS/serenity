@@ -43,6 +43,7 @@ private:
     struct FlexItem {
         Box& box;
         CSS::FlexBasisData used_flex_basis {};
+        bool used_flex_basis_is_definite { false };
         float flex_base_size { 0 };
         float hypothetical_main_size { 0 };
         float hypothetical_cross_size { 0 };
