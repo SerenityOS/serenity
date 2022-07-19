@@ -1106,16 +1106,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
-            if (is_direction_reverse())
-                space_before_first_item = m_available_space->main.value_or(NumericLimits<float>::max());
-            else
-                space_before_first_item = 0;
-            break;
         case CSS::JustifyContent::FlexEnd:
-            if (is_direction_reverse())
-                space_before_first_item = 0;
-            else
-                space_before_first_item = m_available_space->main.value_or(NumericLimits<float>::max());
+            space_before_first_item = 0;
             break;
         case CSS::JustifyContent::Center:
             space_before_first_item = (m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space) / 2.0f;
