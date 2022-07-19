@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define TEST_CASE_IN_PTHREAD(x)                                                 \
     static void* __TESTCASE_FUNC(x##__inner)(void*);                            \
@@ -85,4 +86,41 @@ TEST_CASE_IN_PTHREAD(cancel_type_invalid)
     EXPECT_EQ(old_type, PTHREAD_CANCEL_DEFERRED);
 
     return nullptr;
+}
+
+static void cancel_clenaup_handler(void* data)
+{
+    (*static_cast<bool*>(data)) = true;
+}
+
+static void* cancel_inner(void* data)
+{
+    pthread_cleanup_push(cancel_clenaup_handler, data);
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr);
+
+    // Sleep for a second until the other side sets up their end of the check,
+    // then do a call to write, which should be a cancellation point.
+    sleep(1);
+    write(STDOUT_FILENO, nullptr, 0);
+
+    pthread_exit(nullptr);
+}
+
+TEST_CASE(cancel)
+{
+    pthread_t thread;
+
+    bool called_cleanup_handler = false;
+    pthread_create(&thread, nullptr, cancel_inner, &called_cleanup_handler);
+
+    int rc = pthread_cancel(thread);
+
+    void* exit_code;
+    pthread_join(thread, &exit_code);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(called_cleanup_handler, true);
+    EXPECT_EQ(exit_code, PTHREAD_CANCELED);
 }
