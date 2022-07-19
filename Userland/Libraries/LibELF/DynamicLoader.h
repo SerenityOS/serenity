@@ -136,7 +136,6 @@ private:
     RelocationResult do_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak should_initialize_weak);
     void do_relr_relocations();
     void find_tls_size_and_alignment();
-    ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 
     String m_filename;
     String m_filepath;
