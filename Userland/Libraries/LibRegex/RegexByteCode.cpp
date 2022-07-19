@@ -532,7 +532,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
         } else if (compare_type == CharacterCompareType::CharClass) {
 
-            if (input.view.length() <= state.string_position)
+            if (input.view.length() <= state.string_position_in_code_units)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto character_class = (CharClass)m_bytecode->at(offset++);
