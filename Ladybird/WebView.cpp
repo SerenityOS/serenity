@@ -61,7 +61,6 @@
 #include <QScrollBar>
 #include <QTextEdit>
 #include <QVBoxLayout>
-#include <stdlib.h>
 
 AK::String akstring_from_qstring(QString const& qstring)
 {
@@ -237,10 +236,12 @@ public:
 
     virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override
     {
+        m_view.setCursor(Qt::IBeamCursor);
     }
 
     virtual void page_did_leave_tooltip_area() override
     {
+        m_view.setCursor(Qt::ArrowCursor);
     }
 
     virtual void page_did_hover_link(AK::URL const& url) override
@@ -398,7 +399,7 @@ unsigned get_buttons_from_qt_event(QMouseEvent const& event)
     return buttons;
 }
 
-unsigned get_modifiers_from_qt_event(QMouseEvent const& event)
+unsigned get_modifiers_from_qt_mouse_event(QMouseEvent const& event)
 {
     unsigned modifiers = 0;
     if (event.modifiers() & Qt::Modifier::ALT)
@@ -410,11 +411,357 @@ unsigned get_modifiers_from_qt_event(QMouseEvent const& event)
     return modifiers;
 }
 
+unsigned get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
+{
+    auto modifiers = 0;
+    if (event.modifiers().testFlag(Qt::AltModifier))
+        modifiers |= KeyModifier::Mod_Alt;
+    if (event.modifiers().testFlag(Qt::ControlModifier))
+        modifiers |= KeyModifier::Mod_Ctrl;
+    if (event.modifiers().testFlag(Qt::MetaModifier))
+        modifiers |= KeyModifier::Mod_Super;
+    if (event.modifiers().testFlag(Qt::ShiftModifier))
+        modifiers |= KeyModifier::Mod_Shift;
+    if (event.modifiers().testFlag(Qt::AltModifier))
+        modifiers |= KeyModifier::Mod_AltGr;
+    return modifiers;
+}
+
+KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
+{
+    auto key = (KeyCode)event.nativeScanCode();
+    key = Key_Insert;
+
+    switch (event.key()) {
+    case Qt::Key_Escape:
+        key = Key_Escape;
+        break;
+    case Qt::Key_Tab:
+        key = Key_Tab;
+        break;
+    case Qt::Key_Backspace:
+        key = Key_Backspace;
+        break;
+    case Qt::Key_Return:
+        key = Key_Return;
+        break;
+    case Qt::Key_Insert:
+        key = Key_Insert;
+        break;
+    case Qt::Key_Delete:
+        key = Key_Delete;
+        break;
+    case Qt::Key_Print:
+        key = Key_PrintScreen;
+        break;
+    case Qt::Key_SysReq:
+        key = Key_SysRq;
+        break;
+    case Qt::Key_Home:
+        key = Key_Home;
+        break;
+    case Qt::Key_End:
+        key = Key_End;
+        break;
+    case Qt::Key_Left:
+        key = Key_Left;
+        break;
+    case Qt::Key_Up:
+        key = Key_Up;
+        break;
+    case Qt::Key_Right:
+        key = Key_Right;
+        break;
+    case Qt::Key_Down:
+        key = Key_Down;
+        break;
+    case Qt::Key_PageUp:
+        key = Key_PageUp;
+        break;
+    case Qt::Key_PageDown:
+        key = Key_PageDown;
+        break;
+    case Qt::Key_Shift:
+        key = Key_LeftShift;
+        break;
+        // TODO: On Serenity/AK - we distinghuish the shift by the modifiers flag.
+        //        case Qt::Key_Shift:
+        //            key = Key_RightShift;
+        //            break;
+    case Qt::Key_Control:
+        key = Key_Control;
+        break;
+    case Qt::Key_Alt:
+        key = Key_Alt;
+        break;
+    case Qt::Key_CapsLock:
+        key = Key_CapsLock;
+        break;
+    case Qt::Key_NumLock:
+        key = Key_NumLock;
+        break;
+    case Qt::Key_ScrollLock:
+        key = Key_ScrollLock;
+        break;
+    case Qt::Key_F1:
+        key = Key_F1;
+        break;
+    case Qt::Key_F2:
+        key = Key_F2;
+        break;
+    case Qt::Key_F3:
+        key = Key_F3;
+        break;
+    case Qt::Key_F4:
+        key = Key_F4;
+        break;
+    case Qt::Key_F5:
+        key = Key_F5;
+        break;
+    case Qt::Key_F6:
+        key = Key_F6;
+        break;
+    case Qt::Key_F7:
+        key = Key_F7;
+        break;
+    case Qt::Key_F8:
+        key = Key_F8;
+        break;
+    case Qt::Key_F9:
+        key = Key_F9;
+        break;
+    case Qt::Key_F10:
+        key = Key_F10;
+        break;
+    case Qt::Key_F11:
+        key = Key_F11;
+        break;
+    case Qt::Key_F12:
+        key = Key_F12;
+        break;
+    case Qt::Key_Space:
+        key = Key_Space;
+        break;
+    case Qt::Key_exclamdown:
+        key = Key_ExclamationPoint;
+        break;
+    case Qt::Key_QuoteDbl:
+        key = Key_DoubleQuote;
+        break;
+        //        case Qt::Key_: ????
+        //            key = Key_Hashtag;
+        //            break;
+    case Qt::Key_Dollar:
+        key = Key_Dollar;
+        break;
+    case Qt::Key_Percent:
+        key = Key_Percent;
+        break;
+    case Qt::Key_Ampersand:
+        key = Key_Ampersand;
+        break;
+    case Qt::Key_Apostrophe:
+        key = Key_Apostrophe;
+        break;
+    case Qt::Key_ParenLeft:
+        key = Key_LeftParen;
+        break;
+    case Qt::Key_ParenRight:
+        key = Key_RightParen;
+        break;
+    case Qt::Key_Asterisk:
+        key = Key_Asterisk;
+        break;
+    case Qt::Key_Plus:
+        key = Key_Plus;
+        break;
+    case Qt::Key_Comma:
+        key = Key_Comma;
+        break;
+    case Qt::Key_Minus:
+        key = Key_Minus;
+        break;
+    case Qt::Key_Period:
+        key = Key_Period;
+        break;
+    case Qt::Key_Slash:
+        key = Key_Slash;
+        break;
+    case Qt::Key_0:
+        key = Key_0;
+        break;
+    case Qt::Key_1:
+        key = Key_1;
+        break;
+    case Qt::Key_2:
+        key = Key_2;
+        break;
+    case Qt::Key_3:
+        key = Key_3;
+        break;
+    case Qt::Key_4:
+        key = Key_4;
+        break;
+    case Qt::Key_5:
+        key = Key_5;
+        break;
+    case Qt::Key_6:
+        key = Key_6;
+        break;
+    case Qt::Key_7:
+        key = Key_7;
+        break;
+    case Qt::Key_8:
+        key = Key_8;
+        break;
+    case Qt::Key_9:
+        key = Key_9;
+        break;
+    case Qt::Key_Colon:
+        key = Key_Colon;
+        break;
+    case Qt::Key_Semicolon:
+        key = Key_Semicolon;
+        break;
+    case Qt::Key_Less:
+        key = Key_LessThan;
+        break;
+    case Qt::Key_Equal:
+        key = Key_Equal;
+        break;
+    case Qt::Key_Greater:
+        key = Key_GreaterThan;
+        break;
+    case Qt::Key_Question:
+        key = Key_QuestionMark;
+        break;
+    case Qt::Key_At:
+        key = Key_AtSign;
+        break;
+    case Qt::Key_A:
+        key = Key_A;
+        break;
+    case Qt::Key_B:
+        key = Key_B;
+        break;
+    case Qt::Key_C:
+        key = Key_C;
+        break;
+    case Qt::Key_D:
+        key = Key_D;
+        break;
+    case Qt::Key_E:
+        key = Key_E;
+        break;
+    case Qt::Key_F:
+        key = Key_F;
+        break;
+    case Qt::Key_G:
+        key = Key_G;
+        break;
+    case Qt::Key_H:
+        key = Key_H;
+        break;
+    case Qt::Key_I:
+        key = Key_I;
+        break;
+    case Qt::Key_J:
+        key = Key_J;
+        break;
+    case Qt::Key_K:
+        key = Key_K;
+        break;
+    case Qt::Key_L:
+        key = Key_L;
+        break;
+    case Qt::Key_M:
+        key = Key_M;
+        break;
+    case Qt::Key_N:
+        key = Key_N;
+        break;
+    case Qt::Key_O:
+        key = Key_O;
+        break;
+    case Qt::Key_P:
+        key = Key_P;
+        break;
+    case Qt::Key_Q:
+        key = Key_Q;
+        break;
+    case Qt::Key_R:
+        key = Key_R;
+        break;
+    case Qt::Key_S:
+        key = Key_S;
+        break;
+    case Qt::Key_T:
+        key = Key_T;
+        break;
+    case Qt::Key_U:
+        key = Key_U;
+        break;
+    case Qt::Key_V:
+        key = Key_V;
+        break;
+    case Qt::Key_W:
+        key = Key_W;
+        break;
+    case Qt::Key_X:
+        key = Key_X;
+        break;
+    case Qt::Key_Y:
+        key = Key_Y;
+        break;
+    case Qt::Key_Z:
+        key = Key_Z;
+        break;
+    case Qt::Key_BracketLeft:
+        key = Key_LeftBracket;
+        break;
+    case Qt::Key_BracketRight:
+        key = Key_RightBracket;
+        break;
+    case Qt::Key_Backslash:
+        key = Key_Backslash;
+        break;
+        //        case Qt::Key_fk: ???
+        //            key = Key_Circumflex;
+        //            break;
+    case Qt::Key_Underscore:
+        key = Key_Underscore;
+        break;
+    case Qt::Key_BraceLeft:
+        key = Key_LeftBrace;
+        break;
+    case Qt::Key_BraceRight:
+        key = Key_RightBrace;
+        break;
+    case Qt::Key_Bar:
+        key = Key_Pipe;
+        break;
+    case Qt::Key_AsciiTilde: //? Unsure about it
+        key = Key_Tilde;
+        break;
+        //        case Qt::Key_AsciiTilde: ???
+        //            key = Key_Backtick;
+        //            break;
+        // On serenity - super/meta R/L are distinguished by key modifiers
+    case Qt::Key_Super_L:
+        key = Key_Super;
+        break;
+    case Qt::Key_Menu:
+        key = Key_Menu;
+        break;
+    }
+    return key;
+}
+
 void WebView::mouseMoveEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
-    auto modifiers = get_modifiers_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     m_page_client->page().handle_mousemove(to_content(position), buttons, modifiers);
 }
 
@@ -422,7 +769,7 @@ void WebView::mousePressEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
-    auto modifiers = get_modifiers_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     m_page_client->page().handle_mousedown(to_content(position), button, modifiers);
 }
 
@@ -430,8 +777,25 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
-    auto modifiers = get_modifiers_from_qt_event(*event);
+    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     m_page_client->page().handle_mouseup(to_content(position), button, modifiers);
+}
+
+void WebView::keyPressEvent(QKeyEvent* event)
+{
+    auto keycode = get_keycode_from_qt_keyboard_event(*event);
+    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
+    auto point = event->text()[0].unicode();
+    //    dbgln(String::formatted("keycode={}, modifiers={}, point={}", (int32_t)keycode, modifiers, point));
+    m_page_client->page().handle_keydown(keycode, modifiers, point);
+}
+
+void WebView::keyReleaseEvent(QKeyEvent* event)
+{
+    auto keycode = get_keycode_from_qt_keyboard_event(*event);
+    auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
+    auto point = event->text()[0].unicode();
+    m_page_client->page().handle_keyup(keycode, modifiers, point);
 }
 
 Gfx::IntPoint WebView::to_content(Gfx::IntPoint viewport_position) const

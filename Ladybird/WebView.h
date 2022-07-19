@@ -33,7 +33,8 @@ public:
     virtual void mouseMoveEvent(QMouseEvent*) override;
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
-
+    virtual void keyPressEvent(QKeyEvent* event) override;
+    virtual void keyReleaseEvent(QKeyEvent* event) override;
     void debug_request(String const& request, String const& argument);
 
     String source() const;
