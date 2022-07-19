@@ -48,12 +48,27 @@ void StackingContext::sort()
         child->sort();
 }
 
+static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phase)
+{
+    // There are not a fully correct mapping since some stacking context phases are combind.
+    switch (phase) {
+    case StackingContext::StackingContextPaintPhase::Floats:
+    case StackingContext::StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced:
+    case StackingContext::StackingContextPaintPhase::BackgroundAndBorders:
+        return PaintPhase::Background;
+    case StackingContext::StackingContextPaintPhase::Foreground:
+        return PaintPhase::Foreground;
+    case StackingContext::StackingContextPaintPhase::FocusAndOverlay:
+        return PaintPhase::Overlay;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
 {
-    if (phase == StackingContextPaintPhase::Foreground) {
-        if (auto* paintable = box.paintable())
-            paintable->before_children_paint(context, PaintPhase::Foreground);
-    }
+    if (auto* paintable = box.paintable())
+        paintable->before_children_paint(context, to_paint_phase(phase));
 
     box.for_each_child([&](auto& child) {
         // If `child` establishes its own stacking context, skip over it.
@@ -104,10 +119,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
         }
     });
 
-    if (phase == StackingContextPaintPhase::Foreground) {
-        if (auto* paintable = box.paintable())
-            paintable->after_children_paint(context, PaintPhase::Foreground);
-    }
+    if (auto* paintable = box.paintable())
+        paintable->after_children_paint(context, to_paint_phase(phase));
 }
 
 void StackingContext::paint_internal(PaintContext& context) const
