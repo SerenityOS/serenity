@@ -27,6 +27,7 @@
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <string.h>
 #include <sys/types.h>
 #include <syscall.h>
@@ -228,8 +229,8 @@ static void allocate_tls()
 
 static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
 {
-    __pthread_mutex_lock(&s_loader_lock);
-    ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
+    pthread_mutex_lock(&s_loader_lock);
+    ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     for (auto& it : s_global_objects) {
         auto& object = it.value;
@@ -385,8 +386,8 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlclose: {}", handle);
 
-    __pthread_mutex_lock(&s_loader_lock);
-    ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
+    pthread_mutex_lock(&s_loader_lock);
+    ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     // FIXME: this will not currently destroy the dynamic object
     // because we're intentionally holding a strong reference to it
@@ -437,9 +438,9 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     auto library_name = get_library_name(filename ? filename : s_main_program_name);
 
-    if (__pthread_mutex_trylock(&s_loader_lock) != 0)
+    if (pthread_mutex_trylock(&s_loader_lock) != 0)
         return DlErrorMessage { "Nested calls to dlopen() are not permitted." };
-    ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
+    ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     auto existing_elf_object = s_global_objects.get(library_name);
     if (existing_elf_object.has_value()) {
@@ -484,8 +485,8 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlsym: {}, {}", handle, symbol_name);
 
-    __pthread_mutex_lock(&s_loader_lock);
-    ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
+    pthread_mutex_lock(&s_loader_lock);
+    ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     StringView symbol_name_view { symbol_name, strlen(symbol_name) };
     Optional<DynamicObject::SymbolLookupResult> symbol;
@@ -510,8 +511,8 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
 {
     VirtualAddress user_addr { addr };
-    __pthread_mutex_lock(&s_loader_lock);
-    ScopeGuard unlock_guard = [] { __pthread_mutex_unlock(&s_loader_lock); };
+    pthread_mutex_lock(&s_loader_lock);
+    ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
     RefPtr<DynamicObject> best_matching_library;
     VirtualAddress best_library_offset;

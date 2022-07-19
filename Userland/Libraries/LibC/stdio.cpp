@@ -534,12 +534,12 @@ bool FILE::Buffer::enqueue_front(u8 byte)
 
 void FILE::lock()
 {
-    __pthread_mutex_lock(&m_mutex);
+    pthread_mutex_lock(&m_mutex);
 }
 
 void FILE::unlock()
 {
-    __pthread_mutex_unlock(&m_mutex);
+    pthread_mutex_unlock(&m_mutex);
 }
 
 extern "C" {

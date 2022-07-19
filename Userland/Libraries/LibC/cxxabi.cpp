@@ -12,6 +12,7 @@
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/mallocdefs.h>
 #include <assert.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,13 +81,13 @@ void __begin_atexit_locking()
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle)
 {
-    __pthread_mutex_lock(&atexit_mutex);
+    pthread_mutex_lock(&atexit_mutex);
 
     // allocate initial atexit region
     if (!atexit_entries) {
         atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_region_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (atexit_entries == MAP_FAILED) {
-            __pthread_mutex_unlock(&atexit_mutex);
+            pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap");
             _exit(1);
         }
@@ -100,7 +101,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
 
         auto* new_atexit_entries = (AtExitEntry*)mmap(nullptr, new_atexit_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (new_atexit_entries == MAP_FAILED) {
-            __pthread_mutex_unlock(&atexit_mutex);
+            pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap (new size)");
             return -1;
         }
@@ -118,7 +119,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle };
     lock_atexit_handlers();
 
-    __pthread_mutex_unlock(&atexit_mutex);
+    pthread_mutex_unlock(&atexit_mutex);
 
     return 0;
 }
@@ -132,7 +133,7 @@ void __cxa_finalize(void* dso_handle)
     // Multiple calls to __cxa_finalize shall not result in calling termination function entries multiple times;
     // the implementation may either remove entries or mark them finished.
 
-    __pthread_mutex_lock(&atexit_mutex);
+    pthread_mutex_lock(&atexit_mutex);
 
     if (atexit_entry_count > atexit_called_entries->size())
         atexit_called_entries->grow(atexit_entry_count, false);
@@ -147,13 +148,13 @@ void __cxa_finalize(void* dso_handle)
         if (needs_calling) {
             dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
             atexit_called_entries->set(entry_index, true);
-            __pthread_mutex_unlock(&atexit_mutex);
+            pthread_mutex_unlock(&atexit_mutex);
             exit_entry.method(exit_entry.parameter);
-            __pthread_mutex_lock(&atexit_mutex);
+            pthread_mutex_lock(&atexit_mutex);
         }
     }
 
-    __pthread_mutex_unlock(&atexit_mutex);
+    pthread_mutex_unlock(&atexit_mutex);
 }
 
 __attribute__((noreturn)) void __cxa_pure_virtual()
