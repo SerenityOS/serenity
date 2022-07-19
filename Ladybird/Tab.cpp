@@ -75,7 +75,7 @@ Tab::Tab(QMainWindow* window)
 
 void Tab::navigate(QString url)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive))
+    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
         url = "http://" + url;
     view().load(url.toUtf8().data());
 }
