@@ -225,6 +225,8 @@ namespace Intl {
 JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
+class MathematicalValue;
+
 // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
 class Segments;
 class SegmentsPrototype;
