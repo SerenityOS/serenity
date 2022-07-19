@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     auto number = TRY(vm.argument(0).to_number(global_object));
 
     // 4. Return ! ResolvePlural(pr, n).
-    auto plurality = resolve_plural(global_object, *plural_rules, number);
+    auto plurality = resolve_plural(*plural_rules, number);
     return js_string(vm, Unicode::plural_category_to_string(plurality));
 }
 

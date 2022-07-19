@@ -94,13 +94,13 @@ Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralFor
 }
 
 // 16.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/ecma402/#sec-resolveplural
-Unicode::PluralCategory resolve_plural(GlobalObject& global_object, PluralRules const& plural_rules, Value number)
+Unicode::PluralCategory resolve_plural(PluralRules const& plural_rules, Value number)
 {
-    return resolve_plural(global_object, plural_rules, plural_rules.type(), number);
+    return resolve_plural(plural_rules, plural_rules.type(), number);
 }
 
 // Non-standard overload of ResolvePlural to allow using the AO without an Intl.PluralRules object.
-Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormatBase const& number_format, Unicode::PluralForm type, Value number)
+Unicode::PluralCategory resolve_plural(NumberFormatBase const& number_format, Unicode::PluralForm type, Value number)
 {
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
@@ -118,7 +118,7 @@ Unicode::PluralCategory resolve_plural(GlobalObject& global_object, NumberFormat
     // 6. Let type be pluralRules.[[Type]].
 
     // 7. Let res be ! FormatNumericToString(pluralRules, n).
-    auto result = format_numeric_to_string(global_object, number_format, number);
+    auto result = format_numeric_to_string(number_format, number);
 
     // 8. Let s be res.[[FormattedString]].
     auto const& string = result.formatted_string;
@@ -157,10 +157,10 @@ ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& gl
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlStartRangeAfterEndRange, start, end);
 
     // 7. Let xp be ! ResolvePlural(pluralRules, x).
-    auto start_plurality = resolve_plural(global_object, plural_rules, start);
+    auto start_plurality = resolve_plural(plural_rules, start);
 
     // 8. Let yp be ! ResolvePlural(pluralRules, y).
-    auto end_plurality = resolve_plural(global_object, plural_rules, end);
+    auto end_plurality = resolve_plural(plural_rules, end);
 
     // 9. Let locale be pluralRules.[[Locale]].
     auto const& locale = plural_rules.locale();

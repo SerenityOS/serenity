@@ -11,6 +11,7 @@
 namespace JS::Intl {
 
 // 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
+// 1.1.4 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
 NumberFormatFunction* NumberFormatFunction::create(GlobalObject& global_object, NumberFormat& number_format)
 {
     return global_object.heap().allocate<NumberFormatFunction>(global_object, number_format, *global_object.function_prototype());
@@ -41,12 +42,12 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
     // 3. If value is not provided, let value be undefined.
     auto value = vm.argument(0);
 
-    // 4. Let x be ? ToNumeric(value).
-    value = TRY(value.to_numeric(global_object));
+    // 4. Let x be ? ToIntlMathematicalValue(value).
+    auto mathematical_value = TRY(to_intl_mathematical_value(global_object, value));
 
     // 5. Return ? FormatNumeric(nf, x).
     // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = format_numeric(global_object, m_number_format, value);
+    auto formatted = format_numeric(global_object, m_number_format, move(mathematical_value));
     return js_string(vm, move(formatted));
 }
 

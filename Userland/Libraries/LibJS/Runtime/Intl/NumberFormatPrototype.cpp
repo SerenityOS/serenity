@@ -59,6 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 }
 
 // 15.3.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
+// 1.4.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formattoparts
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 {
     auto value = vm.argument(0);
@@ -67,12 +68,12 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
     auto* number_format = TRY(typed_this_object(global_object));
 
-    // 3. Let x be ? ToNumeric(value).
-    value = TRY(value.to_numeric(global_object));
+    // 3. Let x be ? ToIntlMathematicalValue(value).
+    auto mathematical_value = TRY(to_intl_mathematical_value(global_object, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
     // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(global_object, *number_format, value);
+    return format_numeric_to_parts(global_object, *number_format, move(mathematical_value));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
