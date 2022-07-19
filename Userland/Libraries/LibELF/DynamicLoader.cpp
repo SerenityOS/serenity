@@ -350,7 +350,6 @@ void DynamicLoader::load_program_headers()
     Vector<ProgramHeaderRegion, 4> load_regions;
     Vector<ProgramHeaderRegion, 3> map_regions;
     Vector<ProgramHeaderRegion, 1> copy_regions;
-    Optional<ProgramHeaderRegion> tls_region;
     Optional<ProgramHeaderRegion> relro_region;
 
     VirtualAddress dynamic_region_desired_vaddr;
@@ -359,8 +358,7 @@ void DynamicLoader::load_program_headers()
         ProgramHeaderRegion region {};
         region.set_program_header(program_header.raw_header());
         if (region.is_tls_template()) {
-            VERIFY(!tls_region.has_value());
-            tls_region = region;
+            // Skip, this is handled in DynamicLoader::copy_initial_tls_data_into.
         } else if (region.is_load()) {
             if (region.size_in_memory() == 0)
                 return;
@@ -464,8 +462,6 @@ void DynamicLoader::load_program_headers()
 
         memcpy(data_segment_start.as_ptr(), (u8*)m_file_data + region.offset(), region.size_in_image());
     }
-
-    // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
 DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicObject::Relocation& relocation, ShouldInitializeWeak should_initialize_weak)
