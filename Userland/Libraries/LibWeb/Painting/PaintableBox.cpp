@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
@@ -242,8 +243,11 @@ BorderRadiiData PaintableBox::normalized_border_radii_data() const
         computed_values().border_bottom_left_radius());
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
     // FIXME: Support more overflow variations.
     auto clip_rect = absolute_padding_box_rect().to_rounded<int>();
     auto overflow_x = computed_values().overflow_x();
@@ -277,8 +281,11 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) cons
     }
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
     // FIXME: Support more overflow variations.
     if (m_clipping_overflow) {
         context.painter().restore();
