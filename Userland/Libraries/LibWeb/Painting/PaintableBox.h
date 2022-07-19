@@ -30,13 +30,6 @@ public:
         Gfx::FloatRect scrollable_overflow_rect;
         Gfx::FloatPoint scroll_offset;
     };
-    Optional<OverflowData> m_overflow_data;
-
-    Gfx::FloatPoint m_offset;
-    Gfx::FloatSize m_content_size;
-
-    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
-    Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     Gfx::FloatRect absolute_rect() const;
     Gfx::FloatPoint effective_offset() const;
@@ -133,6 +126,14 @@ protected:
     Painting::BorderRadiiData normalized_border_radii_data() const;
 
 private:
+    Optional<OverflowData> m_overflow_data;
+
+    Gfx::FloatPoint m_offset;
+    Gfx::FloatSize m_content_size;
+
+    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
+    Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
+
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
