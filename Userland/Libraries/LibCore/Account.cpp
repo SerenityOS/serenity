@@ -68,6 +68,15 @@ ErrorOr<Account> Account::from_passwd(passwd const& pwd, spwd const& spwd)
     return account;
 }
 
+String Account::parse_path_with_uid(StringView general_path, Optional<uid_t> uid)
+{
+    if (general_path.contains("%uid"sv)) {
+        auto const final_uid = uid.has_value() ? uid.value() : getuid();
+        return general_path.replace("%uid"sv, String::number(final_uid), ReplaceMode::All);
+    }
+    return general_path;
+}
+
 ErrorOr<Account> Account::self([[maybe_unused]] Read options)
 {
     Vector<gid_t> extra_gids = TRY(Core::System::getgroups());

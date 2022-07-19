@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/Account.h>
 #include <LibCore/Stream.h>
 #include <LibIPC/Connection.h>
 
@@ -17,7 +18,8 @@ public:                                                                         
     template<typename Klass = klass, class... Args>                                                    \
     static ErrorOr<NonnullRefPtr<klass>> try_create(Args&&... args)                                    \
     {                                                                                                  \
-        auto socket = TRY(Core::Stream::LocalSocket::connect(socket_path));                            \
+        auto parsed_socket_path { Core::Account::parse_path_with_uid(socket_path) };                   \
+        auto socket = TRY(Core::Stream::LocalSocket::connect(move(parsed_socket_path)));               \
         /* We want to rate-limit our clients */                                                        \
         TRY(socket->set_blocking(true));                                                               \
                                                                                                        \

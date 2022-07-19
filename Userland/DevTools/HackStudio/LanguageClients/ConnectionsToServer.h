@@ -15,7 +15,7 @@
 #define LANGUAGE_CLIENT(language_name_, socket_name)                                                    \
     namespace language_name_ {                                                                          \
     class ConnectionToServer final : public HackStudio::ConnectionToServer {                            \
-        IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/portal/language/" #socket_name)                 \
+        IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/portal/language/" socket_name)                  \
     public:                                                                                             \
         static char const* language_name() { return #language_name_; }                                  \
                                                                                                         \
@@ -29,8 +29,8 @@
 
 namespace LanguageClients {
 
-LANGUAGE_CLIENT(Cpp, cpp)
-LANGUAGE_CLIENT(Shell, shell)
+LANGUAGE_CLIENT(Cpp, "cpp"sv)
+LANGUAGE_CLIENT(Shell, "shell"sv)
 
 }
 

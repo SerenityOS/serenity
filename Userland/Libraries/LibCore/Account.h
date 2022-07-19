@@ -34,6 +34,7 @@ public:
 
     // FIXME: Convert the methods below to take StringViews instead.
 
+    static String parse_path_with_uid(StringView general_path, Optional<uid_t> force_uid = {});
     static ErrorOr<Account> self(Read options = Read::All);
     static ErrorOr<Account> from_name(char const* username, Read options = Read::All);
     static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);

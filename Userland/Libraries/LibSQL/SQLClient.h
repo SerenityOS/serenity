@@ -16,7 +16,7 @@ namespace SQL {
 class SQLClient
     : public IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>
     , public SQLClientEndpoint {
-    IPC_CLIENT_CONNECTION(SQLClient, "/tmp/portal/sql")
+    IPC_CLIENT_CONNECTION(SQLClient, "/tmp/portal/sql"sv)
     virtual ~SQLClient() = default;
 
     Function<void(int, String const&)> on_connected;

@@ -16,7 +16,7 @@ namespace GUI {
 class ConnectionToWindowManagerServer final
     : public IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
     , public WindowManagerClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToWindowManagerServer, "/tmp/portal/wm")
+    IPC_CLIENT_CONNECTION(ConnectionToWindowManagerServer, "/tmp/portal/wm"sv)
 
 public:
     static ConnectionToWindowManagerServer& the();

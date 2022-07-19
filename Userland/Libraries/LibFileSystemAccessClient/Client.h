@@ -23,7 +23,7 @@ using Result = ErrorOr<NonnullRefPtr<Core::File>>;
 class Client final
     : public IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
     , public FileSystemAccessClientEndpoint {
-    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/filesystemaccess")
+    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/filesystemaccess"sv)
 
 public:
     Result try_request_file_read_only_approved(GUI::Window* parent_window, String const& path);
