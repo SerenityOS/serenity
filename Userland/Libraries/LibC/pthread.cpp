@@ -64,9 +64,6 @@ extern "C" {
 
 static void* pthread_create_helper(void* (*routine)(void*), void* argument, void* stack_location, size_t stack_size)
 {
-    // HACK: This is a __thread - marked thread-local variable. If we initialize it globally, VERY weird errors happen.
-    // Therefore, we need to do the initialization here and in __malloc_init().
-    s_allocation_enabled = true;
     s_stack_location = stack_location;
     s_stack_size = stack_size;
     void* ret_val = routine(argument);

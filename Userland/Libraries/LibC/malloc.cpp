@@ -291,9 +291,7 @@ enum class CallerWillInitializeMemory {
 };
 
 #ifndef NO_TLS
-// HACK: This is a __thread - marked thread-local variable. If we initialize it globally here, VERY weird errors happen.
-// The initialization happens in __malloc_init() and pthread_create_helper().
-__thread bool s_allocation_enabled;
+__thread bool s_allocation_enabled = true;
 #endif
 
 static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializeMemory caller_will_initialize_memory)
@@ -697,12 +695,6 @@ void* realloc(void* ptr, size_t size)
 
 void __malloc_init()
 {
-#ifndef NO_TLS
-    // HACK: This is a __thread - marked thread-local variable. If we initialize it globally, VERY weird errors happen.
-    // Therefore, we need to do the initialization here and in pthread_create_helper().
-    s_allocation_enabled = true;
-#endif
-
     s_in_userspace_emulator = (int)syscall(SC_emuctl, 0) != -ENOSYS;
     if (s_in_userspace_emulator) {
         // Don't bother scrubbing memory if we're running in UE since it
