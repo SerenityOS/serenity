@@ -136,7 +136,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
     auto const& computed_values = node.computed_values();
 
-    auto is_definite_size = [&](CSS::LengthPercentage const& size, bool width) {
+    auto is_definite_size = [&](CSS::LengthPercentage const& size, float& resolved_definite_size, bool width) {
         // A size that can be determined without performing layout; that is,
         // a <length>,
         // a measure of text (without consideration of line-wrapping),
@@ -147,21 +147,34 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
         if (size.is_auto()) {
             // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
-            if (width && node.parent() && !node.parent()->computed_values().display().is_flex_inside())
-                return containing_block_has_definite_size;
+            if (width && node.parent() && !node.parent()->computed_values().display().is_flex_inside()) {
+                if (containing_block_has_definite_size) {
+                    resolved_definite_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
+                    return true;
+                }
+                return false;
+            }
             return false;
         }
 
-        if (size.is_length())
+        if (size.is_length()) {
+            resolved_definite_size = size.length().to_px(node);
             return true;
-        if (size.is_percentage())
-            return containing_block_has_definite_size;
+        }
+        if (size.is_percentage()) {
+            if (containing_block_has_definite_size) {
+                auto containing_block_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
+                resolved_definite_size = containing_block_size * size.percentage().as_fraction();
+                return true;
+            }
+            return false;
+        }
         // FIXME: Determine if calc() value is definite.
         return false;
     };
 
-    m_has_definite_width = is_definite_size(computed_values.width(), true);
-    m_has_definite_height = is_definite_size(computed_values.height(), false);
+    m_has_definite_width = is_definite_size(computed_values.width(), m_content_width, true);
+    m_has_definite_height = is_definite_size(computed_values.height(), m_content_height, false);
 }
 
 void LayoutState::UsedValues::set_content_width(float width)
