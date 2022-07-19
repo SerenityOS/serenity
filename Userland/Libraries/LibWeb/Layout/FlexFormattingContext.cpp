@@ -27,12 +27,20 @@ template<typename T>
     return ::max(min, ::min(value, max));
 }
 
-static float get_pixel_size(LayoutState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
+static float get_pixel_width(LayoutState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
 {
     if (!length_percentage.has_value())
         return 0;
-    auto inner_main_size = CSS::Length::make_px(state.get(*box.containing_block()).content_width());
-    return length_percentage->resolved(box, inner_main_size).to_px(box);
+    auto inner_width = CSS::Length::make_px(state.get(*box.containing_block()).content_width());
+    return length_percentage->resolved(box, inner_width).to_px(box);
+}
+
+static float get_pixel_height(LayoutState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
+{
+    if (!length_percentage.has_value())
+        return 0;
+    auto inner_height = CSS::Length::make_px(state.get(*box.containing_block()).content_height());
+    return length_percentage->resolved(box, inner_height).to_px(box);
 }
 
 FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex_container, FormattingContext* parent)
@@ -294,17 +302,21 @@ float FlexFormattingContext::specified_cross_size(Box const& box) const
 float FlexFormattingContext::resolved_definite_cross_size(Box const& box) const
 {
     auto const& cross_value = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
+    if (cross_value.is_auto())
+        return specified_cross_size(flex_container());
     if (cross_value.is_length())
-        return cross_value.length().to_px(box);
+        return specified_cross_size(box);
     return cross_value.resolved(box, CSS::Length::make_px(specified_cross_size(flex_container()))).to_px(box);
 }
 
 float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
 {
-    auto const& cross_value = is_row_layout() ? box.computed_values().width() : box.computed_values().height();
-    if (cross_value.is_length())
-        return cross_value.length().to_px(box);
-    return cross_value.resolved(box, CSS::Length::make_px(specified_main_size(flex_container()))).to_px(box);
+    auto const& main_value = is_row_layout() ? box.computed_values().width() : box.computed_values().height();
+    if (main_value.is_auto())
+        return specified_main_size(flex_container());
+    if (main_value.is_length())
+        return specified_main_size(box);
+    return main_value.resolved(box, CSS::Length::make_px(specified_main_size(flex_container()))).to_px(box);
 }
 
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
@@ -335,15 +347,15 @@ float FlexFormattingContext::specified_main_size_of_child_box(Box const& child_b
 float FlexFormattingContext::specified_main_min_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(m_state, box, box.computed_values().min_width())
-        : get_pixel_size(m_state, box, box.computed_values().min_height());
+        ? get_pixel_width(m_state, box, box.computed_values().min_width())
+        : get_pixel_height(m_state, box, box.computed_values().min_height());
 }
 
 float FlexFormattingContext::specified_cross_min_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(m_state, box, box.computed_values().min_height())
-        : get_pixel_size(m_state, box, box.computed_values().min_width());
+        ? get_pixel_height(m_state, box, box.computed_values().min_height())
+        : get_pixel_width(m_state, box, box.computed_values().min_width());
 }
 
 bool FlexFormattingContext::has_main_max_size(Box const& box) const
@@ -361,15 +373,15 @@ bool FlexFormattingContext::has_cross_max_size(Box const& box) const
 float FlexFormattingContext::specified_main_max_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(m_state, box, box.computed_values().max_width())
-        : get_pixel_size(m_state, box, box.computed_values().max_height());
+        ? get_pixel_width(m_state, box, box.computed_values().max_width())
+        : get_pixel_height(m_state, box, box.computed_values().max_height());
 }
 
 float FlexFormattingContext::specified_cross_max_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(m_state, box, box.computed_values().max_height())
-        : get_pixel_size(m_state, box, box.computed_values().max_width());
+        ? get_pixel_height(m_state, box, box.computed_values().max_height())
+        : get_pixel_width(m_state, box, box.computed_values().max_width());
 }
 
 float FlexFormattingContext::calculated_main_size(Box const& box) const
@@ -613,7 +625,9 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (flex_item.used_flex_basis_is_definite) {
-            return get_pixel_size(m_state, child_box, flex_item.used_flex_basis.length_percentage.value());
+            if (is_row_layout())
+                return get_pixel_width(m_state, child_box, flex_item.used_flex_basis.length_percentage.value());
+            return get_pixel_height(m_state, child_box, flex_item.used_flex_basis.length_percentage.value());
         }
 
         // B. If the flex item has ...
