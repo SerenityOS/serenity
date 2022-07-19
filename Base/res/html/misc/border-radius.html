@@ -223,6 +223,11 @@
             border-radius: 50px;
             padding: 10px;
         }
+
+        .positioned {
+            background-color: red;
+            position: relative;
+        }
     </style>
 </head>
 
@@ -329,6 +334,16 @@
     <a style="display: inline-block; border-radius: 50%; overflow: hidden; width: 100px; height: 100px;">
         <img src="car.png" style="width: 100px; height: 100px">
     </a>
+    <br>
+    <em>A red div with position: relative within a parent with overflow: hidden + a border-radius</em><br>
+    <div class="box" style="border-radius: 10px; overflow: hidden;">
+        <div class="box positioned"></div>
+    </div>
+    <br>
+    <em>A blue (background) div within a parent with overflow: hidden + a border-radius</em><br>
+    <div class="box" style="border-radius: 10px; overflow: hidden;">
+        <div class="box" style="background-color: blue;"></div>
+    </div>
     <br>
     <br>
 
