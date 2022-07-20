@@ -34,6 +34,7 @@ enum class AllFlags {
     Multiline = __Regex_Multiline,                               // Handle newline characters. Match each line, one by one.
     SkipTrimEmptyMatches = __Regex_SkipTrimEmptyMatches,         // Do not remove empty capture group results.
     SingleMatch = __Regex_SingleMatch,                           // Stop after acquiring a single match.
+    UnicodeSets = __Regex_UnicodeSets,                           // Only for ECMA262, Allow set operations in character classes.
     Internal_Stateful = __Regex_Internal_Stateful,               // Make global matches match one result at a time, and further match() calls on the same instance continue where the previous one left off.
     Internal_BrowserExtended = __Regex_Internal_BrowserExtended, // Only for ECMA262, Enable the behaviors defined in section B.1.4. of the ECMA262 spec.
     Internal_ConsiderNewline = __Regex_Internal_ConsiderNewline, // Only for ECMA262, Allow multiline matches to consider newlines as line boundaries.
@@ -66,6 +67,7 @@ enum class ECMAScriptFlags : FlagsUnderlyingType {
     Sticky = (FlagsUnderlyingType)AllFlags::Sticky,
     Multiline = (FlagsUnderlyingType)AllFlags::Multiline,
     StringCopyMatches = (FlagsUnderlyingType)AllFlags::StringCopyMatches,
+    UnicodeSets = (FlagsUnderlyingType)AllFlags::UnicodeSets,
     BrowserExtended = (FlagsUnderlyingType)AllFlags::Internal_BrowserExtended,
 };
 

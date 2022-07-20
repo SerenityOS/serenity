@@ -76,7 +76,10 @@ enum class OpCodeId : ByteCodeValueType {
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)               \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(ScriptExtension)      \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy) \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(LookupTable)
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(LookupTable)          \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(And)                  \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Or)                   \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(EndAndOr)
 
 enum class CharacterCompareType : ByteCodeValueType {
 #define __ENUMERATE_CHARACTER_COMPARE_TYPE(x) x,

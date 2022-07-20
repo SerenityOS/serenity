@@ -930,16 +930,17 @@ bool PosixExtendedParser::parse_root(ByteCode& stack, size_t& match_length_minim
 bool ECMA262Parser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
 {
     auto unicode = m_parser_state.regex_options.has_flag_set(AllFlags::Unicode);
-    if (unicode) {
-        return parse_pattern(stack, match_length_minimum, { .unicode = true, .named = true });
+    auto unicode_sets = m_parser_state.regex_options.has_flag_set(AllFlags::UnicodeSets);
+    if (unicode || unicode_sets) {
+        return parse_pattern(stack, match_length_minimum, { .unicode = true, .named = true, .unicode_sets = unicode_sets });
     }
 
     ByteCode new_stack;
     size_t new_match_length = 0;
-    auto res = parse_pattern(new_stack, new_match_length, { .unicode = false, .named = false });
+    auto res = parse_pattern(new_stack, new_match_length, { .unicode = false, .named = false, .unicode_sets = false });
     if (m_parser_state.named_capture_groups_count > 0) {
         reset();
-        return parse_pattern(stack, match_length_minimum, { .unicode = false, .named = true });
+        return parse_pattern(stack, match_length_minimum, { .unicode = false, .named = true, .unicode_sets = false });
     }
 
     if (!res)
@@ -1136,7 +1137,7 @@ bool ECMA262Parser::parse_quantifiable_assertion(ByteCode& stack, size_t&, Parse
     size_t match_length_minimum = 0;
 
     if (try_skip("="sv)) {
-        if (!parse_inner_disjunction(assertion_stack, match_length_minimum, { .unicode = false, .named = flags.named }))
+        if (!parse_inner_disjunction(assertion_stack, match_length_minimum, { .unicode = false, .named = flags.named, .unicode_sets = false }))
             return false;
 
         stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookAhead);
@@ -1149,7 +1150,7 @@ bool ECMA262Parser::parse_quantifiable_assertion(ByteCode& stack, size_t&, Parse
                 exit_capture_group_scope();
             }
         };
-        if (!parse_inner_disjunction(assertion_stack, match_length_minimum, { .unicode = false, .named = flags.named }))
+        if (!parse_inner_disjunction(assertion_stack, match_length_minimum, { .unicode = false, .named = flags.named, .unicode_sets = false }))
             return false;
 
         stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::NegatedLookAhead);
@@ -1756,6 +1757,7 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
         compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
     }
 
+    // ClassContents :: [empty]
     if (match(TokenType::RightBracket)) {
         consume();
         // Should only have at most an 'Inverse'
@@ -1764,7 +1766,12 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
         return true;
     }
 
-    if (!parse_nonempty_class_ranges(compares, flags))
+    // ClassContents :: [~UnicodeSetsMode] NonemptyClassRanges[?UnicodeMode]
+    if (!flags.unicode_sets && !parse_nonempty_class_ranges(compares, flags))
+        return false;
+
+    // ClassContents :: [+UnicodeSetsMode] ClassSetExpression
+    if (flags.unicode_sets && !parse_class_set_expression(compares))
         return false;
 
     match_length_minimum += 1;
@@ -2027,6 +2034,364 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
     consume(TokenType::RightBracket, Error::MismatchingBracket);
 
     return true;
+}
+
+bool ECMA262Parser::parse_class_set_expression(Vector<CompareTypeAndValuePair>& compares)
+{
+    auto start_position = tell();
+
+    // ClassSetExpression :: ClassUnion | ClassIntersection | ClassSubtraction
+    if (parse_class_subtraction(compares)) {
+        consume(TokenType::RightBracket, Error::MismatchingBracket);
+        return true;
+    }
+    if (has_error())
+        return false;
+
+    back(tell() - start_position + 1);
+    if (parse_class_intersection(compares)) {
+        consume(TokenType::RightBracket, Error::MismatchingBracket);
+        return true;
+    }
+    if (has_error())
+        return false;
+
+    back(tell() - start_position + 1);
+    if (parse_class_union(compares)) {
+        consume(TokenType::RightBracket, Error::MismatchingBracket);
+        return true;
+    }
+
+    return false;
+}
+
+bool ECMA262Parser::parse_class_union(Vector<regex::CompareTypeAndValuePair>& compares)
+{
+    auto start_position = tell();
+    ArmedScopeGuard restore_position { [&] { back(tell() - start_position + 1); } };
+
+    auto first = true;
+
+    // ClassUnion :: ClassSetRange ClassUnion[opt] | ClassSetOperand ClassUnion[opt]
+    for (;;) {
+        if (!parse_class_set_range(compares)) {
+            if (has_error() || match(TokenType::RightBracket))
+                break;
+
+            if (!parse_class_set_operand(compares)) {
+                if (first || has_error())
+                    return false;
+                break;
+            }
+        }
+        first = false;
+    }
+
+    restore_position.disarm();
+    return !has_error();
+}
+
+bool ECMA262Parser::parse_class_intersection(Vector<CompareTypeAndValuePair>& compares)
+{
+    // ClassIntersection :: ClassSetOperand "&&" [lookahead != "&"] ClassSetOperand
+    //                    | ClassIntersection "&&" [lookahead != "&"] ClassSetOperand
+    Vector<CompareTypeAndValuePair> lhs;
+    Vector<CompareTypeAndValuePair> rhs;
+
+    auto start_position = tell();
+    ArmedScopeGuard restore_position { [&] { back(tell() - start_position + 1); } };
+
+    if (!parse_class_set_operand(lhs))
+        return false;
+
+    if (!try_skip("&&"sv))
+        return false;
+
+    compares.append({ CharacterCompareType::And, 0 });
+    compares.extend(move(lhs));
+
+    do {
+        rhs.clear_with_capacity();
+        if (!parse_class_set_operand(rhs))
+            return false;
+
+        compares.extend(rhs);
+
+        if (try_skip("&&&"sv))
+            return false;
+    } while (!has_error() && try_skip("&&"sv));
+
+    compares.append({ CharacterCompareType::EndAndOr, 0 });
+
+    restore_position.disarm();
+    return true;
+}
+
+bool ECMA262Parser::parse_class_subtraction(Vector<CompareTypeAndValuePair>& compares)
+{
+    // ClassSubtraction :: ClassSetOperand "--" ClassSetOperand | ClassSubtraction "--" ClassSetOperand
+    Vector<CompareTypeAndValuePair> lhs;
+    Vector<CompareTypeAndValuePair> rhs;
+
+    auto start_position = tell();
+    ArmedScopeGuard restore_position { [&] { back(tell() - start_position + 1); } };
+
+    if (!parse_class_set_operand(lhs))
+        return false;
+
+    if (!try_skip("--"sv))
+        return false;
+
+    compares.append({ CharacterCompareType::And, 0 });
+    compares.extend(move(lhs));
+
+    do {
+        rhs.clear_with_capacity();
+        if (!parse_class_set_operand(rhs))
+            return false;
+
+        compares.append({ CharacterCompareType::TemporaryInverse, 0 });
+        compares.extend(rhs);
+    } while (!has_error() && try_skip("--"sv));
+
+    compares.append({ CharacterCompareType::EndAndOr, 0 });
+
+    restore_position.disarm();
+    return true;
+}
+
+bool ECMA262Parser::parse_class_set_range(Vector<CompareTypeAndValuePair>& compares)
+{
+    // ClassSetRange :: ClassSetCharacter "-" ClassSetCharacter
+    auto start_position = tell();
+    ArmedScopeGuard restore_position { [&] { back(tell() - start_position + 1); } };
+
+    auto lhs = parse_class_set_character();
+    if (!lhs.has_value())
+        return false;
+
+    if (!match(TokenType::HyphenMinus))
+        return false;
+    consume();
+
+    auto rhs = parse_class_set_character();
+    if (!rhs.has_value())
+        return false;
+
+    compares.append({
+        CharacterCompareType::CharRange,
+        CharRange { lhs.value(), rhs.value() },
+    });
+    restore_position.disarm();
+    return true;
+}
+
+Optional<u32> ECMA262Parser::parse_class_set_character()
+{
+    // ClassSetCharacter :: [lookahead ∉ ClassSetReservedDoublePunctuator] SourceCharacter but not ClassSetSyntaxCharacter
+    //                    | "\" CharacterEscape[+UnicodeMode]
+    //                    | "\" ClassSetReservedPunctuator
+    //                    | "\" b
+    // ClassSetReservedDoublePunctuator :: one of "&&" "!!" "##" "$$" "%%" "**" "++" ",," ".." "::" ";;" "<<" "==" ">>" "??" "@@" "^^" "``" "~~"
+    // ClassSetSyntaxCharacter :: one of "(" ")" "{" "}" "[" "]" "/" "-" "\" "|"
+    // ClassSetReservedPunctuator :: one of "&" "-" "!" "#" "%" "," ":" ";" "<" "=" ">" "@" "`" "~"
+
+    constexpr auto class_set_reserved_double_punctuator = Array {
+        "&&"sv, "!!"sv, "##"sv, "$$"sv, "%%"sv, "**"sv, "++"sv, ",,"sv, ".."sv, "::"sv, ";;"sv, "<<"sv, "=="sv, ">>"sv, "??"sv, "@@"sv, "^^"sv, "``"sv, "~~"sv
+    };
+
+    auto start_position = tell();
+    ArmedScopeGuard restore { [&] { back(tell() - start_position + 1); } };
+
+    if (try_skip("\\"sv)) {
+        if (done()) {
+            set_error(Error::InvalidTrailingEscape);
+            return {};
+        }
+
+        // "\" ClassSetReservedPunctuator
+        for (auto const& reserved : class_set_reserved_double_punctuator) {
+            if (try_skip(reserved)) {
+                // "\" ClassSetReservedPunctuator (ClassSetReservedPunctuator)
+                back();
+
+                restore.disarm();
+                return reserved[0];
+            }
+        }
+        // "\" b
+        if (try_skip("b"sv)) {
+            restore.disarm();
+            return '\b';
+        }
+
+        // "\" CharacterEscape[+UnicodeMode]
+        Vector<CompareTypeAndValuePair> compares;
+        size_t minimum_length = 0;
+        if (parse_character_escape(compares, minimum_length, { .unicode = true })) {
+            VERIFY(compares.size() == 1);
+            auto& compare = compares.first();
+            VERIFY(compare.type == CharacterCompareType::Char);
+            restore.disarm();
+            return compare.value;
+        }
+
+        return {};
+    }
+
+    // [lookahead ∉ ClassSetReservedDoublePunctuator] SourceCharacter but not ClassSetSyntaxCharacter
+    auto lookahead_matches = any_of(class_set_reserved_double_punctuator, [this](auto& reserved) {
+        return try_skip(reserved);
+    });
+
+    if (lookahead_matches)
+        return {};
+
+    for (auto character : { "("sv, ")"sv, "{"sv, "}"sv, "["sv, "]"sv, "/"sv, "-"sv, "\\"sv, "|"sv }) {
+        if (try_skip(character))
+            return {};
+    }
+
+    restore.disarm();
+    return skip();
+}
+
+bool ECMA262Parser::parse_class_set_operand(Vector<regex::CompareTypeAndValuePair>& compares)
+{
+    auto start_position = tell();
+
+    // ClassSetOperand :: ClassSetCharacter | ClassStringDisjunction | NestedClass
+    if (auto character = parse_class_set_character(); character.has_value()) {
+        compares.append({ CharacterCompareType::Char, character.value() });
+        return true;
+    }
+
+    // NestedClass :: "[" [lookahead != "^"] ClassContents[+UnicodeMode +UnicodeSetsMode] "]"
+    //              | "[" "^" ClassContents[+UnicodeMode +UnicodeSetsMode] "]"
+    //              | "\" CharacterClassEscape[+UnicodeMode]
+    if (parse_nested_class(compares))
+        return true;
+
+    if (has_error())
+        return false;
+
+    auto negated = false;
+    if (auto ch = parse_character_class_escape(negated, true); ch.has_value()) {
+        if (negated)
+            compares.append({ CharacterCompareType::TemporaryInverse, 1 });
+        compares.append({ CharacterCompareType::CharClass, (ByteCodeValueType)ch.value() });
+        return true;
+    }
+
+    PropertyEscape property {};
+    if (parse_unicode_property_escape(property, negated)) {
+        if (negated)
+            compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
+        property.visit(
+            [&](Unicode::Property property) {
+                compares.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)property });
+            },
+            [&](Unicode::GeneralCategory general_category) {
+                compares.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)general_category });
+            },
+            [&](Script script) {
+                if (script.is_extension)
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::ScriptExtension, (ByteCodeValueType)script.script });
+                else
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::Script, (ByteCodeValueType)script.script });
+            },
+            [](Empty&) { VERIFY_NOT_REACHED(); });
+        return true;
+    }
+
+    if (has_error())
+        return false;
+
+    // ClassStringDisjunction :: "\q{" ClassStringDisjunctionContents "}"
+    // ClassStringDisjunctionContents :: ClassString | ClassString "|" ClassStringDisjunctionContents
+    // ClassString :: [empty] | NonEmptyClassString
+    // NonEmptyClassString :: ClassCharacter NonEmptyClassString[opt]
+    if (try_skip("\\q{"sv)) {
+        // FIXME: Implement this :P
+        return set_error(Error::InvalidCharacterClass);
+    }
+
+    back(tell() - start_position + 1);
+    return false;
+}
+
+bool ECMA262Parser::parse_nested_class(Vector<regex::CompareTypeAndValuePair>& compares)
+{
+    auto start_position = tell();
+
+    // NestedClass :: "[" [lookahead ≠ ^ ] ClassContents [+UnicodeMode, +UnicodeSetsMode] "]"
+    //              | "[" "^" ClassContents[+UnicodeMode, +UnicodeSetsMode] "]"
+    //              | "\" CharacterClassEscape[+UnicodeMode]
+
+    if (match(TokenType::LeftBracket)) {
+        consume();
+
+        compares.append(CompareTypeAndValuePair { CharacterCompareType::Or, 0 });
+
+        if (match(TokenType::Circumflex)) {
+            // Negated charclass
+            consume();
+            compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
+        }
+
+        // ClassContents :: [empty]
+        if (match(TokenType::RightBracket)) {
+            consume();
+            // Should only have at most an 'Inverse' (after an 'Or')
+            VERIFY(compares.size() <= 2);
+            compares.append(CompareTypeAndValuePair { CharacterCompareType::EndAndOr, 0 });
+            return true;
+        }
+
+        // ClassContents :: [+UnicodeSetsMode] ClassSetExpression
+        if (!parse_class_set_expression(compares))
+            return false;
+
+        compares.append(CompareTypeAndValuePair { CharacterCompareType::EndAndOr, 0 });
+        return true;
+    }
+
+    if (try_skip("\\"sv)) {
+        auto negated = false;
+        if (auto char_class = parse_character_class_escape(negated); char_class.has_value()) {
+            if (negated)
+                compares.append({ CharacterCompareType::TemporaryInverse, 1 });
+            compares.append({ CharacterCompareType::CharClass, (ByteCodeValueType)char_class.value() });
+            return true;
+        }
+
+        PropertyEscape property {};
+        if (parse_unicode_property_escape(property, negated)) {
+            if (negated)
+                compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
+            property.visit(
+                [&](Unicode::Property property) {
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)property });
+                },
+                [&](Unicode::GeneralCategory general_category) {
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)general_category });
+                },
+                [&](Script script) {
+                    if (script.is_extension)
+                        compares.empend(CompareTypeAndValuePair { CharacterCompareType::ScriptExtension, (ByteCodeValueType)script.script });
+                    else
+                        compares.empend(CompareTypeAndValuePair { CharacterCompareType::Script, (ByteCodeValueType)script.script });
+                },
+                [](Empty&) { VERIFY_NOT_REACHED(); });
+            return true;
+        }
+
+        if (has_error())
+            return false;
+    }
+
+    back(tell() - start_position + 1);
+    return false;
 }
 
 bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool& negated)

@@ -435,6 +435,20 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
     bool inverse { false };
     bool temporary_inverse { false };
     bool reset_temp_inverse { false };
+    struct DisjunctionState {
+        bool active { false };
+        bool is_conjunction { false };
+        bool fail { false };
+        size_t initial_position;
+        size_t initial_code_unit_position;
+        Optional<size_t> last_accepted_position {};
+        Optional<size_t> last_accepted_code_unit_position {};
+    };
+
+    Vector<DisjunctionState, 4> disjunction_states;
+    disjunction_states.empend();
+
+    auto current_disjunction_state = [&]() -> DisjunctionState& { return disjunction_states.last(); };
 
     auto current_inversion_state = [&]() -> bool { return temporary_inverse ^ inverse; };
 
@@ -602,15 +616,68 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto script = static_cast<Unicode::Script>(m_bytecode->at(offset++));
             compare_script_extension(input, state, script, current_inversion_state(), inverse_matched);
 
+        } else if (compare_type == CharacterCompareType::And) {
+            disjunction_states.append({
+                .active = true,
+                .is_conjunction = false,
+                .fail = false,
+                .initial_position = state.string_position,
+                .initial_code_unit_position = state.string_position_in_code_units,
+            });
+            continue;
+
+        } else if (compare_type == CharacterCompareType::Or) {
+            disjunction_states.append({
+                .active = true,
+                .is_conjunction = true,
+                .fail = true,
+                .initial_position = state.string_position,
+                .initial_code_unit_position = state.string_position_in_code_units,
+            });
+            continue;
+
+        } else if (compare_type == CharacterCompareType::EndAndOr) {
+            auto disjunction_state = disjunction_states.take_last();
+            if (!disjunction_state.fail) {
+                state.string_position = disjunction_state.last_accepted_position.value_or(disjunction_state.initial_position);
+                state.string_position_in_code_units = disjunction_state.last_accepted_code_unit_position.value_or(disjunction_state.initial_code_unit_position);
+            }
+
         } else {
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
             break;
         }
 
-        if (current_inversion_state() && !inverse && !inverse_matched) {
+        auto& new_disjunction_state = current_disjunction_state();
+        if (current_inversion_state() && (!inverse || new_disjunction_state.active) && !inverse_matched) {
             advance_string_position(state, input.view);
             inverse_matched = true;
+        }
+
+        if (new_disjunction_state.active) {
+            auto failed = (!had_zero_length_match && string_position == state.string_position) || state.string_position > input.view.length();
+
+            if (!failed) {
+                new_disjunction_state.last_accepted_position = state.string_position;
+                new_disjunction_state.last_accepted_code_unit_position = state.string_position_in_code_units;
+            }
+
+            if (new_disjunction_state.is_conjunction)
+                new_disjunction_state.fail = failed && new_disjunction_state.fail;
+            else
+                new_disjunction_state.fail = failed || new_disjunction_state.fail;
+
+            state.string_position = new_disjunction_state.initial_position;
+            state.string_position_in_code_units = new_disjunction_state.initial_code_unit_position;
+        }
+    }
+
+    auto& new_disjunction_state = current_disjunction_state();
+    if (new_disjunction_state.active) {
+        if (!new_disjunction_state.fail) {
+            state.string_position = new_disjunction_state.last_accepted_position.value_or(new_disjunction_state.initial_position);
+            state.string_position_in_code_units = new_disjunction_state.last_accepted_code_unit_position.value_or(new_disjunction_state.initial_code_unit_position);
         }
     }
 
@@ -843,6 +910,12 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
             auto count = m_bytecode->at(offset++);
             for (size_t i = 0; i < count; ++i)
                 result.append({ CharacterCompareType::CharRange, m_bytecode->at(offset++) });
+        } else if (compare_type == CharacterCompareType::GeneralCategory
+            || compare_type == CharacterCompareType::Property
+            || compare_type == CharacterCompareType::Script
+            || compare_type == CharacterCompareType::ScriptExtension) {
+            auto value = m_bytecode->at(offset++);
+            result.append({ compare_type, value });
         } else {
             result.append({ compare_type, 0 });
         }
@@ -867,39 +940,39 @@ Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput>
             auto ch = m_bytecode->at(offset++);
             auto is_ascii = is_ascii_printable(ch);
             if (is_ascii)
-                result.empend(String::formatted("value='{:c}'", static_cast<char>(ch)));
+                result.empend(String::formatted(" value='{:c}'", static_cast<char>(ch)));
             else
-                result.empend(String::formatted("value={:x}", ch));
+                result.empend(String::formatted(" value={:x}", ch));
 
             if (!view.is_null() && view.length() > string_start_offset) {
                 if (is_ascii) {
                     result.empend(String::formatted(
-                        "compare against: '{}'",
+                        " compare against: '{}'",
                         view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string()));
                 } else {
                     auto str = view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string();
                     u8 buf[8] { 0 };
                     __builtin_memcpy(buf, str.characters(), min(str.length(), sizeof(buf)));
-                    result.empend(String::formatted("compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
+                    result.empend(String::formatted(" compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
                         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]));
                 }
             }
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
-            result.empend(String::formatted("number={}", ref));
+            result.empend(String::formatted(" number={}", ref));
             if (input.has_value()) {
                 if (state().capture_group_matches.size() > input->match_index) {
                     auto& match = state().capture_group_matches[input->match_index];
                     if (match.size() > ref) {
                         auto& group = match[ref];
-                        result.empend(String::formatted("left={}", group.left_column));
-                        result.empend(String::formatted("right={}", group.left_column + group.view.length_in_code_units()));
-                        result.empend(String::formatted("contents='{}'", group.view));
+                        result.empend(String::formatted(" left={}", group.left_column));
+                        result.empend(String::formatted(" right={}", group.left_column + group.view.length_in_code_units()));
+                        result.empend(String::formatted(" contents='{}'", group.view));
                     } else {
-                        result.empend(String::formatted("(invalid ref, max={})", match.size() - 1));
+                        result.empend(String::formatted(" (invalid ref, max={})", match.size() - 1));
                     }
                 } else {
-                    result.empend(String::formatted("(invalid index {}, max={})", input->match_index, state().capture_group_matches.size() - 1));
+                    result.empend(String::formatted(" (invalid index {}, max={})", input->match_index, state().capture_group_matches.size() - 1));
                 }
             }
         } else if (compare_type == CharacterCompareType::String) {
@@ -907,35 +980,42 @@ Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput>
             StringBuilder str_builder;
             for (size_t i = 0; i < length; ++i)
                 str_builder.append(m_bytecode->at(offset++));
-            result.empend(String::formatted("value=\"{}\"", str_builder.string_view().substring_view(0, length)));
+            result.empend(String::formatted(" value=\"{}\"", str_builder.string_view().substring_view(0, length)));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
-                    "compare against: \"{}\"",
+                    " compare against: \"{}\"",
                     input.value().view.substring_view(string_start_offset, string_start_offset + length > view.length() ? 0 : length).to_string()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
-            result.empend(String::formatted("ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
+            result.empend(String::formatted(" ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
-                    "compare against: '{}'",
+                    " compare against: '{}'",
                     input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
-            result.empend(String::formatted("ch_range={:x}-{:x}", value.from, value.to));
+            result.empend(String::formatted(" ch_range={:x}-{:x}", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
-                    "compare against: '{}'",
+                    " compare against: '{}'",
                     input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::LookupTable) {
             auto count = m_bytecode->at(offset++);
             for (size_t j = 0; j < count; ++j) {
                 auto range = (CharRange)m_bytecode->at(offset++);
-                result.append(String::formatted("{:x}-{:x}", range.from, range.to));
+                result.append(String::formatted(" {:x}-{:x}", range.from, range.to));
             }
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
-                    "compare against: '{}'",
+                    " compare against: '{}'",
                     input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+        } else if (compare_type == CharacterCompareType::GeneralCategory
+            || compare_type == CharacterCompareType::Property
+            || compare_type == CharacterCompareType::Script
+            || compare_type == CharacterCompareType::ScriptExtension) {
+
+            auto value = m_bytecode->at(offset++);
+            result.empend(String::formatted(" value={}", value));
         }
     }
     return result;
