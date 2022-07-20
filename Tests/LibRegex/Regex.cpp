@@ -765,6 +765,45 @@ TEST_CASE(ECMA262_unicode_match)
     }
 }
 
+TEST_CASE(ECMA262_unicode_sets_match)
+{
+    struct _test {
+        StringView pattern;
+        StringView subject;
+        bool matches { true };
+        ECMAScriptFlags options {};
+    };
+
+    constexpr _test tests[] {
+        { "[\\w--x]"sv, "x"sv, false },
+        { "[\\w&&x]"sv, "y"sv, false },
+        { "[\\w--x]"sv, "y"sv, true },
+        { "[\\w&&x]"sv, "x"sv, true },
+        { "[[0-9\\w]--x--6]"sv, "6"sv, false },
+        { "[[0-9\\w]--x--6]"sv, "x"sv, false },
+        { "[[0-9\\w]--x--6]"sv, "y"sv, true },
+        { "[[0-9\\w]--x--6]"sv, "9"sv, true },
+        { "[\\w&&\\d]"sv, "a"sv, false },
+        { "[\\w&&\\d]"sv, "4"sv, true },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::UnicodeSets | test.options);
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
+
+        EXPECT_EQ(re.parser_result.error, regex::Error::NoError);
+        auto result = re.match(test.subject).success;
+        EXPECT_EQ(result, test.matches);
+    }
+}
+
 TEST_CASE(ECMA262_property_match)
 {
     struct _test {

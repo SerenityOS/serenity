@@ -205,6 +205,9 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
         case CharacterCompareType::GeneralCategory:
         case CharacterCompareType::Script:
         case CharacterCompareType::ScriptExtension:
+        case CharacterCompareType::And:
+        case CharacterCompareType::Or:
+        case CharacterCompareType::EndAndOr:
             // FIXME: These are too difficult to handle, so bail out.
             return true;
         case CharacterCompareType::Undefined:
@@ -274,6 +277,9 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
         case CharacterCompareType::GeneralCategory:
         case CharacterCompareType::Script:
         case CharacterCompareType::ScriptExtension:
+        case CharacterCompareType::And:
+        case CharacterCompareType::Or:
+        case CharacterCompareType::EndAndOr:
             // FIXME: These are too difficult to handle, so bail out.
             return true;
         case CharacterCompareType::Undefined:
@@ -785,6 +791,8 @@ enum class LookupTableInsertionOutcome {
     ReplaceWithAnyChar,
     TemporaryInversionNeeded,
     PermanentInversionNeeded,
+    FlushOnInsertion,
+    FinishFlushOnInsertion,
     CannotPlaceInTable,
 };
 static LookupTableInsertionOutcome insert_into_lookup_table(RedBlackTree<ByteCodeValueType, CharRange>& table, CompareTypeAndValuePair pair)
@@ -806,11 +814,16 @@ static LookupTableInsertionOutcome insert_into_lookup_table(RedBlackTree<ByteCod
         table.insert(range.from, range);
         break;
     }
+    case CharacterCompareType::EndAndOr:
+        return LookupTableInsertionOutcome::FinishFlushOnInsertion;
+    case CharacterCompareType::And:
+        return LookupTableInsertionOutcome::FlushOnInsertion;
     case CharacterCompareType::Reference:
     case CharacterCompareType::Property:
     case CharacterCompareType::GeneralCategory:
     case CharacterCompareType::Script:
     case CharacterCompareType::ScriptExtension:
+    case CharacterCompareType::Or:
         return LookupTableInsertionOutcome::CannotPlaceInTable;
     case CharacterCompareType::Undefined:
     case CharacterCompareType::RangeExpressionDummy:
@@ -830,7 +843,12 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
     if (pairs.size() <= 1) {
         for (auto& pair : pairs) {
             arguments.append(to_underlying(pair.type));
-            if (pair.type != CharacterCompareType::AnyChar && pair.type != CharacterCompareType::TemporaryInverse && pair.type != CharacterCompareType::Inverse)
+            if (pair.type != CharacterCompareType::AnyChar
+                && pair.type != CharacterCompareType::TemporaryInverse
+                && pair.type != CharacterCompareType::Inverse
+                && pair.type != CharacterCompareType::And
+                && pair.type != CharacterCompareType::Or
+                && pair.type != CharacterCompareType::EndAndOr)
                 arguments.append(pair.value);
             ++argument_count;
         }
@@ -881,8 +899,12 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
                 append_table(inverted_table);
             }
+
+            table.clear();
+            inverted_table.clear();
         };
 
+        auto flush_on_every_insertion = false;
         for (auto& value : pairs) {
             auto should_invert_after_this_iteration = invert_for_next_iteration;
             invert_for_next_iteration = false;
@@ -890,6 +912,8 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
             auto insertion_result = insert_into_lookup_table(*current_table, value);
             switch (insertion_result) {
             case LookupTableInsertionOutcome::Successful:
+                if (flush_on_every_insertion)
+                    flush_tables();
                 break;
             case LookupTableInsertionOutcome::ReplaceWithAnyChar: {
                 table.clear();
@@ -908,13 +932,25 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 arguments.append(to_underlying(CharacterCompareType::Inverse));
                 ++argument_count;
                 break;
+            case LookupTableInsertionOutcome::FlushOnInsertion:
+            case LookupTableInsertionOutcome::FinishFlushOnInsertion:
+                flush_tables();
+                flush_on_every_insertion = insertion_result == LookupTableInsertionOutcome::FlushOnInsertion;
+                [[fallthrough]];
             case LookupTableInsertionOutcome::CannotPlaceInTable:
                 if (is_currently_inverted) {
                     arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
                     ++argument_count;
                 }
                 arguments.append(to_underlying(value.type));
-                arguments.append(value.value);
+
+                if (value.type != CharacterCompareType::AnyChar
+                    && value.type != CharacterCompareType::TemporaryInverse
+                    && value.type != CharacterCompareType::Inverse
+                    && value.type != CharacterCompareType::And
+                    && value.type != CharacterCompareType::Or
+                    && value.type != CharacterCompareType::EndAndOr)
+                    arguments.append(value.value);
                 ++argument_count;
                 break;
             }

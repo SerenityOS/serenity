@@ -21,24 +21,25 @@ typedef struct {
 
 enum __Regex_Error {
     __Regex_NoError,
-    __Regex_InvalidPattern,             // Invalid regular expression.
-    __Regex_InvalidCollationElement,    // Invalid collating element referenced.
-    __Regex_InvalidCharacterClass,      // Invalid character class type referenced.
-    __Regex_InvalidTrailingEscape,      // Trailing \ in pattern.
-    __Regex_InvalidNumber,              // Number in \digit invalid or in error.
-    __Regex_MismatchingBracket,         // [ ] imbalance.
-    __Regex_MismatchingParen,           // ( ) imbalance.
-    __Regex_MismatchingBrace,           // { } imbalance.
-    __Regex_InvalidBraceContent,        // Content of {} invalid: not a number, number too large, more than two numbers, first larger than second.
-    __Regex_InvalidBracketContent,      // Content of [] invalid.
-    __Regex_InvalidRange,               // Invalid endpoint in range expression.
-    __Regex_InvalidRepetitionMarker,    // ?, * or + not preceded by valid regular expression.
-    __Regex_ReachedMaxRecursion,        // MaximumRecursion has been reached.
-    __Regex_EmptySubExpression,         // Sub expression has empty content.
-    __Regex_InvalidCaptureGroup,        // Content of capture group is invalid.
-    __Regex_InvalidNameForCaptureGroup, // Name of capture group is invalid.
-    __Regex_InvalidNameForProperty,     // Name of property is invalid.
-    __Regex_DuplicateNamedCapture,      // Duplicate named capture group
+    __Regex_InvalidPattern,              // Invalid regular expression.
+    __Regex_InvalidCollationElement,     // Invalid collating element referenced.
+    __Regex_InvalidCharacterClass,       // Invalid character class type referenced.
+    __Regex_InvalidTrailingEscape,       // Trailing \ in pattern.
+    __Regex_InvalidNumber,               // Number in \digit invalid or in error.
+    __Regex_MismatchingBracket,          // [ ] imbalance.
+    __Regex_MismatchingParen,            // ( ) imbalance.
+    __Regex_MismatchingBrace,            // { } imbalance.
+    __Regex_InvalidBraceContent,         // Content of {} invalid: not a number, number too large, more than two numbers, first larger than second.
+    __Regex_InvalidBracketContent,       // Content of [] invalid.
+    __Regex_InvalidRange,                // Invalid endpoint in range expression.
+    __Regex_InvalidRepetitionMarker,     // ?, * or + not preceded by valid regular expression.
+    __Regex_ReachedMaxRecursion,         // MaximumRecursion has been reached.
+    __Regex_EmptySubExpression,          // Sub expression has empty content.
+    __Regex_InvalidCaptureGroup,         // Content of capture group is invalid.
+    __Regex_InvalidNameForCaptureGroup,  // Name of capture group is invalid.
+    __Regex_InvalidNameForProperty,      // Name of property is invalid.
+    __Regex_DuplicateNamedCapture,       // Duplicate named capture group
+    __Regex_InvalidCharacterClassEscape, // Invalid escaped entity in character class.
 };
 
 enum ReError {
@@ -82,10 +83,11 @@ enum __RegexAllFlags {
     __Regex_Multiline = __Regex_Global << 12,                // Handle newline characters. Match each line, one by one.
     __Regex_SkipTrimEmptyMatches = __Regex_Global << 13,     // Do not remove empty capture group results.
     __Regex_SingleMatch = __Regex_Global << 14,              // Stop after acquiring a single match.
-    __Regex_Internal_Stateful = __Regex_Global << 15,        // Internal flag; enables stateful matches.
-    __Regex_Internal_BrowserExtended = __Regex_Global << 16, // Internal flag; enable browser-specific ECMA262 extensions.
-    __Regex_Internal_ConsiderNewline = __Regex_Global << 17, // Internal flag; allow matchers to consider newlines as line separators.
-    __Regex_Last = __Regex_SingleMatch
+    __Regex_UnicodeSets = __Regex_Global << 15,              // ECMA262 Parser specific: Allow set operations in char classes.
+    __Regex_Internal_Stateful = __Regex_Global << 16,        // Internal flag; enables stateful matches.
+    __Regex_Internal_BrowserExtended = __Regex_Global << 17, // Internal flag; enable browser-specific ECMA262 extensions.
+    __Regex_Internal_ConsiderNewline = __Regex_Global << 18, // Internal flag; allow matchers to consider newlines as line separators.
+    __Regex_Last = __Regex_UnicodeSets,
 };
 
 // Values for the cflags parameter to the regcomp() function:

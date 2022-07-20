@@ -92,6 +92,8 @@ protected:
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
 
+    size_t tell() const { return m_parser_state.current_token.position(); }
+
     struct NamedCaptureGroup {
         size_t group_index { 0 };
         size_t minimum_length { 0 };
@@ -223,6 +225,7 @@ private:
     struct ParseFlags {
         bool unicode { false };
         bool named { false };
+        bool unicode_sets { false };
     };
 
     enum class ReadDigitsInitialZeroState {
@@ -256,6 +259,15 @@ private:
     bool parse_unicode_property_escape(PropertyEscape& property, bool& negated);
 
     bool parse_character_escape(Vector<CompareTypeAndValuePair>&, size_t&, ParseFlags);
+
+    bool parse_class_set_expression(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_union(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_intersection(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_subtraction(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_set_range(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_set_operand(Vector<CompareTypeAndValuePair>&);
+    bool parse_nested_class(Vector<CompareTypeAndValuePair>&);
+    Optional<u32> parse_class_set_character();
 
     // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
     bool parse_quantifiable_assertion(ByteCode&, size_t&, ParseFlags);
