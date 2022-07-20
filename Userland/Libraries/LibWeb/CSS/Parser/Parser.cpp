@@ -4973,13 +4973,21 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         argument_tokens.skip_whitespace();
         while (argument_tokens.has_next_token()) {
             auto& value = argument_tokens.next_token();
-
-            // FIXME: Allow calc() parameters.
+            RefPtr<CalculatedStyleValue> maybe_calc_value;
+            if (auto maybe_dynamic_value = parse_dynamic_value(value)) {
+                // TODO: calc() is the only dynamic value we support for now, but more will come later.
+                // FIXME: Actually, calc() should probably be parsed inside parse_dimension_value() etc,
+                //        so that it affects every use instead of us having to manually implement it.
+                VERIFY(maybe_dynamic_value->is_calculated());
+                maybe_calc_value = maybe_dynamic_value->as_calculated();
+            }
 
             switch (function_metadata.parameter_type) {
             case TransformFunctionParameterType::Angle: {
                 // These are `<angle> | <zero>` in the spec, so we have to check for both kinds.
-                if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
+                if (maybe_calc_value && maybe_calc_value->resolves_to_angle()) {
+                    values.append(AngleStyleValue::create(Angle::make_calculated(maybe_calc_value.release_nonnull())));
+                } else if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
                     values.append(AngleStyleValue::create(Angle::make_degrees(0)));
                 } else {
                     auto dimension_value = parse_dimension_value(value);
@@ -4990,22 +4998,29 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
                 break;
             }
             case TransformFunctionParameterType::LengthPercentage: {
-                auto dimension_value = parse_dimension_value(value);
-                if (!dimension_value)
-                    return nullptr;
+                if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
+                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                } else {
+                    auto dimension_value = parse_dimension_value(value);
+                    if (!dimension_value)
+                        return nullptr;
 
-                if (dimension_value->is_percentage() || dimension_value->is_length())
-                    values.append(dimension_value.release_nonnull());
-                else
-                    return nullptr;
-
+                    if (dimension_value->is_percentage() || dimension_value->is_length())
+                        values.append(dimension_value.release_nonnull());
+                    else
+                        return nullptr;
+                }
                 break;
             }
             case TransformFunctionParameterType::Number: {
-                auto number = parse_numeric_value(value);
-                if (!number)
-                    return nullptr;
-                values.append(number.release_nonnull());
+                if (maybe_calc_value && maybe_calc_value->resolves_to_number()) {
+                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                } else {
+                    auto number = parse_numeric_value(value);
+                    if (!number)
+                        return nullptr;
+                    values.append(number.release_nonnull());
+                }
                 break;
             }
             }
