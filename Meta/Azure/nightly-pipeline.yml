@@ -24,3 +24,10 @@ stages:
         parameters:
           arch: 'x86_64'
           coverage: 'ON'
+
+  - stage: Lagom_Android
+    dependsOn: []
+    jobs:
+      - template: Lagom.yml
+        parameters:
+          os: 'Android'
