@@ -54,6 +54,7 @@
     M(IntlNumberIsNaN, "{} must not be NaN")                                                                                            \
     M(IntlNumberIsNaNOrInfinity, "Number must not be NaN or Infinity")                                                                  \
     M(IntlNumberIsNaNOrOutOfRange, "Value {} is NaN or is not between {} and {}")                                                       \
+    M(IntlNumberRangeIsInvalid, "Numeric range is invalid: {}")                                                                         \
     M(IntlOptionUndefined, "Option {} must be defined when option {} is {}")                                                            \
     M(IntlNonNumericOr2DigitAfterNumericOr2Digit, "Styles other than 'numeric' and '2-digit' may not be used in smaller units after "   \
                                                   "being used in larger units")                                                         \

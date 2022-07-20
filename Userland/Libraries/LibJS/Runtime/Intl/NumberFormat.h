@@ -287,5 +287,9 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
 ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(GlobalObject& global_object, Value value);
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative);
 RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
+Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_format, Vector<PatternPartitionWithSource> result);
+Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
+ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
 
 }
