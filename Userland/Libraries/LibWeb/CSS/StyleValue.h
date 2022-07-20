@@ -677,14 +677,14 @@ public:
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
 
     Optional<Angle> resolve_angle() const;
-    Optional<AnglePercentage> resolve_angle_percentage(Angle const& percentage_basis) const;
+    Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
     Optional<Frequency> resolve_frequency() const;
-    Optional<FrequencyPercentage> resolve_frequency_percentage(Frequency const& percentage_basis) const;
+    Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
-    Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+    Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
     Optional<Percentage> resolve_percentage() const;
     Optional<Time> resolve_time() const;
-    Optional<TimePercentage> resolve_time_percentage(Time const& percentage_basis) const;
+    Optional<Time> resolve_time_percentage(Time const& percentage_basis) const;
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
 

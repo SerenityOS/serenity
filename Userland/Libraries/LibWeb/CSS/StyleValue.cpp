@@ -661,18 +661,15 @@ Optional<Angle> CalculatedStyleValue::resolve_angle() const
     return {};
 }
 
-Optional<AnglePercentage> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
+Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Angle const& angle) -> Optional<AnglePercentage> {
+        [&](Angle const& angle) -> Optional<Angle> {
             return angle;
         },
-        [&](Percentage const& percentage) -> Optional<AnglePercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<AnglePercentage> {
+        [&](auto const&) -> Optional<Angle> {
             return {};
         });
 }
@@ -686,18 +683,15 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
     return {};
 }
 
-Optional<FrequencyPercentage> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
+Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Frequency const& frequency) -> Optional<FrequencyPercentage> {
+        [&](Frequency const& frequency) -> Optional<Frequency> {
             return frequency;
         },
-        [&](Percentage const& percentage) -> Optional<FrequencyPercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<FrequencyPercentage> {
+        [&](auto const&) -> Optional<Frequency> {
             return {};
         });
 }
@@ -711,18 +705,15 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
     return {};
 }
 
-Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
+Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
-        [&](Length const& length) -> Optional<LengthPercentage> {
+        [&](Length const& length) -> Optional<Length> {
             return length;
         },
-        [&](Percentage const& percentage) -> Optional<LengthPercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<LengthPercentage> {
+        [&](auto const&) -> Optional<Length> {
             return {};
         });
 }
@@ -744,18 +735,15 @@ Optional<Time> CalculatedStyleValue::resolve_time() const
     return {};
 }
 
-Optional<TimePercentage> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
+Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Time const& time) -> Optional<TimePercentage> {
+        [&](Time const& time) -> Optional<Time> {
             return time;
         },
-        [&](Percentage const& percentage) -> Optional<TimePercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<TimePercentage> {
+        [&](auto const&) -> Optional<Time> {
             return {};
         });
 }
