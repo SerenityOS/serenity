@@ -106,6 +106,9 @@ private:
     Optional<float> transferred_size_suggestion(FlexItem const&) const;
     float content_size_suggestion(FlexItem const&) const;
 
+    float get_pixel_width(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
+    float get_pixel_height(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
+
     bool flex_item_is_stretched(FlexItem const&) const;
 
     void set_main_size(Box const&, float size);
