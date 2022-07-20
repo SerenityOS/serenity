@@ -33,6 +33,7 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(vm.names.formatRange, format_range, 2, attr);
+    define_native_function(vm.names.formatRangeToParts, format_range_to_parts, 2, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -102,6 +103,32 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
     // 6. Return ? FormatNumericRange(nf, x, y).
     auto formatted = TRY(format_numeric_range(global_object, *number_format, move(x), move(y)));
     return js_string(vm, move(formatted));
+}
+
+// 1.4.6 Intl.NumberFormat.prototype.formatRangeToParts ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrangetoparts
+JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
+{
+    auto start = vm.argument(0);
+    auto end = vm.argument(1);
+
+    // 1. Let nf be the this value.
+    // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
+    auto* number_format = TRY(typed_this_object(global_object));
+
+    // 3. If start is undefined or end is undefined, throw a TypeError exception.
+    if (start.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "start"sv);
+    if (end.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "end"sv);
+
+    // 4. Let x be ? ToIntlMathematicalValue(start).
+    auto x = TRY(to_intl_mathematical_value(global_object, start));
+
+    // 5. Let y be ? ToIntlMathematicalValue(end).
+    auto y = TRY(to_intl_mathematical_value(global_object, end));
+
+    // 6. Return ? FormatNumericRangeToParts(nf, x, y).
+    return TRY(format_numeric_range_to_parts(global_object, *number_format, move(x), move(y)));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions

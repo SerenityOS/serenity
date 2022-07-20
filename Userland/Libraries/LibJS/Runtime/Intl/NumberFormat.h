@@ -291,5 +291,6 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
 Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_format, Vector<PatternPartitionWithSource> result);
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
 ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
+ThrowCompletionOr<Array*> format_numeric_range_to_parts(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
 
 }
