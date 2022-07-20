@@ -81,6 +81,18 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
         }
     };
 
+    Core::ArgsParser::Option block_size_1k_option {
+        Core::ArgsParser::OptionArgumentMode::None,
+        "Equivalent to `--block-size 1024`",
+        nullptr,
+        'k',
+        nullptr,
+        [&du_option](auto const*) {
+            du_option.block_size = 1024;
+            return true;
+        }
+    };
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
@@ -93,6 +105,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude_from", 'X', "file");
     args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size");
+    args_parser.add_option(move(block_size_1k_option));
     args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
