@@ -1428,6 +1428,137 @@ bool ECMA262Parser::parse_invalid_braced_quantifier()
 
 bool ECMA262Parser::parse_character_escape(Vector<CompareTypeAndValuePair>& compares, size_t& match_length_minimum, ParseFlags flags)
 {
+    // CharacterEscape > ControlEscape
+    if (try_skip("f"sv)) {
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\f' });
+        return true;
+    }
+
+    if (try_skip("n"sv)) {
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\n' });
+        return true;
+    }
+
+    if (try_skip("r"sv)) {
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\r' });
+        return true;
+    }
+
+    if (try_skip("t"sv)) {
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\t' });
+        return true;
+    }
+
+    if (try_skip("v"sv)) {
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\v' });
+        return true;
+    }
+
+    // CharacterEscape > ControlLetter
+    if (try_skip("c"sv)) {
+        for (auto c : s_alphabetic_characters) {
+            if (try_skip({ &c, 1 })) {
+                match_length_minimum += 1;
+                compares.append({ CharacterCompareType::Char, (ByteCodeValueType)(c % 32) });
+                return true;
+            }
+        }
+
+        if (flags.unicode) {
+            set_error(Error::InvalidPattern);
+            return false;
+        }
+
+        if (m_should_use_browser_extended_grammar) {
+            back(1 + (done() ? 0 : 1));
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'\\' });
+            match_length_minimum += 1;
+            return true;
+        }
+
+        // Allow '\c' in non-unicode mode, just matches 'c'.
+        match_length_minimum += 1;
+        compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'c' });
+        return true;
+    }
+
+    // '\0'
+    if (try_skip("0"sv)) {
+        if (!lookahead_any(s_decimal_characters)) {
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)0 });
+            return true;
+        }
+
+        back();
+    }
+
+    // LegacyOctalEscapeSequence
+    if (m_should_use_browser_extended_grammar) {
+        if (!flags.unicode) {
+            if (auto escape = parse_legacy_octal_escape(); escape.has_value()) {
+                compares.append({ CharacterCompareType::Char, (ByteCodeValueType)escape.value() });
+                match_length_minimum += 1;
+                return true;
+            }
+        }
+    }
+
+    // HexEscape
+    if (try_skip("x"sv)) {
+        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() });
+            return true;
+        }
+        if (!flags.unicode) {
+            // '\x' is allowed in non-unicode mode, just matches 'x'.
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'x' });
+            return true;
+        }
+
+        set_error(Error::InvalidPattern);
+        return false;
+    }
+
+    if (try_skip("u"sv)) {
+        if (auto code_point = consume_escaped_code_point(flags.unicode); code_point.has_value()) {
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)code_point.value() });
+            return true;
+        }
+
+        return false;
+    }
+
+    // IdentityEscape
+    for (auto ch : identity_escape_characters(flags.unicode, m_should_use_browser_extended_grammar)) {
+        if (try_skip({ &ch, 1 })) {
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)ch });
+            return true;
+        }
+    }
+
+    if (flags.unicode) {
+        if (try_skip("/"sv)) {
+            match_length_minimum += 1;
+            compares.append({ CharacterCompareType::Char, (ByteCodeValueType)'/' });
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_minimum, ParseFlags flags)
+{
     if (auto escape_str = read_digits_as_string(ReadDigitsInitialZeroState::Disallow); !escape_str.is_empty()) {
         if (auto escape = escape_str.to_uint(); escape.has_value()) {
             // See if this is a "back"-reference (we've already parsed the group it refers to)
@@ -1453,130 +1584,10 @@ bool ECMA262Parser::parse_character_escape(Vector<CompareTypeAndValuePair>& comp
         back(escape_str.length());
     }
 
-    // CharacterEscape > ControlEscape
-    if (try_skip("f"sv)) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\f' } });
+    Vector<CompareTypeAndValuePair> escape_compares;
+    if (parse_character_escape(escape_compares, match_length_minimum, flags)) {
+        stack.insert_bytecode_compare_values(move(escape_compares));
         return true;
-    }
-
-    if (try_skip("n"sv)) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\n' } });
-        return true;
-    }
-
-    if (try_skip("r"sv)) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\r' } });
-        return true;
-    }
-
-    if (try_skip("t"sv)) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\t' } });
-        return true;
-    }
-
-    if (try_skip("v"sv)) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\v' } });
-        return true;
-    }
-
-    // CharacterEscape > ControlLetter
-    if (try_skip("c"sv)) {
-        for (auto c : s_alphabetic_characters) {
-            if (try_skip({ &c, 1 })) {
-                match_length_minimum += 1;
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)(c % 32) } });
-                return true;
-            }
-        }
-
-        if (flags.unicode) {
-            set_error(Error::InvalidPattern);
-            return false;
-        }
-
-        if (m_should_use_browser_extended_grammar) {
-            back(1 + !done());
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\\' } });
-            match_length_minimum += 1;
-            return true;
-        }
-
-        // Allow '\c' in non-unicode mode, just matches 'c'.
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'c' } });
-        return true;
-    }
-
-    // '\0'
-    if (try_skip("0"sv)) {
-        if (!lookahead_any(s_decimal_characters)) {
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
-            return true;
-        }
-
-        back();
-    }
-
-    // LegacyOctalEscapeSequence
-    if (m_should_use_browser_extended_grammar) {
-        if (!flags.unicode) {
-            if (auto escape = parse_legacy_octal_escape(); escape.has_value()) {
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)escape.value() } });
-                match_length_minimum += 1;
-                return true;
-            }
-        }
-    }
-
-    // HexEscape
-    if (try_skip("x"sv)) {
-        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
-            return true;
-        }
-        if (!flags.unicode) {
-            // '\x' is allowed in non-unicode mode, just matches 'x'.
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'x' } });
-            return true;
-        }
-
-        set_error(Error::InvalidPattern);
-        return false;
-    }
-
-    if (try_skip("u"sv)) {
-        if (auto code_point = consume_escaped_code_point(flags.unicode); code_point.has_value()) {
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
-            return true;
-        }
-
-        return false;
-    }
-
-    // IdentityEscape
-    for (auto ch : identity_escape_characters(flags.unicode, m_should_use_browser_extended_grammar)) {
-        if (try_skip({ &ch, 1 })) {
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
-            return true;
-        }
-    }
-
-    if (flags.unicode) {
-        if (try_skip("/"sv)) {
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'/' } });
-            return true;
-        }
     }
 
     if (flags.named && try_skip("k"sv)) {

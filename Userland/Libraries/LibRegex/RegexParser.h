@@ -255,6 +255,8 @@ private:
     bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, ParseFlags);
     bool parse_unicode_property_escape(PropertyEscape& property, bool& negated);
 
+    bool parse_character_escape(Vector<CompareTypeAndValuePair>&, size_t&, ParseFlags);
+
     // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
     bool parse_quantifiable_assertion(ByteCode&, size_t&, ParseFlags);
     bool parse_extended_atom(ByteCode&, size_t&, ParseFlags);
