@@ -146,6 +146,20 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
 
 OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box, LayoutMode layout_mode)
 {
+    {
+        // OPTIMIZATION: If we're doing intrinsic sizing and `child_box` has definite size in both axes,
+        //               we don't need to layout its insides. The size is resolvable without learning
+        //               the metrics of whatever's inside the box.
+        auto const& used_values = m_state.get(child_box);
+        if (layout_mode == LayoutMode::IntrinsicSizing
+            && used_values.width_constraint == SizeConstraint::None
+            && used_values.height_constraint == SizeConstraint::None
+            && used_values.has_definite_width()
+            && used_values.has_definite_height()) {
+            return nullptr;
+        }
+    }
+
     if (!child_box.can_have_children())
         return {};
 

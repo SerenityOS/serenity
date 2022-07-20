@@ -150,7 +150,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             box_state.set_content_height(height_value.resolved(box, container_height).to_px(inline_block));
         }
 
-        independent_formatting_context->parent_context_did_dimension_child_root_box();
+        if (independent_formatting_context)
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
         return;
     }
 
