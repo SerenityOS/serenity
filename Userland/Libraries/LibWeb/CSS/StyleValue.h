@@ -676,15 +676,27 @@ public:
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
 
+    bool resolves_to_angle() const { return m_resolved_type == ResolvedType::Angle; }
     Optional<Angle> resolve_angle() const;
     Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
+
+    bool resolves_to_frequency() const { return m_resolved_type == ResolvedType::Frequency; }
     Optional<Frequency> resolve_frequency() const;
     Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
+
+    bool resolves_to_length() const { return m_resolved_type == ResolvedType::Length; }
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+
+    bool resolves_to_percentage() const { return m_resolved_type == ResolvedType::Percentage; }
     Optional<Percentage> resolve_percentage() const;
+
+    bool resolves_to_time() const { return m_resolved_type == ResolvedType::Time; }
     Optional<Time> resolve_time() const;
     Optional<Time> resolve_time_percentage(Time const& percentage_basis) const;
+
+    bool resolves_to_integer() const { return m_resolved_type == ResolvedType::Integer; }
+    bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
 
