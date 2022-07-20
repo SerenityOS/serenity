@@ -273,7 +273,7 @@ DOM::ExceptionOr<void> Headers::fill(HeadersInit const& object)
                 // 2. Append (header’s first item, header’s second item) to headers.
                 auto header = Fetch::Infrastructure::Header {
                     .name = TRY_OR_RETURN_OOM(ByteBuffer::copy(entry[0].bytes())),
-                    .value = TRY_OR_RETURN_OOM(ByteBuffer::copy(entry[0].bytes())),
+                    .value = TRY_OR_RETURN_OOM(ByteBuffer::copy(entry[1].bytes())),
                 };
                 TRY(append(move(header)));
             }
