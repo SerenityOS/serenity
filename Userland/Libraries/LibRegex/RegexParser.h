@@ -220,6 +220,11 @@ public:
 private:
     bool parse_internal(ByteCode&, size_t&) override;
 
+    struct ParseFlags {
+        bool unicode { false };
+        bool named { false };
+    };
+
     enum class ReadDigitsInitialZeroState {
         Allow,
         Disallow,
@@ -235,25 +240,25 @@ private:
     using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory, Script, Empty>;
     Optional<PropertyEscape> read_unicode_property_escape();
 
-    bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_disjunction(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_alternative(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_term(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_assertion(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_atom(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_quantifier(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_pattern(ByteCode&, size_t&, ParseFlags);
+    bool parse_disjunction(ByteCode&, size_t&, ParseFlags);
+    bool parse_alternative(ByteCode&, size_t&, ParseFlags);
+    bool parse_term(ByteCode&, size_t&, ParseFlags);
+    bool parse_assertion(ByteCode&, size_t&, ParseFlags);
+    bool parse_atom(ByteCode&, size_t&, ParseFlags);
+    bool parse_quantifier(ByteCode&, size_t&, ParseFlags);
     bool parse_interval_quantifier(Optional<u64>& repeat_min, Optional<u64>& repeat_max);
-    bool parse_atom_escape(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_character_class(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_atom_escape(ByteCode&, size_t&, ParseFlags);
+    bool parse_character_class(ByteCode&, size_t&, ParseFlags);
+    bool parse_capture_group(ByteCode&, size_t&, ParseFlags);
     Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
-    bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
+    bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, ParseFlags);
     bool parse_unicode_property_escape(PropertyEscape& property, bool& negated);
 
     // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
-    bool parse_quantifiable_assertion(ByteCode&, size_t&, bool named);
-    bool parse_extended_atom(ByteCode&, size_t&, bool named);
-    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, bool unicode, bool named);
+    bool parse_quantifiable_assertion(ByteCode&, size_t&, ParseFlags);
+    bool parse_extended_atom(ByteCode&, size_t&, ParseFlags);
+    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, ParseFlags);
     bool parse_invalid_braced_quantifier(); // Note: This function either parses and *fails*, or doesn't parse anything and returns false.
     bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
     Optional<u8> parse_legacy_octal_escape();
