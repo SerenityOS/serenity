@@ -162,7 +162,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
         out("{}", human_readable_size(size));
     } else {
         constexpr long long block_size = 1024;
-        size = size / block_size + (size % block_size != 0);
+        size = ceil_div(size, block_size);
         out("{}", size);
     }
 
