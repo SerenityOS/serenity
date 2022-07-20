@@ -872,6 +872,8 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
 
     if (!containing_block.has_definite_height())
         containing_block_state.set_content_height(INFINITY);
+    else if (containing_block.computed_values().height().is_auto())
+        containing_block_state.set_content_height(containing_block_height_for(containing_block));
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MinContent;
@@ -912,6 +914,8 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
 
     if (!containing_block.has_definite_height())
         containing_block_state.set_content_height(INFINITY);
+    else if (containing_block.computed_values().height().is_auto())
+        containing_block_state.set_content_height(containing_block_height_for(containing_block));
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MaxContent;
@@ -952,6 +956,8 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
 
     if (!containing_block.has_definite_width())
         containing_block_state.set_content_width(INFINITY);
+    else if (containing_block.computed_values().width().is_auto())
+        containing_block_state.set_content_width(containing_block_width_for(containing_block));
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MinContent;
@@ -992,6 +998,8 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
 
     if (!containing_block.has_definite_width())
         containing_block_state.set_content_width(INFINITY);
+    else if (containing_block.computed_values().width().is_auto())
+        containing_block_state.set_content_width(containing_block_width_for(containing_block));
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MaxContent;
