@@ -35,3 +35,8 @@ steps:
     - script: |
         brew install ninja wabt ccache unzip
       displayName: 'Install Dependencies'
+
+  - ${{ if eq(parameters.os, 'Android') }}:
+    - script: |
+        sudo apt-get install ccache ninja-build unzip
+      displayName: 'Install Dependencies'
