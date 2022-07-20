@@ -561,11 +561,11 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
 
     // If we're in a row layout and looking for the width, just use the fit-content width.
     if (is_row_layout())
-        return calculate_fit_content_width(item.box, m_available_space->main);
+        return calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->main);
 
     // We're in a column layout, looking for the height. Figure out the fit-content width,
     // then layout with that and see what height comes out of it.
-    float fit_content_cross_size = calculate_fit_content_width(item.box, m_available_space->cross);
+    float fit_content_cross_size = calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->cross);
 
     LayoutState throwaway_state(&m_state);
     auto& box_state = throwaway_state.get_mutable(item.box);
@@ -1629,12 +1629,14 @@ float FlexFormattingContext::calculate_min_content_main_size(FlexItem const& ite
 
 float FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_fit_content_width(item.box, m_available_space->main) : calculate_fit_content_height(item.box, m_available_space->main);
+    return is_row_layout() ? calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->main)
+                           : calculate_fit_content_height(item.box, m_state.get(item.box).height_constraint, m_available_space->main);
 }
 
 float FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_fit_content_height(item.box, m_available_space->cross) : calculate_fit_content_width(item.box, m_available_space->cross);
+    return !is_row_layout() ? calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->cross)
+                            : calculate_fit_content_height(item.box, m_state.get(item.box).height_constraint, m_available_space->cross);
 }
 
 float FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const

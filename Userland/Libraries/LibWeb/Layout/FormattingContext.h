@@ -50,8 +50,8 @@ public:
     float calculate_min_content_height(Layout::Box const&) const;
     float calculate_max_content_height(Layout::Box const&) const;
 
-    float calculate_fit_content_height(Layout::Box const&, Optional<float> available_height) const;
-    float calculate_fit_content_width(Layout::Box const&, Optional<float> available_width) const;
+    float calculate_fit_content_height(Layout::Box const&, SizeConstraint, Optional<float> available_height) const;
+    float calculate_fit_content_width(Layout::Box const&, SizeConstraint, Optional<float> available_width) const;
 
     virtual float greatest_child_width(Box const&);
 
@@ -66,7 +66,7 @@ public:
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);
 
-    float calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const;
+    float calculate_fit_content_size(float min_content_size, float max_content_size, SizeConstraint, Optional<float> available_space) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
     void compute_inset(Box const& box);

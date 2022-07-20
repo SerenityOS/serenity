@@ -823,7 +823,7 @@ void FormattingContext::compute_inset(Box const& box)
     resolve_two_opposing_insets(computed_values.inset().top, computed_values.inset().bottom, box_state.inset_top, box_state.inset_bottom, containing_block_height_for(box));
 }
 
-float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const
+float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, SizeConstraint constraint, Optional<float> available_space) const
 {
     // If the available space in a given axis is definite, equal to clamp(min-content size, stretch-fit size, max-content size)
     // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
@@ -834,20 +834,38 @@ float FormattingContext::calculate_fit_content_size(float min_content_size, floa
         return s;
     }
 
-    // FIXME: When sizing under a min-content constraint, equal to the min-content size.
+    // When sizing under a min-content constraint, equal to the min-content size.
+    if (constraint == SizeConstraint::MinContent)
+        return min_content_size;
 
     // Otherwise, equal to the max-content size in that axis.
     return max_content_size;
 }
 
-float FormattingContext::calculate_fit_content_width(Layout::Box const& box, Optional<float> available_space) const
+float FormattingContext::calculate_fit_content_width(Layout::Box const& box, SizeConstraint constraint, Optional<float> available_space) const
 {
-    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), available_space);
+    // When sizing under a min-content constraint, equal to the min-content size.
+    // NOTE: We check this first, to avoid needlessly calculating the max-content size.
+    if (constraint == SizeConstraint::MinContent)
+        return calculate_min_content_width(box);
+
+    if (constraint == SizeConstraint::MaxContent)
+        return calculate_max_content_width(box);
+
+    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), constraint, available_space);
 }
 
-float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Optional<float> available_space) const
+float FormattingContext::calculate_fit_content_height(Layout::Box const& box, SizeConstraint constraint, Optional<float> available_space) const
 {
-    return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), available_space);
+    // When sizing under a min-content constraint, equal to the min-content size.
+    // NOTE: We check this first, to avoid needlessly calculating the max-content size.
+    if (constraint == SizeConstraint::MinContent)
+        return calculate_min_content_height(box);
+
+    if (constraint == SizeConstraint::MaxContent)
+        return calculate_max_content_height(box);
+
+    return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), constraint, available_space);
 }
 
 float FormattingContext::calculate_auto_height(LayoutState const& state, Box const& box)
