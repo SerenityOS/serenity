@@ -32,6 +32,7 @@ struct DuOption {
     int threshold = 0;
     TimeType time_type = TimeType::NotUsed;
     Vector<String> excluded_patterns;
+    size_t block_size = 1024;
 };
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
@@ -91,6 +92,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.add_option(move(time_option));
     args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude_from", 'X', "file");
+    args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size");
     args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -143,7 +145,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
             return { 0 };
     }
 
-    off_t size = path_stat.st_size;
+    size_t size = path_stat.st_size;
     if (du_option.apparent_size) {
         constexpr auto block_size = 512;
         size = path_stat.st_blocks * block_size;
@@ -155,14 +157,13 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
     if (is_directory)
         size = directory_size;
 
-    if ((du_option.threshold > 0 && size < du_option.threshold) || (du_option.threshold < 0 && size > -du_option.threshold))
+    if ((du_option.threshold > 0 && size < static_cast<size_t>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<size_t>(-du_option.threshold)))
         return { 0 };
 
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        constexpr long long block_size = 1024;
-        size = ceil_div(size, block_size);
+        size = ceil_div(size, du_option.block_size);
         out("{}", size);
     }
 
