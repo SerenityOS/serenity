@@ -13,6 +13,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -38,6 +39,7 @@ public:
     [[nodiscard]] ErrorOr<void> set(Header);
     [[nodiscard]] ErrorOr<void> combine(Header);
     [[nodiscard]] ErrorOr<Vector<Header>> sort_and_combine() const;
+    [[nodiscard]] Optional<MimeSniff::MimeType> extract_mime_type() const;
 };
 
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);

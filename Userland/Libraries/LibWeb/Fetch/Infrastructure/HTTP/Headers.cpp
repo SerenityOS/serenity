@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -250,6 +251,64 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 
     // 4. Return headers.
     return headers;
+}
+
+// https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
+Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
+{
+    // 1. Let charset be null.
+    Optional<String> charset;
+
+    // 2. Let essence be null.
+    Optional<String> essence;
+
+    // 3. Let mimeType be null.
+    Optional<MimeSniff::MimeType> mime_type;
+
+    // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
+    auto values_or_error = get_decode_and_split("Content-Type"sv.bytes());
+    if (values_or_error.is_error())
+        return {};
+    auto values = values_or_error.release_value();
+
+    // 5. If values is null, then return failure.
+    if (!values.has_value())
+        return {};
+
+    // 6. For each value of values:
+    for (auto const& value : *values) {
+        // 1. Let temporaryMimeType be the result of parsing value.
+        auto temporary_mime_type = MimeSniff::MimeType::from_string(value);
+
+        // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
+        if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
+            continue;
+
+        // 3. Set mimeType to temporaryMimeType.
+        mime_type = temporary_mime_type;
+
+        // 4. If mimeType’s essence is not essence, then:
+        if (mime_type->essence() != essence) {
+            // 1. Set charset to null.
+            charset = {};
+
+            // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
+            auto charset_it = mime_type->parameters().find("charset"sv);
+            if (charset_it != mime_type->parameters().end())
+                charset = charset_it->value;
+
+            // 3. Set essence to mimeType’s essence.
+            essence = mime_type->essence();
+        }
+        // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
+        else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
+            mime_type->set_parameter("charset"sv, charset.value());
+        }
+    }
+
+    // 7. If mimeType is null, then return failure.
+    // 8. Return mimeType.
+    return mime_type;
 }
 
 // https://fetch.spec.whatwg.org/#convert-header-names-to-a-sorted-lowercase-set
