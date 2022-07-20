@@ -53,6 +53,30 @@ struct PatternPartition {
     String value;
 };
 
+struct PatternPartitionWithSource : public PatternPartition {
+    static Vector<PatternPartitionWithSource> create_from_parent_list(Vector<PatternPartition> partitions)
+    {
+        Vector<PatternPartitionWithSource> result;
+        result.ensure_capacity(partitions.size());
+
+        for (auto& partition : partitions) {
+            PatternPartitionWithSource partition_with_source {};
+            partition_with_source.type = partition.type;
+            partition_with_source.value = move(partition.value);
+            result.append(move(partition_with_source));
+        }
+
+        return result;
+    }
+
+    bool operator==(PatternPartitionWithSource const& other) const
+    {
+        return (type == other.type) && (value == other.value) && (source == other.source);
+    }
+
+    StringView source;
+};
+
 // Table 2: Single units sanctioned for use in ECMAScript, https://tc39.es/ecma402/#table-sanctioned-single-unit-identifiers
 constexpr auto sanctioned_single_unit_identifiers()
 {
