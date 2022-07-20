@@ -71,5 +71,6 @@ Vector<NumberFormat> get_compact_number_system_formats(StringView locale, String
 Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style);
 
 Optional<String> augment_currency_format_pattern(StringView currency_display, StringView base_pattern);
+Optional<String> augment_range_pattern(StringView range_separator, StringView lower, StringView upper);
 
 }
