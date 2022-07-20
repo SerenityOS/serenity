@@ -146,7 +146,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
     }
 
     size_t size = path_stat.st_size;
-    if (du_option.apparent_size) {
+    if (!du_option.apparent_size) {
         constexpr auto block_size = 512;
         size = path_stat.st_blocks * block_size;
     }
