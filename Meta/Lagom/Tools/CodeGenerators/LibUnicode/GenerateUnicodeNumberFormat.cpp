@@ -489,6 +489,8 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     };
 
     auto numeric_symbol_from_string = [&](StringView numeric_symbol) -> Optional<Unicode::NumericSymbol> {
+        if (numeric_symbol == "approximatelySign"sv)
+            return Unicode::NumericSymbol::ApproximatelySign;
         if (numeric_symbol == "decimal"sv)
             return Unicode::NumericSymbol::Decimal;
         if (numeric_symbol == "exponential"sv)
@@ -516,6 +518,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
         constexpr auto currency_formats_prefix = "currencyFormats-numberSystem-"sv;
         constexpr auto percent_formats_prefix = "percentFormats-numberSystem-"sv;
         constexpr auto scientific_formats_prefix = "scientificFormats-numberSystem-"sv;
+        constexpr auto misc_patterns_prefix = "miscPatterns-numberSystem-"sv;
 
         if (key.starts_with(symbols_prefix)) {
             auto system = key.substring(symbols_prefix.length());
@@ -534,6 +537,22 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
                 auto symbol_index = locale_data.unique_strings.ensure(localization.as_string());
                 symbols[to_underlying(*numeric_symbol)] = symbol_index;
             });
+
+            // The range separator does not appear in the symbols list, we have to extract it from
+            // the range pattern.
+            auto misc_patterns_key = String::formatted("{}{}", misc_patterns_prefix, system);
+            auto misc_patterns = locale_numbers_object.as_object().get(misc_patterns_key);
+            auto range_separator = misc_patterns.as_object().get("range"sv).as_string();
+
+            auto begin_index = range_separator.find("{0}"sv).value() + "{0}"sv.length();
+            auto end_index = range_separator.find("{1}"sv).value();
+            range_separator = range_separator.substring(begin_index, end_index - begin_index);
+
+            if (to_underlying(Unicode::NumericSymbol::RangeSeparator) >= symbols.size())
+                symbols.resize(to_underlying(Unicode::NumericSymbol::RangeSeparator) + 1);
+
+            auto symbol_index = locale_data.unique_strings.ensure(move(range_separator));
+            symbols[to_underlying(Unicode::NumericSymbol::RangeSeparator)] = symbol_index;
 
             number_system.symbols = locale_data.unique_symbols.ensure(move(symbols));
         } else if (key.starts_with(decimal_formats_prefix)) {

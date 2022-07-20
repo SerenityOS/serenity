@@ -47,6 +47,7 @@ struct NumberFormat {
 };
 
 enum class NumericSymbol : u8 {
+    ApproximatelySign,
     Decimal,
     Exponential,
     Group,
@@ -55,6 +56,7 @@ enum class NumericSymbol : u8 {
     NaN,
     PercentSign,
     PlusSign,
+    RangeSeparator,
     TimeSeparator,
 };
 
