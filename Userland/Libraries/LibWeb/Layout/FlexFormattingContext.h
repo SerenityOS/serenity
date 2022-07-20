@@ -106,6 +106,8 @@ private:
     Optional<float> transferred_size_suggestion(FlexItem const&) const;
     float content_size_suggestion(FlexItem const&) const;
 
+    bool flex_item_is_stretched(FlexItem const&) const;
+
     void set_main_size(Box const&, float size);
     void set_cross_size(Box const&, float size);
     void set_has_definite_main_size(Box const&, bool);

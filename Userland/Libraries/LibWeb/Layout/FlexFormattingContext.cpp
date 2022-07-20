@@ -61,6 +61,26 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
     // 1. Generate anonymous flex items
     generate_anonymous_flex_items();
 
+    {
+        // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
+        // 3. If a single-line flex container has a definite cross size,
+        //    the automatic preferred outer cross size of any stretched flex items is the flex container’s inner cross size
+        //    (clamped to the flex item’s min and max cross size) and is considered definite.
+        if (is_single_line() && has_definite_cross_size(flex_container())) {
+            auto flex_container_inner_cross_size = specified_cross_size(flex_container());
+            for (auto& item : m_flex_items) {
+                if (!flex_item_is_stretched(item))
+                    continue;
+                auto item_min_cross_size = has_cross_min_size(item.box) ? specified_cross_min_size(item.box) : automatic_minimum_size(item);
+                auto item_max_cross_size = has_cross_max_size(item.box) ? specified_cross_max_size(item.box) : INFINITY;
+                auto item_preferred_outer_cross_size = css_clamp(flex_container_inner_cross_size, item_min_cross_size, item_max_cross_size);
+                auto item_inner_cross_size = item_preferred_outer_cross_size - item.margins.cross_before - item.margins.cross_after - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after;
+                set_cross_size(item.box, item_inner_cross_size);
+                set_has_definite_cross_size(item.box, true);
+            }
+        }
+    }
+
     // 2. Determine the available main and cross space for the flex items
     float main_max_size = NumericLimits<float>::max();
     float main_min_size = 0;
@@ -142,6 +162,19 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
 
     // 15. Determine the flex container’s used cross size:
     determine_flex_container_used_cross_size(cross_min_size, cross_max_size);
+
+    {
+        // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
+        // 4. Once the cross size of a flex line has been determined,
+        //    the cross sizes of items in auto-sized flex containers are also considered definite for the purpose of layout.
+        auto const& flex_container_computed_cross_size = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
+        if (flex_container_computed_cross_size.is_auto()) {
+            for (auto& item : m_flex_items) {
+                set_cross_size(item.box, item.cross_size);
+                set_has_definite_cross_size(item.box, true);
+            }
+        }
+    }
 
     // 16. Align all flex lines (per align-content)
     align_all_flex_lines();
@@ -1662,6 +1695,17 @@ SizeConstraint FlexFormattingContext::flex_container_main_constraint() const
 SizeConstraint FlexFormattingContext::flex_container_cross_constraint() const
 {
     return is_row_layout() ? m_flex_container_state.height_constraint : m_flex_container_state.width_constraint;
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#stretched
+bool FlexFormattingContext::flex_item_is_stretched(FlexItem const& item) const
+{
+    auto alignment = alignment_for_item(item);
+    if (alignment != CSS::AlignItems::Stretch)
+        return false;
+    // If the cross size property of the flex item computes to auto, and neither of the cross-axis margins are auto, the flex item is stretched.
+    auto const& computed_cross_size = is_row_layout() ? item.box.computed_values().height() : item.box.computed_values().width();
+    return computed_cross_size.is_auto() && !item.margins.cross_before_is_auto && !item.margins.cross_after_is_auto;
 }
 
 }
