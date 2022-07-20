@@ -798,41 +798,9 @@ float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) co
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-container
 void FlexFormattingContext::determine_main_size_of_flex_container(bool const main_is_constrained, float const main_min_size, float const main_max_size)
 {
-    // FIXME: This function should make use of our ability to calculate the flex container's
-    //        intrinsic max-content sizes.
-
+    // FIXME: This needs to be reworked.
     if (!main_is_constrained || !m_available_space->main.has_value()) {
-        // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
-        // 9.9.1
-        // 1.
-        float largest_max_content_flex_fraction = 0;
-        for (auto& flex_item : m_flex_items) {
-            // FIXME: This needs some serious work.
-            float max_content_contribution = calculated_main_size(flex_item.box);
-            float max_content_flex_fraction = max_content_contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after);
-            if (max_content_flex_fraction > 0) {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
-            } else {
-                max_content_flex_fraction /= flex_item.scaled_flex_shrink_factor;
-            }
-            flex_item.desired_flex_fraction = max_content_flex_fraction;
-
-            if (max_content_flex_fraction > largest_max_content_flex_fraction)
-                largest_max_content_flex_fraction = max_content_flex_fraction;
-        }
-
-        // 2. Omitted
-        // 3.
-        float result = 0;
-        for (auto& flex_item : m_flex_items) {
-            auto product = 0;
-            if (flex_item.desired_flex_fraction > 0) {
-                product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow();
-            } else {
-                product = largest_max_content_flex_fraction * flex_item.scaled_flex_shrink_factor;
-            }
-            result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after + product;
-        }
+        auto result = is_row_layout() ? calculate_max_content_width(flex_container()) : calculate_max_content_height(flex_container());
         m_available_space->main = css_clamp(result, main_min_size, main_max_size);
     }
     set_main_size(flex_container(), m_available_space->main.value_or(NumericLimits<float>::max()));
