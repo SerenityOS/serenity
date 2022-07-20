@@ -61,7 +61,7 @@ public:
     static float containing_block_width_for(Box const&, LayoutState const&);
     static float containing_block_height_for(Box const&, LayoutState const&);
 
-    virtual void run_intrinsic_size_determination(Box const&);
+    virtual void run_intrinsic_sizing(Box const&);
 
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);

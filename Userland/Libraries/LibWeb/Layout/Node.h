@@ -27,7 +27,8 @@ enum class LayoutMode {
     // Intrinsic size determination.
     // Boxes honor min-content and max-content constraints (set via LayoutState::UsedValues::{width,height}_constraint)
     // by considering their containing block to be 0-sized or infinitely large in the relevant axis.
-    IntrinsicSizeDetermination,
+    // https://drafts.csswg.org/css-sizing-3/#intrinsic-sizing
+    IntrinsicSizing,
 };
 
 class Node : public TreeNode<Node> {

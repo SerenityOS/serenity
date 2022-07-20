@@ -368,7 +368,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
 
     auto& block_container_state = m_state.get_mutable(block_container);
 
-    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+    if (layout_mode == LayoutMode::IntrinsicSizing) {
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(containing_block_width_for(block_container));
         if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
@@ -386,7 +386,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         content_height += line_box.height();
     }
 
-    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+    if (layout_mode == LayoutMode::IntrinsicSizing) {
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(max_line_width);
     }
@@ -452,7 +452,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
-void BlockFormattingContext::run_intrinsic_size_determination(Box const& box)
+void BlockFormattingContext::run_intrinsic_sizing(Box const& box)
 {
     auto& box_state = m_state.get_mutable(box);
 
@@ -462,7 +462,7 @@ void BlockFormattingContext::run_intrinsic_size_determination(Box const& box)
     if (box_state.has_definite_height())
         box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
 
-    run(box, LayoutMode::IntrinsicSizeDetermination);
+    run(box, LayoutMode::IntrinsicSizing);
 }
 
 void BlockFormattingContext::layout_block_level_children(BlockContainer const& block_container, LayoutMode layout_mode)
@@ -471,7 +471,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     float content_height = 0;
 
-    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+    if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(containing_block_width_for(block_container));
@@ -484,7 +484,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         return IterationDecision::Continue;
     });
 
-    if (layout_mode == LayoutMode::IntrinsicSizeDetermination) {
+    if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(greatest_child_width(block_container));

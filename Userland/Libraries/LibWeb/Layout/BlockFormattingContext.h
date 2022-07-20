@@ -22,7 +22,7 @@ public:
     ~BlockFormattingContext();
 
     virtual void run(Box const&, LayoutMode) override;
-    virtual void run_intrinsic_size_determination(Box const&) override;
+    virtual void run_intrinsic_sizing(Box const&) override;
 
     bool is_initial() const;
 
