@@ -1718,4 +1718,148 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
     return RoundingDecision::HigherValue;
 }
 
+// 1.1.21 PartitionNumberRangePattern ( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberrangepattern
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If x is NaN or y is NaN, throw a RangeError exception.
+    if (start.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "start"sv);
+    if (end.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "end"sv);
+
+    // 2. If x is a mathematical value, then
+    if (start.is_mathematical_value()) {
+        // a. If y is a mathematical value and y < x, throw a RangeError exception.
+        if (end.is_mathematical_value() && end.is_less_than(start))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is a mathematical value and end < start"sv);
+
+        // b. Else if y is -∞, throw a RangeError exception.
+        if (end.is_negative_infinity())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is -∞"sv);
+
+        // c. Else if y is -0𝔽 and x ≥ 0, throw a RangeError exception.
+        if (end.is_negative_zero() && (start.is_zero() || start.is_positive()))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is -0 and start ≥ 0"sv);
+    }
+    // 3. Else if x is +∞, then
+    else if (start.is_positive_infinity()) {
+        // a. If y is a mathematical value, throw a RangeError exception.
+        if (end.is_mathematical_value())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is a mathematical value"sv);
+
+        // b. Else if y is -∞, throw a RangeError exception.
+        if (end.is_negative_infinity())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is -∞"sv);
+
+        // c. Else if y is -0𝔽, throw a RangeError exception.
+        if (end.is_negative_zero())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is -0"sv);
+    }
+    // 4. Else if x is -0𝔽, then
+    else if (start.is_negative_zero()) {
+        // a. If y is a mathematical value and y < 0, throw a RangeError exception.
+        if (end.is_mathematical_value() && end.is_negative())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is -0, end is a mathematical value and end < 0"sv);
+
+        // b. Else if y is -∞, throw a RangeError exception.
+        if (end.is_negative_infinity())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is -0, end is -∞"sv);
+    }
+
+    // 5. Let result be a new empty List.
+    Vector<PatternPartitionWithSource> result;
+
+    // 6. Let xResult be ? PartitionNumberPattern(numberFormat, x).
+    auto raw_start_result = partition_number_pattern(global_object, number_format, move(start));
+    auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
+
+    // 7. Let yResult be ? PartitionNumberPattern(numberFormat, y).
+    auto raw_end_result = partition_number_pattern(global_object, number_format, move(end));
+    auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
+
+    // 8. If xResult is equal to yResult, return FormatApproximately(numberFormat, xResult).
+    if (start_result == end_result)
+        return format_approximately(number_format, move(start_result));
+
+    // 9. For each r in xResult, do
+    for (auto& part : start_result) {
+        // i. Set r.[[Source]] to "startRange".
+        part.source = "startRange"sv;
+    }
+
+    // 10. Add all elements in xResult to result in order.
+    result = move(start_result);
+
+    // 11. Let rangeSeparator be an ILND String value used to separate two numbers.
+    auto range_separator_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::RangeSeparator).value_or("-"sv);
+    auto range_separator = Unicode::augment_range_pattern(range_separator_symbol, result.last().value, end_result[0].value);
+
+    // 12. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
+    PatternPartitionWithSource part;
+    part.type = "literal"sv;
+    part.value = range_separator.value_or(range_separator_symbol);
+    part.source = "shared"sv;
+    result.append(move(part));
+
+    // 13. For each r in yResult, do
+    for (auto& part : end_result) {
+        // a. Set r.[[Source]] to "endRange".
+        part.source = "endRange"sv;
+    }
+
+    // 14. Add all elements in yResult to result in order.
+    result.extend(move(end_result));
+
+    // 15. Return ! CollapseNumberRange(result).
+    return collapse_number_range(move(result));
+}
+
+// 1.1.22 FormatApproximately ( numberFormat, result ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatapproximately
+Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_format, Vector<PatternPartitionWithSource> result)
+{
+    // 1. Let i be an index into result, determined by an implementation-defined algorithm based on numberFormat and result.
+    // 2. Let approximatelySign be an ILND String value used to signify that a number is approximate.
+    auto approximately_sign = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::ApproximatelySign).value_or("~"sv);
+
+    // 3. Insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
+    PatternPartitionWithSource partition;
+    partition.type = "approximatelySign"sv;
+    partition.value = approximately_sign;
+
+    result.insert_before_matching(move(partition), [](auto const& part) {
+        return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
+    });
+
+    // 4. Return result.
+    return result;
+}
+
+// 1.1.23 CollapseNumberRange ( result ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-collapsenumberrange
+Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result)
+{
+    // Returning result unmodified is guaranteed to be a correct implementation of CollapseNumberRange.
+    return result;
+}
+
+// 1.1.24 FormatNumericRange( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumericrange
+ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
+{
+    // 1. Let parts be ? PartitionNumberRangePattern(numberFormat, x, y).
+    auto parts = TRY(partition_number_range_pattern(global_object, number_format, move(start), move(end)));
+
+    // 2. Let result be the empty String.
+    StringBuilder result;
+
+    // 3. For each part in parts, do
+    for (auto& part : parts) {
+        // a. Set result to the string-concatenation of result and part.[[Value]].
+        result.append(move(part.value));
+    }
+
+    // 4. Return result.
+    return result.build();
+}
+
 }
