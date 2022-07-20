@@ -367,7 +367,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     VERIFY(iso_date_time_within_limits(global_object, year2, month2, day2, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2));
 
     // 3. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
-    auto time_difference = difference_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
+    auto time_difference = difference_time(global_object, hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 
     // 4. Let timeSign be ! DurationSign(0, 0, 0, 0, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     auto time_sign = duration_sign(0, 0, 0, 0, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
