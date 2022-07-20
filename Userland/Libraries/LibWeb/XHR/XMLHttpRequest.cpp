@@ -201,7 +201,6 @@ MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
 // https://xhr.spec.whatwg.org/#response-mime-type
 MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
-    // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
     // FIXME: Use an actual HeaderList for XHR headers.
     Fetch::Infrastructure::HeaderList header_list;
     for (auto const& entry : m_response_headers) {
@@ -212,7 +211,8 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
         MUST(header_list.append(move(header)));
     }
 
-    auto mime_type = extract_mime_type(header_list);
+    // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
+    auto mime_type = header_list.extract_mime_type();
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
@@ -253,62 +253,6 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
     // 7. If encoding is failure, then return null.
     // 8. Return encoding.
     return encoding;
-}
-
-// https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
-// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(Fetch::Infrastructure::HeaderList const& header_list) const
-{
-    // 1. Let charset be null.
-    Optional<String> charset;
-
-    // 2. Let essence be null.
-    Optional<String> essence;
-
-    // 3. Let mimeType be null.
-    Optional<MimeSniff::MimeType> mime_type;
-
-    // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
-    auto values = MUST(header_list.get_decode_and_split("Content-Type"sv.bytes()));
-
-    // 5. If values is null, then return failure.
-    if (!values.has_value())
-        return {};
-
-    // 6. For each value of values:
-    for (auto const& value : *values) {
-        // 1. Let temporaryMimeType be the result of parsing value.
-        auto temporary_mime_type = MimeSniff::MimeType::from_string(value);
-
-        // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
-        if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
-            continue;
-
-        // 3. Set mimeType to temporaryMimeType.
-        mime_type = temporary_mime_type;
-
-        // 4. If mimeType’s essence is not essence, then:
-        if (mime_type->essence() != essence) {
-            // 1. Set charset to null.
-            charset = {};
-
-            // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
-            auto charset_it = mime_type->parameters().find("charset"sv);
-            if (charset_it != mime_type->parameters().end())
-                charset = charset_it->value;
-
-            // 3. Set essence to mimeType’s essence.
-            essence = mime_type->essence();
-        } else {
-            // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
-            if (!mime_type->parameters().contains("charset"sv) && charset.has_value())
-                mime_type->set_parameter("charset"sv, charset.value());
-        }
-    }
-
-    // 7. If mimeType is null, then return failure.
-    // 8. Return mimeType.
-    return mime_type;
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
