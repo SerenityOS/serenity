@@ -39,6 +39,7 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
 {
     QNetworkRequest request { QString(url.to_string().characters()) };
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+    request.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 
     QNetworkReply* reply = nullptr;
 
