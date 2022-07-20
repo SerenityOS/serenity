@@ -1710,4 +1710,13 @@ bool FlexFormattingContext::flex_item_is_stretched(FlexItem const& item) const
     return computed_cross_size.is_auto() && !item.margins.cross_before_is_auto && !item.margins.cross_after_is_auto;
 }
 
+CSS::LengthPercentage const& FlexFormattingContext::computed_main_size(Box const& box) const
+{
+    return is_row_layout() ? box.computed_values().width() : box.computed_values().height();
+}
+CSS::LengthPercentage const& FlexFormattingContext::computed_cross_size(Box const& box) const
+{
+    return !is_row_layout() ? box.computed_values().width() : box.computed_values().height();
+}
+
 }

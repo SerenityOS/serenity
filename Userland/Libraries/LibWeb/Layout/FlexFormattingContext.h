@@ -105,6 +105,8 @@ private:
     Optional<float> specified_size_suggestion(FlexItem const&) const;
     Optional<float> transferred_size_suggestion(FlexItem const&) const;
     float content_size_suggestion(FlexItem const&) const;
+    CSS::LengthPercentage const& computed_main_size(Box const&) const;
+    CSS::LengthPercentage const& computed_cross_size(Box const&) const;
 
     float get_pixel_width(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
     float get_pixel_height(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
