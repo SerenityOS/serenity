@@ -180,25 +180,6 @@ struct LocalTime {
     u16 millisecond { 0 }; // [[Millisecond]]
 };
 
-struct PatternPartitionWithSource : public PatternPartition {
-    static Vector<PatternPartitionWithSource> create_from_parent_list(Vector<PatternPartition> partitions)
-    {
-        Vector<PatternPartitionWithSource> result;
-        result.ensure_capacity(partitions.size());
-
-        for (auto& partition : partitions) {
-            PatternPartitionWithSource partition_with_source {};
-            partition_with_source.type = partition.type;
-            partition_with_source.value = move(partition.value);
-            result.append(move(partition_with_source));
-        }
-
-        return result;
-    }
-
-    StringView source;
-};
-
 ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired, OptionDefaults);
 Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
 Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
