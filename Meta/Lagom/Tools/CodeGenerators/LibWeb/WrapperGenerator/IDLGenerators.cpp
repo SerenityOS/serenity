@@ -3774,7 +3774,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
 
-    define_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_native_function(vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 
