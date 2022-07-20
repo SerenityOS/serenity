@@ -42,16 +42,21 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
 
     QNetworkReply* reply = nullptr;
 
+    for (auto& it : request_headers) {
+        // FIXME: We currently strip the Accept-Encoding header on outgoing requests from LibWeb
+        //        since otherwise it'll ask for compression without Qt being aware of it.
+        //        This is very hackish and I'm sure we can do it in concert with Qt somehow.
+        if (it.key == "Accept-Encoding")
+            continue;
+        request.setRawHeader(QByteArray(it.key.characters()), QByteArray(it.value.characters()));
+    }
+
     if (method.equals_ignoring_case("head"sv)) {
         reply = qnam.head(request);
     } else if (method.equals_ignoring_case("get"sv)) {
         reply = qnam.get(request);
     } else if (method.equals_ignoring_case("post"sv)) {
         reply = qnam.post(request, QByteArray((char const*)request_body.data(), request_body.size()));
-    }
-
-    for (auto& it : request_headers) {
-        request.setRawHeader(it.key.characters(), it.value.characters());
     }
 
     return adopt_ref(*new Request(*reply));
