@@ -1484,7 +1484,10 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
             else if (flex_item->desired_flex_fraction < 0)
                 product = chosen_flex_fraction * flex_item->scaled_flex_shrink_factor;
             auto result = flex_item->flex_base_size + product;
-            // FIXME: Clamp result to min/max main size
+
+            auto clamp_min = has_main_min_size(flex_item->box) ? specified_main_min_size(flex_item->box) : automatic_minimum_size(*flex_item);
+            auto clamp_max = has_main_max_size(flex_item->box) ? specified_main_max_size(flex_item->box) : NumericLimits<float>::max();
+            result = css_clamp(result, clamp_min, clamp_max);
 
             // NOTE: The spec doesn't mention anything about the *outer* size here, but if we don't add the margin box,
             //       flex items with non-zero padding/border/margin in the main axis end up overflowing the container.
@@ -1493,6 +1496,7 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
             sum += result;
         }
 
+        // 5. The flex container’s max-content size is the largest sum (among all the lines) of the afore-calculated sizes of all items within a single line.
         largest_sum = max(largest_sum, sum);
     }
 
