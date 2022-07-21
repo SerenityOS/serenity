@@ -1425,6 +1425,10 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
             auto result = flex_item->flex_base_size + product;
             // FIXME: Clamp result to min/max main size
 
+            // NOTE: The spec doesn't mention anything about the *outer* size here, but if we don't add the margin box,
+            //       flex items with non-zero padding/border/margin in the main axis end up overflowing the container.
+            result = flex_item->add_main_margin_box_sizes(result);
+
             sum += result;
         }
 
