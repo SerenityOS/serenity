@@ -247,6 +247,10 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
+    case CSS::TransformFunction::Rotate:
+        if (count == 1)
+            return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
+        break;
     default:
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_string());
     }
