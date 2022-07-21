@@ -14,6 +14,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_
       "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
 endif()
 
+if (CYGWIN)
+    set(BUILD_SHARED_LIBS OFF)
+    unset(BUILD_LAGOM CACHE)
+    message(STATUS "Disabled unsupported Lagom libraries/apps and shared libraries under cygwin")
+endif()
+
 # This is required for CMake (when invoked for a Lagom-only build) to
 # ignore any files downloading during the build, e.g. UnicodeData.txt.
 # https://cmake.org/cmake/help/latest/policy/CMP0058.html
@@ -256,18 +262,24 @@ if (NOT TARGET all_generated)
     add_custom_target(all_generated)
 endif()
 
+# Only enable gcc extensions for LibCore, LibMain & LibTimeZone under cygwin
+if (CYGWIN)
+    set(CMAKE_CXX_EXTENSIONS ON)
+endif()
+
 # AK/LibCore
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
-if (ANDROID)
+if (ANDROID OR CYGWIN)
     list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
+    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Group.cpp")
 endif()
 lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
     LIBS Threads::Threads
 )
-if (NOT APPLE AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+if (NOT APPLE AND NOT ANDROID AND NOT CYGWIN AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     target_link_libraries(LibCore crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 
@@ -289,6 +301,11 @@ lagom_lib(TimeZone timezone
     SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
 )
 target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+
+# Disable previously enabled gcc extensions
+if (CYGWIN)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 
 # Manually install AK headers
 install(

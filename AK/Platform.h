@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,6 +26,16 @@
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 #    define AK_OS_BSD_GENERIC
+#endif
+
+#if defined(__CYGWIN__) || defined(_WIN32)
+#    define AK_OS_WIN32
+#    undef __POSIX_VISIBLE
+#    define __POSIX_VISIBLE 200809
+#    undef __XSI_VISIBLE
+#    define __XSI_VISIBLE 700
+#    undef __GNU_VISIBLE
+#    define __GNU_VISIBLE 1
 #endif
 
 // FIXME: Remove clang-format suppression after https://github.com/llvm/llvm-project/issues/56602 resolved
@@ -121,7 +132,7 @@ extern "C" {
 #    endif
 #endif
 
-#ifdef AK_OS_BSD_GENERIC
+#if defined(AK_OS_BSD_GENERIC) || defined(AK_OS_WIN32)
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif

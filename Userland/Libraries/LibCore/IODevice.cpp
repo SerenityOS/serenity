@@ -15,6 +15,10 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#if defined(AK_OS_WIN32)
+#    include <sys/unistd.h>
+#endif
+
 namespace Core {
 
 IODevice::IODevice(Object* parent)

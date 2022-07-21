@@ -17,7 +17,7 @@
 #    include <unistd.h>
 #endif
 
-#if defined(AK_OS_MACOS)
+#if defined(AK_OS_MACOS) || defined(AK_OS_WIN32)
 #    include <sys/random.h>
 #endif
 

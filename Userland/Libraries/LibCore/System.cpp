@@ -19,10 +19,13 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/ptrace.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
+
+#if !defined(AK_OS_WIN32)
+#    include <sys/ptrace.h>
+#endif
 
 #ifdef __serenity__
 #    include <LibSystem/syscall.h>
@@ -183,7 +186,7 @@ ErrorOr<void> profiling_free_buffer(pid_t pid)
 }
 #endif
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID) && !defined(AK_OS_WIN32)
 ErrorOr<Optional<struct spwd>> getspent()
 {
     errno = 0;
@@ -918,7 +921,7 @@ ErrorOr<struct utsname> uname()
     return uts;
 }
 
-#ifndef AK_OS_ANDROID
+#if !defined(AK_OS_ANDROID) && !defined(AK_OS_WIN32)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 {
 #    ifdef __serenity__
@@ -1183,7 +1186,7 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2])
 ErrorOr<Array<int, 2>> pipe2([[maybe_unused]] int flags)
 {
     Array<int, 2> fds;
-#if defined(__unix__)
+#if defined(__unix__) && !defined(AK_OS_WIN32)
     if (::pipe2(fds.data(), flags) < 0)
         return Error::from_syscall("pipe2"sv, -errno);
 #else

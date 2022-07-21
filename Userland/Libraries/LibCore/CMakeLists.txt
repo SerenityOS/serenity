@@ -13,7 +13,6 @@ set(SOURCES
     File.cpp
     FilePermissionsMask.cpp
     GetPassword.cpp
-    Group.cpp
     IODevice.cpp
     LocalServer.cpp
     LockFile.cpp
@@ -37,8 +36,9 @@ set(SOURCES
     UDPServer.cpp
     Version.cpp
 )
-if (NOT ANDROID)
+if (NOT ANDROID AND NOT CYGWIN)
     list(APPEND SOURCES Account.cpp)
+    list(APPEND SOURCES Group.cpp)
 endif()
 
 serenity_lib(LibCore core)

@@ -9,6 +9,10 @@
 #include <errno.h>
 #include <unistd.h>
 
+#if defined(AK_OS_WIN32)
+#    include <dirent.h>
+#endif
+
 namespace Core {
 
 DirIterator::DirIterator(String path, Flags flags)
