@@ -460,7 +460,8 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
     add_option(move(option));
 }
 
-void ArgsParser::add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+template<typename Integral>
+void ArgsParser::add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode) requires(IsIntegral<Integral>)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -469,7 +470,12 @@ void ArgsParser::add_option(int& value, char const* help_string, char const* lon
         short_name,
         value_name,
         [&value](char const* s) {
-            auto opt = StringView { s, strlen(s) }.to_int();
+            auto view = StringView { s, strlen(s) };
+            Optional<Integral> opt;
+            if constexpr (IsSigned<Integral>)
+                opt = view.to_int<Integral>();
+            else
+                opt = view.to_uint<Integral>();
             value = opt.value_or(0);
             return opt.has_value();
         },
@@ -478,23 +484,8 @@ void ArgsParser::add_option(int& value, char const* help_string, char const* lon
     add_option(move(option));
 }
 
-void ArgsParser::add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        OptionArgumentMode::Required,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](char const* s) {
-            auto opt = StringView { s, strlen(s) }.to_uint();
-            value = opt.value_or(0);
-            return opt.has_value();
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
+template void ArgsParser::add_option(int&, char const*, char const*, char, char const*, OptionHideMode);
+template void ArgsParser::add_option(unsigned&, char const*, char const*, char, char const*, OptionHideMode);
 
 void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
