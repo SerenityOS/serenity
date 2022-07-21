@@ -2240,8 +2240,10 @@ Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calen
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Era, style);
 
-    if (auto value_index = to_underlying(value); value_index < symbols.size())
-        return s_string_list[symbols.at(value_index)];
+    if (auto value_index = to_underlying(value); value_index < symbols.size()) {
+        if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
+            return s_string_list[symbol_index];
+    }
 
     return {};
 }
@@ -2250,8 +2252,10 @@ Optional<StringView> get_calendar_month_symbol(StringView locale, StringView cal
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Month, style);
 
-    if (auto value_index = to_underlying(value); value_index < symbols.size())
-        return s_string_list[symbols.at(value_index)];
+    if (auto value_index = to_underlying(value); value_index < symbols.size()) {
+        if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
+            return s_string_list[symbol_index];
+    }
 
     return {};
 }
@@ -2260,8 +2264,10 @@ Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView c
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Weekday, style);
 
-    if (auto value_index = to_underlying(value); value_index < symbols.size())
-        return s_string_list[symbols.at(value_index)];
+    if (auto value_index = to_underlying(value); value_index < symbols.size()) {
+        if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
+            return s_string_list[symbol_index];
+    }
 
     return {};
 }
@@ -2270,8 +2276,10 @@ Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringVie
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::DayPeriod, style);
 
-    if (auto value_index = to_underlying(value); value_index < symbols.size())
-        return s_string_list[symbols.at(value_index)];
+    if (auto value_index = to_underlying(value); value_index < symbols.size()) {
+        if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
+            return s_string_list[symbol_index];
+    }
 
     return {};
 }
