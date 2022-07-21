@@ -124,6 +124,23 @@ struct Sample {
         return { left * mult, right * mult };
     }
 
+    constexpr Sample operator*(Sample const mult) const
+    {
+        return { left * mult.left, right * mult.right };
+    }
+
+    constexpr Sample& operator/=(Sample const mult)
+    {
+        left /= mult.left;
+        right /= mult.right;
+        return *this;
+    }
+
+    constexpr Sample operator/(Sample const mult) const
+    {
+        return { left / mult.left, right / mult.right };
+    }
+
     constexpr Sample& operator+=(Sample const& other)
     {
         left += other.left;
