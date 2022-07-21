@@ -50,6 +50,7 @@ enum class Weekday : u8 {
 enum class DayPeriod : u8 {
     AM,
     PM,
+    Noon,
     Morning1,
     Morning2,
     Afternoon1,
