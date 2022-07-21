@@ -590,6 +590,8 @@ static Optional<Unicode::DayPeriod> day_period_from_string(StringView day_period
         return Unicode::DayPeriod::AM;
     if (day_period == "pm"sv)
         return Unicode::DayPeriod::PM;
+    if (day_period == "noon"sv)
+        return Unicode::DayPeriod::Noon;
     if (day_period == "morning1"sv)
         return Unicode::DayPeriod::Morning1;
     if (day_period == "morning2"sv)
@@ -1364,7 +1366,7 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
         auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
         auto const& long_symbols = symbols_object.get("wide"sv).as_object();
-        auto symbol_lists = create_symbol_lists(10);
+        auto symbol_lists = create_symbol_lists(11);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
             if (auto day_period = day_period_from_string(key); day_period.has_value())
@@ -1613,6 +1615,9 @@ static ErrorOr<void> parse_day_periods(String core_path, UnicodeLocaleData& loca
     };
 
     auto parse_day_period = [&](auto const& symbol, auto const& ranges) -> Optional<DayPeriod> {
+        if (!ranges.has("_from"sv))
+            return {};
+
         auto day_period = day_period_from_string(symbol);
         if (!day_period.has_value())
             return {};
