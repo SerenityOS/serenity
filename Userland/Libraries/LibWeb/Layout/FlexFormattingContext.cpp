@@ -376,15 +376,15 @@ bool FlexFormattingContext::is_cross_auto(Box const& box) const
 bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
 {
     if (is_row_layout())
-        return box.computed_values().margin().left.is_length() && box.computed_values().margin().left.length().is_auto();
-    return box.computed_values().margin().top.is_length() && box.computed_values().margin().top.length().is_auto();
+        return box.computed_values().margin().left.length().is_auto();
+    return box.computed_values().margin().top.length().is_auto();
 }
 
 bool FlexFormattingContext::is_main_axis_margin_second_auto(Box const& box) const
 {
     if (is_row_layout())
-        return box.computed_values().margin().right.is_length() && box.computed_values().margin().right.length().is_auto();
-    return box.computed_values().margin().bottom.is_length() && box.computed_values().margin().bottom.length().is_auto();
+        return box.computed_values().margin().right.length().is_auto();
+    return box.computed_values().margin().bottom.length().is_auto();
 }
 
 void FlexFormattingContext::set_main_size(Box const& box, float size)
