@@ -1001,9 +1001,22 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        // FIXME: 6. If Type(V) is Object and V has an [[ArrayBufferData]] internal slot, then
-        //           1. If types includes ArrayBuffer, then return the result of converting V to ArrayBuffer.
-        //           2. If types includes object, then return the IDL value that is a reference to the object V.
+        // 6. If Type(V) is Object and V has an [[ArrayBufferData]] internal slot, then
+        //    1. If types includes ArrayBuffer, then return the result of converting V to ArrayBuffer.
+        for (auto& type : types) {
+            if (type.name == "BufferSource") {
+                union_generator.append(R"~~~(
+            if (is<JS::ArrayBuffer>(@js_name@@js_suffix@_object))
+                return JS::make_handle(@js_name@@js_suffix@_object);
+)~~~");
+            }
+        }
+        //    2. If types includes object, then return the IDL value that is a reference to the object V.
+        if (includes_object) {
+            union_generator.append(R"~~~(
+            return @js_name@@js_suffix@_object;
+)~~~");
+        }
 
         // FIXME: 7. If Type(V) is Object and V has a [[DataView]] internal slot, then:
         //           1. If types includes DataView, then return the result of converting V to DataView.
@@ -2835,6 +2848,7 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
