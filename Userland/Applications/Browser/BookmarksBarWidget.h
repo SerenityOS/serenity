@@ -39,6 +39,12 @@ public:
     bool add_bookmark(String const& url, String const& title);
     bool edit_bookmark(String const& url);
 
+    virtual Optional<GUI::UISize> calculated_min_size() const override
+    {
+        // Large enough to fit the `m_additional` button.
+        return GUI::UISize(20, 20);
+    }
+
 private:
     BookmarksBarWidget(String const&, bool enabled);
 
