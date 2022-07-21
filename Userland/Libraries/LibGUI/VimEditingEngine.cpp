@@ -971,6 +971,12 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
                 move_one_up(event);
                 switch_to_insert_mode();
                 return true;
+            case (KeyCode::Key_V):
+                move_to_logical_line_beginning();
+                switch_to_visual_mode();
+                m_editor->select_current_line();
+                m_editor->update_selection(true);
+                return true;
             case (KeyCode::Key_LeftBrace): {
                 auto amount = m_motion.amount() > 0 ? m_motion.amount() : 1;
                 m_motion.reset();
@@ -1152,6 +1158,11 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
         case (KeyCode::Key_Tilde):
             casefold_selection(Casing::Invertcase);
             switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_V):
+            move_to_logical_line_beginning();
+            m_editor->select_current_line();
+            m_editor->update_selection(true);
             return true;
         default:
             break;
