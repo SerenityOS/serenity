@@ -2289,14 +2289,18 @@ Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, 
 
     for (auto day_period_index : day_periods) {
         auto day_period = s_day_periods[day_period_index];
-        auto h = hour;
+        bool hour_falls_within_day_period = false;
 
         if (day_period.begin > day_period.end) {
-            day_period.end += 24;
-            h += 24;
+            if (hour >= day_period.begin)
+                hour_falls_within_day_period = true;
+            else if (hour <= day_period.end)
+                hour_falls_within_day_period = true;
+        } else if ((day_period.begin <= hour) && (hour < day_period.end)) {
+            hour_falls_within_day_period = true;
         }
 
-        if ((day_period.begin <= h) && (h < day_period.end)) {
+        if (hour_falls_within_day_period) {
             auto period = static_cast<DayPeriod>(day_period.day_period);
             return get_calendar_day_period_symbol(locale, calendar, style, period);
         }

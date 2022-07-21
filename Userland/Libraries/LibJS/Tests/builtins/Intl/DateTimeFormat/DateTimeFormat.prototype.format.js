@@ -263,11 +263,15 @@ describe("dayPeriod", () => {
     });
 
     test("flexible day period rolls over midnight", () => {
-        // For the en locale, this time (05:00) falls in the flexible day period range of [21:00, 06:00).
-        const date = Date.UTC(2017, 11, 12, 5, 0, 0, 0);
-
         const en = new Intl.DateTimeFormat("en", { dayPeriod: "short", timeZone: "UTC" });
-        expect(en.format(date)).toBe("5 at night");
+
+        // For the en locale, these times (05:00 and 23:00) fall in the flexible day period range of
+        // [21:00, 06:00), on either side of midnight.
+        const date1 = Date.UTC(2017, 11, 12, 5, 0, 0, 0);
+        const date2 = Date.UTC(2017, 11, 12, 23, 0, 0, 0);
+
+        expect(en.format(date1)).toBe("5 at night");
+        expect(en.format(date2)).toBe("11 at night");
     });
 });
 
