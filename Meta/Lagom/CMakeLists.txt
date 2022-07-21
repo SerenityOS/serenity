@@ -344,6 +344,13 @@ if (BUILD_LAGOM)
         LIBS LibIPC
     )
 
+    # DSP
+    file(GLOB LIBDSP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibDSP/*.cpp")
+    lagom_lib(DSP dsp
+        SOURCES ${LIBDSP_SOURCES}
+        LIBS LibAudio
+    )
+
     # ELF
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
@@ -657,6 +664,12 @@ if (BUILD_LAGOM)
         file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
         foreach(source ${LIBCOMPRESS_TESTS})
             lagom_test(${source} LIBS LibCompress)
+        endforeach()
+
+        # DSP
+        file(GLOB LIBDSP_TESTS CONFIGURE_DEPENDS "../../Tests/LibDSP/*.cpp")
+        foreach(source ${LIBDSP_TESTS})
+            lagom_test(${source} LIBS LibDSP)
         endforeach()
 
         # GL
