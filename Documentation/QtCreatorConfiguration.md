@@ -1,4 +1,4 @@
-# Using Qt Creator for working with SerenityOS
+# Qt Creator Project Configuration
 
 ## Setup
 
