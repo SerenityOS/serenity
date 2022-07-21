@@ -378,6 +378,7 @@ if (BUILD_LAGOM)
         Audio
         Compress
         Crypto
+        DSP
         DNS
         Gemini
         Gfx
@@ -595,6 +596,7 @@ if (BUILD_LAGOM)
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
             AK
+            LibDSP
             LibCrypto
             LibCompress
             LibGL
