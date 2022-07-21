@@ -273,6 +273,48 @@ describe("dayPeriod", () => {
         expect(en.format(date1)).toBe("5 at night");
         expect(en.format(date2)).toBe("11 at night");
     });
+
+    test("noon", () => {
+        const date0 = Date.UTC(2017, 11, 12, 12, 0, 0, 0);
+        const date1 = Date.UTC(2017, 11, 12, 12, 1, 0, 0);
+        const date2 = Date.UTC(2017, 11, 12, 12, 0, 1, 0);
+        const date3 = Date.UTC(2017, 11, 12, 12, 0, 0, 500);
+
+        // prettier-ignore
+        const data = [
+            { minute: undefined, second: undefined, fractionalSecondDigits: undefined, en0: "12 noon", en1: "12 noon", en2: "12 noon", en3: "12 noon", ar0: "١٢ ظهرًا", ar1: "١٢ ظهرًا", ar2: "١٢ ظهرًا", ar3: "١٢ ظهرًا" },
+            { minute: "numeric", second: undefined, fractionalSecondDigits: undefined, en0: "12:00 noon", en1: "12:01 in the afternoon", en2: "12:00 noon", en3: "12:00 noon", ar0: "١٢:٠٠ ظهرًا", ar1: "١٢:٠١ ظهرًا", ar2: "١٢:٠٠ ظهرًا", ar3: "١٢:٠٠ ظهرًا" },
+            { minute: "numeric", second: "numeric", fractionalSecondDigits: undefined, en0: "12:00:00 noon", en1: "12:01:00 in the afternoon", en2: "12:00:01 in the afternoon", en3: "12:00:00 noon", ar0: "١٢:٠٠:٠٠ ظهرًا", ar1: "١٢:٠١:٠٠ ظهرًا", ar2: "١٢:٠٠:٠١ ظهرًا", ar3: "١٢:٠٠:٠٠ ظهرًا" },
+            { minute: "numeric", second: "numeric", fractionalSecondDigits: 1, en0: "12:00:00.0 noon", en1: "12:01:00.0 in the afternoon", en2: "12:00:01.0 in the afternoon", en3: "12:00:00.5 in the afternoon", ar0: "١٢:٠٠:٠٠٫٠ ظهرًا", ar1: "١٢:٠١:٠٠٫٠ ظهرًا", ar2: "١٢:٠٠:٠١٫٠ ظهرًا", ar3: "١٢:٠٠:٠٠٫٥ ظهرًا" },
+        ];
+
+        // The en locale includes the "noon" fixed day period, whereas the ar locale does not.
+        data.forEach(d => {
+            const en = new Intl.DateTimeFormat("en", {
+                dayPeriod: "short",
+                timeZone: "UTC",
+                minute: d.minute,
+                second: d.second,
+                fractionalSecondDigits: d.fractionalSecondDigits,
+            });
+            expect(en.format(date0)).toBe(d.en0);
+            expect(en.format(date1)).toBe(d.en1);
+            expect(en.format(date2)).toBe(d.en2);
+            expect(en.format(date3)).toBe(d.en3);
+
+            const ar = new Intl.DateTimeFormat("ar", {
+                dayPeriod: "short",
+                timeZone: "UTC",
+                minute: d.minute,
+                second: d.second,
+                fractionalSecondDigits: d.fractionalSecondDigits,
+            });
+            expect(ar.format(date0)).toBe(d.ar0);
+            expect(ar.format(date1)).toBe(d.ar1);
+            expect(ar.format(date2)).toBe(d.ar2);
+            expect(ar.format(date3)).toBe(d.ar3);
+        });
+    });
 });
 
 describe("hour", () => {
