@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<sigaction const*> 
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::sigaction));
-    if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
+    if (signum < 1 || signum >= NSIG || signum == SIGKILL || signum == SIGSTOP)
         return EINVAL;
 
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
