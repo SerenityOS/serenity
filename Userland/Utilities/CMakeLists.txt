@@ -11,47 +11,52 @@ list(APPEND RECOMMENDED_TARGETS
     nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
-# FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
-
+# when ENABLE_JAKT=ON yakt executables added to the YAKT_TARGETS list won't have the C++ version of the same name built if it exists
+set(JAKT_TARGETS "")
 if (ENABLE_JAKT)
     add_jakt_executable(hello-jakt hello-world.jakt)
+
+    list(APPEND JAKT_TARGETS hello-jakt)
 endif()
 
-foreach(CMD_SRC ${CMD_SOURCES})
+# FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
+foreach(CMD_SRC IN LISTS CMD_SOURCES)
     get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
-    if (CMD_NAME IN_LIST SPECIAL_TARGETS)
-        set(TARGET_NAME "${CMD_NAME}-bin")
-    else()
-        set(TARGET_NAME "${CMD_NAME}")
-    endif()
-    if(CMD_NAME IN_LIST REQUIRED_TARGETS)
-        serenity_component(
-            ${CMD_NAME}
-            REQUIRED
-            TARGETS ${TARGET_NAME}
-        )
-    elseif(CMD_NAME IN_LIST RECOMMENDED_TARGETS)
-        serenity_component(
-            ${CMD_NAME}
-            RECOMMENDED
-            TARGETS ${TARGET_NAME}
-        )
-    else()
-        serenity_component(
-            ${CMD_NAME}
-            TARGETS ${TARGET_NAME}
-        )
-    endif()
-    if (CMD_NAME IN_LIST SPECIAL_TARGETS)
-        add_executable(${TARGET_NAME} ${CMD_SRC})
-        target_link_libraries(${TARGET_NAME} LibCore LibMain)
-        install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin)
-        install(CODE "file(RENAME ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME})")
-    else()
-        add_executable(${CMD_NAME} ${CMD_SRC})
-        set_target_properties(${CMD_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
-        target_link_libraries(${CMD_NAME} LibCore)
-        install(TARGETS ${CMD_NAME} RUNTIME DESTINATION bin OPTIONAL)
+    if(NOT CMD_NAME IN_LIST JAKT_TARGETS)
+        if (CMD_NAME IN_LIST SPECIAL_TARGETS)
+            set(TARGET_NAME "${CMD_NAME}-bin")
+        else()
+            set(TARGET_NAME "${CMD_NAME}")
+        endif()
+        if(CMD_NAME IN_LIST REQUIRED_TARGETS)
+            serenity_component(
+                ${CMD_NAME}
+                REQUIRED
+                TARGETS ${TARGET_NAME}
+            )
+        elseif(CMD_NAME IN_LIST RECOMMENDED_TARGETS)
+            serenity_component(
+                ${CMD_NAME}
+                RECOMMENDED
+                TARGETS ${TARGET_NAME}
+            )
+        else()
+            serenity_component(
+                ${CMD_NAME}
+                TARGETS ${TARGET_NAME}
+            )
+        endif()
+        if (CMD_NAME IN_LIST SPECIAL_TARGETS)
+            add_executable(${TARGET_NAME} ${CMD_SRC})
+            target_link_libraries(${TARGET_NAME} LibCore LibMain)
+            install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin)
+            install(CODE "file(RENAME ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME})")
+        else()
+            add_executable(${CMD_NAME} ${CMD_SRC})
+            set_target_properties(${CMD_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+            target_link_libraries(${CMD_NAME} LibCore)
+            install(TARGETS ${CMD_NAME} RUNTIME DESTINATION bin OPTIONAL)
+        endif()
     endif()
 endforeach()
 
