@@ -164,6 +164,8 @@ private:
     [[nodiscard]] float calculate_fit_content_main_size(FlexItem const&) const;
     [[nodiscard]] float calculate_fit_content_cross_size(FlexItem const&) const;
 
+    virtual void parent_context_did_dimension_child_root_box() override;
+
     CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
 
     LayoutState::UsedValues& m_flex_container_state;
