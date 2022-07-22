@@ -115,7 +115,7 @@ String guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(compressed_iso, "extra/isz", 0, 4, 'I', 's', 'Z', '!')                                                          \
     __ENUMERATE_MIME_TYPE_HEADER(elf, "extra/elf", 0, 4, 0x7F, 'E', 'L', 'F')                                                                    \
     __ENUMERATE_MIME_TYPE_HEADER(ext, "extra/ext", 0x438, 2, 0x53, 0xEF)                                                                         \
-    __ENUMERATE_MIME_TYPE_HEADER(flac, "extra/flac", 0, 4, 0x66, 0x4C, 0x61, 0x43)                                                               \
+    __ENUMERATE_MIME_TYPE_HEADER(flac, "audio/flac", 0, 4, 'f', 'L', 'a', 'C')                                                                   \
     __ENUMERATE_MIME_TYPE_HEADER(gif_87, "image/gif", 0, 6, 'G', 'I', 'F', '8', '7', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gif_89, "image/gif", 0, 6, 'G', 'I', 'F', '8', '9', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gzip, "application/gzip", 0, 2, 0x1F, 0x8B)                                                                     \
