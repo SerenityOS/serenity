@@ -65,13 +65,13 @@ struct Sample {
     // - Linear:        0.0 to 1.0
     // - Logarithmic:   0.0 to 1.0
 
-    ALWAYS_INLINE float linear_to_log(float const change) const
+    static ALWAYS_INLINE float linear_to_log(float const change)
     {
         // TODO: Add linear slope around 0
         return VOLUME_A * exp(VOLUME_B * change);
     }
 
-    ALWAYS_INLINE float log_to_linear(float const val) const
+    static ALWAYS_INLINE float log_to_linear(float const val)
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
