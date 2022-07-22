@@ -263,7 +263,11 @@ describe("dayPeriod", () => {
     });
 
     test("flexible day period rolls over midnight", () => {
-        const en = new Intl.DateTimeFormat("en", { dayPeriod: "short", timeZone: "UTC" });
+        const en = new Intl.DateTimeFormat("en", {
+            hour: "numeric",
+            dayPeriod: "short",
+            timeZone: "UTC",
+        });
 
         // For the en locale, these times (05:00 and 23:00) fall in the flexible day period range of
         // [21:00, 06:00), on either side of midnight.
@@ -291,6 +295,7 @@ describe("dayPeriod", () => {
         // The en locale includes the "noon" fixed day period, whereas the ar locale does not.
         data.forEach(d => {
             const en = new Intl.DateTimeFormat("en", {
+                hour: "numeric",
                 dayPeriod: "short",
                 timeZone: "UTC",
                 minute: d.minute,
@@ -303,6 +308,7 @@ describe("dayPeriod", () => {
             expect(en.format(date3)).toBe(d.en3);
 
             const ar = new Intl.DateTimeFormat("ar", {
+                hour: "numeric",
                 dayPeriod: "short",
                 timeZone: "UTC",
                 minute: d.minute,
@@ -313,6 +319,38 @@ describe("dayPeriod", () => {
             expect(ar.format(date1)).toBe(d.ar1);
             expect(ar.format(date2)).toBe(d.ar2);
             expect(ar.format(date3)).toBe(d.ar3);
+        });
+    });
+
+    test("dayPeriod without time", () => {
+        // prettier-ignore
+        const data = [
+            { dayPeriod: "narrow", en0: "in the afternoon", en1: "in the morning", ar0: "بعد الظهر", ar1: "صباحًا", as0: "অপৰাহ্ন", as1: "পূৰ্বাহ্ন"},
+            { dayPeriod: "short", en0: "in the afternoon", en1: "in the morning", ar0: "بعد الظهر", ar1: "ص", as0: "অপৰাহ্ন", as1: "পূৰ্বাহ্ন"},
+            { dayPeriod: "long", en0: "in the afternoon", en1: "in the morning", ar0: "بعد الظهر", ar1: "صباحًا", as0: "অপৰাহ্ন", as1: "পূৰ্বাহ্ন"},
+        ];
+
+        data.forEach(d => {
+            const en = new Intl.DateTimeFormat("en", {
+                dayPeriod: d.dayPeriod,
+                timeZone: "UTC",
+            });
+            expect(en.format(d0)).toBe(d.en0);
+            expect(en.format(d1)).toBe(d.en1);
+
+            const ar = new Intl.DateTimeFormat("ar", {
+                dayPeriod: d.dayPeriod,
+                timeZone: "UTC",
+            });
+            expect(ar.format(d0)).toBe(d.ar0);
+            expect(ar.format(d1)).toBe(d.ar1);
+
+            const as = new Intl.DateTimeFormat("as", {
+                dayPeriod: d.dayPeriod,
+                timeZone: "UTC",
+            });
+            expect(as.format(d0)).toBe(d.as0);
+            expect(as.format(d1)).toBe(d.as1);
         });
     });
 });
