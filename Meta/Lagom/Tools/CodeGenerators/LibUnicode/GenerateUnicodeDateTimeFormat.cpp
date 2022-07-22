@@ -1160,6 +1160,21 @@ static void parse_interval_patterns(Calendar& calendar, JsonObject const& interv
     calendar.range12_formats = locale_data.unique_range_pattern_lists.ensure(move(range12_formats));
 }
 
+static void generate_default_patterns(CalendarPatternList& formats, UnicodeLocaleData& locale_data)
+{
+    // For compatibility with ICU, we generate a list of default patterns for every locale:
+    // https://github.com/unicode-org/icu/blob/release-71-1/icu4c/source/i18n/dtptngen.cpp#L1343-L1354=
+    static constexpr auto default_patterns = Array { "G"sv, "y"sv, "M"sv, "E"sv, "D"sv, "F"sv, "d"sv, "a"sv, "B"sv, "H"sv, "mm"sv, "ss"sv, "SS"sv, "v"sv };
+
+    for (auto pattern : default_patterns) {
+        auto index = parse_date_time_pattern(pattern, pattern, locale_data);
+        VERIFY(index.has_value());
+
+        if (!formats.contains_slow(*index))
+            formats.append(*index);
+    }
+}
+
 static void generate_missing_patterns(Calendar& calendar, CalendarPatternList& formats, Vector<CalendarPattern> date_formats, Vector<CalendarPattern> time_formats, UnicodeLocaleData& locale_data)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Missing_Skeleton_Fields
@@ -1473,6 +1488,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         auto const& interval_formats_object = date_time_formats_object.as_object().get("intervalFormats"sv);
         parse_interval_patterns(calendar, interval_formats_object.as_object(), locale_data);
 
+        generate_default_patterns(available_formats, locale_data);
         generate_missing_patterns(calendar, available_formats, move(date_formats), move(time_formats), locale_data);
         parse_calendar_symbols(calendar, value.as_object(), locale_data);
 
