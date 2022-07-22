@@ -102,6 +102,17 @@ bool AppFile::run_in_terminal() const
     return m_config->read_bool_entry("App", "RunInTerminal", false);
 }
 
+Vector<String> AppFile::launcher_mime_types() const
+{
+    Vector<String> mime_types;
+    for (auto& entry : m_config->read_entry("Launcher", "MimeTypes").split(',')) {
+        entry = entry.trim_whitespace();
+        if (!entry.is_empty())
+            mime_types.append(entry);
+    }
+    return mime_types;
+}
+
 Vector<String> AppFile::launcher_file_types() const
 {
     Vector<String> file_types;

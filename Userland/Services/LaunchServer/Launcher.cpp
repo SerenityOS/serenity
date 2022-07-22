@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
 #include <errno.h>
@@ -83,6 +84,9 @@ void Launcher::load_handlers(String const& af_dir)
     Desktop::AppFile::for_each([&](auto af) {
         auto app_name = af->name();
         auto app_executable = af->executable();
+        HashTable<String> mime_types;
+        for (auto& mime_type : af->launcher_mime_types())
+            mime_types.set(mime_type);
         HashTable<String> file_types;
         for (auto& file_type : af->launcher_file_types())
             file_types.set(file_type);
@@ -90,13 +94,22 @@ void Launcher::load_handlers(String const& af_dir)
         for (auto& protocol : af->launcher_protocols())
             protocols.set(protocol);
         if (access(app_executable.characters(), X_OK) == 0)
-            m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, file_types, protocols });
+            m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, mime_types, file_types, protocols });
     },
         af_dir);
 }
 
 void Launcher::load_config(Core::ConfigFile const& cfg)
 {
+    for (auto key : cfg.keys("MimeType")) {
+        auto handler = cfg.read_entry("MimeType", key).trim_whitespace();
+        if (handler.is_empty())
+            continue;
+        if (access(handler.characters(), X_OK) != 0)
+            continue;
+        m_mime_handlers.set(key.to_lowercase(), handler);
+    }
+
     for (auto key : cfg.keys("FileType")) {
         auto handler = cfg.read_entry("FileType", key).trim_whitespace();
         if (handler.is_empty())
@@ -154,6 +167,20 @@ Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
         });
     }
     return handlers;
+}
+
+Optional<String> Launcher::mime_type_for_file(String path)
+{
+    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    if (file_or_error.is_error()) {
+        return {};
+    } else {
+        auto file = file_or_error.release_value();
+        // Read accounts for longest possible offset + signature we currently match against.
+        auto bytes = file->read(0x9006);
+
+        return Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes());
+    }
 }
 
 bool Launcher::open_url(const URL& url, String const& handler_name)
@@ -275,12 +302,20 @@ void Launcher::for_each_handler_for_path(String const& path, Function<bool(Handl
         f(get_handler_for_executable(Handler::Type::Application, path));
 
     auto extension = LexicalPath::extension(path).to_lowercase();
-
-    for_each_handler(extension, m_file_handlers, [&](auto const& handler) -> bool {
-        if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
-            return f(handler);
-        return false;
-    });
+    auto mime_type = mime_type_for_file(path);
+    if (mime_type.has_value()) {
+        for_each_handler(mime_type.value(), m_mime_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.mime_types.contains(mime_type.value()))
+                return f(handler);
+            return false;
+        });
+    } else {
+        for_each_handler(extension, m_file_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
+                return f(handler);
+            return false;
+        });
+    }
 }
 
 bool Launcher::open_file_url(const URL& url)
@@ -312,10 +347,13 @@ bool Launcher::open_file_url(const URL& url)
     if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return spawn(url.path(), {});
 
-    auto extension_parts = url.path().to_lowercase().split('.');
-    String extension = {};
-    if (extension_parts.size() > 1)
-        extension = extension_parts.last();
+    auto extension = LexicalPath::extension(url.path()).to_lowercase();
+    auto mime_type = mime_type_for_file(url.path());
+
+    auto mime_type_or_extension = extension;
+    bool should_use_mime_type = mime_type.has_value() && m_mime_handlers.get(mime_type.value()).has_value();
+    if (should_use_mime_type)
+        mime_type_or_extension = mime_type.value();
 
     auto handler_optional = m_file_handlers.get("txt");
     if (!handler_optional.has_value())
@@ -339,6 +377,6 @@ bool Launcher::open_file_url(const URL& url)
 
     additional_parameters.append(filepath);
 
-    return open_with_user_preferences(m_file_handlers, extension, additional_parameters, default_handler);
+    return open_with_user_preferences(should_use_mime_type ? m_mime_handlers : m_file_handlers, mime_type_or_extension, additional_parameters, default_handler);
 }
 }
