@@ -17,7 +17,7 @@
 namespace Web::Bindings::IDL {
 
 // https://webidl.spec.whatwg.org/#dfn-get-buffer-source-copy
-Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
+ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
 {
     // 1. Let esBufferSource be the result of converting bufferSource to an ECMAScript value.
 
@@ -69,18 +69,16 @@ Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         return ByteBuffer {};
 
     // 8. Let bytes be a new byte sequence of length equal to length.
-    auto bytes = ByteBuffer::create_zeroed(length);
-    if (bytes.is_error())
-        return {};
+    auto bytes = TRY(ByteBuffer::create_zeroed(length));
 
     // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to ! GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
     for (u64 i = offset; i <= offset + length - 1; ++i) {
         auto value = es_array_buffer->get_value<u8>(i, true, JS::ArrayBuffer::Unordered);
-        bytes.value()[i - offset] = (u8)value.as_u32();
+        bytes[i - offset] = (u8)value.as_u32();
     }
 
     // 10. Return bytes.
-    return bytes.release_value();
+    return bytes;
 }
 
 // https://webidl.spec.whatwg.org/#invoke-a-callback-function
