@@ -257,7 +257,7 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 // FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-static Fetch::Infrastructure::BodyWithType extract_body(XMLHttpRequestBodyInit const& body_init)
+static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestBodyInit const& body_init)
 {
     // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
     Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
@@ -271,8 +271,8 @@ static Fetch::Infrastructure::BodyWithType extract_body(XMLHttpRequestBodyInit c
 
     // 6. Switch on object.
     // FIXME: Still need to support BufferSource and FormData
-    body_init.visit(
-        [&](NonnullRefPtr<FileAPI::Blob> const& blob) {
+    TRY(body_init.visit(
+        [&](NonnullRefPtr<FileAPI::Blob> const& blob) -> ErrorOr<void> {
             // FIXME: Set action to this step: read object.
             // Set source to object.
             source = blob;
@@ -281,20 +281,23 @@ static Fetch::Infrastructure::BodyWithType extract_body(XMLHttpRequestBodyInit c
             // If object’s type attribute is not the empty byte sequence, set type to its value.
             if (!blob->type().is_empty())
                 type = blob->type().to_byte_buffer();
+            return {};
         },
-        [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) {
+        [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_string().to_byte_buffer();
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
-            type = MUST(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
+            type = TRY(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
+            return {};
         },
-        [&](String const& scalar_value_string) {
+        [&](String const& scalar_value_string) -> ErrorOr<void> {
             // NOTE: AK::String is always UTF-8.
             // Set source to the UTF-8 encoding of object.
             source = scalar_value_string.to_byte_buffer();
             // Set type to `text/plain;charset=UTF-8`.
-            type = MUST(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
-        });
+            type = TRY(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
+            return {};
+        }));
 
     // FIXME: 7. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
     // FIXME: 8. If action is non-null, then run these steps in in parallel:
@@ -302,7 +305,7 @@ static Fetch::Infrastructure::BodyWithType extract_body(XMLHttpRequestBodyInit c
     // 9. Let body be a body whose stream is stream, source is source, and length is length.
     auto body = Fetch::Infrastructure::Body { move(stream), move(source), move(length) };
     // 10. Return (body, type).
-    return { .body = move(body), .type = move(type) };
+    return Fetch::Infrastructure::BodyWithType { .body = move(body), .type = move(type) };
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
@@ -444,7 +447,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? extract_body(body.value()) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
