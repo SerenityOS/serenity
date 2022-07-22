@@ -221,3 +221,32 @@ function(download_file url path)
         endif()
     endif()
 endfunction()
+
+function(add_jakt_executable exe_name source_file)
+    cmake_parse_arguments(PARSE_ARGV 2 JAKT_COMPONENT "RECOMMENDED;REQUIRED" ""  "")
+    if(${source_file} MATCHES "//*")
+        set(source ${source_file})
+    else()
+        set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source_file})
+    endif()
+    
+    get_filename_component(CMD_NAME_JAKT ${source} NAME_WE)
+    add_executable(${exe_name} "${CMD_NAME_JAKT}.cpp")
+    compile_jakt(${source})
+    target_link_libraries(${exe_name} LibC)
+    set_target_properties(${exe_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    install(TARGETS ${exe_name} RUNTIME DESTINATION bin OPTIONAL)
+    if(JAKT_COMPONENT_REQUIRED)
+        serenity_component(
+            ${exe_name}
+            REQUIRED
+            TARGETS ${exe_name}
+        )
+    else()
+        serenity_component(
+            ${exe_name}
+            RECOMMENDED
+            TARGETS ${exe_name}
+        )
+    endif()
+endfunction()
