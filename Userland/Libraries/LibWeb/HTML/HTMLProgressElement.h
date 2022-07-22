@@ -31,7 +31,11 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
+    bool using_system_appearance() const;
+
 private:
+    void progress_position_updated();
+
     bool is_determinate() const { return has_attribute(HTML::AttributeNames::value); }
 };
 
