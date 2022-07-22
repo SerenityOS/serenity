@@ -5,3 +5,4 @@ Category=Sound
 
 [Launcher]
 FileTypes=mp3,flac,m3u,m3u8,wav
+MimeTypes=audio/mpeg,audio/wave,audio/flac
