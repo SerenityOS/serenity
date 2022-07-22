@@ -9,10 +9,13 @@
 
 #include <AK/Format.h>
 #include <AK/Math.h>
+#include <math.h>
 
 namespace Audio {
+using AK::pow;
 using AK::Exponentials::exp;
 using AK::Exponentials::log;
+using AK::Exponentials::log10;
 // Constants for logarithmic volume. See Sample::linear_to_log
 // Corresponds to 60dB
 constexpr float DYNAMIC_RANGE = 1000;
@@ -36,6 +39,22 @@ struct Sample {
         : left(left)
         , right(right)
     {
+    }
+
+    constexpr Sample(Sample const& other) = default;
+    constexpr Sample& operator=(Sample const& other) = default;
+    constexpr Sample(Sample&& other) = default;
+    constexpr Sample& operator=(Sample&& other) = default;
+
+    constexpr bool operator==(Sample& other) const
+    {
+        return this->left == other.left && this->right == other.right;
+    }
+
+    // *Either* channel has a NaN value.
+    bool any_channel_is_nan() const
+    {
+        return isnan(left) || isnan(right);
     }
 
     void clip()
@@ -75,6 +94,18 @@ struct Sample {
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
+    }
+
+    // Decibels are a logarithmic "unit":
+    // 20 dB = 10x difference between two loudness levels.
+    static ALWAYS_INLINE float db_to_linear(float const val)
+    {
+        return pow(10.0f, val / 20.0f);
+    }
+
+    static ALWAYS_INLINE float linear_to_db(float const val)
+    {
+        return 20.0f * log10(val);
     }
 
     ALWAYS_INLINE Sample& log_multiply(float const change)
@@ -124,6 +155,29 @@ struct Sample {
         return { left * mult, right * mult };
     }
 
+    constexpr Sample operator*(Sample const mult) const
+    {
+        return { left * mult.left, right * mult.right };
+    }
+
+    constexpr Sample& operator*=(Sample const mult)
+    {
+        *this = *this * mult;
+        return *this;
+    }
+
+    constexpr Sample& operator/=(Sample const mult)
+    {
+        left /= mult.left;
+        right /= mult.right;
+        return *this;
+    }
+
+    constexpr Sample operator/(Sample const mult) const
+    {
+        return { left / mult.left, right / mult.right };
+    }
+
     constexpr Sample& operator+=(Sample const& other)
     {
         left += other.left;
@@ -137,9 +191,21 @@ struct Sample {
         return *this;
     }
 
+    constexpr Sample& operator-=(Sample const& other)
+    {
+        left -= other.left;
+        right -= other.right;
+        return *this;
+    }
+
     constexpr Sample operator+(Sample const& other) const
     {
         return { left + other.left, right + other.right };
+    }
+
+    constexpr Sample operator-(Sample const& other) const
+    {
+        return { left - other.left, right - other.right };
     }
 
     float left { 0 };
