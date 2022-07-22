@@ -12,7 +12,7 @@
 
 namespace JS::Bytecode {
 
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, false, true, false, false, false, false, IdentifierTableIndex);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, false, true, false, false, false, false, IdentifierTableIndex);
 
 class IdentifierTable {
     AK_MAKE_NONMOVABLE(IdentifierTable);
