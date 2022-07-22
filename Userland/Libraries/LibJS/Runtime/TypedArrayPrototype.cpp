@@ -60,6 +60,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.toReversed, to_reversed, 0, attr);
     define_native_function(vm.names.toSorted, to_sorted, 1, attr);
     define_native_function(vm.names.toSpliced, to_spliced, 2, attr);
+    define_native_function(vm.names.with, with, 2, attr);
     define_native_function(vm.names.values, values, 0, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
@@ -1712,6 +1713,69 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_spliced)
     }
 
     // 21. Return A.
+    return return_array;
+}
+
+// 1.2.2.1.6 %TypedArray%.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
+{
+    auto index = vm.argument(0);
+    auto value = vm.argument(1);
+
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
+    auto relative_index = TRY(index.to_integer_or_infinity(global_object));
+
+    double actual_index = 0;
+    // 5. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
+    if (relative_index >= 0)
+        actual_index = relative_index;
+    else
+        actual_index = length + relative_index;
+
+    // 7. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
+    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
+        value = TRY(value.to_bigint(global_object));
+    // 8. Else, set value to ? ToNumber(value).
+    else
+        value = TRY(value.to_number(global_object));
+
+    // 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
+    if (!is_valid_integer_index(*typed_array, CanonicalIndex(CanonicalIndex::Type::Index, actual_index)))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
+
+    // 10. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+    MarkedVector<Value> arguments(vm.heap());
+    arguments.empend(length);
+    auto* return_array = TRY(typed_array_create_same_type(global_object, *typed_array, move(arguments)));
+
+    // 11. Let k be 0.
+    // 12. Repeat, while k < len,
+    for (size_t k = 0; k < length; k++) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        Value from_value;
+        // b. If k is actualIndex, let fromValue be value.
+        if (k == actual_index)
+            from_value = value;
+        // c. Else, let fromValue be ! Get(O, Pk).
+        else
+            from_value = MUST(typed_array->get(property_key));
+
+        // d. Perform ! Set(A, Pk, fromValue, true).
+        MUST(return_array->set(property_key, from_value, Object::ShouldThrowExceptions::Yes));
+
+        // e. Set k to k + 1.
+    }
+
+    // 13. Return A.
     return return_array;
 }
 
