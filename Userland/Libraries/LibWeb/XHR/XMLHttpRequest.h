@@ -23,6 +23,7 @@
 
 namespace Web::XHR {
 
+// https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
 using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<FileAPI::Blob>, NonnullRefPtr<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final
