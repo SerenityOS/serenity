@@ -782,6 +782,8 @@ bool VimEditingEngine::on_key(KeyEvent const& event)
         return on_key_in_visual_mode(event);
     case (VimMode::Normal):
         return on_key_in_normal_mode(event);
+    case (VimMode::VisualLine):
+        return on_key_in_visual_line_mode(event);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -971,6 +973,9 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
                 move_one_up(event);
                 switch_to_insert_mode();
                 return true;
+            case (KeyCode::Key_V):
+                switch_to_visual_line_mode();
+                return true;
             case (KeyCode::Key_LeftBrace): {
                 auto amount = m_motion.amount() > 0 ? m_motion.amount() : 1;
                 m_motion.reset();
@@ -1153,6 +1158,9 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
             casefold_selection(Casing::Invertcase);
             switch_to_normal_mode();
             return true;
+        case (KeyCode::Key_V):
+            switch_to_visual_line_mode();
+            return true;
         default:
             break;
         }
@@ -1234,6 +1242,116 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
     return true;
 }
 
+bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
+{
+    // Handle first any key codes that are to be applied regardless of modifiers.
+    switch (event.key()) {
+    case (KeyCode::Key_Escape):
+        switch_to_normal_mode();
+        if (m_editor->on_escape_pressed)
+            m_editor->on_escape_pressed();
+        return true;
+    default:
+        break;
+    }
+
+    // No modifiers pressed.
+    if (!event.ctrl() && !event.shift() && !event.alt()) {
+        switch (event.key()) {
+        case (KeyCode::Key_D):
+        case (KeyCode::Key_X):
+            yank(Selection);
+            m_editor->do_delete();
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_V):
+            switch_to_visual_mode();
+            return true;
+        case (KeyCode::Key_C):
+            yank(Selection);
+            m_editor->do_delete();
+            switch_to_insert_mode();
+            return true;
+        case (KeyCode::Key_Y):
+            yank(Selection);
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Lowercase);
+            switch_to_normal_mode();
+            return true;
+        // FIXME: When selecting down but then changing and going up past the start line,
+        // the line the selection began on does not get selected correctly.
+        case (KeyCode::Key_K):
+            // An invalid KeyCode indicates that we have just switched to linewise visual mode and are trying
+            // to move up lines. The default cursor position is for down, so we need to change it for up.
+            if (m_previous_key == KeyCode::Key_Invalid)
+                m_selection_start_position = { m_editor->cursor().line(), m_editor->current_line().length() - 1 };
+            move_one_up(event);
+            move_to_line_beginning();
+            update_selection_on_cursor_move();
+            m_previous_key = KeyCode::Key_K;
+            return true;
+        case (KeyCode::Key_J): {
+            move_one_down(event);
+            move_to_line_end();
+            update_selection_on_cursor_move();
+            m_previous_key = KeyCode::Key_J;
+            return true;
+        }
+        default:
+            break;
+        }
+    }
+
+    // CTRL is pressed.
+    if (event.ctrl() && !event.shift() && !event.alt()) {
+        switch (event.key()) {
+        case (KeyCode::Key_D):
+            move_half_page_down();
+            move_to_line_end();
+            update_selection_on_cursor_move();
+            return true;
+        case (KeyCode::Key_U):
+            move_half_page_up();
+            move_to_line_beginning();
+            update_selection_on_cursor_move();
+            return true;
+        default:
+            break;
+        }
+    }
+
+    // SHIFT is pressed.
+    if (event.shift() && !event.ctrl() && !event.alt()) {
+        switch (event.key()) {
+        case (KeyCode::Key_A):
+            move_to_logical_line_end();
+            switch_to_insert_mode();
+            return true;
+        case (KeyCode::Key_I):
+            move_to_logical_line_beginning();
+            switch_to_insert_mode();
+            return true;
+        case (KeyCode::Key_U):
+            casefold_selection(Casing::Uppercase);
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_Tilde):
+            casefold_selection(Casing::Invertcase);
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_V):
+            switch_to_normal_mode();
+            return true;
+        default:
+            break;
+        }
+    }
+
+    return true;
+}
+
 void VimEditingEngine::switch_to_normal_mode()
 {
     m_vim_mode = VimMode::Normal;
@@ -1259,6 +1377,17 @@ void VimEditingEngine::switch_to_visual_mode()
     m_previous_key = {};
     m_selection_start_position = m_editor->cursor();
     m_editor->selection().set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
+    m_editor->did_update_selection();
+    m_motion.reset();
+}
+
+void VimEditingEngine::switch_to_visual_line_mode()
+{
+    m_vim_mode = VimMode::VisualLine;
+    m_editor->reset_cursor_blink();
+    m_previous_key = {};
+    m_selection_start_position = { m_editor->cursor().line(), 0 };
+    m_editor->select_current_line();
     m_editor->did_update_selection();
     m_motion.reset();
 }
