@@ -129,6 +129,14 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
     }
 }
 
+bool Launcher::has_mime_handlers(String const& mime_type)
+{
+    for (auto& handler : m_handlers)
+        if (handler.value.mime_types.contains(mime_type))
+            return true;
+    return false;
+}
+
 Vector<String> Launcher::handlers_for_url(const URL& url)
 {
     Vector<String> handlers;
@@ -233,6 +241,17 @@ bool Launcher::open_with_user_preferences(HashMap<String, String> const& user_pr
     if (program_path.has_value())
         return spawn(program_path.value(), arguments);
 
+    String executable = "";
+    if (for_each_handler(key, user_preferences, [&](auto const& handler) -> bool {
+            if (executable.is_empty() && (handler.mime_types.contains(key) || handler.file_types.contains(key) || handler.protocols.contains(key))) {
+                executable = handler.executable;
+                return true;
+            }
+            return false;
+        })) {
+        return spawn(executable, arguments);
+    }
+
     // There wasn't a handler for this, so try the fallback instead
     program_path = user_preferences.get("*");
     if (program_path.has_value())
@@ -245,7 +264,7 @@ bool Launcher::open_with_user_preferences(HashMap<String, String> const& user_pr
     return false;
 }
 
-void Launcher::for_each_handler(String const& key, HashMap<String, String>& user_preference, Function<bool(Handler const&)> f)
+size_t Launcher::for_each_handler(String const& key, HashMap<String, String> const& user_preference, Function<bool(Handler const&)> f)
 {
     auto user_preferred = user_preference.get(key);
     if (user_preferred.has_value())
@@ -263,6 +282,9 @@ void Launcher::for_each_handler(String const& key, HashMap<String, String>& user
     auto user_default = user_preference.get("*");
     if (counted == 0 && user_default.has_value())
         f(get_handler_for_executable(Handler::Type::UserDefault, user_default.value()));
+    // Return the number of times f() was called,
+    // which can be used to know whether there were any handlers
+    return counted;
 }
 
 void Launcher::for_each_handler_for_path(String const& path, Function<bool(Handler const&)> f)
@@ -303,19 +325,22 @@ void Launcher::for_each_handler_for_path(String const& path, Function<bool(Handl
 
     auto extension = LexicalPath::extension(path).to_lowercase();
     auto mime_type = mime_type_for_file(path);
+
     if (mime_type.has_value()) {
-        for_each_handler(mime_type.value(), m_mime_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.mime_types.contains(mime_type.value()))
-                return f(handler);
-            return false;
-        });
-    } else {
-        for_each_handler(extension, m_file_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
-                return f(handler);
-            return false;
-        });
+        if (for_each_handler(mime_type.value(), m_mime_handlers, [&](auto const& handler) -> bool {
+                if (handler.handler_type != Handler::Type::Default || handler.mime_types.contains(mime_type.value()))
+                    return f(handler);
+                return false;
+            })) {
+            return;
+        }
     }
+
+    for_each_handler(extension, m_file_handlers, [&](auto const& handler) -> bool {
+        if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
+            return f(handler);
+        return false;
+    });
 }
 
 bool Launcher::open_file_url(const URL& url)
@@ -351,14 +376,14 @@ bool Launcher::open_file_url(const URL& url)
     auto mime_type = mime_type_for_file(url.path());
 
     auto mime_type_or_extension = extension;
-    bool should_use_mime_type = mime_type.has_value() && m_mime_handlers.get(mime_type.value()).has_value();
+    bool should_use_mime_type = mime_type.has_value() && has_mime_handlers(mime_type.value());
     if (should_use_mime_type)
         mime_type_or_extension = mime_type.value();
 
     auto handler_optional = m_file_handlers.get("txt");
-    if (!handler_optional.has_value())
-        return false;
-    auto& default_handler = handler_optional.value();
+    String default_handler = "";
+    if (handler_optional.has_value())
+        default_handler = handler_optional.value();
 
     // Additional parameters parsing, specific for the file protocol and txt file handlers
     Vector<String> additional_parameters;
