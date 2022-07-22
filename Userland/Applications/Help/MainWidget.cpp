@@ -114,7 +114,10 @@ MainWidget::MainWidget()
                 }
                 auto const section = url.paths()[0];
                 auto const page = url.paths()[1];
-                open_url(URL::create_with_file_scheme(String::formatted("/usr/share/man/man{}/{}.md", section, page), url.fragment()));
+                auto const path = String::formatted("/usr/share/man/man{}/{}.md", section, page);
+
+                m_history.push(path);
+                open_url(URL::create_with_file_scheme(path, url.fragment()));
             } else {
                 dbgln("Bad help operation '{}' in URL '{}'", url.host(), url);
             }
@@ -266,6 +269,9 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
 void MainWidget::open_url(URL const& url)
 {
+    m_go_back_action->set_enabled(m_history.can_go_back());
+    m_go_forward_action->set_enabled(m_history.can_go_forward());
+
     if (url.protocol() == "file") {
         m_web_view->load(url);
         m_web_view->scroll_to_top();
