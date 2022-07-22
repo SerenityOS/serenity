@@ -130,17 +130,19 @@ int timingsafe_memcmp(void const* b1, void const* b2, size_t len)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcpy.html
 void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 {
+#if ARCH(I386) || ARCH(X86_64)
     void* original_dest = dest_ptr;
     asm volatile(
         "rep movsb"
         : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"memory");
     return original_dest;
+#else
+#    error Unknown architecture
+#endif
 }
 
 #if ARCH(I386)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
-//
-// For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
 void* memset(void* dest_ptr, int c, size_t n)
 {
     size_t dest = (size_t)dest_ptr;
@@ -164,6 +166,10 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "memory");
     return dest_ptr;
 }
+#elif ARCH(X86_64)
+// For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
+#else
+#    error Unknown architecture
 #endif
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memmove.html

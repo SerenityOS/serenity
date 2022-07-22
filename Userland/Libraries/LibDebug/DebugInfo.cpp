@@ -169,8 +169,10 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
         FlatPtr ip;
 #if ARCH(I386)
         ip = regs.eip;
-#else
+#elif ARCH(X86_64)
         ip = regs.rip;
+#else
+#    error Unknown architecture
 #endif
         if (ip - m_base_address < scope.address_low || ip - m_base_address >= scope.address_high)
             continue;

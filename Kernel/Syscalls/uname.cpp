@@ -19,8 +19,12 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.version, "FIXME", 6);
 #if ARCH(I386)
     memcpy(buf.machine, "i686", 5);
-#else
+#elif ARCH(X86_64)
     memcpy(buf.machine, "x86_64", 7);
+#elif ARCH(AARCH64)
+    memcpy(buf.machine, "AArch64", 7);
+#else
+#    error Unknown architecture
 #endif
 
     hostname().with_shared([&](auto const& name) {

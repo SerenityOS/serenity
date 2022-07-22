@@ -85,8 +85,10 @@ ErrorOr<void> Coredump::write_elf_header()
     elf_file_header.e_ident[EI_MAG3] = 'F';
 #if ARCH(I386)
     elf_file_header.e_ident[EI_CLASS] = ELFCLASS32;
-#else
+#elif ARCH(X86_64) || ARCH(AARCH64)
     elf_file_header.e_ident[EI_CLASS] = ELFCLASS64;
+#else
+#    error Unknown architecture
 #endif
     elf_file_header.e_ident[EI_DATA] = ELFDATA2LSB;
     elf_file_header.e_ident[EI_VERSION] = EV_CURRENT;
@@ -101,8 +103,12 @@ ErrorOr<void> Coredump::write_elf_header()
     elf_file_header.e_type = ET_CORE;
 #if ARCH(I386)
     elf_file_header.e_machine = EM_386;
-#else
+#elif ARCH(X86_64)
     elf_file_header.e_machine = EM_X86_64;
+#elif ARCH(AARCH64)
+    elf_file_header.e_machine = EM_AARCH64;
+#else
+#    error Unknown architecture
 #endif
     elf_file_header.e_version = 1;
     elf_file_header.e_entry = 0;

@@ -191,8 +191,10 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Non
     first_thread->regs().set_ip((FlatPtr)entry);
 #if ARCH(I386)
     first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
-#else
+#elif ARCH(X86_64)
     first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
+#else
+#    error Unknown architecture
 #endif
 
     if (do_register == RegisterProcess::Yes)

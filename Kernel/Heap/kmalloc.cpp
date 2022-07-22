@@ -20,8 +20,10 @@
 
 #if ARCH(I386)
 static constexpr size_t CHUNK_SIZE = 32;
-#else
+#elif ARCH(X86_64) || ARCH(AARCH64)
 static constexpr size_t CHUNK_SIZE = 64;
+#else
+#    error Unknown architecture
 #endif
 static_assert(is_power_of_two(CHUNK_SIZE));
 

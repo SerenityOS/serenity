@@ -149,10 +149,12 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     push_on_new_stack(envp);
     push_on_new_stack(argv);
     push_on_new_stack(argv_entries.size());
-#else
+#elif ARCH(X86_64)
     regs.rdi = argv_entries.size();
     regs.rsi = argv;
     regs.rdx = envp;
+#else
+#    error Unknown architecture
 #endif
 
     VERIFY(new_sp % 16 == 0);

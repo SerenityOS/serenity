@@ -346,8 +346,10 @@ FlatPtr DebugSession::single_step()
     constexpr u32 TRAP_FLAG = 0x100;
 #if ARCH(I386)
     regs.eflags |= TRAP_FLAG;
-#else
+#elif ARCH(X86_64)
     regs.rflags |= TRAP_FLAG;
+#else
+#    error Unknown architecture
 #endif
     set_registers(regs);
 
@@ -361,8 +363,10 @@ FlatPtr DebugSession::single_step()
     regs = get_registers();
 #if ARCH(I386)
     regs.eflags &= ~(TRAP_FLAG);
-#else
+#elif ARCH(X86_64)
     regs.rflags &= ~(TRAP_FLAG);
+#else
+#    error Unknown architecture
 #endif
     set_registers(regs);
     return regs.ip();

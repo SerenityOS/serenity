@@ -43,12 +43,14 @@ static void handle_print_registers(PtraceRegisters const& regs)
     outln("eax={:p} ebx={:p} ecx={:p} edx={:p}", regs.eax, regs.ebx, regs.ecx, regs.edx);
     outln("esp={:p} ebp={:p} esi={:p} edi={:p}", regs.esp, regs.ebp, regs.esi, regs.edi);
     outln("eip={:p} eflags={:p}", regs.eip, regs.eflags);
-#else
+#elif ARCH(X86_64)
     outln("rax={:p} rbx={:p} rcx={:p} rdx={:p}", regs.rax, regs.rbx, regs.rcx, regs.rdx);
     outln("rsp={:p} rbp={:p} rsi={:p} rdi={:p}", regs.rsp, regs.rbp, regs.rsi, regs.rdi);
     outln("r8 ={:p} r9 ={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
     outln("r12={:p} r13={:p} r14={:p} r15={:p}", regs.r12, regs.r13, regs.r14, regs.r15);
     outln("rip={:p} rflags={:p}", regs.rip, regs.rflags);
+#else
+#    error Unknown architecture
 #endif
 }
 
@@ -246,8 +248,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         const PtraceRegisters& regs = optional_regs.value();
 #if ARCH(I386)
         const FlatPtr ip = regs.eip;
-#else
+#elif ARCH(X86_64)
         const FlatPtr ip = regs.rip;
+#else
+#    error Unknown architecture
 #endif
 
         auto symbol_at_ip = g_debug_session->symbolicate(ip);
