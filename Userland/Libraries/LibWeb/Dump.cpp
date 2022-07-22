@@ -492,6 +492,12 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::PseudoElement::Marker:
                     pseudo_element_description = "marker";
                     break;
+                case CSS::Selector::PseudoElement::ProgressBar:
+                    pseudo_element_description = "-webkit-progress-bar";
+                    break;
+                case CSS::Selector::PseudoElement::ProgressValue:
+                    pseudo_element_description = "-webkit-progress-value";
+                    break;
                 }
 
                 builder.appendff(" pseudo_element={}", pseudo_element_description);
