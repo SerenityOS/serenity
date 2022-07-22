@@ -24,6 +24,7 @@ struct Handler {
     Type handler_type;
     String name;
     String executable;
+    HashTable<String> mime_types {};
     HashTable<String> file_types {};
     HashTable<String> protocols {};
 
@@ -47,7 +48,9 @@ private:
     HashMap<String, Handler> m_handlers;
     HashMap<String, String> m_protocol_handlers;
     HashMap<String, String> m_file_handlers;
+    HashMap<String, String> m_mime_handlers;
 
+    Optional<String> mime_type_for_file(String path);
     Handler get_handler_for_executable(Handler::Type, String const&) const;
     void for_each_handler(String const& key, HashMap<String, String>& user_preferences, Function<bool(Handler const&)> f);
     void for_each_handler_for_path(String const&, Function<bool(Handler const&)> f);
