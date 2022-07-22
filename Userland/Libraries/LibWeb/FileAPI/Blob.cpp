@@ -71,10 +71,8 @@ ErrorOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& blob_parts)
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
             [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
-                auto data_buffer = Bindings::IDL::get_buffer_source_copy(*buffer_source.cell());
-                if (data_buffer.has_value())
-                    return bytes.try_append(data_buffer->bytes());
-                return {};
+                auto data_buffer = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+                return bytes.try_append(data_buffer.bytes());
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.
             [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {

@@ -16,7 +16,7 @@
 
 namespace Web::Bindings::IDL {
 
-Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source);
+ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source);
 
 // https://webidl.spec.whatwg.org/#call-user-object-operation-return
 inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored_settings, HTML::EnvironmentSettingsObject& relevant_settings, JS::Completion& completion)
