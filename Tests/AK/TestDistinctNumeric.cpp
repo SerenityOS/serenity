@@ -13,7 +13,7 @@ class ForType {
 public:
     static void check_size()
     {
-        TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, false, false, false, false, false, false, TheNumeric);
+        AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, false, false, false, false, false, false, TheNumeric);
         EXPECT_EQ(sizeof(T), sizeof(TheNumeric));
     }
 };
@@ -34,14 +34,14 @@ TEST_CASE(check_size)
     ForType<double>::check_size();
 }
 
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, false, BareNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, false, false, false, false, false, IncrNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, true, false, false, false, false, CmpNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, true, false, false, false, BoolNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, true, false, false, FlagsNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, true, false, ShiftNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, true, ArithNumeric);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, true, true, true, true, true, GeneralNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, false, BareNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, false, false, false, false, false, IncrNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, true, false, false, false, false, CmpNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, true, false, false, false, BoolNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, true, false, false, FlagsNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, true, false, ShiftNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, true, ArithNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, true, true, true, true, true, GeneralNumeric);
 
 TEST_CASE(address_identity)
 {
