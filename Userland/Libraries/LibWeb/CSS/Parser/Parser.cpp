@@ -458,10 +458,12 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         }
 
         auto pseudo_name = name_token.token().ident();
-        if (has_ignored_vendor_prefix(pseudo_name))
+        auto pseudo_element = pseudo_element_from_string(pseudo_name);
+
+        // Note: We allow the "ignored" -webkit prefix here for -webkit-progress-bar/-webkit-progress-bar
+        if (!pseudo_element.has_value() && has_ignored_vendor_prefix(pseudo_name))
             return ParseError::IncludesIgnoredVendorPrefix;
 
-        auto pseudo_element = pseudo_element_from_string(pseudo_name);
         if (!pseudo_element.has_value()) {
             dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
             return ParseError::SyntaxError;
