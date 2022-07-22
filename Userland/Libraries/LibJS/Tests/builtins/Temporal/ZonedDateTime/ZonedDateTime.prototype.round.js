@@ -112,7 +112,35 @@ describe("errors", () => {
             zonedDateTime.round({ smallestUnit: "second" });
         }).toThrowWithMessage(
             RangeError,
-            "Cannot round a ZonedDateTime in a calendar that has zero-length days"
+            "Cannot round a ZonedDateTime in a calendar or time zone that has zero or negative length days"
+        );
+    });
+
+    test("time zone with negative length days", () => {
+        class CustomTimeZone extends Temporal.TimeZone {
+            constructor() {
+                super("UTC");
+                this.getPossibleInstantsForCallCount = 0;
+            }
+
+            getPossibleInstantsFor(temporalDateTime) {
+                this.getPossibleInstantsForCallCount++;
+
+                if (this.getPossibleInstantsForCallCount === 2) {
+                    return [new Temporal.Instant(-1n)];
+                }
+
+                return super.getPossibleInstantsFor(temporalDateTime);
+            }
+        }
+
+        const zonedDateTime = new Temporal.ZonedDateTime(1n, new CustomTimeZone());
+
+        expect(() => {
+            zonedDateTime.round({ smallestUnit: "second" });
+        }).toThrowWithMessage(
+            RangeError,
+            "Cannot round a ZonedDateTime in a calendar or time zone that has zero or negative length days"
         );
     });
 });
