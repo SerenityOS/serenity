@@ -10,7 +10,7 @@
 
 namespace Wasm {
 
-TYPEDEF_DISTINCT_ORDERED_ID(u32, OpCode);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, OpCode);
 
 namespace Instructions {
 

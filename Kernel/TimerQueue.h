@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-TYPEDEF_DISTINCT_ORDERED_ID(u64, TimerId);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, TimerId);
 
 class Timer : public RefCounted<Timer> {
     friend class TimerQueue;
