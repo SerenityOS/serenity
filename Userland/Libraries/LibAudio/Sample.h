@@ -11,8 +11,10 @@
 #include <AK/Math.h>
 
 namespace Audio {
+using AK::pow;
 using AK::Exponentials::exp;
 using AK::Exponentials::log;
+using AK::Exponentials::log10;
 // Constants for logarithmic volume. See Sample::linear_to_log
 // Corresponds to 60dB
 constexpr float DYNAMIC_RANGE = 1000;
@@ -75,6 +77,18 @@ struct Sample {
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
+    }
+
+    // Decibels are a logarithmic "unit":
+    // 20 dB = 10x difference between two loudness levels.
+    static ALWAYS_INLINE float db_to_linear(float const val)
+    {
+        return pow(10.0f, val / 20.0f);
+    }
+
+    static ALWAYS_INLINE float linear_to_db(float const val)
+    {
+        return 20.0f * log10(val);
     }
 
     ALWAYS_INLINE Sample& log_multiply(float const change)
