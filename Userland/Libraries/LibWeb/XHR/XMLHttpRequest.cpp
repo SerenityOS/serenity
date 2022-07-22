@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -281,6 +282,11 @@ static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestB
             // If object’s type attribute is not the empty byte sequence, set type to its value.
             if (!blob->type().is_empty())
                 type = blob->type().to_byte_buffer();
+            return {};
+        },
+        [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+            // Set source to a copy of the bytes held by object.
+            source = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
         [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
