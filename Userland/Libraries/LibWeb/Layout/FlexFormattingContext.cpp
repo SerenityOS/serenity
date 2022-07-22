@@ -665,6 +665,10 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
                 return false;
             if (flex_basis.length_percentage->is_length())
                 return true;
+            if (flex_basis.length_percentage->is_calculated()) {
+                // FIXME: Handle calc() in used flex basis.
+                return false;
+            }
             if (is_row_layout())
                 return m_flex_container_state.has_definite_width();
             return m_flex_container_state.has_definite_height();
