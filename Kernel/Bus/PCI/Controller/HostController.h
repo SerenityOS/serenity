@@ -13,9 +13,9 @@
 
 namespace Kernel::PCI {
 
-TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, BusNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, DeviceNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, FunctionNumber);
 
 class HostController {
 public:

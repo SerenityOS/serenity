@@ -15,8 +15,8 @@ namespace Kernel {
 class FileSystem;
 struct InodeMetadata;
 
-TYPEDEF_DISTINCT_ORDERED_ID(u32, FileSystemID);
-TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, FileSystemID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
 
 class InodeIdentifier {
 public:

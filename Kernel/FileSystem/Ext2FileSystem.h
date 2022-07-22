@@ -105,7 +105,7 @@ public:
     FeaturesReadOnly get_features_readonly() const;
 
 private:
-    TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);
+    AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);
 
     explicit Ext2FS(OpenFileDescription&);
 
