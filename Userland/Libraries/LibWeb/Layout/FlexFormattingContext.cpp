@@ -62,6 +62,20 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
     bool cross_is_constrained = false;
     determine_available_main_and_cross_space(main_is_constrained, cross_is_constrained, main_min_size, main_max_size, cross_min_size, cross_max_size);
 
+    if (m_flex_container_state.width_constraint == SizeConstraint::MaxContent || m_flex_container_state.height_constraint == SizeConstraint::MaxContent) {
+        if (is_row_layout())
+            m_available_space->main = INFINITY;
+        else
+            m_available_space->cross = INFINITY;
+    }
+
+    if (m_flex_container_state.width_constraint == SizeConstraint::MinContent || m_flex_container_state.height_constraint == SizeConstraint::MinContent) {
+        if (is_row_layout())
+            m_available_space->main = 0;
+        else
+            m_available_space->cross = 0;
+    }
+
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : m_flex_items) {
         if (flex_item.box.is_replaced_box()) {
