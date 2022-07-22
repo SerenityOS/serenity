@@ -616,17 +616,20 @@ void Document::update_layout()
 
     Layout::LayoutState layout_state;
     layout_state.used_values_per_layout_node.resize(layout_node_count());
-    Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
 
-    auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
-    auto& icb_state = layout_state.get_mutable(icb);
-    icb_state.set_content_width(viewport_rect.width());
-    icb_state.set_content_height(viewport_rect.height());
+    {
+        Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
 
-    icb.set_has_definite_width(true);
-    icb.set_has_definite_height(true);
+        auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
+        auto& icb_state = layout_state.get_mutable(icb);
+        icb.set_has_definite_width(true);
+        icb.set_has_definite_height(true);
+        icb_state.set_content_width(viewport_rect.width());
+        icb_state.set_content_height(viewport_rect.height());
 
-    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
+        root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
+    }
+
     layout_state.commit();
 
     browsing_context()->set_needs_display();
