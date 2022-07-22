@@ -78,6 +78,7 @@ private:
         Vector<FlexItem*> items;
         float cross_size { 0 };
         float remaining_free_space { 0 };
+        float chosen_flex_fraction { 0 };
     };
 
     bool has_definite_main_size(Box const&) const;
@@ -106,7 +107,11 @@ private:
     Optional<float> transferred_size_suggestion(FlexItem const&) const;
     float content_size_suggestion(FlexItem const&) const;
     CSS::LengthPercentage const& computed_main_size(Box const&) const;
+    CSS::LengthPercentage const& computed_main_min_size(Box const&) const;
+    CSS::LengthPercentage const& computed_main_max_size(Box const&) const;
     CSS::LengthPercentage const& computed_cross_size(Box const&) const;
+    CSS::LengthPercentage const& computed_cross_min_size(Box const&) const;
+    CSS::LengthPercentage const& computed_cross_max_size(Box const&) const;
 
     float get_pixel_width(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
     float get_pixel_height(Box const& box, Optional<CSS::LengthPercentage> const& length_percentage) const;
@@ -136,7 +141,7 @@ private:
 
     void resolve_flexible_lengths();
 
-    void determine_hypothetical_cross_size_of_item(FlexItem&);
+    void determine_hypothetical_cross_size_of_item(FlexItem&, bool resolve_percentage_min_max_sizes);
 
     void calculate_cross_size_of_each_flex_line(float cross_min_size, float cross_max_size);
 
@@ -161,8 +166,8 @@ private:
     [[nodiscard]] float calculate_intrinsic_main_size_of_flex_container(LayoutMode);
     [[nodiscard]] float calculate_intrinsic_cross_size_of_flex_container(LayoutMode);
 
-    [[nodiscard]] float calculate_cross_min_content_contribution(FlexItem const&) const;
-    [[nodiscard]] float calculate_cross_max_content_contribution(FlexItem const&) const;
+    [[nodiscard]] float calculate_cross_min_content_contribution(FlexItem const&, bool resolve_percentage_min_max_sizes) const;
+    [[nodiscard]] float calculate_cross_max_content_contribution(FlexItem const&, bool resolve_percentage_min_max_sizes) const;
     [[nodiscard]] float calculate_main_min_content_contribution(FlexItem const&) const;
     [[nodiscard]] float calculate_main_max_content_contribution(FlexItem const&) const;
 
