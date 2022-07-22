@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,8 +63,13 @@ public:
         auto column = event.x() / (base_rect.width() + gap());
 
         // Handle case where divider is clicked.
-        if (rect_for_desktop(row, column).contains(event.position()))
+        if (rect_for_desktop(row, column).contains(event.position())) {
             GUI::ConnectionToWindowManagerServer::the().async_set_workspace(row, column);
+
+            set_current_row(row);
+            set_current_column(column);
+            update();
+        }
     }
 
     virtual void mousewheel_event(GUI::MouseEvent& event) override
@@ -81,6 +87,10 @@ public:
             column = abs((int)column + direction) % workspace_columns;
         else
             row = abs((int)row + direction) % workspace_rows;
+
+        set_current_row(row);
+        set_current_column(column);
+        update();
 
         GUI::ConnectionToWindowManagerServer::the().async_set_workspace(row, column);
     }
