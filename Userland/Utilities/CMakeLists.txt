@@ -13,6 +13,10 @@ list(APPEND RECOMMENDED_TARGETS
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
 
+if (ENABLE_JAKT)
+    add_jakt_executable(hello-jakt hello-world.jakt)
+endif()
+
 foreach(CMD_SRC ${CMD_SOURCES})
     get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
@@ -50,19 +54,6 @@ foreach(CMD_SRC ${CMD_SOURCES})
         install(TARGETS ${CMD_NAME} RUNTIME DESTINATION bin OPTIONAL)
     endif()
 endforeach()
-
-if (ENABLE_JAKT)
-    add_executable(hello-jakt hello-world.cpp)
-    compile_jakt(hello-world.jakt)
-    target_link_libraries(hello-jakt LibC)
-    set_target_properties(hello-jakt PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    install(TARGETS hello-jakt RUNTIME DESTINATION bin OPTIONAL)
-    serenity_component(
-        hello-jakt
-        RECOMMENDED
-        TARGETS hello-jakt
-    )
-endif()
 
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/egrep SYMBOLIC)")
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/rgrep SYMBOLIC)")

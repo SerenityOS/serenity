@@ -64,7 +64,6 @@ function(generate_state_machine source header)
 endfunction()
 
 function(compile_jakt source)
-    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     get_filename_component(source_base ${source} NAME_WE)
     set(output "${source_base}.cpp")
     add_custom_command(
