@@ -12,7 +12,8 @@ namespace HackStudio {
 RegistersModel::RegistersModel(PtraceRegisters const& regs)
     : m_raw_registers(regs)
 {
-#if ARCH(I386)
+#if ARCH(I386) || ARCH(X86_64)
+#    if ARCH(I386)
     m_registers.append({ "eax", regs.eax });
     m_registers.append({ "ebx", regs.ebx });
     m_registers.append({ "ecx", regs.ecx });
@@ -23,7 +24,7 @@ RegistersModel::RegistersModel(PtraceRegisters const& regs)
     m_registers.append({ "edi", regs.edi });
     m_registers.append({ "eip", regs.eip });
     m_registers.append({ "eflags", regs.eflags });
-#else
+#    else
     m_registers.append({ "rax", regs.rax });
     m_registers.append({ "rbx", regs.rbx });
     m_registers.append({ "rcx", regs.rcx });
@@ -42,7 +43,7 @@ RegistersModel::RegistersModel(PtraceRegisters const& regs)
     m_registers.append({ "r14", regs.r14 });
     m_registers.append({ "r15", regs.r15 });
     m_registers.append({ "rflags", regs.rflags });
-#endif
+#    endif
 
     m_registers.append({ "cs", regs.cs });
     m_registers.append({ "ss", regs.ss });
@@ -50,12 +51,16 @@ RegistersModel::RegistersModel(PtraceRegisters const& regs)
     m_registers.append({ "es", regs.es });
     m_registers.append({ "fs", regs.fs });
     m_registers.append({ "gs", regs.gs });
+#else
+#    error Unknown architecture
+#endif
 }
 
 RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegisters const& previous_regs)
     : m_raw_registers(current_regs)
 {
-#if ARCH(I386)
+#if ARCH(I386) || ARCH(X86_64)
+#    if ARCH(I386)
     m_registers.append({ "eax", current_regs.eax, current_regs.eax != previous_regs.eax });
     m_registers.append({ "ebx", current_regs.ebx, current_regs.ebx != previous_regs.ebx });
     m_registers.append({ "ecx", current_regs.ecx, current_regs.ecx != previous_regs.ecx });
@@ -66,7 +71,7 @@ RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegist
     m_registers.append({ "edi", current_regs.edi, current_regs.edi != previous_regs.edi });
     m_registers.append({ "eip", current_regs.eip, current_regs.eip != previous_regs.eip });
     m_registers.append({ "eflags", current_regs.eflags, current_regs.eflags != previous_regs.eflags });
-#else
+#    else
     m_registers.append({ "rax", current_regs.rax, current_regs.rax != previous_regs.rax });
     m_registers.append({ "rbx", current_regs.rbx, current_regs.rbx != previous_regs.rbx });
     m_registers.append({ "rcx", current_regs.rcx, current_regs.rcx != previous_regs.rcx });
@@ -85,13 +90,16 @@ RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegist
     m_registers.append({ "r14", current_regs.r14, current_regs.r14 != previous_regs.r14 });
     m_registers.append({ "r15", current_regs.r15, current_regs.r15 != previous_regs.r15 });
     m_registers.append({ "rflags", current_regs.rflags, current_regs.rflags != previous_regs.rflags });
-#endif
+#    endif
     m_registers.append({ "cs", current_regs.cs, current_regs.cs != previous_regs.cs });
     m_registers.append({ "ss", current_regs.ss, current_regs.ss != previous_regs.ss });
     m_registers.append({ "ds", current_regs.ds, current_regs.ds != previous_regs.ds });
     m_registers.append({ "es", current_regs.es, current_regs.es != previous_regs.es });
     m_registers.append({ "fs", current_regs.fs, current_regs.fs != previous_regs.fs });
     m_registers.append({ "gs", current_regs.gs, current_regs.gs != previous_regs.gs });
+#else
+#    error Unknown architecture
+#endif
 }
 
 int RegistersModel::row_count(const GUI::ModelIndex&) const

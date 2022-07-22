@@ -96,11 +96,13 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_regs.ss = GDT_SELECTOR_DATA3 | 3;
         m_regs.gs = GDT_SELECTOR_TLS | 3;
     }
-#else
+#elif ARCH(X86_64)
     if (m_process->is_kernel_process())
         m_regs.cs = GDT_SELECTOR_CODE0;
     else
         m_regs.cs = GDT_SELECTOR_CODE3 | 3;
+#else
+#    error Unknown architecture
 #endif
 
     m_regs.cr3 = m_process->address_space().page_directory().cr3();

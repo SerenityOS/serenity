@@ -186,8 +186,10 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
 #if ARCH(I386)
         FlatPtr current_instruction = regs.eip;
-#else
+#elif ARCH(X86_64)
         FlatPtr current_instruction = regs.rip;
+#else
+#    error Unknown architecture
 #endif
 
         auto debug_status = peek_debug(DEBUG_STATUS_REGISTER);
@@ -207,8 +209,10 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
 #if ARCH(I386)
                 FlatPtr current_ebp = regs.ebp;
-#else
+#elif ARCH(X86_64)
                 FlatPtr current_ebp = regs.rbp;
+#else
+#    error Unknown architecture
 #endif
 
                 do {
@@ -253,8 +257,10 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             auto breakpoint_addr = bit_cast<FlatPtr>(current_breakpoint.value().address);
 #if ARCH(I386)
             regs.eip = breakpoint_addr;
-#else
+#elif ARCH(X86_64)
             regs.rip = breakpoint_addr;
+#else
+#    error Unknown architecture
 #endif
             set_registers(regs);
             disable_breakpoint(current_breakpoint.value().address);

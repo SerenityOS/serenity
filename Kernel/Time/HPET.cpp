@@ -93,7 +93,7 @@ static u64 read_register_safe64(HPETRegister const& reg)
 {
 #if ARCH(X86_64)
     return reg.full;
-#else
+#elif ARCH(I386)
     // As per 2.4.7 this reads the 64 bit value in a consistent manner
     // using only 32 bit reads
     u32 low, high = reg.high;
@@ -105,6 +105,8 @@ static u64 read_register_safe64(HPETRegister const& reg)
         high = new_high;
     }
     return ((u64)high << 32) | (u64)low;
+#else
+#    error Unknown architecture
 #endif
 }
 

@@ -219,9 +219,11 @@ int main(int argc, char** argv)
 #if ARCH(I386)
             asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
             asm volatile("pushl $0");
-#else
+#elif ARCH(X86_64)
             asm volatile("movq %%rax, %%rsp" ::"a"(bad_esp));
             asm volatile("pushq $0");
+#else
+#    error Unknown architecture
 #endif
 
             return Crash::Failure::DidNotCrash;

@@ -20,8 +20,10 @@ namespace Web {
 
 #if ARCH(I386)
 #    define CPU_STRING "x86"
-#else
+#elif ARCH(X86_64)
 #    define CPU_STRING "x86_64"
+#elif ARCH(AARCH64)
+#    define CPU_STRING "AArch64"
 #endif
 
 constexpr auto default_user_agent = "Mozilla/5.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";

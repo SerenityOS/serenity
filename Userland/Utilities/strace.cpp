@@ -212,7 +212,7 @@ static int g_pid = -1;
 
 #if ARCH(I386)
 using syscall_arg_t = u32;
-#else
+#elif ARCH(X86_64) || ARCH(AARCH64)
 using syscall_arg_t = u64;
 #endif
 
@@ -889,11 +889,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         syscall_arg_t arg1 = regs.edx;
         syscall_arg_t arg2 = regs.ecx;
         syscall_arg_t arg3 = regs.ebx;
-#else
+#elif ARCH(X86_64)
         syscall_arg_t syscall_index = regs.rax;
         syscall_arg_t arg1 = regs.rdx;
         syscall_arg_t arg2 = regs.rcx;
         syscall_arg_t arg3 = regs.rbx;
+#else
+#    error Unknown architecture
 #endif
 
         TRY(Core::System::ptrace(PT_SYSCALL, g_pid, 0, 0));
@@ -906,8 +908,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 #if ARCH(I386)
         u32 res = regs.eax;
-#else
+#elif ARCH(X86_64)
         u64 res = regs.rax;
+#else
+#    error Unknown architecture
 #endif
 
         auto syscall_function = (Syscall::Function)syscall_index;

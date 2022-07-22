@@ -97,11 +97,13 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     push_on_stack(thread_params->stack_location);
     push_on_stack(argument);
     push_on_stack((void*)entry);
-#else
+#elif ARCH(X86_64)
     thread_params->rdi = (FlatPtr)entry;
     thread_params->rsi = (FlatPtr)argument;
     thread_params->rdx = (FlatPtr)thread_params->stack_location;
     thread_params->rcx = thread_params->stack_size;
+#else
+#    error Unknown architecture
 #endif
     VERIFY((uintptr_t)stack % 16 == 0);
 

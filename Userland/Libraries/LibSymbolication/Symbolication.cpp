@@ -45,8 +45,10 @@ Optional<FlatPtr> kernel_base()
         auto kernel_base_str = String { file.value()->read_all(), NoChomp };
 #if ARCH(I386)
         using AddressType = u32;
-#else
+#elif ARCH(X86_64) || ARCH(AARCH64)
         using AddressType = u64;
+#else
+#    error Unknown architecture
 #endif
         auto maybe_kernel_base = kernel_base_str.to_uint<AddressType>();
         if (!maybe_kernel_base.has_value()) {
