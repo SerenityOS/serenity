@@ -50,9 +50,10 @@ private:
     HashMap<String, String> m_file_handlers;
     HashMap<String, String> m_mime_handlers;
 
+    bool has_mime_handlers(String const&);
     Optional<String> mime_type_for_file(String path);
     Handler get_handler_for_executable(Handler::Type, String const&) const;
-    void for_each_handler(String const& key, HashMap<String, String>& user_preferences, Function<bool(Handler const&)> f);
+    size_t for_each_handler(String const& key, HashMap<String, String> const& user_preferences, Function<bool(Handler const&)> f);
     void for_each_handler_for_path(String const&, Function<bool(Handler const&)> f);
     bool open_file_url(const URL&);
     bool open_with_user_preferences(HashMap<String, String> const& user_preferences, String const& key, Vector<String> const& arguments, String const& default_program = {});
