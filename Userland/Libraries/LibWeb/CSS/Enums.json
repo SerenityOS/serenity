@@ -24,6 +24,24 @@
         "stretch",
         "unsafe"
     ],
+    "appearance": [
+        "auto",
+        "button",
+        "checkbox",
+        "listbox",
+        "menulist",
+        "meter",
+        "menulist-button",
+        "none",
+        "push-button",
+        "progress-bar",
+        "radio",
+        "searchfield",
+        "slider-horizontal",
+        "square-button",
+        "textarea",
+        "textfield"
+    ],
     "background-attachment": [
         "fixed",
         "local",

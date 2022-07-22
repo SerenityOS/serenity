@@ -39,6 +39,7 @@ public:
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
     static CSS::AlignSelf align_self() { return CSS::AlignSelf::Auto; }
+    static CSS::Appearance appearance() { return CSS::Appearance::Auto; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
     static CSS::BoxSizing box_sizing() { return CSS::BoxSizing::ContentBox; }
     static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
@@ -154,6 +155,7 @@ public:
     int order() const { return m_noninherited.order; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     CSS::AlignSelf align_self() const { return m_noninherited.align_self; }
+    CSS::Appearance appearance() const { return m_noninherited.appearance; }
     float opacity() const { return m_noninherited.opacity; }
     CSS::Visibility visibility() const { return m_inherited.visibility; }
     CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
@@ -269,6 +271,7 @@ protected:
         int order { InitialValues::order() };
         CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::AlignSelf align_self { InitialValues::align_self() };
+        CSS::Appearance appearance { InitialValues::appearance() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
@@ -339,6 +342,7 @@ public:
     void set_order(int value) { m_noninherited.order = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_align_self(CSS::AlignSelf value) { m_noninherited.align_self = value; }
+    void set_appearance(CSS::Appearance value) { m_noninherited.appearance = value; }
     void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Vector<ShadowData>&& value) { m_noninherited.box_shadow = move(value); }
