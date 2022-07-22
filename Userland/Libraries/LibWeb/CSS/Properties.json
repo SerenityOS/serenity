@@ -13,6 +13,13 @@
       "align-self"
     ]
   },
+  "appearance": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "appearance"
+    ]
+  },
   "background": {
     "affects-layout": false,
     "inherited": false,
