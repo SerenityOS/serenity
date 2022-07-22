@@ -1,4 +1,4 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+file(GLOB CMD_SOURCES CONFIGURE_DEPENDS "*.cpp")
 list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false fgrep
@@ -11,13 +11,20 @@ list(APPEND RECOMMENDED_TARGETS
     nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
-# FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
-
+# when ENABLE_JAKT=ON yakt executables added to the YAKT_TARGETS list won't have the C++ version of the same name built if it exists
+set(JAKT_TARGETS "")
 if (ENABLE_JAKT)
     add_jakt_executable(hello-jakt hello-world.jakt)
+
+    list(APPEND JAKT_TARGETS hello-jakt)
+
+    foreach(JAKT_TARGET IN LISTS JAKT_TARGETS)
+        list(REMOVE_ITEM CMD_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/${JAKT_TARGET}.cpp)
+    endforeach()
 endif()
 
-foreach(CMD_SRC ${CMD_SOURCES})
+# FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
+foreach(CMD_SRC IN LISTS CMD_SOURCES)
     get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
         set(TARGET_NAME "${CMD_NAME}-bin")
