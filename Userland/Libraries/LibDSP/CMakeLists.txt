@@ -1,4 +1,5 @@
 set(SOURCES
+    BandAdjustmentFilter.cpp
     Clip.cpp
     Effects.cpp
     Synthesizers.cpp
