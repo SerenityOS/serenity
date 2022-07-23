@@ -39,7 +39,7 @@ static void append_indent(StringBuilder& builder, int indent)
 String StringObject::to_string(int) const
 {
     if (is_binary())
-        return String::formatted("<{}>", encode_hex(string().bytes()).to_uppercase());
+        return String::formatted("<{:HEX-DUMP}>", string().bytes());
     return String::formatted("({})", string());
 }
 
@@ -99,16 +99,15 @@ String StreamObject::to_string(int indent) const
     builder.appendff("{}\n", dict()->to_string(indent + 1));
     append_indent(builder, indent + 1);
 
-    auto string = encode_hex(bytes());
+    off_t offset = 0;
     while (true) {
-        if (string.length() > 60) {
-            builder.appendff("{}\n", string.substring(0, 60));
+        if (bytes().size() * 2 - offset > 60) {
+            builder.appendff("{}\n", bytes().slice(offset, 60));
             append_indent(builder, indent);
-            string = string.substring(60);
             continue;
         }
 
-        builder.appendff("{}\n", string);
+        builder.appendff("{}\n", bytes().slice(offset));
         break;
     }
 
