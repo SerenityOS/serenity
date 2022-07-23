@@ -59,12 +59,34 @@ void Delay::process_impl(Signal const& input_signal, Signal& output_signal)
 
 Mastering::Mastering(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
+    , m_pan("Pan", -1, 1, 0, Logarithmic::No)
+    , m_volume("Volume", 0, 1, 1, Logarithmic::No)
+    , m_muted("Mute", false)
 {
+    m_parameters.append(m_muted);
+    m_parameters.append(m_volume);
+    m_parameters.append(m_pan);
 }
 
-void Mastering::process_impl([[maybe_unused]] Signal const& input_signal, [[maybe_unused]] Signal& output_signal)
+void Mastering::process_impl(Signal const& input_signal, Signal& output)
 {
-    TODO();
+    process_to_fixed_array(input_signal, output.get<FixedArray<Sample>>());
+}
+
+void Mastering::process_to_fixed_array(Signal const& input_signal, FixedArray<Sample>& output)
+{
+    if (m_muted) {
+        output.fill_with({});
+        return;
+    }
+
+    auto const& input = input_signal.get<FixedArray<Sample>>();
+    for (size_t i = 0; i < input.size(); ++i) {
+        auto sample = input[i];
+        sample.log_multiply(static_cast<float>(m_volume));
+        sample.pan(static_cast<float>(m_pan));
+        output[i] = sample;
+    }
 }
 
 }
