@@ -31,6 +31,8 @@ public:
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
 
+    static MinorNumber generate_partition_minor_number();
+
     static u32 generate_controller_id();
 
     void remove_device(StorageDevice&);

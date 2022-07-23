@@ -15,9 +15,7 @@ namespace Kernel {
 
 NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
-    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t drive_index = minor / 16;
-    auto device_name = MUST(KString::formatted("ramdisk{}", drive_index));
+    auto device_name = MUST(KString::formatted("ramdisk{}", minor));
 
     auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor, move(device_name));
     // FIXME: Find a way to propagate errors
