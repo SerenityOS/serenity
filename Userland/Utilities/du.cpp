@@ -165,14 +165,13 @@ ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, si
         size += path_stat.st_size;
     }
 
-    if (inside_dir && !du_option.all && !is_directory)
+    bool is_beyond_depth = current_depth > du_option.max_depth;
+    bool is_inner_file = inside_dir && !is_directory;
+    bool is_outside_threshold = (du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold));
+
+    // All of these still count towards the full size, they are just not reported on individually.
+    if (is_beyond_depth || (is_inner_file && !du_option.all) || is_outside_threshold)
         return size;
-
-    if ((du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold)))
-        return { 0 };
-
-    if (current_depth > du_option.max_depth)
-        return { size };
 
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
