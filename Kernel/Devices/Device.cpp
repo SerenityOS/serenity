@@ -48,6 +48,18 @@ void Device::will_be_destroyed()
     before_will_be_destroyed_remove_from_device_management();
 }
 
+NonnullRefPtr<SysFSComponent> Device::sysfs_device_identifier_component() const
+{
+    // Note: Verify that we are not using both pointers by accident.
+    VERIFY(!(m_sysfs_component && m_symlink_sysfs_component));
+    RefPtr<SysFSComponent> device_identifier_component;
+    if (m_sysfs_component)
+        device_identifier_component = m_sysfs_component;
+    else if (m_symlink_sysfs_component)
+        device_identifier_component = m_symlink_sysfs_component;
+    return device_identifier_component.release_nonnull();
+}
+
 Device::~Device()
 {
     VERIFY(m_state == State::BeingRemoved);

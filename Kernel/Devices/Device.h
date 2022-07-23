@@ -64,6 +64,8 @@ public:
         return request;
     }
 
+    NonnullRefPtr<SysFSComponent> sysfs_device_identifier_component() const;
+
 protected:
     Device(MajorNumber major, MinorNumber minor);
     void set_uid(UserID uid) { m_uid = uid; }

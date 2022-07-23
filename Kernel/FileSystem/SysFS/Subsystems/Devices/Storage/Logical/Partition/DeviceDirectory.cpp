@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Partition/DeviceAttribute.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Partition/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Partition/ParentDeviceSymbolicLink.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -19,7 +20,7 @@ DiskPartition const& PartitionDeviceSysFSDirectory::device(Badge<PartitionDevice
     return *m_device;
 }
 
-NonnullRefPtr<PartitionDeviceSysFSDirectory> PartitionDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, DiskPartition const& device)
+NonnullRefPtr<PartitionDeviceSysFSDirectory> PartitionDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, DiskPartition const& device, SysFSComponent const& parent_device_identifier_component)
 {
     // FIXME: Handle allocation failure gracefully
     auto device_name = MUST(KString::formatted("{}", device.minor().value()));
@@ -31,6 +32,7 @@ NonnullRefPtr<PartitionDeviceSysFSDirectory> PartitionDeviceSysFSDirectory::crea
             list.append(PartitionDeviceAttributeSysFSComponent::must_create(*directory, PartitionDeviceAttributeSysFSComponent::Type::UUID));
         list.append(PartitionDeviceAttributeSysFSComponent::must_create(*directory, PartitionDeviceAttributeSysFSComponent::Type::PartitionType));
         list.append(PartitionDeviceAttributeSysFSComponent::must_create(*directory, PartitionDeviceAttributeSysFSComponent::Type::Attributes));
+        list.append(PartitionDeviceParentDeviceSymbolicLinkSysFSComponent::try_create(*directory, parent_device_identifier_component).release_value_but_fixme_should_propagate_errors());
         return {};
     }));
     return directory;

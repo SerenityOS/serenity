@@ -15,7 +15,7 @@ namespace Kernel {
 class PartitionDeviceAttributeSysFSComponent;
 class PartitionDeviceSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<PartitionDeviceSysFSDirectory> create(SysFSDirectory const&, DiskPartition const&);
+    static NonnullRefPtr<PartitionDeviceSysFSDirectory> create(SysFSDirectory const&, DiskPartition const&, SysFSComponent const&);
 
     virtual StringView name() const override { return m_device_directory_name->view(); }
 

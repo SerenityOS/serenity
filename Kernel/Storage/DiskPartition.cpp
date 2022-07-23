@@ -31,7 +31,14 @@ DiskPartition::DiskPartition(BlockDevice& device, MinorNumber minor_number, Part
 void DiskPartition::after_inserting()
 {
     after_inserting_add_to_device_management();
-    auto sysfs_partition_device_directory = PartitionDeviceSysFSDirectory::create(SysFSStoragePartitionDevicesDirectory::the(), *this);
+    auto parent_device = m_device.strong_ref();
+    if (!parent_device) {
+        // Note: If for some odd reason there's no parent device, this device will probably be erased soon
+        // so let's exit this function without doing anything.
+        return;
+    }
+    auto parent_sysfs_device_identifier_component = parent_device->sysfs_device_identifier_component();
+    auto sysfs_partition_device_directory = PartitionDeviceSysFSDirectory::create(SysFSStoragePartitionDevicesDirectory::the(), *this, *parent_sysfs_device_identifier_component);
     m_sysfs_device_directory = sysfs_partition_device_directory;
     SysFSStoragePartitionDevicesDirectory::the().plug({}, *sysfs_partition_device_directory);
     VERIFY(!m_symlink_sysfs_component);
