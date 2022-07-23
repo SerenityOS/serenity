@@ -33,26 +33,26 @@ struct DuOption {
     TimeType time_type = TimeType::NotUsed;
     Vector<String> excluded_patterns;
     size_t block_size = 1024;
+    size_t max_depth = SIZE_MAX;
 };
 
-static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
-static ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, int max_depth, bool inside_dir = false);
+static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option);
+static ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<String> files;
     DuOption du_option;
-    int max_depth = INT_MAX;
 
-    TRY(parse_args(arguments, files, du_option, max_depth));
+    TRY(parse_args(arguments, files, du_option));
 
     for (auto const& file : files)
-        TRY(print_space_usage(file, du_option, max_depth));
+        TRY(print_space_usage(file, du_option, 0));
 
     return 0;
 }
 
-ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth)
+ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option)
 {
     bool summarize = false;
     char const* pattern = nullptr;
@@ -98,7 +98,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
     args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
     args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
+    args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
     args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
     args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
     args_parser.add_option(move(time_option));
@@ -110,7 +110,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.parse(arguments);
 
     if (summarize)
-        max_depth = 0;
+        du_option.max_depth = 0;
 
     if (pattern)
         du_option.excluded_patterns.append(pattern);
@@ -134,12 +134,12 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, int max_depth, bool inside_dir)
+ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
 {
     struct stat path_stat = TRY(Core::System::lstat(path));
     off_t directory_size = 0;
     bool const is_directory = S_ISDIR(path_stat.st_mode);
-    if (--max_depth >= 0 && is_directory) {
+    if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
@@ -148,7 +148,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
 
         while (di.has_next()) {
             auto const child_path = di.next_full_path();
-            directory_size += TRY(print_space_usage(child_path, du_option, max_depth, true));
+            directory_size += TRY(print_space_usage(child_path, du_option, current_depth + 1, true));
         }
     }
 
@@ -173,10 +173,15 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
     if ((du_option.threshold > 0 && size < static_cast<size_t>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<size_t>(-du_option.threshold)))
         return { 0 };
 
+    if (!du_option.human_readable)
+        size = ceil_div(size, du_option.block_size);
+
+    if (current_depth > du_option.max_depth)
+        return { size };
+
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        size = ceil_div(size, du_option.block_size);
         out("{}", size);
     }
 
