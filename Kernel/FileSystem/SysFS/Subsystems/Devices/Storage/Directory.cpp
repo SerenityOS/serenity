@@ -7,6 +7,7 @@
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/Directory.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -18,6 +19,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSStorageDirectory> SysFSStorageDirectory::mus
     auto directory = adopt_ref(*new (nothrow) SysFSStorageDirectory(parent_directory));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSStoragePhysicalDevicesDirectory::must_create(*directory));
+        list.append(SysFSStorageLogicalDevicesDirectory::must_create(*directory));
         return {};
     }));
     return directory;
