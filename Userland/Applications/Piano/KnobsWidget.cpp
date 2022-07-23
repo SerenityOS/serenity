@@ -8,7 +8,7 @@
 
 #include "KnobsWidget.h"
 #include "MainWidget.h"
-#include "ProcessorParameterWidget/Slider.h"
+#include "ProcessorParameterWidget/ParameterWidget.h"
 #include "TrackManager.h"
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/BoxLayout.h>
@@ -20,33 +20,16 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     : m_track_manager(track_manager)
     , m_main_widget(main_widget)
 {
-    set_layout<GUI::VerticalBoxLayout>();
+    set_layout<GUI::HorizontalBoxLayout>();
     set_fill_with_background_color(true);
 
-    m_labels_container = add<GUI::Widget>();
-    m_labels_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_labels_container->set_fixed_height(45);
-
-    m_volume_label = m_labels_container->add<GUI::Label>("Volume");
-    m_octave_label = m_labels_container->add<GUI::Label>("Octave");
-
-    m_values_container = add<GUI::Widget>();
-    m_values_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_values_container->set_fixed_height(10);
-
-    m_volume_value = m_values_container->add<GUI::Label>(String::number(0));
-    m_octave_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
-
-    m_knobs_container = add<GUI::Widget>();
-    m_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_octave_container = add<GUI::Widget>();
+    m_octave_container->set_layout<GUI::VerticalBoxLayout>();
+    m_octave_container->add<GUI::Label>("Octave");
+    m_octave_value = m_octave_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
 
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
-
-    m_volume_knob = m_knobs_container->add<GUI::VerticalSlider>();
-    m_volume_knob->set_range(0, volume_max);
-    m_volume_knob->set_step(10);
-
-    m_octave_knob = m_knobs_container->add<GUI::VerticalSlider>();
+    m_octave_knob = m_octave_container->add<GUI::VerticalSlider>();
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
     m_octave_knob->set_value((octave_max - 1) - (m_track_manager.keyboard()->virtual_keyboard_octave() - 1));
@@ -59,41 +42,14 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         m_octave_value->set_text(String::number(new_octave));
     };
 
-    for (auto& raw_parameter : m_track_manager.current_track()->synth()->parameters()) {
-        // The synth has range and enum parameters
-        switch (raw_parameter.type()) {
-        case DSP::ParameterType::Range: {
-            auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
-            m_synth_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
-            auto& parameter_knob_value = m_synth_values.last();
-            m_synth_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Synth: {}", parameter.name())));
-            m_synth_knobs.append(m_knobs_container->add<ProcessorParameterSlider>(Orientation::Vertical, parameter, parameter_knob_value));
-            break;
-        }
-        case DSP::ParameterType::Enum: {
-            // FIXME: We shouldn't do that, but we know the synth and it is nice
-            auto& parameter = static_cast<DSP::ProcessorEnumParameter<DSP::Synthesizers::Waveform>&>(raw_parameter);
-            // The value is empty for enum parameters
-            m_synth_values.append(m_values_container->add<GUI::Label>(String::empty()));
-            m_synth_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Synth: {}", parameter.name())));
-            auto enum_strings = Vector<String> { "Sine", "Triangle", "Square", "Saw", "Noise" };
-            m_synth_knobs.append(m_knobs_container->add<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>>(parameter, move(enum_strings)));
-            m_synth_waveform = static_cast<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>&>(m_synth_knobs.last());
-            break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
+    for (auto& parameter : m_track_manager.current_track()->track_mastering()->parameters())
+        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
 
-    for (auto& raw_parameter : m_track_manager.current_track()->delay()->parameters()) {
-        // FIXME: We shouldn't do that, but we know the effect and it's nice.
-        auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
-        m_delay_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
-        auto& parameter_knob_value = m_delay_values.last();
-        m_delay_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Delay: {}", parameter.name())));
-        m_delay_knobs.append(m_knobs_container->add<ProcessorParameterSlider>(Orientation::Vertical, parameter, parameter_knob_value));
-    }
+    for (auto& parameter : m_track_manager.current_track()->synth()->parameters())
+        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
+
+    for (auto& parameter : m_track_manager.current_track()->delay()->parameters())
+        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
 }
 
 void KnobsWidget::update_knobs()

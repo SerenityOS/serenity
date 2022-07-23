@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "ProcessorParameterWidget/Dropdown.h"
-#include "ProcessorParameterWidget/Slider.h"
+#include "ProcessorParameterWidget/ParameterWidget.h"
 #include <AK/NonnullRefPtrVector.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Synthesizers.h>
@@ -33,24 +32,11 @@ private:
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;
 
-    RefPtr<GUI::Widget> m_labels_container;
-    RefPtr<GUI::Label> m_volume_label;
-    RefPtr<GUI::Label> m_octave_label;
-    NonnullRefPtrVector<GUI::Label> m_synth_labels;
-    NonnullRefPtrVector<GUI::Label> m_delay_labels;
-
-    RefPtr<GUI::Widget> m_values_container;
-    RefPtr<GUI::Label> m_volume_value;
-    RefPtr<GUI::Label> m_octave_value;
-    NonnullRefPtrVector<GUI::Label> m_synth_values;
-    NonnullRefPtrVector<GUI::Label> m_delay_values;
-
-    RefPtr<GUI::Widget> m_knobs_container;
-    RefPtr<GUI::Slider> m_volume_knob;
+    RefPtr<GUI::Widget> m_octave_container;
     RefPtr<GUI::Slider> m_octave_knob;
-    RefPtr<ProcessorParameterDropdown<DSP::Synthesizers::Waveform>> m_synth_waveform;
-    NonnullRefPtrVector<GUI::Widget> m_synth_knobs;
-    NonnullRefPtrVector<ProcessorParameterSlider> m_delay_knobs;
+    RefPtr<GUI::Label> m_octave_value;
+
+    NonnullRefPtrVector<ProcessorParameterWidget> m_parameter_widgets;
 
     bool m_change_underlying { true };
 };
