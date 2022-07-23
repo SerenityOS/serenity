@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/DisjointChunks.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
 #include <LibDSP/Clip.h>
 #include <LibDSP/Effects.h>
 #include <LibDSP/Keyboard.h>
@@ -35,6 +35,7 @@ public:
 
     NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
     NonnullRefPtr<Transport const> transport() const { return m_transport; }
+    NonnullRefPtr<DSP::Effects::Mastering> track_mastering() { return m_track_mastering; }
 
     // FIXME: These two getters are temporary until we have dynamic processor UI
     NonnullRefPtr<Synthesizers::Classic> synth();
@@ -43,6 +44,7 @@ public:
 protected:
     Track(NonnullRefPtr<Transport> transport, NonnullRefPtr<Keyboard> keyboard)
         : m_transport(move(transport))
+        , m_track_mastering(make_ref_counted<Effects::Mastering>(m_transport))
         , m_keyboard(move(keyboard))
     {
     }
@@ -53,6 +55,7 @@ protected:
 
     NonnullRefPtrVector<Processor> m_processor_chain;
     NonnullRefPtr<Transport> m_transport;
+    NonnullRefPtr<Effects::Mastering> m_track_mastering;
     NonnullRefPtr<Keyboard> m_keyboard;
     // The current signal is stored here, to prevent unnecessary reallocation.
     Signal m_current_signal { FixedArray<Sample> {} };

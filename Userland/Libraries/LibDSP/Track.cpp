@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/NonnullRefPtr.h"
-#include "AK/Userspace.h"
 #include <AK/FixedArray.h>
 #include <AK/NoAllocationGuard.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TypedTransfer.h>
@@ -91,8 +90,8 @@ void Track::current_signal(FixedArray<Sample>& output_signal)
     }
     VERIFY(source_signal->type() == SignalType::Sample);
     VERIFY(output_signal.size() == source_signal->get<FixedArray<Sample>>().size());
-    // This is one final unavoidable memcopy. Otherwise we need to special-case the last processor or
-    AK::TypedTransfer<Sample>::copy(output_signal.data(), source_signal->get<FixedArray<Sample>>().data(), output_signal.size());
+    // The last processor is the fixed mastering processor. This can write directly to the output data. We also just trust this processor that it does the right thing :^)
+    m_track_mastering->process_to_fixed_array(*source_signal, output_signal);
 }
 
 void NoteTrack::compute_current_clips_signal()
