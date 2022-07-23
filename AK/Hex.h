@@ -31,14 +31,7 @@ constexpr u8 decode_hex_digit(char digit)
 
 ErrorOr<ByteBuffer> decode_hex(StringView);
 
-#ifdef KERNEL
-ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(ReadonlyBytes);
-#else
-String encode_hex(ReadonlyBytes);
-#endif
-
 }
 
 using AK::decode_hex;
 using AK::decode_hex_digit;
-using AK::encode_hex;
