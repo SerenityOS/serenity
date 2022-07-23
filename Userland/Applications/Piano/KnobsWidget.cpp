@@ -34,7 +34,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_values_container->set_layout<GUI::HorizontalBoxLayout>();
     m_values_container->set_fixed_height(10);
 
-    m_volume_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track()->volume()));
+    m_volume_value = m_values_container->add<GUI::Label>(String::number(0));
     m_octave_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
 
     m_knobs_container = add<GUI::Widget>();
@@ -44,15 +44,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     m_volume_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_volume_knob->set_range(0, volume_max);
-    m_volume_knob->set_value(volume_max - m_track_manager.current_track()->volume());
     m_volume_knob->set_step(10);
-    m_volume_knob->on_change = [this](int value) {
-        int new_volume = volume_max - value;
-        if (m_change_underlying)
-            m_track_manager.current_track()->set_volume(new_volume);
-        VERIFY(new_volume == m_track_manager.current_track()->volume());
-        m_volume_value->set_text(String::number(new_volume));
-    };
 
     m_octave_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");
@@ -111,7 +103,6 @@ void KnobsWidget::update_knobs()
     // need to change the slider without changing the underlying value.
     m_change_underlying = false;
 
-    m_volume_knob->set_value(volume_max - m_track_manager.current_track()->volume());
     m_octave_knob->set_value(octave_max - m_track_manager.keyboard()->virtual_keyboard_octave());
 
     m_change_underlying = true;

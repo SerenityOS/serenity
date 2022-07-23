@@ -43,18 +43,6 @@ bool Track::check_processor_chain_valid_with_initial_type(SignalType initial_typ
     return true;
 }
 
-float Track::volume() const
-{
-    // FIXME: This is a hack until we have a Master processor
-    return 1.0f;
-}
-
-void Track::set_volume(float volume) const
-{
-    // FIXME: This is a hack until we have a Master processor
-    (void)volume;
-}
-
 NonnullRefPtr<Synthesizers::Classic> Track::synth()
 {
     return static_ptr_cast<Synthesizers::Classic>(m_processor_chain.ptr_at(0));

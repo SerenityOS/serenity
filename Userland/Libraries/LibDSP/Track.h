@@ -36,9 +36,6 @@ public:
     NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
     NonnullRefPtr<Transport const> transport() const { return m_transport; }
 
-    float volume() const;
-    void set_volume(float volume) const;
-
     // FIXME: These two getters are temporary until we have dynamic processor UI
     NonnullRefPtr<Synthesizers::Classic> synth();
     NonnullRefPtr<Effects::Delay> delay();
