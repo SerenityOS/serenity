@@ -141,11 +141,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
 
     if constexpr (TLS_SSL_KEYLOG_DEBUG) {
         auto file = MUST(Core::Stream::File::open("/home/anon/ssl_keylog"sv, Core::Stream::OpenMode::Append | Core::Stream::OpenMode::Write));
-        VERIFY(file->write_or_error("CLIENT_RANDOM "sv.bytes()));
-        VERIFY(file->write_or_error(encode_hex({ m_context.local_random, 32 }).bytes()));
-        VERIFY(file->write_or_error(" "sv.bytes()));
-        VERIFY(file->write_or_error(encode_hex(m_context.master_key).bytes()));
-        VERIFY(file->write_or_error("\n"sv.bytes()));
+        MUST(file->write(String::formatted("CLIENT_RANDOM {} {}\n", ReadonlyBytes { m_context.local_random, 32 }, m_context.master_key.bytes()).bytes()));
     }
 
     expand_key();
