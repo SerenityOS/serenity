@@ -104,11 +104,6 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     }
 }
 
-void KnobsWidget::cycle_waveform()
-{
-    m_synth_waveform->set_selected_index((m_synth_waveform->selected_index() + 1) % m_synth_waveform->model()->row_count());
-}
-
 void KnobsWidget::update_knobs()
 {
     // FIXME: This is needed because when the slider is changed normally, we

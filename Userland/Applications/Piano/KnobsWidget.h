@@ -26,7 +26,6 @@ public:
     virtual ~KnobsWidget() override = default;
 
     void update_knobs();
-    void cycle_waveform();
 
 private:
     KnobsWidget(TrackManager&, MainWidget&);
