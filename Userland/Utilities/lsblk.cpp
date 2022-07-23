@@ -18,16 +18,16 @@ static constexpr StringView format_row = "{:10s}\t{:10s}\t{:10s}\t{:10s}\t{:10s}
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/sys/devices/storage", "r"));
+    TRY(Core::System::unveil("/sys/devices/storage/physical", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List Storage (Block) devices.");
     args_parser.parse(arguments);
 
-    Core::DirIterator di("/sys/devices/storage/", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/sys/devices/storage/physical/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
-        warnln("Failed to open /sys/devices/storage - {}", di.error());
+        warnln("Failed to open /sys/devices/storage/physical/ - {}", di.error());
         return 1;
     }
 
@@ -37,22 +37,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     while (di.has_next()) {
         auto dir = di.next_path();
-        auto command_set_file = Core::File::construct(String::formatted("/sys/devices/storage/{}/command_set", dir));
+        auto command_set_file = Core::File::construct(String::formatted("/sys/devices/storage/physical/{}/command_set", dir));
         if (!command_set_file->open(Core::OpenMode::ReadOnly)) {
             dbgln("Error: Could not open {}: {}", command_set_file->name(), command_set_file->error_string());
             continue;
         }
-        auto interface_type_file = Core::File::construct(String::formatted("/sys/devices/storage/{}/interface_type", dir));
+        auto interface_type_file = Core::File::construct(String::formatted("/sys/devices/storage/physical/{}/interface_type", dir));
         if (!interface_type_file->open(Core::OpenMode::ReadOnly)) {
             dbgln("Error: Could not open {}: {}", interface_type_file->name(), interface_type_file->error_string());
             continue;
         }
-        auto last_lba_file = Core::File::construct(String::formatted("/sys/devices/storage/{}/last_lba", dir));
+        auto last_lba_file = Core::File::construct(String::formatted("/sys/devices/storage/physical/{}/last_lba", dir));
         if (!last_lba_file->open(Core::OpenMode::ReadOnly)) {
             dbgln("Error: Could not open {}: {}", last_lba_file->name(), last_lba_file->error_string());
             continue;
         }
-        auto sector_size_file = Core::File::construct(String::formatted("/sys/devices/storage/{}/sector_size", dir));
+        auto sector_size_file = Core::File::construct(String::formatted("/sys/devices/storage/physical/{}/sector_size", dir));
         if (!sector_size_file->open(Core::OpenMode::ReadOnly)) {
             dbgln("Error: Could not open {}: {}", sector_size_file->name(), sector_size_file->error_string());
             continue;

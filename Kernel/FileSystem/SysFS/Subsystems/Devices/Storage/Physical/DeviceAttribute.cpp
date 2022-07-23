@@ -7,7 +7,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceAttribute.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceAttribute.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

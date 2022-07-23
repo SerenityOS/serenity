@@ -11,8 +11,8 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/Directory.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibC/sys/ioctl_numbers.h>
@@ -31,9 +31,9 @@ StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, MajorNumber
 void StorageDevice::after_inserting()
 {
     after_inserting_add_to_device_management();
-    auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
+    auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStoragePhysicalDevicesDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_storage_device_directory;
-    SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
+    SysFSStoragePhysicalDevicesDirectory::the().plug({}, *sysfs_storage_device_directory);
     VERIFY(!m_symlink_sysfs_component);
     auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
@@ -45,7 +45,7 @@ void StorageDevice::will_be_destroyed()
     VERIFY(m_symlink_sysfs_component);
     before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
     m_symlink_sysfs_component.clear();
-    SysFSStorageDirectory::the().unplug({}, *m_sysfs_device_directory);
+    SysFSStoragePhysicalDevicesDirectory::the().unplug({}, *m_sysfs_device_directory);
     before_will_be_destroyed_remove_from_device_management();
 }
 

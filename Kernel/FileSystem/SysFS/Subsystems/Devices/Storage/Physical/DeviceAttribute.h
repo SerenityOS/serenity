@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceDirectory.h>
 #include <Kernel/KBuffer.h>
 
 namespace Kernel {
