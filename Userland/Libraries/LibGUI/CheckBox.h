@@ -29,9 +29,10 @@ public:
     CheckBoxPosition checkbox_position() const { return m_checkbox_position; }
     void set_checkbox_position(CheckBoxPosition value) { m_checkbox_position = value; }
 
-private:
+protected:
     explicit CheckBox(String = {});
 
+private:
     void size_to_fit();
 
     // These don't make sense for a check box, so hide them.
