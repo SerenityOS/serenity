@@ -29,15 +29,15 @@ struct DuOption {
     bool human_readable = false;
     bool all = false;
     bool apparent_size = false;
-    int threshold = 0;
+    i64 threshold = 0;
     TimeType time_type = TimeType::NotUsed;
     Vector<String> excluded_patterns;
-    size_t block_size = 1024;
+    u64 block_size = 1024;
     size_t max_depth = SIZE_MAX;
 };
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option);
-static ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
+static ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -134,10 +134,10 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
+ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
 {
     struct stat path_stat = TRY(Core::System::lstat(path));
-    off_t directory_size = 0;
+    u64 directory_size = 0;
     bool const is_directory = S_ISDIR(path_stat.st_mode);
     if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
@@ -158,7 +158,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
             return { 0 };
     }
 
-    size_t size = path_stat.st_size;
+    u64 size = path_stat.st_size;
     if (!du_option.apparent_size) {
         constexpr auto block_size = 512;
         size = path_stat.st_blocks * block_size;
@@ -170,7 +170,7 @@ ErrorOr<off_t> print_space_usage(String const& path, DuOption const& du_option, 
     if (is_directory)
         size = directory_size;
 
-    if ((du_option.threshold > 0 && size < static_cast<size_t>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<size_t>(-du_option.threshold)))
+    if ((du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold)))
         return { 0 };
 
     if (!du_option.human_readable)
