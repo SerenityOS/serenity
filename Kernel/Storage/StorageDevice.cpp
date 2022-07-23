@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/PartitionDeviceSymbolicLink.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibC/sys/ioctl_numbers.h>
@@ -33,6 +34,7 @@ void StorageDevice::after_inserting()
     after_inserting_add_to_device_management();
     auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStoragePhysicalDevicesDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_storage_device_directory;
+    m_sysfs_partitions_directory = sysfs_storage_device_directory->partitions_directory();
     SysFSStoragePhysicalDevicesDirectory::the().plug({}, *sysfs_storage_device_directory);
     VERIFY(!m_symlink_sysfs_component);
     auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
@@ -47,6 +49,15 @@ void StorageDevice::will_be_destroyed()
     m_symlink_sysfs_component.clear();
     SysFSStoragePhysicalDevicesDirectory::the().unplug({}, *m_sysfs_device_directory);
     before_will_be_destroyed_remove_from_device_management();
+}
+
+void StorageDevice::add_partition(size_t partition_index, NonnullRefPtr<DiskPartition> disk_partition)
+{
+    VERIFY(m_sysfs_partitions_directory);
+    MUST(m_partitions.try_append(disk_partition));
+    auto sysfs_disk_partition_device_identifier_symlink = disk_partition->sysfs_device_identifier_component();
+    auto sysfs_partition_symlink = MUST(PartitionDeviceSymbolicLinkSysFSComponent::try_create(*m_sysfs_partitions_directory, partition_index, *sysfs_disk_partition_device_identifier_symlink));
+    m_sysfs_partitions_directory->plug({}, *sysfs_partition_symlink);
 }
 
 StringView StorageDevice::class_name() const

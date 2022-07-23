@@ -65,6 +65,7 @@ public:
     }
 
     NonnullRefPtr<SysFSComponent> sysfs_device_identifier_component() const;
+    RefPtr<SysFSDirectory> sysfs_device_directory() const;
 
 protected:
     Device(MajorNumber major, MinorNumber minor);

@@ -29,6 +29,9 @@ NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDirectory::create(S
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::SectorSize));
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::CommandSet));
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::InterfaceType));
+        auto partitions_directory = StorageDevicePartitionsSysFSDirectory::must_create(*directory);
+        directory->m_partitions_directory = partitions_directory;
+        list.append(partitions_directory);
         return {};
     }));
     return directory;

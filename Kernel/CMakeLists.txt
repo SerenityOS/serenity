@@ -156,6 +156,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/Physical/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/Physical/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/Storage/Physical/PartitionDeviceSymbolicLink.cpp
+    FileSystem/SysFS/Subsystems/Devices/Storage/Physical/PartitionsDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.cpp

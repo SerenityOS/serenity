@@ -158,7 +158,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
             if (!partition_metadata.has_value())
                 continue;
             auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata.value());
-            device.add_partition(disk_partition);
+            device.add_partition(partition_index, disk_partition);
         }
         device_index++;
     }

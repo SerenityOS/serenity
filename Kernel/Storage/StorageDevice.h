@@ -8,6 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/PartitionsDirectory.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Storage/DiskPartition.h>
@@ -75,7 +76,7 @@ public:
 
     NonnullRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
 
-    void add_partition(NonnullRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
+    void add_partition(size_t partition_index, NonnullRefPtr<DiskPartition> disk_partition);
 
     LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
 
@@ -105,6 +106,8 @@ private:
     LUNAddress const m_logical_unit_number_address;
     u64 m_max_addressable_block { 0 };
     size_t m_blocks_per_page { 0 };
+
+    RefPtr<StorageDevicePartitionsSysFSDirectory> m_sysfs_partitions_directory;
 };
 
 }

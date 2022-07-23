@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/SysFS/Component.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Physical/PartitionsDirectory.h>
 #include <Kernel/KString.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -21,9 +22,12 @@ public:
 
     StorageDevice const& device(Badge<StorageDeviceAttributeSysFSComponent>) const;
 
+    RefPtr<StorageDevicePartitionsSysFSDirectory> partitions_directory() const { return m_partitions_directory; }
+
 private:
     StorageDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const&, StorageDevice const&);
     RefPtr<StorageDevice> m_device;
+    RefPtr<StorageDevicePartitionsSysFSDirectory> m_partitions_directory;
     NonnullOwnPtr<KString> m_device_directory_name;
 };
 

@@ -60,6 +60,11 @@ NonnullRefPtr<SysFSComponent> Device::sysfs_device_identifier_component() const
     return device_identifier_component.release_nonnull();
 }
 
+RefPtr<SysFSDirectory> Device::sysfs_device_directory() const
+{
+    return m_sysfs_device_directory;
+}
+
 Device::~Device()
 {
     VERIFY(m_state == State::BeingRemoved);
