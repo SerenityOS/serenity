@@ -301,20 +301,27 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(AK_OS_WIN32)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
+#    if defined(AK_OS_WIN32)
+    fd = ::open(String::formatted("/dev/shm{}", name).characters(), O_RDWR | O_CREAT | options, 0600);
+    ::fcntl(fd, F_SETFD, ::fcntl(fd, F_GETFD, 0) | FD_CLOEXEC);
+#    else
     fd = shm_open(name.characters(), O_RDWR | O_CREAT | options, 0600);
-
-    if (shm_unlink(name.characters()) == -1) {
+#    endif
+    if (fd < 0) {
         auto saved_errno = errno;
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
 
-    if (fd < 0)
-        return Error::from_errno(errno);
+    if (shm_unlink(name.characters()) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
 
     if (::ftruncate(fd, size) < 0) {
         auto saved_errno = errno;

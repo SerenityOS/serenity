@@ -18,8 +18,14 @@ asm(".section .rodata\n"
     ".global brotli_dictionary_data\n"
     "brotli_dictionary_data:\n");
 #endif
+
+#if defined(AK_OS_WIN32)
+asm(".incbin \"LibCompress/BrotliDictionaryData.bin\"\n"
+    ".byte 0\n");
+#else
 asm(".incbin \"LibCompress/BrotliDictionaryData.bin\"\n"
     ".previous\n");
+#endif
 
 namespace Compress {
 

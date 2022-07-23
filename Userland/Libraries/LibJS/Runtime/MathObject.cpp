@@ -13,6 +13,18 @@
 #include <LibJS/Runtime/MathObject.h>
 #include <math.h>
 
+// These definitions are missing under cygwin
+#if defined(AK_OS_WIN32)
+#    define M_E 2.7182818284590452354
+#    define M_LN2 0.69314718055994530942
+#    define M_LN10 2.30258509299404568402
+#    define M_PI 3.14159265358979323846
+#    define M_PI_2 1.57079632679489661923
+#    define M_PI_4 0.78539816339744830962
+#    define M_SQRT2 1.41421356237309504880
+#    define M_SQRT1_2 0.70710678118654752440
+#endif
+
 namespace JS {
 
 MathObject::MathObject(GlobalObject& global_object)

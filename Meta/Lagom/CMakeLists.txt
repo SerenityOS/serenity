@@ -16,8 +16,7 @@ endif()
 
 if (CYGWIN)
     set(BUILD_SHARED_LIBS OFF)
-    unset(BUILD_LAGOM CACHE)
-    message(STATUS "Disabled unsupported Lagom libraries/apps and shared libraries under cygwin")
+    message(STATUS "Disabled Lagom shared libraries under cygwin since they're not supported")
 endif()
 
 # This is required for CMake (when invoked for a Lagom-only build) to
@@ -262,11 +261,6 @@ if (NOT TARGET all_generated)
     add_custom_target(all_generated)
 endif()
 
-# Only enable gcc extensions for LibCore, LibMain & LibTimeZone under cygwin
-if (CYGWIN)
-    set(CMAKE_CXX_EXTENSIONS ON)
-endif()
-
 # AK/LibCore
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
@@ -301,11 +295,6 @@ lagom_lib(TimeZone timezone
     SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
 )
 target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
-
-# Disable previously enabled gcc extensions
-if (CYGWIN)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
 
 # Manually install AK headers
 install(
@@ -387,15 +376,8 @@ if (BUILD_LAGOM)
     file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/TrueType/*.cpp")
     file(GLOB LIBGFX_WOFF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/WOFF/*.cpp")
     lagom_lib(Gfx gfx
-            SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FILTER_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
-            LIBS m LibCompress LibTextCodec LibIPC
-            )
-
-    # GPU
-    file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
-    lagom_lib(GPU gpu
-        SOURCES ${LIBGPU_SOURCES}
-        LIBS dl
+        SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FILTER_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
+        LIBS m LibCompress LibTextCodec LibIPC
     )
 
     # GL
@@ -403,7 +385,15 @@ if (BUILD_LAGOM)
     file(GLOB LIBGL_TEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
     lagom_lib(GL gl
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
-        LIBS m LibGfx LibGPU)
+        LIBS m LibGfx LibGPU
+    )
+
+    # GPU
+    file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
+    lagom_lib(GPU gpu
+        SOURCES ${LIBGPU_SOURCES}
+        LIBS dl
+    )
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
@@ -438,10 +428,19 @@ if (BUILD_LAGOM)
     file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
     file(GLOB LIBJS_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*/*.cpp")
     list(REMOVE_ITEM LIBJS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/SyntaxHighlighter.cpp")
+    # FIXME: `typeof` is a reserved keyword under `CMAKE_CXX_EXTENSIONS` hence having to disable it
+    #        that also breaks the usage of non-ansi features which is why we disable AgentObject.
+    if (CYGWIN)
+        set(CMAKE_CXX_EXTENSIONS OFF)
+        list(REMOVE_ITEM LIBJS_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/Contrib/Test262/AgentObject.cpp")
+    endif()
     lagom_lib(JS js
         SOURCES ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES}
         LIBS m LibCrypto LibRegex LibUnicode LibTextCodec
     )
+    if (CYGWIN)
+        set(CMAKE_CXX_EXTENSIONS ON)
+    endif()
 
     # Line
     file(GLOB LIBLINE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibLine/*.cpp")
@@ -472,6 +471,13 @@ if (BUILD_LAGOM)
         LIBS LibUnicode
     )
 
+    # SoftGPU
+    file(GLOB_RECURSE LIBSOFTGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSoftGPU/*.cpp")
+    lagom_lib(SoftGPU softgpu
+        SOURCES ${LIBSOFTGPU_SOURCES}
+        LIBS m LibGfx
+    )
+
     # Shell
     file(GLOB SHELL_SOURCES CONFIGURE_DEPENDS "../../Userland/Shell/*.cpp")
     list(REMOVE_ITEM SHELL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Shell/SyntaxHighlighter.cpp")
@@ -479,13 +485,6 @@ if (BUILD_LAGOM)
     lagom_lib(Shell shell
         SOURCES ${SHELL_SOURCES}
         LIBS LibLine LibRegex
-    )
-
-    # SoftGPU
-    file(GLOB_RECURSE LIBSOFTGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSoftGPU/*.cpp")
-    lagom_lib(SoftGPU softgpu
-        SOURCES ${LIBSOFTGPU_SOURCES}
-        LIBS m LibGfx
     )
 
     # Syntax
@@ -532,7 +531,29 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWASM_SOURCES}
     )
 
+    # WebSocket
+    file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
+    file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
+    lagom_lib(WebSocket websocket
+        SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
+        LIBS LibCrypto LibTLS
+    )
+
+    # x86
+    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
+    #        for Lagom on Apple M1
+    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+        file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
+        lagom_lib(X86 x86
+            SOURCES ${LIBX86_SOURCES}
+        )
+    endif()
+
     # Web
+    # FIXME: `typeof` is a reserved keyword under `CMAKE_CXX_EXTENSIONS` hence having to disable it.
+    if (CYGWIN)
+        set(CMAKE_CXX_EXTENSIONS OFF)
+    endif()
     include(libweb_generators)
     file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
     file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
@@ -558,25 +579,11 @@ if (BUILD_LAGOM)
         LIBS LibMarkdown LibGemini LibGfx LibGL LibJS LibTextCodec LibWasm LibXML
     )
     generate_js_wrappers(LibWeb)
-
-    # WebSocket
-    file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
-    file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
-    lagom_lib(WebSocket websocket
-        SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
-        LIBS LibCrypto LibTLS
-    )
-
-    # x86
-    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
-    #        for Lagom on Apple M1
-    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-        file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
-        lagom_lib(X86 x86
-            SOURCES ${LIBX86_SOURCES}
-        )
+    if (CYGWIN)
+        set(CMAKE_CXX_EXTENSIONS ON)
     endif()
 
+    # XML
     file(GLOB LIBXML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibXML/*/*.cpp")
     lagom_lib(XML xml
         SOURCES ${LIBXML_SOURCES})
@@ -593,10 +600,6 @@ if (BUILD_LAGOM)
         target_link_libraries(TestJson LibCore)
 
         # Lagom Utilities
-        add_executable(adjtime_lagom ../../Userland/Utilities/adjtime.cpp)
-        set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
-        target_link_libraries(adjtime_lagom LibCore LibMain)
-
         # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
@@ -609,6 +612,9 @@ if (BUILD_LAGOM)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
         target_link_libraries(gml-format_lagom LibCore LibGML LibMain)
 
+        if (CYGWIN)
+            set(CMAKE_CXX_EXTENSIONS OFF)
+        endif()
         add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
         set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
         target_link_libraries(headless_browser_lagom LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
@@ -616,14 +622,13 @@ if (BUILD_LAGOM)
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
         target_link_libraries(js_lagom LibJS LibLine LibMain Threads::Threads)
+        if (CYGWIN)
+            set(CMAKE_CXX_EXTENSIONS ON)
+        endif()
 
         add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
         set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
         target_link_libraries(markdown-check_lagom LibMarkdown LibMain)
-
-        add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
-        set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
-        target_link_libraries(ntpquery_lagom LibCore)
 
         add_executable(shell_lagom ../../Userland/Shell/main.cpp)
         set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
@@ -637,183 +642,195 @@ if (BUILD_LAGOM)
         set_target_properties(xml_lagom PROPERTIES OUTPUT_NAME xml)
         target_link_libraries(xml_lagom LibCore LibXML LibMain)
 
-        enable_testing()
-        # LibTest
-        file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
-        list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
-        add_library(
-            LibTest
-            ${LIBTEST_SOURCES}
-        )
-        target_link_libraries(LibTest LibCore)
-        set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
-        add_library(
-            LibTestMain
-            OBJECT
-            "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibTest/TestMain.cpp"
-        )
+        # FIXME: Disable non-compiling applications on Win32.
+        # FIXME: Get tests working on Win32.
+        if (NOT CYGWIN)
+            add_executable(adjtime_lagom ../../Userland/Utilities/adjtime.cpp)
+            set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
+            target_link_libraries(adjtime_lagom LibCore LibMain)
 
-        # LibTest tests from Tests/
-        # AK
-        file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
-        foreach(source ${AK_TEST_SOURCES})
-            lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
-        endforeach()
+            add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
+            set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
+            target_link_libraries(ntpquery_lagom LibCore)
 
-        # LibCore
-        lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
+            enable_testing()
+            # LibTest
+            file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
+            list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
+            add_library(
+                LibTest
+                ${LIBTEST_SOURCES}
+            )
+            target_link_libraries(LibTest LibCore)
+            set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
+            add_library(
+                LibTestMain
+                OBJECT
+                "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibTest/TestMain.cpp"
+            )
 
-        # Crypto
-        file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
-        foreach(source ${LIBCRYPTO_TESTS})
-            lagom_test(${source} LIBS LibCrypto)
-        endforeach()
+            # LibTest tests from Tests/
+            # AK
+            file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
+            foreach(source ${AK_TEST_SOURCES})
+                lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
+            endforeach()
 
-        # Compress
-        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibCompress/brotli-test-files" DESTINATION "./")
-        file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
-        foreach(source ${LIBCOMPRESS_TESTS})
-            lagom_test(${source} LIBS LibCompress)
-        endforeach()
+            # LibCore
+            lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
 
-        # GL
-        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
-        file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
-        foreach(source ${LIBGL_TESTS})
-            lagom_test(${source} WORKING_DIRECTORY LIBS LibGL LibGPU LibSoftGPU)
-        endforeach()
+            # Crypto
+            file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
+            foreach(source ${LIBCRYPTO_TESTS})
+                lagom_test(${source} LIBS LibCrypto)
+            endforeach()
 
-        # PDF
-        file(GLOB LIBPDF_TESTS CONFIGURE_DEPENDS "../../Tests/LibPDF/*.cpp")
-        foreach(source ${LIBPDF_TESTS})
-            lagom_test(${source} LIBS LibPDF WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Base/home/anon/Documents/pdf/)
-        endforeach()
+            # Compress
+            file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibCompress/brotli-test-files" DESTINATION "./")
+            file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
+            foreach(source ${LIBCOMPRESS_TESTS})
+                lagom_test(${source} LIBS LibCompress)
+            endforeach()
 
-        # Regex
-        file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
-        # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
-        # It is therefore not reasonable to run it on Lagom
-        list(REMOVE_ITEM LIBREGEX_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibRegex/RegexLibC.cpp")
-        foreach(source ${LIBREGEX_TESTS})
-            lagom_test(${source} LIBS LibRegex)
-        endforeach()
+            # GL
+            file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
+            file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
+            foreach(source ${LIBGL_TESTS})
+                lagom_test(${source} WORKING_DIRECTORY LIBS LibGL LibGPU LibSoftGPU)
+            endforeach()
 
-        # SQL
-        file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
-        foreach(source ${LIBSQL_TEST_SOURCES})
-            lagom_test(${source} LIBS LibSQL)
-        endforeach()
+            # PDF
+            file(GLOB LIBPDF_TESTS CONFIGURE_DEPENDS "../../Tests/LibPDF/*.cpp")
+            foreach(source ${LIBPDF_TESTS})
+                lagom_test(${source} LIBS LibPDF WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Base/home/anon/Documents/pdf/)
+            endforeach()
 
-        # TextCodec
-        file(GLOB LIBTEXTCODEC_TESTS CONFIGURE_DEPENDS "../../Tests/LibTextCodec/*.cpp")
-        foreach(source ${LIBTEXTCODEC_TESTS})
-            lagom_test(${source} LIBS LibTextCodec
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTextCodec)
-        endforeach()
+            # Regex
+            file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
+            # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
+            # It is therefore not reasonable to run it on Lagom
+            list(REMOVE_ITEM LIBREGEX_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibRegex/RegexLibC.cpp")
+            foreach(source ${LIBREGEX_TESTS})
+                lagom_test(${source} LIBS LibRegex)
+            endforeach()
 
-        # TLS
-        file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
-        foreach(source ${LIBTLS_TESTS})
-            lagom_test(${source} LIBS LibTLS
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
-        endforeach()
+            # SQL
+            file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
+            foreach(source ${LIBSQL_TEST_SOURCES})
+                lagom_test(${source} LIBS LibSQL)
+            endforeach()
 
-        # TTF
-        file(GLOB LIBTTF_TESTS CONFIGURE_DEPENDS "../../Tests/LibTTF/*.cpp")
-        foreach(source ${LIBTTF_TESTS})
-            lagom_test(${source} LIBS LibGfx)
-        endforeach()
+            # TextCodec
+            file(GLOB LIBTEXTCODEC_TESTS CONFIGURE_DEPENDS "../../Tests/LibTextCodec/*.cpp")
+            foreach(source ${LIBTEXTCODEC_TESTS})
+                lagom_test(${source} LIBS LibTextCodec
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTextCodec)
+            endforeach()
 
-        # LibTimeZone
-        file(GLOB LIBTIMEZONE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibTimeZone/*.cpp")
-        foreach(source ${LIBTIMEZONE_TEST_SOURCES})
-            lagom_test(${source} LIBS LibTimeZone)
+            # TLS
+            file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
+            foreach(source ${LIBTLS_TESTS})
+                lagom_test(${source} LIBS LibTLS
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
+            endforeach()
 
-            get_filename_component(target "${source}" NAME_WLE)
-            target_compile_definitions("${target}_lagom" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
-        endforeach()
+            # TTF
+            file(GLOB LIBTTF_TESTS CONFIGURE_DEPENDS "../../Tests/LibTTF/*.cpp")
+            foreach(source ${LIBTTF_TESTS})
+                lagom_test(${source} LIBS LibGfx)
+            endforeach()
 
-        # Unicode
-        file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
-        foreach(source ${LIBUNICODE_TEST_SOURCES})
-            lagom_test(${source} LIBS LibUnicode)
-        endforeach()
+            # LibTimeZone
+            file(GLOB LIBTIMEZONE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibTimeZone/*.cpp")
+            foreach(source ${LIBTIMEZONE_TEST_SOURCES})
+                lagom_test(${source} LIBS LibTimeZone)
 
-        # JavaScriptTestRunner + LibTest tests
-        # test-js
-        add_executable(test-js_lagom
-            ../../Tests/LibJS/test-js.cpp
-            ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
-        target_link_libraries(test-js_lagom LibCore LibTest LibJS)
-        add_test(
-            NAME JS
-            COMMAND test-js_lagom --show-progress=false
-        )
-        set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
+                get_filename_component(target "${source}" NAME_WLE)
+                target_compile_definitions("${target}_lagom" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+            endforeach()
 
-        # Extra tests from Tests/LibJS
-        lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LibJS)
-        lagom_test(../../Tests/LibJS/test-bytecode-js.cpp LIBS LibJS)
+            # Unicode
+            file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
+            foreach(source ${LIBUNICODE_TEST_SOURCES})
+                lagom_test(${source} LIBS LibUnicode)
+            endforeach()
 
-        # Spreadsheet
-        add_executable(test-spreadsheet_lagom
-                ../../Tests/Spreadsheet/test-spreadsheet.cpp
+            # JavaScriptTestRunner + LibTest tests
+            # test-js
+            add_executable(test-js_lagom
+                ../../Tests/LibJS/test-js.cpp
                 ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-spreadsheet_lagom PROPERTIES OUTPUT_NAME test-spreadsheet)
-        target_link_libraries(test-spreadsheet_lagom LibCore LibTest LibJS)
-        add_test(
-                NAME Spreadsheet
-                COMMAND test-spreadsheet_lagom --show-progress=false
-        )
-        set_tests_properties(Spreadsheet PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
-
-
-        # Markdown
-        include(commonmark_spec)
-        file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
-        foreach(source ${LIBMARKDOWN_TEST_SOURCES})
-            lagom_test(${source} LIBS LibMarkdown)
-        endforeach()
-        set_tests_properties(TestCommonmark PROPERTIES DISABLED YES)
-
-        # test-wasm
-        add_executable(test-wasm_lagom
-            ../../Tests/LibWasm/test-wasm.cpp
-            ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-wasm_lagom PROPERTIES OUTPUT_NAME test-wasm)
-        target_link_libraries(test-wasm_lagom LibCore LibTest LibWasm LibJS)
-        add_test(
-            NAME WasmParser
-            COMMAND test-wasm_lagom --show-progress=false
-        )
-        set_tests_properties(WasmParser PROPERTIES
-            ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
-            SKIP_RETURN_CODE 1)
-
-        # Tests that are not LibTest based
-        # Shell
-        file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
-        foreach(TEST_PATH ${SHELL_TESTS})
-            get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+            set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
+            target_link_libraries(test-js_lagom LibCore LibTest LibJS)
             add_test(
-                NAME "Shell-${TEST_NAME}"
-                COMMAND shell_lagom --skip-shellrc "${TEST_PATH}"
-                WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Userland/Shell/Tests
+                NAME JS
+                COMMAND test-js_lagom --show-progress=false
             )
-            set_tests_properties("Shell-${TEST_NAME}" PROPERTIES
-                TIMEOUT 10
-                FAIL_REGULAR_EXPRESSION "FAIL"
-                PASS_REGULAR_EXPRESSION "PASS"
+            set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
+
+            # Extra tests from Tests/LibJS
+            lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LibJS)
+            lagom_test(../../Tests/LibJS/test-bytecode-js.cpp LIBS LibJS)
+
+            # Spreadsheet
+            add_executable(test-spreadsheet_lagom
+                    ../../Tests/Spreadsheet/test-spreadsheet.cpp
+                    ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
+            set_target_properties(test-spreadsheet_lagom PROPERTIES OUTPUT_NAME test-spreadsheet)
+            target_link_libraries(test-spreadsheet_lagom LibCore LibTest LibJS)
+            add_test(
+                    NAME Spreadsheet
+                    COMMAND test-spreadsheet_lagom --show-progress=false
             )
-        endforeach()
+            set_tests_properties(Spreadsheet PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
-        # FIXME: When we are using CMake >= 3.21, the library installations can be replaced with RUNTIME_DEPENDENCIES.
-        #        https://cmake.org/cmake/help/latest/command/install.html
-        include(get_linked_lagom_libraries.cmake)
-        get_linked_lagom_libraries(js_lagom js_lagom_libraries)
 
-        install(TARGETS js_lagom ${js_lagom_libraries} COMPONENT js)
+            # Markdown
+            include(commonmark_spec)
+            file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
+            foreach(source ${LIBMARKDOWN_TEST_SOURCES})
+                lagom_test(${source} LIBS LibMarkdown)
+            endforeach()
+            set_tests_properties(TestCommonmark PROPERTIES DISABLED YES)
+
+            # test-wasm
+            add_executable(test-wasm_lagom
+                ../../Tests/LibWasm/test-wasm.cpp
+                ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
+            set_target_properties(test-wasm_lagom PROPERTIES OUTPUT_NAME test-wasm)
+            target_link_libraries(test-wasm_lagom LibCore LibTest LibWasm LibJS)
+            add_test(
+                NAME WasmParser
+                COMMAND test-wasm_lagom --show-progress=false
+            )
+            set_tests_properties(WasmParser PROPERTIES
+                ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
+                SKIP_RETURN_CODE 1)
+
+            # Tests that are not LibTest based
+            # Shell
+            file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
+            foreach(TEST_PATH ${SHELL_TESTS})
+                get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+                add_test(
+                    NAME "Shell-${TEST_NAME}"
+                    COMMAND shell_lagom --skip-shellrc "${TEST_PATH}"
+                    WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Userland/Shell/Tests
+                )
+                set_tests_properties("Shell-${TEST_NAME}" PROPERTIES
+                    TIMEOUT 10
+                    FAIL_REGULAR_EXPRESSION "FAIL"
+                    PASS_REGULAR_EXPRESSION "PASS"
+                )
+            endforeach()
+
+            # FIXME: When we are using CMake >= 3.21, the library installations can be replaced with RUNTIME_DEPENDENCIES.
+            #        https://cmake.org/cmake/help/latest/command/install.html
+            include(get_linked_lagom_libraries.cmake)
+            get_linked_lagom_libraries(js_lagom js_lagom_libraries)
+
+            install(TARGETS js_lagom ${js_lagom_libraries} COMPONENT js)
+        endif()
 
         set(CPACK_GENERATOR "TGZ")
         set(CPACK_STRIP_FILES TRUE)

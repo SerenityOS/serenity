@@ -17,7 +17,11 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Vector3.h>
 
+#if defined(AK_OS_WIN32)
+GL::GLContext* g_gl_context;
+#else
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
+#endif
 
 namespace GL {
 

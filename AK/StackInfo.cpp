@@ -12,7 +12,7 @@
 
 #ifdef __serenity__
 #    include <serenity.h>
-#elif defined(__linux__) or defined(AK_OS_MACOS)
+#elif defined(__linux__) or defined(AK_OS_MACOS) or defined(AK_OS_WIN32)
 #    include <pthread.h>
 #elif defined(__FreeBSD__)
 #    include <pthread.h>
@@ -28,12 +28,12 @@ StackInfo::StackInfo()
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();
     }
-#elif defined(__linux__) or defined(__FreeBSD__)
+#elif defined(__linux__) or defined(__FreeBSD__) or defined(AK_OS_WIN32)
     int rc;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
 
-#    ifdef __linux__
+#    if defined(__linux__) or defined(AK_OS_WIN32)
     if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
         fprintf(stderr, "pthread_getattr_np: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
