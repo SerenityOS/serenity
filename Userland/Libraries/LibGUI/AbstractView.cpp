@@ -453,6 +453,23 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
     update();
 }
 
+void AbstractView::select_range(ModelIndex const& index)
+{
+    auto min_row = min(selection_start_index().row(), index.row());
+    auto max_row = max(selection_start_index().row(), index.row());
+    auto min_column = min(selection_start_index().column(), index.column());
+    auto max_column = max(selection_start_index().column(), index.column());
+
+    clear_selection();
+    for (auto row = min_row; row <= max_row; ++row) {
+        for (auto column = min_column; column <= max_column; ++column) {
+            auto new_index = model()->index(row, column);
+            if (new_index.is_valid())
+                toggle_selection(new_index);
+        }
+    }
+}
+
 void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update, bool scroll_cursor_into_view)
 {
     if (!model() || !index.is_valid() || selection_mode() == SelectionMode::NoSelection) {
@@ -477,19 +494,7 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
             if (!m_selection.contains(index))
                 clear_selection();
         } else if (selection_update == SelectionUpdate::Shift) {
-            auto min_row = min(selection_start_index().row(), index.row());
-            auto max_row = max(selection_start_index().row(), index.row());
-            auto min_column = min(selection_start_index().column(), index.column());
-            auto max_column = max(selection_start_index().column(), index.column());
-
-            clear_selection();
-            for (auto row = min_row; row <= max_row; ++row) {
-                for (auto column = min_column; column <= max_column; ++column) {
-                    auto new_index = model()->index(row, column);
-                    if (new_index.is_valid())
-                        toggle_selection(new_index);
-                }
-            }
+            select_range(index);
         }
 
         // FIXME: Support the other SelectionUpdate types
