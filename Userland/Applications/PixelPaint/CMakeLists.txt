@@ -38,6 +38,7 @@ set(SOURCES
     Image.cpp
     ImageEditor.cpp
     Layers/BitmapLayer.cpp
+    Layers/ColorLayer.cpp
     Layers/Layer.cpp
     LayerListWidget.cpp
     LayerPropertiesWidget.cpp

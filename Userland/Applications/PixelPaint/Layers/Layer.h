@@ -91,6 +91,7 @@ public:
     enum class LayerType {
         Undefined,
         BitmapLayer,
+        ColorLayer,
     };
 
     LayerType layer_type() const { return m_layer_type; }
