@@ -100,6 +100,8 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
     auto result = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     VERIFY(result->has_alpha_channel());
 
+    auto const& bitmap = content_bitmap();
+
     for (int y = selection_rect.top(); y <= selection_rect.bottom(); y++) {
         for (int x = selection_rect.left(); x <= selection_rect.right(); x++) {
 
@@ -107,12 +109,12 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
             auto layer_point = image_point - m_location;
             auto result_point = image_point - selection_rect.top_left();
 
-            if (!m_content_bitmap->physical_rect().contains(layer_point)) {
+            if (!bitmap.physical_rect().contains(layer_point)) {
                 result->set_pixel(result_point, Gfx::Color::Transparent);
                 continue;
             }
 
-            auto pixel = m_content_bitmap->get_pixel(layer_point);
+            auto pixel = bitmap.get_pixel(layer_point);
 
             // Widen to int before multiplying to avoid overflow issues
             auto pixel_alpha = static_cast<int>(pixel.alpha());
