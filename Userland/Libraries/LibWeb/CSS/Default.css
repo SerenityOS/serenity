@@ -330,10 +330,10 @@ progress {
 progress::-webkit-progress-bar {
     width: inherit;
     height: inherit;
-    background-color: #808080;
+    background-color: grey;
 }
 
 progress::-webkit-progress-value {
     height: inherit;
-    background: #008000;
+    background-color: green;
 }
