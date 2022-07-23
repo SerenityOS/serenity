@@ -136,8 +136,8 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
 
 ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
 {
+    u64 size = 0;
     struct stat path_stat = TRY(Core::System::lstat(path));
-    u64 directory_size = 0;
     bool const is_directory = S_ISDIR(path_stat.st_mode);
     if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
@@ -148,7 +148,7 @@ ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, si
 
         while (di.has_next()) {
             auto const child_path = di.next_full_path();
-            directory_size += TRY(print_space_usage(child_path, du_option, current_depth + 1, true));
+            size += TRY(print_space_usage(child_path, du_option, current_depth + 1, true));
         }
     }
 
@@ -158,23 +158,18 @@ ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, si
             return { 0 };
     }
 
-    u64 size = path_stat.st_size;
     if (!du_option.apparent_size) {
         constexpr auto block_size = 512;
-        size = path_stat.st_blocks * block_size;
+        size += path_stat.st_blocks * block_size;
+    } else {
+        size += path_stat.st_size;
     }
 
     if (inside_dir && !du_option.all && !is_directory)
         return size;
 
-    if (is_directory)
-        size = directory_size;
-
     if ((du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold)))
         return { 0 };
-
-    if (!du_option.human_readable)
-        size = ceil_div(size, du_option.block_size);
 
     if (current_depth > du_option.max_depth)
         return { size };
@@ -182,7 +177,7 @@ ErrorOr<u64> print_space_usage(String const& path, DuOption const& du_option, si
     if (du_option.human_readable) {
         out("{}", human_readable_size(size));
     } else {
-        out("{}", size);
+        out("{}", ceil_div(size, du_option.block_size));
     }
 
     if (du_option.time_type == DuOption::TimeType::NotUsed) {
