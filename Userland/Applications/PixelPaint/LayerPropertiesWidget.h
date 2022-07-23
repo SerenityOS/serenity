@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibGUI/ColorInput.h>
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
@@ -27,6 +28,8 @@ private:
     RefPtr<GUI::CheckBox> m_visibility_checkbox;
     RefPtr<GUI::OpacitySlider> m_opacity_slider;
     RefPtr<GUI::TextBox> m_name_textbox;
+    RefPtr<GUI::Widget> m_color_container;
+    RefPtr<GUI::ColorInput> m_color_select;
 
     RefPtr<Layer> m_layer;
 };

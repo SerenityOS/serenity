@@ -6,7 +6,8 @@
  */
 
 #include "LayerPropertiesWidget.h"
-#include "Userland/Applications/PixelPaint/Layers/Layer.h"
+#include "Layers/ColorLayer.h"
+#include "Layers/Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/GroupBox.h>
@@ -64,6 +65,25 @@ LayerPropertiesWidget::LayerPropertiesWidget()
         if (m_layer)
             m_layer->set_visible(checked);
     };
+
+    m_color_container = group_box.add<GUI::Widget>();
+    m_color_container->set_fixed_height(20);
+    m_color_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_color_container->set_visible(false);
+
+    auto& color_label = m_color_container->add<GUI::Label>("Color:");
+    color_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    color_label.set_fixed_size(80, 20);
+
+    m_color_select = m_color_container->add<GUI::ColorInput>();
+    m_color_select->on_change = [this]() {
+        if (!m_layer)
+            return;
+        if (m_layer->layer_type() != Layer::LayerType::ColorLayer)
+            return;
+        auto* color_layer = static_cast<ColorLayer*>(m_layer.ptr());
+        color_layer->set_color(m_color_select->color());
+    };
 }
 
 void LayerPropertiesWidget::set_layer(Layer* layer)
@@ -76,6 +96,13 @@ void LayerPropertiesWidget::set_layer(Layer* layer)
         m_name_textbox->set_text(layer->name());
         m_opacity_slider->set_value(layer->opacity_percent());
         m_visibility_checkbox->set_checked(layer->is_visible());
+        if (layer->layer_type() == Layer::LayerType::ColorLayer) {
+            m_color_container->set_visible(true);
+            auto* color_layer = static_cast<ColorLayer*>(m_layer.ptr());
+            m_color_select->set_color(color_layer->color());
+        } else {
+            m_color_container->set_visible(false);
+        }
         set_enabled(true);
     } else {
         m_layer = nullptr;

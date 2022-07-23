@@ -61,7 +61,7 @@
 
             @PixelPaint::LayerPropertiesWidget {
                 name: "layer_properties_widget"
-                max_height: 94
+                max_height: 120
             }
 
             @GUI::GroupBox {
