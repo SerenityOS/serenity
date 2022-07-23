@@ -7,8 +7,10 @@
 #include "CreateNewLayerDialog.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ColorInput.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
 
 namespace PixelPaint {
@@ -45,6 +47,37 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, G
     height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& height_spinbox = main_widget.add<GUI::SpinBox>();
+
+    auto& type_select_container = main_widget.add<GUI::Widget>();
+    type_select_container.set_layout<GUI::VerticalBoxLayout>();
+    auto& layer_type_label = type_select_container.add<GUI::Label>("Select Layer Type:");
+    layer_type_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+
+    auto& type_select_tabs = type_select_container.add<GUI::TabWidget>();
+
+    auto& bitmap_tab = type_select_tabs.add_tab<GUI::Widget>("Bitmap");
+    bitmap_tab.set_fixed_size({ 0, 0 });
+
+    auto& color_layer_tab = type_select_tabs.add_tab<GUI::Widget>("Color");
+    color_layer_tab.set_layout<GUI::HorizontalBoxLayout>();
+    color_layer_tab.layout()->set_margins({ 2, 2, 2, 2 });
+
+    auto& color_label = color_layer_tab.add<GUI::Label>("Color:");
+    color_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    color_label.set_fixed_width(40);
+    auto& color_select = color_layer_tab.add<GUI::ColorInput>();
+
+    color_select.on_change = [this, &color_select]() {
+        m_layer_color = color_select.color();
+    };
+
+    type_select_tabs.on_change = [this](GUI::Widget const& widget) {
+        auto title = widget.title();
+        if (title == "Bitmap")
+            m_layer_type = Layer::LayerType::BitmapLayer;
+        else if (title == "Color")
+            m_layer_type = Layer::LayerType::ColorLayer;
+    };
 
     auto& button_container = main_widget.add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();

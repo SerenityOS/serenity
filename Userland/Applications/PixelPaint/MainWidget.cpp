@@ -7,6 +7,7 @@
  */
 
 #include "MainWidget.h"
+#include "Applications/PixelPaint/Layers/ColorLayer.h"
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
@@ -529,12 +530,32 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto layer_or_error = PixelPaint::BitmapLayer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
-                if (layer_or_error.is_error()) {
-                    GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size()));
+                RefPtr<Layer> layer { nullptr };
+
+                switch (dialog->layer_type()) {
+                case Layer::LayerType::BitmapLayer: {
+                    auto layer_or_error = PixelPaint::BitmapLayer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
+                    if (layer_or_error.is_error()) {
+                        GUI::MessageBox::show_error(&window, String::formatted("Unable to create bitmap layer with size {}", dialog->size()));
+                        return;
+                    }
+                    layer = layer_or_error.release_value();
+                    break;
+                }
+                case Layer::LayerType::ColorLayer: {
+                    auto layer_or_error = PixelPaint::ColorLayer::try_create_with_size_and_color(editor->image(), dialog->layer_size(), dialog->layer_color(), dialog->layer_name());
+                    if (layer_or_error.is_error()) {
+                        GUI::MessageBox::show_error(&window, String::formatted("Unable to create color layer with size {}", dialog->size()));
+                        return;
+                    }
+                    layer = layer_or_error.release_value();
+                    break;
+                }
+                default:
                     return;
                 }
-                editor->image().add_layer(layer_or_error.release_value());
+
+                editor->image().add_layer(layer.release_nonnull());
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
             }
