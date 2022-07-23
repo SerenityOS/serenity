@@ -8,9 +8,9 @@ set(SOURCES
     AbstractScrollableWidget.cpp
     AbstractSlider.cpp
     AbstractTableView.cpp
+    AbstractThemePreview.cpp
     AbstractView.cpp
     AbstractZoomPanWidget.cpp
-    AbstractThemePreview.cpp
     Action.cpp
     ActionGroup.cpp
     Application.cpp
@@ -24,10 +24,12 @@ set(SOURCES
     ColorInput.cpp
     ColorPicker.cpp
     ColumnsView.cpp
-    CommonActions.cpp
-    CommonLocationsProvider.cpp
     ComboBox.cpp
     CommandPalette.cpp
+    CommonActions.cpp
+    CommonLocationsProvider.cpp
+    ConnectionToWindowManagerServer.cpp
+    ConnectionToWindowServer.cpp
     Desktop.cpp
     Dialog.cpp
     DisplayLink.cpp
@@ -52,11 +54,11 @@ set(SOURCES
     GML/SyntaxHighlighter.cpp
     GroupBox.cpp
     HeaderView.cpp
-    INILexer.cpp
-    INISyntaxHighlighter.cpp
     Icon.cpp
     IconView.cpp
     ImageWidget.cpp
+    INILexer.cpp
+    INISyntaxHighlighter.cpp
     InputBox.cpp
     JsonArrayModel.cpp
     Label.cpp
@@ -65,8 +67,8 @@ set(SOURCES
     LinkLabel.cpp
     ListView.cpp
     Menu.cpp
-    MenuItem.cpp
     Menubar.cpp
+    MenuItem.cpp
     MessageBox.cpp
     Model.cpp
     ModelIndex.cpp
@@ -98,8 +100,8 @@ set(SOURCES
     Splitter.cpp
     StackWidget.cpp
     Statusbar.cpp
-    TabWidget.cpp
     TableView.cpp
+    TabWidget.cpp
     TextBox.cpp
     TextDocument.cpp
     TextEditor.cpp
@@ -114,11 +116,9 @@ set(SOURCES
     VimEditingEngine.cpp
     Widget.cpp
     Window.cpp
-    ConnectionToWindowServer.cpp
-    ConnectionToWindowManagerServer.cpp
-    Wizards/WizardDialog.cpp
     Wizards/AbstractWizardPage.cpp
     Wizards/CoverWizardPage.cpp
+    Wizards/WizardDialog.cpp
     Wizards/WizardPage.cpp
 )
 
