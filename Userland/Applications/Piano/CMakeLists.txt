@@ -17,6 +17,7 @@ set(SOURCES
     SamplerWidget.cpp
     WaveWidget.cpp
     ProcessorParameterWidget/Slider.cpp
+    ProcessorParameterWidget/ParameterWidget.cpp
 )
 
 serenity_app(Piano ICON app-piano)
