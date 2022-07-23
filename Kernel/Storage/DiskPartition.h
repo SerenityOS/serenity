@@ -34,6 +34,9 @@ private:
     DiskPartition(BlockDevice&, unsigned, Partition::DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
+    virtual void after_inserting() override;
+    virtual void will_be_destroyed() override;
+
     WeakPtr<BlockDevice> m_device;
     Partition::DiskPartitionMetadata m_metadata;
 };

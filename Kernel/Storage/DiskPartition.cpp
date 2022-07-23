@@ -7,6 +7,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Partition/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Logical/Partition/Directory.h>
 #include <Kernel/Storage/DiskPartition.h>
 
 namespace Kernel {
@@ -24,6 +26,27 @@ DiskPartition::DiskPartition(BlockDevice& device, unsigned minor_number, Partiti
     , m_device(device)
     , m_metadata(metadata)
 {
+}
+
+void DiskPartition::after_inserting()
+{
+    after_inserting_add_to_device_management();
+    auto sysfs_partition_device_directory = PartitionDeviceSysFSDirectory::create(SysFSStoragePartitionDevicesDirectory::the(), *this);
+    m_sysfs_device_directory = sysfs_partition_device_directory;
+    SysFSStoragePartitionDevicesDirectory::the().plug({}, *sysfs_partition_device_directory);
+    VERIFY(!m_symlink_sysfs_component);
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
+    m_symlink_sysfs_component = sys_fs_component;
+    after_inserting_add_symlink_to_device_identifier_directory();
+}
+
+void DiskPartition::will_be_destroyed()
+{
+    VERIFY(m_symlink_sysfs_component);
+    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+    m_symlink_sysfs_component.clear();
+    SysFSStoragePartitionDevicesDirectory::the().unplug({}, *m_sysfs_device_directory);
+    before_will_be_destroyed_remove_from_device_management();
 }
 
 DiskPartition::~DiskPartition() = default;
