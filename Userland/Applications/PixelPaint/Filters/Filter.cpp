@@ -42,7 +42,7 @@ void Filter::apply() const
         return;
     if (auto* layer = m_editor->active_layer()) {
         apply(layer->content_bitmap(), layer->content_bitmap());
-        layer->did_modify_bitmap(layer->rect());
+        layer->did_modify(layer->rect());
         m_editor->did_complete_action();
     }
 }

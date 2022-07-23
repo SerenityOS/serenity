@@ -31,7 +31,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (layer_event.shift() && m_has_clicked) {
         draw_line(layer->currently_edited_bitmap(), color_for(layer_event), m_last_position, layer_event.position());
         auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
-        layer->did_modify_bitmap(modified_rect);
+        layer->did_modify(modified_rect);
         m_last_position = layer_event.position();
         return;
     }
@@ -41,7 +41,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
     for (int i = 0; i < first_draw_opacity; ++i)
         draw_point(layer->currently_edited_bitmap(), color_for(layer_event), layer_event.position());
 
-    layer->did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
+    layer->did_modify(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = layer_event.position();
     m_has_clicked = true;
 }
@@ -59,7 +59,7 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 
     auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
 
-    layer->did_modify_bitmap(modified_rect);
+    layer->did_modify(modified_rect);
     m_last_position = layer_event.position();
     m_was_drawing = true;
 }

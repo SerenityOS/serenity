@@ -118,7 +118,7 @@ void LevelsDialog::generate_new_image()
         }
     }
 
-    m_editor->active_layer()->did_modify_bitmap();
+    m_editor->active_layer()->did_modify();
     m_did_change = true;
 }
 

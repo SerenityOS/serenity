@@ -57,7 +57,7 @@ void SprayTool::paint_it()
         bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(xpos, ypos, m_color);
     }
 
-    layer->did_modify_bitmap(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));
+    layer->did_modify(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));
 }
 
 void SprayTool::on_mousedown(Layer* layer, MouseEvent& event)

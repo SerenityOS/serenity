@@ -63,12 +63,6 @@ Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
 {
 }
 
-void Layer::did_modify_bitmap(Gfx::IntRect const& rect)
-{
-    m_image.layer_did_modify_bitmap({}, *this, rect);
-    update_cached_bitmap();
-}
-
 void Layer::set_visible(bool visible)
 {
     if (m_visible == visible)
@@ -267,6 +261,12 @@ void Layer::set_edit_mode(Layer::EditMode mode)
         return;
 
     m_edit_mode = mode;
+}
+
+void Layer::did_modify(Gfx::IntRect const& rect)
+{
+    m_image.layer_did_modify_bitmap({}, *this, rect);
+    update_cached_bitmap();
 }
 
 }
