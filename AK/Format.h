@@ -383,10 +383,8 @@ struct Formatter<ReadonlyBytes> : Formatter<StringView> {
             Formatter<FlatPtr> formatter { *this };
             return formatter.format(builder, reinterpret_cast<FlatPtr>(value.data()));
         }
-        if (m_mode == Mode::Default || m_mode == Mode::HexDump) {
+        if (m_mode == Mode::Default)
             m_mode = Mode::HexDump;
-            return Formatter<StringView>::format(builder, value);
-        }
         return Formatter<StringView>::format(builder, value);
     }
 };
