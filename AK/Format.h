@@ -225,7 +225,8 @@ public:
     ErrorOr<void> put_hexdump(
         ReadonlyBytes,
         size_t width,
-        char fill = ' ');
+        char fill = ' ',
+        bool upper_case = false);
 
     StringBuilder const& builder() const
     {
@@ -293,6 +294,7 @@ struct StandardFormatter {
         Hexfloat,
         HexfloatUppercase,
         HexDump,
+        HexDumpUppercase
     };
 
     FormatBuilder::Align m_align = FormatBuilder::Align::Default;

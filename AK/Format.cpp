@@ -549,8 +549,11 @@ ErrorOr<void> FormatBuilder::put_f80(
 
 #endif
 
-ErrorOr<void> FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
+ErrorOr<void> FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill, bool upper_case)
 {
+    constexpr char const lowercase_lookup[] = "0123456789abcdef";
+    constexpr char const uppercase_lookup[] = "0123456789ABCDEF";
+
     auto put_char_view = [&](auto i) -> ErrorOr<void> {
         TRY(put_padding(fill, 4));
         for (size_t j = i - width; j < i; ++j) {
@@ -567,7 +570,13 @@ ErrorOr<void> FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char
                 TRY(put_literal("\n"sv));
             }
         }
-        TRY(put_u64(bytes[i], 16, false, false, true, Align::Right, 2));
+        if (upper_case) {
+            TRY(m_builder.try_append(uppercase_lookup[bytes[i] >> 4]));
+            TRY(m_builder.try_append(uppercase_lookup[bytes[i] & 0xF]));
+        } else {
+            TRY(m_builder.try_append(lowercase_lookup[bytes[i] >> 4]));
+            TRY(m_builder.try_append(lowercase_lookup[bytes[i] & 0xF]));
+        }
     }
 
     if (width > 0 && bytes.size() && bytes.size() % width == 0)
@@ -658,6 +667,8 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         m_mode = Mode::HexfloatUppercase;
     else if (parser.consume_specific("hex-dump"))
         m_mode = Mode::HexDump;
+    else if (parser.consume_specific("HEX-DUMP"))
+        m_mode = Mode::HexDumpUppercase;
 
     if (!parser.is_eof())
         dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
@@ -679,8 +690,8 @@ ErrorOr<void> Formatter<StringView>::format(FormatBuilder& builder, StringView v
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
-    if (m_mode == Mode::HexDump)
-        return builder.put_hexdump(value.bytes(), m_width.value(), m_fill);
+    if (m_mode == Mode::HexDump || m_mode == Mode::HexDumpUppercase)
+        return builder.put_hexdump(value.bytes(), m_width.value(), m_fill, m_mode == Mode::HexDumpUppercase);
     return builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
 }
 
@@ -740,9 +751,9 @@ ErrorOr<void> Formatter<T>::format(FormatBuilder& builder, T value)
     } else if (m_mode == Mode::HexadecimalUppercase) {
         base = 16;
         upper_case = true;
-    } else if (m_mode == Mode::HexDump) {
+    } else if (m_mode == Mode::HexDump || m_mode == Mode::HexDumpUppercase) {
         m_width = m_width.value_or(32);
-        return builder.put_hexdump({ &value, sizeof(value) }, m_width.value(), m_fill);
+        return builder.put_hexdump({ &value, sizeof(value) }, m_width.value(), m_fill, m_mode == Mode::HexDumpUppercase);
     } else {
         VERIFY_NOT_REACHED();
     }
@@ -784,8 +795,8 @@ ErrorOr<void> Formatter<bool>::format(FormatBuilder& builder, bool value)
     if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
         Formatter<u8> formatter { *this };
         return formatter.format(builder, static_cast<u8>(value));
-    } else if (m_mode == Mode::HexDump) {
-        return builder.put_hexdump({ &value, sizeof(value) }, m_width.value_or(32), m_fill);
+    } else if (m_mode == Mode::HexDump || m_mode == Mode::HexDumpUppercase) {
+        return builder.put_hexdump({ &value, sizeof(value) }, m_width.value_or(32), m_fill, m_mode == Mode::HexDumpUppercase);
     } else {
         Formatter<StringView> formatter { *this };
         return formatter.format(builder, value ? "true"sv : "false"sv);
