@@ -12,6 +12,7 @@ compile_gml(ResizeImageDialog.gml ResizeImageDialogGML.h resize_image_dialog_gml
 compile_gml(LevelsDialog.gml LevelsDialogGML.h levels_dialog_gml)
 
 set(SOURCES
+    BitmapLayer.cpp
     CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
     EditGuideDialog.cpp

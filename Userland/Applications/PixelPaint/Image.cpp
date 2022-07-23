@@ -7,6 +7,7 @@
  */
 
 #include "Image.h"
+#include "BitmapLayer.h"
 #include "Layer.h"
 #include "Selection.h"
 #include <AK/Base64.h>
@@ -78,7 +79,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
 ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
     auto image = TRY(try_create_with_size({ bitmap->width(), bitmap->height() }));
-    auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
+    auto layer = TRY(BitmapLayer::try_create_with_bitmap(*image, *bitmap, "Background"));
     image->add_layer(move(layer));
     return image;
 }
@@ -95,7 +96,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
         auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_string();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
-        auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
+        auto layer = TRY(BitmapLayer::try_create_with_bitmap(*image, move(bitmap), name));
 
         if (auto mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
             auto mask_base64_encoded = mask_object.as_string();
@@ -241,7 +242,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
     auto snapshot = TRY(try_create_with_size(m_size));
     for (auto const& layer : m_layers) {
-        auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
+        auto layer_snapshot = TRY(BitmapLayer::try_create_snapshot(*snapshot, layer));
         snapshot->add_layer(move(layer_snapshot));
     }
     return snapshot;
@@ -254,7 +255,7 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 
     bool layer_selected = false;
     for (auto const& snapshot_layer : snapshot.m_layers) {
-        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
+        auto layer = TRY(BitmapLayer::try_create_snapshot(*this, snapshot_layer));
         if (layer->is_selected()) {
             select_layer(layer.ptr());
             layer_selected = true;

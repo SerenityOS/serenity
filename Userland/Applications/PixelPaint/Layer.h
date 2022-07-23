@@ -28,23 +28,19 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize const&, String name);
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
-
-    ~Layer() = default;
+    virtual ~Layer() = default;
 
     Gfx::IntPoint const& location() const { return m_location; }
     void set_location(Gfx::IntPoint const& location) { m_location = location; }
 
-    Gfx::Bitmap const& display_bitmap() const { return m_cached_display_bitmap; }
-    Gfx::Bitmap const& content_bitmap() const { return m_content_bitmap; }
-    Gfx::Bitmap& content_bitmap() { return m_content_bitmap; }
+    virtual Gfx::Bitmap const& display_bitmap() const { return m_cached_display_bitmap; }
+    virtual Gfx::Bitmap const& content_bitmap() const = 0;
+    virtual Gfx::Bitmap& content_bitmap() = 0;
 
     Gfx::Bitmap const* mask_bitmap() const { return m_mask_bitmap; }
     Gfx::Bitmap* mask_bitmap() { return m_mask_bitmap; }
 
-    void create_mask();
+    virtual void create_mask();
 
     Gfx::IntSize size() const { return content_bitmap().size(); }
 
@@ -54,16 +50,12 @@ public:
     String const& name() const { return m_name; }
     void set_name(String);
 
-    void flip(Gfx::Orientation orientation);
-    void rotate(Gfx::RotationDirection direction);
-    void crop(Gfx::IntRect const& rect);
-    void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
-    void resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode);
-
-    ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
-
-    void did_modify_bitmap(Gfx::IntRect const& = {});
+    virtual void flip(Gfx::Orientation orientation) = 0;
+    virtual void rotate(Gfx::RotationDirection direction) = 0;
+    virtual void crop(Gfx::IntRect const& rect) = 0;
+    virtual void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
+    virtual void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
+    virtual void resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode) = 0;
 
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }
@@ -74,11 +66,11 @@ public:
     int opacity_percent() const { return m_opacity_percent; }
     void set_opacity_percent(int);
 
-    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
+    virtual RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
 
     Image const& image() const { return m_image; }
 
-    void erase_selection(Selection const&);
+    virtual void erase_selection(Selection const&);
 
     bool is_masked() const { return !m_mask_bitmap.is_null(); }
 
@@ -92,25 +84,34 @@ public:
 
     Gfx::Bitmap& currently_edited_bitmap();
 
-private:
-    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
+    virtual void did_modify(Gfx::IntRect const& = {});
+
+    enum class LayerType {
+        Undefined,
+        BitmapLayer,
+    };
+
+    LayerType layer_type() const { return m_layer_type; }
+
+protected:
+    Layer(LayerType type, Image&, String name, NonnullRefPtr<Gfx::Bitmap> cached_display_bitmap);
 
     Image& m_image;
-
-    String m_name;
-    Gfx::IntPoint m_location;
-    NonnullRefPtr<Gfx::Bitmap> m_content_bitmap;
-    RefPtr<Gfx::Bitmap> m_mask_bitmap { nullptr };
     NonnullRefPtr<Gfx::Bitmap> m_cached_display_bitmap;
-
-    bool m_selected { false };
+    RefPtr<Gfx::Bitmap> m_mask_bitmap { nullptr };
     bool m_visible { true };
-
     int m_opacity_percent { 100 };
 
-    EditMode m_edit_mode { EditMode::Content };
-
     void update_cached_bitmap();
+
+private:
+    String m_name;
+    Gfx::IntPoint m_location;
+
+    bool m_selected { false };
+
+    EditMode m_edit_mode { EditMode::Content };
+    LayerType m_layer_type { LayerType::Undefined };
 };
 
 }

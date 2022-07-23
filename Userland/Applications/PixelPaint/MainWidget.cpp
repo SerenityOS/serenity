@@ -7,11 +7,13 @@
  */
 
 #include "MainWidget.h"
+#include "BitmapLayer.h"
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
+#include "Layers/BitmapLayer.h"
 #include "LevelsDialog.h"
 #include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
@@ -119,7 +121,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
-                auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
+                auto bg_layer = PixelPaint::BitmapLayer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
                 bg_layer->content_bitmap().fill(Color::White);
 
@@ -284,7 +286,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (!bitmap)
             return;
 
-        auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+        auto layer = PixelPaint::BitmapLayer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
         editor->selection().clear();
@@ -528,7 +530,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
+                auto layer_or_error = PixelPaint::BitmapLayer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (layer_or_error.is_error()) {
                     GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size()));
                     return;
@@ -626,7 +628,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
                 editor->set_active_layer(&next_active_layer);
             } else {
-                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background").release_value_but_fixme_should_propagate_errors();
+                auto layer = PixelPaint::BitmapLayer::try_create_with_size(editor->image(), editor->image().size(), "Background").release_value_but_fixme_should_propagate_errors();
                 editor->image().add_layer(move(layer));
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
@@ -693,7 +695,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             Gfx::GenericConvolutionFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(&window)) {
                 filter.apply(layer->content_bitmap(), layer->rect(), layer->content_bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
+                layer->did_modify(layer->rect());
                 editor->did_complete_action();
             }
         }
@@ -809,7 +811,7 @@ void MainWidget::create_default_image()
 {
     auto image = Image::try_create_with_size({ 510, 356 }).release_value_but_fixme_should_propagate_errors();
 
-    auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
+    auto bg_layer = BitmapLayer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*bg_layer);
     bg_layer->content_bitmap().fill(Color::White);
 
@@ -830,7 +832,7 @@ void MainWidget::create_image_from_clipboard()
     }
 
     auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
-    auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+    auto layer = PixelPaint::BitmapLayer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*layer);
 
     auto& editor = create_new_editor(*image);

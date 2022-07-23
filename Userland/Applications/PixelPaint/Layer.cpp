@@ -15,51 +15,11 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size, String name)
-{
-    VERIFY(!size.is_empty());
-
-    if (size.width() > 16384 || size.height() > 16384)
-        return Error::from_string_literal("Layer size too large");
-
-    auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
-}
-
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
-{
-    VERIFY(!bitmap->size().is_empty());
-
-    if (bitmap->size().width() > 16384 || bitmap->size().height() > 16384)
-        return Error::from_string_literal("Layer size too large");
-
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, bitmap, move(name)));
-}
-
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_snapshot(Image& image, Layer const& layer)
-{
-    auto bitmap = TRY(layer.content_bitmap().clone());
-    auto snapshot = TRY(try_create_with_bitmap(image, move(bitmap), layer.name()));
-
-    /*
-        We set these properties directly because calling the setters might
-        notify the image of an update on the newly created layer, but this
-        layer has not yet been added to the image.
-    */
-    snapshot->m_opacity_percent = layer.opacity_percent();
-    snapshot->m_visible = layer.is_visible();
-
-    snapshot->set_selected(layer.is_selected());
-    snapshot->set_location(layer.location());
-
-    return snapshot;
-}
-
-Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
+Layer::Layer(LayerType type, Image& image, String name, NonnullRefPtr<Gfx::Bitmap> cached_display_bitmap)
     : m_image(image)
+    , m_cached_display_bitmap(move(cached_display_bitmap))
     , m_name(move(name))
-    , m_content_bitmap(move(bitmap))
-    , m_cached_display_bitmap(m_content_bitmap)
+    , m_layer_type(type)
 {
 }
 
@@ -135,71 +95,6 @@ void Layer::erase_selection(Selection const& selection)
     auto const image_and_selection_intersection = m_image.rect().intersected(selection.bounding_rect());
     auto const translated_to_layer_space = image_and_selection_intersection.translated(-location());
     painter.clear_rect(translated_to_layer_space, Color::Transparent);
-    did_modify_bitmap(translated_to_layer_space);
-}
-
-ErrorOr<void> Layer::try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask)
-{
-    if (mask && content->size() != mask->size())
-        return Error::from_string_literal("Layer content and mask must be same size");
-
-    m_content_bitmap = move(content);
-    m_mask_bitmap = move(mask);
-    update_cached_bitmap();
-    return {};
-}
-
-void Layer::flip(Gfx::Orientation orientation)
-{
-    m_content_bitmap = *m_content_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
-    if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
-
-    did_modify_bitmap();
-}
-
-void Layer::rotate(Gfx::RotationDirection direction)
-{
-    m_content_bitmap = *m_content_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
-    if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
-
-    did_modify_bitmap();
-}
-
-void Layer::crop(Gfx::IntRect const& rect)
-{
-    m_content_bitmap = *m_content_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
-    if (m_mask_bitmap)
-        m_mask_bitmap = *m_mask_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
-
-    did_modify_bitmap();
-}
-
-void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode)
-{
-    auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
-    auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
-
-    {
-        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
-        Gfx::Painter painter(dst);
-
-        painter.draw_scaled_bitmap(dst_rect, *m_content_bitmap, src_rect, 1.0f, scaling_mode);
-
-        m_content_bitmap = move(dst);
-    }
-
-    if (m_mask_bitmap) {
-        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
-        Gfx::Painter painter(dst);
-
-        painter.draw_scaled_bitmap(dst_rect, *m_mask_bitmap, src_rect, 1.0f, scaling_mode);
-        m_mask_bitmap = move(dst);
-    }
-
-    set_location(new_location);
-    did_modify_bitmap();
 }
 
 void Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode)
@@ -210,31 +105,6 @@ void Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scali
 void Layer::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
     resize(new_size, location(), scaling_mode);
-}
-
-void Layer::update_cached_bitmap()
-{
-    if (!is_masked()) {
-        if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
-            return;
-        m_cached_display_bitmap = m_content_bitmap;
-        return;
-    }
-
-    if (m_cached_display_bitmap.ptr() == m_content_bitmap.ptr() || m_cached_display_bitmap->size() != size()) {
-        m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
-    }
-
-    // FIXME: This can probably be done nicer
-    m_cached_display_bitmap->fill(Color::Transparent);
-    for (int y = 0; y < size().height(); ++y) {
-        for (int x = 0; x < size().width(); ++x) {
-            auto opacity_multiplier = (float)m_mask_bitmap->get_pixel(x, y).to_grayscale().red() / 255;
-            auto content_color = m_content_bitmap->get_pixel(x, y);
-            content_color.set_alpha(content_color.alpha() * opacity_multiplier);
-            m_cached_display_bitmap->set_pixel(x, y, content_color);
-        }
-    }
 }
 
 void Layer::create_mask()
@@ -269,6 +139,33 @@ void Layer::did_modify(Gfx::IntRect const& rect)
 {
     m_image.layer_did_modify_bitmap({}, *this, rect);
     update_cached_bitmap();
+}
+
+void Layer::update_cached_bitmap()
+{
+    auto& bitmap_content = content_bitmap();
+
+    if (!is_masked()) {
+        if (bitmap_content == m_cached_display_bitmap)
+            return;
+        m_cached_display_bitmap = bitmap_content;
+        return;
+    }
+
+    if (m_cached_display_bitmap == bitmap_content || m_cached_display_bitmap->size() != size()) {
+        m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+    }
+
+    // FIXME: This can probably be done nicer
+    m_cached_display_bitmap->fill(Color::Transparent);
+    for (int y = 0; y < size().height(); ++y) {
+        for (int x = 0; x < size().width(); ++x) {
+            auto opacity_multiplier = (float)m_mask_bitmap->get_pixel(x, y).to_grayscale().red() / 255;
+            auto content_color = bitmap_content.get_pixel(x, y);
+            content_color.set_alpha(content_color.alpha() * opacity_multiplier);
+            m_cached_display_bitmap->set_pixel(x, y, content_color);
+        }
+    }
 }
 
 }

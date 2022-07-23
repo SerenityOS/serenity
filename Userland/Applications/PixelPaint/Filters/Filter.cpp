@@ -6,6 +6,7 @@
  */
 
 #include "Filter.h"
+#include "Applications/PixelPaint/BitmapLayer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 
@@ -41,6 +42,8 @@ void Filter::apply() const
     if (!m_editor)
         return;
     if (auto* layer = m_editor->active_layer()) {
+        if (layer->layer_type() != Layer::LayerType::BitmapLayer)
+            return;
         apply(layer->content_bitmap(), layer->content_bitmap());
         layer->did_modify(layer->rect());
         m_editor->did_complete_action();
