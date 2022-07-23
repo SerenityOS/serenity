@@ -7,7 +7,6 @@
  */
 
 #include "MainWidget.h"
-#include "BitmapLayer.h"
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"

@@ -1,17 +1,19 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
+ *
  */
 
 #include "Layer.h"
-#include "Image.h"
-#include "Selection.h"
-#include <AK/RefPtr.h>
-#include <AK/Try.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Painter.h>
+#include "AK/RefPtr.h"
+#include "AK/Try.h"
+#include "Userland/Applications/PixelPaint/Image.h"
+#include "Userland/Applications/PixelPaint/Selection.h"
+#include "Userland/Libraries/LibGfx/Bitmap.h"
+#include "Userland/Libraries/LibGfx/Painter.h"
 
 namespace PixelPaint {
 

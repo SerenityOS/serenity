@@ -8,7 +8,7 @@
 #include "MoveTool.h"
 #include "../Image.h"
 #include "../ImageEditor.h"
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Window.h>

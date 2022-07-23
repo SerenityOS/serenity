@@ -6,7 +6,7 @@
 
 #include "ProjectLoader.h"
 #include "Image.h"
-#include "Layer.h"
+#include "Layers/Layer.h"
 #include <AK/JsonObject.h>
 #include <AK/Result.h>
 #include <AK/String.h>

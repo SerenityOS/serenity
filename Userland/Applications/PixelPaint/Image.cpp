@@ -7,8 +7,8 @@
  */
 
 #include "Image.h"
-#include "BitmapLayer.h"
-#include "Layer.h"
+#include "Layers/BitmapLayer.h"
+#include "Layers/Layer.h"
 #include "Selection.h"
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>

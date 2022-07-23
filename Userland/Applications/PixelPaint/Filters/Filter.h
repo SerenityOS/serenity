@@ -8,7 +8,7 @@
 #pragma once
 
 #include "../ImageEditor.h"
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {

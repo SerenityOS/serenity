@@ -9,7 +9,7 @@
 
 #include "ImageEditor.h"
 #include "Image.h"
-#include "Layer.h"
+#include "Layers/Layer.h"
 #include "Tools/MoveTool.h"
 #include "Tools/Tool.h"
 #include <AK/IntegralMath.h>

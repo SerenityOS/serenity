@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include "Tool.h"
 
 namespace PixelPaint {

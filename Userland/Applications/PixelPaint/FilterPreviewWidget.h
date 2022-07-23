@@ -8,7 +8,7 @@
 
 #include "Filters/Filter.h"
 #include "ImageEditor.h"
-#include "Layer.h"
+#include "Layers/Layer.h"
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 

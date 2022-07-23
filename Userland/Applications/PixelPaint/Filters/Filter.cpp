@@ -6,7 +6,6 @@
  */
 
 #include "Filter.h"
-#include "Applications/PixelPaint/BitmapLayer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 

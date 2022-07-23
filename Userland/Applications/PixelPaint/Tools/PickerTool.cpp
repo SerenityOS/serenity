@@ -8,7 +8,7 @@
 
 #include "PickerTool.h"
 #include "../ImageEditor.h"
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 

@@ -6,7 +6,7 @@
  */
 
 #include "LayerPropertiesWidget.h"
-#include "Layer.h"
+#include "Userland/Applications/PixelPaint/Layers/Layer.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/GroupBox.h>

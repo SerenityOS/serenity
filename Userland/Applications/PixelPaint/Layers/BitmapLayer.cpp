@@ -8,8 +8,8 @@
  */
 
 #include "BitmapLayer.h"
-#include "Image.h"
-#include "Selection.h"
+#include "../Image.h"
+#include "../Selection.h"
 
 namespace PixelPaint {
 

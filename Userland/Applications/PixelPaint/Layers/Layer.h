@@ -4,6 +4,7 @@
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
+ *
  */
 
 #pragma once

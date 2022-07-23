@@ -7,7 +7,7 @@
 
 #include "BrushTool.h"
 #include "../ImageEditor.h"
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

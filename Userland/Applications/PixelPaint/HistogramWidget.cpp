@@ -7,7 +7,7 @@
 #include "HistogramWidget.h"
 #include "Image.h"
 #include "ImageEditor.h"
-#include "Layer.h"
+#include "Layers/Layer.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>

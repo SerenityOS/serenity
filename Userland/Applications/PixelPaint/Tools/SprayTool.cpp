@@ -7,7 +7,7 @@
 
 #include "SprayTool.h"
 #include "../ImageEditor.h"
-#include "../Layer.h"
+#include "../Layers/Layer.h"
 #include <AK/Math.h>
 #include <AK/Queue.h>
 #include <LibGUI/Action.h>
