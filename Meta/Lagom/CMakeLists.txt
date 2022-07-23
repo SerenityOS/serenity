@@ -9,9 +9,9 @@ project(
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11")
-  message(FATAL_ERROR
-      "A GCC version less than 11 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
-      "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
+    message(FATAL_ERROR
+        "A GCC version less than 11 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
+        "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
 endif()
 
 if (CYGWIN)
@@ -125,7 +125,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         message(FATAL_ERROR
             "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
             "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain "
-	    "or build binaries without built-in fuzzing support by setting -DENABLE_FUZZERS instead."
+            "or build binaries without built-in fuzzing support by setting -DENABLE_FUZZERS instead."
         )
     endif()
 endif()
@@ -460,8 +460,8 @@ if (BUILD_LAGOM)
     file(GLOB LIBPDF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*.cpp")
     file(GLOB LIBPDF_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*/*.cpp")
     lagom_lib(PDF pdf
-       SOURCES ${LIBPDF_SOURCES} ${LIBPDF_SUBDIR_SOURCES}
-       LIBS LibGfx LibIPC LibTextCodec
+        SOURCES ${LIBPDF_SOURCES} ${LIBPDF_SUBDIR_SOURCES}
+        LIBS LibGfx LibIPC LibTextCodec
     )
 
     # Regex
