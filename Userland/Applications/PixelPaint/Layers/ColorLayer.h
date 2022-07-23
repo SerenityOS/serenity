@@ -24,6 +24,7 @@ public:
     virtual bool is_current_bitmap_editable() override;
 
     void set_color(Gfx::Color color);
+    Gfx::Color color() const { return m_color; }
 
     // FIXME: Implement those
     virtual void flip(Gfx::Orientation) override {};
