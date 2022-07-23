@@ -249,6 +249,7 @@ button, input[type=submit], input[type=button], input[type=reset] {
     padding: 1px 4px;
     background-color: -libweb-palette-button;
     border: 1px solid -libweb-palette-threed-shadow1;
+    color: -libweb-palette-button-text;
 }
 
 button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover {
