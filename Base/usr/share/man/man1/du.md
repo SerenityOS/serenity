@@ -21,7 +21,7 @@ $ du [files...]
 * `-t size`, `--threshold size`: Exclude entries smaller than size if positive, or entries greater than size if negative
 * `--time time-type`: Show time of time time-type of any file in the directory, or any of its subdirectories. Available choices: mtime, modification, ctime, status, use, atime, access
 * `--exclude pattern`: Exclude files that match pattern
-* `-X file, --exclude_from`: Exclude files that match any pattern in file
+* `-X file, --exclude-from`: Exclude files that match any pattern in file
 
 ## Arguments
 
