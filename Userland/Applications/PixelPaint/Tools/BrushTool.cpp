@@ -22,6 +22,8 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
+    if (!layer->is_current_bitmap_editable())
+        return;
 
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Primary && layer_event.button() != GUI::MouseButton::Secondary)
@@ -49,6 +51,8 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
     if (!layer)
+        return;
+    if (!layer->is_current_bitmap_editable())
         return;
 
     auto& layer_event = event.layer_event();

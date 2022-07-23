@@ -85,6 +85,8 @@ void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
+    if (!layer->is_current_bitmap_editable())
+        return;
 
     if (event.layer_event().button() == m_drawing_button) {
         GUI::Painter painter(layer->currently_edited_bitmap());

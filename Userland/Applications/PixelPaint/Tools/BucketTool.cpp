@@ -123,6 +123,8 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
+    if (!layer->is_current_bitmap_editable())
+        return;
 
     auto& layer_event = event.layer_event();
     if (!layer->rect().contains(layer_event.position()))

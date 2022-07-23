@@ -83,6 +83,7 @@ public:
     EditMode edit_mode() { return m_edit_mode; }
     void set_edit_mode(EditMode mode);
 
+    virtual bool is_current_bitmap_editable() { return true; }
     Gfx::Bitmap& currently_edited_bitmap();
 
     virtual void did_modify(Gfx::IntRect const& = {});

@@ -39,6 +39,8 @@ void SprayTool::paint_it()
     auto* layer = m_editor->active_layer();
     if (!layer)
         return;
+    if (!layer->is_current_bitmap_editable())
+        return;
 
     auto& bitmap = layer->currently_edited_bitmap();
     GUI::Painter painter(bitmap);

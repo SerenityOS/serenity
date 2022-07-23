@@ -73,6 +73,8 @@ void LineTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
     if (!layer)
         return;
+    if (!layer->is_current_bitmap_editable())
+        return;
 
     auto& layer_event = event.layer_event();
     if (layer_event.button() == m_drawing_button) {
