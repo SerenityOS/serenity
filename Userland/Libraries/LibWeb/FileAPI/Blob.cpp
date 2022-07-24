@@ -52,6 +52,11 @@ Blob::Blob(ByteBuffer byte_buffer, String type)
 {
 }
 
+Blob::Blob(ByteBuffer byte_buffer)
+    : m_byte_buffer(move(byte_buffer))
+{
+}
+
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
 DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {

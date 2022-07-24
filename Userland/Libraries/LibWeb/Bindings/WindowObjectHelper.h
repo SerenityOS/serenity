@@ -87,6 +87,8 @@
 #include <LibWeb/Bindings/EventPrototype.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
+#include <LibWeb/Bindings/FileConstructor.h>
+#include <LibWeb/Bindings/FilePrototype.h>
 #include <LibWeb/Bindings/FocusEventConstructor.h>
 #include <LibWeb/Bindings/FocusEventPrototype.h>
 #include <LibWeb/Bindings/HTMLAnchorElementConstructor.h>
@@ -422,6 +424,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(ErrorEvent)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                                                              \
     ADD_WINDOW_OBJECT_INTERFACE(EventTarget)                                                        \
+    ADD_WINDOW_OBJECT_INTERFACE(File)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(Headers)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(History)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLAnchorElement)                                                  \

@@ -185,6 +185,7 @@ class Response;
 
 namespace Web::FileAPI {
 class Blob;
+class File;
 }
 
 namespace Web::Geometry {
@@ -474,6 +475,7 @@ class ErrorEventWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
 class EventWrapper;
+class FileWrapper;
 class FocusEventWrapper;
 class HeadersWrapper;
 class HeadersIteratorWrapper;
