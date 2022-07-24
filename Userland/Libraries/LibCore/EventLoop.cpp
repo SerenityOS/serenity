@@ -359,7 +359,7 @@ EventLoop::~EventLoop()
 bool connect_to_inspector_server()
 {
 #ifdef __serenity__
-    auto maybe_socket = Core::Stream::LocalSocket::connect("/tmp/portal/inspectables");
+    auto maybe_socket = Core::Stream::LocalSocket::connect("/tmp/user/%uid/portal/inspectables");
     if (maybe_socket.is_error()) {
         dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
         return false;
