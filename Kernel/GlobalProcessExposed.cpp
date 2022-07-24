@@ -647,11 +647,11 @@ private:
 
                 if (info.l1_data_cache().has_value())
                     TRY(add_cache_info("l1_data"sv, *info.l1_data_cache()));
-                if (info.l1_data_cache().has_value())
+                if (info.l1_instruction_cache().has_value())
                     TRY(add_cache_info("l1_instruction"sv, *info.l1_instruction_cache()));
-                if (info.l1_data_cache().has_value())
+                if (info.l2_cache().has_value())
                     TRY(add_cache_info("l2"sv, *info.l2_cache()));
-                if (info.l1_data_cache().has_value())
+                if (info.l3_cache().has_value())
                     TRY(add_cache_info("l3"sv, *info.l3_cache()));
 
                 TRY(caches.finish());
