@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
     // For writing temporary files when exporting.
     TRY(Core::System::unveil("/tmp", "crw"));
     TRY(Core::System::unveil("/etc", "r"));
