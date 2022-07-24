@@ -15,7 +15,7 @@ namespace GUI {
 class ConnectionToNotificationServer final
     : public IPC::ConnectionToServer<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToNotificationServer, "/tmp/portal/notify"sv)
+    IPC_CLIENT_CONNECTION(ConnectionToNotificationServer, "/tmp/user/%uid/portal/notify"sv)
 
     friend class Notification;
 
