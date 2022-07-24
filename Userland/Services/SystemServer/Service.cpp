@@ -211,7 +211,7 @@ void Service::spawn(int socket_fd)
             setenv("SOCKET_TAKEOVER", builder.to_string().characters(), true);
         }
 
-        if (m_account.has_value()) {
+        if (m_account.has_value() && m_account.value().uid() != getuid()) {
             auto& account = m_account.value();
             if (setgid(account.gid()) < 0 || setgroups(account.extra_gids().size(), account.extra_gids().data()) < 0 || setuid(account.uid()) < 0) {
                 dbgln("Failed to drop privileges (GID={}, UID={})\n", account.gid(), account.uid());
