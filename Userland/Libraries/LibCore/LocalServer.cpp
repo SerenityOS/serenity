@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Account.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
@@ -37,7 +38,8 @@ ErrorOr<void> LocalServer::take_over_from_system_server(String const& socket_pat
     if (m_listening)
         return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening");
 
-    auto socket = TRY(take_over_socket_from_system_server(socket_path));
+    auto const parsed_path = Core::Account::parse_path_with_uid(socket_path);
+    auto socket = TRY(take_over_socket_from_system_server(parsed_path));
     m_fd = TRY(socket->release_fd());
 
     m_listening = true;
