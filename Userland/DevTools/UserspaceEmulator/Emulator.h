@@ -222,8 +222,8 @@ private:
     int virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$rename(FlatPtr address);
     int virt$rmdir(FlatPtr path, size_t path_length);
-    int virt$sched_getparam(pid_t, FlatPtr);
-    int virt$sched_setparam(int, FlatPtr);
+    int virt$scheduler_get_parameters(FlatPtr);
+    int virt$scheduler_set_parameters(FlatPtr);
     int virt$sendfd(int, int);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$set_coredump_metadata(FlatPtr address);

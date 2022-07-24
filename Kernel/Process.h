@@ -400,8 +400,8 @@ public:
     ErrorOr<FlatPtr> sys$getsockname(Userspace<Syscall::SC_getsockname_params const*>);
     ErrorOr<FlatPtr> sys$getpeername(Userspace<Syscall::SC_getpeername_params const*>);
     ErrorOr<FlatPtr> sys$socketpair(Userspace<Syscall::SC_socketpair_params const*>);
-    ErrorOr<FlatPtr> sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
-    ErrorOr<FlatPtr> sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
+    ErrorOr<FlatPtr> sys$scheduler_set_parameters(Userspace<Syscall::SC_scheduler_parameters_params const*>);
+    ErrorOr<FlatPtr> sys$scheduler_get_parameters(Userspace<Syscall::SC_scheduler_parameters_params*>);
     ErrorOr<FlatPtr> sys$create_thread(void* (*)(void*), Userspace<Syscall::SC_create_thread_params const*>);
     [[noreturn]] void sys$exit_thread(Userspace<void*>, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$join_thread(pid_t tid, Userspace<void**> exit_value);
@@ -839,6 +839,8 @@ public:
 private:
     SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
     SpinlockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
+
+    ErrorOr<NonnullRefPtr<Thread>> get_thread_from_pid_or_tid(pid_t pid_or_tid, Syscall::SchedulerParametersMode mode);
 
     SpinlockProtected<Thread::ListInProcess> m_thread_list { LockRank::None };
 
