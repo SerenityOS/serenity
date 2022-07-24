@@ -201,10 +201,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$rename(arg1);
     case SC_rmdir:
         return virt$rmdir(arg1, arg2);
-    case SC_sched_getparam:
-        return virt$sched_getparam(arg1, arg2);
-    case SC_sched_setparam:
-        return virt$sched_setparam(arg1, arg2);
+    case SC_scheduler_get_parameters:
+        return virt$scheduler_get_parameters(arg1);
+    case SC_scheduler_set_parameters:
+        return virt$scheduler_set_parameters(arg1);
     case SC_sendfd:
         return virt$sendfd(arg1, arg2);
     case SC_sendmsg:
@@ -1504,20 +1504,20 @@ int Emulator::virt$dup2(int old_fd, int new_fd)
     return syscall(SC_dup2, old_fd, new_fd);
 }
 
-int Emulator::virt$sched_getparam(pid_t pid, FlatPtr user_addr)
+int Emulator::virt$scheduler_get_parameters(FlatPtr user_addr)
 {
-    sched_param user_param;
+    Syscall::SC_scheduler_parameters_params user_param;
     mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
-    auto rc = syscall(SC_sched_getparam, pid, &user_param);
+    auto rc = syscall(SC_scheduler_get_parameters, &user_param);
     mmu().copy_to_vm(user_addr, &user_param, sizeof(user_param));
     return rc;
 }
 
-int Emulator::virt$sched_setparam(int pid, FlatPtr user_addr)
+int Emulator::virt$scheduler_set_parameters(FlatPtr user_addr)
 {
-    sched_param user_param;
+    Syscall::SC_scheduler_parameters_params user_param;
     mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
-    return syscall(SC_sched_setparam, pid, &user_param);
+    return syscall(SC_scheduler_set_parameters, &user_param);
 }
 
 int Emulator::virt$set_thread_name(pid_t pid, FlatPtr name_addr, size_t name_length)

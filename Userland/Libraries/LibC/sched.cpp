@@ -32,14 +32,26 @@ int sched_get_priority_max([[maybe_unused]] int policy)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_setparam.html
 int sched_setparam(pid_t pid, const struct sched_param* param)
 {
-    int rc = syscall(SC_sched_setparam, pid, param);
+    Syscall::SC_scheduler_parameters_params parameters {
+        .pid_or_tid = pid,
+        .mode = Syscall::SchedulerParametersMode::Process,
+        .parameters = *param,
+    };
+    int rc = syscall(SC_scheduler_set_parameters, &parameters);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_getparam.html
 int sched_getparam(pid_t pid, struct sched_param* param)
 {
-    int rc = syscall(SC_sched_getparam, pid, param);
+    Syscall::SC_scheduler_parameters_params parameters {
+        .pid_or_tid = pid,
+        .mode = Syscall::SchedulerParametersMode::Process,
+        .parameters = {},
+    };
+    int rc = syscall(SC_scheduler_get_parameters, &parameters);
+    if (rc == 0)
+        *param = parameters.parameters;
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <AK/Userspace.h>
+#include <Kernel/API/POSIX/sched.h>
 
 constexpr int syscall_vector = 0x82;
 
@@ -145,8 +146,8 @@ enum class NeedsBigProcessLock {
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::No)                      \
     S(rmdir, NeedsBigProcessLock::No)                       \
-    S(sched_getparam, NeedsBigProcessLock::No)              \
-    S(sched_setparam, NeedsBigProcessLock::No)              \
+    S(scheduler_get_parameters, NeedsBigProcessLock::No)    \
+    S(scheduler_set_parameters, NeedsBigProcessLock::No)    \
     S(sendfd, NeedsBigProcessLock::No)                      \
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
     S(set_coredump_metadata, NeedsBigProcessLock::No)       \
@@ -478,6 +479,17 @@ struct SC_chmod_params {
     StringArgument path;
     u16 mode;
     int follow_symlinks;
+};
+
+enum class SchedulerParametersMode : bool {
+    Process,
+    Thread,
+};
+
+struct SC_scheduler_parameters_params {
+    pid_t pid_or_tid;
+    SchedulerParametersMode mode;
+    struct sched_param parameters;
 };
 
 void initialize();
