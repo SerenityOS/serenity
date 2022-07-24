@@ -75,8 +75,15 @@ ErrorOr<FlatPtr> Process::sys$scheduler_set_parameters(Userspace<Syscall::SC_sch
     if (!credentials->is_superuser() && credentials->euid() != peer_credentials->uid() && credentials->uid() != peer_credentials->uid())
         return EPERM;
 
-    // FIXME: Only sets priority for main thread of process if mode == PROCESS
     peer->set_priority((u32)parameters.parameters.sched_priority);
+    // POSIX says that process scheduling parameters have precedence over thread scheduling parameters.
+    // We don't track them separately, so overwrite the thread scheduling settings manually for now.
+    if (parameters.mode == Syscall::SchedulerParametersMode::Process) {
+        peer->process().for_each_thread([&](auto& thread) {
+            thread.set_priority((u32)parameters.parameters.sched_priority);
+        });
+    }
+
     return 0;
 }
 
