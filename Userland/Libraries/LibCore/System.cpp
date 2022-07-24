@@ -12,6 +12,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/Account.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -81,8 +82,10 @@ ErrorOr<void> pledge(StringView promises, StringView execpromises)
 
 ErrorOr<void> unveil(StringView path, StringView permissions)
 {
+    auto const parsed_path = Core::Account::parse_path_with_uid(path);
+
     Syscall::SC_unveil_params params {
-        { path.characters_without_null_termination(), path.length() },
+        { parsed_path.characters(), parsed_path.length() },
         { permissions.characters_without_null_termination(), permissions.length() },
     };
     int rc = syscall(SC_unveil, &params);
