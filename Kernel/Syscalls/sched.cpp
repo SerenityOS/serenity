@@ -29,6 +29,10 @@ ErrorOr<NonnullRefPtr<Thread>> Process::get_thread_from_pid_or_tid(pid_t pid_or_
         if (pid_or_tid != 0)
             peer = Thread::from_tid(pid_or_tid);
 
+        // Only superuser can access other processes' threads.
+        if (!credentials()->is_superuser() && peer && &peer->process() != this)
+            return EPERM;
+
         break;
     }
     case Syscall::SchedulerParametersMode::Process: {
