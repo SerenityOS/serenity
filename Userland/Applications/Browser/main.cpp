@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/tmp/portal/image", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/request", "rw"));
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
