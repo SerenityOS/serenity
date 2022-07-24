@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
-    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto size = Config::read_i32("Chess"sv, "Display"sv, "size"sv, 512);
