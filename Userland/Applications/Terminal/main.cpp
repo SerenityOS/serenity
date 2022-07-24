@@ -433,7 +433,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/utmpupdate", "x"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
-    TRY(Core::System::unveil("/tmp/portal/config", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto modified_state_check_timer = Core::Timer::create_repeating(500, [&] {
