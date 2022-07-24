@@ -17,6 +17,7 @@ set(TEST_SOURCES
     TestMkDir.cpp
     TestPthreadCancel.cpp
     TestPthreadCleanup.cpp
+    TestPThreadPriority.cpp
     TestPthreadSpinLocks.cpp
     TestPthreadRWLocks.cpp
     TestQsort.cpp
