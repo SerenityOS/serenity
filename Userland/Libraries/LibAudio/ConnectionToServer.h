@@ -26,7 +26,7 @@ namespace Audio {
 class ConnectionToServer final
     : public IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/portal/audio"sv)
+    IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/user/%uid/portal/audio"sv)
 public:
     virtual ~ConnectionToServer() override;
 
