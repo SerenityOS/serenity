@@ -18,7 +18,7 @@ namespace Config {
 class Client final
     : public IPC::ConnectionToServer<ConfigClientEndpoint, ConfigServerEndpoint>
     , public ConfigClientEndpoint {
-    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/config"sv)
+    IPC_CLIENT_CONNECTION(Client, "/tmp/user/%uid/portal/config"sv)
 
 public:
     void pledge_domains(Vector<String> const&);
