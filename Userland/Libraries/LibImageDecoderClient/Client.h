@@ -27,7 +27,7 @@ struct DecodedImage {
 class Client final
     : public IPC::ConnectionToServer<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
     , public ImageDecoderClientEndpoint {
-    IPC_CLIENT_CONNECTION(Client, "/tmp/portal/image"sv);
+    IPC_CLIENT_CONNECTION(Client, "/tmp/user/%uid/portal/image"sv);
 
 public:
     Optional<DecodedImage> decode_image(ReadonlyBytes);
