@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/user/%uid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
-    TRY(Core::System::unveil("/tmp/portal/websocket", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::ImageDecoding::Decoder::initialize(WebView::ImageDecoderClientAdapter::create());
