@@ -76,7 +76,7 @@ ErrorOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& blob_parts)
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.
             [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {
-                return bytes.try_append(blob->m_byte_buffer.bytes());
+                return bytes.try_append(blob->bytes());
             }));
     }
     return bytes;

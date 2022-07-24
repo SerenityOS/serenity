@@ -475,10 +475,19 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
     if (body_with_type.has_value()) {
-        body_with_type->body.source().visit(
-            [&](ByteBuffer const& buffer) { request.set_body(buffer); },
-            [&](NonnullRefPtr<FileAPI::Blob> const& blob) { request.set_body(blob->m_byte_buffer); },
-            [](auto&) {});
+        TRY_OR_RETURN_OOM(body_with_type->body.source().visit(
+            [&](ByteBuffer const& buffer) -> ErrorOr<void> {
+                request.set_body(buffer);
+                return {};
+            },
+            [&](NonnullRefPtr<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+                auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
+                request.set_body(byte_buffer);
+                return {};
+            },
+            [](auto&) -> ErrorOr<void> {
+                return {};
+            }));
         if (body_with_type->type.has_value())
             request.set_header("Content-Type", String { body_with_type->type->span() });
     }
