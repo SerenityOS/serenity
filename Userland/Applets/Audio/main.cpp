@@ -241,7 +241,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("AudioApplet");
-    TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/audio", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
