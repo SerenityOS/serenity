@@ -26,6 +26,8 @@ struct BlobPropertyBag {
     Bindings::EndingType endings;
 };
 
+[[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
+
 class Blob
     : public RefCounted<Blob>
     , public Weakable<Blob>
@@ -52,7 +54,6 @@ public:
 
 private:
     Blob() = default;
-    static ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
 
     ByteBuffer m_byte_buffer {};
     String m_type {};

@@ -12,6 +12,40 @@
 
 namespace Web::FileAPI {
 
+// https://w3c.github.io/FileAPI/#process-blob-parts
+ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts)
+{
+    // 1. Let bytes be an empty sequence of bytes.
+    ByteBuffer bytes {};
+
+    // 2. For each element in parts:
+    for (auto const& blob_part : blob_parts) {
+        TRY(blob_part.visit(
+            // 1. If element is a USVString, run the following sub-steps:
+            [&](String const& string) -> ErrorOr<void> {
+                // NOTE: This step is handled by the lambda expression.
+                // 1. Let s be element.
+
+                // FIXME: 2. If the endings member of options is "native", set s to the result of converting line endings to native of element.
+
+                // NOTE: The AK::String is always UTF-8.
+                // 3. Append the result of UTF-8 encoding s to bytes.
+                return bytes.try_append(string.to_byte_buffer());
+            },
+            // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
+            [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+                auto data_buffer = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+                return bytes.try_append(data_buffer.bytes());
+            },
+            // 3. If element is a Blob, append the bytes it represents to bytes.
+            [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {
+                return bytes.try_append(blob->bytes());
+            }));
+    }
+    // 3. Return bytes.
+    return bytes;
+}
+
 Blob::Blob(ByteBuffer byte_buffer, String type)
     : m_byte_buffer(move(byte_buffer))
     , m_type(move(type))
@@ -47,39 +81,6 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
 DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     return Blob::create(blob_parts, options);
-}
-
-// https://w3c.github.io/FileAPI/#process-blob-parts
-ErrorOr<ByteBuffer> Blob::process_blob_parts(Vector<BlobPart> const& blob_parts)
-{
-    // 1. Let bytes be an empty sequence of bytes.
-    ByteBuffer bytes {};
-
-    // 2. For each element in parts:
-    for (auto const& blob_part : blob_parts) {
-        TRY(blob_part.visit(
-            // 1. If element is a USVString, run the following sub-steps:
-            [&](String const& string) -> ErrorOr<void> {
-                // NOTE: This step is handled by the lambda expression.
-                // 1. Let s be element.
-
-                // FIXME: 2. If the endings member of options is "native", set s to the result of converting line endings to native of element.
-
-                // NOTE: The AK::String is always UTF-8.
-                // 3. Append the result of UTF-8 encoding s to bytes.
-                return bytes.try_append(string.to_byte_buffer());
-            },
-            // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
-            [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
-                auto data_buffer = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
-                return bytes.try_append(data_buffer.bytes());
-            },
-            // 3. If element is a Blob, append the bytes it represents to bytes.
-            [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {
-                return bytes.try_append(blob->bytes());
-            }));
-    }
-    return bytes;
 }
 
 // https://w3c.github.io/FileAPI/#dfn-slice
