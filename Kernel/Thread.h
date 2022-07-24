@@ -15,6 +15,7 @@
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <Kernel/API/POSIX/sched.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
@@ -45,12 +46,6 @@ enum class DispatchSignalResult {
 struct ThreadSpecificData {
     ThreadSpecificData* self;
 };
-
-#define THREAD_PRIORITY_MIN 1
-#define THREAD_PRIORITY_LOW 10
-#define THREAD_PRIORITY_NORMAL 30
-#define THREAD_PRIORITY_HIGH 50
-#define THREAD_PRIORITY_MAX 99
 
 #define THREAD_AFFINITY_DEFAULT 0xffffffff
 

@@ -16,6 +16,12 @@ struct sched_param {
     int sched_priority;
 };
 
+#define THREAD_PRIORITY_MIN 1
+#define THREAD_PRIORITY_LOW 10
+#define THREAD_PRIORITY_NORMAL 30
+#define THREAD_PRIORITY_HIGH 50
+#define THREAD_PRIORITY_MAX 99
+
 #ifdef __cplusplus
 }
 #endif

@@ -20,13 +20,13 @@ int sched_yield()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_get_priority_min.html
 int sched_get_priority_min([[maybe_unused]] int policy)
 {
-    return 0; // Idle
+    return THREAD_PRIORITY_MIN;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_get_priority_max.html
 int sched_get_priority_max([[maybe_unused]] int policy)
 {
-    return 3; // High
+    return THREAD_PRIORITY_MAX;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_setparam.html
