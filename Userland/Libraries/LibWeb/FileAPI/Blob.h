@@ -54,6 +54,9 @@ public:
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 
+protected:
+    Blob(ByteBuffer byte_buffer);
+
 private:
     Blob() = default;
 
