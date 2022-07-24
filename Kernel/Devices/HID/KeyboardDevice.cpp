@@ -98,7 +98,7 @@ static constexpr KeyCode unshifted_key_map[0x80] = {
     Key_End,
     Key_Down, // 80
     Key_PageDown,
-    Key_Invalid,
+    Key_Insert,
     Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
@@ -195,7 +195,7 @@ static constexpr KeyCode shifted_key_map[0x100] = {
     Key_End,
     Key_Down, // 80
     Key_PageDown,
-    Key_Invalid,
+    Key_Insert,
     Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
