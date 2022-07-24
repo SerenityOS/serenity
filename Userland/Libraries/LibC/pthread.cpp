@@ -496,15 +496,30 @@ int pthread_attr_setscope([[maybe_unused]] pthread_attr_t* attributes, [[maybe_u
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getschedparam.html
-int pthread_getschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int* policy, [[maybe_unused]] struct sched_param* param)
+int pthread_getschedparam(pthread_t thread, [[maybe_unused]] int* policy, struct sched_param* param)
 {
-    return 0;
+    Syscall::SC_scheduler_parameters_params parameters {
+        .pid_or_tid = thread,
+        .mode = Syscall::SchedulerParametersMode::Thread,
+        .parameters = *param,
+    };
+    int rc = syscall(Syscall::SC_scheduler_get_parameters, &parameters);
+    if (rc == 0)
+        *param = parameters.parameters;
+
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setschedparam.html
-int pthread_setschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int policy, [[maybe_unused]] const struct sched_param* param)
+int pthread_setschedparam(pthread_t thread, [[maybe_unused]] int policy, struct sched_param const* param)
 {
-    return 0;
+    Syscall::SC_scheduler_parameters_params parameters {
+        .pid_or_tid = thread,
+        .mode = Syscall::SchedulerParametersMode::Thread,
+        .parameters = *param,
+    };
+    int rc = syscall(Syscall::SC_scheduler_set_parameters, &parameters);
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 static void pthread_cancel_signal_handler(int signal)
