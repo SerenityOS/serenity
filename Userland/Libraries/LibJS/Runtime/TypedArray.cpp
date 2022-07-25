@@ -412,6 +412,10 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
             : (x.as_double() > y.as_double()))
         return 1;
 
+    // 8. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
+    if (x.is_negative_zero() && y.is_positive_zero())
+        return -1;
+
     // 9. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
     if (x.is_positive_zero() && y.is_negative_zero())
         return 1;
