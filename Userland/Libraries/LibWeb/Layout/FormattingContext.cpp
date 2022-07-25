@@ -659,26 +659,30 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     // FIXME: The section below is partly on-spec, partly ad-hoc.
     auto& computed_values = box.computed_values();
     auto const& containing_block = *box.containing_block();
-    auto& box_state = m_state.get_mutable(box);
+
     auto width_of_containing_block = containing_block_width_for(box);
     auto height_of_containing_block = containing_block_height_for(box);
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-    CSS::Length specified_top = computed_values.inset().top.resolved(box, height_of_containing_block_as_length).resolved(box);
-    CSS::Length specified_bottom = computed_values.inset().bottom.resolved(box, height_of_containing_block_as_length).resolved(box);
-    CSS::Length specified_height = CSS::Length::make_auto();
+    auto const& computed_top = computed_values.inset().top;
+    auto const& computed_bottom = computed_values.inset().bottom;
+    auto const& computed_height = computed_values.height();
+    auto const& computed_min_height = computed_values.min_height();
+    auto const& computed_max_height = computed_values.max_height();
+
+    auto used_top = computed_top.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box);
+    auto used_bottom = computed_bottom.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box);
+    auto tentative_height = CSS::Length::make_auto();
 
     if (computed_values.height().is_percentage()
         && !(containing_block.computed_values().height().is_length() && containing_block.computed_values().height().length().is_absolute())) {
-        // specified_height is already auto
+        // tentative_height is already auto
     } else {
-        specified_height = computed_values.height().resolved(box, height_of_containing_block_as_length).resolved(box);
+        tentative_height = computed_values.height().resolved(box, height_of_containing_block_as_length).resolved(box);
     }
 
-    auto specified_max_height = computed_values.max_height().resolved(box, height_of_containing_block_as_length).resolved(box);
-    auto specified_min_height = computed_values.min_height().resolved(box, height_of_containing_block_as_length).resolved(box);
-
+    auto& box_state = m_state.get_mutable(box);
     box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.border_top = computed_values.border_top().width;
@@ -686,27 +690,26 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
 
-    if (specified_height.is_auto() && specified_top.is_auto() && specified_bottom.is_auto()) {
-        specified_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
+    if (computed_height.is_auto() && computed_top.is_auto() && computed_bottom.is_auto()) {
+        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
     }
 
-    else if (specified_height.is_auto() && !specified_top.is_auto() && specified_bottom.is_auto()) {
-        specified_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
-        box_state.inset_bottom = height_of_containing_block - specified_height.to_px(box) - specified_top.to_px(box) - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
+    else if (computed_height.is_auto() && !computed_top.is_auto() && computed_bottom.is_auto()) {
+        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
+        box_state.inset_bottom = height_of_containing_block - tentative_height.to_px(box) - used_top - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
     }
 
-    else if (specified_height.is_auto() && !specified_top.is_auto() && !specified_bottom.is_auto()) {
-        specified_height = CSS::Length(height_of_containing_block - specified_top.to_px(box) - box_state.margin_top - box_state.padding_top - box_state.border_top - specified_bottom.to_px(box) - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom, CSS::Length::Type::Px);
+    else if (computed_height.is_auto() && !computed_top.is_auto() && !computed_bottom.is_auto()) {
+        tentative_height = CSS::Length(height_of_containing_block - used_top - box_state.margin_top - box_state.padding_top - box_state.border_top - used_bottom - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom, CSS::Length::Type::Px);
     }
 
-    if (!specified_height.is_auto()) {
-        float used_height = specified_height.to_px(box);
-        if (!specified_max_height.is_auto())
-            used_height = min(used_height, specified_max_height.to_px(box));
-        if (!specified_min_height.is_auto())
-            used_height = max(used_height, specified_min_height.to_px(box));
-        box_state.set_content_height(used_height);
-    }
+    float used_height = tentative_height.to_px(box);
+    if (!computed_max_height.is_auto())
+        used_height = min(used_height, computed_max_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+    if (!computed_min_height.is_auto())
+        used_height = max(used_height, computed_min_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+
+    box_state.set_content_height(used_height);
 }
 
 void FormattingContext::layout_absolutely_positioned_element(Box const& box)
