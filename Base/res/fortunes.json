@@ -256,5 +256,12 @@
     "url": "https://discord.com/channels/830522505605283862/830522505605283866/1007765914722238534",
     "utc_time": 1660340460,
     "context": "Dynamic implementations of drivers and interfaces (Kernel-modules, OpenGL, ...) dlopen-ing and executing random files if you ask them \"nicely\", and StylePainter potentially having to do the same, leading to Filiph Sandström saying \"Potential privilege escalation, it's not a bug it's a feature™\""
+  },
+  {
+    "quote": "if you think about it, but not too hard, a programmer's brain can earn them money, colloquially known as bread. so their brain is bread. and when debugging in shared channel, you have more than one programmer putting their heads together",
+    "author": "Andrew Kaster",
+    "url": "https://discord.com/channels/830522505605283862/830525235803586570/1000895024277504020",
+    "utc_time": 1658702369,
+    "context": "\"Is debugging a sandwich?\""
   }
 ]
