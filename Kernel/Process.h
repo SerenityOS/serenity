@@ -339,6 +339,7 @@ public:
     ErrorOr<FlatPtr> sys$clock_gettime(clockid_t, Userspace<timespec*>);
     ErrorOr<FlatPtr> sys$clock_settime(clockid_t, Userspace<timespec const*>);
     ErrorOr<FlatPtr> sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosleep_params const*>);
+    ErrorOr<FlatPtr> sys$clock_getres(Userspace<Syscall::SC_clock_getres_params const*>);
     ErrorOr<FlatPtr> sys$gethostname(Userspace<char*>, size_t);
     ErrorOr<FlatPtr> sys$sethostname(Userspace<char const*>, size_t);
     ErrorOr<FlatPtr> sys$uname(Userspace<utsname*>);

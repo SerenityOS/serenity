@@ -471,10 +471,10 @@ int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining
     return clock_nanosleep(CLOCK_REALTIME, 0, requested_sleep, remaining_sleep);
 }
 
-int clock_getres(clockid_t, struct timespec*)
+int clock_getres(clockid_t clock_id, struct timespec* result)
 {
-    dbgln("FIXME: Implement clock_getres()");
-    auto rc = -ENOSYS;
+    Syscall::SC_clock_getres_params params { clock_id, result };
+    int rc = syscall(SC_clock_getres, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

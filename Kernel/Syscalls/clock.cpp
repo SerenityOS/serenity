@@ -91,6 +91,23 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosl
     return 0;
 }
 
+ErrorOr<FlatPtr> Process::sys$clock_getres(Userspace<Syscall::SC_clock_getres_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    auto params = TRY(copy_typed_from_user(user_params));
+    timespec ts {};
+    switch (params.clock_id) {
+    case CLOCK_REALTIME:
+        ts.tv_sec = 0;
+        ts.tv_nsec = 1000000000 / _SC_CLK_TCK;
+        TRY(copy_to_user(params.result, &ts));
+        break;
+    default:
+        return EINVAL;
+    }
+    return 0;
+}
+
 ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, Userspace<timeval*> user_old_delta)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
