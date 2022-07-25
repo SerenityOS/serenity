@@ -39,10 +39,19 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::parse(StringView string)
 
 ErrorOr<FilePermissionsMask> FilePermissionsMask::from_numeric_notation(StringView string)
 {
-    mode_t mode = AK::StringUtils::convert_to_uint_from_octal<u16>(string).value_or(01000);
-    if (mode > 0777)
+    string = string.trim_whitespace();
+    mode_t mode = AK::StringUtils::convert_to_uint_from_octal<u16>(string, TrimWhitespace::No).value_or(010000);
+    if (mode > 07777)
         return Error::from_string_literal("invalid octal representation");
-    return move(FilePermissionsMask().assign_permissions(mode));
+
+    FilePermissionsMask mask;
+    mask.assign_permissions(mode);
+
+    // For compatibility purposes, just clear the special mode bits if we explicitly passed a 4-character mode.
+    if (string.length() >= 4)
+        mask.remove_permissions(07000);
+
+    return mask;
 }
 
 ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringView string)

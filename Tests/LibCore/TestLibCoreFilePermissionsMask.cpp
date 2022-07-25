@@ -116,3 +116,24 @@ TEST_CASE(file_permission_mask_parse)
     mask = Core::FilePermissionsMask::parse("z+rw"sv);
     EXPECT(mask.is_error());
 }
+
+TEST_CASE(numeric_mask_special_bits)
+{
+    {
+        auto mask = Core::FilePermissionsMask::parse("750"sv);
+        EXPECT(!mask.is_error());
+        EXPECT_EQ(mask.value().apply(07000), 07750);
+    }
+
+    {
+        auto mask = Core::FilePermissionsMask::parse("7750"sv);
+        EXPECT(!mask.is_error());
+        EXPECT_EQ(mask.value().apply(0), 07750);
+    }
+
+    {
+        auto mask = Core::FilePermissionsMask::parse("0750"sv);
+        EXPECT(!mask.is_error());
+        EXPECT_EQ(mask.value().apply(07000), 0750);
+    }
+}
