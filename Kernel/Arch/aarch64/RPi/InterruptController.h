@@ -30,7 +30,7 @@ private:
 
     virtual StringView model() const override
     {
-        return "Raspberry Pi Interrupt Controller";
+        return "Raspberry Pi Interrupt Controller"sv;
     }
 
     InterruptControllerRegisters volatile* m_registers;
