@@ -401,6 +401,18 @@ Vector<size_t> find_all(StringView haystack, StringView needle)
     return positions;
 }
 
+Vector<size_t> find_all(StringView haystack, Function<bool(char)> const& predicate)
+{
+    Vector<size_t> positions;
+    size_t current_position = 0;
+    while (current_position < haystack.length()) {
+        if (predicate(haystack[current_position]))
+            positions.append(current_position);
+        ++current_position;
+    }
+    return positions;
+}
+
 Optional<size_t> find_any_of(StringView haystack, StringView needles, SearchDirection direction)
 {
     if (haystack.is_empty() || needles.is_empty())

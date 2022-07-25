@@ -239,6 +239,11 @@ Vector<size_t> StringView::find_all(StringView needle) const
     return StringUtils::find_all(*this, needle);
 }
 
+Vector<size_t> StringView::find_all(Function<bool(char)> const& predicate) const
+{
+    return StringUtils::find_all(*this, predicate);
+}
+
 Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predicate, bool keep_empty) const
 {
     if (is_empty())

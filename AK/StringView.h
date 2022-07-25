@@ -104,6 +104,7 @@ public:
     // FIXME: Implement find_last(StringView) for API symmetry.
 
     [[nodiscard]] Vector<size_t> find_all(StringView needle) const;
+    [[nodiscard]] Vector<size_t> find_all(Function<bool(char)> const& predicate) const;
 
     using SearchDirection = StringUtils::SearchDirection;
     [[nodiscard]] Optional<size_t> find_any_of(StringView needles, SearchDirection direction = SearchDirection::Forward) const { return StringUtils::find_any_of(*this, needles, direction); }
