@@ -770,6 +770,24 @@ ErrorOr<bool> isatty(int fd)
     return rc == 1;
 }
 
+ErrorOr<void> link(StringView old_path, StringView new_path)
+{
+#ifdef __serenity__
+    Syscall::SC_link_params params {
+        .old_path = { old_path.characters_without_null_termination(), old_path.length() },
+        .new_path = { new_path.characters_without_null_termination(), new_path.length() },
+    };
+    int rc = syscall(SC_link, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("link", rc, {});
+#else
+    String old_path_string = old_path;
+    String new_path_string = new_path;
+    if (::link(old_path_string.characters(), new_path_string.characters()) < 0)
+        return Error::from_syscall("link"sv, -errno);
+    return {};
+#endif
+}
+
 ErrorOr<void> symlink(StringView target, StringView link_path)
 {
 #ifdef __serenity__

@@ -144,6 +144,7 @@ ErrorOr<void> setpgid(pid_t pid, pid_t pgid);
 ErrorOr<pid_t> setsid();
 ErrorOr<void> drop_privileges();
 ErrorOr<bool> isatty(int fd);
+ErrorOr<void> link(StringView old_path, StringView new_path);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);
 ErrorOr<void> chdir(StringView path);
