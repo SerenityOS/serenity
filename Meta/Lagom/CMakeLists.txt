@@ -61,6 +61,7 @@ if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
 endif()
 
 include(wasm_spec_tests)
+include(flac_spec_tests)
 include(lagom_compile_options)
 
 include(GNUInstallDirs) # make sure to include before we mess w/RPATH
@@ -641,6 +642,12 @@ if (BUILD_LAGOM)
         file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
         foreach(source ${AK_TEST_SOURCES})
             lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
+        endforeach()
+
+        # LibAudio
+        file(GLOB LIBAUDIO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibAudio/*.cpp")
+        foreach(source ${LIBAUDIO_TEST_SOURCES})
+            lagom_test(${source} LIBS LibAudio WORKING_DIRECTORY ${FLAC_TEST_PATH})
         endforeach()
 
         # LibCore

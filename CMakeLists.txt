@@ -206,6 +206,7 @@ option(BUILD_EVERYTHING "Build all optional components" ON)
 
 include(utils)
 include(wasm_spec_tests)
+include(flac_spec_tests)
 
 serenity_component(
     Tests
