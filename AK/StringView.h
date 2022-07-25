@@ -62,7 +62,12 @@ public:
 
     [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
 
-    constexpr char const& operator[](size_t index) const { return m_characters[index]; }
+    constexpr char const& operator[](size_t index) const
+    {
+        if (!is_constant_evaluated())
+            VERIFY(index < m_length);
+        return m_characters[index];
+    }
 
     using ConstIterator = SimpleIterator<const StringView, char const>;
 
