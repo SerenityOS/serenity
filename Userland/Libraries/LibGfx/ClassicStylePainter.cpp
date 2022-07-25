@@ -394,29 +394,149 @@ void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rec
         painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, palette.base_text());
 }
 
-static RefPtr<Gfx::Bitmap> s_unfilled_circle_bitmap;
-static RefPtr<Gfx::Bitmap> s_filled_circle_bitmap;
-static RefPtr<Gfx::Bitmap> s_changing_filled_circle_bitmap;
-static RefPtr<Gfx::Bitmap> s_changing_unfilled_circle_bitmap;
-
-static Gfx::Bitmap const& circle_bitmap(bool checked, bool changing)
+void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& a_rect, Palette const& palette, bool is_checked, bool is_being_pressed)
 {
-    if (changing)
-        return checked ? *s_changing_filled_circle_bitmap : *s_changing_unfilled_circle_bitmap;
-    return checked ? *s_filled_circle_bitmap : *s_unfilled_circle_bitmap;
-}
+    // Outer top left arc, starting at bottom left point.
+    constexpr Gfx::IntPoint outer_top_left_arc[] = {
+        { 1, 9 },
+        { 1, 8 },
+        { 0, 7 },
+        { 0, 6 },
+        { 0, 5 },
+        { 0, 4 },
+        { 1, 3 },
+        { 1, 2 },
+        { 2, 1 },
+        { 3, 1 },
+        { 4, 0 },
+        { 5, 0 },
+        { 6, 0 },
+        { 7, 0 },
+        { 8, 1 },
+        { 9, 1 },
+    };
 
-void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& rect, Palette const&, bool is_checked, bool is_being_pressed)
-{
-    if (!s_unfilled_circle_bitmap) {
-        s_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/unfilled-radio-circle.png"sv).release_value_but_fixme_should_propagate_errors();
-        s_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/filled-radio-circle.png"sv).release_value_but_fixme_should_propagate_errors();
-        s_changing_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-filled-radio-circle.png"sv).release_value_but_fixme_should_propagate_errors();
-        s_changing_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-unfilled-radio-circle.png"sv).release_value_but_fixme_should_propagate_errors();
+    // Outer bottom right arc, starting at top right point.
+    constexpr Gfx::IntPoint outer_bottom_right_arc[] = {
+        { 10, 2 },
+        { 10, 3 },
+        { 11, 4 },
+        { 11, 5 },
+        { 11, 6 },
+        { 11, 7 },
+        { 10, 8 },
+        { 10, 9 },
+        { 9, 10 },
+        { 8, 10 },
+        { 7, 11 },
+        { 6, 11 },
+        { 5, 11 },
+        { 4, 11 },
+        { 3, 10 },
+        { 2, 10 },
+    };
+
+    // Inner top left arc, starting at bottom left point.
+    constexpr Gfx::IntPoint inner_top_left_arc[] = {
+        { 2, 8 },
+        { 1, 7 },
+        { 1, 6 },
+        { 1, 5 },
+        { 1, 4 },
+        { 2, 3 },
+        { 2, 2 },
+        { 3, 2 },
+        { 3, 2 },
+        { 3, 2 },
+        { 3, 2 },
+        { 4, 1 },
+        { 5, 1 },
+        { 6, 1 },
+        { 7, 1 },
+        { 8, 2 },
+        { 9, 2 },
+    };
+
+    // Inner bottom right arc, starting at top right point.
+    constexpr Gfx::IntPoint inner_bottom_right_arc[] = {
+        { 9, 3 },
+        { 10, 4 },
+        { 10, 5 },
+        { 10, 6 },
+        { 10, 7 },
+        { 9, 8 },
+        { 9, 9 },
+        { 8, 9 },
+        { 7, 10 },
+        { 6, 10 },
+        { 5, 10 },
+        { 4, 10 },
+        { 3, 9 },
+        { 2, 9 },
+    };
+
+    // Inner "being pressed" circle, starting at top left corner point.
+    constexpr Gfx::IntPoint inner_being_pressed_circle[] = {
+        { 3, 3 },
+        { 4, 2 },
+        { 5, 2 },
+        { 6, 2 },
+        { 7, 2 },
+        { 8, 3 },
+        { 9, 4 },
+        { 9, 5 },
+        { 9, 6 },
+        { 9, 7 },
+        { 8, 8 },
+        { 7, 9 },
+        { 6, 9 },
+        { 5, 9 },
+        { 4, 9 },
+        { 3, 8 },
+        { 2, 7 },
+        { 2, 6 },
+        { 2, 5 },
+        { 2, 4 },
+    };
+
+    // Inner "checked" circle, starting at top left.
+    constexpr Gfx::IntPoint checked_circle[] = {
+        { 5, 4 },
+        { 6, 4 },
+        { 4, 5 },
+        { 5, 5 },
+        { 6, 5 },
+        { 7, 5 },
+        { 4, 6 },
+        { 5, 6 },
+        { 6, 6 },
+        { 7, 6 },
+        { 5, 7 },
+        { 6, 7 },
+    };
+
+    // FIXME: Support radio buttons at any size.
+    Gfx::IntRect rect { a_rect.x(), a_rect.y(), 12, 12 };
+
+    auto set_pixels = [&](auto const& points, Gfx::Color color) {
+        for (auto const& p : points) {
+            painter.set_pixel(rect.location().translated(p), color);
+        }
+    };
+
+    // Fill center with base color
+    painter.fill_rect(rect.shrunken(4, 4), palette.base());
+
+    set_pixels(outer_top_left_arc, palette.threed_shadow1());
+    set_pixels(outer_bottom_right_arc, palette.threed_highlight());
+    set_pixels(inner_top_left_arc, palette.threed_shadow2());
+    set_pixels(inner_bottom_right_arc, palette.button());
+    if (is_being_pressed) {
+        set_pixels(inner_being_pressed_circle, palette.threed_shadow1());
     }
-
-    auto& bitmap = circle_bitmap(is_checked, is_being_pressed);
-    painter.blit(rect.location(), bitmap, bitmap.rect());
+    if (is_checked) {
+        set_pixels(checked_circle, palette.base_text());
+    }
 }
 
 static constexpr Gfx::CharacterBitmap s_checked_bitmap {
