@@ -42,7 +42,7 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_numeric_notation(StringVi
     mode_t mode = AK::StringUtils::convert_to_uint_from_octal<u16>(string).value_or(01000);
     if (mode > 0777)
         return Error::from_string_literal("invalid octal representation");
-    return FilePermissionsMask().assign_permissions(mode);
+    return move(FilePermissionsMask().assign_permissions(mode));
 }
 
 ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringView string)
@@ -98,25 +98,37 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
             }
 
             mode_t write_bits = 0;
+            bool apply_to_directories_and_executables_only = false;
 
-            if (ch == 'r')
+            switch (ch) {
+            case 'r':
                 write_bits = 4;
-            else if (ch == 'w')
+                break;
+            case 'w':
                 write_bits = 2;
-            else if (ch == 'x')
+                break;
+            case 'x':
                 write_bits = 1;
-            else
+                break;
+            case 'X':
+                write_bits = 1;
+                apply_to_directories_and_executables_only = true;
+                break;
+            default:
                 return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'");
+            }
 
             mode_t clear_bits = operation == Operation::Assign ? 7 : write_bits;
+
+            FilePermissionsMask& edit_mask = apply_to_directories_and_executables_only ? mask.directory_or_executable_mask() : mask;
 
             // Update masks one class at a time in other, group, user order
             for (auto cls = classes; cls != 0; cls >>= 1) {
                 if (cls & 1) {
                     if (operation == Operation::Add || operation == Operation::Assign)
-                        mask.add_permissions(write_bits);
+                        edit_mask.add_permissions(write_bits);
                     if (operation == Operation::Remove || operation == Operation::Assign)
-                        mask.remove_permissions(clear_bits);
+                        edit_mask.remove_permissions(clear_bits);
                 }
                 write_bits <<= 3;
                 clear_bits <<= 3;
