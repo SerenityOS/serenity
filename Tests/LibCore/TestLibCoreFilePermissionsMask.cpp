@@ -72,6 +72,16 @@ TEST_CASE(file_permission_mask_from_symbolic_notation)
     EXPECT_EQ(mask.value().apply(0), 0555);
     EXPECT_EQ(mask.value().apply(0664), 0555);
 
+    mask = Core::FilePermissionsMask::from_symbolic_notation("a+X"sv);
+    EXPECT(!mask.is_error());
+    EXPECT_EQ(mask.value().clear_mask(), 0);
+    EXPECT_EQ(mask.value().write_mask(), 0);
+    EXPECT_EQ(mask.value().directory_or_executable_mask().clear_mask(), 0);
+    EXPECT_EQ(mask.value().directory_or_executable_mask().write_mask(), 0111);
+    EXPECT_EQ(mask.value().apply(0), 0);
+    EXPECT_EQ(mask.value().apply(0100), 0111);
+    EXPECT_EQ(mask.value().apply(S_IFDIR | 0), S_IFDIR | 0111);
+
     mask = Core::FilePermissionsMask::from_symbolic_notation("z+rw"sv);
     EXPECT(mask.is_error());
     EXPECT(mask.error().string_literal().starts_with("invalid class"sv));
