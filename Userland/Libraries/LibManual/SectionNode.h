@@ -34,6 +34,7 @@ public:
     virtual Node const* parent() const override { return nullptr; }
     virtual String name() const override;
     String const& section_name() const { return m_section; }
+    String const& category_name() const { return m_name; }
     virtual String path() const;
 
     virtual bool is_open() const override { return m_open; }
