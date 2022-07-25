@@ -51,6 +51,7 @@ enum class NeedsBigProcessLock {
     S(chmod, NeedsBigProcessLock::No)                       \
     S(chown, NeedsBigProcessLock::No)                       \
     S(clock_gettime, NeedsBigProcessLock::No)               \
+    S(clock_getres, NeedsBigProcessLock::No)                \
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
     S(clock_settime, NeedsBigProcessLock::No)               \
     S(close, NeedsBigProcessLock::No)                       \
@@ -255,6 +256,11 @@ struct SC_clock_nanosleep_params {
     int flags;
     const struct timespec* requested_sleep;
     struct timespec* remaining_sleep;
+};
+
+struct SC_clock_getres_params {
+    int clock_id;
+    struct timespec* result;
 };
 
 struct SC_accept4_params {
