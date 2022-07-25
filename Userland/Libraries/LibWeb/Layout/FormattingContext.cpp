@@ -724,24 +724,20 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     box_state.inset_right = box.computed_values().inset().right.resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.inset_bottom = box.computed_values().inset().bottom.resolved(box, height_of_containing_block_as_length).to_px(box);
 
-    auto is_auto = [](auto const& length_percentage) {
-        return length_percentage.is_length() && length_percentage.length().is_auto();
-    };
-
-    if (is_auto(box.computed_values().inset().left) && specified_width.is_auto() && is_auto(box.computed_values().inset().right)) {
-        if (is_auto(box.computed_values().margin().left))
+    if (box.computed_values().inset().left.is_auto() && specified_width.is_auto() && box.computed_values().inset().right.is_auto()) {
+        if (box.computed_values().margin().left.is_auto())
             box_state.margin_left = 0;
-        if (is_auto(box.computed_values().margin().right))
+        if (box.computed_values().margin().right.is_auto())
             box_state.margin_right = 0;
     }
 
     Gfx::FloatPoint used_offset;
 
-    if (!is_auto(box.computed_values().inset().left)) {
+    if (!box.computed_values().inset().left.is_auto()) {
         float x_offset = box_state.inset_left
             + box_state.border_box_left();
         used_offset.set_x(x_offset + box_state.margin_left);
-    } else if (!is_auto(box.computed_values().inset().right)) {
+    } else if (!box.computed_values().inset().right.is_auto()) {
         float x_offset = 0
             - box_state.inset_right
             - box_state.border_box_right();
@@ -751,11 +747,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
         used_offset.set_x(x_offset);
     }
 
-    if (!is_auto(box.computed_values().inset().top)) {
+    if (!box.computed_values().inset().top.is_auto()) {
         float y_offset = box_state.inset_top
             + box_state.border_box_top();
         used_offset.set_y(y_offset + box_state.margin_top);
-    } else if (!is_auto(box.computed_values().inset().bottom)) {
+    } else if (!box.computed_values().inset().bottom.is_auto()) {
         float y_offset = 0
             - box_state.inset_bottom
             - box_state.border_box_bottom();

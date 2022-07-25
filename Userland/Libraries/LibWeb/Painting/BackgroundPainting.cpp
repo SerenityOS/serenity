@@ -139,8 +139,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         case CSS::BackgroundSize::LengthPercentage: {
             float width;
             float height;
-            bool x_is_auto = layer.size_x.is_length() && layer.size_x.length().is_auto();
-            bool y_is_auto = layer.size_y.is_length() && layer.size_y.length().is_auto();
+            bool x_is_auto = layer.size_x.is_auto();
+            bool y_is_auto = layer.size_y.is_auto();
             if (x_is_auto && y_is_auto) {
                 width = image.width();
                 height = image.height();
@@ -179,10 +179,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // for the other dimension, then there is a third step: that other dimension is scaled
             // so that the original aspect ratio is restored.
             if (layer.repeat_x != layer.repeat_y) {
-                if (layer.size_x.is_length() && layer.size_x.length().is_auto()) {
+                if (layer.size_x.is_auto()) {
                     image_rect.set_width(image.width() * (image_rect.height() / image.height()));
                 }
-                if (layer.size_y.is_length() && layer.size_y.length().is_auto()) {
+                if (layer.size_y.is_auto()) {
                     image_rect.set_height(image.height() * (image_rect.width() / image.width()));
                 }
             }
