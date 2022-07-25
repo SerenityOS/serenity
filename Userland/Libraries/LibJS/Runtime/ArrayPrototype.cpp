@@ -1492,7 +1492,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
     return Value(false);
 }
 
-ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionObject* compare_func, MarkedVector<Value>& arr_to_sort)
+ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, Function<ThrowCompletionOr<double>(Value, Value)> const& compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
@@ -1526,7 +1526,7 @@ ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionOb
         auto x = left[left_index];
         auto y = right[right_index];
 
-        double comparison_result = TRY(compare_array_elements(global_object, x, y, compare_func));
+        double comparison_result = TRY(compare_func(x, y));
 
         if (comparison_result <= 0) {
             arr_to_sort.append(x);
@@ -1551,42 +1551,64 @@ ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, FunctionOb
 }
 
 // 23.1.3.30 Array.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-array.prototype.sort
+// 1.1.1.1 Array.prototype.sort ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.sort
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 {
-    auto callback = vm.argument(0);
-    if (!callback.is_undefined() && !callback.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
+    auto comparefn = vm.argument(0);
+    if (!comparefn.is_undefined() && !comparefn.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn.to_string_without_side_effects());
 
+    // 2. Let obj be ? ToObject(this value).
     auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
+    // 3. Let len be ? LengthOfArrayLike(obj).
     auto length = TRY(length_of_array_like(global_object, *object));
 
-    MarkedVector<Value> items(vm.heap());
-    for (size_t k = 0; k < length; ++k) {
-        auto k_present = TRY(object->has_property(k));
+    // 4. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
+    Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
+        // a. Return ? CompareArrayElements(x, y, comparefn).
+        return TRY(compare_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
+    };
 
-        if (k_present) {
-            auto k_value = TRY(object->get(k));
-            items.append(k_value);
-        }
+    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, true).
+    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, true));
+
+    // 7. Let itemCount be the number of elements in sortedList.
+    auto item_count = sorted_list.size();
+
+    // 8. Let j be 0.
+    size_t j = 0;
+
+    // 9. Repeat, while j < itemCount,
+    for (; j < item_count; ++j) {
+        // a. Perform ? CreateDataPropertyOrThrow(obj, ! ToString(𝔽(j)), sortedList[j]).
+
+        // FIXME: Spec issue: The above step should likely be:
+        //
+        //    Perform ? Set(obj, ! ToString(𝔽(j)), items[j], true).
+        //
+        // That is the behavior of SortIndexedProperties in ECMA-262, and about a dozen test262
+        // tests will failed if CreateDataPropertyOrThrow is used instead. For example,
+        // test/built-ins/Array/prototype/sort/precise-getter-appends-elements.js fails in
+        // CreateDataPropertyOrThrow because the Array object is configurable but the property
+        // created by Object.defineProperty is not.
+        //
+        // See: https://github.com/tc39/proposal-change-array-by-copy/issues/97
+        TRY(object->set(j, sorted_list[j], Object::ShouldThrowExceptions::Yes));
+
+        // b. Set j to j + 1.
     }
 
-    // Perform sorting by merge sort. This isn't as efficient compared to quick sort, but
-    // quicksort can't be used in all cases because the spec requires Array.prototype.sort()
-    // to be stable. FIXME: when initially scanning through the array, maintain a flag
-    // for if an unstable sort would be indistinguishable from a stable sort (such as just
-    // just strings or numbers), and in that case use quick sort instead for better performance.
-    TRY(array_merge_sort(global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
-
-    for (size_t j = 0; j < items.size(); ++j)
-        TRY(object->set(j, items[j], Object::ShouldThrowExceptions::Yes));
-
-    // The empty parts of the array are always sorted to the end, regardless of the
-    // compare function. FIXME: For performance, a similar process could be used
-    // for undefined, which are sorted to right before the empty values.
-    for (size_t j = items.size(); j < length; ++j)
+    // 10. NOTE: The call to SortIndexedProperties in step 6 has the skipHoles parameter set to true. The remaining indexes are deleted to preserve the number of holes that were detected and excluded from the sort.
+    // 11. Repeat, while j < len,
+    for (; j < length; ++j) {
+        // a. Perform ? DeletePropertyOrThrow(obj, ! ToString(𝔽(j))).
         TRY(object->delete_property_or_throw(j));
+        // b. Set j to j + 1.
+    }
 
+    // 12. Return obj.
     return object;
 }
 
