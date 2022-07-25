@@ -93,8 +93,6 @@ private:
     float specified_cross_max_size(Box const&) const;
     float calculated_main_size(Box const&) const;
     bool is_cross_auto(Box const&) const;
-    bool is_main_axis_margin_first_auto(Box const&) const;
-    bool is_main_axis_margin_second_auto(Box const&) const;
     float specified_main_size_of_child_box(Box const& child_box) const;
     float specified_main_min_size(Box const&) const;
     float specified_cross_min_size(Box const&) const;

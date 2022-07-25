@@ -443,20 +443,6 @@ bool FlexFormattingContext::is_cross_auto(Box const& box) const
     return cross_length.is_auto();
 }
 
-bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
-{
-    if (is_row_layout())
-        return box.computed_values().margin().left.is_auto();
-    return box.computed_values().margin().top.is_auto();
-}
-
-bool FlexFormattingContext::is_main_axis_margin_second_auto(Box const& box) const
-{
-    if (is_row_layout())
-        return box.computed_values().margin().right.is_auto();
-    return box.computed_values().margin().bottom.is_auto();
-}
-
 void FlexFormattingContext::set_main_size(Box const& box, float size)
 {
     if (is_row_layout())
@@ -1163,10 +1149,10 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         size_t auto_margins = 0;
         for (auto& flex_item : flex_line.items) {
             used_main_space += flex_item->main_size;
-            if (is_main_axis_margin_first_auto(flex_item->box))
+            if (flex_item->margins.main_before_is_auto)
                 ++auto_margins;
 
-            if (is_main_axis_margin_second_auto(flex_item->box))
+            if (flex_item->margins.main_after_is_auto)
                 ++auto_margins;
 
             used_main_space += flex_item->margins.main_before + flex_item->margins.main_after
@@ -1177,16 +1163,16 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         if (flex_line.remaining_free_space > 0) {
             float size_per_auto_margin = flex_line.remaining_free_space / (float)auto_margins;
             for (auto& flex_item : flex_line.items) {
-                if (is_main_axis_margin_first_auto(flex_item->box))
+                if (flex_item->margins.main_before_is_auto)
                     set_main_axis_first_margin(*flex_item, size_per_auto_margin);
-                if (is_main_axis_margin_second_auto(flex_item->box))
+                if (flex_item->margins.main_after_is_auto)
                     set_main_axis_second_margin(*flex_item, size_per_auto_margin);
             }
         } else {
             for (auto& flex_item : flex_line.items) {
-                if (is_main_axis_margin_first_auto(flex_item->box))
+                if (flex_item->margins.main_before_is_auto)
                     set_main_axis_first_margin(*flex_item, 0);
-                if (is_main_axis_margin_second_auto(flex_item->box))
+                if (flex_item->margins.main_after_is_auto)
                     set_main_axis_second_margin(*flex_item, 0);
             }
         }
