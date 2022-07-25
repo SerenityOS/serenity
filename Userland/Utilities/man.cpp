@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = TRY(file->read_all());
     auto source = String::copy(buffer);
 
-    const String title("SerenityOS manual");
+    auto title = String::formatted("SerenityOS {} Manual", section->category_name());
 
     int spaces = max(view_width / 2 - page->name().length() - section->section_name().length() - title.length() / 2 - 4, 0);
     outln("{}({}){}{}", page->name(), section->section_name(), String::repeated(' ', spaces), title);
