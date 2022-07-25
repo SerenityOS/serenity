@@ -61,6 +61,16 @@ private:
         DirectionAgnosticMargins padding {};
         bool is_min_violation { false };
         bool is_max_violation { false };
+
+        float add_main_margin_box_sizes(float content_size) const
+        {
+            return content_size + margins.main_before + margins.main_after + borders.main_before + borders.main_after + padding.main_before + padding.main_after;
+        }
+
+        float add_cross_margin_box_sizes(float content_size) const
+        {
+            return content_size + margins.cross_before + margins.cross_after + borders.cross_before + borders.cross_after + padding.cross_before + padding.cross_after;
+        }
     };
 
     struct FlexLine {
