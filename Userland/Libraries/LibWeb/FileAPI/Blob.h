@@ -40,7 +40,9 @@ public:
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create(Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 
+    // https://w3c.github.io/FileAPI/#dfn-size
     u64 size() const { return m_byte_buffer.size(); }
+    // https://w3c.github.io/FileAPI/#dfn-type
     String const& type() const { return m_type; }
 
     DOM::ExceptionOr<NonnullRefPtr<Blob>> slice(Optional<i64> start = {}, Optional<i64> end = {}, Optional<String> const& content_type = {});
