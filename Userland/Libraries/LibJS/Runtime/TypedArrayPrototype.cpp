@@ -1251,119 +1251,95 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
     return Value(result);
 }
 
-static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedVector<Value>& arr_to_sort)
-{
-    auto& vm = global_object.vm();
-    if (arr_to_sort.size() <= 1)
-        return {};
-
-    MarkedVector<Value> left(vm.heap());
-    MarkedVector<Value> right(vm.heap());
-
-    left.ensure_capacity(arr_to_sort.size() / 2);
-    right.ensure_capacity(arr_to_sort.size() / 2 + (arr_to_sort.size() & 1));
-
-    for (size_t i = 0; i < arr_to_sort.size(); ++i) {
-        if (i < arr_to_sort.size() / 2) {
-            left.append(arr_to_sort[i]);
-        } else {
-            right.append(arr_to_sort[i]);
-        }
-    }
-
-    TRY(typed_array_merge_sort(global_object, compare_function, buffer, left));
-    TRY(typed_array_merge_sort(global_object, compare_function, buffer, right));
-
-    arr_to_sort.clear();
-
-    size_t left_index = 0, right_index = 0;
-
-    while (left_index < left.size() && right_index < right.size()) {
-        auto x = left[left_index];
-        auto y = right[right_index];
-
-        bool number_comparison = x.is_number();
-        double comparison_result;
-
-        if (compare_function) {
-            auto result = TRY(call(global_object, *compare_function, js_undefined(), x, y));
-
-            auto value = TRY(result.to_number(global_object));
-
-            if (value.is_nan())
-                comparison_result = 0;
-            else
-                comparison_result = value.as_double();
-        } else if (x.is_nan() && y.is_nan()) {
-            comparison_result = 0;
-        } else if (x.is_nan()) {
-            comparison_result = 1;
-        } else if (y.is_nan()) {
-            comparison_result = -1;
-        } else if (number_comparison ? (x.as_double() < y.as_double()) : (x.as_bigint().big_integer() < y.as_bigint().big_integer())) {
-            comparison_result = -1;
-        } else if (number_comparison ? (x.as_double() > y.as_double()) : (x.as_bigint().big_integer() > y.as_bigint().big_integer())) {
-            comparison_result = 1;
-        } else if (x.is_negative_zero() && y.is_positive_zero()) {
-            comparison_result = -1;
-        } else if (x.is_positive_zero() && y.is_negative_zero()) {
-            comparison_result = 1;
-        } else {
-            comparison_result = 0;
-        }
-
-        if (comparison_result <= 0) {
-            arr_to_sort.append(left[left_index]);
-            left_index++;
-        } else {
-            arr_to_sort.append(right[right_index]);
-            right_index++;
-        }
-    }
-
-    while (left_index < left.size()) {
-        arr_to_sort.append(left[left_index]);
-        left_index++;
-    }
-
-    while (right_index < right.size()) {
-        arr_to_sort.append(right[right_index]);
-        right_index++;
-    }
-
-    return {};
-}
-
 // 23.2.3.29 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
+// 1.2.2.1.1 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.sort
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 {
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     auto compare_fn = vm.argument(0);
     if (!compare_fn.is_undefined() && !compare_fn.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
 
+    // 2. Let obj be the this value.
+    // 3. Perform ? ValidateTypedArray(obj).
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
+    // 4. Let len be obj.[[ArrayLength]].
     auto length = typed_array->array_length();
 
-    MarkedVector<Value> items(vm.heap());
-    for (u32 k = 0; k < length; ++k) {
-        auto k_present = TRY(typed_array->has_property(k));
+    // 5. NOTE: The following closure performs a numeric comparison rather than the string comparison used in 23.1.3.30.
+    // 6. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
+    Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
+        // FIXME: Replace the following steps with CompareTypedArrayElements when the change-array-by-copy proposal is
+        //        updated to no longer throw on detached array buffers. See: https://github.com/tc39/ecma262/commit/e0c74e1
 
-        if (k_present) {
-            auto k_value = TRY(typed_array->get(k));
-            items.append(k_value);
+        // a.  Assert: Both Type(x) and Type(y) are Number or both are BigInt.
+        VERIFY((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint()));
+
+        // b. If comparefn is not undefined, then
+        if (!compare_fn.is_undefined()) {
+            // i. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
+            auto result = TRY(call(global_object, compare_fn.as_function(), js_undefined(), x, y));
+            auto value = TRY(result.to_number(global_object));
+
+            // ii. If v is NaN, return +0𝔽.
+            if (value.is_nan())
+                return 0;
+
+            // iii. Return v.
+            return value.as_double();
         }
+
+        // c. If x and y are both NaN, return +0𝔽.
+        if (x.is_nan() && y.is_nan())
+            return 0;
+
+        // d. If x is NaN, return 1𝔽.
+        if (x.is_nan())
+            return 1;
+
+        // e. If y is NaN, return -1𝔽.
+        if (y.is_nan())
+            return -1;
+
+        // f. If x < y, return -1𝔽.
+        if (x.is_bigint()
+                ? (x.as_bigint().big_integer() < y.as_bigint().big_integer())
+                : (x.as_double() < y.as_double())) {
+            return -1;
+        }
+
+        // g. If x > y, return 1𝔽.
+        if (x.is_bigint()
+                ? (x.as_bigint().big_integer() > y.as_bigint().big_integer())
+                : (x.as_double() > y.as_double())) {
+            return 1;
+        }
+
+        // h. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
+        if (x.is_negative_zero() && y.is_positive_zero())
+            return -1;
+
+        // i. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
+        if (x.is_positive_zero() && y.is_negative_zero())
+            return 1;
+
+        // j. Return +0𝔽.
+        return 0;
+    };
+
+    // 7. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
+    auto sorted_list = TRY(sort_indexed_properties(global_object, *typed_array, length, sort_compare, false));
+
+    // 8. Let j be 0.
+    // 9. Repeat, while j < len,
+    for (size_t j = 0; j < length; j++) {
+        // a. Perform ! Set(obj, ! ToString(𝔽(j)), sortedList[j], true).
+        MUST(typed_array->set(j, sorted_list[j], Object::ShouldThrowExceptions::Yes));
+        // b. Set j to j + 1.
     }
 
-    TRY(typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items));
-
-    u32 j;
-    for (j = 0; j < items.size(); ++j)
-        TRY(typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes));
-
-    for (; j < length; ++j)
-        TRY(typed_array->delete_property_or_throw(j));
-
+    // 10. Return obj.
     return typed_array;
 }
 
