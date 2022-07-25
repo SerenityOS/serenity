@@ -7,17 +7,15 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath"));
+    TRY(Core::System::pledge("stdio cpath rpath"));
 
     bool force = false;
     bool symbolic = false;
-    char const* target = nullptr;
-    char const* path = nullptr;
+    StringView target;
+    StringView path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force the creation", "force", 'f');
@@ -27,37 +25,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     String path_buffer;
-    if (!path) {
+    if (path.is_empty()) {
         path_buffer = LexicalPath::basename(target);
-        path = path_buffer.characters();
+        path = path_buffer.view();
     }
 
-    do {
-        if (symbolic) {
-            int rc = symlink(target, path);
-            if (rc < 0 && !force) {
-                perror("symlink");
-                return 1;
-            } else if (rc == 0) {
-                return 0;
-            }
-        } else {
-            int rc = link(target, path);
-            if (rc < 0 && !force) {
-                perror("link");
-                return 1;
-            } else if (rc == 0) {
-                return 0;
-            }
-        }
+    if (force) {
+        auto stat = Core::System::lstat(path);
 
-        int rc = unlink(path);
-        if (rc < 0) {
-            perror("unlink");
-            return 1;
+        if (stat.is_error() && stat.error().code() != ENOENT)
+            return stat.error();
+
+        if (!stat.is_error()) {
+            TRY(Core::System::unlink(path));
         }
-        force = false;
-    } while (true);
+    }
+
+    if (symbolic) {
+        TRY(Core::System::symlink(target, path));
+    } else {
+        TRY(Core::System::link(target, path));
+    }
 
     return 0;
 }
